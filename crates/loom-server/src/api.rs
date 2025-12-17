@@ -22,6 +22,7 @@ pub fn create_router(repo: Arc<ThreadRepository>) -> Router {
     let bin_dir = std::env::var("LOOM_SERVER_BIN_DIR").unwrap_or_else(|_| "./bin".to_string());
 
     Router::new()
+        .route("/v1/threads/search", get(search_threads))
         .route("/v1/threads/{id}", put(upsert_thread))
         .route("/v1/threads/{id}", get(get_thread))
         .route("/v1/threads/{id}", delete(delete_thread))
@@ -49,6 +50,41 @@ pub struct ListParams {
 
 fn default_limit() -> u32 {
     50
+}
+
+fn default_search_limit() -> u32 {
+    50
+}
+
+/// Query parameters for search endpoint
+#[derive(Debug, Deserialize)]
+pub struct SearchParams {
+    /// Search query
+    pub q: String,
+    /// Optional workspace filter
+    pub workspace: Option<String>,
+    /// Maximum results (default: 50)
+    #[serde(default = "default_search_limit")]
+    pub limit: u32,
+    /// Pagination offset (default: 0)
+    #[serde(default)]
+    pub offset: u32,
+}
+
+/// Search response
+#[derive(Debug, Serialize)]
+pub struct SearchResponse {
+    pub hits: Vec<SearchResponseHit>,
+    pub limit: u32,
+    pub offset: u32,
+}
+
+/// Single search hit in the response
+#[derive(Debug, Serialize)]
+pub struct SearchResponseHit {
+    #[serde(flatten)]
+    pub summary: ThreadSummary,
+    pub score: f64,
 }
 
 /// Request body for updating thread visibility.
@@ -240,6 +276,45 @@ async fn update_thread_visibility(
     Ok((StatusCode::OK, Json(stored)))
 }
 
+/// GET /v1/threads/search - Search threads.
+#[axum::debug_handler]
+async fn search_threads(
+    State(state): State<AppState>,
+    Query(params): Query<SearchParams>,
+) -> Result<Json<SearchResponse>, ServerError> {
+    let query = params.q.trim();
+
+    if query.is_empty() {
+        return Err(ServerError::BadRequest("Empty search query".into()));
+    }
+
+    tracing::debug!(
+        query = %query,
+        workspace = ?params.workspace,
+        limit = params.limit,
+        offset = params.offset,
+        "searching threads"
+    );
+
+    let hits = state
+        .search(query, params.workspace.as_deref(), params.limit, params.offset)
+        .await?;
+
+    let response_hits = hits
+        .into_iter()
+        .map(|h| SearchResponseHit {
+            summary: h.summary,
+            score: h.score,
+        })
+        .collect();
+
+    Ok(Json(SearchResponse {
+        hits: response_hits,
+        limit: params.limit,
+        offset: params.offset,
+    }))
+}
+
 /// GET /health - Comprehensive health check endpoint.
 async fn health_check(State(repo): State<AppState>) -> impl IntoResponse {
     use tokio::time::Instant;
@@ -332,6 +407,14 @@ mod tests {
             workspace_root: Some("/test".to_string()),
             cwd: Some("/test".to_string()),
             loom_version: Some("0.1.0".to_string()),
+            git_branch: Some("main".to_string()),
+            git_remote_url: Some("github.com/test/repo".to_string()),
+            git_initial_branch: Some("main".to_string()),
+            git_initial_commit_sha: Some("abc123def456".to_string()),
+            git_current_commit_sha: Some("xyz789012345".to_string()),
+            git_start_dirty: Some(false),
+            git_end_dirty: Some(false),
+            git_commits: vec!["abc123def456".to_string(), "xyz789012345".to_string()],
             provider: Some("anthropic".to_string()),
             model: Some("claude-sonnet-4-20250514".to_string()),
             conversation: ConversationSnapshot { messages: vec![] },
@@ -526,5 +609,63 @@ mod tests {
         let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
         let updated: Thread = serde_json::from_slice(&body).unwrap();
         assert_eq!(updated.visibility, loom_thread::ThreadVisibility::Public);
+    }
+
+    #[tokio::test]
+    async fn test_search_endpoint() {
+        let (app, _dir) = create_test_app().await;
+
+        // First create a thread
+        let thread = create_test_thread();
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri(format!("/v1/threads/{}", thread.id.as_str()))
+                    .header("Content-Type", "application/json")
+                    .header("If-Match", "0")
+                    .body(Body::from(serde_json::to_string(&thread).unwrap()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+
+        // Now search for it
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/v1/threads/search?q=main")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let result: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        assert!(result.get("hits").is_some());
+    }
+
+    #[tokio::test]
+    async fn test_search_empty_query_returns_error() {
+        let (app, _dir) = create_test_app().await;
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/v1/threads/search?q=")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 }

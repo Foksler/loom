@@ -263,6 +263,41 @@ pub struct Thread {
     pub cwd: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub loom_version: Option<String>,
+
+    /// Current git branch name (e.g., "main", "feature/xyz")
+    /// None if not a git repo, detached HEAD, or git unavailable
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub git_branch: Option<String>,
+
+    /// Normalized remote URL slug (e.g., "github.com/owner/repo")
+    /// None if not a git repo, no remotes configured, or git unavailable
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub git_remote_url: Option<String>,
+
+    /// Branch when the thread was created
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub git_initial_branch: Option<String>,
+
+    /// Commit SHA when the thread was created
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub git_initial_commit_sha: Option<String>,
+
+    /// Latest known commit SHA
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub git_current_commit_sha: Option<String>,
+
+    /// Whether working tree was dirty at thread creation
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub git_start_dirty: Option<bool>,
+
+    /// Whether working tree was dirty at last update
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub git_end_dirty: Option<bool>,
+
+    /// All commit SHAs observed during this session (chronological order)
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub git_commits: Vec<String>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub provider: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -297,6 +332,14 @@ impl Thread {
             workspace_root: None,
             cwd: None,
             loom_version: None,
+            git_branch: None,
+            git_remote_url: None,
+            git_initial_branch: None,
+            git_initial_commit_sha: None,
+            git_current_commit_sha: None,
+            git_start_dirty: None,
+            git_end_dirty: None,
+            git_commits: Vec::new(),
             provider: None,
             model: None,
             conversation: ConversationSnapshot::default(),
@@ -339,6 +382,14 @@ pub struct ThreadSummary {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub workspace_root: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub git_branch: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub git_remote_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub git_initial_commit_sha: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub git_current_commit_sha: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub provider: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub model: Option<String>,
@@ -359,6 +410,10 @@ impl From<&Thread> for ThreadSummary {
             last_activity_at: thread.last_activity_at.clone(),
             title: thread.metadata.title.clone(),
             workspace_root: thread.workspace_root.clone(),
+            git_branch: thread.git_branch.clone(),
+            git_remote_url: thread.git_remote_url.clone(),
+            git_initial_commit_sha: thread.git_initial_commit_sha.clone(),
+            git_current_commit_sha: thread.git_current_commit_sha.clone(),
             provider: thread.provider.clone(),
             model: thread.model.clone(),
             tags: thread.metadata.tags.clone(),
@@ -577,5 +632,111 @@ mod tests {
 
         assert_eq!(restored.visibility, ThreadVisibility::Public);
         assert!(restored.is_private);
+    }
+
+    /// **Property: Git metadata survives JSON roundtrip**
+    ///
+    /// Why this is important: Git metadata (branch and remote URL) is used for
+    /// filtering threads by repository and branch in the UI. If these fields
+    /// are lost or corrupted during serialization, users cannot find threads
+    /// associated with specific repos/branches, breaking workspace-based navigation.
+    ///
+    /// Invariant: git_branch and git_remote_url preserve their values through
+    /// serialize -> deserialize cycles for both Thread and ThreadSummary
+    #[test]
+    fn test_git_metadata_json_roundtrip() {
+        let mut thread = Thread::new();
+        thread.git_branch = Some("feature/my-branch".to_string());
+        thread.git_remote_url = Some("github.com/owner/repo".to_string());
+
+        let json = serde_json::to_string(&thread).expect("serialize");
+        let restored: Thread = serde_json::from_str(&json).expect("deserialize");
+
+        assert_eq!(restored.git_branch, Some("feature/my-branch".to_string()));
+        assert_eq!(restored.git_remote_url, Some("github.com/owner/repo".to_string()));
+
+        let summary = ThreadSummary::from(&thread);
+        let summary_json = serde_json::to_string(&summary).expect("serialize summary");
+        let restored_summary: ThreadSummary = serde_json::from_str(&summary_json).expect("deserialize summary");
+
+        assert_eq!(restored_summary.git_branch, Some("feature/my-branch".to_string()));
+        assert_eq!(restored_summary.git_remote_url, Some("github.com/owner/repo".to_string()));
+    }
+
+    /// **Property: Git metadata None values are omitted from JSON**
+    ///
+    /// Why this is important: Optional fields should not clutter the JSON when
+    /// absent. This reduces storage size and maintains backward compatibility
+    /// with older clients that don't recognize these fields.
+    ///
+    /// Invariant: When git_branch and git_remote_url are None, they do not
+    /// appear in the serialized JSON output
+    #[test]
+    fn test_git_metadata_none_omitted_from_json() {
+        let thread = Thread::new();
+        assert!(thread.git_branch.is_none());
+        assert!(thread.git_remote_url.is_none());
+
+        let json = serde_json::to_string(&thread).expect("serialize");
+        assert!(!json.contains("git_branch"));
+        assert!(!json.contains("git_remote_url"));
+
+        let summary = ThreadSummary::from(&thread);
+        let summary_json = serde_json::to_string(&summary).expect("serialize summary");
+        assert!(!summary_json.contains("git_branch"));
+        assert!(!summary_json.contains("git_remote_url"));
+    }
+
+    /// **Property: Advanced git metadata fields survive JSON roundtrip**
+    ///
+    /// Why this is important: These fields track the complete git state throughout
+    /// a coding session - initial branch/commit, current commit, dirty state, and
+    /// all commits observed. This data is essential for:
+    /// 1. Audit trails: Understanding what code state the AI was working with
+    /// 2. Reproducibility: Recreating the exact environment for debugging
+    /// 3. Session analysis: Tracking how many commits were made during a session
+    /// 4. Conflict detection: Knowing if uncommitted changes existed
+    ///
+    /// If any of these fields are lost or corrupted during serialization, users
+    /// lose visibility into the git context of their AI sessions, making it
+    /// impossible to correlate thread activity with repository history.
+    ///
+    /// Invariant: All advanced git metadata fields (git_initial_branch,
+    /// git_initial_commit_sha, git_current_commit_sha, git_start_dirty,
+    /// git_end_dirty, git_commits) preserve their values through
+    /// serialize -> deserialize cycles
+    #[test]
+    fn test_advanced_git_metadata_json_roundtrip() {
+        let mut thread = Thread::new();
+        thread.git_initial_branch = Some("feature/add-auth".to_string());
+        thread.git_initial_commit_sha = Some("abc1234def5678".to_string());
+        thread.git_current_commit_sha = Some("def5678abc1234".to_string());
+        thread.git_start_dirty = Some(true);
+        thread.git_end_dirty = Some(false);
+        thread.git_commits = vec![
+            "abc1234def5678".to_string(),
+            "111222333444555".to_string(),
+            "def5678abc1234".to_string(),
+        ];
+
+        let json = serde_json::to_string(&thread).expect("serialize");
+        let restored: Thread = serde_json::from_str(&json).expect("deserialize");
+
+        assert_eq!(restored.git_initial_branch, Some("feature/add-auth".to_string()));
+        assert_eq!(restored.git_initial_commit_sha, Some("abc1234def5678".to_string()));
+        assert_eq!(restored.git_current_commit_sha, Some("def5678abc1234".to_string()));
+        assert_eq!(restored.git_start_dirty, Some(true));
+        assert_eq!(restored.git_end_dirty, Some(false));
+        assert_eq!(restored.git_commits.len(), 3);
+        assert_eq!(restored.git_commits[0], "abc1234def5678");
+        assert_eq!(restored.git_commits[1], "111222333444555");
+        assert_eq!(restored.git_commits[2], "def5678abc1234");
+
+        let summary = ThreadSummary::from(&thread);
+        let summary_json = serde_json::to_string(&summary).expect("serialize summary");
+        let restored_summary: ThreadSummary = serde_json::from_str(&summary_json).expect("deserialize summary");
+
+        assert_eq!(restored_summary.git_initial_commit_sha, Some("abc1234def5678".to_string()));
+        assert_eq!(restored_summary.git_current_commit_sha, Some("def5678abc1234".to_string()));
     }
 }

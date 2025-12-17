@@ -18,6 +18,9 @@ This directory contains the architectural specifications and design documentatio
 | [configuration-system.md](./configuration-system.md) | Full configuration registry, XDG paths, TOML format, layered sources |
 | [distribution.md](./distribution.md) | Build system, multi-platform binaries, self-update, and CI/CD pipeline |
 | [health-check.md](./health-check.md) | Health check endpoints for monitoring and load balancer integration |
+| [thread-system.md](./thread-system.md) | Thread persistence, local storage, server sync, and CLI commands |
+| [git-metadata.md](./git-metadata.md) | Git repository detection, loom-git crate, and thread git metadata |
+| [search-system.md](./search-system.md) | Full-text search with FTS5, commit SHA lookup, and CLI search command |
 
 ## Quick Reference
 
@@ -28,6 +31,9 @@ loom/
 ├── crates/
 │   ├── loom-config/         # Configuration management, XDG paths, layered sources
 │   ├── loom-core/           # Core types, state machine, LLM traits
+│   ├── loom-git/            # Git repository detection for threads
+│   ├── loom-thread/         # Thread persistence and sync
+│   ├── loom-server/         # HTTP server with SQLite
 │   ├── loom-tools/          # Tool definitions (read_file, list_files, edit_file)
 │   ├── loom-llm-anthropic/  # Anthropic Claude API client
 │   ├── loom-llm-openai/     # OpenAI GPT API client

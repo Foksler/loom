@@ -9,6 +9,63 @@ use std::str::FromStr;
 
 use crate::error::ServerError;
 
+/// A search result hit with relevance score
+#[derive(Debug, Clone)]
+pub struct ThreadSearchHit {
+    pub summary: ThreadSummary,
+    pub score: f64,
+}
+
+/// Get or create a repo entry in the repos table, returning its id.
+async fn get_or_create_repo_id(pool: &SqlitePool, slug: &str) -> Result<Option<i64>, ServerError> {
+    let now = chrono::Utc::now().to_rfc3339();
+
+    sqlx::query("INSERT OR IGNORE INTO repos (slug, created_at) VALUES(?, ?)")
+        .bind(slug)
+        .bind(&now)
+        .execute(pool)
+        .await?;
+
+    let result: Option<(i64,)> = sqlx::query_as("SELECT id FROM repos WHERE slug = ?")
+        .bind(slug)
+        .fetch_optional(pool)
+        .await?;
+
+    Ok(result.map(|(id,)| id))
+}
+
+/// Record commit SHAs associated with a thread in the thread_commits table.
+async fn record_thread_commits(
+    pool: &SqlitePool,
+    thread: &Thread,
+    repo_id: i64,
+) -> Result<(), ServerError> {
+    for sha in &thread.git_commits {
+        let is_initial = Some(sha) == thread.git_initial_commit_sha.as_ref();
+        let is_final = Some(sha) == thread.git_current_commit_sha.as_ref();
+
+        sqlx::query(
+            r#"
+            INSERT OR IGNORE INTO thread_commits (
+                thread_id, repo_id, commit_sha, branch, is_dirty,
+                observed_at, is_initial, is_final
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            "#,
+        )
+        .bind(thread.id.as_str())
+        .bind(repo_id)
+        .bind(sha)
+        .bind(&thread.git_branch)
+        .bind(thread.git_end_dirty.unwrap_or(false) as i32)
+        .bind(&thread.updated_at)
+        .bind(is_initial as i32)
+        .bind(is_final as i32)
+        .execute(pool)
+        .await?;
+    }
+    Ok(())
+}
+
 /// Repository for thread database operations.
 #[derive(Clone)]
 pub struct ThreadRepository {
@@ -50,6 +107,63 @@ impl ThreadRepository {
                 && !msg.contains("already exists")
             {
                 return Err(e.into());
+            }
+        }
+
+        let m3 = include_str!("../migrations/003_add_git_metadata.sql");
+        if let Err(e) = sqlx::query(m3).execute(pool).await {
+            let msg = e.to_string();
+            if !msg.contains("duplicate column")
+                && !msg.contains("already exists")
+            {
+                return Err(e.into());
+            }
+        }
+
+        // Migration 004: repos table and thread_commits
+        let m4 = include_str!("../migrations/004_git_repos_and_commits.sql");
+        // Split by semicolons and execute each statement
+        for stmt in m4.split(';').filter(|s| !s.trim().is_empty()) {
+            if let Err(e) = sqlx::query(stmt).execute(pool).await {
+                let msg = e.to_string();
+                if !msg.contains("duplicate column")
+                    && !msg.contains("already exists")
+                    && !msg.contains("table repos already exists")
+                    && !msg.contains("table thread_commits already exists")
+                {
+                    return Err(e.into());
+                }
+            }
+        }
+
+        // Migration 005: FTS5 search
+        // Parse statements carefully: split CREATE VIRTUAL TABLE from triggers
+        let m5 = include_str!("../migrations/005_thread_fts.sql");
+        
+        // Find the CREATE VIRTUAL TABLE statement (ends with ");")
+        if let Some(vt_end) = m5.find(");") {
+            let create_vt = &m5[..vt_end + 2];
+            if let Err(e) = sqlx::query(create_vt.trim()).execute(pool).await {
+                let msg = e.to_string();
+                if !msg.contains("already exists") && !msg.contains("table thread_fts already exists") {
+                    tracing::warn!(error = %e, "FTS CREATE VIRTUAL TABLE failed");
+                }
+            }
+            
+            // Parse triggers (split remaining text by "END;")
+            let remaining = &m5[vt_end + 2..];
+            for trigger_block in remaining.split("END;") {
+                let trigger = trigger_block.trim();
+                if trigger.is_empty() || !trigger.contains("CREATE TRIGGER") {
+                    continue;
+                }
+                let full_trigger = format!("{} END;", trigger);
+                if let Err(e) = sqlx::query(&full_trigger).execute(pool).await {
+                    let msg = e.to_string();
+                    if !msg.contains("already exists") && !msg.contains("trigger") {
+                        tracing::warn!(error = %e, stmt = %full_trigger.chars().take(80).collect::<String>(), "FTS trigger creation failed");
+                    }
+                }
             }
         }
 
@@ -100,17 +214,29 @@ impl ThreadRepository {
         let conversation_json = serde_json::to_string(&thread.conversation)?;
         let metadata_json = serde_json::to_string(&thread.metadata)?;
 
+        let repo_id = if let Some(ref slug) = thread.git_remote_url {
+            get_or_create_repo_id(&self.pool, slug).await?
+        } else {
+            None
+        };
+
         sqlx::query(
             r#"
             INSERT INTO threads (
                 id, version, created_at, updated_at, last_activity_at,
                 workspace_root, cwd, loom_version, provider, model,
+                git_branch, git_remote_url, repo_id,
+                git_initial_branch, git_initial_commit_sha, git_current_commit_sha,
+                git_start_dirty, git_end_dirty,
                 title, tags, is_pinned, message_count,
                 agent_state_kind, agent_state, conversation, metadata, full_json,
                 visibility, is_shared_with_support
             ) VALUES (
                 ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?,
+                ?, ?, ?,
+                ?, ?, ?,
+                ?, ?,
                 ?, ?, ?, ?,
                 ?, ?, ?, ?, ?,
                 ?, ?
@@ -127,6 +253,14 @@ impl ThreadRepository {
         .bind(&thread.loom_version)
         .bind(&thread.provider)
         .bind(&thread.model)
+        .bind(&thread.git_branch)
+        .bind(&thread.git_remote_url)
+        .bind(repo_id)
+        .bind(&thread.git_initial_branch)
+        .bind(&thread.git_initial_commit_sha)
+        .bind(&thread.git_current_commit_sha)
+        .bind(thread.git_start_dirty.map(|d| d as i32))
+        .bind(thread.git_end_dirty.map(|d| d as i32))
         .bind(&thread.metadata.title)
         .bind(&tags_json)
         .bind(thread.metadata.is_pinned as i32)
@@ -141,6 +275,10 @@ impl ThreadRepository {
         .execute(&self.pool)
         .await?;
 
+        if let Some(repo_id) = repo_id {
+            record_thread_commits(&self.pool, thread, repo_id).await?;
+        }
+
         tracing::debug!(thread_id = %thread.id, version = thread.version, "thread inserted");
 
         Ok(())
@@ -154,6 +292,12 @@ impl ThreadRepository {
         let conversation_json = serde_json::to_string(&thread.conversation)?;
         let metadata_json = serde_json::to_string(&thread.metadata)?;
 
+        let repo_id = if let Some(ref slug) = thread.git_remote_url {
+            get_or_create_repo_id(&self.pool, slug).await?
+        } else {
+            None
+        };
+
         sqlx::query(
             r#"
             UPDATE threads SET
@@ -165,6 +309,14 @@ impl ThreadRepository {
                 loom_version = ?,
                 provider = ?,
                 model = ?,
+                git_branch = ?,
+                git_remote_url = ?,
+                repo_id = ?,
+                git_initial_branch = ?,
+                git_initial_commit_sha = ?,
+                git_current_commit_sha = ?,
+                git_start_dirty = ?,
+                git_end_dirty = ?,
                 title = ?,
                 tags = ?,
                 is_pinned = ?,
@@ -187,6 +339,14 @@ impl ThreadRepository {
         .bind(&thread.loom_version)
         .bind(&thread.provider)
         .bind(&thread.model)
+        .bind(&thread.git_branch)
+        .bind(&thread.git_remote_url)
+        .bind(repo_id)
+        .bind(&thread.git_initial_branch)
+        .bind(&thread.git_initial_commit_sha)
+        .bind(&thread.git_current_commit_sha)
+        .bind(thread.git_start_dirty.map(|d| d as i32))
+        .bind(thread.git_end_dirty.map(|d| d as i32))
         .bind(&thread.metadata.title)
         .bind(&tags_json)
         .bind(thread.metadata.is_pinned as i32)
@@ -201,6 +361,10 @@ impl ThreadRepository {
         .bind(thread.id.as_str())
         .execute(&self.pool)
         .await?;
+
+        if let Some(repo_id) = repo_id {
+            record_thread_commits(&self.pool, thread, repo_id).await?;
+        }
 
         tracing::debug!(thread_id = %thread.id, version = thread.version, "thread updated");
 
@@ -243,7 +407,9 @@ impl ThreadRepository {
                     r#"
                     SELECT id, title, workspace_root, last_activity_at,
                            provider, model, tags, version, message_count,
-                           created_at, updated_at, is_pinned, visibility
+                           created_at, updated_at, is_pinned, visibility,
+                           git_branch, git_remote_url,
+                           git_initial_commit_sha, git_current_commit_sha
                     FROM threads
                     WHERE deleted_at IS NULL AND workspace_root = ?
                     ORDER BY last_activity_at DESC
@@ -261,7 +427,9 @@ impl ThreadRepository {
                     r#"
                     SELECT id, title, workspace_root, last_activity_at,
                            provider, model, tags, version, message_count,
-                           created_at, updated_at, is_pinned, visibility
+                           created_at, updated_at, is_pinned, visibility,
+                           git_branch, git_remote_url,
+                           git_initial_commit_sha, git_current_commit_sha
                     FROM threads
                     WHERE deleted_at IS NULL
                     ORDER BY last_activity_at DESC
@@ -291,6 +459,10 @@ impl ThreadRepository {
                 let updated_at: String = row.get("updated_at");
                 let is_pinned: i32 = row.get("is_pinned");
                 let visibility_str: String = row.get("visibility");
+                let git_branch: Option<String> = row.get("git_branch");
+                let git_remote_url: Option<String> = row.get("git_remote_url");
+                let git_initial_commit_sha: Option<String> = row.get("git_initial_commit_sha");
+                let git_current_commit_sha: Option<String> = row.get("git_current_commit_sha");
 
                 let tags: Vec<String> = serde_json::from_str(&tags_json).unwrap_or_default();
                 let visibility = visibility_str
@@ -305,6 +477,10 @@ impl ThreadRepository {
                     last_activity_at,
                     title,
                     workspace_root,
+                    git_branch,
+                    git_remote_url,
+                    git_initial_commit_sha,
+                    git_current_commit_sha,
                     provider,
                     model,
                     tags,
@@ -380,6 +556,227 @@ impl ThreadRepository {
 
         Ok(count.0 as u64)
     }
+
+    /// Search threads by query string.
+    ///
+    /// Detects SHA-like queries and searches commit prefixes first,
+    /// otherwise falls back to FTS5 full-text search.
+    pub async fn search(
+        &self,
+        query: &str,
+        workspace: Option<&str>,
+        limit: u32,
+        offset: u32,
+    ) -> Result<Vec<ThreadSearchHit>, ServerError> {
+        let query = query.trim();
+
+        // SHA-like heuristic: hex chars only, 7-40 length, no spaces
+        let is_sha_like = query.len() >= 7
+            && query.len() <= 40
+            && !query.contains(char::is_whitespace)
+            && query.chars().all(|c| c.is_ascii_hexdigit());
+
+        if is_sha_like {
+            let hits = self
+                .search_by_commit_prefix(query, workspace, limit, offset)
+                .await?;
+            if !hits.is_empty() {
+                return Ok(hits);
+            }
+        }
+
+        self.search_fts(query, workspace, limit, offset).await
+    }
+
+    async fn search_by_commit_prefix(
+        &self,
+        prefix: &str,
+        workspace: Option<&str>,
+        limit: u32,
+        offset: u32,
+    ) -> Result<Vec<ThreadSearchHit>, ServerError> {
+        let like_pattern = format!("{}%", prefix);
+
+        let sql = if workspace.is_some() {
+            r#"
+            SELECT DISTINCT
+                t.id, t.version, t.created_at, t.updated_at, t.last_activity_at,
+                t.title, t.workspace_root, t.git_branch, t.git_remote_url,
+                t.git_initial_commit_sha, t.git_current_commit_sha,
+                t.provider, t.model, t.tags, t.message_count, t.is_pinned, t.visibility
+            FROM thread_commits c
+            JOIN threads t ON t.id = c.thread_id
+            WHERE c.commit_sha LIKE ?1
+              AND t.deleted_at IS NULL
+              AND t.workspace_root = ?2
+            ORDER BY t.last_activity_at DESC
+            LIMIT ?3 OFFSET ?4
+            "#
+        } else {
+            r#"
+            SELECT DISTINCT
+                t.id, t.version, t.created_at, t.updated_at, t.last_activity_at,
+                t.title, t.workspace_root, t.git_branch, t.git_remote_url,
+                t.git_initial_commit_sha, t.git_current_commit_sha,
+                t.provider, t.model, t.tags, t.message_count, t.is_pinned, t.visibility
+            FROM thread_commits c
+            JOIN threads t ON t.id = c.thread_id
+            WHERE c.commit_sha LIKE ?1
+              AND t.deleted_at IS NULL
+            ORDER BY t.last_activity_at DESC
+            LIMIT ?2 OFFSET ?3
+            "#
+        };
+
+        let rows = if let Some(ws) = workspace {
+            sqlx::query(sql)
+                .bind(&like_pattern)
+                .bind(ws)
+                .bind(limit as i32)
+                .bind(offset as i32)
+                .fetch_all(&self.pool)
+                .await?
+        } else {
+            sqlx::query(sql)
+                .bind(&like_pattern)
+                .bind(limit as i32)
+                .bind(offset as i32)
+                .fetch_all(&self.pool)
+                .await?
+        };
+
+        self.rows_to_search_hits(rows, 0.0)
+    }
+
+    async fn search_fts(
+        &self,
+        query: &str,
+        workspace: Option<&str>,
+        limit: u32,
+        offset: u32,
+    ) -> Result<Vec<ThreadSearchHit>, ServerError> {
+        // Escape quotes and wrap in phrase for safety
+        let fts_query = format!("\"{}\"", query.replace('"', " "));
+
+        let sql = if workspace.is_some() {
+            r#"
+            SELECT
+                t.id, t.version, t.created_at, t.updated_at, t.last_activity_at,
+                t.title, t.workspace_root, t.git_branch, t.git_remote_url,
+                t.git_initial_commit_sha, t.git_current_commit_sha,
+                t.provider, t.model, t.tags, t.message_count, t.is_pinned, t.visibility,
+                bm25(thread_fts) AS score
+            FROM thread_fts
+            JOIN threads t ON t.id = thread_fts.thread_id
+            WHERE thread_fts MATCH ?1
+              AND t.deleted_at IS NULL
+              AND t.workspace_root = ?2
+            ORDER BY score ASC, t.last_activity_at DESC
+            LIMIT ?3 OFFSET ?4
+            "#
+        } else {
+            r#"
+            SELECT
+                t.id, t.version, t.created_at, t.updated_at, t.last_activity_at,
+                t.title, t.workspace_root, t.git_branch, t.git_remote_url,
+                t.git_initial_commit_sha, t.git_current_commit_sha,
+                t.provider, t.model, t.tags, t.message_count, t.is_pinned, t.visibility,
+                bm25(thread_fts) AS score
+            FROM thread_fts
+            JOIN threads t ON t.id = thread_fts.thread_id
+            WHERE thread_fts MATCH ?1
+              AND t.deleted_at IS NULL
+            ORDER BY score ASC, t.last_activity_at DESC
+            LIMIT ?2 OFFSET ?3
+            "#
+        };
+
+        let rows = if let Some(ws) = workspace {
+            sqlx::query(sql)
+                .bind(&fts_query)
+                .bind(ws)
+                .bind(limit as i32)
+                .bind(offset as i32)
+                .fetch_all(&self.pool)
+                .await?
+        } else {
+            sqlx::query(sql)
+                .bind(&fts_query)
+                .bind(limit as i32)
+                .bind(offset as i32)
+                .fetch_all(&self.pool)
+                .await?
+        };
+
+        let mut hits = Vec::new();
+        for row in rows {
+            let summary = self.row_to_summary(&row)?;
+            let score: f64 = row.try_get("score").unwrap_or(0.0);
+            hits.push(ThreadSearchHit { summary, score });
+        }
+        Ok(hits)
+    }
+
+    fn rows_to_search_hits(
+        &self,
+        rows: Vec<sqlx::sqlite::SqliteRow>,
+        default_score: f64,
+    ) -> Result<Vec<ThreadSearchHit>, ServerError> {
+        let mut hits = Vec::new();
+        for row in rows {
+            let summary = self.row_to_summary(&row)?;
+            hits.push(ThreadSearchHit {
+                summary,
+                score: default_score,
+            });
+        }
+        Ok(hits)
+    }
+
+    fn row_to_summary(&self, row: &sqlx::sqlite::SqliteRow) -> Result<ThreadSummary, ServerError> {
+        let id: String = row.get("id");
+        let title: Option<String> = row.get("title");
+        let workspace_root: Option<String> = row.get("workspace_root");
+        let last_activity_at: String = row.get("last_activity_at");
+        let provider: Option<String> = row.get("provider");
+        let model: Option<String> = row.get("model");
+        let tags_json: String = row.get("tags");
+        let version: i64 = row.get("version");
+        let message_count: i32 = row.get("message_count");
+        let created_at: String = row.get("created_at");
+        let updated_at: String = row.get("updated_at");
+        let is_pinned: i32 = row.get("is_pinned");
+        let visibility_str: String = row.get("visibility");
+        let git_branch: Option<String> = row.get("git_branch");
+        let git_remote_url: Option<String> = row.get("git_remote_url");
+        let git_initial_commit_sha: Option<String> = row.get("git_initial_commit_sha");
+        let git_current_commit_sha: Option<String> = row.get("git_current_commit_sha");
+
+        let tags: Vec<String> = serde_json::from_str(&tags_json).unwrap_or_default();
+        let visibility = visibility_str
+            .parse()
+            .unwrap_or(loom_thread::ThreadVisibility::Private);
+
+        Ok(ThreadSummary {
+            id: ThreadId::from_string(id),
+            version: version as u64,
+            created_at,
+            updated_at,
+            last_activity_at,
+            title,
+            workspace_root,
+            git_branch,
+            git_remote_url,
+            git_initial_commit_sha,
+            git_current_commit_sha,
+            provider,
+            model,
+            tags,
+            message_count: message_count as usize,
+            is_pinned: is_pinned != 0,
+            visibility,
+        })
+    }
 }
 
 // Helper trait for AgentStateKind
@@ -428,6 +825,14 @@ mod tests {
             loom_version: Some("0.1.0".to_string()),
             provider: Some("anthropic".to_string()),
             model: Some("claude-sonnet-4-20250514".to_string()),
+            git_branch: Some("main".to_string()),
+            git_remote_url: Some("github.com/test/repo".to_string()),
+            git_initial_branch: Some("main".to_string()),
+            git_initial_commit_sha: Some("abc123def456".to_string()),
+            git_current_commit_sha: Some("xyz789012345".to_string()),
+            git_start_dirty: Some(false),
+            git_end_dirty: Some(false),
+            git_commits: vec!["abc123def456".to_string(), "xyz789012345".to_string()],
             conversation: ConversationSnapshot { messages: vec![] },
             agent_state: AgentStateSnapshot {
                 kind: AgentStateKind::WaitingForUserInput,
@@ -500,5 +905,85 @@ mod tests {
 
         let list = repo.list(None, 10, 0).await.unwrap();
         assert_eq!(list.len(), 5);
+    }
+
+    #[tokio::test]
+    async fn test_git_metadata_roundtrip() {
+        let (repo, _dir) = create_test_repo().await;
+
+        let mut thread = create_test_thread();
+        thread.git_branch = Some("feature/test".to_string());
+        thread.git_remote_url = Some("github.com/alice/project".to_string());
+
+        repo.insert(&thread).await.unwrap();
+
+        let loaded = repo.get(&thread.id).await.unwrap().unwrap();
+        assert_eq!(loaded.git_branch, Some("feature/test".to_string()));
+        assert_eq!(loaded.git_remote_url, Some("github.com/alice/project".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_thread_commits_populated() {
+        let (repo, _dir) = create_test_repo().await;
+
+        let mut thread = create_test_thread();
+        thread.git_commits = vec!["commit1".to_string(), "commit2".to_string()];
+        thread.git_initial_commit_sha = Some("commit1".to_string());
+        thread.git_current_commit_sha = Some("commit2".to_string());
+
+        repo.insert(&thread).await.unwrap();
+
+        let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM thread_commits WHERE thread_id = ?")
+            .bind(thread.id.as_str())
+            .fetch_one(&repo.pool)
+            .await
+            .unwrap();
+        assert_eq!(count.0, 2, "Expected 2 commits to be recorded in thread_commits");
+
+        let initial: (i32,) = sqlx::query_as(
+            "SELECT is_initial FROM thread_commits WHERE thread_id = ? AND commit_sha = ?",
+        )
+        .bind(thread.id.as_str())
+        .bind("commit1")
+        .fetch_one(&repo.pool)
+        .await
+        .unwrap();
+        assert_eq!(initial.0, 1, "commit1 should be marked as initial");
+
+        let final_commit: (i32,) = sqlx::query_as(
+            "SELECT is_final FROM thread_commits WHERE thread_id = ? AND commit_sha = ?",
+        )
+        .bind(thread.id.as_str())
+        .bind("commit2")
+        .fetch_one(&repo.pool)
+        .await
+        .unwrap();
+        assert_eq!(final_commit.0, 1, "commit2 should be marked as final");
+    }
+
+    #[tokio::test]
+    async fn test_search_by_commit_sha() {
+        let (repo, _dir) = create_test_repo().await;
+
+        let mut thread = create_test_thread();
+        thread.git_commits = vec!["abc123def456789012345678901234567890abcd".to_string()];
+        repo.insert(&thread).await.unwrap();
+
+        let hits = repo.search("abc123def", None, 10, 0).await.unwrap();
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].summary.id.as_str(), thread.id.as_str());
+    }
+
+    #[tokio::test]
+    async fn test_search_by_branch() {
+        let (repo, _dir) = create_test_repo().await;
+
+        let mut thread = create_test_thread();
+        thread.git_branch = Some("feature/unique-test-branch".to_string());
+        repo.insert(&thread).await.unwrap();
+
+        // Search by branch name
+        let hits = repo.search("unique-test-branch", None, 10, 0).await.unwrap();
+        assert!(hits.len() >= 1, "Expected at least 1 hit for branch search");
     }
 }

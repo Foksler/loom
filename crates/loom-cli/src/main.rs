@@ -27,6 +27,7 @@ use loom_thread::{
     ThreadSyncClient, MessageSnapshot, AgentStateKind, AgentStateSnapshot,
     MessageRole, ToolCallSnapshot, LoomVersionHeaders, ThreadVisibility,
 };
+use loom_git::detect_repo_status;
 
 #[derive(clap::ValueEnum, Clone, Debug)]
 enum ShareVisibilityArg {
@@ -106,6 +107,17 @@ enum Command {
         /// Share thread with support team (shortcut for --visibility support)
         #[arg(long)]
         support: bool,
+    },
+    /// Search threads by content, git metadata, or commit SHA
+    Search {
+        /// Search query (text, branch name, repo URL, or commit SHA prefix)
+        query: String,
+        /// Maximum number of results
+        #[arg(short, long, default_value = "20")]
+        limit: usize,
+        /// Output raw JSON
+        #[arg(long)]
+        json: bool,
     },
     /// Show version and build information
     Version,
@@ -280,7 +292,7 @@ async fn execute_tool(
     }
 }
 
-#[instrument(skip(llm_client, tool_registry, tool_ctx, thread, thread_store, shutdown_flag))]
+#[instrument(skip(llm_client, tool_registry, tool_ctx, thread, thread_store, shutdown_flag, workspace))]
 async fn run_repl(
     llm_client: &dyn LlmClient,
     tool_registry: &ToolRegistry,
@@ -289,6 +301,7 @@ async fn run_repl(
     thread: &mut Thread,
     thread_store: &dyn ThreadStore,
     shutdown_flag: Arc<AtomicBool>,
+    workspace: &std::path::Path,
 ) -> Result<()> {
     let stdin = io::stdin();
     let mut stdout = io::stdout();
@@ -303,6 +316,7 @@ async fn run_repl(
         // Check if shutdown was requested
         if shutdown_flag.load(Ordering::Relaxed) {
             info!("shutdown requested, saving thread");
+            snapshot_git_state(thread, workspace);
             thread.touch();
             if let Err(e) = thread_store.save(thread).await {
                 warn!(error = %e, "failed to save thread on shutdown");
@@ -319,6 +333,7 @@ async fn run_repl(
 
         if bytes_read == 0 {
             info!("EOF received, shutting down");
+            snapshot_git_state(thread, workspace);
             thread.touch();
             if let Err(e) = thread_store.save(thread).await {
                 warn!(error = %e, "failed to save thread on exit");
@@ -329,6 +344,7 @@ async fn run_repl(
         // Check shutdown again after potentially blocking read
         if shutdown_flag.load(Ordering::Relaxed) {
             info!("shutdown requested after input, saving thread");
+            snapshot_git_state(thread, workspace);
             thread.touch();
             if let Err(e) = thread_store.save(thread).await {
                 warn!(error = %e, "failed to save thread on shutdown");
@@ -447,6 +463,7 @@ async fn run_repl(
                     last_error: None,
                     pending_tool_calls: Vec::new(),
                 };
+                snapshot_git_state(thread, workspace);
                 thread.touch();
 
                 if let Err(e) = thread_store.save(thread).await {
@@ -516,6 +533,7 @@ async fn start_repl_session(
         &mut thread,
         thread_store.as_ref(),
         shutdown_flag,
+        &workspace,
     ).await
 }
 
@@ -600,6 +618,172 @@ async fn run_update() -> Result<()> {
     Ok(())
 }
 
+fn snapshot_git_state(thread: &mut Thread, workspace_path: &std::path::Path) {
+    match detect_repo_status(workspace_path) {
+        Ok(Some(status)) => {
+            if thread.git_remote_url.is_none() {
+                thread.git_remote_url = status.remote_slug.clone();
+            }
+
+            if thread.git_initial_branch.is_none() {
+                thread.git_initial_branch = status.branch.clone();
+            }
+
+            thread.git_branch = status.branch;
+
+            if let Some(ref head) = status.head {
+                let sha = head.sha.clone();
+
+                if thread.git_initial_commit_sha.is_none() {
+                    thread.git_initial_commit_sha = Some(sha.clone());
+                }
+
+                thread.git_current_commit_sha = Some(sha.clone());
+
+                if !thread.git_commits.contains(&sha) {
+                    thread.git_commits.push(sha);
+                }
+            }
+
+            if thread.git_start_dirty.is_none() {
+                thread.git_start_dirty = status.is_dirty;
+            }
+            thread.git_end_dirty = status.is_dirty;
+
+            debug!(
+                git_branch = ?thread.git_branch,
+                git_remote_url = ?thread.git_remote_url,
+                git_current_commit_sha = ?thread.git_current_commit_sha,
+                git_is_dirty = ?thread.git_end_dirty,
+                "snapshot git state"
+            );
+        }
+        Ok(None) => {
+            debug!("not a git repository or git unavailable");
+        }
+        Err(e) => {
+            debug!(error = %e, "failed to detect git repository");
+        }
+    }
+}
+
+async fn run_search(
+    query: &str,
+    limit: usize,
+    json_output: bool,
+    _thread_store: &dyn ThreadStore,
+) -> Result<()> {
+    let query = query.trim();
+    if query.is_empty() {
+        anyhow::bail!("Search query cannot be empty");
+    }
+    
+    // Try server search first if sync is enabled
+    if let Ok(sync_url) = std::env::var("LOOM_THREAD_SYNC_URL") {
+        match search_server(&sync_url, query, limit).await {
+            Ok(results) => {
+                if json_output {
+                    println!("{}", serde_json::to_string_pretty(&results)?);
+                } else {
+                    print_search_results(&results, query);
+                }
+                return Ok(());
+            }
+            Err(e) => {
+                debug!(error = %e, "Server search failed, falling back to local");
+            }
+        }
+    }
+    
+    // Fall back to local search
+    let local_store = LocalThreadStore::from_xdg()?;
+    let results = local_store.search(query, limit).await?;
+    
+    if json_output {
+        println!("{}", serde_json::to_string_pretty(&results)?);
+    } else {
+        print_local_search_results(&results, query);
+    }
+    
+    Ok(())
+}
+
+async fn search_server(base_url: &str, query: &str, limit: usize) -> Result<Vec<serde_json::Value>> {
+    let client = reqwest::Client::new();
+    let url = format!("{}/v1/threads/search", base_url.trim_end_matches('/'));
+    
+    let response = client
+        .get(&url)
+        .query(&[("q", query), ("limit", &limit.to_string())])
+        .timeout(std::time::Duration::from_secs(10))
+        .send()
+        .await?;
+    
+    if !response.status().is_success() {
+        anyhow::bail!("Server returned {}", response.status());
+    }
+    
+    let body: serde_json::Value = response.json().await?;
+    let hits = body.get("hits")
+        .and_then(|h| h.as_array())
+        .cloned()
+        .unwrap_or_default();
+    
+    Ok(hits)
+}
+
+fn print_search_results(results: &[serde_json::Value], query: &str) {
+    if results.is_empty() {
+        println!("No results found for \"{}\"", query);
+        return;
+    }
+    
+    println!("Results for \"{}\" ({} hits):\n", query, results.len());
+    
+    for (i, hit) in results.iter().enumerate() {
+        let summary = hit.get("summary").unwrap_or(hit);
+        let id = summary.get("id").and_then(|v| v.as_str()).unwrap_or("?");
+        let title = summary.get("title").and_then(|v| v.as_str()).unwrap_or("(untitled)");
+        let branch = summary.get("git_branch").and_then(|v| v.as_str()).unwrap_or("-");
+        let remote = summary.get("git_remote_url").and_then(|v| v.as_str()).unwrap_or("-");
+        let score = hit.get("score").and_then(|v| v.as_f64());
+        
+        println!("{}) {}", i + 1, id);
+        if remote != "-" {
+            println!("   [{}] {}", remote, branch);
+        }
+        println!("   \"{}\"", title);
+        if let Some(s) = score {
+            if s != 0.0 {
+                println!("   score: {:.3}", s);
+            }
+        }
+        println!();
+    }
+}
+
+fn print_local_search_results(results: &[loom_thread::ThreadSummary], query: &str) {
+    if results.is_empty() {
+        println!("No results found for \"{}\" (local search)", query);
+        return;
+    }
+    
+    println!("Results for \"{}\" ({} hits, local search):\n", query, results.len());
+    
+    for (i, summary) in results.iter().enumerate() {
+        let title = summary.title.as_deref().unwrap_or("(untitled)");
+        let branch = summary.git_branch.as_deref().unwrap_or("-");
+        let remote = summary.git_remote_url.as_deref().unwrap_or("-");
+        
+        println!("{}) {}", i + 1, summary.id);
+        if remote != "-" {
+            println!("   [{}] {}", remote, branch);
+        }
+        println!("   \"{}\"", title);
+        println!();
+    }
+}
+
 fn create_new_thread(config: &loom_config::LoomConfig, args: &Args) -> Result<Thread> {
     let provider_config = config
         .providers
@@ -633,6 +817,8 @@ fn create_new_thread(config: &loom_config::LoomConfig, args: &Args) -> Result<Th
             _ => None,
         }
     });
+
+    snapshot_git_state(&mut thread, &workspace);
 
     info!(thread_id = %thread.id, "created new thread");
     Ok(thread)
@@ -750,6 +936,9 @@ async fn main() -> Result<()> {
             println!("Starting private session (local-only, never synced to server).");
             println!("Thread: {}", thread.id);
             start_repl_session(&config, &args, thread_store, thread).await
+        }
+        Some(Command::Search { query, limit, json }) => {
+            run_search(&query, *limit, *json, thread_store.as_ref()).await
         }
         Some(Command::Share { thread_id, visibility, support }) => {
             let thread = match thread_id {

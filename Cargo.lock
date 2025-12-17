@@ -1400,6 +1400,7 @@ dependencies = [
  "humantime",
  "loom-config",
  "loom-core",
+ "loom-git",
  "loom-http-retry",
  "loom-llm-anthropic",
  "loom-llm-openai",
@@ -1445,6 +1446,16 @@ dependencies = [
  "tokio-test",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "loom-git"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tracing",
 ]
 
 [[package]]
