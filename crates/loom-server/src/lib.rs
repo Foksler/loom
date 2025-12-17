@@ -11,5 +11,5 @@ pub mod health;
 
 pub use api::{create_app_state, create_router, AppState};
 pub use config::ServerConfig;
-pub use db::ThreadRepository;
+pub use db::{GithubInstallation, GithubInstallationInfo, GithubRepo, ThreadRepository};
 pub use error::ServerError;

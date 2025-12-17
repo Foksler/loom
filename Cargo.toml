@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/loom-config",
     "crates/loom-git",
+    "crates/loom-github-app",
     "crates/loom-google-cse",
     "crates/loom-http-retry",
     "crates/loom-core",

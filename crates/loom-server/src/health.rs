@@ -2,8 +2,11 @@
 
 use serde::Serialize;
 use std::path::Path;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::{timeout, Instant};
+
+use loom_github_app::{GithubAppClient, GithubAppError};
 
 use crate::db::ThreadRepository;
 
@@ -78,6 +81,16 @@ pub struct GoogleCseHealth {
     pub error: Option<String>,
 }
 
+/// GitHub App component health.
+#[derive(Debug, Serialize)]
+pub struct GithubAppHealth {
+    pub status: HealthStatus,
+    pub latency_ms: u64,
+    pub configured: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
 /// All health check components.
 #[derive(Debug, Serialize)]
 pub struct HealthComponents {
@@ -85,6 +98,7 @@ pub struct HealthComponents {
     pub bin_dir: BinDirHealth,
     pub llm_providers: LlmProvidersHealth,
     pub google_cse: GoogleCseHealth,
+    pub github_app: GithubAppHealth,
 }
 
 /// Complete health check response.
@@ -255,12 +269,62 @@ pub async fn check_google_cse() -> GoogleCseHealth {
     }
 }
 
+const GITHUB_CHECK_TIMEOUT: Duration = Duration::from_secs(3);
+
+/// Check GitHub App health by validating JWT generation and API connectivity.
+pub async fn check_github_app(client: Option<Arc<GithubAppClient>>) -> GithubAppHealth {
+    let start = Instant::now();
+
+    let (configured, status, error) = match client {
+        None => (
+            false,
+            HealthStatus::Degraded,
+            Some("GitHub App not configured".to_string()),
+        ),
+        Some(client) => {
+            match timeout(GITHUB_CHECK_TIMEOUT, client.list_installations()).await {
+                Ok(Ok(_)) => (true, HealthStatus::Healthy, None),
+                Ok(Err(e)) => {
+                    let status = match &e {
+                        GithubAppError::Unauthorized
+                        | GithubAppError::Config(_)
+                        | GithubAppError::Jwt(_) => HealthStatus::Unhealthy,
+                        GithubAppError::Timeout
+                        | GithubAppError::RateLimited
+                        | GithubAppError::Network(_) => HealthStatus::Degraded,
+                        GithubAppError::ApiError { status, .. } if *status >= 500 => {
+                            HealthStatus::Degraded
+                        }
+                        _ => HealthStatus::Degraded,
+                    };
+                    (true, status, Some(e.to_string()))
+                }
+                Err(_) => (
+                    true,
+                    HealthStatus::Degraded,
+                    Some("GitHub health check timed out".to_string()),
+                ),
+            }
+        }
+    };
+
+    let latency_ms = start.elapsed().as_millis() as u64;
+
+    GithubAppHealth {
+        status,
+        latency_ms,
+        configured,
+        error,
+    }
+}
+
 /// Aggregate component statuses into overall status.
 pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
     let statuses = [
         components.database.status,
         components.bin_dir.status,
         components.google_cse.status,
+        components.github_app.status,
     ];
 
     if statuses.iter().any(|s| matches!(s, HealthStatus::Unhealthy)) {

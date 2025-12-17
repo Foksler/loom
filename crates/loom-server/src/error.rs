@@ -45,6 +45,14 @@ pub enum ServerError {
     /// Service temporarily unavailable (e.g., rate limited).
     #[error("Service unavailable: {0}")]
     ServiceUnavailable(String),
+
+    /// Unauthorized (authentication failed).
+    #[error("Unauthorized: {0}")]
+    Unauthorized(String),
+
+    /// Forbidden (insufficient permissions).
+    #[error("Forbidden: {0}")]
+    Forbidden(String),
 }
 
 /// Error response body.
@@ -154,6 +162,30 @@ impl IntoResponse for ServerError {
                     StatusCode::SERVICE_UNAVAILABLE,
                     ErrorResponse {
                         error: "service_unavailable".to_string(),
+                        message: msg.clone(),
+                        server_version: None,
+                        client_version: None,
+                    },
+                )
+            }
+            ServerError::Unauthorized(msg) => {
+                tracing::warn!(error = %msg, "unauthorized");
+                (
+                    StatusCode::UNAUTHORIZED,
+                    ErrorResponse {
+                        error: "unauthorized".to_string(),
+                        message: msg.clone(),
+                        server_version: None,
+                        client_version: None,
+                    },
+                )
+            }
+            ServerError::Forbidden(msg) => {
+                tracing::warn!(error = %msg, "forbidden");
+                (
+                    StatusCode::FORBIDDEN,
+                    ErrorResponse {
+                        error: "forbidden".to_string(),
                         message: msg.clone(),
                         server_version: None,
                         client_version: None,

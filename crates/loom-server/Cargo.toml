@@ -17,7 +17,13 @@ path = "src/lib.rs"
 [dependencies]
 loom-thread = { path = "../loom-thread" }
 loom-google-cse = { path = "../loom-google-cse" }
+loom-github-app = { path = "../loom-github-app" }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+# HMAC for webhook verification
+hmac = "0.12"
+sha2 = "0.10"
+hex = "0.4"
 
 # Web framework
 axum = { version = "0.8", features = ["macros"] }

@@ -2,6 +2,7 @@
 
 use loom_google_cse::CseResponse;
 use loom_thread::{Thread, ThreadId, ThreadSummary};
+use serde::{Deserialize, Serialize};
 use sqlx::{
     sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePool, SqliteSynchronous},
     Row,
@@ -9,6 +10,40 @@ use sqlx::{
 use std::str::FromStr;
 
 use crate::error::ServerError;
+
+/// GitHub App installation info stored in the database.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GithubInstallation {
+    pub installation_id: i64,
+    pub account_id: i64,
+    pub account_login: String,
+    pub account_type: String,
+    pub app_slug: Option<String>,
+    pub repositories_selection: String,
+    pub suspended_at: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+/// GitHub repository linked to an installation.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GithubRepo {
+    pub repository_id: i64,
+    pub owner: String,
+    pub name: String,
+    pub full_name: String,
+    pub private: bool,
+    pub default_branch: Option<String>,
+}
+
+/// Installation info with minimal fields for lookups.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GithubInstallationInfo {
+    pub installation_id: i64,
+    pub account_login: String,
+    pub account_type: String,
+    pub repositories_selection: String,
+}
 
 /// A search result hit with relevance score
 #[derive(Debug, Clone)]
@@ -175,6 +210,21 @@ impl ThreadRepository {
                 let msg = e.to_string();
                 if !msg.contains("already exists")
                     && !msg.contains("duplicate column")
+                {
+                    return Err(e.into());
+                }
+            }
+        }
+
+        // Migration 007: GitHub App tables
+        let m7 = include_str!("../migrations/007_github_app.sql");
+        for stmt in m7.split(';').filter(|s| !s.trim().is_empty()) {
+            if let Err(e) = sqlx::query(stmt).execute(pool).await {
+                let msg = e.to_string();
+                if !msg.contains("already exists")
+                    && !msg.contains("duplicate column")
+                    && !msg.contains("table github_installations already exists")
+                    && !msg.contains("table github_installation_repos already exists")
                 {
                     return Err(e.into());
                 }
@@ -908,6 +958,270 @@ impl ThreadRepository {
         }
 
         Ok(())
+    }
+
+    // ========== GitHub App Methods ==========
+
+    /// Upsert a GitHub installation from webhook data.
+    pub async fn upsert_github_installation(
+        &self,
+        installation: &GithubInstallation,
+    ) -> Result<(), ServerError> {
+        let now = chrono::Utc::now().to_rfc3339();
+
+        sqlx::query(
+            r#"
+            INSERT INTO github_installations (
+                installation_id, account_id, account_login, account_type,
+                app_slug, repositories_selection, suspended_at, created_at, updated_at
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+            ON CONFLICT(installation_id) DO UPDATE SET
+                account_id = excluded.account_id,
+                account_login = excluded.account_login,
+                account_type = excluded.account_type,
+                app_slug = excluded.app_slug,
+                repositories_selection = excluded.repositories_selection,
+                suspended_at = excluded.suspended_at,
+                updated_at = ?9
+            "#,
+        )
+        .bind(installation.installation_id)
+        .bind(installation.account_id)
+        .bind(&installation.account_login)
+        .bind(&installation.account_type)
+        .bind(&installation.app_slug)
+        .bind(&installation.repositories_selection)
+        .bind(&installation.suspended_at)
+        .bind(&installation.created_at)
+        .bind(&now)
+        .execute(&self.pool)
+        .await?;
+
+        tracing::info!(
+            installation_id = installation.installation_id,
+            account_login = %installation.account_login,
+            "github_installation: upserted"
+        );
+
+        Ok(())
+    }
+
+    /// Delete a GitHub installation (cascades to repos).
+    pub async fn delete_github_installation(
+        &self,
+        installation_id: i64,
+    ) -> Result<bool, ServerError> {
+        let result = sqlx::query("DELETE FROM github_installations WHERE installation_id = ?")
+            .bind(installation_id)
+            .execute(&self.pool)
+            .await?;
+
+        let deleted = result.rows_affected() > 0;
+
+        if deleted {
+            tracing::info!(
+                installation_id = installation_id,
+                "github_installation: deleted"
+            );
+        }
+
+        Ok(deleted)
+    }
+
+    /// Suspend or unsuspend an installation.
+    pub async fn update_github_installation_suspension(
+        &self,
+        installation_id: i64,
+        suspended_at: Option<&str>,
+    ) -> Result<bool, ServerError> {
+        let now = chrono::Utc::now().to_rfc3339();
+
+        let result = sqlx::query(
+            r#"
+            UPDATE github_installations
+            SET suspended_at = ?1, updated_at = ?2
+            WHERE installation_id = ?3
+            "#,
+        )
+        .bind(suspended_at)
+        .bind(&now)
+        .bind(installation_id)
+        .execute(&self.pool)
+        .await?;
+
+        let updated = result.rows_affected() > 0;
+
+        if updated {
+            tracing::info!(
+                installation_id = installation_id,
+                suspended = suspended_at.is_some(),
+                "github_installation: suspension updated"
+            );
+        }
+
+        Ok(updated)
+    }
+
+    /// Add repositories to an installation.
+    pub async fn add_github_installation_repos(
+        &self,
+        installation_id: i64,
+        repos: &[GithubRepo],
+    ) -> Result<(), ServerError> {
+        let now = chrono::Utc::now().to_rfc3339();
+
+        for repo in repos {
+            sqlx::query(
+                r#"
+                INSERT INTO github_installation_repos (
+                    repository_id, installation_id, owner, name, full_name,
+                    private, default_branch, created_at, updated_at
+                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+                ON CONFLICT(repository_id) DO UPDATE SET
+                    installation_id = excluded.installation_id,
+                    owner = excluded.owner,
+                    name = excluded.name,
+                    full_name = excluded.full_name,
+                    private = excluded.private,
+                    default_branch = excluded.default_branch,
+                    updated_at = ?9
+                "#,
+            )
+            .bind(repo.repository_id)
+            .bind(installation_id)
+            .bind(&repo.owner)
+            .bind(&repo.name)
+            .bind(&repo.full_name)
+            .bind(repo.private as i32)
+            .bind(&repo.default_branch)
+            .bind(&now)
+            .bind(&now)
+            .execute(&self.pool)
+            .await?;
+        }
+
+        tracing::info!(
+            installation_id = installation_id,
+            repo_count = repos.len(),
+            "github_installation_repos: added"
+        );
+
+        Ok(())
+    }
+
+    /// Remove repositories from installations by repository ID.
+    pub async fn remove_github_installation_repos(
+        &self,
+        repository_ids: &[i64],
+    ) -> Result<(), ServerError> {
+        for repo_id in repository_ids {
+            sqlx::query("DELETE FROM github_installation_repos WHERE repository_id = ?")
+                .bind(repo_id)
+                .execute(&self.pool)
+                .await?;
+        }
+
+        tracing::info!(
+            repo_count = repository_ids.len(),
+            "github_installation_repos: removed"
+        );
+
+        Ok(())
+    }
+
+    /// Get installation ID for a repository by owner/name.
+    pub async fn get_github_installation_for_repo(
+        &self,
+        owner: &str,
+        name: &str,
+    ) -> Result<Option<GithubInstallationInfo>, ServerError> {
+        let row: Option<(i64, String, String, String)> = sqlx::query_as(
+            r#"
+            SELECT
+                gi.installation_id,
+                gi.account_login,
+                gi.account_type,
+                gi.repositories_selection
+            FROM github_installation_repos gir
+            JOIN github_installations gi ON gi.installation_id = gir.installation_id
+            WHERE gir.owner = ?1 AND gir.name = ?2
+              AND gi.suspended_at IS NULL
+            "#,
+        )
+        .bind(owner)
+        .bind(name)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        match row {
+            Some((installation_id, account_login, account_type, repositories_selection)) => {
+                tracing::debug!(
+                    owner = %owner,
+                    name = %name,
+                    installation_id = installation_id,
+                    "github_installation_for_repo: found"
+                );
+                Ok(Some(GithubInstallationInfo {
+                    installation_id,
+                    account_login,
+                    account_type,
+                    repositories_selection,
+                }))
+            }
+            None => {
+                tracing::debug!(
+                    owner = %owner,
+                    name = %name,
+                    "github_installation_for_repo: not found"
+                );
+                Ok(None)
+            }
+        }
+    }
+
+    /// List all installations.
+    pub async fn list_github_installations(&self) -> Result<Vec<GithubInstallation>, ServerError> {
+        let rows: Vec<(i64, i64, String, String, Option<String>, String, Option<String>, String, String)> =
+            sqlx::query_as(
+                r#"
+                SELECT
+                    installation_id, account_id, account_login, account_type,
+                    app_slug, repositories_selection, suspended_at, created_at, updated_at
+                FROM github_installations
+                ORDER BY account_login
+                "#,
+            )
+            .fetch_all(&self.pool)
+            .await?;
+
+        let installations = rows
+            .into_iter()
+            .map(
+                |(
+                    installation_id,
+                    account_id,
+                    account_login,
+                    account_type,
+                    app_slug,
+                    repositories_selection,
+                    suspended_at,
+                    created_at,
+                    updated_at,
+                )| GithubInstallation {
+                    installation_id,
+                    account_id,
+                    account_login,
+                    account_type,
+                    app_slug,
+                    repositories_selection,
+                    suspended_at,
+                    created_at,
+                    updated_at,
+                },
+            )
+            .collect();
+
+        Ok(installations)
     }
 }
 
