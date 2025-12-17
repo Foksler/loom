@@ -1,0 +1,23 @@
+[package]
+name = "loom-llm-openai"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+loom-core = { path = "../loom-core" }
+loom-http-retry = { path = "../loom-http-retry" }
+tokio = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+pin-project-lite = { workspace = true }
+bytes = { workspace = true }
+
+[dev-dependencies]
+tokio-test = { workspace = true }

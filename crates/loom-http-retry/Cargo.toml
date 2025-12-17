@@ -1,0 +1,15 @@
+[package]
+name = "loom-http-retry"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+tokio = { workspace = true }
+reqwest = { workspace = true }
+tracing = { workspace = true }
+fastrand = { workspace = true }
+
+[dev-dependencies]
+tokio-test = { workspace = true }

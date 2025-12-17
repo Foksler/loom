@@ -1,0 +1,24 @@
+[package]
+name = "loom-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "loom"
+path = "src/main.rs"
+
+[dependencies]
+loom-core = { path = "../loom-core" }
+loom-tools = { path = "../loom-tools" }
+loom-llm-anthropic = { path = "../loom-llm-anthropic" }
+loom-llm-openai = { path = "../loom-llm-openai" }
+tokio = { workspace = true }
+clap = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+futures = { workspace = true }
+ctrlc = "3"
