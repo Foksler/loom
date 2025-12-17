@@ -38,12 +38,22 @@ impl ThreadRepository {
 
     /// Run database migrations.
     async fn run_migrations(pool: &SqlitePool) -> Result<(), ServerError> {
-        let migration_sql = include_str!("../migrations/001_create_threads.sql");
+        let m1 = include_str!("../migrations/001_create_threads.sql");
+        sqlx::query(m1).execute(pool).await?;
 
-        sqlx::query(migration_sql).execute(pool).await?;
+        let m2 = include_str!("../migrations/002_add_visibility.sql");
+        if let Err(e) = sqlx::query(m2).execute(pool).await {
+            let msg = e.to_string();
+            // Gracefully handle if column already exists
+            if !msg.contains("duplicate column name: visibility")
+                && !msg.contains("duplicate column")
+                && !msg.contains("already exists")
+            {
+                return Err(e.into());
+            }
+        }
 
         tracing::debug!("database migrations complete");
-
         Ok(())
     }
 
@@ -96,12 +106,14 @@ impl ThreadRepository {
                 id, version, created_at, updated_at, last_activity_at,
                 workspace_root, cwd, loom_version, provider, model,
                 title, tags, is_pinned, message_count,
-                agent_state_kind, agent_state, conversation, metadata, full_json
+                agent_state_kind, agent_state, conversation, metadata, full_json,
+                visibility, is_shared_with_support
             ) VALUES (
                 ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?,
                 ?, ?, ?, ?,
-                ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?,
+                ?, ?
             )
             "#,
         )
@@ -124,6 +136,8 @@ impl ThreadRepository {
         .bind(&conversation_json)
         .bind(&metadata_json)
         .bind(&full_json)
+        .bind(thread.visibility.as_str())
+        .bind(thread.is_shared_with_support as i32)
         .execute(&self.pool)
         .await?;
 
@@ -159,7 +173,9 @@ impl ThreadRepository {
                 agent_state = ?,
                 conversation = ?,
                 metadata = ?,
-                full_json = ?
+                full_json = ?,
+                visibility = ?,
+                is_shared_with_support = ?
             WHERE id = ?
             "#,
         )
@@ -180,6 +196,8 @@ impl ThreadRepository {
         .bind(&conversation_json)
         .bind(&metadata_json)
         .bind(&full_json)
+        .bind(thread.visibility.as_str())
+        .bind(thread.is_shared_with_support as i32)
         .bind(thread.id.as_str())
         .execute(&self.pool)
         .await?;
@@ -225,7 +243,7 @@ impl ThreadRepository {
                     r#"
                     SELECT id, title, workspace_root, last_activity_at,
                            provider, model, tags, version, message_count,
-                           created_at, updated_at, is_pinned
+                           created_at, updated_at, is_pinned, visibility
                     FROM threads
                     WHERE deleted_at IS NULL AND workspace_root = ?
                     ORDER BY last_activity_at DESC
@@ -243,7 +261,7 @@ impl ThreadRepository {
                     r#"
                     SELECT id, title, workspace_root, last_activity_at,
                            provider, model, tags, version, message_count,
-                           created_at, updated_at, is_pinned
+                           created_at, updated_at, is_pinned, visibility
                     FROM threads
                     WHERE deleted_at IS NULL
                     ORDER BY last_activity_at DESC
@@ -272,8 +290,12 @@ impl ThreadRepository {
                 let created_at: String = row.get("created_at");
                 let updated_at: String = row.get("updated_at");
                 let is_pinned: i32 = row.get("is_pinned");
+                let visibility_str: String = row.get("visibility");
 
                 let tags: Vec<String> = serde_json::from_str(&tags_json).unwrap_or_default();
+                let visibility = visibility_str
+                    .parse()
+                    .unwrap_or(loom_thread::ThreadVisibility::Private);
 
                 ThreadSummary {
                     id: ThreadId::from_string(id),
@@ -288,6 +310,7 @@ impl ThreadRepository {
                     tags,
                     message_count: message_count as usize,
                     is_pinned: is_pinned != 0,
+                    visibility,
                 }
             })
             .collect();
@@ -380,7 +403,9 @@ impl AgentStateKindExt for loom_thread::AgentStateKind {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use loom_thread::{AgentStateKind, AgentStateSnapshot, ConversationSnapshot, ThreadMetadata};
+    use loom_thread::{
+        AgentStateKind, AgentStateSnapshot, ConversationSnapshot, ThreadMetadata, ThreadVisibility,
+    };
     use tempfile::tempdir;
 
     async fn create_test_repo() -> (ThreadRepository, tempfile::TempDir) {
@@ -411,6 +436,9 @@ mod tests {
                 pending_tool_calls: vec![],
             },
             metadata: ThreadMetadata::default(),
+            visibility: ThreadVisibility::Private,
+            is_private: false,
+            is_shared_with_support: false,
         }
     }
 

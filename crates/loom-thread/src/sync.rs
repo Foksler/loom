@@ -246,6 +246,14 @@ impl ThreadStore for SyncingThreadStore {
     async fn save(&self, thread: &Thread) -> Result<(), ThreadStoreError> {
         self.local.save(thread).await?;
 
+        if thread.is_private {
+            debug!(
+                thread_id = %thread.id,
+                "skipping sync for private (local-only) thread"
+            );
+            return Ok(());
+        }
+
         if let Some(sync_client) = &self.sync_client {
             let thread_clone = thread.clone();
             let sync_client_base_url = sync_client.base_url.clone();
@@ -287,7 +295,19 @@ impl ThreadStore for SyncingThreadStore {
     }
 
     async fn delete(&self, id: &ThreadId) -> Result<(), ThreadStoreError> {
+        let thread = self.local.load(id).await?;
+
         self.local.delete(id).await?;
+
+        if let Some(ref t) = thread {
+            if t.is_private {
+                debug!(
+                    thread_id = %t.id,
+                    "skipping delete sync for private (local-only) thread"
+                );
+                return Ok(());
+            }
+        }
 
         if let Some(sync_client) = &self.sync_client {
             let id_clone = id.clone();

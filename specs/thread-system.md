@@ -86,6 +86,10 @@ Properties:
     "pending_tool_calls": []
   },
   
+  "visibility": "organization",
+  "is_private": false,
+  "is_shared_with_support": false,
+
   "metadata": {
     "title": "Add logging to my app",
     "tags": ["logging", "tracing"],
@@ -122,6 +126,24 @@ impl ThreadId {
     }
 }
 
+/// Thread visibility controls how synced threads are exposed on the server.
+/// - Organization: visible to organization members (default)
+/// - Private: synced but only owner can see
+/// - Public: may be listed/exposed publicly
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ThreadVisibility {
+    Organization,
+    Private,
+    Public,
+}
+
+impl Default for ThreadVisibility {
+    fn default() -> Self {
+        ThreadVisibility::Organization
+    }
+}
+
 /// Complete thread document
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Thread {
@@ -137,6 +159,10 @@ pub struct Thread {
 
     pub provider: Option<String>,
     pub model: Option<String>,
+
+    pub visibility: ThreadVisibility,
+    pub is_private: bool,  // If true, thread is local-only and NEVER syncs
+    pub is_shared_with_support: bool,  // If true, thread has been shared with support team
 
     pub conversation: ConversationSnapshot,
     pub agent_state: AgentStateSnapshot,
@@ -345,6 +371,44 @@ loom update
 loom login
 loom logout
 ```
+
+### 4.7 Private and Share Commands
+
+- `loom private` - Starts a new private (local-only) session that NEVER syncs to the server. Sets `is_private = true` on the thread.
+
+- `loom share [threadId] --visibility [organization|private|public]` - Changes the server-side visibility of a synced thread.
+  - Cannot be used on private (local-only) threads
+  - If no threadId provided, uses most recent thread
+
+- `loom share [threadId] --support` - Shares the thread with the support team by setting `is_shared_with_support = true`.
+  - Does NOT change the thread's visibility setting
+  - Cannot be used on private (local-only) threads
+
+Example usage:
+```bash
+# Start a private session that never syncs
+loom private
+
+# Make the most recent thread publicly listed
+loom share --visibility public
+
+# Share a specific thread with support (visibility unchanged)
+loom share T-019b2b97-fddf-7602-a3e4-1c4a295110c0 --support
+
+# Change visibility to private
+loom share T-019b2b97-fddf-7602-a3e4-1c4a295110c0 --visibility private
+```
+
+### 4.8 Sync Privacy Enforcement
+
+**Invariant**: If `thread.is_private == true`, the thread MUST NEVER be sent to the server.
+
+This is enforced at the `SyncingThreadStore` layer:
+- `save()` checks `is_private` and skips server sync if true
+- `delete()` checks `is_private` and skips server delete notification if true
+- No HTTP requests are made for private threads
+
+This ensures that even if sync is configured, private sessions remain completely local.
 
 ---
 
@@ -583,6 +647,7 @@ CREATE TABLE IF NOT EXISTS threads (
     title TEXT,
     tags TEXT,                           -- JSON array
     is_pinned INTEGER NOT NULL DEFAULT 0,
+    visibility TEXT NOT NULL DEFAULT 'private',
     
     message_count INTEGER NOT NULL DEFAULT 0,
     
@@ -944,6 +1009,49 @@ proptest! {
             thread.version += 1;
         }
         prop_assert_eq!(thread.version, initial_version + mutations as u64);
+    }
+}
+```
+
+#### Visibility
+
+```rust
+proptest! {
+    /// **Property: Private threads never trigger sync**
+    ///
+    /// Why this is important: Private sessions are a trust boundary. Users
+    /// expect local-only threads to never leave their machine.
+    ///
+    /// Invariant: SyncingThreadStore.save() never calls sync_client when is_private == true
+    #[test]
+    fn private_threads_never_sync(thread in arb_thread()) {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            let mut private_thread = thread.clone();
+            private_thread.is_private = true;
+            
+            let store = SyncingThreadStore::with_mock_sync(...);
+            store.save(&private_thread).await.unwrap();
+            
+            prop_assert!(store.sync_calls() == 0);
+            Ok(())
+        }).unwrap();
+    }
+
+    /// **Property: ThreadVisibility serializes to lowercase**
+    ///
+    /// Why this is important: API contracts expect lowercase visibility values.
+    #[test]
+    fn visibility_serde_format(_dummy in 0u8..1u8) {
+        let variants = [
+            (ThreadVisibility::Private, "\"private\""),
+            (ThreadVisibility::Unlisted, "\"unlisted\""),
+            (ThreadVisibility::Public, "\"public\""),
+        ];
+        for (vis, expected) in variants {
+            let json = serde_json::to_string(&vis).unwrap();
+            prop_assert_eq!(json, expected);
+        }
     }
 }
 ```

@@ -25,8 +25,25 @@ use loom_llm_openai::{OpenAIClient, OpenAIConfig};
 use loom_thread::{
     Thread, ThreadId, ThreadStore, LocalThreadStore, SyncingThreadStore,
     ThreadSyncClient, MessageSnapshot, AgentStateKind, AgentStateSnapshot,
-    MessageRole, ToolCallSnapshot, LoomVersionHeaders,
+    MessageRole, ToolCallSnapshot, LoomVersionHeaders, ThreadVisibility,
 };
+
+#[derive(clap::ValueEnum, Clone, Debug)]
+enum ShareVisibilityArg {
+    Organization,
+    Private,
+    Public,
+}
+
+impl From<ShareVisibilityArg> for ThreadVisibility {
+    fn from(v: ShareVisibilityArg) -> Self {
+        match v {
+            ShareVisibilityArg::Organization => ThreadVisibility::Organization,
+            ShareVisibilityArg::Private => ThreadVisibility::Private,
+            ShareVisibilityArg::Public => ThreadVisibility::Public,
+        }
+    }
+}
 use loom_tools::{EditFileTool, ListFilesTool, ReadFileTool, ToolRegistry};
 use url::Url;
 
@@ -76,6 +93,19 @@ enum Command {
     Resume {
         /// Thread ID to resume (uses most recent if not specified)
         thread_id: Option<String>,
+    },
+    /// Start a new private (local-only) session that never syncs
+    Private,
+    /// Change server-side visibility of a synced thread
+    Share {
+        /// Thread ID to share (uses most recent if not specified)
+        thread_id: Option<String>,
+        /// Desired visibility: organization, private, support, or public
+        #[arg(long, value_enum, conflicts_with = "support")]
+        visibility: Option<ShareVisibilityArg>,
+        /// Share thread with support team (shortcut for --visibility support)
+        #[arg(long)]
+        support: bool,
     },
     /// Show version and build information
     Version,
@@ -711,6 +741,83 @@ async fn main() -> Result<()> {
             };
             info!(thread_id = %thread.id, "resuming thread");
             start_repl_session(&config, &args, thread_store, thread).await
+        }
+        Some(Command::Private) => {
+            let mut thread = create_new_thread(&config, &args)?;
+            thread.is_private = true;
+            thread.visibility = ThreadVisibility::Private;
+            info!(thread_id = %thread.id, "created new private (local-only) thread");
+            println!("Starting private session (local-only, never synced to server).");
+            println!("Thread: {}", thread.id);
+            start_repl_session(&config, &args, thread_store, thread).await
+        }
+        Some(Command::Share { thread_id, visibility, support }) => {
+            let thread = match thread_id {
+                Some(id) => {
+                    let tid = ThreadId::from_string(id.clone());
+                    thread_store.load(&tid).await
+                        .context("failed to load thread")?
+                        .with_context(|| format!("thread '{}' not found", id))?
+                }
+                None => {
+                    let threads = thread_store.list(1).await
+                        .context("failed to list threads")?;
+                    let summary = threads.into_iter().next()
+                        .context("no threads found to share")?;
+                    thread_store.load(&summary.id).await
+                        .context("failed to load thread")?
+                        .context("thread not found")?
+                }
+            };
+
+            if thread.is_private {
+                anyhow::bail!(
+                    "Thread {} is a local-only private session and cannot be shared. \
+                     Start a normal session if you want to sync to the server.",
+                    thread.id
+                );
+            }
+
+            let mut updated = thread.clone();
+
+            if *support {
+                updated.is_shared_with_support = true;
+                updated.touch();
+
+                info!(
+                    thread_id = %updated.id,
+                    "sharing thread with support"
+                );
+
+                thread_store.save(&updated).await
+                    .context("failed to save thread")?;
+
+                println!(
+                    "Thread {} has been shared with support.",
+                    updated.id
+                );
+            } else if let Some(v) = visibility {
+                updated.visibility = ThreadVisibility::from(v.clone());
+                updated.touch();
+
+                info!(
+                    thread_id = %updated.id,
+                    visibility = ?updated.visibility,
+                    "updating thread visibility"
+                );
+
+                thread_store.save(&updated).await
+                    .context("failed to save thread with updated visibility")?;
+
+                println!(
+                    "Updated visibility of {} to {:?}.",
+                    updated.id, updated.visibility
+                );
+            } else {
+                anyhow::bail!("Either --visibility or --support must be specified");
+            }
+
+            Ok(())
         }
         None => {
             let thread = create_new_thread(&config, &args)?;

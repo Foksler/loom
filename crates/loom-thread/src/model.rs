@@ -81,6 +81,47 @@ impl From<&loom_core::Role> for MessageRole {
     }
 }
 
+/// Thread visibility controls how synced threads are exposed on the server.
+/// - Organization: visible to organization members (default)
+/// - Private: synced but only owner can see
+/// - Public: may be listed/exposed publicly
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum ThreadVisibility {
+    Organization,
+    Private,
+    Public,
+}
+
+impl Default for ThreadVisibility {
+    fn default() -> Self {
+        ThreadVisibility::Organization
+    }
+}
+
+impl ThreadVisibility {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ThreadVisibility::Organization => "organization",
+            ThreadVisibility::Private => "private",
+            ThreadVisibility::Public => "public",
+        }
+    }
+}
+
+impl std::str::FromStr for ThreadVisibility {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "organization" | "organisation" => Ok(ThreadVisibility::Organization),
+            "private" => Ok(ThreadVisibility::Private),
+            "public" => Ok(ThreadVisibility::Public),
+            _ => Err(format!("invalid visibility: {}", s)),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MessageSnapshot {
     pub role: MessageRole,
@@ -230,6 +271,18 @@ pub struct Thread {
     pub conversation: ConversationSnapshot,
     pub agent_state: AgentStateSnapshot,
     pub metadata: ThreadMetadata,
+
+    /// Server-side visibility for synced threads
+    #[serde(default)]
+    pub visibility: ThreadVisibility,
+    
+    /// If true, this thread is local-only and NEVER syncs to server
+    #[serde(default)]
+    pub is_private: bool,
+
+    /// If true, this thread has been shared with the support team
+    #[serde(default)]
+    pub is_shared_with_support: bool,
 }
 
 impl Thread {
@@ -254,6 +307,9 @@ impl Thread {
                 pending_tool_calls: Vec::new(),
             },
             metadata: ThreadMetadata::default(),
+            visibility: ThreadVisibility::Organization,
+            is_private: false,
+            is_shared_with_support: false,
         }
     }
 
@@ -290,6 +346,7 @@ pub struct ThreadSummary {
     pub tags: Vec<String>,
     pub message_count: usize,
     pub is_pinned: bool,
+    pub visibility: ThreadVisibility,
 }
 
 impl From<&Thread> for ThreadSummary {
@@ -307,6 +364,7 @@ impl From<&Thread> for ThreadSummary {
             tags: thread.metadata.tags.clone(),
             message_count: thread.conversation.messages.len(),
             is_pinned: thread.metadata.is_pinned,
+            visibility: thread.visibility.clone(),
         }
     }
 }
@@ -435,5 +493,89 @@ mod tests {
                 prop_assert_eq!(json, expected);
             }
         }
+    }
+
+    /// **Property: ThreadVisibility serializes to lowercase**
+    ///
+    /// Why this is important: API contracts expect lowercase visibility values
+    /// for JSON compatibility and cross-system interoperability.
+    ///
+    /// Invariant: All ThreadVisibility variants serialize to their lowercase name
+    #[test]
+    fn test_visibility_serde_format() {
+        let variants = [
+            (ThreadVisibility::Organization, "\"organization\""),
+            (ThreadVisibility::Private, "\"private\""),
+            (ThreadVisibility::Public, "\"public\""),
+        ];
+        for (vis, expected) in variants {
+            let json = serde_json::to_string(&vis).unwrap();
+            assert_eq!(json, expected);
+        }
+    }
+
+    /// **Property: Default thread has organization visibility, is not local-only, and not shared with support**
+    ///
+    /// Why this is important: New threads should sync by default (is_private=false)
+    /// and have organization visibility for team collaboration.
+    #[test]
+    fn test_default_thread_visibility() {
+        let thread = Thread::new();
+        assert_eq!(thread.visibility, ThreadVisibility::Organization);
+        assert!(!thread.is_private);
+        assert!(!thread.is_shared_with_support);
+    }
+
+    /// **Property: ThreadVisibility FromStr accepts both spellings of organization**
+    ///
+    /// Why this is important: Users may use American or British spelling.
+    #[test]
+    fn test_visibility_from_str_spellings() {
+        assert_eq!(
+            "organization".parse::<ThreadVisibility>().unwrap(),
+            ThreadVisibility::Organization
+        );
+        assert_eq!(
+            "organisation".parse::<ThreadVisibility>().unwrap(),
+            ThreadVisibility::Organization
+        );
+        assert_eq!(
+            "public".parse::<ThreadVisibility>().unwrap(),
+            ThreadVisibility::Public
+        );
+    }
+
+    /// **Property: is_shared_with_support is independent of visibility**
+    ///
+    /// Why this is important: Sharing with support should not change the
+    /// thread's visibility setting - they are orthogonal concepts.
+    #[test]
+    fn test_is_shared_with_support_independent_of_visibility() {
+        let mut thread = Thread::new();
+        thread.visibility = ThreadVisibility::Private;
+        thread.is_shared_with_support = true;
+
+        let json = serde_json::to_string(&thread).expect("serialize");
+        let restored: Thread = serde_json::from_str(&json).expect("deserialize");
+
+        assert_eq!(restored.visibility, ThreadVisibility::Private);
+        assert!(restored.is_shared_with_support);
+    }
+
+    /// **Property: Thread with visibility roundtrips through JSON**
+    ///
+    /// Why this is important: Visibility must survive serialization for
+    /// both local persistence and server sync.
+    #[test]
+    fn test_thread_visibility_json_roundtrip() {
+        let mut thread = Thread::new();
+        thread.visibility = ThreadVisibility::Public;
+        thread.is_private = true;
+
+        let json = serde_json::to_string(&thread).expect("serialize");
+        let restored: Thread = serde_json::from_str(&json).expect("deserialize");
+
+        assert_eq!(restored.visibility, ThreadVisibility::Public);
+        assert!(restored.is_private);
     }
 }

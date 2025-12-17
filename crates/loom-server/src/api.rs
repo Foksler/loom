@@ -25,6 +25,7 @@ pub fn create_router(repo: Arc<ThreadRepository>) -> Router {
         .route("/v1/threads/{id}", put(upsert_thread))
         .route("/v1/threads/{id}", get(get_thread))
         .route("/v1/threads/{id}", delete(delete_thread))
+        .route("/v1/threads/{id}/visibility", post(update_thread_visibility))
         .route("/v1/threads", get(list_threads))
         .route("/v1/auth/login", post(login_stub))
         .route("/v1/auth/logout", post(logout_stub))
@@ -48,6 +49,12 @@ pub struct ListParams {
 
 fn default_limit() -> u32 {
     50
+}
+
+/// Request body for updating thread visibility.
+#[derive(Debug, Deserialize)]
+pub struct UpdateVisibilityRequest {
+    pub visibility: loom_thread::ThreadVisibility,
 }
 
 /// Response for list endpoint.
@@ -178,6 +185,61 @@ async fn delete_thread(
     }
 }
 
+/// POST /v1/threads/{id}/visibility - Update thread visibility.
+///
+/// Allows changing the visibility of a thread without syncing the full thread content.
+/// Supports optimistic concurrency via If-Match header.
+#[axum::debug_handler]
+async fn update_thread_visibility(
+    State(repo): State<AppState>,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+    Json(body): Json<UpdateVisibilityRequest>,
+) -> Result<impl IntoResponse, ServerError> {
+    let thread_id = ThreadId::from_string(id.clone());
+
+    let expected_version = headers
+        .get("If-Match")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.parse::<u64>().ok());
+
+    tracing::debug!(
+        thread_id = %id,
+        visibility = ?body.visibility,
+        expected_version = ?expected_version,
+        "updating thread visibility"
+    );
+
+    let mut thread = repo
+        .get(&thread_id)
+        .await?
+        .ok_or_else(|| ServerError::NotFound(id.clone()))?;
+
+    if let Some(expected) = expected_version {
+        if thread.version != expected {
+            return Err(ServerError::Conflict {
+                expected: thread.version,
+                actual: expected,
+            });
+        }
+    }
+
+    thread.visibility = body.visibility;
+    thread.updated_at = chrono::Utc::now().to_rfc3339();
+    thread.version += 1;
+
+    let stored = repo.upsert(&thread, None).await?;
+
+    tracing::info!(
+        thread_id = %id,
+        version = stored.version,
+        visibility = ?stored.visibility,
+        "thread visibility updated"
+    );
+
+    Ok((StatusCode::OK, Json(stored)))
+}
+
 /// GET /health - Comprehensive health check endpoint.
 async fn health_check(State(repo): State<AppState>) -> impl IntoResponse {
     use tokio::time::Instant;
@@ -246,7 +308,9 @@ mod tests {
         body::Body,
         http::{Request, StatusCode},
     };
-    use loom_thread::{AgentStateKind, AgentStateSnapshot, ConversationSnapshot, ThreadMetadata};
+    use loom_thread::{
+        AgentStateKind, AgentStateSnapshot, ConversationSnapshot, ThreadMetadata, ThreadVisibility,
+    };
     use tempfile::tempdir;
     use tower::ServiceExt;
 
@@ -278,6 +342,9 @@ mod tests {
                 pending_tool_calls: vec![],
             },
             metadata: ThreadMetadata::default(),
+            visibility: ThreadVisibility::Private,
+            is_private: false,
+            is_shared_with_support: false,
         }
     }
 
@@ -419,5 +486,45 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
+    }
+
+    #[tokio::test]
+    async fn test_update_visibility() {
+        let (app, _dir) = create_test_app().await;
+        let thread = create_test_thread();
+        let thread_json = serde_json::to_string(&thread).unwrap();
+
+        // First create the thread
+        let _ = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri(format!("/v1/threads/{}", thread.id))
+                    .header("Content-Type", "application/json")
+                    .body(Body::from(thread_json))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        // Update visibility
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(format!("/v1/threads/{}/visibility", thread.id))
+                    .header("Content-Type", "application/json")
+                    .body(Body::from(r#"{"visibility":"public"}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let updated: Thread = serde_json::from_slice(&body).unwrap();
+        assert_eq!(updated.visibility, loom_thread::ThreadVisibility::Public);
     }
 }
