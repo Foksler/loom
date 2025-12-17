@@ -1,5 +1,6 @@
 //! SQLite database operations for thread persistence.
 
+use loom_google_cse::CseResponse;
 use loom_thread::{Thread, ThreadId, ThreadSummary};
 use sqlx::{
     sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePool, SqliteSynchronous},
@@ -163,6 +164,19 @@ impl ThreadRepository {
                     if !msg.contains("already exists") && !msg.contains("trigger") {
                         tracing::warn!(error = %e, stmt = %full_trigger.chars().take(80).collect::<String>(), "FTS trigger creation failed");
                     }
+                }
+            }
+        }
+
+        // Migration 006: CSE cache table
+        let m6 = include_str!("../migrations/006_cse_cache.sql");
+        for stmt in m6.split(';').filter(|s| !s.trim().is_empty()) {
+            if let Err(e) = sqlx::query(stmt).execute(pool).await {
+                let msg = e.to_string();
+                if !msg.contains("already exists")
+                    && !msg.contains("duplicate column")
+                {
+                    return Err(e.into());
                 }
             }
         }
@@ -776,6 +790,112 @@ impl ThreadRepository {
             is_pinned: is_pinned != 0,
             visibility,
         })
+    }
+
+    // ========== CSE Cache Methods ==========
+
+    /// Get cached CSE response if it exists and is not expired (24h TTL).
+    pub async fn get_cse_cache(
+        &self,
+        query: &str,
+        max_results: u32,
+    ) -> Result<Option<CseResponse>, ServerError> {
+        use chrono::{Duration, Utc};
+
+        let cutoff = (Utc::now() - Duration::hours(24)).to_rfc3339();
+
+        let row: Option<(String,)> = sqlx::query_as(
+            r#"
+            SELECT response_json
+            FROM cse_cache
+            WHERE query = ?1
+              AND max_results = ?2
+              AND created_at >= ?3
+            LIMIT 1
+            "#,
+        )
+        .bind(query)
+        .bind(max_results as i64)
+        .bind(&cutoff)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        match row {
+            Some((json,)) => {
+                let response: CseResponse = serde_json::from_str(&json)?;
+                tracing::debug!(
+                    query = %query,
+                    max_results = max_results,
+                    "cse_cache: hit"
+                );
+                Ok(Some(response))
+            }
+            None => {
+                tracing::debug!(
+                    query = %query,
+                    max_results = max_results,
+                    "cse_cache: miss"
+                );
+                Ok(None)
+            }
+        }
+    }
+
+    /// Store CSE response in cache, upserting on conflict.
+    /// Also performs opportunistic cleanup of expired entries.
+    pub async fn put_cse_cache(
+        &self,
+        response: &CseResponse,
+        max_results: u32,
+    ) -> Result<(), ServerError> {
+        use chrono::{Duration, Utc};
+
+        let now = Utc::now().to_rfc3339();
+        let json = serde_json::to_string(response)?;
+
+        // Upsert: insert or update existing entry
+        sqlx::query(
+            r#"
+            INSERT INTO cse_cache (query, max_results, response_json, created_at)
+            VALUES (?1, ?2, ?3, ?4)
+            ON CONFLICT(query, max_results) DO UPDATE SET
+                response_json = excluded.response_json,
+                created_at    = excluded.created_at
+            "#,
+        )
+        .bind(&response.query)
+        .bind(max_results as i64)
+        .bind(&json)
+        .bind(&now)
+        .execute(&self.pool)
+        .await?;
+
+        tracing::debug!(
+            query = %response.query,
+            max_results = max_results,
+            "cse_cache: stored"
+        );
+
+        // Opportunistic cleanup of expired entries (older than 24h)
+        let cutoff = (Utc::now() - Duration::hours(24)).to_rfc3339();
+        let result = sqlx::query(
+            r#"
+            DELETE FROM cse_cache
+            WHERE created_at < ?1
+            "#,
+        )
+        .bind(&cutoff)
+        .execute(&self.pool)
+        .await?;
+
+        if result.rows_affected() > 0 {
+            tracing::debug!(
+                deleted = result.rows_affected(),
+                "cse_cache: cleaned up expired entries"
+            );
+        }
+
+        Ok(())
     }
 }
 

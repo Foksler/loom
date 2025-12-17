@@ -1,8 +1,8 @@
 # Health Check System Specification
 
 **Status:** Draft  
-**Version:** 1.0  
-**Last Updated:** 2024-12-17
+**Version:** 1.1  
+**Last Updated:** 2025-01-18
 
 ---
 
@@ -39,6 +39,7 @@ The health check system provides endpoints for monitoring the operational status
 | Database | Critical | `unhealthy` - service cannot function |
 | Binary Directory | Non-critical | `degraded` - updates unavailable |
 | LLM Providers | Non-critical | `degraded` - inference unavailable |
+| Google CSE | Non-critical | `degraded` - web search unavailable |
 
 ---
 
@@ -81,6 +82,11 @@ Host: loom.example.com
     "llm_providers": {
       "status": "unknown",
       "providers": []
+    },
+    "google_cse": {
+      "status": "healthy",
+      "latency_ms": 245,
+      "configured": true
     }
   }
 }
@@ -111,6 +117,12 @@ Host: loom.example.com
     "llm_providers": {
       "status": "unknown",
       "providers": []
+    },
+    "google_cse": {
+      "status": "degraded",
+      "latency_ms": 0,
+      "configured": false,
+      "error": "Google CSE not configured"
     }
   }
 }
@@ -142,6 +154,11 @@ Host: loom.example.com
     "llm_providers": {
       "status": "unknown",
       "providers": []
+    },
+    "google_cse": {
+      "status": "healthy",
+      "latency_ms": 180,
+      "configured": true
     }
   }
 }
@@ -195,6 +212,23 @@ Will verify connectivity to configured LLM provider APIs.
 - Some providers unreachable → `degraded`
 - All providers unreachable → `degraded` (not unhealthy, as local features still work)
 
+### 4.4 Google CSE Check
+
+Verifies Google Custom Search Engine configuration and connectivity.
+
+**Timeout:** 5 seconds
+
+**Checks performed:**
+1. Environment variables configured (`LOOM_SERVER_GOOGLE_CSE_API_KEY`, `LOOM_SERVER_GOOGLE_CSE_CX`)
+2. API connectivity test (lightweight search query)
+
+**Status mapping:**
+- Configured and API responds → `healthy`
+- Configured but rate limited → `degraded`
+- Configured but timeout → `degraded`
+- Configured but auth error → `unhealthy`
+- Not configured → `degraded` (CSE is optional)
+
 ---
 
 ## 5. Response Schema
@@ -228,6 +262,7 @@ interface HealthComponents {
   database: DatabaseHealth;
   bin_dir: BinDirHealth;
   llm_providers: LlmProvidersHealth;
+  google_cse: GoogleCseHealth;
 }
 ```
 
@@ -267,6 +302,17 @@ interface LlmProviderHealth {
   name: string;
   status: HealthStatus;
   latency_ms?: number;
+  error?: string;
+}
+```
+
+### 5.7 GoogleCseHealth
+
+```typescript
+interface GoogleCseHealth {
+  status: HealthStatus;
+  latency_ms: number;
+  configured: boolean;
   error?: string;
 }
 ```
@@ -326,6 +372,7 @@ Each component check has an individual timeout to prevent slow checks from block
 - Database: 500ms
 - Bin dir: 500ms (sync I/O, typically instant)
 - LLM providers: 300ms per provider (future)
+- Google CSE: 5 seconds
 
 ### 7.3 Error Handling
 

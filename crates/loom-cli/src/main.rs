@@ -45,7 +45,7 @@ impl From<ShareVisibilityArg> for ThreadVisibility {
         }
     }
 }
-use loom_tools::{EditFileTool, ListFilesTool, ReadFileTool, ToolRegistry};
+use loom_tools::{EditFileTool, ListFilesTool, ReadFileTool, ToolRegistry, WebSearchTool};
 use url::Url;
 
 mod version;
@@ -226,6 +226,7 @@ fn create_tool_registry() -> ToolRegistry {
     registry.register(Box::new(ReadFileTool::new()));
     registry.register(Box::new(ListFilesTool::new()));
     registry.register(Box::new(EditFileTool::new()));
+    registry.register(Box::new(WebSearchTool::default()));
 
     let definitions = registry.definitions();
     debug!(

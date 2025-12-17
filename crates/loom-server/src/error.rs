@@ -33,6 +33,18 @@ pub enum ServerError {
     /// Serialization error.
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
+
+    /// Upstream service returned an error.
+    #[error("Upstream error: {0}")]
+    UpstreamError(String),
+
+    /// Upstream service timed out.
+    #[error("Upstream timeout: {0}")]
+    UpstreamTimeout(String),
+
+    /// Service temporarily unavailable (e.g., rate limited).
+    #[error("Service unavailable: {0}")]
+    ServiceUnavailable(String),
 }
 
 /// Error response body.
@@ -112,6 +124,42 @@ impl IntoResponse for ServerError {
                     client_version: None,
                 },
             ),
+            ServerError::UpstreamError(msg) => {
+                tracing::warn!(error = %msg, "upstream error");
+                (
+                    StatusCode::BAD_GATEWAY,
+                    ErrorResponse {
+                        error: "upstream_error".to_string(),
+                        message: msg.clone(),
+                        server_version: None,
+                        client_version: None,
+                    },
+                )
+            }
+            ServerError::UpstreamTimeout(msg) => {
+                tracing::warn!(error = %msg, "upstream timeout");
+                (
+                    StatusCode::GATEWAY_TIMEOUT,
+                    ErrorResponse {
+                        error: "upstream_timeout".to_string(),
+                        message: msg.clone(),
+                        server_version: None,
+                        client_version: None,
+                    },
+                )
+            }
+            ServerError::ServiceUnavailable(msg) => {
+                tracing::warn!(error = %msg, "service unavailable");
+                (
+                    StatusCode::SERVICE_UNAVAILABLE,
+                    ErrorResponse {
+                        error: "service_unavailable".to_string(),
+                        message: msg.clone(),
+                        server_version: None,
+                        client_version: None,
+                    },
+                )
+            }
         };
 
         (status, Json(error_response)).into_response()

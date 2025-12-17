@@ -9,6 +9,7 @@ use axum::{
 };
 use tower_http::services::ServeDir;
 use loom_thread::{Thread, ThreadId, ThreadSummary};
+use loom_google_cse::{CseClient, CseError, CseRequest};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -31,6 +32,7 @@ pub fn create_router(repo: Arc<ThreadRepository>) -> Router {
         .route("/v1/auth/login", post(login_stub))
         .route("/v1/auth/logout", post(logout_stub))
         .route("/health", get(health_check))
+        .route("/proxy/cse", post(proxy_cse))
         .nest_service("/bin", ServeDir::new(bin_dir))
         .with_state(repo)
 }
@@ -107,6 +109,30 @@ pub struct ListResponse {
 pub struct AuthStubResponse {
     pub status: String,
     pub message: String,
+}
+
+/// Request body for CSE proxy endpoint.
+#[derive(Debug, Deserialize)]
+pub struct CseProxyRequest {
+    pub query: String,
+    pub max_results: Option<u32>,
+}
+
+/// Response for CSE proxy endpoint.
+#[derive(Debug, Serialize)]
+pub struct CseProxyResponse {
+    pub query: String,
+    pub results: Vec<CseProxyResultItem>,
+}
+
+/// Single result item in CSE proxy response.
+#[derive(Debug, Serialize)]
+pub struct CseProxyResultItem {
+    pub title: String,
+    pub url: String,
+    pub snippet: String,
+    pub display_link: Option<String>,
+    pub rank: u32,
 }
 
 /// PUT /v1/threads/{id} - Create or update a thread.
@@ -322,9 +348,10 @@ async fn health_check(State(repo): State<AppState>) -> impl IntoResponse {
     let overall_start = Instant::now();
 
     // Run checks in parallel
-    let (database, bin_dir) = tokio::join!(
+    let (database, bin_dir, google_cse) = tokio::join!(
         health::check_database(&repo),
-        async { health::check_bin_dir() }
+        async { health::check_bin_dir() },
+        health::check_google_cse()
     );
     
     let llm_providers = health::check_llm_providers();
@@ -333,6 +360,7 @@ async fn health_check(State(repo): State<AppState>) -> impl IntoResponse {
         database,
         bin_dir,
         llm_providers,
+        google_cse,
     };
 
     let status = health::aggregate_status(&components);
@@ -374,6 +402,121 @@ async fn logout_stub() -> impl IntoResponse {
             message: "Logout is not implemented yet.".to_string(),
         }),
     )
+}
+
+/// POST /proxy/cse - Proxy requests to Google Custom Search Engine.
+#[axum::debug_handler]
+async fn proxy_cse(
+    State(repo): State<AppState>,
+    Json(body): Json<CseProxyRequest>,
+) -> Result<impl IntoResponse, ServerError> {
+    let query = body.query.trim().to_string();
+    let max_results = body.max_results.unwrap_or(5).min(10);
+
+    if query.is_empty() {
+        tracing::warn!("proxy_cse: empty query");
+        return Err(ServerError::BadRequest("query must not be empty".into()));
+    }
+
+    // Try cache first
+    if let Some(cached) = repo.get_cse_cache(&query, max_results).await? {
+        tracing::info!(
+            query = %query,
+            max_results = max_results,
+            results_count = cached.results.len(),
+            "proxy_cse: returning cached response"
+        );
+
+        let response = CseProxyResponse {
+            query: cached.query,
+            results: cached.results.into_iter().map(|item| CseProxyResultItem {
+                title: item.title,
+                url: item.url,
+                snippet: item.snippet,
+                display_link: item.display_link,
+                rank: item.rank,
+            }).collect(),
+        };
+
+        return Ok((StatusCode::OK, Json(response)));
+    }
+
+    tracing::debug!(
+        query = %query,
+        max_results = max_results,
+        "proxy_cse: cache miss, calling Google CSE"
+    );
+
+    // Load secrets from environment
+    let api_key = std::env::var("LOOM_SERVER_GOOGLE_CSE_API_KEY").map_err(|_| {
+        tracing::error!("proxy_cse: LOOM_SERVER_GOOGLE_CSE_API_KEY not configured");
+        ServerError::Internal("Google CSE is not configured on the server".to_string())
+    })?;
+
+    let cx = std::env::var("LOOM_SERVER_GOOGLE_CSE_CX").map_err(|_| {
+        tracing::error!("proxy_cse: LOOM_SERVER_GOOGLE_CSE_CX not configured");
+        ServerError::Internal("Google CSE is not configured on the server".to_string())
+    })?;
+
+    tracing::debug!(
+        query = %query,
+        max_results = max_results,
+        "proxy_cse: performing Google CSE request"
+    );
+
+    let client = CseClient::new(api_key, cx);
+    let request = CseRequest::new(query.clone(), max_results);
+
+    let cse_response = client.search(request).await.map_err(|e| match e {
+        CseError::Timeout => {
+            tracing::warn!("proxy_cse: timeout contacting Google CSE");
+            ServerError::UpstreamTimeout("Google CSE request timed out".into())
+        }
+        CseError::RateLimited => {
+            tracing::warn!("proxy_cse: rate limited by Google CSE");
+            ServerError::ServiceUnavailable("Google CSE rate limit exceeded; try again later".into())
+        }
+        CseError::Unauthorized => {
+            tracing::error!("proxy_cse: invalid API key or CSE ID");
+            ServerError::Internal("Google CSE authentication failed".into())
+        }
+        CseError::Network(e) => {
+            tracing::error!(error = %e, "proxy_cse: network error");
+            ServerError::UpstreamError(format!("Failed to contact Google CSE: {}", e))
+        }
+        CseError::InvalidResponse(msg) => {
+            tracing::error!(error = %msg, "proxy_cse: invalid response");
+            ServerError::UpstreamError(format!("Invalid Google CSE response: {}", msg))
+        }
+        CseError::ApiError { status, message } => {
+            tracing::warn!(status = status, message = %message, "proxy_cse: API error");
+            ServerError::UpstreamError(format!("Google CSE error: {} - {}", status, message))
+        }
+    })?;
+
+    // Store in cache (best-effort, don't fail request if cache write fails)
+    if let Err(e) = repo.put_cse_cache(&cse_response, max_results).await {
+        tracing::warn!(error = %e, "proxy_cse: failed to write to cache");
+    }
+
+    tracing::info!(
+        query = %query,
+        results_count = cse_response.results.len(),
+        "proxy_cse: returning results"
+    );
+
+    let response = CseProxyResponse {
+        query: cse_response.query,
+        results: cse_response.results.into_iter().map(|item| CseProxyResultItem {
+            title: item.title,
+            url: item.url,
+            snippet: item.snippet,
+            display_link: item.display_link,
+            rank: item.rank,
+        }).collect(),
+    };
+
+    Ok((StatusCode::OK, Json(response)))
 }
 
 #[cfg(test)]
@@ -467,6 +610,7 @@ mod tests {
         assert!(components.get("database").is_some());
         assert!(components.get("bin_dir").is_some());
         assert!(components.get("llm_providers").is_some());
+        assert!(components.get("google_cse").is_some());
     }
 
     #[tokio::test]
@@ -667,5 +811,65 @@ mod tests {
             .unwrap();
 
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_proxy_cse_empty_query_returns_400() {
+        let (app, _dir) = create_test_app().await;
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/proxy/cse")
+                    .header("Content-Type", "application/json")
+                    .body(Body::from(r#"{"query":""}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_proxy_cse_whitespace_query_returns_400() {
+        let (app, _dir) = create_test_app().await;
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/proxy/cse")
+                    .header("Content-Type", "application/json")
+                    .body(Body::from(r#"{"query":"   "}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_proxy_cse_unconfigured_returns_500() {
+        // This test verifies that when CSE is not configured, we get an error
+        // (cache miss path, then env var lookup fails)
+        let (app, _dir) = create_test_app().await;
+        
+        // Clear env vars to ensure CSE is not configured
+        std::env::remove_var("LOOM_SERVER_GOOGLE_CSE_API_KEY");
+        std::env::remove_var("LOOM_SERVER_GOOGLE_CSE_CX");
+        
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/proxy/cse")
+                    .header("Content-Type", "application/json")
+                    .body(Body::from(r#"{"query":"test query"}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        
+        // Should be 500 because CSE env vars are not set
+        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
     }
 }

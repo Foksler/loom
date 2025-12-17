@@ -68,12 +68,23 @@ pub struct LlmProvidersHealth {
     pub providers: Vec<LlmProviderHealth>,
 }
 
+/// Google CSE component health.
+#[derive(Debug, Serialize)]
+pub struct GoogleCseHealth {
+    pub status: HealthStatus,
+    pub latency_ms: u64,
+    pub configured: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
 /// All health check components.
 #[derive(Debug, Serialize)]
 pub struct HealthComponents {
     pub database: DatabaseHealth,
     pub bin_dir: BinDirHealth,
     pub llm_providers: LlmProvidersHealth,
+    pub google_cse: GoogleCseHealth,
 }
 
 /// Complete health check response.
@@ -194,9 +205,63 @@ pub fn check_llm_providers() -> LlmProvidersHealth {
     }
 }
 
+const CSE_CHECK_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// Check Google CSE health by verifying configuration and optionally testing connectivity.
+pub async fn check_google_cse() -> GoogleCseHealth {
+    use loom_google_cse::{CseClient, CseRequest};
+    
+    let start = Instant::now();
+
+    // Check if CSE is configured
+    let api_key = std::env::var("LOOM_SERVER_GOOGLE_CSE_API_KEY");
+    let cx = std::env::var("LOOM_SERVER_GOOGLE_CSE_CX");
+
+    let (configured, status, error) = match (api_key, cx) {
+        (Ok(key), Ok(cx_val)) if !key.is_empty() && !cx_val.is_empty() => {
+            // CSE is configured, try a simple search to verify connectivity
+            let client = CseClient::new(key, cx_val);
+            let request = CseRequest::new("test", 1);
+            
+            match timeout(CSE_CHECK_TIMEOUT, client.search(request)).await {
+                Ok(Ok(_)) => (true, HealthStatus::Healthy, None),
+                Ok(Err(e)) => {
+                    // Check if it's an auth error vs network error
+                    let err_str = e.to_string();
+                    if err_str.contains("Unauthorized") || err_str.contains("Invalid API key") {
+                        (true, HealthStatus::Unhealthy, Some("Invalid API key or CSE ID".to_string()))
+                    } else if err_str.contains("Rate limit") {
+                        (true, HealthStatus::Degraded, Some("Rate limited".to_string()))
+                    } else {
+                        (true, HealthStatus::Degraded, Some(err_str))
+                    }
+                }
+                Err(_) => (true, HealthStatus::Degraded, Some("CSE health check timed out".to_string())),
+            }
+        }
+        _ => {
+            // Not configured - this is degraded, not unhealthy (CSE is optional)
+            (false, HealthStatus::Degraded, Some("Google CSE not configured".to_string()))
+        }
+    };
+
+    let latency_ms = start.elapsed().as_millis() as u64;
+
+    GoogleCseHealth {
+        status,
+        latency_ms,
+        configured,
+        error,
+    }
+}
+
 /// Aggregate component statuses into overall status.
 pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
-    let statuses = [components.database.status, components.bin_dir.status];
+    let statuses = [
+        components.database.status,
+        components.bin_dir.status,
+        components.google_cse.status,
+    ];
 
     if statuses.iter().any(|s| matches!(s, HealthStatus::Unhealthy)) {
         HealthStatus::Unhealthy

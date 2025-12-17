@@ -1,21 +1,19 @@
 [package]
-name = "loom-tools"
+name = "loom-google-cse"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+description = "Google Custom Search Engine client for Loom"
 
 [dependencies]
-loom-core = { path = "../loom-core" }
-tokio = { workspace = true }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
-async-trait = { workspace = true }
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+tokio = { workspace = true }
 
 [dev-dependencies]
 proptest = { workspace = true }
 tokio-test = { workspace = true }
-tempfile = { workspace = true }

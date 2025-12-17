@@ -1459,6 +1459,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-google-cse"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+]
+
+[[package]]
 name = "loom-http-retry"
 version = "0.1.0"
 dependencies = [
@@ -1514,8 +1528,10 @@ dependencies = [
  "axum",
  "chrono",
  "dotenvy",
+ "loom-google-cse",
  "loom-thread",
  "proptest",
+ "reqwest",
  "serde",
  "serde_json",
  "sqlx",
@@ -1559,6 +1575,7 @@ dependencies = [
  "async-trait",
  "loom-core",
  "proptest",
+ "reqwest",
  "serde",
  "serde_json",
  "tempfile",

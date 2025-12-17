@@ -16,6 +16,8 @@ path = "src/lib.rs"
 
 [dependencies]
 loom-thread = { path = "../loom-thread" }
+loom-google-cse = { path = "../loom-google-cse" }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 
 # Web framework
 axum = { version = "0.8", features = ["macros"] }
