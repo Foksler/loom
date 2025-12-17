@@ -14,7 +14,8 @@ This directory contains the architectural specifications and design documentatio
 | [error-handling.md](./error-handling.md) | Error types, propagation, and recovery strategies |
 | [retry-strategy.md](./retry-strategy.md) | HTTP retry/backoff with exponential backoff and jitter |
 | [testing.md](./testing.md) | Testing strategy with property-based tests |
-| [configuration.md](./configuration.md) | CLI arguments, environment variables, and config structs |
+| [configuration.md](./configuration.md) | CLI arguments and basic config overview |
+| [configuration-system.md](./configuration-system.md) | **NEW**: Full configuration registry, XDG paths, TOML format, layered sources |
 
 ## Quick Reference
 
@@ -23,6 +24,7 @@ This directory contains the architectural specifications and design documentatio
 ```
 loom/
 ├── crates/
+│   ├── loom-config/         # Configuration management, XDG paths, layered sources
 │   ├── loom-core/           # Core types, state machine, LLM traits
 │   ├── loom-tools/          # Tool definitions (read_file, list_files, edit_file)
 │   ├── loom-llm-anthropic/  # Anthropic Claude API client
@@ -44,6 +46,7 @@ loom/
 - **Add LLM Provider**: See [llm-client.md](./llm-client.md#adding-new-providers)
 - **Add Tool**: See [tool-system.md](./tool-system.md#adding-new-tools)
 - **Add Agent State**: See [state-machine.md](./state-machine.md#extension-guide)
+- **Add Config Source**: See [configuration-system.md](./configuration-system.md#6-configuration-registry-architecture)
 
 ## Usage
 

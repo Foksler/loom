@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/loom-config",
     "crates/loom-http-retry",
     "crates/loom-core",
     "crates/loom-llm-anthropic",
@@ -56,3 +57,9 @@ fastrand = "2"
 
 # Bytes
 bytes = "1"
+
+# TOML parsing
+toml = "0.8"
+
+# Directories (for XDG)
+dirs = "5"

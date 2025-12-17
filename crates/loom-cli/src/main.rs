@@ -9,147 +9,142 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use clap::{Parser, ValueEnum};
+use clap::Parser;
 use tracing::{debug, error, info, instrument, warn};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
+use loom_config::{
+    load_config_with_cli,
+    runtime::{LogFormat, LogLevel, ProviderConfig},
+    sources::CliOverrides,
+};
 use loom_core::{LlmClient, LlmEvent, Message, ToolCall, ToolContext, ToolDefinition, ToolExecutionOutcome};
 use loom_llm_anthropic::{AnthropicClient, AnthropicConfig};
 use loom_llm_openai::{OpenAIClient, OpenAIConfig};
 use loom_tools::{EditFileTool, ListFilesTool, ReadFileTool, ToolRegistry};
 
-/// LLM provider selection
-#[derive(Debug, Clone, Copy, Default, ValueEnum)]
-enum Provider {
-    #[default]
-    Anthropic,
-    OpenAi,
-}
-
-/// Log level selection
-#[derive(Debug, Clone, Copy, Default, ValueEnum)]
-enum LogLevel {
-    Trace,
-    Debug,
-    #[default]
-    Info,
-    Warn,
-    Error,
-}
-
-impl From<LogLevel> for tracing::Level {
-    fn from(level: LogLevel) -> Self {
-        match level {
-            LogLevel::Trace => tracing::Level::TRACE,
-            LogLevel::Debug => tracing::Level::DEBUG,
-            LogLevel::Info => tracing::Level::INFO,
-            LogLevel::Warn => tracing::Level::WARN,
-            LogLevel::Error => tracing::Level::ERROR,
-        }
-    }
-}
-
 /// Loom - AI-powered coding assistant
 #[derive(Parser, Debug)]
 #[command(name = "loom", version, about, long_about = None)]
 struct Args {
-    /// LLM provider to use
-    #[arg(short, long, default_value = "anthropic")]
-    provider: Provider,
+    /// Path to custom configuration file
+    #[arg(short, long)]
+    config: Option<PathBuf>,
 
-    /// Model name (uses provider default if not specified)
+    /// LLM provider to use (overrides config)
+    #[arg(short, long)]
+    provider: Option<String>,
+
+    /// Model name (overrides config)
     #[arg(short, long)]
     model: Option<String>,
 
-    /// API key for the selected provider.
-    /// Can also be set via ANTHROPIC_API_KEY or OPENAI_API_KEY environment variables.
-    #[arg(long, env = "ANTHROPIC_API_KEY")]
-    api_key: Option<String>,
-
     /// Workspace directory for file operations
-    #[arg(short, long, default_value = ".")]
-    workspace: PathBuf,
+    #[arg(short, long)]
+    workspace: Option<PathBuf>,
 
-    /// Log level
-    #[arg(short, long, default_value = "info")]
-    log_level: LogLevel,
+    /// Log level (overrides config)
+    #[arg(short, long)]
+    log_level: Option<String>,
 
-    /// Output logs as JSON
-    #[arg(long, default_value = "false")]
+    /// Output logs as JSON (overrides config)
+    #[arg(long)]
     json_logs: bool,
 }
 
-impl Args {
-    /// Resolve the API key based on provider, checking provider-specific env vars
-    fn resolve_api_key(&self) -> Result<String> {
-        if let Some(ref key) = self.api_key {
-            return Ok(key.clone());
+impl From<&Args> for CliOverrides {
+    fn from(args: &Args) -> Self {
+        Self {
+            provider: args.provider.clone(),
+            model: args.model.clone(),
+            workspace: args.workspace.clone(),
+            log_level: args.log_level.clone(),
+            log_format: if args.json_logs {
+                Some("json".to_string())
+            } else {
+                None
+            },
+            config_file: args.config.clone(),
         }
-
-        let env_var = match self.provider {
-            Provider::Anthropic => "ANTHROPIC_API_KEY",
-            Provider::OpenAi => "OPENAI_API_KEY",
-        };
-
-        std::env::var(env_var)
-            .with_context(|| format!("API key not provided. Set --api-key or {}", env_var))
     }
 }
 
-/// Initialize the tracing subscriber based on configuration
-fn init_tracing(log_level: LogLevel, json_logs: bool) {
+fn log_level_to_tracing(level: LogLevel) -> tracing::Level {
+    match level {
+        LogLevel::Trace => tracing::Level::TRACE,
+        LogLevel::Debug => tracing::Level::DEBUG,
+        LogLevel::Info => tracing::Level::INFO,
+        LogLevel::Warn => tracing::Level::WARN,
+        LogLevel::Error => tracing::Level::ERROR,
+    }
+}
+
+fn init_tracing(logging: &loom_config::runtime::LoggingConfig) {
     let filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new(format!("loom={}", tracing::Level::from(log_level))));
+        .unwrap_or_else(|_| EnvFilter::new(format!("loom={}", log_level_to_tracing(logging.level))));
 
-    if json_logs {
-        tracing_subscriber::registry()
-            .with(filter)
-            .with(fmt::layer().json())
-            .init();
-    } else {
-        tracing_subscriber::registry()
-            .with(filter)
-            .with(fmt::layer())
-            .init();
+    match logging.format {
+        LogFormat::Json => {
+            tracing_subscriber::registry()
+                .with(filter)
+                .with(fmt::layer().json())
+                .init();
+        }
+        LogFormat::Compact => {
+            tracing_subscriber::registry()
+                .with(filter)
+                .with(fmt::layer().compact())
+                .init();
+        }
+        LogFormat::Pretty => {
+            tracing_subscriber::registry()
+                .with(filter)
+                .with(fmt::layer())
+                .init();
+        }
     }
 }
 
-/// Create an LLM client based on the selected provider
-#[instrument(skip(api_key))]
+#[instrument(skip(provider_config))]
 fn create_llm_client(
-    provider: Provider,
-    api_key: String,
-    model: Option<String>,
+    provider_name: &str,
+    provider_config: &ProviderConfig,
+    model_override: Option<&str>,
 ) -> Result<Arc<dyn LlmClient>> {
     info!(
-        provider = ?provider,
-        model = ?model,
+        provider = %provider_name,
+        model_override = ?model_override,
         "creating LLM client"
     );
 
-    match provider {
-        Provider::Anthropic => {
-            let mut config = AnthropicConfig::new(api_key);
-            if let Some(m) = model {
-                config = config.with_model(m);
-            }
+    match provider_config {
+        ProviderConfig::Anthropic(cfg) => {
+            let model = model_override
+                .map(String::from)
+                .unwrap_or_else(|| cfg.default_model.clone());
+            let config = AnthropicConfig::new(&cfg.api_key).with_model(model);
             let client = AnthropicClient::new(config)
                 .context("failed to create Anthropic client")?;
             Ok(Arc::new(client))
         }
-        Provider::OpenAi => {
-            let mut config = OpenAIConfig::new(api_key);
-            if let Some(m) = model {
-                config = config.with_model(m);
-            }
+        ProviderConfig::OpenAi(cfg) => {
+            let model = model_override
+                .map(String::from)
+                .unwrap_or_else(|| cfg.default_model.clone());
+            let config = OpenAIConfig::new(&cfg.api_key).with_model(model);
             let client = OpenAIClient::new(config)
                 .context("failed to create OpenAI client")?;
             Ok(Arc::new(client))
         }
+        ProviderConfig::Ollama(_) => {
+            anyhow::bail!("Ollama provider not yet implemented")
+        }
+        ProviderConfig::Custom(_) => {
+            anyhow::bail!("Custom provider not yet implemented")
+        }
     }
 }
 
-/// Create the tool registry with available tools
 #[instrument]
 fn create_tool_registry() -> ToolRegistry {
     info!("creating tool registry");
@@ -168,12 +163,10 @@ fn create_tool_registry() -> ToolRegistry {
     registry
 }
 
-/// Get tool definitions from the registry
 fn get_tool_definitions(registry: &ToolRegistry) -> Vec<ToolDefinition> {
     registry.definitions()
 }
 
-/// Execute a tool call using the registry
 #[instrument(skip(registry, ctx))]
 async fn execute_tool(
     registry: &ToolRegistry,
@@ -226,7 +219,6 @@ async fn execute_tool(
     }
 }
 
-/// Run the REPL loop
 #[instrument(skip(llm_client, tool_registry, tool_ctx))]
 async fn run_repl(
     llm_client: &dyn LlmClient,
@@ -348,22 +340,43 @@ async fn run_repl(
 async fn main() -> Result<()> {
     let args = Args::parse();
 
-    init_tracing(args.log_level, args.json_logs);
+    let cli_overrides = CliOverrides::from(&args);
+    let config = load_config_with_cli(cli_overrides)
+        .context("failed to load configuration")?;
+
+    init_tracing(&config.logging);
 
     info!(
-        provider = ?args.provider,
-        workspace = %args.workspace.display(),
+        provider = %config.global.default_provider,
         "starting loom"
     );
 
-    let api_key = args.resolve_api_key()?;
+    let provider_config = config
+        .providers
+        .get(&config.global.default_provider)
+        .with_context(|| {
+            format!(
+                "provider '{}' not configured. Available: {:?}",
+                config.global.default_provider,
+                config.providers.keys().collect::<Vec<_>>()
+            )
+        })?;
 
-    let workspace = args
-        .workspace
+    let workspace = config
+        .global
+        .workspace_root
+        .clone()
+        .or_else(|| config.tools.workspace.root.clone())
+        .unwrap_or_else(|| PathBuf::from("."))
         .canonicalize()
-        .with_context(|| format!("invalid workspace path: {}", args.workspace.display()))?;
+        .context("invalid workspace path")?;
 
-    let llm_client = create_llm_client(args.provider, api_key, args.model)?;
+    let llm_client = create_llm_client(
+        &config.global.default_provider,
+        provider_config,
+        args.model.as_deref(),
+    )?;
+
     let tool_registry = create_tool_registry();
     let tool_definitions = get_tool_definitions(&tool_registry);
     let tool_ctx = ToolContext::new(&workspace);
@@ -379,7 +392,6 @@ async fn main() -> Result<()> {
     run_repl(llm_client.as_ref(), &tool_registry, &tool_definitions, &tool_ctx).await
 }
 
-/// Set up Ctrl+C handler for graceful shutdown
 fn ctrlc_handler() -> Result<()> {
     ctrlc::set_handler(|| {
         info!("received Ctrl+C, shutting down");

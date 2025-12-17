@@ -10,6 +10,7 @@ name = "loom"
 path = "src/main.rs"
 
 [dependencies]
+loom-config = { path = "../loom-config" }
 loom-core = { path = "../loom-core" }
 loom-tools = { path = "../loom-tools" }
 loom-llm-anthropic = { path = "../loom-llm-anthropic" }
