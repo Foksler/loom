@@ -264,9 +264,51 @@ AgentAction::Shutdown => {
 
 ---
 
-## 4. Local Storage
+## 4. CLI Thread Commands
 
-### 4.1 File Locations
+The Loom CLI provides commands for managing and resuming threads using the `ThreadStore` abstraction.
+
+### 4.1 Commands
+
+- `loom` - Starts new interactive REPL session, creates new Thread
+- `loom list` - Lists local threads using ThreadStore::list, sorted by last_activity_at descending
+- `loom resume` - Resumes most recent thread
+- `loom resume <thread_id>` - Resumes specific thread by ID
+
+### 4.2 Auth Commands (Stubs)
+
+- `loom login` - Stub, not implemented yet
+- `loom logout` - Stub, not implemented yet
+
+Server stub endpoints:
+- POST /v1/auth/login - returns 501 Not Implemented
+- POST /v1/auth/logout - returns 501 Not Implemented
+
+### 4.3 Example Usage
+
+```bash
+# Start new session
+loom
+
+# List threads
+loom list
+
+# Resume most recent
+loom resume
+
+# Resume specific thread
+loom resume T-019b2b97-fddf-7602-a3e4-1c4a295110c0
+
+# Login/logout stubs
+loom login
+loom logout
+```
+
+---
+
+## 5. Local Storage
+
+### 5.1 File Locations
 
 Following XDG Base Directory Specification:
 
@@ -275,7 +317,7 @@ Following XDG Base Directory Specification:
 | Thread files | `$XDG_DATA_HOME/loom/threads/<thread_id>.json` |
 | Pending sync queue | `$XDG_STATE_HOME/loom/sync/pending.json` |
 
-### 4.2 LocalThreadStore
+### 5.2 LocalThreadStore
 
 ```rust
 pub struct LocalThreadStore {
@@ -337,9 +379,9 @@ impl ThreadStore for LocalThreadStore {
 
 ---
 
-## 5. Server API Design
+## 6. Server API Design
 
-### 5.1 Endpoints
+### 6.1 Endpoints
 
 Base URL: `https://api.loom.example.com/v1`
 
@@ -350,7 +392,7 @@ Base URL: `https://api.loom.example.com/v1`
 | `GET` | `/threads` | List threads |
 | `DELETE` | `/threads/{id}` | Soft-delete thread |
 
-### 5.2 PUT /threads/{id}
+### 6.2 PUT /threads/{id}
 
 **Request**:
 ```http
@@ -378,7 +420,7 @@ If-Match: 4
 2. If exists and `If-Match` header matches → Update
 3. If exists and `If-Match` doesn't match → 409 Conflict
 
-### 5.3 GET /threads/{id}
+### 6.3 GET /threads/{id}
 
 **Request**:
 ```http
@@ -392,7 +434,7 @@ GET /v1/threads/T-019b2b97-fddf-7602-a3e4-1c4a295110c0
 | `200 OK` | Thread found | `Thread` JSON |
 | `404 Not Found` | Thread not found | `{"error": "not_found"}` |
 
-### 5.4 GET /threads
+### 6.4 GET /threads
 
 **Request**:
 ```http
@@ -428,7 +470,7 @@ GET /v1/threads?workspace=/home/alice/projects&limit=50
 }
 ```
 
-### 5.5 DELETE /threads/{id}
+### 6.5 DELETE /threads/{id}
 
 **Request**:
 ```http
@@ -446,9 +488,9 @@ DELETE /v1/threads/T-019b2b97-fddf-7602-a3e4-1c4a295110c0
 
 ---
 
-## 6. SQLite Schema
+## 7. SQLite Schema
 
-### 6.1 Database Configuration
+### 7.1 Database Configuration
 
 ```rust
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqliteSynchronous};
@@ -475,7 +517,7 @@ pub async fn create_pool(database_url: &str) -> Result<SqlitePool, DbError> {
 - Better crash recovery
 - Improved performance for read-heavy workloads
 
-### 6.2 Table Schema
+### 7.2 Table Schema
 
 ```sql
 -- migrations/001_create_threads.sql
@@ -527,9 +569,9 @@ CREATE INDEX IF NOT EXISTS idx_threads_pinned
 
 ---
 
-## 7. Client Sync Architecture
+## 8. Client Sync Architecture
 
-### 7.1 ThreadSyncClient
+### 8.1 ThreadSyncClient
 
 ```rust
 pub struct ThreadSyncClient {
@@ -591,7 +633,7 @@ impl ThreadSyncClient {
 }
 ```
 
-### 7.2 SyncingThreadStore
+### 8.2 SyncingThreadStore
 
 Wraps `LocalThreadStore` and adds server sync:
 
@@ -641,9 +683,9 @@ impl ThreadStore for SyncingThreadStore {
 
 ---
 
-## 8. Error Types
+## 9. Error Types
 
-### 8.1 Thread Store Errors
+### 9.1 Thread Store Errors
 
 ```rust
 #[derive(Debug, thiserror::Error)]
@@ -662,7 +704,7 @@ pub enum ThreadStoreError {
 }
 ```
 
-### 8.2 Sync Errors
+### 9.2 Sync Errors
 
 ```rust
 #[derive(Debug, Clone, thiserror::Error)]
@@ -697,7 +739,7 @@ impl loom_http_retry::RetryableError for ThreadSyncError {
 }
 ```
 
-### 8.3 Server Errors
+### 9.3 Server Errors
 
 ```rust
 #[derive(Debug, thiserror::Error)]
@@ -721,7 +763,7 @@ pub enum ServerError {
 
 ---
 
-## 9. Crate Structure
+## 10. Crate Structure
 
 ```
 loom/
@@ -785,9 +827,9 @@ loom/
 
 ---
 
-## 10. Configuration
+## 11. Configuration
 
-### 10.1 Client Configuration
+### 11.1 Client Configuration
 
 In `config.toml`:
 
@@ -805,7 +847,7 @@ initial_backoff_ms = 200
 max_backoff_ms = 5000
 ```
 
-### 10.2 Server Configuration
+### 11.2 Server Configuration
 
 Via environment variables:
 
@@ -818,9 +860,9 @@ Via environment variables:
 
 ---
 
-## 11. Testing Strategy
+## 12. Testing Strategy
 
-### 11.1 Property-Based Tests
+### 12.1 Property-Based Tests
 
 #### Thread Model
 
@@ -934,7 +976,7 @@ proptest! {
 }
 ```
 
-### 11.2 Integration Tests
+### 12.2 Integration Tests
 
 - End-to-end test with CLI → LocalThreadStore → SyncingThreadStore → Server → SQLite
 - Offline mode testing (server unavailable)
@@ -942,31 +984,32 @@ proptest! {
 
 ---
 
-## 12. Future Considerations
+## 13. Future Considerations
 
-### 12.1 Authentication
+### 13.1 Authentication
 
 - Add API key or JWT authentication to server endpoints
 - Store credentials in system keyring
+- Stub endpoints exist: POST /v1/auth/login and POST /v1/auth/logout (return 501 Not Implemented)
 
-### 12.2 Search
+### 13.2 Search
 
 - Add full-text search using SQLite FTS5:
   ```sql
   CREATE VIRTUAL TABLE threads_fts USING fts5(content, title, tags);
   ```
 
-### 12.3 Real-Time Sync
+### 13.3 Real-Time Sync
 
 - WebSocket connection for live updates
 - Server-sent events for thread changes
 
-### 12.4 Conflict Resolution
+### 13.4 Conflict Resolution
 
 - Three-way merge for conversation histories
 - CLI command: `loom thread resolve <id>`
 
-### 12.5 Backup & Export
+### 13.5 Backup & Export
 
 - `loom thread export <id> > thread.json`
 - `loom thread import < thread.json`

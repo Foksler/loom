@@ -4,7 +4,7 @@ use axum::{
     extract::{Path, Query, State},
     http::{HeaderMap, StatusCode},
     response::IntoResponse,
-    routing::{delete, get, put},
+    routing::{delete, get, post, put},
     Json, Router,
 };
 use loom_thread::{Thread, ThreadId, ThreadSummary};
@@ -24,6 +24,8 @@ pub fn create_router(repo: Arc<ThreadRepository>) -> Router {
         .route("/v1/threads/{id}", delete(delete_thread))
         .route("/v1/threads", get(list_threads))
         .route("/health", get(health_check))
+        .route("/v1/auth/login", post(login_stub))
+        .route("/v1/auth/logout", post(logout_stub))
         .with_state(repo)
 }
 
@@ -57,6 +59,13 @@ pub struct ListResponse {
 #[derive(Debug, Serialize)]
 pub struct HealthResponse {
     pub status: String,
+}
+
+/// Response for authentication stub endpoints.
+#[derive(Debug, Serialize)]
+pub struct AuthStubResponse {
+    pub status: String,
+    pub message: String,
 }
 
 /// PUT /v1/threads/{id} - Create or update a thread.
@@ -176,6 +185,28 @@ async fn health_check() -> impl IntoResponse {
     Json(HealthResponse {
         status: "ok".to_string(),
     })
+}
+
+/// POST /v1/auth/login - Stub login endpoint.
+async fn login_stub() -> impl IntoResponse {
+    (
+        StatusCode::NOT_IMPLEMENTED,
+        Json(AuthStubResponse {
+            status: "not_implemented".to_string(),
+            message: "Authentication is not implemented yet.".to_string(),
+        }),
+    )
+}
+
+/// POST /v1/auth/logout - Stub logout endpoint.
+async fn logout_stub() -> impl IntoResponse {
+    (
+        StatusCode::NOT_IMPLEMENTED,
+        Json(AuthStubResponse {
+            status: "not_implemented".to_string(),
+            message: "Logout is not implemented yet.".to_string(),
+        }),
+    )
 }
 
 #[cfg(test)]
@@ -300,5 +331,37 @@ mod tests {
             .unwrap();
 
         assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn test_login_stub() {
+        let (app, _dir) = create_test_app().await;
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v1/auth/login")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
+    }
+
+    #[tokio::test]
+    async fn test_logout_stub() {
+        let (app, _dir) = create_test_app().await;
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v1/auth/logout")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
     }
 }

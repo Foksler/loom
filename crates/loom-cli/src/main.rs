@@ -10,7 +10,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use tracing::{debug, error, info, instrument, warn};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
@@ -23,7 +23,7 @@ use loom_core::{LlmClient, LlmEvent, Message, ToolCall, ToolContext, ToolDefinit
 use loom_llm_anthropic::{AnthropicClient, AnthropicConfig};
 use loom_llm_openai::{OpenAIClient, OpenAIConfig};
 use loom_thread::{
-    Thread, ThreadStore, LocalThreadStore, SyncingThreadStore,
+    Thread, ThreadId, ThreadStore, LocalThreadStore, SyncingThreadStore,
     ThreadSyncClient, MessageSnapshot, AgentStateKind, AgentStateSnapshot,
     MessageRole, ToolCallSnapshot,
 };
@@ -57,6 +57,24 @@ struct Args {
     /// Output logs as JSON (overrides config)
     #[arg(long)]
     json_logs: bool,
+
+    #[command(subcommand)]
+    command: Option<Command>,
+}
+
+#[derive(Subcommand, Debug)]
+enum Command {
+    /// Authenticate with Loom services
+    Login,
+    /// Log out from Loom services
+    Logout,
+    /// List local threads
+    List,
+    /// Resume an existing thread
+    Resume {
+        /// Thread ID to resume (uses most recent if not specified)
+        thread_id: Option<String>,
+    },
 }
 
 impl From<&Args> for CliOverrides {
@@ -409,21 +427,12 @@ async fn run_repl(
     Ok(())
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    let args = Args::parse();
-
-    let cli_overrides = CliOverrides::from(&args);
-    let config = load_config_with_cli(cli_overrides)
-        .context("failed to load configuration")?;
-
-    init_tracing(&config.logging);
-
-    info!(
-        provider = %config.global.default_provider,
-        "starting loom"
-    );
-
+async fn start_repl_session(
+    config: &loom_config::LoomConfig,
+    args: &Args,
+    thread_store: Arc<dyn ThreadStore>,
+    mut thread: Thread,
+) -> Result<()> {
     let provider_config = config
         .providers
         .get(&config.global.default_provider)
@@ -444,36 +453,6 @@ async fn main() -> Result<()> {
         .canonicalize()
         .context("invalid workspace path")?;
 
-    let thread_store: Arc<dyn ThreadStore> = {
-        let local_store = LocalThreadStore::from_xdg()
-            .context("failed to create local thread store")?;
-
-        if let Ok(sync_url) = std::env::var("LOOM_THREAD_SYNC_URL") {
-            let base_url = Url::parse(&sync_url)
-                .context("invalid LOOM_THREAD_SYNC_URL")?;
-            let http_client = reqwest::Client::new();
-            let sync_client = ThreadSyncClient::new(base_url, http_client);
-            Arc::new(SyncingThreadStore::with_sync(local_store, sync_client))
-        } else {
-            Arc::new(SyncingThreadStore::local_only(local_store))
-        }
-    };
-
-    let mut thread = Thread::new();
-    thread.workspace_root = Some(workspace.display().to_string());
-    thread.cwd = Some(std::env::current_dir()?.display().to_string());
-    thread.loom_version = Some(env!("CARGO_PKG_VERSION").to_string());
-    thread.provider = Some(config.global.default_provider.clone());
-    thread.model = args.model.clone().or_else(|| {
-        match provider_config {
-            ProviderConfig::Anthropic(cfg) => Some(cfg.default_model.clone()),
-            ProviderConfig::OpenAi(cfg) => Some(cfg.default_model.clone()),
-            _ => None,
-        }
-    });
-
-    info!(thread_id = %thread.id, "created new thread");
-
     let llm_client = create_llm_client(
         &config.global.default_provider,
         provider_config,
@@ -490,7 +469,6 @@ async fn main() -> Result<()> {
         "initialized"
     );
 
-    // Setup shutdown flag for graceful Ctrl+C handling
     let shutdown_flag = Arc::new(AtomicBool::new(false));
     setup_ctrlc_handler(shutdown_flag.clone())?;
 
@@ -503,6 +481,138 @@ async fn main() -> Result<()> {
         thread_store.as_ref(),
         shutdown_flag,
     ).await
+}
+
+fn create_new_thread(config: &loom_config::LoomConfig, args: &Args) -> Result<Thread> {
+    let provider_config = config
+        .providers
+        .get(&config.global.default_provider)
+        .with_context(|| {
+            format!(
+                "provider '{}' not configured. Available: {:?}",
+                config.global.default_provider,
+                config.providers.keys().collect::<Vec<_>>()
+            )
+        })?;
+
+    let workspace = config
+        .global
+        .workspace_root
+        .clone()
+        .or_else(|| config.tools.workspace.root.clone())
+        .unwrap_or_else(|| PathBuf::from("."))
+        .canonicalize()
+        .context("invalid workspace path")?;
+
+    let mut thread = Thread::new();
+    thread.workspace_root = Some(workspace.display().to_string());
+    thread.cwd = Some(std::env::current_dir()?.display().to_string());
+    thread.loom_version = Some(env!("CARGO_PKG_VERSION").to_string());
+    thread.provider = Some(config.global.default_provider.clone());
+    thread.model = args.model.clone().or_else(|| {
+        match provider_config {
+            ProviderConfig::Anthropic(cfg) => Some(cfg.default_model.clone()),
+            ProviderConfig::OpenAi(cfg) => Some(cfg.default_model.clone()),
+            _ => None,
+        }
+    });
+
+    info!(thread_id = %thread.id, "created new thread");
+    Ok(thread)
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let args = Args::parse();
+
+    let cli_overrides = CliOverrides::from(&args);
+    let config = load_config_with_cli(cli_overrides)
+        .context("failed to load configuration")?;
+
+    init_tracing(&config.logging);
+
+    info!(
+        provider = %config.global.default_provider,
+        "starting loom"
+    );
+
+    let thread_store: Arc<dyn ThreadStore> = {
+        let local_store = LocalThreadStore::from_xdg()
+            .context("failed to create local thread store")?;
+
+        if let Ok(sync_url) = std::env::var("LOOM_THREAD_SYNC_URL") {
+            let base_url = Url::parse(&sync_url)
+                .context("invalid LOOM_THREAD_SYNC_URL")?;
+            let http_client = reqwest::Client::new();
+            let sync_client = ThreadSyncClient::new(base_url, http_client);
+            Arc::new(SyncingThreadStore::with_sync(local_store, sync_client))
+        } else {
+            Arc::new(SyncingThreadStore::local_only(local_store))
+        }
+    };
+
+    match &args.command {
+        Some(Command::Login) => {
+            println!("loom login: not implemented yet");
+            Ok(())
+        }
+        Some(Command::Logout) => {
+            println!("loom logout: not implemented yet");
+            Ok(())
+        }
+        Some(Command::List) => {
+            let threads = thread_store.list(100).await
+                .context("failed to list threads")?;
+
+            if threads.is_empty() {
+                println!("No threads found.");
+            } else {
+                println!("{:<42} {:<30} {:>6} {:<20}", "ID", "TITLE", "MSGS", "LAST ACTIVITY");
+                println!("{}", "-".repeat(100));
+                for summary in threads {
+                    let title = summary.title.as_deref().unwrap_or("(untitled)");
+                    let title_display = if title.len() > 28 {
+                        format!("{}...", &title[..25])
+                    } else {
+                        title.to_string()
+                    };
+                    println!(
+                        "{:<42} {:<30} {:>6} {:<20}",
+                        summary.id,
+                        title_display,
+                        summary.message_count,
+                        summary.last_activity_at
+                    );
+                }
+            }
+            Ok(())
+        }
+        Some(Command::Resume { thread_id }) => {
+            let thread = match thread_id {
+                Some(id) => {
+                    let tid = ThreadId::from_string(id.clone());
+                    thread_store.load(&tid).await
+                        .context("failed to load thread")?
+                        .with_context(|| format!("thread '{}' not found", id))?
+                }
+                None => {
+                    let threads = thread_store.list(1).await
+                        .context("failed to list threads")?;
+                    let summary = threads.into_iter().next()
+                        .context("no threads found to resume")?;
+                    thread_store.load(&summary.id).await
+                        .context("failed to load thread")?
+                        .context("thread not found")?
+                }
+            };
+            info!(thread_id = %thread.id, "resuming thread");
+            start_repl_session(&config, &args, thread_store, thread).await
+        }
+        None => {
+            let thread = create_new_thread(&config, &args)?;
+            start_repl_session(&config, &args, thread_store, thread).await
+        }
+    }
 }
 
 fn setup_ctrlc_handler(shutdown_flag: Arc<AtomicBool>) -> Result<()> {
