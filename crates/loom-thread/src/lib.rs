@@ -6,4 +6,4 @@ pub mod sync;
 pub use error::*;
 pub use model::*;
 pub use store::*;
-pub use sync::*;
+pub use sync::{LoomVersionHeaders, SyncingThreadStore, ThreadSyncClient};

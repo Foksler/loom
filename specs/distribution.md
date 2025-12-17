@@ -1,0 +1,219 @@
+# Distribution System Specification
+
+**Status:** Draft  
+**Version:** 1.0  
+**Last Updated:** 2024-12-17
+
+---
+
+## 1. Overview
+
+### Purpose
+
+This specification describes how Loom CLI binaries are built, distributed, and served to enable self-updating across platforms.
+
+### Goals
+
+- **Multi-platform support**: Build for Linux (x86_64, aarch64), macOS (x86_64, aarch64), Windows (x86_64)
+- **Self-update**: CLI can update itself from the server
+- **Automated builds**: CI/CD builds all platforms automatically
+- **Version tracking**: Build info embedded in binaries
+
+---
+
+## 2. Platform Naming Convention
+
+Platform strings follow the format `{os}-{arch}`:
+
+| Platform | Rust Target | Platform String |
+|----------|-------------|-----------------|
+| Linux x64 | `x86_64-unknown-linux-gnu` | `linux-x86_64` |
+| Linux ARM64 | `aarch64-unknown-linux-gnu` | `linux-aarch64` |
+| macOS Intel | `x86_64-apple-darwin` | `macos-x86_64` |
+| macOS Apple Silicon | `aarch64-apple-darwin` | `macos-aarch64` |
+| Windows x64 | `x86_64-pc-windows-msvc` | `windows-x86_64` |
+
+The platform string is derived at compile time:
+```rust
+concat!(env!("CARGO_CFG_TARGET_OS"), "-", env!("CARGO_CFG_TARGET_ARCH"))
+```
+
+---
+
+## 3. Build System
+
+### 3.1 Local Build Script
+
+The `scripts/build-cli-binaries.sh` script builds CLI binaries for specified platforms:
+
+```bash
+# Build all platforms (requires cross-compilation toolchains)
+./scripts/build-cli-binaries.sh
+
+# Build specific platform
+./scripts/build-cli-binaries.sh linux-x86_64
+
+# Build multiple platforms
+./scripts/build-cli-binaries.sh linux-x86_64 macos-aarch64
+```
+
+Output binaries are placed in `$LOOM_SERVER_BIN_DIR` (default: `./bin/`).
+
+### 3.2 Build Info Embedding
+
+Each CLI binary embeds build information via `shadow-rs`:
+- Package version (from Cargo.toml)
+- Git commit SHA (short)
+- Build timestamp (RFC3339)
+- Target platform
+
+This info is displayed by `loom version` and sent as HTTP headers.
+
+---
+
+## 4. Server Distribution
+
+### 4.1 Binary Serving
+
+The loom-server serves CLI binaries at `/bin/{platform}`:
+
+| Endpoint | File |
+|----------|------|
+| `GET /bin/linux-x86_64` | `$LOOM_SERVER_BIN_DIR/linux-x86_64` |
+| `GET /bin/linux-aarch64` | `$LOOM_SERVER_BIN_DIR/linux-aarch64` |
+| `GET /bin/macos-x86_64` | `$LOOM_SERVER_BIN_DIR/macos-x86_64` |
+| `GET /bin/macos-aarch64` | `$LOOM_SERVER_BIN_DIR/macos-aarch64` |
+| `GET /bin/windows-x86_64` | `$LOOM_SERVER_BIN_DIR/windows-x86_64` |
+
+### 4.2 Server Configuration
+
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `LOOM_SERVER_BIN_DIR` | `./bin` | Directory containing platform binaries |
+
+### 4.3 Directory Layout
+
+```
+loom-server-deployment/
+├── loom-server          # Server binary
+└── bin/
+    ├── linux-x86_64     # Linux x64 CLI
+    ├── linux-aarch64    # Linux ARM64 CLI
+    ├── macos-x86_64     # macOS Intel CLI
+    ├── macos-aarch64    # macOS Apple Silicon CLI
+    └── windows-x86_64   # Windows x64 CLI
+```
+
+---
+
+## 5. Self-Update Flow
+
+### 5.1 Update Command
+
+```bash
+loom update
+```
+
+### 5.2 Update Process
+
+1. CLI determines current platform string
+2. Constructs URL: `{base_url}/bin/{platform}`
+3. Downloads binary with version headers
+4. Writes to temporary file
+5. Sets executable permissions (Unix)
+6. Atomically replaces current binary (backup created as `.old`)
+
+### 5.3 Update Configuration
+
+| Environment Variable | Description |
+|---------------------|-------------|
+| `LOOM_UPDATE_BASE_URL` | Base URL for updates (e.g., `https://loom.example.com`) |
+| `LOOM_THREAD_SYNC_URL` | Fallback: derives base URL from sync URL |
+
+---
+
+## 6. CI/CD Pipeline
+
+### 6.1 Workflow Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        GitHub Actions                            │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
+│  │ build-cli   │  │ build-cli   │  │ build-cli   │  ...         │
+│  │ linux-x86   │  │ macos-arm   │  │ windows     │              │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘              │
+│         │                │                │                      │
+│         └────────────────┼────────────────┘                      │
+│                          ▼                                       │
+│                   ┌─────────────┐                                │
+│                   │   package   │                                │
+│                   │   bundle    │                                │
+│                   └──────┬──────┘                                │
+│                          │                                       │
+│                          ▼                                       │
+│                   ┌─────────────┐                                │
+│                   │   release   │                                │
+│                   │   upload    │                                │
+│                   └─────────────┘                                │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### 6.2 Build Matrix
+
+| Platform | Runner | Target |
+|----------|--------|--------|
+| linux-x86_64 | `ubuntu-latest` | `x86_64-unknown-linux-gnu` |
+| linux-aarch64 | `ubuntu-24.04-arm64` | `aarch64-unknown-linux-gnu` |
+| macos-x86_64 | `macos-13` | `x86_64-apple-darwin` |
+| macos-aarch64 | `macos-14` | `aarch64-apple-darwin` |
+| windows-x86_64 | `windows-latest` | `x86_64-pc-windows-msvc` |
+
+### 6.3 Artifacts
+
+| Artifact | Contents | Retention |
+|----------|----------|-----------|
+| `cli-{platform}` | Single platform CLI binary | 7 days |
+| `server-linux-x86_64` | Server binary | 7 days |
+| `loom-bundle` | Server + all CLI binaries tarball | 30 days |
+
+---
+
+## 7. Version Headers
+
+All HTTP requests from CLI to server include:
+
+| Header | Example |
+|--------|---------|
+| `X-Loom-Version` | `0.1.0` |
+| `X-Loom-Git-Sha` | `abc1234` |
+| `X-Loom-Build-Timestamp` | `2024-12-17T10:30:00Z` |
+| `X-Loom-Platform` | `linux-x86_64` |
+
+These enable:
+- Server-side version analytics
+- Compatibility checks (future)
+- Targeted update recommendations (future)
+
+---
+
+## 8. Future Considerations
+
+### 8.1 Signed Binaries
+- Sign binaries with a release key
+- Verify signatures before applying updates
+
+### 8.2 Delta Updates
+- Download only changed bytes
+- Reduce bandwidth for minor updates
+
+### 8.3 Update Channels
+- `stable`, `beta`, `nightly` channels
+- `loom update --channel beta`
+
+### 8.4 Version Manifest
+- `GET /bin/manifest.json` returns available versions
+- CLI can show "update available" notifications

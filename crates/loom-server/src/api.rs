@@ -7,6 +7,7 @@ use axum::{
     routing::{delete, get, post, put},
     Json, Router,
 };
+use tower_http::services::ServeDir;
 use loom_thread::{Thread, ThreadId, ThreadSummary};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -18,14 +19,17 @@ pub type AppState = Arc<ThreadRepository>;
 
 /// Create the API router with all routes.
 pub fn create_router(repo: Arc<ThreadRepository>) -> Router {
+    let bin_dir = std::env::var("LOOM_SERVER_BIN_DIR").unwrap_or_else(|_| "./bin".to_string());
+
     Router::new()
         .route("/v1/threads/{id}", put(upsert_thread))
         .route("/v1/threads/{id}", get(get_thread))
         .route("/v1/threads/{id}", delete(delete_thread))
         .route("/v1/threads", get(list_threads))
-        .route("/health", get(health_check))
         .route("/v1/auth/login", post(login_stub))
         .route("/v1/auth/logout", post(logout_stub))
+        .route("/health", get(health_check))
+        .nest_service("/bin", ServeDir::new(bin_dir))
         .with_state(repo)
 }
 

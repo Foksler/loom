@@ -275,7 +275,30 @@ The Loom CLI provides commands for managing and resuming threads using the `Thre
 - `loom resume` - Resumes most recent thread
 - `loom resume <thread_id>` - Resumes specific thread by ID
 
-### 4.2 Auth Commands (Stubs)
+### 4.2 Version and Update Commands
+
+- `loom version` - Shows version information including:
+  - Package version from Cargo.toml
+  - Git SHA (short commit hash)
+  - Build timestamp (RFC3339)
+  - Build age (relative and absolute)
+  - Platform (os-arch, e.g., `linux-x86_64`)
+
+- `loom update` - Self-updates the CLI binary:
+  - Downloads the latest binary from the server at `/bin/{platform}`
+  - Replaces the current executable atomically
+  - Creates a backup of the old binary (`.old` extension)
+  - Requires `LOOM_UPDATE_BASE_URL` or `LOOM_THREAD_SYNC_URL` to be set
+
+### 4.3 Version Headers
+
+All HTTP requests from the CLI to the loom-server include version headers:
+- `X-Loom-Version` - Package version (e.g., `0.1.0`)
+- `X-Loom-Git-Sha` - Git commit SHA
+- `X-Loom-Build-Timestamp` - Build time (RFC3339)
+- `X-Loom-Platform` - Target platform (e.g., `linux-x86_64`)
+
+### 4.4 Auth Commands (Stubs)
 
 - `loom login` - Stub, not implemented yet
 - `loom logout` - Stub, not implemented yet
@@ -284,7 +307,20 @@ Server stub endpoints:
 - POST /v1/auth/login - returns 501 Not Implemented
 - POST /v1/auth/logout - returns 501 Not Implemented
 
-### 4.3 Example Usage
+### 4.5 Binary Distribution
+
+The server serves pre-built CLI binaries at `/bin/{platform}`:
+- `GET /bin/linux-x86_64` - Linux x86_64 binary
+- `GET /bin/linux-aarch64` - Linux ARM64 binary
+- `GET /bin/macos-x86_64` - macOS Intel binary
+- `GET /bin/macos-aarch64` - macOS Apple Silicon binary
+- `GET /bin/windows-x86_64` - Windows x64 binary
+
+Platform string format: `{CARGO_CFG_TARGET_OS}-{CARGO_CFG_TARGET_ARCH}`
+
+The server reads binaries from `$LOOM_SERVER_BIN_DIR` (default: `./bin`).
+
+### 4.6 Example Usage
 
 ```bash
 # Start new session
@@ -298,6 +334,12 @@ loom resume
 
 # Resume specific thread
 loom resume T-019b2b97-fddf-7602-a3e4-1c4a295110c0
+
+# Show version info
+loom version
+
+# Update to latest version
+loom update
 
 # Login/logout stubs
 loom login

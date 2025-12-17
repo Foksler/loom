@@ -25,10 +25,12 @@ use loom_llm_openai::{OpenAIClient, OpenAIConfig};
 use loom_thread::{
     Thread, ThreadId, ThreadStore, LocalThreadStore, SyncingThreadStore,
     ThreadSyncClient, MessageSnapshot, AgentStateKind, AgentStateSnapshot,
-    MessageRole, ToolCallSnapshot,
+    MessageRole, ToolCallSnapshot, LoomVersionHeaders,
 };
 use loom_tools::{EditFileTool, ListFilesTool, ReadFileTool, ToolRegistry};
 use url::Url;
+
+mod version;
 
 /// Loom - AI-powered coding assistant
 #[derive(Parser, Debug)]
@@ -75,6 +77,10 @@ enum Command {
         /// Thread ID to resume (uses most recent if not specified)
         thread_id: Option<String>,
     },
+    /// Show version and build information
+    Version,
+    /// Update Loom to the latest version from the server
+    Update,
 }
 
 impl From<&Args> for CliOverrides {
@@ -483,6 +489,87 @@ async fn start_repl_session(
     ).await
 }
 
+fn get_update_base_url() -> Result<Url> {
+    if let Ok(raw) = std::env::var("LOOM_UPDATE_BASE_URL") {
+        return Url::parse(&raw).context("invalid LOOM_UPDATE_BASE_URL");
+    }
+    if let Ok(sync_url) = std::env::var("LOOM_THREAD_SYNC_URL") {
+        let mut base = Url::parse(&sync_url).context("invalid LOOM_THREAD_SYNC_URL")?;
+        base.set_path("");
+        return Ok(base);
+    }
+    anyhow::bail!("LOOM_UPDATE_BASE_URL or LOOM_THREAD_SYNC_URL must be set for updates")
+}
+
+async fn run_update() -> Result<()> {
+    let build_info = version::build_info();
+    let base_url = get_update_base_url()?;
+    
+    let bin_url = base_url
+        .join(&format!("bin/{}", build_info.platform))
+        .context("failed to construct update URL")?;
+    
+    println!("Current version: {}", build_info.version);
+    println!("Platform:        {}", build_info.platform);
+    println!("Checking for updates from {}...", bin_url);
+    
+    let current_exe = std::env::current_exe()
+        .context("failed to get current executable path")?;
+    
+    let http_client = reqwest::Client::new();
+    let response = http_client
+        .get(bin_url.clone())
+        .header("X-Loom-Version", build_info.version)
+        .header("X-Loom-Git-Sha", build_info.git_sha)
+        .header("X-Loom-Platform", build_info.platform)
+        .send()
+        .await
+        .context("failed to download update")?;
+    
+    if !response.status().is_success() {
+        anyhow::bail!(
+            "Update server returned error: {} - {}",
+            response.status(),
+            response.text().await.unwrap_or_default()
+        );
+    }
+    
+    let bytes = response.bytes().await.context("failed to read update binary")?;
+    
+    if bytes.is_empty() {
+        anyhow::bail!("Downloaded binary is empty");
+    }
+    
+    println!("Downloaded {} bytes", bytes.len());
+    
+    let tmp_path = current_exe.with_extension("new");
+    tokio::fs::write(&tmp_path, &bytes)
+        .await
+        .context("failed to write temporary binary")?;
+    
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = std::fs::metadata(&tmp_path)?.permissions();
+        perms.set_mode(0o755);
+        std::fs::set_permissions(&tmp_path, perms)?;
+    }
+    
+    let backup_path = current_exe.with_extension("old");
+    if backup_path.exists() {
+        std::fs::remove_file(&backup_path).ok();
+    }
+    
+    std::fs::rename(&current_exe, &backup_path)
+        .context("failed to backup current binary")?;
+    std::fs::rename(&tmp_path, &current_exe)
+        .context("failed to install new binary")?;
+    
+    println!("Update complete! Please restart loom.");
+    
+    Ok(())
+}
+
 fn create_new_thread(config: &loom_config::LoomConfig, args: &Args) -> Result<Thread> {
     let provider_config = config
         .providers
@@ -544,7 +631,17 @@ async fn main() -> Result<()> {
             let base_url = Url::parse(&sync_url)
                 .context("invalid LOOM_THREAD_SYNC_URL")?;
             let http_client = reqwest::Client::new();
-            let sync_client = ThreadSyncClient::new(base_url, http_client);
+            
+            let build_info = version::build_info();
+            let version_headers = LoomVersionHeaders {
+                version: build_info.version.to_string(),
+                git_sha: build_info.git_sha.to_string(),
+                build_timestamp: build_info.build_timestamp.to_string(),
+                platform: build_info.platform.to_string(),
+            };
+            
+            let sync_client = ThreadSyncClient::new(base_url, http_client)
+                .with_version_headers(version_headers);
             Arc::new(SyncingThreadStore::with_sync(local_store, sync_client))
         } else {
             Arc::new(SyncingThreadStore::local_only(local_store))
@@ -552,6 +649,13 @@ async fn main() -> Result<()> {
     };
 
     match &args.command {
+        Some(Command::Version) => {
+            println!("{}", version::format_version_info());
+            Ok(())
+        }
+        Some(Command::Update) => {
+            run_update().await
+        }
         Some(Command::Login) => {
             println!("loom login: not implemented yet");
             Ok(())

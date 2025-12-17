@@ -21,3 +21,23 @@ devenv.local.yaml
 # OS
 .DS_Store
 Thumbs.db
+
+# Binary distribution - platform binaries served by loom-server
+/bin/*
+!/bin/.gitkeep
+
+# Compiled binaries (all platforms)
+/bin/linux-x86_64
+/bin/linux-aarch64
+/bin/macos-x86_64
+/bin/macos-aarch64
+/bin/windows-x86_64
+
+# Backup binaries from loom update
+*.old
+*.new
+
+# Release artifacts
+*.tar.gz
+*.zip
+/dist/

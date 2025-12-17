@@ -13,6 +13,8 @@ pub struct ServerConfig {
     pub database_url: String,
     /// Log level filter.
     pub log_level: String,
+    /// Directory containing platform binaries.
+    pub bin_dir: String,
 }
 
 impl ServerConfig {
@@ -36,11 +38,14 @@ impl ServerConfig {
 
         let log_level = env::var("LOOM_SERVER_LOG_LEVEL").unwrap_or_else(|_| "info".to_string());
 
+        let bin_dir = env::var("LOOM_SERVER_BIN_DIR").unwrap_or_else(|_| "./bin".to_string());
+
         Ok(Self {
             host,
             port,
             database_url,
             log_level,
+            bin_dir,
         })
     }
 
@@ -57,6 +62,7 @@ impl Default for ServerConfig {
             port: 8080,
             database_url: "sqlite:./loom.db".to_string(),
             log_level: "info".to_string(),
+            bin_dir: "./bin".to_string(),
         }
     }
 }

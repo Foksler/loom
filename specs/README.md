@@ -15,7 +15,8 @@ This directory contains the architectural specifications and design documentatio
 | [retry-strategy.md](./retry-strategy.md) | HTTP retry/backoff with exponential backoff and jitter |
 | [testing.md](./testing.md) | Testing strategy with property-based tests |
 | [configuration.md](./configuration.md) | CLI arguments and basic config overview |
-| [configuration-system.md](./configuration-system.md) | **NEW**: Full configuration registry, XDG paths, TOML format, layered sources |
+| [configuration-system.md](./configuration-system.md) | Full configuration registry, XDG paths, TOML format, layered sources |
+| [distribution.md](./distribution.md) | Build system, multi-platform binaries, self-update, and CI/CD pipeline |
 
 ## Quick Reference
 
