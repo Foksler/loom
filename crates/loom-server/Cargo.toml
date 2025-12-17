@@ -1,0 +1,45 @@
+[package]
+name = "loom-server"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "HTTP server for Loom thread persistence"
+
+[[bin]]
+name = "loom-server"
+path = "src/main.rs"
+
+[lib]
+name = "loom_server"
+path = "src/lib.rs"
+
+[dependencies]
+loom-thread = { path = "../loom-thread" }
+
+# Web framework
+axum = { version = "0.8", features = ["macros"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+
+# Database
+sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# From workspace
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# Config
+dotenvy = "0.15"
+
+[dev-dependencies]
+tempfile.workspace = true
+tokio-test.workspace = true
+proptest.workspace = true

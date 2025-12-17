@@ -4,6 +4,8 @@ members = [
     "crates/loom-config",
     "crates/loom-http-retry",
     "crates/loom-core",
+    "crates/loom-thread",
+    "crates/loom-server",
     "crates/loom-llm-anthropic",
     "crates/loom-llm-openai",
     "crates/loom-tools",

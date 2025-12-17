@@ -6,6 +6,7 @@
 
 use std::io::{self, BufRead, Write};
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
@@ -21,7 +22,13 @@ use loom_config::{
 use loom_core::{LlmClient, LlmEvent, Message, ToolCall, ToolContext, ToolDefinition, ToolExecutionOutcome};
 use loom_llm_anthropic::{AnthropicClient, AnthropicConfig};
 use loom_llm_openai::{OpenAIClient, OpenAIConfig};
+use loom_thread::{
+    Thread, ThreadStore, LocalThreadStore, SyncingThreadStore,
+    ThreadSyncClient, MessageSnapshot, AgentStateKind, AgentStateSnapshot,
+    MessageRole, ToolCallSnapshot,
+};
 use loom_tools::{EditFileTool, ListFilesTool, ReadFileTool, ToolRegistry};
+use url::Url;
 
 /// Loom - AI-powered coding assistant
 #[derive(Parser, Debug)]
@@ -219,22 +226,37 @@ async fn execute_tool(
     }
 }
 
-#[instrument(skip(llm_client, tool_registry, tool_ctx))]
+#[instrument(skip(llm_client, tool_registry, tool_ctx, thread, thread_store, shutdown_flag))]
 async fn run_repl(
     llm_client: &dyn LlmClient,
     tool_registry: &ToolRegistry,
     tool_definitions: &[ToolDefinition],
     tool_ctx: &ToolContext,
+    thread: &mut Thread,
+    thread_store: &dyn ThreadStore,
+    shutdown_flag: Arc<AtomicBool>,
 ) -> Result<()> {
     let stdin = io::stdin();
     let mut stdout = io::stdout();
 
     println!("Welcome to Loom - AI-powered coding assistant");
+    println!("Thread: {}", thread.id);
     println!("Type your message and press Enter. Use Ctrl+C to exit.\n");
 
     let mut messages: Vec<Message> = Vec::new();
 
     loop {
+        // Check if shutdown was requested
+        if shutdown_flag.load(Ordering::Relaxed) {
+            info!("shutdown requested, saving thread");
+            thread.touch();
+            if let Err(e) = thread_store.save(thread).await {
+                warn!(error = %e, "failed to save thread on shutdown");
+            }
+            println!("\nInterrupted. Thread saved. Goodbye!");
+            break;
+        }
+
         print!("> ");
         stdout.flush()?;
 
@@ -243,6 +265,21 @@ async fn run_repl(
 
         if bytes_read == 0 {
             info!("EOF received, shutting down");
+            thread.touch();
+            if let Err(e) = thread_store.save(thread).await {
+                warn!(error = %e, "failed to save thread on exit");
+            }
+            break;
+        }
+        
+        // Check shutdown again after potentially blocking read
+        if shutdown_flag.load(Ordering::Relaxed) {
+            info!("shutdown requested after input, saving thread");
+            thread.touch();
+            if let Err(e) = thread_store.save(thread).await {
+                warn!(error = %e, "failed to save thread on shutdown");
+            }
+            println!("\nInterrupted. Thread saved. Goodbye!");
             break;
         }
 
@@ -254,7 +291,9 @@ async fn run_repl(
         debug!(input_length = input.len(), "received user input");
 
         let user_message = Message::user(input);
-        messages.push(user_message);
+        messages.push(user_message.clone());
+
+        thread.conversation.messages.push(MessageSnapshot::from(&user_message));
 
         let request = loom_core::LlmRequest::new("default")
             .with_messages(messages.clone())
@@ -299,6 +338,20 @@ async fn run_repl(
 
                 messages.push(Message::assistant(&assistant_content));
 
+                thread.conversation.messages.push(MessageSnapshot {
+                    role: MessageRole::Assistant,
+                    content: assistant_content.clone(),
+                    tool_call_id: None,
+                    tool_name: None,
+                    tool_calls: if tool_calls.is_empty() { None } else {
+                        Some(tool_calls.iter().map(|tc| ToolCallSnapshot {
+                            id: tc.id.clone(),
+                            tool_name: tc.tool_name.clone(),
+                            arguments_json: tc.arguments_json.clone(),
+                        }).collect())
+                    },
+                });
+
                 for tool_call in tool_calls {
                     info!(
                         tool_name = %tool_call.tool_name,
@@ -324,6 +377,26 @@ async fn run_repl(
                     }
 
                     messages.push(Message::tool(&tool_call.id, &tool_call.tool_name, &tool_result));
+
+                    thread.conversation.messages.push(MessageSnapshot {
+                        role: MessageRole::Tool,
+                        content: tool_result.clone(),
+                        tool_call_id: Some(tool_call.id.clone()),
+                        tool_name: Some(tool_call.tool_name.clone()),
+                        tool_calls: None,
+                    });
+                }
+
+                thread.agent_state = AgentStateSnapshot {
+                    kind: AgentStateKind::WaitingForUserInput,
+                    retries: 0,
+                    last_error: None,
+                    pending_tool_calls: Vec::new(),
+                };
+                thread.touch();
+
+                if let Err(e) = thread_store.save(thread).await {
+                    warn!(error = %e, "failed to save thread");
                 }
             }
             Err(e) => {
@@ -371,6 +444,36 @@ async fn main() -> Result<()> {
         .canonicalize()
         .context("invalid workspace path")?;
 
+    let thread_store: Arc<dyn ThreadStore> = {
+        let local_store = LocalThreadStore::from_xdg()
+            .context("failed to create local thread store")?;
+
+        if let Ok(sync_url) = std::env::var("LOOM_THREAD_SYNC_URL") {
+            let base_url = Url::parse(&sync_url)
+                .context("invalid LOOM_THREAD_SYNC_URL")?;
+            let http_client = reqwest::Client::new();
+            let sync_client = ThreadSyncClient::new(base_url, http_client);
+            Arc::new(SyncingThreadStore::with_sync(local_store, sync_client))
+        } else {
+            Arc::new(SyncingThreadStore::local_only(local_store))
+        }
+    };
+
+    let mut thread = Thread::new();
+    thread.workspace_root = Some(workspace.display().to_string());
+    thread.cwd = Some(std::env::current_dir()?.display().to_string());
+    thread.loom_version = Some(env!("CARGO_PKG_VERSION").to_string());
+    thread.provider = Some(config.global.default_provider.clone());
+    thread.model = args.model.clone().or_else(|| {
+        match provider_config {
+            ProviderConfig::Anthropic(cfg) => Some(cfg.default_model.clone()),
+            ProviderConfig::OpenAi(cfg) => Some(cfg.default_model.clone()),
+            _ => None,
+        }
+    });
+
+    info!(thread_id = %thread.id, "created new thread");
+
     let llm_client = create_llm_client(
         &config.global.default_provider,
         provider_config,
@@ -387,16 +490,27 @@ async fn main() -> Result<()> {
         "initialized"
     );
 
-    ctrlc_handler()?;
+    // Setup shutdown flag for graceful Ctrl+C handling
+    let shutdown_flag = Arc::new(AtomicBool::new(false));
+    setup_ctrlc_handler(shutdown_flag.clone())?;
 
-    run_repl(llm_client.as_ref(), &tool_registry, &tool_definitions, &tool_ctx).await
+    run_repl(
+        llm_client.as_ref(),
+        &tool_registry,
+        &tool_definitions,
+        &tool_ctx,
+        &mut thread,
+        thread_store.as_ref(),
+        shutdown_flag,
+    ).await
 }
 
-fn ctrlc_handler() -> Result<()> {
-    ctrlc::set_handler(|| {
-        info!("received Ctrl+C, shutting down");
-        println!("\nInterrupted. Goodbye!");
-        std::process::exit(0);
+fn setup_ctrlc_handler(shutdown_flag: Arc<AtomicBool>) -> Result<()> {
+    ctrlc::set_handler(move || {
+        info!("received Ctrl+C, requesting shutdown");
+        shutdown_flag.store(true, Ordering::Relaxed);
+        // Print newline to clean up prompt
+        eprintln!();
     })
     .context("failed to set Ctrl+C handler")?;
 
