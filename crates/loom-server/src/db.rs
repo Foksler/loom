@@ -794,6 +794,18 @@ impl ThreadRepository {
 
     // ========== CSE Cache Methods ==========
 
+    /// Normalizes a query string for cache key purposes.
+    /// - Converts to lowercase
+    /// - Collapses multiple whitespace into single spaces
+    /// - Trims leading/trailing whitespace
+    fn normalize_cache_query(query: &str) -> String {
+        query
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .to_lowercase()
+    }
+
     /// Get cached CSE response if it exists and is not expired (24h TTL).
     pub async fn get_cse_cache(
         &self,
@@ -814,7 +826,7 @@ impl ThreadRepository {
             LIMIT 1
             "#,
         )
-        .bind(query)
+        .bind(Self::normalize_cache_query(query))
         .bind(max_results as i64)
         .bind(&cutoff)
         .fetch_optional(&self.pool)
@@ -863,7 +875,7 @@ impl ThreadRepository {
                 created_at    = excluded.created_at
             "#,
         )
-        .bind(&response.query)
+        .bind(Self::normalize_cache_query(&response.query))
         .bind(max_results as i64)
         .bind(&json)
         .bind(&now)
@@ -1092,6 +1104,15 @@ mod tests {
         let hits = repo.search("abc123def", None, 10, 0).await.unwrap();
         assert_eq!(hits.len(), 1);
         assert_eq!(hits[0].summary.id.as_str(), thread.id.as_str());
+    }
+
+    #[test]
+    fn test_normalize_cache_query() {
+        assert_eq!(ThreadRepository::normalize_cache_query("Hello World"), "hello world");
+        assert_eq!(ThreadRepository::normalize_cache_query("  multiple   spaces  "), "multiple spaces");
+        assert_eq!(ThreadRepository::normalize_cache_query("UPPERCASE"), "uppercase");
+        assert_eq!(ThreadRepository::normalize_cache_query("  trim  me  "), "trim me");
+        assert_eq!(ThreadRepository::normalize_cache_query("already normalized"), "already normalized");
     }
 
     #[tokio::test]

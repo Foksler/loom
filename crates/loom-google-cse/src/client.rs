@@ -2,6 +2,7 @@
 
 use std::time::Duration;
 
+use loom_http_retry::{retry, RetryConfig};
 use reqwest::{Client, Url};
 use serde::Deserialize;
 use tracing::{debug, error, instrument, trace};
@@ -19,6 +20,7 @@ pub struct CseClient {
     api_key: String,
     cx: String,
     base_url: String,
+    retry_config: RetryConfig,
 }
 
 #[derive(Debug, Deserialize)]
@@ -55,6 +57,7 @@ impl CseClient {
             api_key: api_key.into(),
             cx: cx.into(),
             base_url: DEFAULT_BASE_URL.to_string(),
+            retry_config: RetryConfig::default(),
         }
     }
 
@@ -64,9 +67,22 @@ impl CseClient {
         self
     }
 
+    /// Sets a custom retry configuration.
+    pub fn with_retry_config(mut self, config: RetryConfig) -> Self {
+        self.retry_config = config;
+        self
+    }
+
     /// Performs a search using the Google Custom Search Engine API.
     #[instrument(skip(self), fields(query = %request.query, num = request.num))]
     pub async fn search(&self, request: CseRequest) -> Result<CseResponse, CseError> {
+        let query = request.query.clone();
+        let num = request.num;
+
+        retry(&self.retry_config, || self.search_inner(&query, num)).await
+    }
+
+    async fn search_inner(&self, query: &str, num: u32) -> Result<CseResponse, CseError> {
         let mut url = Url::parse(&self.base_url).map_err(|e| {
             CseError::InvalidResponse(format!("Invalid base URL: {}", e))
         })?;
@@ -74,11 +90,11 @@ impl CseClient {
         url.query_pairs_mut()
             .append_pair("key", &self.api_key)
             .append_pair("cx", &self.cx)
-            .append_pair("q", &request.query)
-            .append_pair("num", &request.num.to_string());
+            .append_pair("q", query)
+            .append_pair("num", &num.to_string());
 
         debug!(url = %self.base_url, "Sending search request to Google CSE");
-        trace!(query = %request.query, num = request.num, "Search parameters");
+        trace!(query = %query, num = num, "Search parameters");
 
         let response = self
             .http_client
@@ -157,7 +173,7 @@ impl CseClient {
         debug!(result_count = results.len(), "Search completed successfully");
 
         Ok(CseResponse {
-            query: request.query,
+            query: query.to_string(),
             results,
         })
     }

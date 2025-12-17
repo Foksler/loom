@@ -9,7 +9,7 @@ pub mod db;
 pub mod error;
 pub mod health;
 
-pub use api::create_router;
+pub use api::{create_app_state, create_router, AppState};
 pub use config::ServerConfig;
 pub use db::ThreadRepository;
 pub use error::ServerError;

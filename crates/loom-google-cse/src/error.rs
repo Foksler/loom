@@ -1,5 +1,6 @@
 //! Error types for Google Custom Search Engine client.
 
+use loom_http_retry::RetryableError;
 use thiserror::Error;
 
 /// Errors that can occur when interacting with the Google CSE API.
@@ -31,4 +32,17 @@ pub enum CseError {
         status: u16,
         message: String,
     },
+}
+
+impl RetryableError for CseError {
+    fn is_retryable(&self) -> bool {
+        match self {
+            CseError::Network(e) => e.is_retryable(),
+            CseError::Timeout => true,
+            CseError::RateLimited => true,
+            CseError::Unauthorized => false,
+            CseError::InvalidResponse(_) => false,
+            CseError::ApiError { status, .. } => *status >= 500,
+        }
+    }
 }

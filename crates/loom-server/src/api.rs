@@ -16,10 +16,33 @@ use std::sync::Arc;
 use crate::{db::ThreadRepository, error::ServerError, health::{self, HealthComponents, HealthResponse, HealthStatus}};
 
 /// Application state shared across handlers.
-pub type AppState = Arc<ThreadRepository>;
+#[derive(Clone)]
+pub struct AppState {
+    pub repo: Arc<ThreadRepository>,
+    pub cse_client: Option<Arc<CseClient>>,
+}
+
+/// Creates the application state, initializing optional components.
+pub fn create_app_state(repo: Arc<ThreadRepository>) -> AppState {
+    let cse_client = match (
+        std::env::var("LOOM_SERVER_GOOGLE_CSE_API_KEY"),
+        std::env::var("LOOM_SERVER_GOOGLE_CSE_CX"),
+    ) {
+        (Ok(api_key), Ok(cx)) if !api_key.is_empty() && !cx.is_empty() => {
+            tracing::info!("Google CSE configured, creating client");
+            Some(Arc::new(CseClient::new(api_key, cx)))
+        }
+        _ => {
+            tracing::info!("Google CSE not configured");
+            None
+        }
+    };
+
+    AppState { repo, cse_client }
+}
 
 /// Create the API router with all routes.
-pub fn create_router(repo: Arc<ThreadRepository>) -> Router {
+pub fn create_router(state: AppState) -> Router {
     let bin_dir = std::env::var("LOOM_SERVER_BIN_DIR").unwrap_or_else(|_| "./bin".to_string());
 
     Router::new()
@@ -34,7 +57,7 @@ pub fn create_router(repo: Arc<ThreadRepository>) -> Router {
         .route("/health", get(health_check))
         .route("/proxy/cse", post(proxy_cse))
         .nest_service("/bin", ServeDir::new(bin_dir))
-        .with_state(repo)
+        .with_state(state)
 }
 
 /// Query parameters for listing threads.
@@ -140,7 +163,7 @@ pub struct CseProxyResultItem {
 /// Supports optimistic concurrency via If-Match header.
 #[axum::debug_handler]
 async fn upsert_thread(
-    State(repo): State<AppState>,
+    State(state): State<AppState>,
     Path(id): Path<String>,
     headers: HeaderMap,
     Json(mut thread): Json<Thread>,
@@ -169,7 +192,7 @@ async fn upsert_thread(
     // Update timestamp
     thread.updated_at = chrono::Utc::now().to_rfc3339();
 
-    let stored = repo.upsert(&thread, expected_version).await?;
+    let stored = state.repo.upsert(&thread, expected_version).await?;
 
     tracing::info!(
         thread_id = %id,
@@ -183,14 +206,15 @@ async fn upsert_thread(
 /// GET /v1/threads/{id} - Get a thread by ID.
 #[axum::debug_handler]
 async fn get_thread(
-    State(repo): State<AppState>,
+    State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> Result<impl IntoResponse, ServerError> {
     let thread_id = ThreadId::from_string(id.clone());
 
     tracing::debug!(thread_id = %id, "getting thread");
 
-    let thread = repo
+    let thread = state
+        .repo
         .get(&thread_id)
         .await?
         .ok_or_else(|| ServerError::NotFound(id.clone()))?;
@@ -201,7 +225,7 @@ async fn get_thread(
 /// GET /v1/threads - List threads.
 #[axum::debug_handler]
 async fn list_threads(
-    State(repo): State<AppState>,
+    State(state): State<AppState>,
     Query(params): Query<ListParams>,
 ) -> Result<impl IntoResponse, ServerError> {
     tracing::debug!(
@@ -211,11 +235,12 @@ async fn list_threads(
         "listing threads"
     );
 
-    let threads = repo
+    let threads = state
+        .repo
         .list(params.workspace.as_deref(), params.limit, params.offset)
         .await?;
 
-    let total = repo.count(params.workspace.as_deref()).await?;
+    let total = state.repo.count(params.workspace.as_deref()).await?;
 
     let response = ListResponse {
         threads,
@@ -230,14 +255,14 @@ async fn list_threads(
 /// DELETE /v1/threads/{id} - Soft-delete a thread.
 #[axum::debug_handler]
 async fn delete_thread(
-    State(repo): State<AppState>,
+    State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> Result<impl IntoResponse, ServerError> {
     let thread_id = ThreadId::from_string(id.clone());
 
     tracing::debug!(thread_id = %id, "deleting thread");
 
-    let deleted = repo.delete(&thread_id).await?;
+    let deleted = state.repo.delete(&thread_id).await?;
 
     if deleted {
         tracing::info!(thread_id = %id, "thread deleted");
@@ -253,7 +278,7 @@ async fn delete_thread(
 /// Supports optimistic concurrency via If-Match header.
 #[axum::debug_handler]
 async fn update_thread_visibility(
-    State(repo): State<AppState>,
+    State(state): State<AppState>,
     Path(id): Path<String>,
     headers: HeaderMap,
     Json(body): Json<UpdateVisibilityRequest>,
@@ -272,7 +297,8 @@ async fn update_thread_visibility(
         "updating thread visibility"
     );
 
-    let mut thread = repo
+    let mut thread = state
+        .repo
         .get(&thread_id)
         .await?
         .ok_or_else(|| ServerError::NotFound(id.clone()))?;
@@ -290,7 +316,7 @@ async fn update_thread_visibility(
     thread.updated_at = chrono::Utc::now().to_rfc3339();
     thread.version += 1;
 
-    let stored = repo.upsert(&thread, None).await?;
+    let stored = state.repo.upsert(&thread, None).await?;
 
     tracing::info!(
         thread_id = %id,
@@ -323,6 +349,7 @@ async fn search_threads(
     );
 
     let hits = state
+        .repo
         .search(query, params.workspace.as_deref(), params.limit, params.offset)
         .await?;
 
@@ -342,14 +369,14 @@ async fn search_threads(
 }
 
 /// GET /health - Comprehensive health check endpoint.
-async fn health_check(State(repo): State<AppState>) -> impl IntoResponse {
+async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
     use tokio::time::Instant;
     
     let overall_start = Instant::now();
 
     // Run checks in parallel
     let (database, bin_dir, google_cse) = tokio::join!(
-        health::check_database(&repo),
+        health::check_database(&state.repo),
         async { health::check_bin_dir() },
         health::check_google_cse()
     );
@@ -407,11 +434,11 @@ async fn logout_stub() -> impl IntoResponse {
 /// POST /proxy/cse - Proxy requests to Google Custom Search Engine.
 #[axum::debug_handler]
 async fn proxy_cse(
-    State(repo): State<AppState>,
+    State(state): State<AppState>,
     Json(body): Json<CseProxyRequest>,
 ) -> Result<impl IntoResponse, ServerError> {
     let query = body.query.trim().to_string();
-    let max_results = body.max_results.unwrap_or(5).min(10);
+    let max_results = body.max_results.unwrap_or(5).clamp(1, 10);
 
     if query.is_empty() {
         tracing::warn!("proxy_cse: empty query");
@@ -419,7 +446,7 @@ async fn proxy_cse(
     }
 
     // Try cache first
-    if let Some(cached) = repo.get_cse_cache(&query, max_results).await? {
+    if let Some(cached) = state.repo.get_cse_cache(&query, max_results).await? {
         tracing::info!(
             query = %query,
             max_results = max_results,
@@ -447,24 +474,12 @@ async fn proxy_cse(
         "proxy_cse: cache miss, calling Google CSE"
     );
 
-    // Load secrets from environment
-    let api_key = std::env::var("LOOM_SERVER_GOOGLE_CSE_API_KEY").map_err(|_| {
-        tracing::error!("proxy_cse: LOOM_SERVER_GOOGLE_CSE_API_KEY not configured");
+    // Get CSE client from state, or return error if not configured
+    let client = state.cse_client.as_ref().ok_or_else(|| {
+        tracing::error!("proxy_cse: Google CSE not configured");
         ServerError::Internal("Google CSE is not configured on the server".to_string())
     })?;
 
-    let cx = std::env::var("LOOM_SERVER_GOOGLE_CSE_CX").map_err(|_| {
-        tracing::error!("proxy_cse: LOOM_SERVER_GOOGLE_CSE_CX not configured");
-        ServerError::Internal("Google CSE is not configured on the server".to_string())
-    })?;
-
-    tracing::debug!(
-        query = %query,
-        max_results = max_results,
-        "proxy_cse: performing Google CSE request"
-    );
-
-    let client = CseClient::new(api_key, cx);
     let request = CseRequest::new(query.clone(), max_results);
 
     let cse_response = client.search(request).await.map_err(|e| match e {
@@ -494,8 +509,8 @@ async fn proxy_cse(
         }
     })?;
 
-    // Store in cache (best-effort, don't fail request if cache write fails)
-    if let Err(e) = repo.put_cse_cache(&cse_response, max_results).await {
+    // Store in cache
+    if let Err(e) = state.repo.put_cse_cache(&cse_response, max_results).await {
         tracing::warn!(error = %e, "proxy_cse: failed to write to cache");
     }
 
@@ -537,7 +552,8 @@ mod tests {
         let db_path = dir.path().join("test.db");
         let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
         let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
-        (create_router(repo), dir)
+        let state = create_app_state(repo);
+        (create_router(state), dir)
     }
 
     fn create_test_thread() -> Thread {

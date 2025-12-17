@@ -1,6 +1,6 @@
 //! Loom thread persistence server binary.
 
-use loom_server::{create_router, ServerConfig, ThreadRepository};
+use loom_server::{create_app_state, create_router, ServerConfig, ThreadRepository};
 use std::sync::Arc;
 use tower_http::{
     cors::{Any, CorsLayer},
@@ -35,8 +35,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create database repository
     let repo = Arc::new(ThreadRepository::new(&config.database_url).await?);
 
-    // Create router with middleware
-    let app = create_router(repo)
+    // Create application state and router with middleware
+    let state = create_app_state(repo);
+    let app = create_router(state)
         .layer(TraceLayer::new_for_http())
         .layer(
             CorsLayer::new()

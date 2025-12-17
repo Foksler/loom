@@ -339,7 +339,7 @@ CREATE INDEX IF NOT EXISTS idx_cse_cache_created_at
 
 | Component | Normalization |
 |-----------|---------------|
-| `query` | Trimmed whitespace, case-sensitive, internal whitespace preserved |
+| `query` | Lowercase, whitespace collapsed to single spaces |
 | `max_results` | Clamped to 1-10 |
 
 ### Cache Behavior
