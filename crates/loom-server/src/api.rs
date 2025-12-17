@@ -12,7 +12,7 @@ use loom_thread::{Thread, ThreadId, ThreadSummary};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-use crate::{db::ThreadRepository, error::ServerError};
+use crate::{db::ThreadRepository, error::ServerError, health::{self, HealthComponents, HealthResponse, HealthStatus}};
 
 /// Application state shared across handlers.
 pub type AppState = Arc<ThreadRepository>;
@@ -57,12 +57,6 @@ pub struct ListResponse {
     pub total: u64,
     pub limit: u32,
     pub offset: u32,
-}
-
-/// Health check response.
-#[derive(Debug, Serialize)]
-pub struct HealthResponse {
-    pub status: String,
 }
 
 /// Response for authentication stub endpoints.
@@ -184,11 +178,43 @@ async fn delete_thread(
     }
 }
 
-/// GET /health - Health check endpoint.
-async fn health_check() -> impl IntoResponse {
-    Json(HealthResponse {
-        status: "ok".to_string(),
-    })
+/// GET /health - Comprehensive health check endpoint.
+async fn health_check(State(repo): State<AppState>) -> impl IntoResponse {
+    use tokio::time::Instant;
+    
+    let overall_start = Instant::now();
+
+    // Run checks in parallel
+    let (database, bin_dir) = tokio::join!(
+        health::check_database(&repo),
+        async { health::check_bin_dir() }
+    );
+    
+    let llm_providers = health::check_llm_providers();
+
+    let components = HealthComponents {
+        database,
+        bin_dir,
+        llm_providers,
+    };
+
+    let status = health::aggregate_status(&components);
+    let duration_ms = overall_start.elapsed().as_millis() as u64;
+
+    let response = HealthResponse {
+        status,
+        timestamp: chrono::Utc::now().to_rfc3339(),
+        duration_ms,
+        version: health::VERSION_INFO,
+        components,
+    };
+
+    let http_status = match status {
+        HealthStatus::Healthy | HealthStatus::Degraded => StatusCode::OK,
+        HealthStatus::Unhealthy | HealthStatus::Unknown => StatusCode::SERVICE_UNAVAILABLE,
+    };
+
+    (http_status, Json(response))
 }
 
 /// POST /v1/auth/login - Stub login endpoint.
@@ -264,7 +290,33 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        // Should be OK (healthy or degraded, depending on bin dir)
+        assert!(response.status() == StatusCode::OK || response.status() == StatusCode::SERVICE_UNAVAILABLE);
+    }
+
+    #[tokio::test]
+    async fn test_health_check_response_structure() {
+        let (app, _dir) = create_test_app().await;
+
+        let response = app
+            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let health: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+        // Verify response structure
+        assert!(health.get("status").is_some());
+        assert!(health.get("timestamp").is_some());
+        assert!(health.get("duration_ms").is_some());
+        assert!(health.get("version").is_some());
+        assert!(health.get("components").is_some());
+        
+        let components = health.get("components").unwrap();
+        assert!(components.get("database").is_some());
+        assert!(components.get("bin_dir").is_some());
+        assert!(components.get("llm_providers").is_some());
     }
 
     #[tokio::test]

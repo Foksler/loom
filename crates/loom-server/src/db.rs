@@ -320,6 +320,15 @@ impl ThreadRepository {
         Ok(deleted)
     }
 
+    /// Lightweight database health check (used by /health endpoint).
+    pub async fn health_check(&self) -> Result<(), ServerError> {
+        sqlx::query("SELECT 1")
+            .execute(&self.pool)
+            .await
+            .map(|_| ())
+            .map_err(Into::into)
+    }
+
     /// Count total threads (excluding deleted).
     pub async fn count(&self, workspace: Option<&str>) -> Result<u64, ServerError> {
         let count: (i64,) = match workspace {

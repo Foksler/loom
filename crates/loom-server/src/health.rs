@@ -1,0 +1,208 @@
+//! Health check types and component checking logic.
+
+use serde::Serialize;
+use std::path::Path;
+use std::time::Duration;
+use tokio::time::{timeout, Instant};
+
+use crate::db::ThreadRepository;
+
+/// Health status for components and overall system.
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum HealthStatus {
+    Healthy,
+    Degraded,
+    Unhealthy,
+    Unknown,
+}
+
+/// Server version and build information.
+#[derive(Debug, Serialize)]
+pub struct VersionInfo {
+    pub version: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub git_sha: Option<&'static str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub build_timestamp: Option<&'static str>,
+}
+
+/// Database component health.
+#[derive(Debug, Serialize)]
+pub struct DatabaseHealth {
+    pub status: HealthStatus,
+    pub latency_ms: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+/// Binary directory component health.
+#[derive(Debug, Serialize)]
+pub struct BinDirHealth {
+    pub status: HealthStatus,
+    pub latency_ms: u64,
+    pub path: String,
+    pub exists: bool,
+    pub is_dir: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file_count: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+/// Individual LLM provider health.
+#[derive(Debug, Serialize)]
+pub struct LlmProviderHealth {
+    pub name: String,
+    pub status: HealthStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub latency_ms: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+/// LLM providers component health.
+#[derive(Debug, Serialize)]
+pub struct LlmProvidersHealth {
+    pub status: HealthStatus,
+    pub providers: Vec<LlmProviderHealth>,
+}
+
+/// All health check components.
+#[derive(Debug, Serialize)]
+pub struct HealthComponents {
+    pub database: DatabaseHealth,
+    pub bin_dir: BinDirHealth,
+    pub llm_providers: LlmProvidersHealth,
+}
+
+/// Complete health check response.
+#[derive(Debug, Serialize)]
+pub struct HealthResponse {
+    pub status: HealthStatus,
+    pub timestamp: String,
+    pub duration_ms: u64,
+    pub version: VersionInfo,
+    pub components: HealthComponents,
+}
+
+/// Build information constant.
+pub const VERSION_INFO: VersionInfo = VersionInfo {
+    version: env!("CARGO_PKG_VERSION"),
+    git_sha: option_env!("GIT_SHA"),
+    build_timestamp: option_env!("BUILD_TIMESTAMP"),
+};
+
+const DB_CHECK_TIMEOUT: Duration = Duration::from_millis(500);
+
+/// Check database health.
+pub async fn check_database(repo: &ThreadRepository) -> DatabaseHealth {
+    let start = Instant::now();
+
+    let result = timeout(DB_CHECK_TIMEOUT, repo.health_check()).await;
+    let latency_ms = start.elapsed().as_millis() as u64;
+
+    match result {
+        Ok(Ok(())) => DatabaseHealth {
+            status: HealthStatus::Healthy,
+            latency_ms,
+            error: None,
+        },
+        Ok(Err(e)) => DatabaseHealth {
+            status: HealthStatus::Unhealthy,
+            latency_ms,
+            error: Some(e.to_string()),
+        },
+        Err(_) => DatabaseHealth {
+            status: HealthStatus::Unhealthy,
+            latency_ms,
+            error: Some("database health check timed out".to_string()),
+        },
+    }
+}
+
+/// Check binary directory health.
+pub fn check_bin_dir() -> BinDirHealth {
+    let start = Instant::now();
+
+    let bin_dir = std::env::var("LOOM_SERVER_BIN_DIR").unwrap_or_else(|_| "./bin".to_string());
+    let path = Path::new(&bin_dir);
+
+    let (exists, is_dir, file_count, status, error) = if !path.exists() {
+        (
+            false,
+            false,
+            None,
+            HealthStatus::Degraded,
+            Some("binary directory does not exist".to_string()),
+        )
+    } else if !path.is_dir() {
+        (
+            true,
+            false,
+            None,
+            HealthStatus::Degraded,
+            Some("binary path is not a directory".to_string()),
+        )
+    } else {
+        match std::fs::read_dir(path) {
+            Ok(entries) => {
+                let count = entries
+                    .filter_map(Result::ok)
+                    .filter(|e| !e.file_name().to_string_lossy().starts_with('.'))
+                    .count();
+                if count == 0 {
+                    (
+                        true,
+                        true,
+                        Some(0),
+                        HealthStatus::Degraded,
+                        Some("binary directory is empty".to_string()),
+                    )
+                } else {
+                    (true, true, Some(count), HealthStatus::Healthy, None)
+                }
+            }
+            Err(e) => (
+                true,
+                true,
+                None,
+                HealthStatus::Degraded,
+                Some(format!("failed to read binary directory: {e}")),
+            ),
+        }
+    };
+
+    let latency_ms = start.elapsed().as_millis() as u64;
+
+    BinDirHealth {
+        status,
+        latency_ms,
+        path: bin_dir,
+        exists,
+        is_dir,
+        file_count,
+        error,
+    }
+}
+
+/// Return placeholder for LLM provider checks (not yet implemented).
+pub fn check_llm_providers() -> LlmProvidersHealth {
+    LlmProvidersHealth {
+        status: HealthStatus::Unknown,
+        providers: Vec::new(),
+    }
+}
+
+/// Aggregate component statuses into overall status.
+pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
+    let statuses = [components.database.status, components.bin_dir.status];
+
+    if statuses.iter().any(|s| matches!(s, HealthStatus::Unhealthy)) {
+        HealthStatus::Unhealthy
+    } else if statuses.iter().any(|s| matches!(s, HealthStatus::Degraded)) {
+        HealthStatus::Degraded
+    } else {
+        HealthStatus::Healthy
+    }
+}

@@ -7,6 +7,7 @@ pub mod api;
 pub mod config;
 pub mod db;
 pub mod error;
+pub mod health;
 
 pub use api::create_router;
 pub use config::ServerConfig;

@@ -17,6 +17,7 @@ This directory contains the architectural specifications and design documentatio
 | [configuration.md](./configuration.md) | CLI arguments and basic config overview |
 | [configuration-system.md](./configuration-system.md) | Full configuration registry, XDG paths, TOML format, layered sources |
 | [distribution.md](./distribution.md) | Build system, multi-platform binaries, self-update, and CI/CD pipeline |
+| [health-check.md](./health-check.md) | Health check endpoints for monitoring and load balancer integration |
 
 ## Quick Reference
 
