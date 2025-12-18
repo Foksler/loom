@@ -5,7 +5,7 @@
 GITLEAKS_REPO := https://raw.githubusercontent.com/gitleaks/gitleaks/master
 GITLEAKS_VENDOR_DIR := crates/loom-redact/third_party/gitleaks
 
-.PHONY: all build test lint format check clean update-gitleaks
+.PHONY: all build test lint format check clean update-gitleaks sbom sbom-spdx sbom-cyclonedx release
 
 # Default target
 all: format lint build test
@@ -64,3 +64,29 @@ clean:
 	rm -f "$(GITLEAKS_VENDOR_DIR)/gitleaks.toml"
 	rm -f "$(GITLEAKS_VENDOR_DIR)/LICENSE"
 	rm -f "$(GITLEAKS_VENDOR_DIR)/README.md"
+
+# SBOM configuration
+SBOM_DIR ?= target/sbom
+
+# Generate SBOM in SPDX JSON 2.3 format (default)
+sbom-spdx:
+	@command -v cargo-sbom >/dev/null 2>&1 || \
+		(echo "Error: cargo-sbom not found. Install with: cargo install cargo-sbom --version 0.10.0" && exit 1)
+	mkdir -p "$(SBOM_DIR)"
+	cargo sbom --output-format=spdx_json_2_3 > "$(SBOM_DIR)/loom.spdx.json"
+	@echo "Generated SBOM: $(SBOM_DIR)/loom.spdx.json"
+
+# Generate SBOM in CycloneDX JSON 1.4 format
+sbom-cyclonedx:
+	@command -v cargo-sbom >/dev/null 2>&1 || \
+		(echo "Error: cargo-sbom not found. Install with: cargo install cargo-sbom --version 0.10.0" && exit 1)
+	mkdir -p "$(SBOM_DIR)"
+	cargo sbom --output-format=cyclone_dx_json_1_4 > "$(SBOM_DIR)/loom.cyclonedx.json"
+	@echo "Generated SBOM: $(SBOM_DIR)/loom.cyclonedx.json"
+
+# Generate both SPDX and CycloneDX SBOMs
+sbom: sbom-spdx sbom-cyclonedx
+
+# Release build: full build + test + SBOM
+release: build test sbom
+	@echo "Release build complete. Artifacts in target/debug/ and $(SBOM_DIR)/"

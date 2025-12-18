@@ -200,20 +200,48 @@ These enable:
 
 ---
 
-## 8. Future Considerations
+## 8. Software Bill of Materials (SBOM)
 
-### 8.1 Signed Binaries
+### 8.1 SBOM Generation
+
+As part of the release pipeline, SBOMs are generated for supply chain transparency:
+
+- **Tool:** `cargo-sbom` (v0.10.0, pinned)
+- **Formats:** SPDX JSON 2.3, CycloneDX JSON 1.4
+- **Coverage:** All Rust crates in the workspace
+- **Location:** `target/sbom/loom.{spdx,cyclonedx}.json`
+
+See [sbom-system.md](./sbom-system.md) for full details.
+
+### 8.2 Release Distribution
+
+SBOMs are attached to GitHub releases alongside binaries:
+
+| Artifact | Format |
+|----------|--------|
+| `loom.spdx.json` | SPDX 2.3 (Linux Foundation standard) |
+| `loom.cyclonedx.json` | CycloneDX 1.4 (DevOps/container tooling) |
+
+---
+
+## 9. Future Considerations
+
+### 9.1 Signed Binaries
 - Sign binaries with a release key
 - Verify signatures before applying updates
 
-### 8.2 Delta Updates
+### 9.2 Delta Updates
 - Download only changed bytes
 - Reduce bandwidth for minor updates
 
-### 8.3 Update Channels
+### 9.3 Update Channels
 - `stable`, `beta`, `nightly` channels
 - `loom update --channel beta`
 
-### 8.4 Version Manifest
+### 9.4 Version Manifest
 - `GET /bin/manifest.json` returns available versions
 - CLI can show "update available" notifications
+
+### 9.5 Container Image SBOMs
+- Generate image-level SBOMs with `syft` for Docker containers
+- Attach both source-level and image-level SBOMs to releases

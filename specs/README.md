@@ -17,6 +17,7 @@ This directory contains the architectural specifications and design documentatio
 | [configuration.md](./configuration.md) | CLI arguments and basic config overview |
 | [configuration-system.md](./configuration-system.md) | Full configuration registry, XDG paths, TOML format, layered sources |
 | [distribution.md](./distribution.md) | Build system, multi-platform binaries, self-update, and CI/CD pipeline |
+| [sbom-system.md](./sbom-system.md) | Software Bill of Materials generation, formats (SPDX/CycloneDX), and CI integration |
 | [health-check.md](./health-check.md) | Health check endpoints for monitoring and load balancer integration |
 | [thread-system.md](./thread-system.md) | Thread persistence, local storage, server sync, and CLI commands |
 | [git-metadata.md](./git-metadata.md) | Git repository detection, loom-git crate, and thread git metadata |
