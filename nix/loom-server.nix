@@ -15,7 +15,7 @@ rustPlatform.buildRustPackage {
   cargoLock.lockFile = ../Cargo.lock;
 
   # Only build the server crate to save time.
-  cargoBuildFlags = [ "--package" "loom-server" "--locked" "--release" ];
+  cargoBuildFlags = [ "--package" "loom-server" "--locked" ];
 
   # Disable tests here; rely on CI and Make test target instead.
   doCheck = false;
