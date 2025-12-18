@@ -296,6 +296,116 @@ Performs snippet-based text replacement with support for file creation.
 - `replace_all: false` (default): Replaces only first occurrence
 - Creates parent directories automatically
 
+### oracle
+
+**Location:** [crates/loom-tools/src/oracle.rs](file:///home/ghuntley/loom/crates/loom-tools/src/oracle.rs)
+
+Queries OpenAI for additional reasoning or advice via the Loom server proxy. This tool enables the primary LLM (Claude) to consult a secondary LLM (OpenAI) for complex reasoning tasks, code review, or specialized knowledge.
+
+**Input Schema:**
+```json
+{
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "The question or task for OpenAI to reason about."
+    },
+    "model": {
+      "type": "string",
+      "description": "Model override. Defaults to LOOM_ORACLE_MODEL env or 'gpt-4o'."
+    },
+    "max_tokens": {
+      "type": "integer",
+      "minimum": 16,
+      "maximum": 4096,
+      "description": "Maximum tokens in the response (default: 512)."
+    },
+    "temperature": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 2.0,
+      "description": "Sampling temperature (default: 0.2)."
+    },
+    "system_prompt": {
+      "type": "string",
+      "description": "Extra guidance for the oracle to customize its behavior."
+    }
+  },
+  "required": ["query"]
+}
+```
+
+**Output:**
+```json
+{
+  "message": {
+    "role": "assistant",
+    "content": "OpenAI's response text..."
+  },
+  "tool_calls": [],
+  "usage": {
+    "input_tokens": 100,
+    "output_tokens": 250
+  },
+  "finish_reason": "stop"
+}
+```
+
+**Behavior:**
+- Uses `loom-http-retry` for resilience against transient failures (429, 503, timeouts)
+- Sends requests to `/proxy/openai/complete` endpoint on the Loom server
+- Default system prompt instructs OpenAI to act as a sub-agent providing concise, technically accurate advice
+- Parameters are clamped to valid ranges (`max_tokens`: 16-4096, `temperature`: 0.0-2.0)
+
+**Configuration:**
+- `LOOM_SERVER_URL`: Server URL for proxy requests (default: `http://127.0.0.1:8080`)
+- `LOOM_ORACLE_MODEL`: Default model when not specified in args (default: `gpt-4o`)
+
+### web_search
+
+**Location:** [crates/loom-tools/src/web_search.rs](file:///home/ghuntley/loom/crates/loom-tools/src/web_search.rs)
+
+Performs web searches via the Loom server using Google Custom Search Engine (CSE).
+
+**Input Schema:**
+```json
+{
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "Search query string in natural language."
+    },
+    "max_results": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10,
+      "description": "Maximum number of search results to return (default: 5, max: 10)."
+    }
+  },
+  "required": ["query"]
+}
+```
+
+**Output:**
+```json
+{
+  "results": [
+    {
+      "title": "Result title",
+      "url": "https://example.com/page",
+      "snippet": "Brief description of the page content..."
+    }
+  ]
+}
+```
+
+**Behavior:**
+- Uses `loom-http-retry` for resilience against transient failures
+- Sends requests to `/proxy/cse` endpoint on the Loom server
+- Requires Google CSE to be configured on the server
+
 ## Security Considerations
 
 ### Path Validation
