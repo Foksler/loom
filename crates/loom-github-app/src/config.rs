@@ -2,6 +2,7 @@
 
 use std::env;
 
+use loom_config_common::{load_secret_env, Secret, SecretString};
 use loom_http_retry::RetryConfig;
 use reqwest::Url;
 use tracing::warn;
@@ -13,17 +14,18 @@ const DEFAULT_APP_SLUG: &str = "loom";
 
 /// Configuration for the GitHub App client.
 ///
-/// Fields are private to enforce validation invariants. Use accessors to read values.
+/// Sensitive fields (private key, webhook secret) are stored as [`SecretString`]
+/// to prevent accidental logging. Use `.expose()` to access the actual values.
 #[derive(Clone)]
 pub struct GithubAppConfig {
     /// GitHub App numeric ID
     app_id: u64,
 
     /// PEM-encoded RSA private key for JWT signing
-    private_key_pem: String,
+    private_key_pem: SecretString,
 
     /// Secret for webhook signature verification
-    webhook_secret: Option<String>,
+    webhook_secret: Option<SecretString>,
 
     /// App slug for installation URL generation
     app_slug: String,
@@ -39,8 +41,8 @@ impl std::fmt::Debug for GithubAppConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("GithubAppConfig")
             .field("app_id", &self.app_id)
-            .field("private_key_pem", &"[REDACTED]")
-            .field("webhook_secret", &self.webhook_secret.as_ref().map(|_| "[REDACTED]"))
+            .field("private_key_pem", &self.private_key_pem)
+            .field("webhook_secret", &self.webhook_secret)
             .field("app_slug", &self.app_slug)
             .field("base_url", &self.base_url.as_str())
             .field("retry_config", &self.retry_config)
@@ -85,7 +87,7 @@ impl GithubAppConfig {
     pub fn new(app_id: u64, private_key_pem: impl Into<String>) -> Self {
         Self {
             app_id,
-            private_key_pem: private_key_pem.into(),
+            private_key_pem: Secret::new(private_key_pem.into()),
             webhook_secret: None,
             app_slug: DEFAULT_APP_SLUG.to_string(),
             base_url: Url::parse(DEFAULT_BASE_URL).expect("default URL is valid"),
@@ -97,10 +99,10 @@ impl GithubAppConfig {
     ///
     /// Required environment variables:
     /// - `LOOM_GITHUB_APP_ID`: GitHub App numeric ID
-    /// - `LOOM_GITHUB_APP_PRIVATE_KEY`: PEM-encoded RSA private key
+    /// - `LOOM_GITHUB_APP_PRIVATE_KEY`: PEM-encoded RSA private key (or `_FILE` suffix for file path)
     ///
     /// Optional environment variables:
-    /// - `LOOM_GITHUB_APP_WEBHOOK_SECRET`: Secret for webhook verification
+    /// - `LOOM_GITHUB_APP_WEBHOOK_SECRET`: Secret for webhook verification (or `_FILE` suffix)
     /// - `LOOM_GITHUB_APP_SLUG`: App slug (defaults to "loom")
     /// - `LOOM_GITHUB_APP_BASE_URL`: API base URL (defaults to api.github.com, must be HTTPS)
     pub fn from_env() -> Result<Self, GithubAppError> {
@@ -111,16 +113,19 @@ impl GithubAppConfig {
             .parse()
             .map_err(|_| GithubAppError::Config(format!("Invalid LOOM_GITHUB_APP_ID: {}", app_id_str)))?;
 
-        let private_key_pem = env::var("LOOM_GITHUB_APP_PRIVATE_KEY")
-            .map_err(|_| GithubAppError::Config("LOOM_GITHUB_APP_PRIVATE_KEY not set".to_string()))?;
+        let private_key_pem = load_secret_env("LOOM_GITHUB_APP_PRIVATE_KEY")
+            .map_err(|e| GithubAppError::Config(e.to_string()))?
+            .ok_or_else(|| GithubAppError::Config("LOOM_GITHUB_APP_PRIVATE_KEY not set".to_string()))?;
 
-        if private_key_pem.is_empty() {
+        if private_key_pem.expose().is_empty() {
             return Err(GithubAppError::Config(
                 "LOOM_GITHUB_APP_PRIVATE_KEY is empty".to_string(),
             ));
         }
 
-        let webhook_secret = env::var("LOOM_GITHUB_APP_WEBHOOK_SECRET").ok();
+        let webhook_secret = load_secret_env("LOOM_GITHUB_APP_WEBHOOK_SECRET")
+            .map_err(|e| GithubAppError::Config(e.to_string()))?;
+
         let app_slug = env::var("LOOM_GITHUB_APP_SLUG").unwrap_or_else(|_| DEFAULT_APP_SLUG.to_string());
         
         let base_url_raw = env::var("LOOM_GITHUB_APP_BASE_URL")
@@ -160,7 +165,7 @@ impl GithubAppConfig {
 
     /// Set the webhook secret.
     pub fn with_webhook_secret(mut self, secret: impl Into<String>) -> Self {
-        self.webhook_secret = Some(secret.into());
+        self.webhook_secret = Some(Secret::new(secret.into()));
         self
     }
 
@@ -177,12 +182,12 @@ impl GithubAppConfig {
 
     /// Get the private key PEM (for internal JWT generation).
     pub(crate) fn private_key_pem(&self) -> &str {
-        &self.private_key_pem
+        self.private_key_pem.expose()
     }
 
     /// Get the webhook secret, if configured.
     pub fn webhook_secret(&self) -> Option<&str> {
-        self.webhook_secret.as_deref()
+        self.webhook_secret.as_ref().map(|s| s.expose().as_str())
     }
 
     /// Get the app slug.
@@ -215,7 +220,6 @@ mod tests {
         let config = GithubAppConfig::new(12345, "test-private-key");
         assert_eq!(config.app_id(), 12345);
         assert_eq!(config.private_key_pem(), "test-private-key");
-        // Url::parse may add a trailing slash; just check it starts with the expected base
         assert!(config.base_url().as_str().starts_with("https://api.github.com"));
         assert_eq!(config.app_slug(), DEFAULT_APP_SLUG);
         assert!(config.webhook_secret().is_none());
@@ -264,7 +268,6 @@ mod tests {
         let config = GithubAppConfig::new(12345, "key")
             .with_base_url("http://insecure.example.com");
         
-        // Should still have the default URL since http:// is rejected
         assert!(config.base_url().as_str().starts_with("https://api.github.com"));
     }
 
@@ -288,6 +291,8 @@ mod tests {
         );
     }
 
+    /// Verifies that Debug output never contains sensitive values.
+    /// This is critical for security - secrets must never appear in logs.
     #[test]
     fn test_debug_redacts_secrets() {
         let config = GithubAppConfig::new(12345, "super-secret-key")

@@ -29,8 +29,8 @@ impl LlmService {
     pub fn new(config: LlmServiceConfig) -> Result<Self, LlmServiceError> {
         info!("Initializing LLM service");
 
-        let anthropic_client = if let Some(api_key) = config.anthropic_api_key {
-            let mut anthropic_config = loom_llm_anthropic::AnthropicConfig::new(api_key);
+        let anthropic_client = if let Some(ref api_key) = config.anthropic_api_key {
+            let mut anthropic_config = loom_llm_anthropic::AnthropicConfig::new(api_key.expose().clone());
             if let Some(model) = config.anthropic_model {
                 debug!(model = %model, "Using custom Anthropic model");
                 anthropic_config = anthropic_config.with_model(model);
@@ -45,8 +45,8 @@ impl LlmService {
             None
         };
 
-        let openai_client = if let Some(api_key) = config.openai_api_key {
-            let mut openai_config = loom_llm_openai::OpenAIConfig::new(api_key);
+        let openai_client = if let Some(ref api_key) = config.openai_api_key {
+            let mut openai_config = loom_llm_openai::OpenAIConfig::new(api_key.expose().clone());
             if let Some(model) = config.openai_model {
                 debug!(model = %model, "Using custom OpenAI model");
                 openai_config = openai_config.with_model(model);

@@ -117,17 +117,42 @@ enum LogLevel {
 
 The Loom server handles all LLM provider interactions. **API keys MUST be set on the server only. Never expose API keys to clients.**
 
+### Secret Type
+
+All API keys and sensitive configuration values are wrapped in the [`Secret<T>`](secret-system.md) type from the `loom-secret` crate. This ensures:
+
+- Secrets are **never logged** (Debug/Display always shows `[REDACTED]`)
+- Secrets are **never serialized** to plain text
+- Secrets are **zeroized from memory** on drop
+- Access requires explicit `.expose()` call
+
 ### LLM Provider Configuration
 
 The server can have both providers configured simultaneously. Clients choose which provider to use via the `--provider` flag.
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `LOOM_SERVER_ANTHROPIC_API_KEY` | For Anthropic support | - | Anthropic API key |
-| `LOOM_SERVER_ANTHROPIC_MODEL` | No | `claude-sonnet-4-20250514` | Anthropic model |
-| `LOOM_SERVER_OPENAI_API_KEY` | For OpenAI support | - | OpenAI API key |
-| `LOOM_SERVER_OPENAI_MODEL` | No | `gpt-4o` | OpenAI model |
-| `LOOM_SERVER_OPENAI_ORG` | No | - | OpenAI organization ID |
+| Variable | File Variant | Required | Default | Description |
+|----------|--------------|----------|---------|-------------|
+| `LOOM_SERVER_ANTHROPIC_API_KEY` | `..._FILE` | For Anthropic | - | Anthropic API key |
+| `LOOM_SERVER_ANTHROPIC_MODEL` | - | No | `claude-sonnet-4-20250514` | Anthropic model |
+| `LOOM_SERVER_OPENAI_API_KEY` | `..._FILE` | For OpenAI | - | OpenAI API key |
+| `LOOM_SERVER_OPENAI_MODEL` | - | No | `gpt-4o` | OpenAI model |
+| `LOOM_SERVER_OPENAI_ORG` | - | No | - | OpenAI organization ID |
+
+### File-Based Secrets
+
+All API key environment variables support a `_FILE` suffix for loading secrets from files. This is the recommended approach for production deployments using Docker or Kubernetes secrets.
+
+**Precedence:** `VAR_FILE` takes precedence over `VAR` if both are set.
+
+```bash
+# Option 1: Direct environment variable (development)
+export LOOM_SERVER_OPENAI_API_KEY="sk-xxx"
+
+# Option 2: File-based (production, recommended)
+export LOOM_SERVER_OPENAI_API_KEY_FILE="/run/secrets/openai_key"
+```
+
+See [Secret System Specification](secret-system.md) for Docker/Kubernetes examples.
 
 > **Note:** Both `LOOM_SERVER_ANTHROPIC_API_KEY` and `LOOM_SERVER_OPENAI_API_KEY` can be set at the same time. The `LlmService` will expose both providers via `has_anthropic()` and `has_openai()` methods.
 

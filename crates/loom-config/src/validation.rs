@@ -37,8 +37,8 @@ fn validate_providers(config: &LoomConfig) -> Result<(), ConfigError> {
     for (name, provider) in &config.providers {
         match provider {
             ProviderConfig::OpenAi(cfg) => {
-                if cfg.api_key.is_empty() {
-                    warn!(provider = %name, "OpenAI provider has empty api_key");
+                if cfg.api_key.is_none() {
+                    warn!(provider = %name, "OpenAI provider has no api_key configured");
                 }
                 if cfg.base_url.is_empty() {
                     return Err(ConfigError::invalid_value(
@@ -48,8 +48,8 @@ fn validate_providers(config: &LoomConfig) -> Result<(), ConfigError> {
                 }
             }
             ProviderConfig::Anthropic(cfg) => {
-                if cfg.api_key.is_empty() {
-                    warn!(provider = %name, "Anthropic provider has empty api_key");
+                if cfg.api_key.is_none() {
+                    warn!(provider = %name, "Anthropic provider has no api_key configured");
                 }
                 if cfg.base_url.is_empty() {
                     return Err(ConfigError::invalid_value(

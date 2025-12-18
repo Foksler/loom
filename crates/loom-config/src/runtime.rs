@@ -1,5 +1,6 @@
 //! Runtime configuration types with resolved defaults.
 
+use loom_config_common::SecretString;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -48,19 +49,40 @@ pub enum ProviderConfig {
     Custom(GenericProviderConfig),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct OpenAiConfig {
-    pub api_key: String,
+    pub api_key: Option<SecretString>,
     pub base_url: String,
     pub default_model: String,
     pub organization: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+impl std::fmt::Debug for OpenAiConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("OpenAiConfig")
+            .field("api_key", &self.api_key)
+            .field("base_url", &self.base_url)
+            .field("default_model", &self.default_model)
+            .field("organization", &self.organization)
+            .finish()
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize)]
 pub struct AnthropicConfig {
-    pub api_key: String,
+    pub api_key: Option<SecretString>,
     pub base_url: String,
     pub default_model: String,
+}
+
+impl std::fmt::Debug for AnthropicConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AnthropicConfig")
+            .field("api_key", &self.api_key)
+            .field("base_url", &self.base_url)
+            .field("default_model", &self.default_model)
+            .finish()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -69,20 +91,52 @@ pub struct OllamaConfig {
     pub default_model: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct GenericProviderConfig {
-    pub api_key: Option<String>,
+    pub api_key: Option<SecretString>,
     pub base_url: String,
     pub default_model: Option<String>,
     pub extra: HashMap<String, String>,
 }
 
+impl std::fmt::Debug for GenericProviderConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GenericProviderConfig")
+            .field("api_key", &self.api_key)
+            .field("base_url", &self.base_url)
+            .field("default_model", &self.default_model)
+            .field("extra", &self.extra)
+            .finish()
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolsConfig {
     pub max_file_size_bytes: u64,
+    #[serde(with = "humantime_serde")]
     pub command_timeout: Duration,
     pub allow_shell: bool,
     pub workspace: WorkspaceConfig,
+}
+
+mod humantime_serde {
+    use serde::{self, Deserialize, Deserializer, Serializer};
+    use std::time::Duration;
+
+    pub fn serialize<S>(duration: &Duration, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_u64(duration.as_secs())
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Duration, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let secs = u64::deserialize(deserializer)?;
+        Ok(Duration::from_secs(secs))
+    }
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -122,7 +176,9 @@ pub enum LogFormat {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RetryConfig {
     pub max_attempts: u32,
+    #[serde(with = "humantime_serde")]
     pub base_delay: Duration,
+    #[serde(with = "humantime_serde")]
     pub max_delay: Duration,
     pub backoff_factor: f64,
     pub jitter: bool,
@@ -223,13 +279,13 @@ fn build_providers_config(layer: Option<ProvidersLayer>) -> Result<HashMap<Strin
         for (name, provider_layer) in pl.entries {
             let config = match provider_layer {
                 ProviderLayer::OpenAi(l) => ProviderConfig::OpenAi(OpenAiConfig {
-                    api_key: l.api_key.unwrap_or_default(),
+                    api_key: l.api_key,
                     base_url: l.base_url.unwrap_or_else(|| "https://api.openai.com/v1".to_string()),
                     default_model: l.default_model.unwrap_or_else(|| "gpt-4o".to_string()),
                     organization: l.organization,
                 }),
                 ProviderLayer::Anthropic(l) => ProviderConfig::Anthropic(AnthropicConfig {
-                    api_key: l.api_key.unwrap_or_default(),
+                    api_key: l.api_key,
                     base_url: l.base_url.unwrap_or_else(|| "https://api.anthropic.com".to_string()),
                     default_model: l.default_model.unwrap_or_else(|| "claude-sonnet-4-20250514".to_string()),
                 }),

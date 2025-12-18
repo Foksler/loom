@@ -1,5 +1,6 @@
 //! Partial configuration layer for merging from multiple sources.
 
+use loom_config_common::SecretString;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -58,10 +59,10 @@ pub enum ProviderLayer {
     Custom(GenericProviderLayer),
 }
 
-#[derive(Debug, Clone, Default, Deserialize)]
+#[derive(Clone, Default, Deserialize)]
 pub struct OpenAiLayer {
     #[serde(default)]
-    pub api_key: Option<String>,
+    pub api_key: Option<SecretString>,
     #[serde(default)]
     pub base_url: Option<String>,
     #[serde(default)]
@@ -70,14 +71,35 @@ pub struct OpenAiLayer {
     pub organization: Option<String>,
 }
 
-#[derive(Debug, Clone, Default, Deserialize)]
+impl std::fmt::Debug for OpenAiLayer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("OpenAiLayer")
+            .field("api_key", &self.api_key)
+            .field("base_url", &self.base_url)
+            .field("default_model", &self.default_model)
+            .field("organization", &self.organization)
+            .finish()
+    }
+}
+
+#[derive(Clone, Default, Deserialize)]
 pub struct AnthropicLayer {
     #[serde(default)]
-    pub api_key: Option<String>,
+    pub api_key: Option<SecretString>,
     #[serde(default)]
     pub base_url: Option<String>,
     #[serde(default)]
     pub default_model: Option<String>,
+}
+
+impl std::fmt::Debug for AnthropicLayer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AnthropicLayer")
+            .field("api_key", &self.api_key)
+            .field("base_url", &self.base_url)
+            .field("default_model", &self.default_model)
+            .finish()
+    }
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -88,16 +110,27 @@ pub struct OllamaLayer {
     pub default_model: Option<String>,
 }
 
-#[derive(Debug, Clone, Default, Deserialize)]
+#[derive(Clone, Default, Deserialize)]
 pub struct GenericProviderLayer {
     #[serde(default)]
-    pub api_key: Option<String>,
+    pub api_key: Option<SecretString>,
     #[serde(default)]
     pub base_url: Option<String>,
     #[serde(default)]
     pub default_model: Option<String>,
     #[serde(default)]
     pub extra: HashMap<String, String>,
+}
+
+impl std::fmt::Debug for GenericProviderLayer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GenericProviderLayer")
+            .field("api_key", &self.api_key)
+            .field("base_url", &self.base_url)
+            .field("default_model", &self.default_model)
+            .field("extra", &self.extra)
+            .finish()
+    }
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -401,11 +434,13 @@ mod tests {
     /// for HashMap-based merging where keys collide.
     #[test]
     fn test_merge_providers_replaces_by_name() {
+        use loom_config_common::Secret;
+
         let mut base = ConfigLayer {
             providers: Some(ProvidersLayer {
                 entries: HashMap::from([
                     ("main".to_string(), ProviderLayer::OpenAi(OpenAiLayer {
-                        api_key: Some("key1".to_string()),
+                        api_key: Some(Secret::new("key1".to_string())),
                         base_url: None,
                         default_model: Some("gpt-4".to_string()),
                         organization: None,
@@ -419,7 +454,7 @@ mod tests {
             providers: Some(ProvidersLayer {
                 entries: HashMap::from([
                     ("main".to_string(), ProviderLayer::Anthropic(AnthropicLayer {
-                        api_key: Some("key2".to_string()),
+                        api_key: Some(Secret::new("key2".to_string())),
                         base_url: None,
                         default_model: Some("claude-3-opus".to_string()),
                     })),

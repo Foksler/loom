@@ -1,6 +1,8 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/loom-secret",
+    "crates/loom-config-common",
     "crates/loom-config",
     "crates/loom-git",
     "crates/loom-github-app",
@@ -71,3 +73,10 @@ toml = "0.8"
 
 # Directories (for XDG)
 dirs = "5"
+
+# Secrets
+zeroize = { version = "1", features = ["zeroize_derive"] }
+
+# Internal crates
+loom-secret = { path = "crates/loom-secret" }
+loom-config-common = { path = "crates/loom-config-common" }

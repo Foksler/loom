@@ -8,6 +8,7 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+loom-config-common.workspace = true
 loom-core = { path = "../loom-core" }
 loom-http-retry = { path = "../loom-http-retry" }
 loom-llm-anthropic = { path = "../loom-llm-anthropic" }

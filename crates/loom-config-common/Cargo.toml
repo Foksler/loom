@@ -1,0 +1,22 @@
+[package]
+name = "loom-config-common"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Common configuration primitives for Loom (Secret type, env helpers)"
+
+[dependencies]
+loom-secret = { path = "../loom-secret" }
+serde = { workspace = true, optional = true }
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true
+
+[features]
+default = ["serde"]
+serde = ["dep:serde", "loom-secret/serde"]

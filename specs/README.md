@@ -21,6 +21,7 @@ This directory contains the architectural specifications and design documentatio
 | [thread-system.md](./thread-system.md) | Thread persistence, local storage, server sync, and CLI commands |
 | [git-metadata.md](./git-metadata.md) | Git repository detection, loom-git crate, and thread git metadata |
 | [search-system.md](./search-system.md) | Full-text search with FTS5, commit SHA lookup, and CLI search command |
+| [secret-system.md](./secret-system.md) | Secret<T> type for safe handling of API keys and sensitive values |
 
 ## Quick Reference
 
@@ -29,6 +30,8 @@ This directory contains the architectural specifications and design documentatio
 ```
 loom/
 ├── crates/
+│   ├── loom-secret/         # Secret<T> type for safe handling of sensitive values
+│   ├── loom-config-common/  # Shared config primitives, re-exports loom-secret
 │   ├── loom-config/         # Configuration management, XDG paths, layered sources
 │   ├── loom-core/           # Core types, state machine, LLM traits
 │   ├── loom-git/            # Git repository detection for threads

@@ -27,6 +27,11 @@ The Loom configuration system provides centralized, layered configuration manage
 - Real-time configuration synchronization across machines
 - Encrypted configuration storage (secrets should use system keyring)
 
+### Related Specifications
+
+- [Secret System](secret-system.md) - `Secret<T>` type for API keys and sensitive values
+- [Configuration Design](configuration.md) - CLI arguments and environment variables
+
 ---
 
 ## 2. XDG Base Directory Compliance

@@ -1,6 +1,8 @@
 //! Configuration sources: files, environment, CLI, defaults.
 
 use std::path::PathBuf;
+
+use loom_config_common::load_secret_env;
 use tracing::{debug, trace};
 
 use crate::layer::*;
@@ -124,6 +126,27 @@ impl ConfigSource for EnvSource {
         debug!("loading environment variables");
         let mut layer = ConfigLayer::default();
 
+        // Load API keys using load_secret_env (supports VAR and VAR_FILE)
+        // Try LOOM_ prefixed first, then fall back to standard env vars
+        if let Some(secret) = load_secret_env("LOOM_OPENAI_API_KEY")
+            .ok()
+            .flatten()
+            .or_else(|| load_secret_env("OPENAI_API_KEY").ok().flatten())
+        {
+            trace!("loaded OpenAI API key from environment");
+            ensure_openai_provider(&mut layer).api_key = Some(secret);
+        }
+
+        if let Some(secret) = load_secret_env("LOOM_ANTHROPIC_API_KEY")
+            .ok()
+            .flatten()
+            .or_else(|| load_secret_env("ANTHROPIC_API_KEY").ok().flatten())
+        {
+            trace!("loaded Anthropic API key from environment");
+            ensure_anthropic_provider(&mut layer).api_key = Some(secret);
+        }
+
+        // Load non-secret env vars
         for (key, value) in std::env::vars() {
             if !key.starts_with("LOOM_") {
                 continue;
@@ -147,10 +170,7 @@ impl ConfigSource for EnvSource {
                         .workspace_root = Some(PathBuf::from(value));
                 }
 
-                // OpenAI provider
-                "LOOM_OPENAI_API_KEY" | "OPENAI_API_KEY" => {
-                    ensure_openai_provider(&mut layer).api_key = Some(value);
-                }
+                // OpenAI provider (non-secret fields)
                 "LOOM_OPENAI_BASE_URL" => {
                     ensure_openai_provider(&mut layer).base_url = Some(value);
                 }
@@ -158,10 +178,7 @@ impl ConfigSource for EnvSource {
                     ensure_openai_provider(&mut layer).default_model = Some(value);
                 }
 
-                // Anthropic provider
-                "LOOM_ANTHROPIC_API_KEY" | "ANTHROPIC_API_KEY" => {
-                    ensure_anthropic_provider(&mut layer).api_key = Some(value);
-                }
+                // Anthropic provider (non-secret fields)
                 "LOOM_ANTHROPIC_BASE_URL" => {
                     ensure_anthropic_provider(&mut layer).base_url = Some(value);
                 }

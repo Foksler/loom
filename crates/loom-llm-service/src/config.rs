@@ -2,6 +2,7 @@
 
 use std::env;
 
+use loom_config_common::{load_secret_env, Secret, SecretString};
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
 
@@ -47,17 +48,36 @@ impl std::str::FromStr for LlmProvider {
 }
 
 /// Configuration for the LLM service.
-#[derive(Debug, Clone)]
+///
+/// API keys are stored as [`SecretString`] to prevent accidental logging.
+/// Use `.expose()` to access the actual key value when needed.
+#[derive(Clone)]
 pub struct LlmServiceConfig {
     pub provider: LlmProvider,
-    pub anthropic_api_key: Option<String>,
+    pub anthropic_api_key: Option<SecretString>,
     pub anthropic_model: Option<String>,
-    pub openai_api_key: Option<String>,
+    pub openai_api_key: Option<SecretString>,
     pub openai_model: Option<String>,
     pub openai_organization: Option<String>,
     pub vertex_project: Option<String>,
     pub vertex_location: Option<String>,
     pub vertex_model: Option<String>,
+}
+
+impl std::fmt::Debug for LlmServiceConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LlmServiceConfig")
+            .field("provider", &self.provider)
+            .field("anthropic_api_key", &self.anthropic_api_key)
+            .field("anthropic_model", &self.anthropic_model)
+            .field("openai_api_key", &self.openai_api_key)
+            .field("openai_model", &self.openai_model)
+            .field("openai_organization", &self.openai_organization)
+            .field("vertex_project", &self.vertex_project)
+            .field("vertex_location", &self.vertex_location)
+            .field("vertex_model", &self.vertex_model)
+            .finish()
+    }
 }
 
 impl Default for LlmServiceConfig {
@@ -87,11 +107,13 @@ impl LlmServiceConfig {
 
     /// Loads configuration from environment variables.
     ///
-    /// Environment variables:
+    /// Supports both direct environment variables and file-based secrets:
+    /// - `LOOM_SERVER_ANTHROPIC_API_KEY`: Anthropic API key (or `_FILE` suffix for file path)
+    /// - `LOOM_SERVER_OPENAI_API_KEY`: OpenAI API key (or `_FILE` suffix for file path)
+    ///
+    /// Other environment variables:
     /// - `LOOM_SERVER_LLM_PROVIDER`: Provider to use ("anthropic", "openai", or "vertex")
-    /// - `LOOM_SERVER_ANTHROPIC_API_KEY`: Anthropic API key
     /// - `LOOM_SERVER_ANTHROPIC_MODEL`: Anthropic model name
-    /// - `LOOM_SERVER_OPENAI_API_KEY`: OpenAI API key
     /// - `LOOM_SERVER_OPENAI_MODEL`: OpenAI model name
     /// - `LOOM_SERVER_OPENAI_ORGANIZATION`: OpenAI organization ID
     /// - `LOOM_SERVER_VERTEX_PROJECT`: GCP project ID for Vertex AI
@@ -111,9 +133,9 @@ impl LlmServiceConfig {
             }
         };
 
-        let anthropic_api_key = env::var("LOOM_SERVER_ANTHROPIC_API_KEY").ok();
+        let anthropic_api_key = load_secret_env("LOOM_SERVER_ANTHROPIC_API_KEY")?;
         let anthropic_model = env::var("LOOM_SERVER_ANTHROPIC_MODEL").ok();
-        let openai_api_key = env::var("LOOM_SERVER_OPENAI_API_KEY").ok();
+        let openai_api_key = load_secret_env("LOOM_SERVER_OPENAI_API_KEY")?;
         let openai_model = env::var("LOOM_SERVER_OPENAI_MODEL").ok();
         let openai_organization = env::var("LOOM_SERVER_OPENAI_ORGANIZATION").ok();
         let vertex_project = env::var("LOOM_SERVER_VERTEX_PROJECT").ok();
@@ -143,7 +165,7 @@ impl LlmServiceConfig {
 
     /// Sets the Anthropic API key.
     pub fn with_anthropic_api_key(mut self, api_key: impl Into<String>) -> Self {
-        self.anthropic_api_key = Some(api_key.into());
+        self.anthropic_api_key = Some(Secret::new(api_key.into()));
         self
     }
 
@@ -155,7 +177,7 @@ impl LlmServiceConfig {
 
     /// Sets the OpenAI API key.
     pub fn with_openai_api_key(mut self, api_key: impl Into<String>) -> Self {
-        self.openai_api_key = Some(api_key.into());
+        self.openai_api_key = Some(Secret::new(api_key.into()));
         self
     }
 
@@ -260,11 +282,26 @@ mod tests {
                 .with_openai_organization("org-123");
 
             assert_eq!(config.provider, LlmProvider::OpenAi);
-            assert_eq!(config.anthropic_api_key, Some("anthropic-key".to_string()));
+            assert_eq!(config.anthropic_api_key.as_ref().map(|s| s.expose().as_str()), Some("anthropic-key"));
             assert_eq!(config.anthropic_model, Some("claude-3".to_string()));
-            assert_eq!(config.openai_api_key, Some("openai-key".to_string()));
+            assert_eq!(config.openai_api_key.as_ref().map(|s| s.expose().as_str()), Some("openai-key"));
             assert_eq!(config.openai_model, Some("gpt-4".to_string()));
             assert_eq!(config.openai_organization, Some("org-123".to_string()));
+        }
+
+        /// Verifies that Debug output never contains API key values.
+        /// This is critical for security - keys must never appear in logs.
+        #[test]
+        fn debug_redacts_api_keys() {
+            let config = LlmServiceConfig::new(LlmProvider::OpenAi)
+                .with_anthropic_api_key("sk-ant-super-secret")
+                .with_openai_api_key("sk-openai-super-secret");
+
+            let debug_output = format!("{:?}", config);
+
+            assert!(!debug_output.contains("sk-ant-super-secret"));
+            assert!(!debug_output.contains("sk-openai-super-secret"));
+            assert!(debug_output.contains("[REDACTED]"));
         }
     }
 }
