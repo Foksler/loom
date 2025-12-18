@@ -8,7 +8,9 @@ repository.workspace = true
 description = "Git repository detection for Loom"
 
 [dependencies]
+async-trait.workspace = true
 thiserror.workspace = true
+tokio.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]

@@ -161,6 +161,7 @@ pub enum AgentStateKind {
     CallingLlm,
     ProcessingLlmResponse,
     ExecutingTools,
+    PostToolsHook,
     Error,
     ShuttingDown,
 }
@@ -214,6 +215,12 @@ impl From<&loom_core::AgentState> for AgentStateSnapshot {
                         tool_name: e.tool_name().to_string(),
                     })
                     .collect(),
+            },
+            loom_core::AgentState::PostToolsHook { .. } => Self {
+                kind: AgentStateKind::PostToolsHook,
+                retries: 0,
+                last_error: None,
+                pending_tool_calls: Vec::new(),
             },
             loom_core::AgentState::Error { error, retries, .. } => Self {
                 kind: AgentStateKind::Error,

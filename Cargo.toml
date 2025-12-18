@@ -5,6 +5,7 @@ members = [
     "crates/loom-config-common",
     "crates/loom-config",
     "crates/loom-git",
+    "crates/loom-auto-commit",
     "crates/loom-github-app",
     "crates/loom-google-cse",
     "crates/loom-http-retry",
@@ -17,6 +18,7 @@ members = [
     "crates/loom-llm-service",
     "crates/loom-llm-proxy",
     "crates/loom-tools",
+    "crates/loom-acp",
     "crates/loom-cli",
     "crates/loom-version",
 ]
@@ -51,6 +53,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 async-trait = "0.1"
 futures = "0.3"
 pin-project-lite = "0.2"
+tokio-util = { version = "0.7", features = ["compat"] }
 
 # CLI
 clap = { version = "4", features = ["derive", "env"] }

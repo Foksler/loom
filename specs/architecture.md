@@ -11,13 +11,15 @@ The system is designed around three core principles:
 
 ## Crate Structure
 
-Loom is organized as a Cargo workspace with 9 crates:
+Loom is organized as a Cargo workspace with 11 crates:
 
 ```
 loom/
 ├── crates/
 │   ├── loom-core/           # Core abstractions and types
 │   ├── loom-http-retry/     # HTTP retry utilities
+│   ├── loom-git/            # Git operations (detection, staging, committing)
+│   ├── loom-auto-commit/    # Auto-commit orchestration
 │   ├── loom-llm-anthropic/  # Anthropic Claude provider (server-only)
 │   ├── loom-llm-openai/     # OpenAI provider (server-only)
 │   ├── loom-llm-service/    # Server-side provider abstraction (owns API keys)
@@ -34,38 +36,45 @@ loom/
                          │  loom-cli   │
                          └──────┬──────┘
                                 │
-              ┌─────────────────┼─────────────────┐
-              │                 │                 │
-              ▼                 ▼                 ▼
-      ┌──────────────┐  ┌─────────────┐  ┌─────────────┐
-      │loom-llm-proxy│  │ loom-tools  │  │    ...      │
-      └──────┬───────┘  └──────┬──────┘  └─────────────┘
-             │                 │
-             ▼                 │
-      ┌─────────────┐          │
-      │ loom-server │          │
-      └──────┬──────┘          │
-             │                 │
-             ▼                 │
-    ┌────────────────┐         │
-    │loom-llm-service│         │
-    └───────┬────────┘         │
-            │                  │
-    ┌───────┴───────┐          │
-    │               │          │
-    ▼               ▼          │
-┌────────────┐ ┌────────────┐  │
-│loom-llm-   │ │loom-llm-   │  │
-│anthropic   │ │openai      │  │
-└─────┬──────┘ └─────┬──────┘  │
-      │              │         │
-      └──────┬───────┘         │
-             ▼                 │
-     ┌───────────────┐         │
-     │loom-http-retry│         │
-     └───────┬───────┘         │
-             │                 │
-             └─────────────────┘
+       ┌────────────────────────┼────────────────────────┐
+       │                        │                        │
+       ▼                        ▼                        ▼
+┌──────────────┐  ┌─────────────────────┐  ┌─────────────┐
+│loom-llm-proxy│  │  loom-auto-commit   │  │ loom-tools  │
+└──────┬───────┘  └──────────┬──────────┘  └──────┬──────┘
+       │                     │                    │
+       │            ┌────────┴────────┐           │
+       │            │                 │           │
+       │            ▼                 │           │
+       │     ┌────────────┐           │           │
+       │     │  loom-git  │           │           │
+       │     └─────┬──────┘           │           │
+       │           │                  │           │
+       ▼           └──────────────────┼───────────┘
+┌─────────────┐                       │
+│ loom-server │                       │
+└──────┬──────┘                       │
+       │                              │
+       ▼                              │
+┌────────────────┐                    │
+│loom-llm-service│                    │
+└───────┬────────┘                    │
+        │                             │
+┌───────┴───────┐                     │
+│               │                     │
+▼               ▼                     │
+┌────────────┐ ┌────────────┐         │
+│loom-llm-   │ │loom-llm-   │         │
+│anthropic   │ │openai      │         │
+└─────┬──────┘ └─────┬──────┘         │
+      │              │                │
+      └──────┬───────┘                │
+             ▼                        │
+     ┌───────────────┐                │
+     │loom-http-retry│                │
+     └───────┬───────┘                │
+             │                        │
+             └────────────────────────┘
                       │
                       ▼
               ┌─────────────┐
@@ -245,6 +254,24 @@ HTTP server with provider-specific LLM proxy endpoints:
 - `/proxy/openai/stream` - OpenAI SSE streaming completion
 - Uses `LlmService` with provider-specific methods (`complete_anthropic()`, `complete_streaming_openai()`, etc.)
 
+### loom-git
+
+Git operations abstraction layer:
+
+- `detect_git_repository()` - Finds `.git` directory from any path
+- `GitClient` trait - Async interface for staging and committing files
+- `CommandGitClient` - Production implementation using git CLI subprocess
+- `MockGitClient` - Test implementation for unit testing without real git
+
+### loom-auto-commit
+
+Auto-commit orchestration for automatic staging and committing of changes:
+
+- `AutoCommitService` - Orchestrates the auto-commit workflow
+- `CommitMessageGenerator` - Uses LLM to generate meaningful commit messages from diffs
+- `AutoCommitConfig` - Configuration (enabled flag, commit style, etc.)
+- Integrates as a post-tool hook to commit changes after tool execution
+
 ### loom-tools
 
 Tool implementations and registry:
@@ -274,6 +301,7 @@ pub enum AgentState {
     CallingLlm { conversation: ConversationContext, retries: u32 },
     ProcessingLlmResponse { conversation: ConversationContext, response: LlmResponse },
     ExecutingTools { conversation: ConversationContext, executions: Vec<ToolExecutionStatus> },
+    PostToolsHook { conversation: ConversationContext },
     Error { conversation: ConversationContext, error: AgentError, retries: u32, origin: ErrorOrigin },
     ShuttingDown,
 }
@@ -287,6 +315,7 @@ pub enum AgentEvent {
     LlmEvent(LlmEvent),
     ToolProgress(ToolProgressEvent),
     ToolCompleted { call_id: String, outcome: ToolExecutionOutcome },
+    PostToolsHookCompleted,
     RetryTimeoutFired,
     ShutdownRequested,
 }
@@ -298,6 +327,7 @@ The `handle_event()` method processes events and returns `AgentAction` for the c
 pub enum AgentAction {
     SendLlmRequest(LlmRequest),
     ExecuteTools(Vec<ToolCall>),
+    RunPostToolsHook,
     WaitForInput,
     DisplayMessage(String),
     DisplayError(String),
@@ -348,6 +378,15 @@ let request = LlmRequest::new("claude-sonnet-4-20250514")
     .with_tools(tool_definitions)
     .with_max_tokens(4096);
 ```
+
+### Hook Pattern (PostToolsHook)
+
+Running infrastructure operations after tool completion without affecting the main conversation flow:
+
+- `PostToolsHook` state triggers after all tools complete
+- `RunPostToolsHook` action signals the caller to execute hooks (e.g., auto-commit)
+- `PostToolsHookCompleted` event returns control to the state machine
+- Hooks are fire-and-forget from the agent's perspective
 
 ### Discriminated Union / Sum Types
 

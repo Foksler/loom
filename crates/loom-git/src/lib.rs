@@ -1,12 +1,18 @@
+mod client;
+mod command_client;
 mod detect;
 mod error;
+mod mock_client;
 mod normalize;
 
+pub use client::{GitClient, GitDiff};
+pub use command_client::CommandGitClient;
 pub use detect::{
     current_branch, default_remote_url, detect_repo_metadata, detect_repo_status, head_commit_sha,
     is_dirty, RepoMetadata,
 };
 pub use error::GitError;
+pub use mock_client::{MockCall, MockGitClient};
 pub use normalize::normalize_remote_url;
 
 /// Commit information

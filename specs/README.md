@@ -22,6 +22,7 @@ This directory contains the architectural specifications and design documentatio
 | [git-metadata.md](./git-metadata.md) | Git repository detection, loom-git crate, and thread git metadata |
 | [search-system.md](./search-system.md) | Full-text search with FTS5, commit SHA lookup, and CLI search command |
 | [secret-system.md](./secret-system.md) | Secret<T> type for safe handling of API keys and sensitive values |
+| [acp-system.md](./acp-system.md) | Agent Client Protocol (ACP) integration for editor-driven usage |
 
 ## Quick Reference
 
@@ -41,6 +42,7 @@ loom/
 │   ├── loom-llm-anthropic/  # Anthropic Claude API client
 │   ├── loom-llm-openai/     # OpenAI GPT API client
 │   ├── loom-http-retry/     # HTTP retry/backoff utilities
+│   ├── loom-acp/            # Agent Client Protocol (ACP) integration
 │   └── loom-cli/            # CLI binary using clap
 └── specs/                   # This directory
 ```

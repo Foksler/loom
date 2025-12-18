@@ -1,0 +1,40 @@
+[package]
+name = "loom-acp"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Agent Client Protocol (ACP) integration for Loom"
+
+[dependencies]
+# Internal crates
+loom-core = { path = "../loom-core" }
+loom-thread = { path = "../loom-thread" }
+loom-tools = { path = "../loom-tools" }
+loom-llm-proxy = { path = "../loom-llm-proxy" }
+
+# ACP SDK
+agent-client-protocol = "0.9"
+
+# Async runtime
+tokio = { workspace = true }
+tokio-util = { version = "0.7", features = ["compat"] }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+
+# Async utilities
+async-trait = { workspace = true }
+futures = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+tokio-test = { workspace = true }

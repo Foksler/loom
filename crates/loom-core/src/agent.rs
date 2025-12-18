@@ -14,6 +14,13 @@ use crate::state::{
 };
 use crate::tool::ToolDefinition;
 
+/// Information about a completed tool for post-tool hooks.
+#[derive(Clone, Debug)]
+pub struct CompletedToolInfo {
+    pub tool_name: String,
+    pub succeeded: bool,
+}
+
 /// Actions that the caller should perform in response to state changes.
 #[derive(Clone, Debug)]
 pub enum AgentAction {
@@ -21,6 +28,10 @@ pub enum AgentAction {
     SendLlmRequest(LlmRequest),
     /// Execute the given tool calls.
     ExecuteTools(Vec<ToolCall>),
+    /// Run post-tool hooks (auto-commit, etc.).
+    RunPostToolsHook {
+        completed_tools: Vec<CompletedToolInfo>,
+    },
     /// Wait for user input (idle state).
     WaitForInput,
     /// Display a message to the user.
@@ -29,6 +40,42 @@ pub enum AgentAction {
     DisplayError(String),
     /// Shutdown the agent.
     Shutdown,
+}
+
+/// Checks if any tool executions are mutating (edit_file or bash) and succeeded.
+fn has_mutating_tools(executions: &[ToolExecutionStatus]) -> bool {
+    const MUTATING_TOOLS: &[&str] = &["edit_file", "bash"];
+    executions.iter().any(|exec| {
+        if let ToolExecutionStatus::Completed {
+            tool_name, outcome, ..
+        } = exec
+        {
+            MUTATING_TOOLS.contains(&tool_name.as_str())
+                && matches!(outcome, ToolExecutionOutcome::Success { .. })
+        } else {
+            false
+        }
+    })
+}
+
+/// Extracts completed tool information from execution statuses.
+fn extract_completed_tools(executions: &[ToolExecutionStatus]) -> Vec<CompletedToolInfo> {
+    executions
+        .iter()
+        .filter_map(|exec| {
+            if let ToolExecutionStatus::Completed {
+                tool_name, outcome, ..
+            } = exec
+            {
+                Some(CompletedToolInfo {
+                    tool_name: tool_name.clone(),
+                    succeeded: matches!(outcome, ToolExecutionOutcome::Success { .. }),
+                })
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 /// The main agent struct managing conversation state and LLM interaction.
@@ -70,6 +117,7 @@ impl Agent {
             AgentState::CallingLlm { conversation, .. } => conversation,
             AgentState::ProcessingLlmResponse { conversation, .. } => conversation,
             AgentState::ExecutingTools { conversation, .. } => conversation,
+            AgentState::PostToolsHook { conversation, .. } => conversation,
             AgentState::Error { conversation, .. } => conversation,
             AgentState::ShuttingDown => {
                 panic!("Cannot get conversation from ShuttingDown state")
@@ -84,6 +132,7 @@ impl Agent {
             AgentState::CallingLlm { conversation, .. } => conversation,
             AgentState::ProcessingLlmResponse { conversation, .. } => conversation,
             AgentState::ExecutingTools { conversation, .. } => conversation,
+            AgentState::PostToolsHook { conversation, .. } => conversation,
             AgentState::Error { conversation, .. } => conversation,
             AgentState::ShuttingDown => {
                 panic!("Cannot get conversation from ShuttingDown state")
@@ -293,19 +342,63 @@ impl Agent {
                         max_tokens: Some(self.config.max_tokens),
                         temperature: self.config.temperature,
                     };
-                    self.state = AgentState::CallingLlm {
-                        conversation: conv,
-                        retries: 0,
-                    };
-                    info!(
-                        from = old_state_name,
-                        to = "CallingLlm",
-                        "all tools complete, sending results to LLM"
-                    );
-                    AgentAction::SendLlmRequest(request)
+
+                    if has_mutating_tools(executions) {
+                        let completed_tools = extract_completed_tools(executions);
+                        debug!(
+                            tool_count = completed_tools.len(),
+                            "mutating tools detected, running post-tools hook"
+                        );
+                        self.state = AgentState::PostToolsHook {
+                            conversation: conv,
+                            pending_llm_request: request,
+                            completed_tools: completed_tools.clone(),
+                        };
+                        info!(
+                            from = old_state_name,
+                            to = "PostToolsHook",
+                            "state transition for post-tools hook"
+                        );
+                        AgentAction::RunPostToolsHook { completed_tools }
+                    } else {
+                        self.state = AgentState::CallingLlm {
+                            conversation: conv,
+                            retries: 0,
+                        };
+                        info!(
+                            from = old_state_name,
+                            to = "CallingLlm",
+                            "all tools complete, sending results to LLM"
+                        );
+                        AgentAction::SendLlmRequest(request)
+                    }
                 } else {
                     AgentAction::WaitForInput
                 }
+            }
+
+            // PostToolsHook + PostToolsHookCompleted -> CallingLlm
+            (
+                AgentState::PostToolsHook {
+                    conversation,
+                    pending_llm_request,
+                    ..
+                },
+                AgentEvent::PostToolsHookCompleted { action_taken },
+            ) => {
+                debug!(action_taken = action_taken, "post-tools hook completed");
+                let conv = conversation.clone();
+                let request = pending_llm_request.clone();
+                self.state = AgentState::CallingLlm {
+                    conversation: conv,
+                    retries: 0,
+                };
+                info!(
+                    from = "PostToolsHook",
+                    to = "CallingLlm",
+                    "state transition after post-tools hook"
+                );
+                AgentAction::SendLlmRequest(request)
             }
 
             // ShutdownRequested from any state
@@ -1051,5 +1144,267 @@ mod tests {
                 "must emit Shutdown action"
             );
         }
+
+        /// **Property test: PostToolsHook always transitions to CallingLlm on completion**
+        ///
+        /// This property verifies that the post-tools hook state machine is deterministic:
+        /// - Regardless of whether an action was taken (e.g., commit made), the hook
+        ///   must complete and allow the agent to continue with the LLM call
+        /// - The pending LLM request must be preserved and sent after the hook completes
+        ///
+        /// Essential for ensuring auto-commit and other post-tool hooks don't block the agent loop.
+        #[test]
+        fn post_tools_hook_always_completes(action_taken in proptest::bool::ANY) {
+            let config = AgentConfig::default();
+            let llm = Arc::new(MockLlmClient);
+            let tools = vec![];
+
+            let conversation = ConversationContext::new();
+            let pending_request = LlmRequest {
+                model: config.model_name.clone(),
+                messages: vec![Message::user("test")],
+                tools: vec![],
+                max_tokens: Some(config.max_tokens),
+                temperature: config.temperature,
+            };
+            let completed_tools = vec![CompletedToolInfo {
+                tool_name: "edit_file".to_string(),
+                succeeded: true,
+            }];
+
+            let mut agent = Agent {
+                state: AgentState::PostToolsHook {
+                    conversation,
+                    pending_llm_request: pending_request,
+                    completed_tools,
+                },
+                config,
+                llm,
+                tools,
+            };
+
+            let action = agent
+                .handle_event(AgentEvent::PostToolsHookCompleted { action_taken })
+                .unwrap();
+
+            prop_assert!(
+                matches!(agent.state(), AgentState::CallingLlm { .. }),
+                "must transition to CallingLlm after PostToolsHookCompleted"
+            );
+            prop_assert!(
+                matches!(action, AgentAction::SendLlmRequest(_)),
+                "must emit SendLlmRequest action"
+            );
+        }
+    }
+
+    /// **Test: Mutating tools (edit_file) trigger PostToolsHook state**
+    ///
+    /// This test verifies that when edit_file (a mutating tool) completes successfully,
+    /// the agent transitions to PostToolsHook instead of directly to CallingLlm.
+    /// This is critical for auto-commit support, as we need a hook point to commit
+    /// changes before continuing the LLM conversation.
+    #[test]
+    fn test_mutating_tools_trigger_post_tools_hook() {
+        let mut agent = create_test_agent();
+
+        agent
+            .handle_event(AgentEvent::UserInput(Message::user("edit a file")))
+            .expect("handle_event should succeed");
+
+        let tool_calls = vec![ToolCall {
+            id: "call_edit".to_string(),
+            tool_name: "edit_file".to_string(),
+            arguments_json: serde_json::json!({"path": "/test.txt", "content": "hello"}),
+        }];
+        let response = create_response_with_tools(tool_calls);
+
+        agent
+            .handle_event(AgentEvent::LlmEvent(LlmEvent::Completed(response)))
+            .expect("handle_event should succeed");
+
+        let action = agent
+            .handle_event(AgentEvent::ToolCompleted {
+                call_id: "call_edit".to_string(),
+                outcome: ToolExecutionOutcome::Success {
+                    call_id: "call_edit".to_string(),
+                    output: serde_json::json!({"success": true}),
+                },
+            })
+            .expect("handle_event should succeed");
+
+        match agent.state() {
+            AgentState::PostToolsHook {
+                completed_tools, ..
+            } => {
+                assert_eq!(completed_tools.len(), 1);
+                assert_eq!(completed_tools[0].tool_name, "edit_file");
+                assert!(completed_tools[0].succeeded);
+            }
+            other => panic!("expected PostToolsHook, got {}", other.name()),
+        }
+
+        match action {
+            AgentAction::RunPostToolsHook { completed_tools } => {
+                assert_eq!(completed_tools.len(), 1);
+                assert_eq!(completed_tools[0].tool_name, "edit_file");
+            }
+            other => panic!("expected RunPostToolsHook, got {:?}", other),
+        }
+    }
+
+    /// **Test: Non-mutating tools skip PostToolsHook and go directly to CallingLlm**
+    ///
+    /// This test verifies that read-only tools (like read_file) don't trigger the
+    /// post-tools hook. This is important for performance - we only want to run
+    /// auto-commit when there are actual file changes to commit.
+    #[test]
+    fn test_non_mutating_tools_skip_post_tools_hook() {
+        let mut agent = create_test_agent();
+
+        agent
+            .handle_event(AgentEvent::UserInput(Message::user("read a file")))
+            .expect("handle_event should succeed");
+
+        let tool_calls = vec![ToolCall {
+            id: "call_read".to_string(),
+            tool_name: "read_file".to_string(),
+            arguments_json: serde_json::json!({"path": "/test.txt"}),
+        }];
+        let response = create_response_with_tools(tool_calls);
+
+        agent
+            .handle_event(AgentEvent::LlmEvent(LlmEvent::Completed(response)))
+            .expect("handle_event should succeed");
+
+        let action = agent
+            .handle_event(AgentEvent::ToolCompleted {
+                call_id: "call_read".to_string(),
+                outcome: ToolExecutionOutcome::Success {
+                    call_id: "call_read".to_string(),
+                    output: serde_json::json!({"content": "file contents"}),
+                },
+            })
+            .expect("handle_event should succeed");
+
+        match agent.state() {
+            AgentState::CallingLlm { retries, .. } => {
+                assert_eq!(*retries, 0, "retries should be 0");
+            }
+            other => panic!("expected CallingLlm, got {}", other.name()),
+        }
+
+        assert!(
+            matches!(action, AgentAction::SendLlmRequest(_)),
+            "expected SendLlmRequest, got {:?}",
+            action
+        );
+    }
+
+    /// **Test: PostToolsHookCompleted transitions to CallingLlm with SendLlmRequest**
+    ///
+    /// This test verifies the completion of the post-tools hook cycle:
+    /// - When PostToolsHookCompleted is received, the agent must transition to CallingLlm
+    /// - The pending LLM request must be sent to continue the conversation
+    /// - This ensures the agentic loop continues after auto-commit or other hooks complete
+    #[test]
+    fn test_post_tools_hook_completed_transitions() {
+        let config = AgentConfig::default();
+        let llm = Arc::new(MockLlmClient);
+
+        let mut conversation = ConversationContext::new();
+        conversation.messages.push(Message::user("test"));
+        conversation
+            .messages
+            .push(Message::assistant("I'll edit the file"));
+
+        let pending_request = LlmRequest {
+            model: config.model_name.clone(),
+            messages: conversation.messages.clone(),
+            tools: vec![],
+            max_tokens: Some(config.max_tokens),
+            temperature: config.temperature,
+        };
+        let completed_tools = vec![CompletedToolInfo {
+            tool_name: "edit_file".to_string(),
+            succeeded: true,
+        }];
+
+        let mut agent = Agent {
+            state: AgentState::PostToolsHook {
+                conversation,
+                pending_llm_request: pending_request.clone(),
+                completed_tools,
+            },
+            config,
+            llm,
+            tools: vec![],
+        };
+
+        let action = agent
+            .handle_event(AgentEvent::PostToolsHookCompleted { action_taken: true })
+            .expect("handle_event should succeed");
+
+        match agent.state() {
+            AgentState::CallingLlm {
+                conversation,
+                retries,
+            } => {
+                assert_eq!(*retries, 0);
+                assert!(!conversation.messages.is_empty());
+            }
+            other => panic!("expected CallingLlm, got {}", other.name()),
+        }
+
+        match action {
+            AgentAction::SendLlmRequest(request) => {
+                assert_eq!(request.messages.len(), pending_request.messages.len());
+            }
+            other => panic!("expected SendLlmRequest, got {:?}", other),
+        }
+    }
+
+    /// **Test: ShutdownRequested from PostToolsHook works correctly**
+    ///
+    /// This test verifies that graceful shutdown is possible from the PostToolsHook state.
+    /// This is important because auto-commit might take time, and users should be able
+    /// to interrupt the process cleanly.
+    #[test]
+    fn test_shutdown_from_post_tools_hook() {
+        let config = AgentConfig::default();
+        let llm = Arc::new(MockLlmClient);
+
+        let conversation = ConversationContext::new();
+        let pending_request = LlmRequest {
+            model: config.model_name.clone(),
+            messages: vec![Message::user("test")],
+            tools: vec![],
+            max_tokens: Some(config.max_tokens),
+            temperature: config.temperature,
+        };
+
+        let mut agent = Agent {
+            state: AgentState::PostToolsHook {
+                conversation,
+                pending_llm_request: pending_request,
+                completed_tools: vec![],
+            },
+            config,
+            llm,
+            tools: vec![],
+        };
+
+        let action = agent
+            .handle_event(AgentEvent::ShutdownRequested)
+            .expect("handle_event should succeed");
+
+        assert!(
+            matches!(agent.state(), AgentState::ShuttingDown),
+            "should transition to ShuttingDown from PostToolsHook"
+        );
+        assert!(
+            matches!(action, AgentAction::Shutdown),
+            "should emit Shutdown action"
+        );
     }
 }

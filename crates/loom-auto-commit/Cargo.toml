@@ -1,0 +1,22 @@
+[package]
+name = "loom-auto-commit"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Auto-commit orchestration for Loom agent"
+
+[dependencies]
+loom-git = { path = "../loom-git" }
+loom-core = { path = "../loom-core" }
+async-trait = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+tokio-test = { workspace = true }

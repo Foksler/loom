@@ -1245,6 +1245,7 @@ impl AgentStateKindExt for loom_thread::AgentStateKind {
             loom_thread::AgentStateKind::CallingLlm => "calling_llm",
             loom_thread::AgentStateKind::ProcessingLlmResponse => "processing_llm_response",
             loom_thread::AgentStateKind::ExecutingTools => "executing_tools",
+            loom_thread::AgentStateKind::PostToolsHook => "post_tools_hook",
             loom_thread::AgentStateKind::Error => "error",
             loom_thread::AgentStateKind::ShuttingDown => "shutting_down",
         }

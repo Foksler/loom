@@ -130,6 +130,11 @@ pub enum AgentEvent {
         call_id: String,
         outcome: ToolExecutionOutcome,
     },
+    /// Post-tool hooks have completed.
+    PostToolsHookCompleted {
+        /// Whether any hook performed a significant action (e.g., committed).
+        action_taken: bool,
+    },
     RetryTimeoutFired,
     ShutdownRequested,
 }
@@ -149,6 +154,7 @@ pub enum ErrorOrigin {
 /// - CallingLlm: Making a request to the LLM
 /// - ProcessingLlmResponse: Handling the LLM's response
 /// - ExecutingTools: Running one or more tool calls
+/// - PostToolsHook: Running post-tool hooks (e.g., auto-commit)
 /// - Error: Handling a recoverable error with retry capability
 /// - ShuttingDown: Graceful shutdown in progress
 #[derive(Debug)]
@@ -168,6 +174,12 @@ pub enum AgentState {
         conversation: ConversationContext,
         executions: Vec<ToolExecutionStatus>,
     },
+    /// Running post-tool hooks (e.g., auto-commit) after tool execution.
+    PostToolsHook {
+        conversation: ConversationContext,
+        pending_llm_request: crate::llm::LlmRequest,
+        completed_tools: Vec<crate::agent::CompletedToolInfo>,
+    },
     Error {
         conversation: ConversationContext,
         error: AgentError,
@@ -185,6 +197,7 @@ impl AgentState {
             Self::CallingLlm { .. } => "CallingLlm",
             Self::ProcessingLlmResponse { .. } => "ProcessingLlmResponse",
             Self::ExecutingTools { .. } => "ExecutingTools",
+            Self::PostToolsHook { .. } => "PostToolsHook",
             Self::Error { .. } => "Error",
             Self::ShuttingDown => "ShuttingDown",
         }

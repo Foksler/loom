@@ -14,6 +14,7 @@ use clap::{Parser, Subcommand};
 use tracing::{debug, error, info, instrument, warn};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
+use loom_auto_commit::{AutoCommitConfig, AutoCommitResult, AutoCommitService, CompletedToolInfo};
 use loom_config::{
     load_config_with_cli,
     runtime::{LogFormat, LogLevel},
@@ -22,7 +23,7 @@ use loom_config::{
 use loom_core::{
     LlmClient, LlmEvent, Message, ToolCall, ToolContext, ToolDefinition, ToolExecutionOutcome,
 };
-use loom_git::detect_repo_status;
+use loom_git::{detect_repo_status, CommandGitClient};
 use loom_llm_proxy::{LlmProvider, ProxyLlmClient};
 use loom_thread::{
     AgentStateKind, AgentStateSnapshot, LocalThreadStore, LoomVersionHeaders, MessageRole,
@@ -52,6 +53,42 @@ use loom_tools::{
 use url::Url;
 
 mod version;
+
+struct AutoCommitGitClient(CommandGitClient);
+
+#[async_trait::async_trait]
+impl loom_auto_commit::GitClient for AutoCommitGitClient {
+    async fn is_repository(&self, path: &std::path::Path) -> bool {
+        loom_git::GitClient::is_repository(&self.0, path).await
+    }
+
+    async fn diff_all(
+        &self,
+        path: &std::path::Path,
+    ) -> Result<loom_auto_commit::GitDiff, loom_auto_commit::AutoCommitError> {
+        let diff = loom_git::GitClient::diff_all(&self.0, path).await?;
+        Ok(loom_auto_commit::GitDiff {
+            content: diff.content,
+            files_changed: diff.files_changed,
+        })
+    }
+
+    async fn stage_all(
+        &self,
+        path: &std::path::Path,
+    ) -> Result<(), loom_auto_commit::AutoCommitError> {
+        loom_git::GitClient::stage_all(&self.0, path).await?;
+        Ok(())
+    }
+
+    async fn commit(
+        &self,
+        path: &std::path::Path,
+        message: &str,
+    ) -> Result<String, loom_auto_commit::AutoCommitError> {
+        Ok(loom_git::GitClient::commit(&self.0, path, message).await?)
+    }
+}
 
 /// Loom - AI-powered coding assistant
 #[derive(Parser, Debug)]
@@ -126,6 +163,8 @@ enum Command {
     Version,
     /// Update Loom to the latest version from the server
     Update,
+    /// Run as ACP agent over stdio (for editor integration)
+    AcpAgent,
 }
 
 impl From<&Args> for CliOverrides {
@@ -195,6 +234,48 @@ fn create_llm_client(server_url: &str, provider: &str) -> Result<Arc<dyn LlmClie
     info!(server_url = %server_url, provider = %provider, "creating proxy LLM client");
     let client = ProxyLlmClient::new(server_url, llm_provider);
     Ok(Arc::new(client))
+}
+
+fn build_auto_commit_config() -> AutoCommitConfig {
+    let disabled = std::env::var("LOOM_AUTO_COMMIT_DISABLE")
+        .map(|v| matches!(v.to_lowercase().as_str(), "true" | "1" | "yes"))
+        .unwrap_or(false);
+
+    if disabled {
+        debug!("auto-commit disabled via LOOM_AUTO_COMMIT_DISABLE env var");
+    }
+
+    AutoCommitConfig {
+        enabled: !disabled,
+        model: "claude-3-haiku-20240307".to_string(),
+        max_diff_bytes: 32 * 1024,
+        trigger_tools: vec!["edit_file".to_string(), "bash".to_string()],
+    }
+}
+
+async fn run_auto_commit(
+    service: &AutoCommitService<AutoCommitGitClient, ProxyLlmClient>,
+    workspace: &std::path::Path,
+    completed_tools: &[CompletedToolInfo],
+) -> AutoCommitResult {
+    let result = service.run(workspace, completed_tools).await;
+
+    if result.committed {
+        info!(
+            commit_hash = ?result.commit_hash,
+            files_changed = result.files_changed,
+            message = ?result.message,
+            "auto-commit successful"
+        );
+        println!(
+            "\n[Auto-commit: {}]",
+            result.message.as_deref().unwrap_or("committed")
+        );
+    } else if let Some(ref reason) = result.skip_reason {
+        debug!(reason = %reason, "auto-commit skipped");
+    }
+
+    result
 }
 
 #[instrument]
@@ -276,7 +357,8 @@ async fn execute_tool(
     thread,
     thread_store,
     shutdown_flag,
-    workspace
+    workspace,
+    auto_commit_service
 ))]
 async fn run_repl(
     llm_client: &dyn LlmClient,
@@ -287,6 +369,7 @@ async fn run_repl(
     thread_store: &dyn ThreadStore,
     shutdown_flag: Arc<AtomicBool>,
     workspace: &std::path::Path,
+    auto_commit_service: Option<&AutoCommitService<AutoCommitGitClient, ProxyLlmClient>>,
 ) -> Result<()> {
     let stdin = io::stdin();
     let mut stdout = io::stdout();
@@ -421,14 +504,17 @@ async fn run_repl(
                     },
                 });
 
-                for tool_call in tool_calls {
+                let mut tool_outcomes: Vec<(String, bool)> = Vec::new();
+                for tool_call in &tool_calls {
                     info!(
                         tool_name = %tool_call.tool_name,
                         tool_id = %tool_call.id,
                         "executing tool call"
                     );
 
-                    let outcome = execute_tool(tool_registry, &tool_call, tool_ctx).await;
+                    let outcome = execute_tool(tool_registry, tool_call, tool_ctx).await;
+                    let succeeded = matches!(&outcome, ToolExecutionOutcome::Success { .. });
+                    tool_outcomes.push((tool_call.tool_name.clone(), succeeded));
 
                     let (tool_result, is_error) = match &outcome {
                         ToolExecutionOutcome::Success { output, .. } => (output.to_string(), false),
@@ -456,6 +542,20 @@ async fn run_repl(
                         tool_name: Some(tool_call.tool_name.clone()),
                         tool_calls: None,
                     });
+                }
+
+                if !tool_calls.is_empty() {
+                    if let Some(auto_commit_svc) = auto_commit_service {
+                        let completed: Vec<CompletedToolInfo> = tool_outcomes
+                            .iter()
+                            .map(|(name, succeeded)| CompletedToolInfo {
+                                tool_name: name.clone(),
+                                succeeded: *succeeded,
+                            })
+                            .collect();
+
+                        run_auto_commit(auto_commit_svc, workspace, &completed).await;
+                    }
                 }
 
                 thread.agent_state = AgentStateSnapshot {
@@ -502,9 +602,27 @@ async fn start_repl_session(
     let tool_definitions = get_tool_definitions(&tool_registry);
     let tool_ctx = ToolContext::new(&workspace);
 
+    let auto_commit_config = build_auto_commit_config();
+    let auto_commit_enabled = auto_commit_config.enabled;
+    let auto_commit_service = if auto_commit_enabled {
+        let git_client = Arc::new(AutoCommitGitClient(CommandGitClient::new()));
+        let haiku_client = Arc::new(ProxyLlmClient::new(
+            &args.server_url,
+            LlmProvider::Anthropic,
+        ));
+        Some(AutoCommitService::new(
+            git_client,
+            haiku_client,
+            auto_commit_config,
+        ))
+    } else {
+        None
+    };
+
     info!(
         tool_count = tool_definitions.len(),
         workspace = %workspace.display(),
+        auto_commit = auto_commit_enabled,
         "initialized"
     );
 
@@ -520,6 +638,7 @@ async fn start_repl_session(
         thread_store.as_ref(),
         shutdown_flag,
         &workspace,
+        auto_commit_service.as_ref(),
     )
     .await
 }
@@ -1015,11 +1134,77 @@ async fn main() -> Result<()> {
 
             Ok(())
         }
+        Some(Command::AcpAgent) => run_acp_agent(&config, &args, thread_store).await,
         None => {
             let thread = create_new_thread(&config, &args)?;
             start_repl_session(&config, &args, thread_store, thread).await
         }
     }
+}
+
+async fn run_acp_agent(
+    config: &loom_config::LoomConfig,
+    args: &Args,
+    thread_store: Arc<dyn ThreadStore>,
+) -> Result<()> {
+    use agent_client_protocol::{self as acp, Client as _};
+    use loom_acp::{LoomAcpAgent, SessionNotificationRequest};
+    use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
+
+    info!("starting ACP agent mode");
+
+    let workspace = config
+        .global
+        .workspace_root
+        .clone()
+        .or_else(|| config.tools.workspace.root.clone())
+        .unwrap_or_else(|| PathBuf::from("."))
+        .canonicalize()
+        .context("invalid workspace path")?;
+
+    let llm_client = create_llm_client(&args.server_url, &args.provider)?;
+    let tools = Arc::new(create_tool_registry());
+
+    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<SessionNotificationRequest>();
+
+    let agent = LoomAcpAgent::new(
+        llm_client,
+        tools,
+        thread_store,
+        workspace,
+        args.provider.clone(),
+        tx,
+    );
+
+    let stdin = tokio::io::stdin().compat();
+    let stdout = tokio::io::stdout().compat_write();
+
+    let local_set = tokio::task::LocalSet::new();
+    local_set
+        .run_until(async move {
+            let (conn, io_task) = acp::AgentSideConnection::new(agent, stdout, stdin, |fut| {
+                tokio::task::spawn_local(fut);
+            });
+
+            // Background task: forward session notifications to client
+            tokio::task::spawn_local(async move {
+                while let Some(req) = rx.recv().await {
+                    if let Err(e) = conn.session_notification(req.notification).await {
+                        error!(error = %e, "failed to send session notification");
+                        break;
+                    }
+                    req.completion_tx.send(()).ok();
+                }
+            });
+
+            // Run until stdio closes
+            if let Err(e) = io_task.await {
+                error!(error = %e, "ACP I/O error");
+            }
+
+            Ok(())
+        })
+        .await
 }
 
 fn setup_ctrlc_handler(shutdown_flag: Arc<AtomicBool>) -> Result<()> {
