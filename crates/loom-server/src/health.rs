@@ -20,16 +20,6 @@ pub enum HealthStatus {
     Unknown,
 }
 
-/// Server version and build information.
-#[derive(Debug, Serialize)]
-pub struct VersionInfo {
-    pub version: &'static str,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub git_sha: Option<&'static str>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub build_timestamp: Option<&'static str>,
-}
-
 /// Database component health.
 #[derive(Debug, Serialize)]
 pub struct DatabaseHealth {
@@ -107,16 +97,9 @@ pub struct HealthResponse {
     pub status: HealthStatus,
     pub timestamp: String,
     pub duration_ms: u64,
-    pub version: VersionInfo,
+    pub version: loom_version::HealthVersionInfo,
     pub components: HealthComponents,
 }
-
-/// Build information constant.
-pub const VERSION_INFO: VersionInfo = VersionInfo {
-    version: env!("CARGO_PKG_VERSION"),
-    git_sha: option_env!("GIT_SHA"),
-    build_timestamp: option_env!("BUILD_TIMESTAMP"),
-};
 
 const DB_CHECK_TIMEOUT: Duration = Duration::from_millis(500);
 

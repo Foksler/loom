@@ -524,9 +524,9 @@ async fn run_update() -> Result<()> {
     let http_client = reqwest::Client::new();
     let response = http_client
         .get(bin_url.clone())
-        .header("X-Loom-Version", build_info.version)
-        .header("X-Loom-Git-Sha", build_info.git_sha)
-        .header("X-Loom-Platform", build_info.platform)
+        .header(loom_version::headers::VERSION, build_info.version)
+        .header(loom_version::headers::GIT_SHA, build_info.git_sha)
+        .header(loom_version::headers::PLATFORM, build_info.platform)
         .send()
         .await
         .context("failed to download update")?;
@@ -754,7 +754,7 @@ fn create_new_thread(config: &loom_config::LoomConfig, args: &Args) -> Result<Th
     let mut thread = Thread::new();
     thread.workspace_root = Some(workspace.display().to_string());
     thread.cwd = Some(std::env::current_dir()?.display().to_string());
-    thread.loom_version = Some(env!("CARGO_PKG_VERSION").to_string());
+    thread.loom_version = Some(loom_version::loom_version().to_string());
     thread.provider = Some(args.provider.clone());
     thread.model = None;
 

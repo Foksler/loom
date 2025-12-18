@@ -221,7 +221,7 @@ mod tests {
         let mut config = minimal_config();
         config.providers.insert("test".to_string(), ProviderConfig::OpenAi(
             crate::runtime::OpenAiConfig {
-                api_key: "key".to_string(),
+                api_key: Some(loom_secret::SecretString::new("key".to_string())),
                 base_url: "".to_string(),
                 default_model: "model".to_string(),
                 organization: None,

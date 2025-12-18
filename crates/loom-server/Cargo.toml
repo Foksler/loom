@@ -20,6 +20,7 @@ loom-google-cse = { path = "../loom-google-cse" }
 loom-github-app = { path = "../loom-github-app" }
 loom-llm-service = { path = "../loom-llm-service" }
 loom-core = { path = "../loom-core" }
+loom-version = { path = "../loom-version", features = ["serde"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 futures = { workspace = true }
 tokio-stream = "0.1"

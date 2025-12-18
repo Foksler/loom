@@ -17,6 +17,7 @@ loom-llm-proxy = { path = "../loom-llm-proxy" }
 loom-thread = { path = "../loom-thread" }
 loom-git = { path = "../loom-git" }
 loom-http-retry = { path = "../loom-http-retry" }
+loom-version = { workspace = true }
 tokio = { workspace = true }
 clap = { workspace = true }
 tracing = { workspace = true }
@@ -30,7 +31,3 @@ reqwest = { workspace = true }
 chrono = { version = "0.4", features = ["serde"] }
 humantime = "2"
 self_update = { version = "0.41", default-features = false, features = ["archive-tar", "compression-flate2", "rustls"] }
-shadow-rs = "0.36"
-
-[build-dependencies]
-shadow-rs = "0.36"

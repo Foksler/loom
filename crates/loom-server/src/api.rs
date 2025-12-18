@@ -528,7 +528,7 @@ async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
         status,
         timestamp: chrono::Utc::now().to_rfc3339(),
         duration_ms,
-        version: health::VERSION_INFO,
+        version: loom_version::HealthVersionInfo::current(),
         components,
     };
 

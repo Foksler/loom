@@ -1,0 +1,19 @@
+[package]
+name = "loom-version"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Shared build and version information for Loom"
+
+[dependencies]
+serde = { workspace = true, optional = true }
+shadow-rs = "0.36"
+
+[features]
+default = []
+serde = ["dep:serde"]
+
+[build-dependencies]
+shadow-rs = "0.36"

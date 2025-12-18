@@ -18,6 +18,7 @@ members = [
     "crates/loom-llm-proxy",
     "crates/loom-tools",
     "crates/loom-cli",
+    "crates/loom-version",
 ]
 
 [workspace.package]
@@ -80,3 +81,4 @@ zeroize = { version = "1", features = ["zeroize_derive"] }
 # Internal crates
 loom-secret = { path = "crates/loom-secret" }
 loom-config-common = { path = "crates/loom-config-common" }
+loom-version = { path = "crates/loom-version" }
