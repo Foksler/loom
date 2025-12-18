@@ -200,9 +200,34 @@ These enable:
 
 ---
 
-## 8. Software Bill of Materials (SBOM)
+## 8. Docker/OCI Container Images
 
-### 8.1 SBOM Generation
+### 8.1 Container Build
+
+Production-ready Docker containers for `loom-server` are built via Nix/devenv:
+
+- **Build tool**: devenv + Nix (reproducible, minimal, secure)
+- **Output**: OCI/Docker image
+- **Base**: Nix-provided minimal runtime
+- **Ports**: 8080/tcp (HTTP)
+
+See [container-system.md](./container-system.md) for full details.
+
+### 8.2 Container Distribution
+
+Containers are published to registry (e.g., ghcr.io) with tags:
+
+| Tag | Audience | Availability |
+|-----|----------|--------------|
+| `latest` | End users | On main branch |
+| `v0.1.0` | Release subscribers | On version tags |
+| `<sha>` | CI/traceability | All commits |
+
+---
+
+## 9. Software Bill of Materials (SBOM)
+
+### 9.1 SBOM Generation
 
 As part of the release pipeline, SBOMs are generated for supply chain transparency:
 
@@ -213,9 +238,9 @@ As part of the release pipeline, SBOMs are generated for supply chain transparen
 
 See [sbom-system.md](./sbom-system.md) for full details.
 
-### 8.2 Release Distribution
+### 9.2 Release Distribution
 
-SBOMs are attached to GitHub releases alongside binaries:
+SBOMs are attached to GitHub releases alongside binaries and container images:
 
 | Artifact | Format |
 |----------|--------|
@@ -224,24 +249,34 @@ SBOMs are attached to GitHub releases alongside binaries:
 
 ---
 
-## 9. Future Considerations
+## 10. Future Considerations
 
-### 9.1 Signed Binaries
+### 10.1 Signed Binaries
 - Sign binaries with a release key
 - Verify signatures before applying updates
 
-### 9.2 Delta Updates
+### 10.2 Delta Updates
 - Download only changed bytes
 - Reduce bandwidth for minor updates
 
-### 9.3 Update Channels
+### 10.3 Update Channels
 - `stable`, `beta`, `nightly` channels
 - `loom update --channel beta`
 
-### 9.4 Version Manifest
+### 10.4 Version Manifest
 - `GET /bin/manifest.json` returns available versions
 - CLI can show "update available" notifications
 
-### 9.5 Container Image SBOMs
+### 10.5 Multi-Architecture Containers
+- Build containers for x86_64 + aarch64
+- Use `docker buildx` or separate Nix builds per architecture
+- Push as manifest list for automatic platform selection
+
+### 10.6 Container Image SBOMs
 - Generate image-level SBOMs with `syft` for Docker containers
 - Attach both source-level and image-level SBOMs to releases
+
+### 10.7 Kubernetes Deployment
+- Publish Helm charts for easy K8s deployment
+- Include resource limits, liveness/readiness probes
+- Support StatefulSets for server persistence

@@ -5,7 +5,7 @@
 GITLEAKS_REPO := https://raw.githubusercontent.com/gitleaks/gitleaks/master
 GITLEAKS_VENDOR_DIR := crates/loom-redact/third_party/gitleaks
 
-.PHONY: all build test lint format check clean update-gitleaks sbom sbom-spdx sbom-cyclonedx release
+.PHONY: all build test lint format check clean update-gitleaks sbom sbom-spdx sbom-cyclonedx release docker-build docker-run
 
 # Default target
 all: format lint build test
@@ -90,3 +90,27 @@ sbom: sbom-spdx sbom-cyclonedx
 # Release build: full build + test + SBOM
 release: build test sbom
 	@echo "Release build complete. Artifacts in target/debug/ and $(SBOM_DIR)/"
+
+# Docker container targets (using devenv + Nix)
+
+# Build loom-server Docker container via devenv/Nix
+# Output: OCI/Docker image (devenv handles image format)
+docker-build:
+	@echo "Building loom-server container via devenv/Nix..."
+	@(set -e; \
+	  devenv container build loom-server; \
+	  echo ""; \
+	  echo "✓ Docker container built successfully"; \
+	  echo "  Image name: loom-server:latest"; \
+	  echo "  To load into Docker: docker load < result"; \
+	  echo "  To run: docker run --rm -p 8080:8080 loom-server:latest")
+
+# Run loom-server container locally
+# Requires docker-build target to have run first
+docker-run: docker-build
+	@echo "Loading container into Docker and running..."
+	@(set -e; \
+	  docker load < result; \
+	  echo ""; \
+	  echo "Starting loom-server container (Ctrl+C to stop)..."; \
+	  docker run --rm -p 8080:8080 loom-server:latest)

@@ -41,3 +41,7 @@ Thumbs.db
 *.tar.gz
 *.zip
 /dist/
+
+# Container/OCI build artifacts
+/result
+/result-*
