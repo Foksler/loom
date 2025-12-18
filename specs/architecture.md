@@ -80,25 +80,27 @@ Loom uses a server-side proxy architecture for all LLM interactions:
 ```
 ┌─────────────┐      HTTP       ┌─────────────┐     Provider API    ┌─────────────┐
 │  loom-cli   │ ───────────────▶│ loom-server │ ──────────────────▶ │  Anthropic  │
-│             │  /proxy/llm/*   │             │                     │   OpenAI    │
-│ ProxyLlm-   │                 │  LlmService │                     │    etc.     │
-│ Client      │ ◀─────────────  │             │ ◀────────────────── │             │
-└─────────────┘   SSE stream    └─────────────┘    SSE stream       └─────────────┘
+│             │ /proxy/{provider}│             │                     │   OpenAI    │
+│ ProxyLlm-   │  /complete      │  LlmService │                     │    etc.     │
+│ Client      │  /stream        │             │                     │             │
+│ (per-       │ ◀─────────────  │ has_anthropic()                   │             │
+│  provider)  │   SSE stream    │ has_openai()│ ◀────────────────── │             │
+└─────────────┘                 └─────────────┘    SSE stream       └─────────────┘
 ```
 
 **Key properties:**
 
 1. **API keys are ONLY stored server-side** - Clients never see or handle provider API keys
-2. **Clients use `ProxyLlmClient`** - Implements `LlmClient` trait, calls `/proxy/llm/*` endpoints on the server
-3. **Server uses `LlmService`** - Wraps provider clients (`AnthropicClient`, `OpenAIClient`), handles routing and provider selection
-4. **Centralized provider management** - Adding new providers requires no client-side changes
+2. **Clients use `ProxyLlmClient`** - Implements `LlmClient` trait, calls `/proxy/{provider}/*` endpoints (e.g., `/proxy/anthropic/complete`, `/proxy/openai/stream`)
+3. **Server uses `LlmService`** - Supports multiple providers simultaneously via `has_anthropic()`, `has_openai()`, `complete_anthropic()`, `complete_openai()`, etc.
+4. **Provider-specific clients** - `ProxyLlmClient::anthropic(server_url)` or `ProxyLlmClient::openai(server_url)` for explicit provider selection
 5. **Security** - No secrets in client binaries, easier credential rotation, audit logging at proxy layer
 
 ### Request Flow
 
-1. CLI creates `ProxyLlmClient` configured with server URL
-2. `ProxyLlmClient.complete()` sends HTTP POST to `/proxy/llm/complete`
-3. Server's `LlmService` routes to appropriate provider based on model
+1. CLI creates `ProxyLlmClient` for specific provider (e.g., `ProxyLlmClient::anthropic(server_url)`)
+2. `ProxyLlmClient.complete()` sends HTTP POST to provider-specific endpoint (e.g., `/proxy/anthropic/complete`)
+3. Server's `LlmService` calls the corresponding provider method (`complete_anthropic()` or `complete_openai()`)
 4. Provider client makes actual API call with server-stored credentials
 5. Response streams back through server to client via SSE
 
@@ -218,25 +220,30 @@ OpenAI API implementation:
 
 Server-side provider abstraction layer:
 
-- `LlmService` - Wraps all provider clients, handles routing based on model
-- Owns and manages API keys for all providers
-- Provides unified interface for the server to call any provider
+- `LlmService` - Wraps all provider clients, supports multiple providers simultaneously
+- Provider availability: `has_anthropic()`, `has_openai()`
+- Provider-specific methods: `complete_anthropic()`, `complete_streaming_anthropic()`, `complete_openai()`, `complete_streaming_openai()`
+- Owns and manages API keys for all configured providers
+- Server can have both Anthropic and OpenAI configured at once with separate API keys
 
 ### loom-llm-proxy (client-side)
 
 Client-side HTTP proxy client:
 
 - `ProxyLlmClient` - Implements `LlmClient` trait via HTTP calls to server
-- Sends requests to `/proxy/llm/complete` and `/proxy/llm/complete_streaming`
+- Constructed with explicit provider: `ProxyLlmClient::anthropic(server_url)`, `ProxyLlmClient::openai(server_url)`, or `ProxyLlmClient::new(server_url, LlmProvider::Anthropic)`
+- Sends requests to provider-specific endpoints (`/proxy/anthropic/complete`, `/proxy/openai/stream`, etc.)
 - Handles SSE stream parsing for streaming responses from server
 
 ### loom-server
 
-HTTP server with LLM proxy endpoints:
+HTTP server with provider-specific LLM proxy endpoints:
 
-- `/proxy/llm/complete` - Non-streaming completion endpoint
-- `/proxy/llm/complete_streaming` - SSE streaming completion endpoint
-- Uses `LlmService` to route requests to appropriate provider
+- `/proxy/anthropic/complete` - Anthropic non-streaming completion
+- `/proxy/anthropic/stream` - Anthropic SSE streaming completion
+- `/proxy/openai/complete` - OpenAI non-streaming completion
+- `/proxy/openai/stream` - OpenAI SSE streaming completion
+- Uses `LlmService` with provider-specific methods (`complete_anthropic()`, `complete_streaming_openai()`, etc.)
 
 ### loom-tools
 

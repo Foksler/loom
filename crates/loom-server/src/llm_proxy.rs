@@ -9,7 +9,7 @@ use axum::{
     },
     Json,
 };
-use loom_core::{LlmError, LlmEvent, LlmRequest, Message, ToolCall, Usage};
+use loom_core::{LlmError, LlmEvent, LlmRequest, LlmStream, Message, ToolCall, Usage};
 use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
 use tokio_stream::wrappers::ReceiverStream;
@@ -52,55 +52,191 @@ impl From<loom_core::LlmResponse> for LlmProxyResponse {
     }
 }
 
-/// POST /proxy/llm/complete - Synchronous LLM completion.
+/// POST /proxy/anthropic/complete - Synchronous Anthropic completion.
 #[axum::debug_handler]
-pub async fn proxy_llm_complete(
+pub async fn proxy_anthropic_complete(
     State(state): State<AppState>,
     Json(request): Json<LlmRequest>,
 ) -> Result<impl IntoResponse, ServerError> {
     let service = state.llm_service.as_ref().ok_or_else(|| {
-        tracing::error!("proxy_llm_complete: LLM service not configured");
+        tracing::error!("proxy_anthropic_complete: LLM service not configured");
         ServerError::ServiceUnavailable("LLM service is not configured on the server".into())
     })?;
+
+    if !service.has_anthropic() {
+        tracing::error!("proxy_anthropic_complete: Anthropic provider not configured");
+        return Err(ServerError::ServiceUnavailable("Anthropic provider is not configured on the server".into()));
+    }
 
     tracing::debug!(
         model = %request.model,
         message_count = request.messages.len(),
         tool_count = request.tools.len(),
-        "proxy_llm_complete: sending request"
+        "proxy_anthropic_complete: sending request"
     );
 
-    let response = service.complete(request).await.map_err(map_llm_error)?;
+    let response = service.complete_anthropic(request).await.map_err(map_llm_error)?;
 
     tracing::info!(
         finish_reason = ?response.finish_reason,
         tool_call_count = response.tool_calls.len(),
-        "proxy_llm_complete: returning response"
+        "proxy_anthropic_complete: returning response"
     );
 
     Ok((StatusCode::OK, Json(LlmProxyResponse::from(response))))
 }
 
-/// POST /proxy/llm/stream - Streaming LLM completion via SSE.
+/// POST /proxy/anthropic/stream - Streaming Anthropic completion via SSE.
 #[axum::debug_handler]
-pub async fn proxy_llm_stream(
+pub async fn proxy_anthropic_stream(
     State(state): State<AppState>,
     Json(request): Json<LlmRequest>,
 ) -> Result<Sse<impl futures::Stream<Item = Result<Event, Infallible>>>, ServerError> {
     let service = state.llm_service.as_ref().ok_or_else(|| {
-        tracing::error!("proxy_llm_stream: LLM service not configured");
+        tracing::error!("proxy_anthropic_stream: LLM service not configured");
         ServerError::ServiceUnavailable("LLM service is not configured on the server".into())
     })?;
+
+    if !service.has_anthropic() {
+        tracing::error!("proxy_anthropic_stream: Anthropic provider not configured");
+        return Err(ServerError::ServiceUnavailable("Anthropic provider is not configured on the server".into()));
+    }
 
     tracing::debug!(
         model = %request.model,
         message_count = request.messages.len(),
         tool_count = request.tools.len(),
-        "proxy_llm_stream: starting stream"
+        "proxy_anthropic_stream: starting stream"
     );
 
-    let stream = service.complete_streaming(request).await.map_err(map_llm_error)?;
+    let stream = service.complete_streaming_anthropic(request).await.map_err(map_llm_error)?;
+    Ok(create_sse_response(stream))
+}
 
+/// POST /proxy/openai/complete - Synchronous OpenAI completion.
+#[axum::debug_handler]
+pub async fn proxy_openai_complete(
+    State(state): State<AppState>,
+    Json(request): Json<LlmRequest>,
+) -> Result<impl IntoResponse, ServerError> {
+    let service = state.llm_service.as_ref().ok_or_else(|| {
+        tracing::error!("proxy_openai_complete: LLM service not configured");
+        ServerError::ServiceUnavailable("LLM service is not configured on the server".into())
+    })?;
+
+    if !service.has_openai() {
+        tracing::error!("proxy_openai_complete: OpenAI provider not configured");
+        return Err(ServerError::ServiceUnavailable("OpenAI provider is not configured on the server".into()));
+    }
+
+    tracing::debug!(
+        model = %request.model,
+        message_count = request.messages.len(),
+        tool_count = request.tools.len(),
+        "proxy_openai_complete: sending request"
+    );
+
+    let response = service.complete_openai(request).await.map_err(map_llm_error)?;
+
+    tracing::info!(
+        finish_reason = ?response.finish_reason,
+        tool_call_count = response.tool_calls.len(),
+        "proxy_openai_complete: returning response"
+    );
+
+    Ok((StatusCode::OK, Json(LlmProxyResponse::from(response))))
+}
+
+/// POST /proxy/openai/stream - Streaming OpenAI completion via SSE.
+#[axum::debug_handler]
+pub async fn proxy_openai_stream(
+    State(state): State<AppState>,
+    Json(request): Json<LlmRequest>,
+) -> Result<Sse<impl futures::Stream<Item = Result<Event, Infallible>>>, ServerError> {
+    let service = state.llm_service.as_ref().ok_or_else(|| {
+        tracing::error!("proxy_openai_stream: LLM service not configured");
+        ServerError::ServiceUnavailable("LLM service is not configured on the server".into())
+    })?;
+
+    if !service.has_openai() {
+        tracing::error!("proxy_openai_stream: OpenAI provider not configured");
+        return Err(ServerError::ServiceUnavailable("OpenAI provider is not configured on the server".into()));
+    }
+
+    tracing::debug!(
+        model = %request.model,
+        message_count = request.messages.len(),
+        tool_count = request.tools.len(),
+        "proxy_openai_stream: starting stream"
+    );
+
+    let stream = service.complete_streaming_openai(request).await.map_err(map_llm_error)?;
+    Ok(create_sse_response(stream))
+}
+
+/// POST /proxy/vertex/complete - Synchronous Vertex AI completion.
+#[axum::debug_handler]
+pub async fn proxy_vertex_complete(
+    State(state): State<AppState>,
+    Json(request): Json<LlmRequest>,
+) -> Result<impl IntoResponse, ServerError> {
+    let service = state.llm_service.as_ref().ok_or_else(|| {
+        tracing::error!("proxy_vertex_complete: LLM service not configured");
+        ServerError::ServiceUnavailable("LLM service is not configured on the server".into())
+    })?;
+
+    if !service.has_vertex() {
+        tracing::error!("proxy_vertex_complete: Vertex provider not configured");
+        return Err(ServerError::ServiceUnavailable("Vertex provider is not configured on the server".into()));
+    }
+
+    tracing::debug!(
+        model = %request.model,
+        message_count = request.messages.len(),
+        tool_count = request.tools.len(),
+        "proxy_vertex_complete: sending request"
+    );
+
+    let response = service.complete_vertex(request).await.map_err(map_llm_error)?;
+
+    tracing::info!(
+        finish_reason = ?response.finish_reason,
+        tool_call_count = response.tool_calls.len(),
+        "proxy_vertex_complete: returning response"
+    );
+
+    Ok((StatusCode::OK, Json(LlmProxyResponse::from(response))))
+}
+
+/// POST /proxy/vertex/stream - Streaming Vertex AI completion via SSE.
+#[axum::debug_handler]
+pub async fn proxy_vertex_stream(
+    State(state): State<AppState>,
+    Json(request): Json<LlmRequest>,
+) -> Result<Sse<impl futures::Stream<Item = Result<Event, Infallible>>>, ServerError> {
+    let service = state.llm_service.as_ref().ok_or_else(|| {
+        tracing::error!("proxy_vertex_stream: LLM service not configured");
+        ServerError::ServiceUnavailable("LLM service is not configured on the server".into())
+    })?;
+
+    if !service.has_vertex() {
+        tracing::error!("proxy_vertex_stream: Vertex provider not configured");
+        return Err(ServerError::ServiceUnavailable("Vertex provider is not configured on the server".into()));
+    }
+
+    tracing::debug!(
+        model = %request.model,
+        message_count = request.messages.len(),
+        tool_count = request.tools.len(),
+        "proxy_vertex_stream: starting stream"
+    );
+
+    let stream = service.complete_streaming_vertex(request).await.map_err(map_llm_error)?;
+    Ok(create_sse_response(stream))
+}
+
+/// Creates an SSE response from an LlmStream.
+fn create_sse_response(stream: LlmStream) -> Sse<impl futures::Stream<Item = Result<Event, Infallible>>> {
     let (tx, rx) = tokio::sync::mpsc::channel::<Result<Event, Infallible>>(32);
 
     tokio::spawn(async move {
@@ -110,7 +246,7 @@ pub async fn proxy_llm_stream(
                 LlmEvent::TextDelta { content } => {
                     let stream_event = LlmStreamEvent::TextDelta { content };
                     match serde_json::to_string(&stream_event) {
-                        Ok(json) => Event::default().data(json),
+                        Ok(json) => Event::default().event("llm").data(json),
                         Err(e) => {
                             tracing::error!(error = %e, "failed to serialize text delta");
                             continue;
@@ -128,7 +264,7 @@ pub async fn proxy_llm_stream(
                         arguments_fragment,
                     };
                     match serde_json::to_string(&stream_event) {
-                        Ok(json) => Event::default().data(json),
+                        Ok(json) => Event::default().event("llm").data(json),
                         Err(e) => {
                             tracing::error!(error = %e, "failed to serialize tool call delta");
                             continue;
@@ -139,13 +275,13 @@ pub async fn proxy_llm_stream(
                     tracing::info!(
                         finish_reason = ?response.finish_reason,
                         tool_call_count = response.tool_calls.len(),
-                        "proxy_llm_stream: stream completed"
+                        "stream completed"
                     );
                     let stream_event = LlmStreamEvent::Completed {
                         response: LlmProxyResponse::from(response),
                     };
                     match serde_json::to_string(&stream_event) {
-                        Ok(json) => Event::default().data(json),
+                        Ok(json) => Event::default().event("llm").data(json),
                         Err(e) => {
                             tracing::error!(error = %e, "failed to serialize completed event");
                             continue;
@@ -153,12 +289,12 @@ pub async fn proxy_llm_stream(
                     }
                 }
                 LlmEvent::Error(err) => {
-                    tracing::warn!(error = %err, "proxy_llm_stream: stream error");
+                    tracing::warn!(error = %err, "stream error");
                     let stream_event = LlmStreamEvent::Error {
                         message: err.to_string(),
                     };
                     match serde_json::to_string(&stream_event) {
-                        Ok(json) => Event::default().data(json),
+                        Ok(json) => Event::default().event("llm").data(json),
                         Err(e) => {
                             tracing::error!(error = %e, "failed to serialize error event");
                             continue;
@@ -168,13 +304,13 @@ pub async fn proxy_llm_stream(
             };
 
             if tx.send(Ok(sse_event)).await.is_err() {
-                tracing::debug!("proxy_llm_stream: client disconnected");
+                tracing::debug!("client disconnected");
                 break;
             }
         }
     });
 
-    Ok(Sse::new(ReceiverStream::new(rx)))
+    Sse::new(ReceiverStream::new(rx))
 }
 
 /// Map LlmError to ServerError for HTTP response conversion.

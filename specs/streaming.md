@@ -233,15 +233,18 @@ Tool call deltas arrive with:
 
 ## Server-to-Client SSE Proxy
 
-The loom server acts as a proxy between LLM providers and clients, normalizing all provider-specific SSE formats into a unified wire format.
+The loom server acts as a proxy between LLM providers and clients, exposing provider-specific endpoints while normalizing SSE formats into a unified wire format.
 
 ### Architecture Flow
 
 ```
 Provider API → loom-llm-{anthropic,openai} → loom-llm-service → loom-server → SSE → loom-llm-proxy → client
+                                              ↓                   ↓
+                                         complete_anthropic()  /proxy/anthropic/stream
+                                         complete_openai()     /proxy/openai/stream
 ```
 
-Provider-specific SSE parsing happens server-side in `loom-llm-anthropic` and `loom-llm-openai`. Clients receive a unified `LlmStreamEvent` format regardless of which provider is being used.
+Provider-specific SSE parsing happens server-side in `loom-llm-anthropic` and `loom-llm-openai`. Clients choose their provider via endpoint path (`/proxy/anthropic/stream` or `/proxy/openai/stream`) and receive a unified `LlmStreamEvent` format.
 
 ### LlmStreamEvent Wire Format
 
@@ -270,11 +273,12 @@ data: {"type":"error","message":"..."}
 
 ### SSE Format Comparison
 
-| Layer | SSE Format | Parser |
-|-------|------------|--------|
-| Anthropic API | Anthropic-specific | `AnthropicStream` |
-| OpenAI API | OpenAI-specific | `OpenAIStream` |
-| Server Proxy | Unified `LlmStreamEvent` | `ProxyLlmStream` |
+| Layer | SSE Format | Parser | Endpoint |
+|-------|------------|--------|----------|
+| Anthropic API | Anthropic-specific | `AnthropicStream` | - |
+| OpenAI API | OpenAI-specific | `OpenAIStream` | - |
+| Server Proxy (Anthropic) | Unified `LlmStreamEvent` | `ProxyLlmStream` | `/proxy/anthropic/stream` |
+| Server Proxy (OpenAI) | Unified `LlmStreamEvent` | `ProxyLlmStream` | `/proxy/openai/stream` |
 
 ## ProxyLlmStream
 

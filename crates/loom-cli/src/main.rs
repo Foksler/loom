@@ -20,7 +20,7 @@ use loom_config::{
     sources::CliOverrides,
 };
 use loom_core::{LlmClient, LlmEvent, Message, ToolCall, ToolContext, ToolDefinition, ToolExecutionOutcome};
-use loom_llm_proxy::ProxyLlmClient;
+use loom_llm_proxy::{LlmProvider, ProxyLlmClient};
 use loom_thread::{
     Thread, ThreadId, ThreadStore, LocalThreadStore, SyncingThreadStore,
     ThreadSyncClient, MessageSnapshot, AgentStateKind, AgentStateSnapshot,
@@ -72,6 +72,10 @@ struct Args {
     /// Loom server URL for LLM proxy
     #[arg(long, env = "LOOM_SERVER_URL", default_value = "http://localhost:8080")]
     server_url: String,
+
+    /// LLM provider to use (anthropic or openai)
+    #[arg(short, long, env = "LOOM_LLM_PROVIDER", default_value = "anthropic")]
+    provider: String,
 
     #[command(subcommand)]
     command: Option<Command>,
@@ -173,9 +177,15 @@ fn init_tracing(logging: &loom_config::runtime::LoggingConfig) {
     }
 }
 
-fn create_llm_client(server_url: &str) -> Result<Arc<dyn LlmClient>> {
-    info!(server_url = %server_url, "creating proxy LLM client");
-    let client = ProxyLlmClient::new(server_url);
+fn create_llm_client(server_url: &str, provider: &str) -> Result<Arc<dyn LlmClient>> {
+    let llm_provider = match provider.to_lowercase().as_str() {
+        "anthropic" => LlmProvider::Anthropic,
+        "openai" => LlmProvider::OpenAi,
+        other => anyhow::bail!("Unknown LLM provider: {}. Use 'anthropic' or 'openai'", other),
+    };
+
+    info!(server_url = %server_url, provider = %provider, "creating proxy LLM client");
+    let client = ProxyLlmClient::new(server_url, llm_provider);
     Ok(Arc::new(client))
 }
 
@@ -457,7 +467,7 @@ async fn start_repl_session(
         .canonicalize()
         .context("invalid workspace path")?;
 
-    let llm_client = create_llm_client(&args.server_url)?;
+    let llm_client = create_llm_client(&args.server_url, &args.provider)?;
 
     let tool_registry = create_tool_registry();
     let tool_definitions = get_tool_definitions(&tool_registry);
@@ -731,7 +741,7 @@ fn print_local_search_results(results: &[loom_thread::ThreadSummary], query: &st
     }
 }
 
-fn create_new_thread(config: &loom_config::LoomConfig, _args: &Args) -> Result<Thread> {
+fn create_new_thread(config: &loom_config::LoomConfig, args: &Args) -> Result<Thread> {
     let workspace = config
         .global
         .workspace_root
@@ -745,13 +755,12 @@ fn create_new_thread(config: &loom_config::LoomConfig, _args: &Args) -> Result<T
     thread.workspace_root = Some(workspace.display().to_string());
     thread.cwd = Some(std::env::current_dir()?.display().to_string());
     thread.loom_version = Some(env!("CARGO_PKG_VERSION").to_string());
-    // Provider and model are now controlled server-side
-    thread.provider = Some("proxy".to_string());
+    thread.provider = Some(args.provider.clone());
     thread.model = None;
 
     snapshot_git_state(&mut thread, &workspace);
 
-    info!(thread_id = %thread.id, "created new thread");
+    info!(thread_id = %thread.id, provider = %args.provider, "created new thread");
     Ok(thread)
 }
 

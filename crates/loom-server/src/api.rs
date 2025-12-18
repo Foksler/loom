@@ -73,7 +73,11 @@ pub fn create_app_state(repo: Arc<ThreadRepository>) -> AppState {
 
     let llm_service = match LlmService::from_env() {
         Ok(service) => {
-            tracing::info!(provider = %service.provider(), "LLM service configured");
+            tracing::info!(
+                anthropic = service.has_anthropic(),
+                openai = service.has_openai(),
+                "LLM service configured"
+            );
             Some(Arc::new(service))
         }
         Err(e) => {
@@ -107,8 +111,12 @@ pub fn create_router(state: AppState) -> Router {
         .route("/proxy/github/search-code", post(proxy_github_search_code))
         .route("/proxy/github/repo-info", post(proxy_github_repo_info))
         .route("/proxy/github/file-contents", post(proxy_github_file_contents))
-        .route("/proxy/llm/complete", post(llm_proxy::proxy_llm_complete))
-        .route("/proxy/llm/stream", post(llm_proxy::proxy_llm_stream))
+        .route("/proxy/anthropic/complete", post(llm_proxy::proxy_anthropic_complete))
+        .route("/proxy/anthropic/stream", post(llm_proxy::proxy_anthropic_stream))
+        .route("/proxy/openai/complete", post(llm_proxy::proxy_openai_complete))
+        .route("/proxy/openai/stream", post(llm_proxy::proxy_openai_stream))
+        .route("/proxy/vertex/complete", post(llm_proxy::proxy_vertex_complete))
+        .route("/proxy/vertex/stream", post(llm_proxy::proxy_vertex_stream))
         .nest_service("/bin", ServeDir::new(bin_dir))
         .with_state(state)
 }

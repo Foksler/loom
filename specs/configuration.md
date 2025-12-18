@@ -54,6 +54,10 @@ struct Args {
     #[arg(long, default_value = "http://localhost:8080", env = "LOOM_SERVER_URL")]
     server_url: String,
 
+    /// LLM provider to use (anthropic or openai)
+    #[arg(long, default_value = "anthropic", env = "LOOM_PROVIDER")]
+    provider: LlmProvider,
+
     /// Workspace directory for file operations
     #[arg(short, long, default_value = ".")]
     workspace: PathBuf,
@@ -66,6 +70,13 @@ struct Args {
     #[arg(long, default_value = "false")]
     json_logs: bool,
 }
+
+#[derive(Debug, Clone, Copy, Default, ValueEnum)]
+enum LlmProvider {
+    #[default]
+    Anthropic,
+    OpenAI,
+}
 ```
 
 ### Client Argument Reference
@@ -73,6 +84,7 @@ struct Args {
 | Argument | Short | Type | Default | Env Var | Description |
 |----------|-------|------|---------|---------|-------------|
 | `--server-url` | - | `String` | `http://localhost:8080` | `LOOM_SERVER_URL` | URL of the Loom server |
+| `--provider` | - | `anthropic \| openai` | `anthropic` | `LOOM_PROVIDER` | LLM provider to use |
 | `--workspace` | `-w` | `PathBuf` | `.` | - | Workspace directory |
 | `--log-level` | `-l` | `trace \| debug \| info \| warn \| error` | `info` | - | Logging verbosity |
 | `--json-logs` | - | `bool` | `false` | - | Structured JSON log output |
@@ -96,6 +108,7 @@ enum LogLevel {
 | Variable | Description |
 |----------|-------------|
 | `LOOM_SERVER_URL` | URL of the Loom server (overridden by `--server-url`) |
+| `LOOM_PROVIDER` | LLM provider to use: `anthropic` or `openai` (overridden by `--provider`) |
 | `RUST_LOG` | tracing filter directive (overrides `--log-level`) |
 
 ---
@@ -106,14 +119,17 @@ The Loom server handles all LLM provider interactions. **API keys MUST be set on
 
 ### LLM Provider Configuration
 
+The server can have both providers configured simultaneously. Clients choose which provider to use via the `--provider` flag.
+
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `LOOM_SERVER_LLM_PROVIDER` | No | `anthropic` | LLM provider (`anthropic` or `openai`) |
-| `LOOM_SERVER_ANTHROPIC_API_KEY` | If using Anthropic | - | Anthropic API key |
+| `LOOM_SERVER_ANTHROPIC_API_KEY` | For Anthropic support | - | Anthropic API key |
 | `LOOM_SERVER_ANTHROPIC_MODEL` | No | `claude-sonnet-4-20250514` | Anthropic model |
-| `LOOM_SERVER_OPENAI_API_KEY` | If using OpenAI | - | OpenAI API key |
+| `LOOM_SERVER_OPENAI_API_KEY` | For OpenAI support | - | OpenAI API key |
 | `LOOM_SERVER_OPENAI_MODEL` | No | `gpt-4o` | OpenAI model |
 | `LOOM_SERVER_OPENAI_ORG` | No | - | OpenAI organization ID |
+
+> **Note:** Both `LOOM_SERVER_ANTHROPIC_API_KEY` and `LOOM_SERVER_OPENAI_API_KEY` can be set at the same time. The `LlmService` will expose both providers via `has_anthropic()` and `has_openai()` methods.
 
 ### Server Environment Variables
 
@@ -190,15 +206,12 @@ Server configuration (used internally by loom-server):
 pub struct ServerConfig {
     pub host: String,
     pub port: u16,
-    pub llm_provider: LlmProvider,
-}
-
-#[derive(Debug, Clone)]
-pub enum LlmProvider {
-    Anthropic(AnthropicConfig),
-    OpenAI(OpenAIConfig),
+    pub anthropic_config: Option<AnthropicConfig>,  // Set if LOOM_SERVER_ANTHROPIC_API_KEY is present
+    pub openai_config: Option<OpenAIConfig>,        // Set if LOOM_SERVER_OPENAI_API_KEY is present
 }
 ```
+
+The server supports having both providers configured simultaneously. Each provider is optional and enabled by setting its respective API key environment variable.
 
 ### AnthropicConfig
 
@@ -347,30 +360,40 @@ impl OpenAIConfig {
 ### Usage Example (Server-side)
 
 ```rust
-// Server initializes LLM client based on configuration
-let provider = std::env::var("LOOM_SERVER_LLM_PROVIDER")
-    .unwrap_or_else(|_| "anthropic".to_string());
+// Server initializes LlmService with all available providers
+let service = LlmService::from_env()?;
 
-let llm_client: Box<dyn LlmClient> = match provider.as_str() {
-    "anthropic" => {
-        let api_key = std::env::var("LOOM_SERVER_ANTHROPIC_API_KEY")?;
-        let model = std::env::var("LOOM_SERVER_ANTHROPIC_MODEL")
-            .unwrap_or_else(|_| "claude-sonnet-4-20250514".to_string());
-        let config = AnthropicConfig::new(api_key).with_model(model);
-        Box::new(AnthropicClient::new(config)?)
-    }
-    "openai" => {
-        let api_key = std::env::var("LOOM_SERVER_OPENAI_API_KEY")?;
-        let model = std::env::var("LOOM_SERVER_OPENAI_MODEL")
-            .unwrap_or_else(|_| "gpt-4o".to_string());
-        let config = OpenAIConfig::new(api_key).with_model(model);
-        if let Ok(org) = std::env::var("LOOM_SERVER_OPENAI_ORG") {
-            config = config.with_organization(org);
-        }
-        Box::new(OpenAIClient::new(config)?)
-    }
-    _ => anyhow::bail!("Unknown provider: {}", provider),
+// Check which providers are available
+if service.has_anthropic() {
+    println!("Anthropic provider is available");
+}
+if service.has_openai() {
+    println!("OpenAI provider is available");
+}
+
+// Use provider-specific methods based on client request endpoint
+// /proxy/anthropic/* routes use:
+let response = service.complete_anthropic(request).await?;
+let stream = service.complete_streaming_anthropic(request).await?;
+
+// /proxy/openai/* routes use:
+let response = service.complete_openai(request).await?;
+let stream = service.complete_streaming_openai(request).await?;
+```
+
+### Usage Example (Client-side)
+
+```rust
+// Client selects provider via CLI flag or environment variable
+let provider = args.provider; // from --provider flag
+
+let client: Arc<dyn LlmClient> = match provider {
+    LlmProvider::Anthropic => Arc::new(ProxyLlmClient::anthropic(&args.server_url)?),
+    LlmProvider::OpenAI => Arc::new(ProxyLlmClient::openai(&args.server_url)?),
 };
+
+// Or use explicit constructor
+let client = ProxyLlmClient::new(&args.server_url, LlmProvider::Anthropic)?;
 ```
 
 ---

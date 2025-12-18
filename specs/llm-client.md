@@ -138,31 +138,46 @@ pub trait LlmClient: Send + Sync {
 
 Located in [`crates/loom-llm-proxy/`](../crates/loom-llm-proxy/):
 
-The `ProxyLlmClient` implements `LlmClient` by forwarding requests to the loom server's LLM proxy endpoints. Clients no longer need API keys — they only need the server URL.
+The `ProxyLlmClient` implements `LlmClient` by forwarding requests to the loom server's provider-specific proxy endpoints. Clients no longer need API keys — they only need the server URL and a provider selection.
 
 **Configuration:**
 ```rust
 pub struct ProxyLlmConfig {
-    pub server_url: String,  // e.g., "http://localhost:3000"
+    pub server_url: String,      // e.g., "http://localhost:3000"
+    pub provider: LlmProvider,   // Anthropic or OpenAI
+}
+
+pub enum LlmProvider {
+    Anthropic,
+    OpenAI,
 }
 ```
 
 **Usage:**
 ```rust
-let client = ProxyLlmClient::new(ProxyLlmConfig {
-    server_url: "http://localhost:3000".to_string(),
-})?;
+// Convenience constructors for specific providers
+let anthropic_client = ProxyLlmClient::anthropic("http://localhost:3000")?;
+let openai_client = ProxyLlmClient::openai("http://localhost:3000")?;
+
+// Explicit provider selection
+let client = ProxyLlmClient::new("http://localhost:3000", LlmProvider::Anthropic)?;
 
 let response = client.complete(request).await?;
 ```
 
 **Endpoints Called:**
-- `complete()` → `POST /proxy/llm/complete`
-- `complete_streaming()` → `POST /proxy/llm/stream`
+
+For Anthropic provider:
+- `complete()` → `POST /proxy/anthropic/complete`
+- `complete_streaming()` → `POST /proxy/anthropic/stream`
+
+For OpenAI provider:
+- `complete()` → `POST /proxy/openai/complete`
+- `complete_streaming()` → `POST /proxy/openai/stream`
 
 ### Wire Format
 
-**POST /proxy/llm/complete**
+**POST /proxy/{provider}/complete** (e.g., `/proxy/anthropic/complete`, `/proxy/openai/complete`)
 
 Request body: `LlmRequest` JSON
 ```json
@@ -185,7 +200,7 @@ Response body: `LlmProxyResponse` JSON
 }
 ```
 
-**POST /proxy/llm/stream**
+**POST /proxy/{provider}/stream** (e.g., `/proxy/anthropic/stream`, `/proxy/openai/stream`)
 
 Request body: `LlmRequest` JSON (same as above)
 
@@ -201,13 +216,13 @@ data: {"type": "error", "message": "..."}
 
 Located in [`crates/loom-llm-service/`](../crates/loom-llm-service/):
 
-The `LlmService` runs on the server and owns the provider clients. It handles incoming proxy requests and dispatches to the appropriate provider.
+The `LlmService` runs on the server and owns the provider clients. It supports multiple providers simultaneously and exposes provider-specific methods.
 
 **Configuration via environment variables:**
 ```bash
 ANTHROPIC_API_KEY=sk-ant-...
 OPENAI_API_KEY=sk-...
-LLM_DEFAULT_PROVIDER=anthropic  # or "openai"
+# Both can be configured at the same time
 ```
 
 **Architecture:**
@@ -215,17 +230,24 @@ LLM_DEFAULT_PROVIDER=anthropic  # or "openai"
 pub struct LlmService {
     anthropic_client: Option<AnthropicClient>,
     openai_client: Option<OpenAIClient>,
-    default_provider: Provider,
 }
 
 impl LlmService {
     pub fn from_env() -> Result<Self, LlmError>;
-    pub async fn complete(&self, request: LlmRequest) -> Result<LlmResponse, LlmError>;
-    pub async fn complete_streaming(&self, request: LlmRequest) -> Result<LlmStream, LlmError>;
+    
+    // Provider availability checks
+    pub fn has_anthropic(&self) -> bool;
+    pub fn has_openai(&self) -> bool;
+    
+    // Provider-specific completion methods
+    pub async fn complete_anthropic(&self, request: LlmRequest) -> Result<LlmResponse, LlmError>;
+    pub async fn complete_streaming_anthropic(&self, request: LlmRequest) -> Result<LlmStream, LlmError>;
+    pub async fn complete_openai(&self, request: LlmRequest) -> Result<LlmResponse, LlmError>;
+    pub async fn complete_streaming_openai(&self, request: LlmRequest) -> Result<LlmStream, LlmError>;
 }
 ```
 
-The service selects the provider based on the model name in the request (e.g., `claude-*` → Anthropic, `gpt-*` → OpenAI) or falls back to the default provider.
+The service supports having both Anthropic and OpenAI configured simultaneously. Clients explicitly choose which provider to use via the endpoint path (`/proxy/anthropic/*` or `/proxy/openai/*`).
 
 ## Provider Implementations (Server-Only)
 
@@ -361,17 +383,30 @@ Using `Arc<dyn LlmClient>` allows:
 2. **Shared ownership** across async tasks (Arc provides thread-safe reference counting)
 3. **Late binding** — switch providers based on runtime configuration
 
-**Client-side (uses proxy):**
+**Client-side (uses proxy with explicit provider):**
 ```rust
-let client: Arc<dyn LlmClient> = Arc::new(ProxyLlmClient::new(ProxyLlmConfig {
-    server_url: config.server_url.clone(),
-})?);
+// Convenience constructors
+let client: Arc<dyn LlmClient> = Arc::new(ProxyLlmClient::anthropic(config.server_url.clone())?);
+let client: Arc<dyn LlmClient> = Arc::new(ProxyLlmClient::openai(config.server_url.clone())?);
+
+// Explicit provider selection
+let client: Arc<dyn LlmClient> = Arc::new(ProxyLlmClient::new(
+    config.server_url.clone(),
+    LlmProvider::Anthropic,
+)?);
 ```
 
-**Server-side (LlmService selects provider internally):**
+**Server-side (LlmService with provider-specific methods):**
 ```rust
 let service = LlmService::from_env()?;
-// Provider selection happens inside LlmService based on model name
+
+// Check provider availability
+if service.has_anthropic() {
+    let response = service.complete_anthropic(request).await?;
+}
+if service.has_openai() {
+    let response = service.complete_openai(request).await?;
+}
 ```
 
 ### How Streaming is Abstracted via LlmStream

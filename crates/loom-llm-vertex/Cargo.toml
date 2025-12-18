@@ -1,0 +1,28 @@
+[package]
+name = "loom-llm-vertex"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Google Vertex AI (Gemini) LLM client for Loom"
+
+[dependencies]
+loom-core = { path = "../loom-core" }
+loom-http-retry = { path = "../loom-http-retry" }
+tokio = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+pin-project-lite = { workspace = true }
+bytes = { workspace = true }
+
+# GCP authentication via Application Default Credentials
+gcp_auth = "0.12"
+
+[dev-dependencies]
+tokio-test = { workspace = true }
+proptest = { workspace = true }

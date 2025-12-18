@@ -14,6 +14,7 @@ pub enum LlmProvider {
     #[default]
     Anthropic,
     OpenAi,
+    Vertex,
 }
 
 impl std::fmt::Display for LlmProvider {
@@ -21,6 +22,7 @@ impl std::fmt::Display for LlmProvider {
         match self {
             LlmProvider::Anthropic => write!(f, "anthropic"),
             LlmProvider::OpenAi => write!(f, "openai"),
+            LlmProvider::Vertex => write!(f, "vertex"),
         }
     }
 }
@@ -32,9 +34,13 @@ impl std::str::FromStr for LlmProvider {
         match s.to_lowercase().as_str() {
             "anthropic" => Ok(LlmProvider::Anthropic),
             "openai" => Ok(LlmProvider::OpenAi),
+            "vertex" => Ok(LlmProvider::Vertex),
             _ => Err(ConfigError::InvalidValue {
                 key: "provider".to_string(),
-                message: format!("unknown provider '{}', expected 'anthropic' or 'openai'", s),
+                message: format!(
+                    "unknown provider '{}', expected 'anthropic', 'openai', or 'vertex'",
+                    s
+                ),
             }),
         }
     }
@@ -49,6 +55,9 @@ pub struct LlmServiceConfig {
     pub openai_api_key: Option<String>,
     pub openai_model: Option<String>,
     pub openai_organization: Option<String>,
+    pub vertex_project: Option<String>,
+    pub vertex_location: Option<String>,
+    pub vertex_model: Option<String>,
 }
 
 impl Default for LlmServiceConfig {
@@ -60,6 +69,9 @@ impl Default for LlmServiceConfig {
             openai_api_key: None,
             openai_model: None,
             openai_organization: None,
+            vertex_project: None,
+            vertex_location: None,
+            vertex_model: None,
         }
     }
 }
@@ -76,12 +88,15 @@ impl LlmServiceConfig {
     /// Loads configuration from environment variables.
     ///
     /// Environment variables:
-    /// - `LOOM_SERVER_LLM_PROVIDER`: Provider to use ("anthropic" or "openai")
+    /// - `LOOM_SERVER_LLM_PROVIDER`: Provider to use ("anthropic", "openai", or "vertex")
     /// - `LOOM_SERVER_ANTHROPIC_API_KEY`: Anthropic API key
     /// - `LOOM_SERVER_ANTHROPIC_MODEL`: Anthropic model name
     /// - `LOOM_SERVER_OPENAI_API_KEY`: OpenAI API key
     /// - `LOOM_SERVER_OPENAI_MODEL`: OpenAI model name
     /// - `LOOM_SERVER_OPENAI_ORGANIZATION`: OpenAI organization ID
+    /// - `LOOM_SERVER_VERTEX_PROJECT`: GCP project ID for Vertex AI
+    /// - `LOOM_SERVER_VERTEX_LOCATION`: GCP region for Vertex AI (e.g., "us-central1")
+    /// - `LOOM_SERVER_VERTEX_MODEL`: Vertex AI model name (e.g., "gemini-1.5-pro")
     pub fn from_env() -> Result<Self, ConfigError> {
         debug!("Loading LLM service configuration from environment");
 
@@ -101,11 +116,15 @@ impl LlmServiceConfig {
         let openai_api_key = env::var("LOOM_SERVER_OPENAI_API_KEY").ok();
         let openai_model = env::var("LOOM_SERVER_OPENAI_MODEL").ok();
         let openai_organization = env::var("LOOM_SERVER_OPENAI_ORGANIZATION").ok();
+        let vertex_project = env::var("LOOM_SERVER_VERTEX_PROJECT").ok();
+        let vertex_location = env::var("LOOM_SERVER_VERTEX_LOCATION").ok();
+        let vertex_model = env::var("LOOM_SERVER_VERTEX_MODEL").ok();
 
         info!(
             provider = %provider,
             anthropic_configured = anthropic_api_key.is_some(),
             openai_configured = openai_api_key.is_some(),
+            vertex_configured = vertex_project.is_some() && vertex_location.is_some(),
             "Loaded LLM service configuration"
         );
 
@@ -116,6 +135,9 @@ impl LlmServiceConfig {
             openai_api_key,
             openai_model,
             openai_organization,
+            vertex_project,
+            vertex_location,
+            vertex_model,
         })
     }
 
@@ -148,6 +170,24 @@ impl LlmServiceConfig {
         self.openai_organization = Some(org.into());
         self
     }
+
+    /// Sets the Vertex AI project ID.
+    pub fn with_vertex_project(mut self, project: impl Into<String>) -> Self {
+        self.vertex_project = Some(project.into());
+        self
+    }
+
+    /// Sets the Vertex AI location (GCP region).
+    pub fn with_vertex_location(mut self, location: impl Into<String>) -> Self {
+        self.vertex_location = Some(location.into());
+        self
+    }
+
+    /// Sets the Vertex AI model.
+    pub fn with_vertex_model(mut self, model: impl Into<String>) -> Self {
+        self.vertex_model = Some(model.into());
+        self
+    }
 }
 
 #[cfg(test)]
@@ -168,6 +208,9 @@ mod tests {
             assert_eq!("openai".parse::<LlmProvider>().unwrap(), LlmProvider::OpenAi);
             assert_eq!("OPENAI".parse::<LlmProvider>().unwrap(), LlmProvider::OpenAi);
             assert_eq!("OpenAI".parse::<LlmProvider>().unwrap(), LlmProvider::OpenAi);
+            assert_eq!("vertex".parse::<LlmProvider>().unwrap(), LlmProvider::Vertex);
+            assert_eq!("VERTEX".parse::<LlmProvider>().unwrap(), LlmProvider::Vertex);
+            assert_eq!("Vertex".parse::<LlmProvider>().unwrap(), LlmProvider::Vertex);
         }
 
         /// Verifies that invalid provider strings produce appropriate errors.
@@ -185,6 +228,7 @@ mod tests {
             fn display_and_parse_roundtrip(provider in prop_oneof![
                 Just(LlmProvider::Anthropic),
                 Just(LlmProvider::OpenAi),
+                Just(LlmProvider::Vertex),
             ]) {
                 let displayed = provider.to_string();
                 let parsed: LlmProvider = displayed.parse().unwrap();

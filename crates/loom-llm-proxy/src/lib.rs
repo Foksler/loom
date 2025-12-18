@@ -7,11 +7,15 @@
 //! # Example
 //!
 //! ```no_run
-//! use loom_llm_proxy::ProxyLlmClient;
+//! use loom_llm_proxy::{ProxyLlmClient, LlmProvider};
 //! use loom_core::{LlmClient, LlmRequest, Message};
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-//! let client = ProxyLlmClient::new("http://localhost:8080");
+//! // Create a client for Anthropic
+//! let client = ProxyLlmClient::anthropic("http://localhost:8080");
+//!
+//! // Or for OpenAI
+//! let openai_client = ProxyLlmClient::openai("http://localhost:8080");
 //!
 //! let request = LlmRequest::new("claude-3-5-sonnet-20241022")
 //!     .with_messages(vec![Message::user("Hello!")]);
@@ -26,6 +30,6 @@ pub mod client;
 pub mod stream;
 pub mod types;
 
-pub use client::ProxyLlmClient;
+pub use client::{LlmProvider, ProxyLlmClient};
 pub use stream::ProxyLlmStream;
 pub use types::{LlmProxyResponse, LlmStreamEvent};

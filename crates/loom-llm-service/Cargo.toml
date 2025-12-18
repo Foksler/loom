@@ -12,6 +12,7 @@ loom-core = { path = "../loom-core" }
 loom-http-retry = { path = "../loom-http-retry" }
 loom-llm-anthropic = { path = "../loom-llm-anthropic" }
 loom-llm-openai = { path = "../loom-llm-openai" }
+loom-llm-vertex = { path = "../loom-llm-vertex" }
 
 async-trait.workspace = true
 thiserror.workspace = true
