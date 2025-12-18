@@ -8,6 +8,7 @@ pub mod config;
 pub mod db;
 pub mod error;
 pub mod health;
+pub mod llm_proxy;
 
 pub use api::{create_app_state, create_router, AppState};
 pub use config::ServerConfig;

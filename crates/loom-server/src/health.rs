@@ -211,11 +211,30 @@ pub fn check_bin_dir() -> BinDirHealth {
     }
 }
 
-/// Return placeholder for LLM provider checks (not yet implemented).
-pub fn check_llm_providers() -> LlmProvidersHealth {
-    LlmProvidersHealth {
-        status: HealthStatus::Unknown,
-        providers: Vec::new(),
+/// Check LLM provider health by verifying if the service is configured.
+pub fn check_llm_providers(llm_service: Option<&loom_llm_service::LlmService>) -> LlmProvidersHealth {
+    match llm_service {
+        Some(service) => {
+            let provider_name = service.provider().to_string();
+            LlmProvidersHealth {
+                status: HealthStatus::Healthy,
+                providers: vec![LlmProviderHealth {
+                    name: provider_name,
+                    status: HealthStatus::Healthy,
+                    latency_ms: None,
+                    error: None,
+                }],
+            }
+        }
+        None => LlmProvidersHealth {
+            status: HealthStatus::Degraded,
+            providers: vec![LlmProviderHealth {
+                name: "none".to_string(),
+                status: HealthStatus::Degraded,
+                latency_ms: None,
+                error: Some("LLM service not configured".to_string()),
+            }],
+        },
     }
 }
 

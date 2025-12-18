@@ -18,7 +18,11 @@ path = "src/lib.rs"
 loom-thread = { path = "../loom-thread" }
 loom-google-cse = { path = "../loom-google-cse" }
 loom-github-app = { path = "../loom-github-app" }
+loom-llm-service = { path = "../loom-llm-service" }
+loom-core = { path = "../loom-core" }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+futures = { workspace = true }
+tokio-stream = "0.1"
 
 # HMAC for webhook verification
 hmac = "0.12"

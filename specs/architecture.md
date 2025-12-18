@@ -11,15 +11,18 @@ The system is designed around three core principles:
 
 ## Crate Structure
 
-Loom is organized as a Cargo workspace with 6 crates:
+Loom is organized as a Cargo workspace with 9 crates:
 
 ```
 loom/
 ├── crates/
 │   ├── loom-core/           # Core abstractions and types
 │   ├── loom-http-retry/     # HTTP retry utilities
-│   ├── loom-llm-anthropic/  # Anthropic Claude provider
-│   ├── loom-llm-openai/     # OpenAI provider
+│   ├── loom-llm-anthropic/  # Anthropic Claude provider (server-only)
+│   ├── loom-llm-openai/     # OpenAI provider (server-only)
+│   ├── loom-llm-service/    # Server-side provider abstraction (owns API keys)
+│   ├── loom-llm-proxy/      # Client-side HTTP LlmClient
+│   ├── loom-server/         # HTTP server with LLM proxy endpoints
 │   ├── loom-tools/          # Tool implementations
 │   └── loom-cli/            # CLI binary
 ```
@@ -27,39 +30,86 @@ loom/
 ### Dependency Graph
 
 ```
-                    ┌─────────────┐
-                    │  loom-cli   │
-                    └──────┬──────┘
-                           │
-        ┌──────────────────┼──────────────────┐
-        │                  │                  │
-        ▼                  ▼                  ▼
-┌───────────────┐  ┌───────────────┐  ┌─────────────┐
-│loom-llm-      │  │loom-llm-      │  │ loom-tools  │
-│anthropic      │  │openai         │  │             │
-└───────┬───────┘  └───────┬───────┘  └──────┬──────┘
-        │                  │                 │
-        │    ┌─────────────┼─────────────────┘
-        │    │             │
-        ▼    ▼             │
-┌───────────────┐          │
-│loom-http-retry│          │
-└───────┬───────┘          │
-        │                  │
-        └──────────────────┘
-                │
-                ▼
-        ┌─────────────┐
-        │  loom-core  │
-        └─────────────┘
+                         ┌─────────────┐
+                         │  loom-cli   │
+                         └──────┬──────┘
+                                │
+              ┌─────────────────┼─────────────────┐
+              │                 │                 │
+              ▼                 ▼                 ▼
+      ┌──────────────┐  ┌─────────────┐  ┌─────────────┐
+      │loom-llm-proxy│  │ loom-tools  │  │    ...      │
+      └──────┬───────┘  └──────┬──────┘  └─────────────┘
+             │                 │
+             ▼                 │
+      ┌─────────────┐          │
+      │ loom-server │          │
+      └──────┬──────┘          │
+             │                 │
+             ▼                 │
+    ┌────────────────┐         │
+    │loom-llm-service│         │
+    └───────┬────────┘         │
+            │                  │
+    ┌───────┴───────┐          │
+    │               │          │
+    ▼               ▼          │
+┌────────────┐ ┌────────────┐  │
+│loom-llm-   │ │loom-llm-   │  │
+│anthropic   │ │openai      │  │
+└─────┬──────┘ └─────┬──────┘  │
+      │              │         │
+      └──────┬───────┘         │
+             ▼                 │
+     ┌───────────────┐         │
+     │loom-http-retry│         │
+     └───────┬───────┘         │
+             │                 │
+             └─────────────────┘
+                      │
+                      ▼
+              ┌─────────────┐
+              │  loom-core  │
+              └─────────────┘
 ```
+
+## Server-Side LLM Proxy Architecture
+
+Loom uses a server-side proxy architecture for all LLM interactions:
+
+```
+┌─────────────┐      HTTP       ┌─────────────┐     Provider API    ┌─────────────┐
+│  loom-cli   │ ───────────────▶│ loom-server │ ──────────────────▶ │  Anthropic  │
+│             │  /proxy/llm/*   │             │                     │   OpenAI    │
+│ ProxyLlm-   │                 │  LlmService │                     │    etc.     │
+│ Client      │ ◀─────────────  │             │ ◀────────────────── │             │
+└─────────────┘   SSE stream    └─────────────┘    SSE stream       └─────────────┘
+```
+
+**Key properties:**
+
+1. **API keys are ONLY stored server-side** - Clients never see or handle provider API keys
+2. **Clients use `ProxyLlmClient`** - Implements `LlmClient` trait, calls `/proxy/llm/*` endpoints on the server
+3. **Server uses `LlmService`** - Wraps provider clients (`AnthropicClient`, `OpenAIClient`), handles routing and provider selection
+4. **Centralized provider management** - Adding new providers requires no client-side changes
+5. **Security** - No secrets in client binaries, easier credential rotation, audit logging at proxy layer
+
+### Request Flow
+
+1. CLI creates `ProxyLlmClient` configured with server URL
+2. `ProxyLlmClient.complete()` sends HTTP POST to `/proxy/llm/complete`
+3. Server's `LlmService` routes to appropriate provider based on model
+4. Provider client makes actual API call with server-stored credentials
+5. Response streams back through server to client via SSE
 
 ## Design Principles
 
 ### Separation of Concerns
 
 - **loom-core**: Defines interfaces (`LlmClient`, `ToolDefinition`) without implementations
-- **loom-llm-***: Provider-specific HTTP client implementations
+- **loom-llm-proxy**: Client-side `ProxyLlmClient` that talks to server
+- **loom-llm-service**: Server-side provider abstraction and routing
+- **loom-llm-***: Provider-specific HTTP client implementations (server-only)
 - **loom-tools**: Tool implementations that are LLM-agnostic
 - **loom-cli**: Orchestration and user interaction
 
@@ -106,7 +156,13 @@ loom-core (bottom layer)
     ↑
 loom-http-retry (utility layer)
     ↑
-loom-llm-anthropic, loom-llm-openai (provider layer)
+loom-llm-anthropic, loom-llm-openai (provider layer, server-only)
+    ↑
+loom-llm-service (server-side provider abstraction)
+    ↑
+loom-server (HTTP server with proxy endpoints)
+    ↑
+loom-llm-proxy (client-side LlmClient via HTTP)
     ↑
 loom-tools (tool layer, depends only on loom-core)
     ↑
@@ -115,8 +171,9 @@ loom-cli (top layer, orchestrates everything)
 
 **Key constraint**: Crates at lower layers never depend on higher layers. This ensures:
 - Core types are reusable across all providers
-- Providers can be swapped without affecting tools
-- The CLI can compose all components
+- Provider implementations are isolated to server-side
+- Clients interact only through the proxy abstraction
+- The CLI can compose all components without provider dependencies
 
 ## Component Responsibilities
 
@@ -142,7 +199,7 @@ Resilient HTTP request handling:
 - `RetryableError` trait - Determines if an error should trigger retry
 - `retry()` function - Generic retry wrapper with exponential backoff
 
-### loom-llm-anthropic
+### loom-llm-anthropic (server-only)
 
 Anthropic Claude API implementation:
 
@@ -150,12 +207,36 @@ Anthropic Claude API implementation:
 - `AnthropicConfig` - API key, model, base URL configuration
 - SSE stream parsing for streaming responses
 
-### loom-llm-openai
+### loom-llm-openai (server-only)
 
 OpenAI API implementation:
 
 - `OpenAIClient` - Implements `LlmClient` for GPT models
 - `OpenAIConfig` - API key, model, base URL configuration
+
+### loom-llm-service (server-only)
+
+Server-side provider abstraction layer:
+
+- `LlmService` - Wraps all provider clients, handles routing based on model
+- Owns and manages API keys for all providers
+- Provides unified interface for the server to call any provider
+
+### loom-llm-proxy (client-side)
+
+Client-side HTTP proxy client:
+
+- `ProxyLlmClient` - Implements `LlmClient` trait via HTTP calls to server
+- Sends requests to `/proxy/llm/complete` and `/proxy/llm/complete_streaming`
+- Handles SSE stream parsing for streaming responses from server
+
+### loom-server
+
+HTTP server with LLM proxy endpoints:
+
+- `/proxy/llm/complete` - Non-streaming completion endpoint
+- `/proxy/llm/complete_streaming` - SSE streaming completion endpoint
+- Uses `LlmService` to route requests to appropriate provider
 
 ### loom-tools
 
@@ -170,7 +251,7 @@ Tool implementations and registry:
 Application entry point:
 
 - CLI argument parsing with `clap`
-- Provider selection (Anthropic/OpenAI)
+- Creates `ProxyLlmClient` to communicate with server
 - REPL loop for user interaction
 - Tool execution orchestration
 
@@ -290,6 +371,8 @@ pub enum ToolExecutionStatus {
 
 ### Adding a New LLM Provider
 
+Provider clients are now **server-only**. Clients automatically get access to new providers via the proxy without any changes.
+
 1. Create a new crate `loom-llm-{provider}`:
 
 ```rust
@@ -310,16 +393,25 @@ impl LlmClient for NewProviderClient {
 }
 ```
 
-2. Add dependency in `loom-cli/Cargo.toml`
+2. Add dependency in `loom-llm-service/Cargo.toml` (NOT in loom-cli)
 
-3. Add provider variant to the CLI:
+3. Register the provider in `LlmService`:
 ```rust
-enum Provider {
-    Anthropic,
-    OpenAi,
-    NewProvider,  // Add this
+// crates/loom-llm-service/src/service.rs
+impl LlmService {
+    pub fn new(config: LlmServiceConfig) -> Self {
+        let mut providers = HashMap::new();
+        providers.insert("anthropic", Arc::new(AnthropicClient::new(...)));
+        providers.insert("openai", Arc::new(OpenAIClient::new(...)));
+        providers.insert("new_provider", Arc::new(NewProviderClient::new(...))); // Add this
+        // ...
+    }
 }
 ```
+
+4. Configure API key in server configuration
+
+**Note**: No client-side changes required. The `ProxyLlmClient` in loom-cli will automatically be able to use the new provider once the server is updated.
 
 ### Adding a New Tool
 

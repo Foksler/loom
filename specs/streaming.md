@@ -231,6 +231,83 @@ Tool call deltas arrive with:
 - `function.name`: Function name (only in first delta)
 - `function.arguments`: JSON fragment to append
 
+## Server-to-Client SSE Proxy
+
+The loom server acts as a proxy between LLM providers and clients, normalizing all provider-specific SSE formats into a unified wire format.
+
+### Architecture Flow
+
+```
+Provider API → loom-llm-{anthropic,openai} → loom-llm-service → loom-server → SSE → loom-llm-proxy → client
+```
+
+Provider-specific SSE parsing happens server-side in `loom-llm-anthropic` and `loom-llm-openai`. Clients receive a unified `LlmStreamEvent` format regardless of which provider is being used.
+
+### LlmStreamEvent Wire Format
+
+The server emits SSE events with `event: llm` and JSON payloads discriminated by `type`:
+
+```
+event: llm
+data: {"type":"text_delta","content":"Hello"}
+
+event: llm
+data: {"type":"tool_call_delta","call_id":"...","tool_name":"...","arguments_fragment":"..."}
+
+event: llm
+data: {"type":"completed","response":{...}}
+
+event: llm
+data: {"type":"error","message":"..."}
+```
+
+| Type | Description |
+|------|-------------|
+| `text_delta` | Incremental text content from the assistant |
+| `tool_call_delta` | Partial tool call with ID, name, and JSON fragment |
+| `completed` | Stream finished successfully with full `LlmResponse` |
+| `error` | Error occurred during streaming |
+
+### SSE Format Comparison
+
+| Layer | SSE Format | Parser |
+|-------|------------|--------|
+| Anthropic API | Anthropic-specific | `AnthropicStream` |
+| OpenAI API | OpenAI-specific | `OpenAIStream` |
+| Server Proxy | Unified `LlmStreamEvent` | `ProxyLlmStream` |
+
+## ProxyLlmStream
+
+The [`ProxyLlmStream`](file:///home/ghuntley/loom/crates/loom-llm-proxy/src/stream.rs) in `loom-llm-proxy` parses the server's unified SSE format for client-side consumption.
+
+### Responsibilities
+
+1. **Parse SSE events**: Extract `event: llm` and `data:` lines from the byte stream
+2. **Deserialize LlmStreamEvent**: Parse JSON payloads into the wire format types
+3. **Convert to LlmEvent**: Map `LlmStreamEvent` variants to the internal `LlmEvent` enum
+4. **Extract LlmResponse**: Return the completed `LlmResponse` from the `Completed` event
+
+### Conversion
+
+```rust
+fn convert_stream_event(event: LlmStreamEvent) -> LlmEvent {
+    match event {
+        LlmStreamEvent::TextDelta { content } => LlmEvent::TextDelta { content },
+        LlmStreamEvent::ToolCallDelta { call_id, tool_name, arguments_fragment } => {
+            LlmEvent::ToolCallDelta { call_id, tool_name, arguments_fragment }
+        }
+        LlmStreamEvent::Completed { response } => LlmEvent::Completed(response),
+        LlmStreamEvent::Error { message } => LlmEvent::Error(LlmError::Stream(message)),
+    }
+}
+```
+
+### Benefits
+
+- **Single client implementation**: Clients only need to understand one SSE format
+- **Provider isolation**: Provider-specific quirks are handled server-side
+- **Simplified testing**: Mock the unified format without provider dependencies
+
 ## Design Decisions
 
 ### Why Custom Stream Parsers

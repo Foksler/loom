@@ -2,26 +2,47 @@
 
 ## Overview
 
-Loom uses a layered configuration approach that balances flexibility with simplicity:
+Loom uses a client-server architecture where clients connect to a central Loom server, which handles all LLM API interactions:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     CLI Arguments                           │
-│                  (highest precedence)                       │
-├─────────────────────────────────────────────────────────────┤
-│                 Environment Variables                       │
-├─────────────────────────────────────────────────────────────┤
-│                    Default Values                           │
-│                  (lowest precedence)                        │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           Configuration Flow                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   ┌──────────┐         HTTP          ┌──────────┐         HTTPS             │
+│   │  Client  │ ───────────────────▶  │  Server  │ ──────────────────▶ LLM   │
+│   │          │                       │          │                     API   │
+│   │ - server │                       │ - provider                           │
+│   │   _url   │                       │ - api_key                            │
+│   │          │                       │ - model                              │
+│   └──────────┘                       └──────────┘                           │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Configuration flows from three sources:
-1. **CLI arguments** - Explicit user intent, highest precedence
-2. **Environment variables** - Machine/session configuration
-3. **Hardcoded defaults** - Sensible fallbacks
+**Key principle:** Clients do NOT have LLM API keys. All LLM requests go through the server.
 
-## CLI Arguments
+Configuration uses a layered approach within each component:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     CLI Arguments                               │
+│                  (highest precedence)                           │
+├─────────────────────────────────────────────────────────────────┤
+│                 Environment Variables                           │
+├─────────────────────────────────────────────────────────────────┤
+│                    Default Values                               │
+│                  (lowest precedence)                            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Client Configuration
+
+The client connects to a Loom server and sends agent requests. It does not interact directly with LLM APIs.
+
+### CLI Arguments
 
 Defined in [`crates/loom-cli/src/main.rs`](../crates/loom-cli/src/main.rs) using clap derive macros:
 
@@ -29,17 +50,9 @@ Defined in [`crates/loom-cli/src/main.rs`](../crates/loom-cli/src/main.rs) using
 #[derive(Parser, Debug)]
 #[command(name = "loom", version, about, long_about = None)]
 struct Args {
-    /// LLM provider to use
-    #[arg(short, long, default_value = "anthropic")]
-    provider: Provider,
-
-    /// Model name (uses provider default if not specified)
-    #[arg(short, long)]
-    model: Option<String>,
-
-    /// API key for the selected provider
-    #[arg(long, env = "ANTHROPIC_API_KEY")]
-    api_key: Option<String>,
+    /// URL of the Loom server
+    #[arg(long, default_value = "http://localhost:8080", env = "LOOM_SERVER_URL")]
+    server_url: String,
 
     /// Workspace directory for file operations
     #[arg(short, long, default_value = ".")]
@@ -55,27 +68,14 @@ struct Args {
 }
 ```
 
-### Argument Reference
+### Client Argument Reference
 
-| Argument | Short | Type | Default | Description |
-|----------|-------|------|---------|-------------|
-| `--provider` | `-p` | `anthropic \| openai` | `anthropic` | LLM provider selection |
-| `--model` | `-m` | `String` | Provider default | Model name override |
-| `--api-key` | - | `String` | From env | API key (env fallback) |
-| `--workspace` | `-w` | `PathBuf` | `.` | Workspace directory |
-| `--log-level` | `-l` | `trace \| debug \| info \| warn \| error` | `info` | Logging verbosity |
-| `--json-logs` | - | `bool` | `false` | Structured JSON log output |
-
-### Provider Enum
-
-```rust
-#[derive(Debug, Clone, Copy, Default, ValueEnum)]
-enum Provider {
-    #[default]
-    Anthropic,
-    OpenAi,
-}
-```
+| Argument | Short | Type | Default | Env Var | Description |
+|----------|-------|------|---------|---------|-------------|
+| `--server-url` | - | `String` | `http://localhost:8080` | `LOOM_SERVER_URL` | URL of the Loom server |
+| `--workspace` | `-w` | `PathBuf` | `.` | - | Workspace directory |
+| `--log-level` | `-l` | `trace \| debug \| info \| warn \| error` | `info` | - | Logging verbosity |
+| `--json-logs` | - | `bool` | `false` | - | Structured JSON log output |
 
 ### Log Level Enum
 
@@ -91,42 +91,41 @@ enum LogLevel {
 }
 ```
 
-## Environment Variables
-
-### API Keys
-
-| Variable | Provider | Description |
-|----------|----------|-------------|
-| `ANTHROPIC_API_KEY` | Anthropic | Claude API authentication |
-| `OPENAI_API_KEY` | OpenAI | GPT API authentication |
-
-API key resolution logic in [`crates/loom-cli/src/main.rs`](../crates/loom-cli/src/main.rs):
-
-```rust
-fn resolve_api_key(&self) -> Result<String> {
-    // CLI argument takes precedence
-    if let Some(ref key) = self.api_key {
-        return Ok(key.clone());
-    }
-
-    // Fall back to provider-specific env var
-    let env_var = match self.provider {
-        Provider::Anthropic => "ANTHROPIC_API_KEY",
-        Provider::OpenAi => "OPENAI_API_KEY",
-    };
-
-    std::env::var(env_var)
-        .with_context(|| format!("API key not provided. Set --api-key or {}", env_var))
-}
-```
-
-### Logging
+### Client Environment Variables
 
 | Variable | Description |
 |----------|-------------|
+| `LOOM_SERVER_URL` | URL of the Loom server (overridden by `--server-url`) |
 | `RUST_LOG` | tracing filter directive (overrides `--log-level`) |
 
-The `RUST_LOG` environment variable uses tracing's `EnvFilter` syntax and takes precedence over `--log-level`:
+---
+
+## Server Configuration
+
+The Loom server handles all LLM provider interactions. **API keys MUST be set on the server only. Never expose API keys to clients.**
+
+### LLM Provider Configuration
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `LOOM_SERVER_LLM_PROVIDER` | No | `anthropic` | LLM provider (`anthropic` or `openai`) |
+| `LOOM_SERVER_ANTHROPIC_API_KEY` | If using Anthropic | - | Anthropic API key |
+| `LOOM_SERVER_ANTHROPIC_MODEL` | No | `claude-sonnet-4-20250514` | Anthropic model |
+| `LOOM_SERVER_OPENAI_API_KEY` | If using OpenAI | - | OpenAI API key |
+| `LOOM_SERVER_OPENAI_MODEL` | No | `gpt-4o` | OpenAI model |
+| `LOOM_SERVER_OPENAI_ORG` | No | - | OpenAI organization ID |
+
+### Server Environment Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `LOOM_SERVER_HOST` | No | `0.0.0.0` | Server bind address |
+| `LOOM_SERVER_PORT` | No | `8080` | Server port |
+| `RUST_LOG` | No | `info` | tracing filter directive |
+
+### Logging
+
+The `RUST_LOG` environment variable uses tracing's `EnvFilter` syntax:
 
 ```rust
 let filter = EnvFilter::try_from_default_env()
@@ -137,6 +136,8 @@ Examples:
 - `RUST_LOG=debug` - All debug logs
 - `RUST_LOG=loom=trace,reqwest=warn` - Trace for loom, warn for reqwest
 - `RUST_LOG=loom_llm_anthropic=debug` - Debug specific crate
+
+---
 
 ## Configuration Structs
 
@@ -179,6 +180,25 @@ impl Default for AgentConfig {
 | `llm_timeout` | `Duration` | `120s` | LLM API request timeout |
 | `max_tokens` | `u32` | `4096` | Maximum tokens in response |
 | `temperature` | `Option<f32>` | `None` | Sampling temperature |
+
+### ServerConfig
+
+Server configuration (used internally by loom-server):
+
+```rust
+#[derive(Debug, Clone)]
+pub struct ServerConfig {
+    pub host: String,
+    pub port: u16,
+    pub llm_provider: LlmProvider,
+}
+
+#[derive(Debug, Clone)]
+pub enum LlmProvider {
+    Anthropic(AnthropicConfig),
+    OpenAI(OpenAIConfig),
+}
+```
 
 ### AnthropicConfig
 
@@ -264,6 +284,8 @@ impl Default for RetryConfig {
 | `jitter` | `bool` | `true` | Add randomization to delays |
 | `retryable_statuses` | `Vec<StatusCode>` | 429, 408, 502, 503, 504 | HTTP statuses that trigger retry |
 
+---
+
 ## Builder Pattern
 
 Provider configs use fluent builder pattern with `with_*` methods:
@@ -322,19 +344,36 @@ impl OpenAIConfig {
 }
 ```
 
-### Usage Example
+### Usage Example (Server-side)
 
 ```rust
-// Basic usage
-let config = AnthropicConfig::new(api_key);
+// Server initializes LLM client based on configuration
+let provider = std::env::var("LOOM_SERVER_LLM_PROVIDER")
+    .unwrap_or_else(|_| "anthropic".to_string());
 
-// With customization
-let config = AnthropicConfig::new(api_key)
-    .with_model("claude-3-opus-20240229")
-    .with_base_url("http://localhost:8080");
-
-let client = AnthropicClient::new(config)?;
+let llm_client: Box<dyn LlmClient> = match provider.as_str() {
+    "anthropic" => {
+        let api_key = std::env::var("LOOM_SERVER_ANTHROPIC_API_KEY")?;
+        let model = std::env::var("LOOM_SERVER_ANTHROPIC_MODEL")
+            .unwrap_or_else(|_| "claude-sonnet-4-20250514".to_string());
+        let config = AnthropicConfig::new(api_key).with_model(model);
+        Box::new(AnthropicClient::new(config)?)
+    }
+    "openai" => {
+        let api_key = std::env::var("LOOM_SERVER_OPENAI_API_KEY")?;
+        let model = std::env::var("LOOM_SERVER_OPENAI_MODEL")
+            .unwrap_or_else(|_| "gpt-4o".to_string());
+        let config = OpenAIConfig::new(api_key).with_model(model);
+        if let Ok(org) = std::env::var("LOOM_SERVER_OPENAI_ORG") {
+            config = config.with_organization(org);
+        }
+        Box::new(OpenAIClient::new(config)?)
+    }
+    _ => anyhow::bail!("Unknown provider: {}", provider),
+};
 ```
+
+---
 
 ## Design Decisions
 
@@ -342,10 +381,19 @@ let client = AnthropicClient::new(config)?;
 
 We use clap's derive macros rather than the builder API because:
 
-1. **Type safety**: Enum variants for providers and log levels are validated at compile time
+1. **Type safety**: Enum variants for log levels are validated at compile time
 2. **Documentation**: Doc comments become help text automatically
 3. **Maintainability**: Adding new arguments requires minimal boilerplate
 4. **Consistency**: Derive pattern matches our config struct style
+
+### Server-Side API Keys
+
+API keys are configured only on the server because:
+
+1. **Security**: Keys never leave the server or appear in client logs/history
+2. **Centralization**: Single point of key management and rotation
+3. **Access control**: Server can implement rate limiting and usage policies
+4. **Auditability**: All LLM requests flow through a single point
 
 ### Environment Variable Precedence
 
@@ -354,15 +402,6 @@ The precedence order (CLI > env > default) was chosen because:
 1. **Explicit intent**: CLI arguments represent immediate user intent
 2. **Session config**: Env vars represent machine/session defaults
 3. **Zero config**: Defaults allow running without any configuration
-4. **Security**: API keys work seamlessly from env without appearing in command history
-
-### Provider-Specific Env Vars
-
-We check provider-specific env vars (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`) rather than a generic `API_KEY` because:
-
-1. **Multi-provider**: Users may have both keys set for different use cases
-2. **Convention**: Matches what LLM libraries and tools expect
-3. **Clarity**: No ambiguity about which key is being used
 
 ### Sensible Defaults
 
@@ -370,11 +409,14 @@ Default values are chosen for common developer workflows:
 
 | Setting | Default | Rationale |
 |---------|---------|-----------|
+| Server URL | `http://localhost:8080` | Local development is most common |
 | Provider | Anthropic | Claude excels at coding tasks |
 | Log level | Info | Balance of visibility and noise |
 | Workspace | `.` | Current directory is most common |
 | Retry attempts | 3 | Handles transient failures without excessive delay |
 | Jitter | enabled | Prevents thundering herd in concurrent usage |
+
+---
 
 ## Future Extensions
 
@@ -383,24 +425,25 @@ Default values are chosen for common developer workflows:
 Add TOML/YAML configuration file support:
 
 ```toml
-# ~/.config/loom/config.toml
-[default]
+# Client: ~/.config/loom/config.toml
+[client]
+server_url = "https://loom.example.com"
+log_level = "info"
+
+# Server: /etc/loom/server.toml
+[server]
+host = "0.0.0.0"
+port = 8080
+
+[server.llm]
 provider = "anthropic"
 model = "claude-sonnet-4-20250514"
-log_level = "info"
 
 [agent]
 max_retries = 3
 tool_timeout = "30s"
 llm_timeout = "120s"
 max_tokens = 4096
-
-[anthropic]
-base_url = "https://api.anthropic.com"
-
-[openai]
-base_url = "https://api.openai.com/v1"
-organization = "org-xxx"
 ```
 
 Loading precedence would become:
@@ -414,7 +457,6 @@ Support `.loom.toml` in workspace root for project-specific settings:
 
 ```toml
 # /path/to/project/.loom.toml
-model = "claude-3-opus-20240229"
 max_tokens = 8192
 
 [tools]
@@ -449,4 +491,4 @@ loom --profile creative
 | `--dry-run` | Show effective configuration without running |
 | Config validation | `loom config validate` subcommand |
 | Config generation | `loom config init` to create template |
-| Secret management | Integration with system keyring |
+| Secret management | Integration with system keyring for server API keys |

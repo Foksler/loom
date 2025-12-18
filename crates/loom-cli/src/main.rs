@@ -16,12 +16,11 @@ use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, Env
 
 use loom_config::{
     load_config_with_cli,
-    runtime::{LogFormat, LogLevel, ProviderConfig},
+    runtime::{LogFormat, LogLevel},
     sources::CliOverrides,
 };
 use loom_core::{LlmClient, LlmEvent, Message, ToolCall, ToolContext, ToolDefinition, ToolExecutionOutcome};
-use loom_llm_anthropic::{AnthropicClient, AnthropicConfig};
-use loom_llm_openai::{OpenAIClient, OpenAIConfig};
+use loom_llm_proxy::ProxyLlmClient;
 use loom_thread::{
     Thread, ThreadId, ThreadStore, LocalThreadStore, SyncingThreadStore,
     ThreadSyncClient, MessageSnapshot, AgentStateKind, AgentStateSnapshot,
@@ -58,14 +57,6 @@ struct Args {
     #[arg(short, long)]
     config: Option<PathBuf>,
 
-    /// LLM provider to use (overrides config)
-    #[arg(short, long)]
-    provider: Option<String>,
-
-    /// Model name (overrides config)
-    #[arg(short, long)]
-    model: Option<String>,
-
     /// Workspace directory for file operations
     #[arg(short, long)]
     workspace: Option<PathBuf>,
@@ -77,6 +68,10 @@ struct Args {
     /// Output logs as JSON (overrides config)
     #[arg(long)]
     json_logs: bool,
+
+    /// Loom server URL for LLM proxy
+    #[arg(long, env = "LOOM_SERVER_URL", default_value = "http://localhost:8080")]
+    server_url: String,
 
     #[command(subcommand)]
     command: Option<Command>,
@@ -128,8 +123,8 @@ enum Command {
 impl From<&Args> for CliOverrides {
     fn from(args: &Args) -> Self {
         Self {
-            provider: args.provider.clone(),
-            model: args.model.clone(),
+            provider: None,
+            model: None,
             workspace: args.workspace.clone(),
             log_level: args.log_level.clone(),
             log_format: if args.json_logs {
@@ -178,44 +173,10 @@ fn init_tracing(logging: &loom_config::runtime::LoggingConfig) {
     }
 }
 
-#[instrument(skip(provider_config))]
-fn create_llm_client(
-    provider_name: &str,
-    provider_config: &ProviderConfig,
-    model_override: Option<&str>,
-) -> Result<Arc<dyn LlmClient>> {
-    info!(
-        provider = %provider_name,
-        model_override = ?model_override,
-        "creating LLM client"
-    );
-
-    match provider_config {
-        ProviderConfig::Anthropic(cfg) => {
-            let model = model_override
-                .map(String::from)
-                .unwrap_or_else(|| cfg.default_model.clone());
-            let config = AnthropicConfig::new(&cfg.api_key).with_model(model);
-            let client = AnthropicClient::new(config)
-                .context("failed to create Anthropic client")?;
-            Ok(Arc::new(client))
-        }
-        ProviderConfig::OpenAi(cfg) => {
-            let model = model_override
-                .map(String::from)
-                .unwrap_or_else(|| cfg.default_model.clone());
-            let config = OpenAIConfig::new(&cfg.api_key).with_model(model);
-            let client = OpenAIClient::new(config)
-                .context("failed to create OpenAI client")?;
-            Ok(Arc::new(client))
-        }
-        ProviderConfig::Ollama(_) => {
-            anyhow::bail!("Ollama provider not yet implemented")
-        }
-        ProviderConfig::Custom(_) => {
-            anyhow::bail!("Custom provider not yet implemented")
-        }
-    }
+fn create_llm_client(server_url: &str) -> Result<Arc<dyn LlmClient>> {
+    info!(server_url = %server_url, "creating proxy LLM client");
+    let client = ProxyLlmClient::new(server_url);
+    Ok(Arc::new(client))
 }
 
 #[instrument]
@@ -487,17 +448,6 @@ async fn start_repl_session(
     thread_store: Arc<dyn ThreadStore>,
     mut thread: Thread,
 ) -> Result<()> {
-    let provider_config = config
-        .providers
-        .get(&config.global.default_provider)
-        .with_context(|| {
-            format!(
-                "provider '{}' not configured. Available: {:?}",
-                config.global.default_provider,
-                config.providers.keys().collect::<Vec<_>>()
-            )
-        })?;
-
     let workspace = config
         .global
         .workspace_root
@@ -507,11 +457,7 @@ async fn start_repl_session(
         .canonicalize()
         .context("invalid workspace path")?;
 
-    let llm_client = create_llm_client(
-        &config.global.default_provider,
-        provider_config,
-        args.model.as_deref(),
-    )?;
+    let llm_client = create_llm_client(&args.server_url)?;
 
     let tool_registry = create_tool_registry();
     let tool_definitions = get_tool_definitions(&tool_registry);
@@ -785,18 +731,7 @@ fn print_local_search_results(results: &[loom_thread::ThreadSummary], query: &st
     }
 }
 
-fn create_new_thread(config: &loom_config::LoomConfig, args: &Args) -> Result<Thread> {
-    let provider_config = config
-        .providers
-        .get(&config.global.default_provider)
-        .with_context(|| {
-            format!(
-                "provider '{}' not configured. Available: {:?}",
-                config.global.default_provider,
-                config.providers.keys().collect::<Vec<_>>()
-            )
-        })?;
-
+fn create_new_thread(config: &loom_config::LoomConfig, _args: &Args) -> Result<Thread> {
     let workspace = config
         .global
         .workspace_root
@@ -810,14 +745,9 @@ fn create_new_thread(config: &loom_config::LoomConfig, args: &Args) -> Result<Th
     thread.workspace_root = Some(workspace.display().to_string());
     thread.cwd = Some(std::env::current_dir()?.display().to_string());
     thread.loom_version = Some(env!("CARGO_PKG_VERSION").to_string());
-    thread.provider = Some(config.global.default_provider.clone());
-    thread.model = args.model.clone().or_else(|| {
-        match provider_config {
-            ProviderConfig::Anthropic(cfg) => Some(cfg.default_model.clone()),
-            ProviderConfig::OpenAi(cfg) => Some(cfg.default_model.clone()),
-            _ => None,
-        }
-    });
+    // Provider and model are now controlled server-side
+    thread.provider = Some("proxy".to_string());
+    thread.model = None;
 
     snapshot_git_state(&mut thread, &workspace);
 

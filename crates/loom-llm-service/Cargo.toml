@@ -1,0 +1,24 @@
+[package]
+name = "loom-llm-service"
+description = "Server-side LLM provider abstraction for Loom"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+loom-core = { path = "../loom-core" }
+loom-http-retry = { path = "../loom-http-retry" }
+loom-llm-anthropic = { path = "../loom-llm-anthropic" }
+loom-llm-openai = { path = "../loom-llm-openai" }
+
+async-trait.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

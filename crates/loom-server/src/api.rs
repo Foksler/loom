@@ -15,8 +15,11 @@ use loom_github_app::{
     GithubAppClient, GithubAppConfig, GithubAppError,
     CodeSearchRequest, AppInfoResponse, InstallationStatusResponse,
 };
+use loom_llm_service::LlmService;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+
+use crate::llm_proxy;
 
 use crate::{
     db::{GithubInstallation, GithubRepo, ThreadRepository},
@@ -30,6 +33,7 @@ pub struct AppState {
     pub repo: Arc<ThreadRepository>,
     pub cse_client: Option<Arc<CseClient>>,
     pub github_client: Option<Arc<GithubAppClient>>,
+    pub llm_service: Option<Arc<LlmService>>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -67,7 +71,18 @@ pub fn create_app_state(repo: Arc<ThreadRepository>) -> AppState {
         }
     };
 
-    AppState { repo, cse_client, github_client }
+    let llm_service = match LlmService::from_env() {
+        Ok(service) => {
+            tracing::info!(provider = %service.provider(), "LLM service configured");
+            Some(Arc::new(service))
+        }
+        Err(e) => {
+            tracing::info!(error = %e, "LLM service not configured");
+            None
+        }
+    };
+
+    AppState { repo, cse_client, github_client, llm_service }
 }
 
 /// Create the API router with all routes.
@@ -92,6 +107,8 @@ pub fn create_router(state: AppState) -> Router {
         .route("/proxy/github/search-code", post(proxy_github_search_code))
         .route("/proxy/github/repo-info", post(proxy_github_repo_info))
         .route("/proxy/github/file-contents", post(proxy_github_file_contents))
+        .route("/proxy/llm/complete", post(llm_proxy::proxy_llm_complete))
+        .route("/proxy/llm/stream", post(llm_proxy::proxy_llm_stream))
         .nest_service("/bin", ServeDir::new(bin_dir))
         .with_state(state)
 }
@@ -486,7 +503,7 @@ async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
         health::check_github_app(state.github_client.clone())
     );
     
-    let llm_providers = health::check_llm_providers();
+    let llm_providers = health::check_llm_providers(state.llm_service.as_deref());
 
     let components = HealthComponents {
         database,

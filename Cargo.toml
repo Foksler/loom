@@ -11,6 +11,8 @@ members = [
     "crates/loom-server",
     "crates/loom-llm-anthropic",
     "crates/loom-llm-openai",
+    "crates/loom-llm-service",
+    "crates/loom-llm-proxy",
     "crates/loom-tools",
     "crates/loom-cli",
 ]

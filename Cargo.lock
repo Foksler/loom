@@ -1417,8 +1417,7 @@ dependencies = [
  "loom-core",
  "loom-git",
  "loom-http-retry",
- "loom-llm-anthropic",
- "loom-llm-openai",
+ "loom-llm-proxy",
  "loom-thread",
  "loom-tools",
  "reqwest",
@@ -1562,16 +1561,55 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-llm-proxy"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "futures",
+ "loom-core",
+ "pin-project-lite",
+ "proptest",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+]
+
+[[package]]
+name = "loom-llm-service"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "loom-core",
+ "loom-http-retry",
+ "loom-llm-anthropic",
+ "loom-llm-openai",
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "loom-server"
 version = "0.1.0"
 dependencies = [
  "axum",
  "chrono",
  "dotenvy",
+ "futures",
  "hex",
  "hmac",
+ "loom-core",
  "loom-github-app",
  "loom-google-cse",
+ "loom-llm-service",
  "loom-thread",
  "proptest",
  "reqwest",
@@ -1582,6 +1620,7 @@ dependencies = [
  "tempfile",
  "thiserror 1.0.69",
  "tokio",
+ "tokio-stream",
  "tokio-test",
  "tower",
  "tower-http",

@@ -134,7 +134,102 @@ pub trait LlmClient: Send + Sync {
 }
 ```
 
-## Provider Implementations
+## HTTP Proxy LLM Client
+
+Located in [`crates/loom-llm-proxy/`](../crates/loom-llm-proxy/):
+
+The `ProxyLlmClient` implements `LlmClient` by forwarding requests to the loom server's LLM proxy endpoints. Clients no longer need API keys — they only need the server URL.
+
+**Configuration:**
+```rust
+pub struct ProxyLlmConfig {
+    pub server_url: String,  // e.g., "http://localhost:3000"
+}
+```
+
+**Usage:**
+```rust
+let client = ProxyLlmClient::new(ProxyLlmConfig {
+    server_url: "http://localhost:3000".to_string(),
+})?;
+
+let response = client.complete(request).await?;
+```
+
+**Endpoints Called:**
+- `complete()` → `POST /proxy/llm/complete`
+- `complete_streaming()` → `POST /proxy/llm/stream`
+
+### Wire Format
+
+**POST /proxy/llm/complete**
+
+Request body: `LlmRequest` JSON
+```json
+{
+  "model": "claude-sonnet-4-20250514",
+  "messages": [...],
+  "tools": [...],
+  "max_tokens": 4096,
+  "temperature": 0.7
+}
+```
+
+Response body: `LlmProxyResponse` JSON
+```json
+{
+  "message": { "role": "assistant", "content": "..." },
+  "tool_calls": [...],
+  "usage": { "prompt_tokens": 100, "completion_tokens": 50 },
+  "finish_reason": "end_turn"
+}
+```
+
+**POST /proxy/llm/stream**
+
+Request body: `LlmRequest` JSON (same as above)
+
+Response: Server-Sent Events (SSE) stream with `LlmStreamEvent` payloads:
+```
+data: {"type": "text_delta", "content": "Hello"}
+data: {"type": "tool_call_delta", "call_id": "...", "tool_name": "...", "arguments_fragment": "..."}
+data: {"type": "completed", "response": {...}}
+data: {"type": "error", "message": "..."}
+```
+
+## Server-Side LLM Service
+
+Located in [`crates/loom-llm-service/`](../crates/loom-llm-service/):
+
+The `LlmService` runs on the server and owns the provider clients. It handles incoming proxy requests and dispatches to the appropriate provider.
+
+**Configuration via environment variables:**
+```bash
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+LLM_DEFAULT_PROVIDER=anthropic  # or "openai"
+```
+
+**Architecture:**
+```rust
+pub struct LlmService {
+    anthropic_client: Option<AnthropicClient>,
+    openai_client: Option<OpenAIClient>,
+    default_provider: Provider,
+}
+
+impl LlmService {
+    pub fn from_env() -> Result<Self, LlmError>;
+    pub async fn complete(&self, request: LlmRequest) -> Result<LlmResponse, LlmError>;
+    pub async fn complete_streaming(&self, request: LlmRequest) -> Result<LlmStream, LlmError>;
+}
+```
+
+The service selects the provider based on the model name in the request (e.g., `claude-*` → Anthropic, `gpt-*` → OpenAI) or falls back to the default provider.
+
+## Provider Implementations (Server-Only)
+
+> **Note:** These provider clients are now **server-only** and are wrapped by `LlmService`. Client applications should use `ProxyLlmClient` instead of instantiating provider clients directly.
 
 ### AnthropicClient
 
@@ -266,11 +361,17 @@ Using `Arc<dyn LlmClient>` allows:
 2. **Shared ownership** across async tasks (Arc provides thread-safe reference counting)
 3. **Late binding** — switch providers based on runtime configuration
 
+**Client-side (uses proxy):**
 ```rust
-let client: Arc<dyn LlmClient> = match config.provider {
-    Provider::Anthropic => Arc::new(AnthropicClient::new(anthropic_config)?),
-    Provider::OpenAI => Arc::new(OpenAIClient::new(openai_config)?),
-};
+let client: Arc<dyn LlmClient> = Arc::new(ProxyLlmClient::new(ProxyLlmConfig {
+    server_url: config.server_url.clone(),
+})?);
+```
+
+**Server-side (LlmService selects provider internally):**
+```rust
+let service = LlmService::from_env()?;
+// Provider selection happens inside LlmService based on model name
 ```
 
 ### How Streaming is Abstracted via LlmStream
