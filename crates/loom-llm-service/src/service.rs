@@ -30,7 +30,8 @@ impl LlmService {
         info!("Initializing LLM service");
 
         let anthropic_client = if let Some(ref api_key) = config.anthropic_api_key {
-            let mut anthropic_config = loom_llm_anthropic::AnthropicConfig::new(api_key.expose().clone());
+            let mut anthropic_config =
+                loom_llm_anthropic::AnthropicConfig::new(api_key.expose().clone());
             if let Some(model) = config.anthropic_model {
                 debug!(model = %model, "Using custom Anthropic model");
                 anthropic_config = anthropic_config.with_model(model);
@@ -65,23 +66,23 @@ impl LlmService {
             None
         };
 
-        let vertex_client =
-            if let (Some(project), Some(location)) = (config.vertex_project, config.vertex_location)
-            {
-                let mut vertex_config = loom_llm_vertex::VertexConfig::new(project, location);
-                if let Some(model) = config.vertex_model {
-                    debug!(model = %model, "Using custom Vertex model");
-                    vertex_config = vertex_config.with_model(model);
-                }
+        let vertex_client = if let (Some(project), Some(location)) =
+            (config.vertex_project, config.vertex_location)
+        {
+            let mut vertex_config = loom_llm_vertex::VertexConfig::new(project, location);
+            if let Some(model) = config.vertex_model {
+                debug!(model = %model, "Using custom Vertex model");
+                vertex_config = vertex_config.with_model(model);
+            }
 
-                let client = VertexClient::new(vertex_config)
-                    .map_err(|e| LlmServiceError::Config(e.to_string()))?;
-                info!("Vertex client initialized");
-                Some(Arc::new(client))
-            } else {
-                debug!("Vertex project/location not configured");
-                None
-            };
+            let client = VertexClient::new(vertex_config)
+                .map_err(|e| LlmServiceError::Config(e.to_string()))?;
+            info!("Vertex client initialized");
+            Some(Arc::new(client))
+        } else {
+            debug!("Vertex project/location not configured");
+            None
+        };
 
         if anthropic_client.is_none() && openai_client.is_none() && vertex_client.is_none() {
             return Err(LlmServiceError::ProviderNotConfigured(
@@ -105,8 +106,8 @@ impl LlmService {
 
     /// Creates a new LLM service from environment variables.
     pub fn from_env() -> Result<Self, LlmServiceError> {
-        let config = LlmServiceConfig::from_env()
-            .map_err(|e| LlmServiceError::Config(e.to_string()))?;
+        let config =
+            LlmServiceConfig::from_env().map_err(|e| LlmServiceError::Config(e.to_string()))?;
         Self::new(config)
     }
 
@@ -128,9 +129,10 @@ impl LlmService {
     /// Sends a completion request to Anthropic.
     #[instrument(skip(self, request), fields(provider = "anthropic"))]
     pub async fn complete_anthropic(&self, request: LlmRequest) -> Result<LlmResponse, LlmError> {
-        let client = self.anthropic_client.as_ref().ok_or_else(|| {
-            LlmError::Api("Anthropic provider not configured".to_string())
-        })?;
+        let client = self
+            .anthropic_client
+            .as_ref()
+            .ok_or_else(|| LlmError::Api("Anthropic provider not configured".to_string()))?;
 
         debug!(
             model = %request.model,
@@ -144,10 +146,14 @@ impl LlmService {
 
     /// Sends a streaming completion request to Anthropic.
     #[instrument(skip(self, request), fields(provider = "anthropic"))]
-    pub async fn complete_streaming_anthropic(&self, request: LlmRequest) -> Result<LlmStream, LlmError> {
-        let client = self.anthropic_client.as_ref().ok_or_else(|| {
-            LlmError::Api("Anthropic provider not configured".to_string())
-        })?;
+    pub async fn complete_streaming_anthropic(
+        &self,
+        request: LlmRequest,
+    ) -> Result<LlmStream, LlmError> {
+        let client = self
+            .anthropic_client
+            .as_ref()
+            .ok_or_else(|| LlmError::Api("Anthropic provider not configured".to_string()))?;
 
         debug!(
             model = %request.model,
@@ -162,9 +168,10 @@ impl LlmService {
     /// Sends a completion request to OpenAI.
     #[instrument(skip(self, request), fields(provider = "openai"))]
     pub async fn complete_openai(&self, request: LlmRequest) -> Result<LlmResponse, LlmError> {
-        let client = self.openai_client.as_ref().ok_or_else(|| {
-            LlmError::Api("OpenAI provider not configured".to_string())
-        })?;
+        let client = self
+            .openai_client
+            .as_ref()
+            .ok_or_else(|| LlmError::Api("OpenAI provider not configured".to_string()))?;
 
         debug!(
             model = %request.model,
@@ -178,10 +185,14 @@ impl LlmService {
 
     /// Sends a streaming completion request to OpenAI.
     #[instrument(skip(self, request), fields(provider = "openai"))]
-    pub async fn complete_streaming_openai(&self, request: LlmRequest) -> Result<LlmStream, LlmError> {
-        let client = self.openai_client.as_ref().ok_or_else(|| {
-            LlmError::Api("OpenAI provider not configured".to_string())
-        })?;
+    pub async fn complete_streaming_openai(
+        &self,
+        request: LlmRequest,
+    ) -> Result<LlmStream, LlmError> {
+        let client = self
+            .openai_client
+            .as_ref()
+            .ok_or_else(|| LlmError::Api("OpenAI provider not configured".to_string()))?;
 
         debug!(
             model = %request.model,
@@ -196,9 +207,10 @@ impl LlmService {
     /// Sends a completion request to Vertex AI.
     #[instrument(skip(self, request), fields(provider = "vertex"))]
     pub async fn complete_vertex(&self, request: LlmRequest) -> Result<LlmResponse, LlmError> {
-        let client = self.vertex_client.as_ref().ok_or_else(|| {
-            LlmError::Api("Vertex provider not configured".to_string())
-        })?;
+        let client = self
+            .vertex_client
+            .as_ref()
+            .ok_or_else(|| LlmError::Api("Vertex provider not configured".to_string()))?;
 
         debug!(
             model = %request.model,
@@ -212,10 +224,14 @@ impl LlmService {
 
     /// Sends a streaming completion request to Vertex AI.
     #[instrument(skip(self, request), fields(provider = "vertex"))]
-    pub async fn complete_streaming_vertex(&self, request: LlmRequest) -> Result<LlmStream, LlmError> {
-        let client = self.vertex_client.as_ref().ok_or_else(|| {
-            LlmError::Api("Vertex provider not configured".to_string())
-        })?;
+    pub async fn complete_streaming_vertex(
+        &self,
+        request: LlmRequest,
+    ) -> Result<LlmStream, LlmError> {
+        let client = self
+            .vertex_client
+            .as_ref()
+            .ok_or_else(|| LlmError::Api("Vertex provider not configured".to_string()))?;
 
         debug!(
             model = %request.model,
@@ -249,14 +265,17 @@ mod tests {
     fn new_fails_without_any_api_key() {
         let config = LlmServiceConfig::new(LlmProvider::Anthropic);
         let result = LlmService::new(config);
-        assert!(matches!(result, Err(LlmServiceError::ProviderNotConfigured(_))));
+        assert!(matches!(
+            result,
+            Err(LlmServiceError::ProviderNotConfigured(_))
+        ));
     }
 
     /// Verifies that has_anthropic() returns true when configured.
     #[test]
     fn has_anthropic_returns_true_when_configured() {
-        let config = LlmServiceConfig::new(LlmProvider::Anthropic)
-            .with_anthropic_api_key("test-key");
+        let config =
+            LlmServiceConfig::new(LlmProvider::Anthropic).with_anthropic_api_key("test-key");
         let service = LlmService::new(config).unwrap();
         assert!(service.has_anthropic());
         assert!(!service.has_openai());
@@ -265,8 +284,7 @@ mod tests {
     /// Verifies that has_openai() returns true when configured.
     #[test]
     fn has_openai_returns_true_when_configured() {
-        let config = LlmServiceConfig::new(LlmProvider::OpenAi)
-            .with_openai_api_key("test-key");
+        let config = LlmServiceConfig::new(LlmProvider::OpenAi).with_openai_api_key("test-key");
         let service = LlmService::new(config).unwrap();
         assert!(!service.has_anthropic());
         assert!(service.has_openai());

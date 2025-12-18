@@ -77,14 +77,10 @@ impl ThreadSyncClient {
         );
 
         let response = loom_http_retry::retry(&self.retry_config, || async {
-            self.apply_headers(
-                self.http
-                    .put(url.clone())
-                    .json(thread)
-            )
-            .send()
-            .await
-            .map_err(ThreadSyncError::from)
+            self.apply_headers(self.http.put(url.clone()).json(thread))
+                .send()
+                .await
+                .map_err(ThreadSyncError::from)
         })
         .await?;
 
@@ -119,13 +115,10 @@ impl ThreadSyncClient {
         debug!(thread_id = %id, url = %url, "fetching thread from server");
 
         let response = loom_http_retry::retry(&self.retry_config, || async {
-            self.apply_headers(
-                self.http
-                    .get(url.clone())
-            )
-            .send()
-            .await
-            .map_err(ThreadSyncError::from)
+            self.apply_headers(self.http.get(url.clone()))
+                .send()
+                .await
+                .map_err(ThreadSyncError::from)
         })
         .await?;
 
@@ -159,13 +152,10 @@ impl ThreadSyncClient {
         debug!(url = %url, limit = limit, "listing threads from server");
 
         let response = loom_http_retry::retry(&self.retry_config, || async {
-            self.apply_headers(
-                self.http
-                    .get(url.clone())
-            )
-            .send()
-            .await
-            .map_err(ThreadSyncError::from)
+            self.apply_headers(self.http.get(url.clone()))
+                .send()
+                .await
+                .map_err(ThreadSyncError::from)
         })
         .await?;
 
@@ -190,13 +180,10 @@ impl ThreadSyncClient {
         debug!(thread_id = %id, url = %url, "deleting thread from server");
 
         let response = loom_http_retry::retry(&self.retry_config, || async {
-            self.apply_headers(
-                self.http
-                    .delete(url.clone())
-            )
-            .send()
-            .await
-            .map_err(ThreadSyncError::from)
+            self.apply_headers(self.http.delete(url.clone()))
+                .send()
+                .await
+                .map_err(ThreadSyncError::from)
         })
         .await?;
 

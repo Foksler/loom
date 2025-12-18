@@ -29,7 +29,11 @@ pub struct CodeSearchRequest {
 
 impl CodeSearchRequest {
     /// Create a new code search request.
-    pub fn new(query: impl Into<String>, owner: impl Into<String>, repo: impl Into<String>) -> Self {
+    pub fn new(
+        query: impl Into<String>,
+        owner: impl Into<String>,
+        repo: impl Into<String>,
+    ) -> Self {
         Self {
             query: query.into(),
             owner: owner.into(),
@@ -178,7 +182,11 @@ impl FileContents {
     /// Decode the base64 content to bytes.
     pub fn decode_content(&self) -> Result<Vec<u8>, base64::DecodeError> {
         use base64::{engine::general_purpose::STANDARD, Engine};
-        let content_no_newlines: String = self.content.chars().filter(|c| !c.is_whitespace()).collect();
+        let content_no_newlines: String = self
+            .content
+            .chars()
+            .filter(|c| !c.is_whitespace())
+            .collect();
         STANDARD.decode(content_no_newlines)
     }
 
@@ -333,22 +341,19 @@ mod tests {
 
     #[test]
     fn test_code_search_request_with_per_page() {
-        let request = CodeSearchRequest::new("test", "owner", "repo")
-            .with_per_page(50);
+        let request = CodeSearchRequest::new("test", "owner", "repo").with_per_page(50);
         assert_eq!(request.per_page, 50);
     }
 
     #[test]
     fn test_code_search_request_clamps_per_page() {
-        let request = CodeSearchRequest::new("test", "owner", "repo")
-            .with_per_page(200);
+        let request = CodeSearchRequest::new("test", "owner", "repo").with_per_page(200);
         assert_eq!(request.per_page, 100);
     }
 
     #[test]
     fn test_file_contents_request_with_ref() {
-        let request = FileContentsRequest::new("owner", "repo", "src/main.rs")
-            .with_ref("develop");
+        let request = FileContentsRequest::new("owner", "repo", "src/main.rs").with_ref("develop");
         assert_eq!(request.git_ref, Some("develop".to_string()));
     }
 

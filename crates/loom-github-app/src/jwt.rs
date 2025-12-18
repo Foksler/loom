@@ -11,7 +11,7 @@ pub(crate) use claims_for_testing::Claims as TestClaims;
 #[cfg(test)]
 mod claims_for_testing {
     use serde::{Deserialize, Serialize};
-    
+
     #[derive(Debug, Serialize, Deserialize)]
     pub struct Claims {
         pub iat: u64,
@@ -101,14 +101,17 @@ mod tests {
     fn test_generate_jwt_with_invalid_key() {
         let result = generate_app_jwt(12345, "not-a-valid-key");
         assert!(result.is_err(), "Should fail with invalid key");
-        
+
         let err = result.unwrap_err();
         assert!(matches!(err, GithubAppError::Jwt(_)));
     }
 
     #[test]
     fn test_generate_jwt_with_invalid_pem_format() {
-        let result = generate_app_jwt(12345, "-----BEGIN RSA PRIVATE KEY-----\ninvalid\n-----END RSA PRIVATE KEY-----");
+        let result = generate_app_jwt(
+            12345,
+            "-----BEGIN RSA PRIVATE KEY-----\ninvalid\n-----END RSA PRIVATE KEY-----",
+        );
         assert!(result.is_err(), "Should fail with malformed PEM");
     }
 
@@ -119,7 +122,7 @@ mod tests {
             .unwrap()
             .as_secs();
         let expires_at = now + 300;
-        
+
         let duration = jwt_refresh_duration(expires_at);
         assert!(duration > Duration::from_secs(200));
     }
@@ -131,7 +134,7 @@ mod tests {
             .unwrap()
             .as_secs();
         let expires_at = now + 20;
-        
+
         let duration = jwt_refresh_duration(expires_at);
         assert_eq!(duration, Duration::ZERO);
     }
@@ -143,65 +146,79 @@ mod tests {
             .unwrap()
             .as_secs();
         let expires_at = now.saturating_sub(60);
-        
+
         let duration = jwt_refresh_duration(expires_at);
         assert_eq!(duration, Duration::ZERO);
     }
 
     #[test]
     fn test_jwt_claims_are_valid() {
-        use jsonwebtoken::{decode, DecodingKey, Validation};
-        use rsa::{RsaPrivateKey, pkcs8::EncodePrivateKey, pkcs1::EncodeRsaPublicKey};
         use super::TestClaims;
-        
+        use jsonwebtoken::{decode, DecodingKey, Validation};
+        use rsa::{pkcs1::EncodeRsaPublicKey, pkcs8::EncodePrivateKey, RsaPrivateKey};
+
         let app_id = 12345u64;
-        
+
         // Generate a real RSA key pair for testing
         let mut rng = rand::thread_rng();
-        let private_key = RsaPrivateKey::new(&mut rng, 2048)
-            .expect("Failed to generate RSA key");
+        let private_key = RsaPrivateKey::new(&mut rng, 2048).expect("Failed to generate RSA key");
         let public_key = private_key.to_public_key();
-        
+
         let private_key_pem = private_key
             .to_pkcs8_pem(rsa::pkcs8::LineEnding::LF)
             .expect("Failed to convert private key to PEM");
         let public_key_pem = public_key
             .to_pkcs1_pem(rsa::pkcs1::LineEnding::LF)
             .expect("Failed to convert public key to PEM");
-        
+
         let token = generate_app_jwt(app_id, &private_key_pem).expect("Failed to generate JWT");
-        
+
         // Decode and verify claims
         let mut validation = Validation::new(Algorithm::RS256);
         validation.validate_exp = false; // We'll check manually
         validation.required_spec_claims.clear();
-        
+
         let decoding_key = DecodingKey::from_rsa_pem(public_key_pem.as_bytes())
             .expect("Failed to create decoding key");
-        
-        let token_data = decode::<TestClaims>(&token, &decoding_key, &validation)
-            .expect("Failed to decode JWT");
-        
+
+        let token_data =
+            decode::<TestClaims>(&token, &decoding_key, &validation).expect("Failed to decode JWT");
+
         let claims = token_data.claims;
-        
+
         // Verify issuer matches app_id
         assert_eq!(claims.iss, app_id.to_string());
-        
+
         // Verify exp > iat
-        assert!(claims.exp > claims.iat, "exp ({}) must be > iat ({})", claims.exp, claims.iat);
-        
+        assert!(
+            claims.exp > claims.iat,
+            "exp ({}) must be > iat ({})",
+            claims.exp,
+            claims.iat
+        );
+
         // Verify lifetime <= 10 minutes (GitHub max)
         let lifetime = claims.exp - claims.iat;
-        assert!(lifetime <= 10 * 60, "JWT lifetime ({} seconds) exceeds GitHub maximum of 10 minutes", lifetime);
-        
+        assert!(
+            lifetime <= 10 * 60,
+            "JWT lifetime ({} seconds) exceeds GitHub maximum of 10 minutes",
+            lifetime
+        );
+
         // Verify token is not already expired (with small grace for test execution)
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs();
-        assert!(claims.exp > now.saturating_sub(5), "Token is already expired");
-        
+        assert!(
+            claims.exp > now.saturating_sub(5),
+            "Token is already expired"
+        );
+
         // Verify iat is in the past (we subtract 60s for clock skew)
-        assert!(claims.iat <= now + 5, "iat should be <= now (with small margin)");
+        assert!(
+            claims.iat <= now + 5,
+            "iat should be <= now (with small margin)"
+        );
     }
 }

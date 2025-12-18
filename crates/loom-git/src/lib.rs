@@ -3,8 +3,8 @@ mod error;
 mod normalize;
 
 pub use detect::{
-    current_branch, default_remote_url, detect_repo_metadata, detect_repo_status,
-    head_commit_sha, is_dirty, RepoMetadata,
+    current_branch, default_remote_url, detect_repo_metadata, detect_repo_status, head_commit_sha,
+    is_dirty, RepoMetadata,
 };
 pub use error::GitError;
 pub use normalize::normalize_remote_url;

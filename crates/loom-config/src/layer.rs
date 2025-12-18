@@ -209,13 +209,27 @@ impl GlobalLayer {
         if other.workspace_root.is_some() {
             self.workspace_root = other.workspace_root;
         }
-        merge_option(&mut self.model_preferences, other.model_preferences, |t, s| {
-            if s.default.is_some() { t.default = s.default; }
-            if s.code.is_some() { t.code = s.code; }
-            if s.chat.is_some() { t.chat = s.chat; }
-            if s.small.is_some() { t.small = s.small; }
-            if s.large.is_some() { t.large = s.large; }
-        });
+        merge_option(
+            &mut self.model_preferences,
+            other.model_preferences,
+            |t, s| {
+                if s.default.is_some() {
+                    t.default = s.default;
+                }
+                if s.code.is_some() {
+                    t.code = s.code;
+                }
+                if s.chat.is_some() {
+                    t.chat = s.chat;
+                }
+                if s.small.is_some() {
+                    t.small = s.small;
+                }
+                if s.large.is_some() {
+                    t.large = s.large;
+                }
+            },
+        );
     }
 }
 
@@ -239,30 +253,50 @@ impl ToolsLayer {
             self.allow_shell = other.allow_shell;
         }
         merge_option(&mut self.workspace, other.workspace, |t, s| {
-            if s.root.is_some() { t.root = s.root; }
+            if s.root.is_some() {
+                t.root = s.root;
+            }
             if s.allow_outside_workspace.is_some() {
                 t.allow_outside_workspace = s.allow_outside_workspace;
             }
-            if s.allowed_paths.is_some() { t.allowed_paths = s.allowed_paths; }
+            if s.allowed_paths.is_some() {
+                t.allowed_paths = s.allowed_paths;
+            }
         });
     }
 }
 
 impl LoggingLayer {
     fn merge(&mut self, other: LoggingLayer) {
-        if other.level.is_some() { self.level = other.level; }
-        if other.file.is_some() { self.file = other.file; }
-        if other.format.is_some() { self.format = other.format; }
+        if other.level.is_some() {
+            self.level = other.level;
+        }
+        if other.file.is_some() {
+            self.file = other.file;
+        }
+        if other.format.is_some() {
+            self.format = other.format;
+        }
     }
 }
 
 impl RetryLayer {
     fn merge(&mut self, other: RetryLayer) {
-        if other.max_attempts.is_some() { self.max_attempts = other.max_attempts; }
-        if other.base_delay_ms.is_some() { self.base_delay_ms = other.base_delay_ms; }
-        if other.max_delay_ms.is_some() { self.max_delay_ms = other.max_delay_ms; }
-        if other.backoff_factor.is_some() { self.backoff_factor = other.backoff_factor; }
-        if other.jitter.is_some() { self.jitter = other.jitter; }
+        if other.max_attempts.is_some() {
+            self.max_attempts = other.max_attempts;
+        }
+        if other.base_delay_ms.is_some() {
+            self.base_delay_ms = other.base_delay_ms;
+        }
+        if other.max_delay_ms.is_some() {
+            self.max_delay_ms = other.max_delay_ms;
+        }
+        if other.backoff_factor.is_some() {
+            self.backoff_factor = other.backoff_factor;
+        }
+        if other.jitter.is_some() {
+            self.jitter = other.jitter;
+        }
     }
 }
 
@@ -438,27 +472,29 @@ mod tests {
 
         let mut base = ConfigLayer {
             providers: Some(ProvidersLayer {
-                entries: HashMap::from([
-                    ("main".to_string(), ProviderLayer::OpenAi(OpenAiLayer {
+                entries: HashMap::from([(
+                    "main".to_string(),
+                    ProviderLayer::OpenAi(OpenAiLayer {
                         api_key: Some(Secret::new("key1".to_string())),
                         base_url: None,
                         default_model: Some("gpt-4".to_string()),
                         organization: None,
-                    })),
-                ]),
+                    }),
+                )]),
             }),
             ..Default::default()
         };
 
         let overlay = ConfigLayer {
             providers: Some(ProvidersLayer {
-                entries: HashMap::from([
-                    ("main".to_string(), ProviderLayer::Anthropic(AnthropicLayer {
+                entries: HashMap::from([(
+                    "main".to_string(),
+                    ProviderLayer::Anthropic(AnthropicLayer {
                         api_key: Some(Secret::new("key2".to_string())),
                         base_url: None,
                         default_model: Some("claude-3-opus".to_string()),
-                    })),
-                ]),
+                    }),
+                )]),
             }),
             ..Default::default()
         };

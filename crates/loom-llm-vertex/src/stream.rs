@@ -218,12 +218,8 @@ fn try_parse_next_event(
                 // After processing parts, if terminal, emit Completed
                 if is_terminal {
                     *finished = true;
-                    let response = build_final_response(
-                        accumulated_content,
-                        tool_calls,
-                        usage,
-                        finish_reason,
-                    );
+                    let response =
+                        build_final_response(accumulated_content, tool_calls, usage, finish_reason);
                     return Some(LlmEvent::Completed(response));
                 }
             }

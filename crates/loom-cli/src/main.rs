@@ -19,14 +19,16 @@ use loom_config::{
     runtime::{LogFormat, LogLevel},
     sources::CliOverrides,
 };
-use loom_core::{LlmClient, LlmEvent, Message, ToolCall, ToolContext, ToolDefinition, ToolExecutionOutcome};
-use loom_llm_proxy::{LlmProvider, ProxyLlmClient};
-use loom_thread::{
-    Thread, ThreadId, ThreadStore, LocalThreadStore, SyncingThreadStore,
-    ThreadSyncClient, MessageSnapshot, AgentStateKind, AgentStateSnapshot,
-    MessageRole, ToolCallSnapshot, LoomVersionHeaders, ThreadVisibility,
+use loom_core::{
+    LlmClient, LlmEvent, Message, ToolCall, ToolContext, ToolDefinition, ToolExecutionOutcome,
 };
 use loom_git::detect_repo_status;
+use loom_llm_proxy::{LlmProvider, ProxyLlmClient};
+use loom_thread::{
+    AgentStateKind, AgentStateSnapshot, LocalThreadStore, LoomVersionHeaders, MessageRole,
+    MessageSnapshot, SyncingThreadStore, Thread, ThreadId, ThreadStore, ThreadSyncClient,
+    ThreadVisibility, ToolCallSnapshot,
+};
 
 #[derive(clap::ValueEnum, Clone, Debug)]
 enum ShareVisibilityArg {
@@ -44,7 +46,9 @@ impl From<ShareVisibilityArg> for ThreadVisibility {
         }
     }
 }
-use loom_tools::{EditFileTool, ListFilesTool, ReadFileTool, ToolRegistry, WebSearchTool};
+use loom_tools::{
+    EditFileTool, ListFilesTool, OracleTool, ReadFileTool, ToolRegistry, WebSearchTool,
+};
 use url::Url;
 
 mod version;
@@ -152,8 +156,9 @@ fn log_level_to_tracing(level: LogLevel) -> tracing::Level {
 }
 
 fn init_tracing(logging: &loom_config::runtime::LoggingConfig) {
-    let filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new(format!("loom={}", log_level_to_tracing(logging.level))));
+    let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+        EnvFilter::new(format!("loom={}", log_level_to_tracing(logging.level)))
+    });
 
     match logging.format {
         LogFormat::Json => {
@@ -181,7 +186,10 @@ fn create_llm_client(server_url: &str, provider: &str) -> Result<Arc<dyn LlmClie
     let llm_provider = match provider.to_lowercase().as_str() {
         "anthropic" => LlmProvider::Anthropic,
         "openai" => LlmProvider::OpenAi,
-        other => anyhow::bail!("Unknown LLM provider: {}. Use 'anthropic' or 'openai'", other),
+        other => anyhow::bail!(
+            "Unknown LLM provider: {}. Use 'anthropic' or 'openai'",
+            other
+        ),
     };
 
     info!(server_url = %server_url, provider = %provider, "creating proxy LLM client");
@@ -197,13 +205,11 @@ fn create_tool_registry() -> ToolRegistry {
     registry.register(Box::new(ReadFileTool::new()));
     registry.register(Box::new(ListFilesTool::new()));
     registry.register(Box::new(EditFileTool::new()));
+    registry.register(Box::new(OracleTool::default()));
     registry.register(Box::new(WebSearchTool::default()));
 
     let definitions = registry.definitions();
-    debug!(
-        tool_count = definitions.len(),
-        "tool registry initialized"
-    );
+    debug!(tool_count = definitions.len(), "tool registry initialized");
 
     registry
 }
@@ -225,31 +231,29 @@ async fn execute_tool(
     );
 
     match registry.get(&tool_call.tool_name) {
-        Some(tool) => {
-            match tool.invoke(tool_call.arguments_json.clone(), ctx).await {
-                Ok(output) => {
-                    debug!(
-                        tool_id = %tool_call.id,
-                        "tool execution succeeded"
-                    );
-                    ToolExecutionOutcome::Success {
-                        call_id: tool_call.id.clone(),
-                        output,
-                    }
-                }
-                Err(e) => {
-                    warn!(
-                        tool_id = %tool_call.id,
-                        error = %e,
-                        "tool execution failed"
-                    );
-                    ToolExecutionOutcome::Error {
-                        call_id: tool_call.id.clone(),
-                        error: e,
-                    }
+        Some(tool) => match tool.invoke(tool_call.arguments_json.clone(), ctx).await {
+            Ok(output) => {
+                debug!(
+                    tool_id = %tool_call.id,
+                    "tool execution succeeded"
+                );
+                ToolExecutionOutcome::Success {
+                    call_id: tool_call.id.clone(),
+                    output,
                 }
             }
-        }
+            Err(e) => {
+                warn!(
+                    tool_id = %tool_call.id,
+                    error = %e,
+                    "tool execution failed"
+                );
+                ToolExecutionOutcome::Error {
+                    call_id: tool_call.id.clone(),
+                    error: e,
+                }
+            }
+        },
         None => {
             warn!(
                 tool_id = %tool_call.id,
@@ -264,7 +268,16 @@ async fn execute_tool(
     }
 }
 
-#[instrument(skip(llm_client, tool_registry, tool_ctx, thread, thread_store, shutdown_flag, workspace))]
+#[allow(clippy::too_many_arguments)]
+#[instrument(skip(
+    llm_client,
+    tool_registry,
+    tool_ctx,
+    thread,
+    thread_store,
+    shutdown_flag,
+    workspace
+))]
 async fn run_repl(
     llm_client: &dyn LlmClient,
     tool_registry: &ToolRegistry,
@@ -312,7 +325,7 @@ async fn run_repl(
             }
             break;
         }
-        
+
         // Check shutdown again after potentially blocking read
         if shutdown_flag.load(Ordering::Relaxed) {
             info!("shutdown requested after input, saving thread");
@@ -335,7 +348,10 @@ async fn run_repl(
         let user_message = Message::user(input);
         messages.push(user_message.clone());
 
-        thread.conversation.messages.push(MessageSnapshot::from(&user_message));
+        thread
+            .conversation
+            .messages
+            .push(MessageSnapshot::from(&user_message));
 
         let request = loom_core::LlmRequest::new("default")
             .with_messages(messages.clone())
@@ -353,7 +369,11 @@ async fn run_repl(
                             let _ = io::stdout().flush();
                             assistant_content.push_str(&content);
                         }
-                        LlmEvent::ToolCallDelta { call_id, tool_name, arguments_fragment } => {
+                        LlmEvent::ToolCallDelta {
+                            call_id,
+                            tool_name,
+                            arguments_fragment,
+                        } => {
                             debug!(
                                 call_id = %call_id,
                                 tool_name = %tool_name,
@@ -385,12 +405,19 @@ async fn run_repl(
                     content: assistant_content.clone(),
                     tool_call_id: None,
                     tool_name: None,
-                    tool_calls: if tool_calls.is_empty() { None } else {
-                        Some(tool_calls.iter().map(|tc| ToolCallSnapshot {
-                            id: tc.id.clone(),
-                            tool_name: tc.tool_name.clone(),
-                            arguments_json: tc.arguments_json.clone(),
-                        }).collect())
+                    tool_calls: if tool_calls.is_empty() {
+                        None
+                    } else {
+                        Some(
+                            tool_calls
+                                .iter()
+                                .map(|tc| ToolCallSnapshot {
+                                    id: tc.id.clone(),
+                                    tool_name: tc.tool_name.clone(),
+                                    arguments_json: tc.arguments_json.clone(),
+                                })
+                                .collect(),
+                        )
                     },
                 });
 
@@ -404,9 +431,7 @@ async fn run_repl(
                     let outcome = execute_tool(tool_registry, &tool_call, tool_ctx).await;
 
                     let (tool_result, is_error) = match &outcome {
-                        ToolExecutionOutcome::Success { output, .. } => {
-                            (output.to_string(), false)
-                        }
+                        ToolExecutionOutcome::Success { output, .. } => (output.to_string(), false),
                         ToolExecutionOutcome::Error { error, .. } => {
                             (format!("Error: {}", error), true)
                         }
@@ -418,7 +443,11 @@ async fn run_repl(
                         debug!(tool_id = %tool_call.id, "tool completed successfully");
                     }
 
-                    messages.push(Message::tool(&tool_call.id, &tool_call.tool_name, &tool_result));
+                    messages.push(Message::tool(
+                        &tool_call.id,
+                        &tool_call.tool_name,
+                        &tool_result,
+                    ));
 
                     thread.conversation.messages.push(MessageSnapshot {
                         role: MessageRole::Tool,
@@ -491,7 +520,8 @@ async fn start_repl_session(
         thread_store.as_ref(),
         shutdown_flag,
         &workspace,
-    ).await
+    )
+    .await
 }
 
 fn get_update_base_url() -> Result<Url> {
@@ -509,18 +539,17 @@ fn get_update_base_url() -> Result<Url> {
 async fn run_update() -> Result<()> {
     let build_info = version::build_info();
     let base_url = get_update_base_url()?;
-    
+
     let bin_url = base_url
         .join(&format!("bin/{}", build_info.platform))
         .context("failed to construct update URL")?;
-    
+
     println!("Current version: {}", build_info.version);
     println!("Platform:        {}", build_info.platform);
     println!("Checking for updates from {}...", bin_url);
-    
-    let current_exe = std::env::current_exe()
-        .context("failed to get current executable path")?;
-    
+
+    let current_exe = std::env::current_exe().context("failed to get current executable path")?;
+
     let http_client = reqwest::Client::new();
     let response = http_client
         .get(bin_url.clone())
@@ -530,7 +559,7 @@ async fn run_update() -> Result<()> {
         .send()
         .await
         .context("failed to download update")?;
-    
+
     if !response.status().is_success() {
         anyhow::bail!(
             "Update server returned error: {} - {}",
@@ -538,20 +567,23 @@ async fn run_update() -> Result<()> {
             response.text().await.unwrap_or_default()
         );
     }
-    
-    let bytes = response.bytes().await.context("failed to read update binary")?;
-    
+
+    let bytes = response
+        .bytes()
+        .await
+        .context("failed to read update binary")?;
+
     if bytes.is_empty() {
         anyhow::bail!("Downloaded binary is empty");
     }
-    
+
     println!("Downloaded {} bytes", bytes.len());
-    
+
     let tmp_path = current_exe.with_extension("new");
     tokio::fs::write(&tmp_path, &bytes)
         .await
         .context("failed to write temporary binary")?;
-    
+
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -559,19 +591,17 @@ async fn run_update() -> Result<()> {
         perms.set_mode(0o755);
         std::fs::set_permissions(&tmp_path, perms)?;
     }
-    
+
     let backup_path = current_exe.with_extension("old");
     if backup_path.exists() {
         std::fs::remove_file(&backup_path).ok();
     }
-    
-    std::fs::rename(&current_exe, &backup_path)
-        .context("failed to backup current binary")?;
-    std::fs::rename(&tmp_path, &current_exe)
-        .context("failed to install new binary")?;
-    
+
+    std::fs::rename(&current_exe, &backup_path).context("failed to backup current binary")?;
+    std::fs::rename(&tmp_path, &current_exe).context("failed to install new binary")?;
+
     println!("Update complete! Please restart loom.");
-    
+
     Ok(())
 }
 
@@ -634,7 +664,7 @@ async fn run_search(
     if query.is_empty() {
         anyhow::bail!("Search query cannot be empty");
     }
-    
+
     // Try server search first if sync is enabled
     if let Ok(sync_url) = std::env::var("LOOM_THREAD_SYNC_URL") {
         match search_server(&sync_url, query, limit).await {
@@ -651,41 +681,46 @@ async fn run_search(
             }
         }
     }
-    
+
     // Fall back to local search
     let local_store = LocalThreadStore::from_xdg()?;
     let results = local_store.search(query, limit).await?;
-    
+
     if json_output {
         println!("{}", serde_json::to_string_pretty(&results)?);
     } else {
         print_local_search_results(&results, query);
     }
-    
+
     Ok(())
 }
 
-async fn search_server(base_url: &str, query: &str, limit: usize) -> Result<Vec<serde_json::Value>> {
+async fn search_server(
+    base_url: &str,
+    query: &str,
+    limit: usize,
+) -> Result<Vec<serde_json::Value>> {
     let client = reqwest::Client::new();
     let url = format!("{}/v1/threads/search", base_url.trim_end_matches('/'));
-    
+
     let response = client
         .get(&url)
         .query(&[("q", query), ("limit", &limit.to_string())])
         .timeout(std::time::Duration::from_secs(10))
         .send()
         .await?;
-    
+
     if !response.status().is_success() {
         anyhow::bail!("Server returned {}", response.status());
     }
-    
+
     let body: serde_json::Value = response.json().await?;
-    let hits = body.get("hits")
+    let hits = body
+        .get("hits")
         .and_then(|h| h.as_array())
         .cloned()
         .unwrap_or_default();
-    
+
     Ok(hits)
 }
 
@@ -694,17 +729,26 @@ fn print_search_results(results: &[serde_json::Value], query: &str) {
         println!("No results found for \"{}\"", query);
         return;
     }
-    
+
     println!("Results for \"{}\" ({} hits):\n", query, results.len());
-    
+
     for (i, hit) in results.iter().enumerate() {
         let summary = hit.get("summary").unwrap_or(hit);
         let id = summary.get("id").and_then(|v| v.as_str()).unwrap_or("?");
-        let title = summary.get("title").and_then(|v| v.as_str()).unwrap_or("(untitled)");
-        let branch = summary.get("git_branch").and_then(|v| v.as_str()).unwrap_or("-");
-        let remote = summary.get("git_remote_url").and_then(|v| v.as_str()).unwrap_or("-");
+        let title = summary
+            .get("title")
+            .and_then(|v| v.as_str())
+            .unwrap_or("(untitled)");
+        let branch = summary
+            .get("git_branch")
+            .and_then(|v| v.as_str())
+            .unwrap_or("-");
+        let remote = summary
+            .get("git_remote_url")
+            .and_then(|v| v.as_str())
+            .unwrap_or("-");
         let score = hit.get("score").and_then(|v| v.as_f64());
-        
+
         println!("{}) {}", i + 1, id);
         if remote != "-" {
             println!("   [{}] {}", remote, branch);
@@ -724,14 +768,18 @@ fn print_local_search_results(results: &[loom_thread::ThreadSummary], query: &st
         println!("No results found for \"{}\" (local search)", query);
         return;
     }
-    
-    println!("Results for \"{}\" ({} hits, local search):\n", query, results.len());
-    
+
+    println!(
+        "Results for \"{}\" ({} hits, local search):\n",
+        query,
+        results.len()
+    );
+
     for (i, summary) in results.iter().enumerate() {
         let title = summary.title.as_deref().unwrap_or("(untitled)");
         let branch = summary.git_branch.as_deref().unwrap_or("-");
         let remote = summary.git_remote_url.as_deref().unwrap_or("-");
-        
+
         println!("{}) {}", i + 1, summary.id);
         if remote != "-" {
             println!("   [{}] {}", remote, branch);
@@ -769,8 +817,7 @@ async fn main() -> Result<()> {
     let args = Args::parse();
 
     let cli_overrides = CliOverrides::from(&args);
-    let config = load_config_with_cli(cli_overrides)
-        .context("failed to load configuration")?;
+    let config = load_config_with_cli(cli_overrides).context("failed to load configuration")?;
 
     init_tracing(&config.logging);
 
@@ -780,14 +827,13 @@ async fn main() -> Result<()> {
     );
 
     let thread_store: Arc<dyn ThreadStore> = {
-        let local_store = LocalThreadStore::from_xdg()
-            .context("failed to create local thread store")?;
+        let local_store =
+            LocalThreadStore::from_xdg().context("failed to create local thread store")?;
 
         if let Ok(sync_url) = std::env::var("LOOM_THREAD_SYNC_URL") {
-            let base_url = Url::parse(&sync_url)
-                .context("invalid LOOM_THREAD_SYNC_URL")?;
+            let base_url = Url::parse(&sync_url).context("invalid LOOM_THREAD_SYNC_URL")?;
             let http_client = reqwest::Client::new();
-            
+
             let build_info = version::build_info();
             let version_headers = LoomVersionHeaders {
                 version: build_info.version.to_string(),
@@ -795,9 +841,9 @@ async fn main() -> Result<()> {
                 build_timestamp: build_info.build_timestamp.to_string(),
                 platform: build_info.platform.to_string(),
             };
-            
-            let sync_client = ThreadSyncClient::new(base_url, http_client)
-                .with_version_headers(version_headers);
+
+            let sync_client =
+                ThreadSyncClient::new(base_url, http_client).with_version_headers(version_headers);
             Arc::new(SyncingThreadStore::with_sync(local_store, sync_client))
         } else {
             Arc::new(SyncingThreadStore::local_only(local_store))
@@ -809,9 +855,7 @@ async fn main() -> Result<()> {
             println!("{}", version::format_version_info());
             Ok(())
         }
-        Some(Command::Update) => {
-            run_update().await
-        }
+        Some(Command::Update) => run_update().await,
         Some(Command::Login) => {
             println!("loom login: not implemented yet");
             Ok(())
@@ -821,13 +865,18 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Some(Command::List) => {
-            let threads = thread_store.list(100).await
+            let threads = thread_store
+                .list(100)
+                .await
                 .context("failed to list threads")?;
 
             if threads.is_empty() {
                 println!("No threads found.");
             } else {
-                println!("{:<42} {:<30} {:>6} {:<20}", "ID", "TITLE", "MSGS", "LAST ACTIVITY");
+                println!(
+                    "{:<42} {:<30} {:>6} {:<20}",
+                    "ID", "TITLE", "MSGS", "LAST ACTIVITY"
+                );
                 println!("{}", "-".repeat(100));
                 for summary in threads {
                     let title = summary.title.as_deref().unwrap_or("(untitled)");
@@ -838,10 +887,7 @@ async fn main() -> Result<()> {
                     };
                     println!(
                         "{:<42} {:<30} {:>6} {:<20}",
-                        summary.id,
-                        title_display,
-                        summary.message_count,
-                        summary.last_activity_at
+                        summary.id, title_display, summary.message_count, summary.last_activity_at
                     );
                 }
             }
@@ -851,16 +897,24 @@ async fn main() -> Result<()> {
             let thread = match thread_id {
                 Some(id) => {
                     let tid = ThreadId::from_string(id.clone());
-                    thread_store.load(&tid).await
+                    thread_store
+                        .load(&tid)
+                        .await
                         .context("failed to load thread")?
                         .with_context(|| format!("thread '{}' not found", id))?
                 }
                 None => {
-                    let threads = thread_store.list(1).await
+                    let threads = thread_store
+                        .list(1)
+                        .await
                         .context("failed to list threads")?;
-                    let summary = threads.into_iter().next()
+                    let summary = threads
+                        .into_iter()
+                        .next()
                         .context("no threads found to resume")?;
-                    thread_store.load(&summary.id).await
+                    thread_store
+                        .load(&summary.id)
+                        .await
                         .context("failed to load thread")?
                         .context("thread not found")?
                 }
@@ -878,22 +932,34 @@ async fn main() -> Result<()> {
             start_repl_session(&config, &args, thread_store, thread).await
         }
         Some(Command::Search { query, limit, json }) => {
-            run_search(&query, *limit, *json, thread_store.as_ref()).await
+            run_search(query, *limit, *json, thread_store.as_ref()).await
         }
-        Some(Command::Share { thread_id, visibility, support }) => {
+        Some(Command::Share {
+            thread_id,
+            visibility,
+            support,
+        }) => {
             let thread = match thread_id {
                 Some(id) => {
                     let tid = ThreadId::from_string(id.clone());
-                    thread_store.load(&tid).await
+                    thread_store
+                        .load(&tid)
+                        .await
                         .context("failed to load thread")?
                         .with_context(|| format!("thread '{}' not found", id))?
                 }
                 None => {
-                    let threads = thread_store.list(1).await
+                    let threads = thread_store
+                        .list(1)
+                        .await
                         .context("failed to list threads")?;
-                    let summary = threads.into_iter().next()
+                    let summary = threads
+                        .into_iter()
+                        .next()
                         .context("no threads found to share")?;
-                    thread_store.load(&summary.id).await
+                    thread_store
+                        .load(&summary.id)
+                        .await
                         .context("failed to load thread")?
                         .context("thread not found")?
                 }
@@ -918,13 +984,12 @@ async fn main() -> Result<()> {
                     "sharing thread with support"
                 );
 
-                thread_store.save(&updated).await
+                thread_store
+                    .save(&updated)
+                    .await
                     .context("failed to save thread")?;
 
-                println!(
-                    "Thread {} has been shared with support.",
-                    updated.id
-                );
+                println!("Thread {} has been shared with support.", updated.id);
             } else if let Some(v) = visibility {
                 updated.visibility = ThreadVisibility::from(v.clone());
                 updated.touch();
@@ -935,7 +1000,9 @@ async fn main() -> Result<()> {
                     "updating thread visibility"
                 );
 
-                thread_store.save(&updated).await
+                thread_store
+                    .save(&updated)
+                    .await
                     .context("failed to save thread with updated visibility")?;
 
                 println!(

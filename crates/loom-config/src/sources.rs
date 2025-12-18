@@ -24,10 +24,10 @@ pub enum Precedence {
 pub trait ConfigSource: Send + Sync {
     /// Name for logging
     fn name(&self) -> &'static str;
-    
+
     /// Precedence level
     fn precedence(&self) -> Precedence;
-    
+
     /// Load configuration layer from this source
     fn load(&self) -> Result<ConfigLayer, ConfigError>;
 }
@@ -36,9 +36,13 @@ pub trait ConfigSource: Send + Sync {
 pub struct DefaultsSource;
 
 impl ConfigSource for DefaultsSource {
-    fn name(&self) -> &'static str { "defaults" }
-    fn precedence(&self) -> Precedence { Precedence::Defaults }
-    
+    fn name(&self) -> &'static str {
+        "defaults"
+    }
+    fn precedence(&self) -> Precedence {
+        Precedence::Defaults
+    }
+
     fn load(&self) -> Result<ConfigLayer, ConfigError> {
         debug!("loading defaults");
         // Return empty layer - defaults applied during finalization
@@ -84,13 +88,21 @@ impl FileSource {
 
     /// Custom file path with specified precedence
     pub fn custom(path: PathBuf, precedence: Precedence, name: &'static str) -> Self {
-        Self { path, precedence, name }
+        Self {
+            path,
+            precedence,
+            name,
+        }
     }
 }
 
 impl ConfigSource for FileSource {
-    fn name(&self) -> &'static str { self.name }
-    fn precedence(&self) -> Precedence { self.precedence }
+    fn name(&self) -> &'static str {
+        self.name
+    }
+    fn precedence(&self) -> Precedence {
+        self.precedence
+    }
 
     fn load(&self) -> Result<ConfigLayer, ConfigError> {
         if !self.path.exists() {
@@ -99,13 +111,11 @@ impl ConfigSource for FileSource {
         }
 
         debug!(path = %self.path.display(), source = self.name, "loading config file");
-        
+
         let content = std::fs::read_to_string(&self.path)?;
-        let layer: ConfigLayer = toml::from_str(&content).map_err(|e| {
-            ConfigError::TomlParse {
-                path: self.path.clone(),
-                source: e,
-            }
+        let layer: ConfigLayer = toml::from_str(&content).map_err(|e| ConfigError::TomlParse {
+            path: self.path.clone(),
+            source: e,
         })?;
 
         trace!(source = self.name, "parsed config layer");
@@ -114,13 +124,17 @@ impl ConfigSource for FileSource {
 }
 
 /// Environment variable source.
-/// 
+///
 /// Convention: LOOM_<SECTION>__<FIELD> (double underscore for nesting)
 pub struct EnvSource;
 
 impl ConfigSource for EnvSource {
-    fn name(&self) -> &'static str { "environment" }
-    fn precedence(&self) -> Precedence { Precedence::Environment }
+    fn name(&self) -> &'static str {
+        "environment"
+    }
+    fn precedence(&self) -> Precedence {
+        Precedence::Environment
+    }
 
     fn load(&self) -> Result<ConfigLayer, ConfigError> {
         debug!("loading environment variables");
@@ -162,11 +176,15 @@ impl ConfigSource for EnvSource {
             match key.as_str() {
                 // Global settings
                 "LOOM_DEFAULT_PROVIDER" => {
-                    layer.global.get_or_insert_with(GlobalLayer::default)
+                    layer
+                        .global
+                        .get_or_insert_with(GlobalLayer::default)
                         .default_provider = Some(value);
                 }
                 "LOOM_WORKSPACE_ROOT" => {
-                    layer.global.get_or_insert_with(GlobalLayer::default)
+                    layer
+                        .global
+                        .get_or_insert_with(GlobalLayer::default)
                         .workspace_root = Some(PathBuf::from(value));
                 }
 
@@ -188,18 +206,24 @@ impl ConfigSource for EnvSource {
 
                 // Logging
                 "LOOM_LOG_LEVEL" => {
-                    layer.logging.get_or_insert_with(LoggingLayer::default)
+                    layer
+                        .logging
+                        .get_or_insert_with(LoggingLayer::default)
                         .level = Some(value);
                 }
                 "LOOM_LOG_FORMAT" => {
-                    layer.logging.get_or_insert_with(LoggingLayer::default)
+                    layer
+                        .logging
+                        .get_or_insert_with(LoggingLayer::default)
                         .format = Some(value);
                 }
 
                 // Retry
                 "LOOM_RETRY_MAX_ATTEMPTS" => {
                     if let Ok(v) = value.parse() {
-                        layer.retry.get_or_insert_with(RetryLayer::default)
+                        layer
+                            .retry
+                            .get_or_insert_with(RetryLayer::default)
                             .max_attempts = Some(v);
                     }
                 }
@@ -216,10 +240,11 @@ impl ConfigSource for EnvSource {
 
 fn ensure_openai_provider(layer: &mut ConfigLayer) -> &mut OpenAiLayer {
     let providers = layer.providers.get_or_insert_with(ProvidersLayer::default);
-    providers.entries
+    providers
+        .entries
         .entry("openai".to_string())
         .or_insert_with(|| ProviderLayer::OpenAi(OpenAiLayer::default()));
-    
+
     match providers.entries.get_mut("openai") {
         Some(ProviderLayer::OpenAi(ref mut l)) => l,
         _ => unreachable!(),
@@ -228,10 +253,11 @@ fn ensure_openai_provider(layer: &mut ConfigLayer) -> &mut OpenAiLayer {
 
 fn ensure_anthropic_provider(layer: &mut ConfigLayer) -> &mut AnthropicLayer {
     let providers = layer.providers.get_or_insert_with(ProvidersLayer::default);
-    providers.entries
+    providers
+        .entries
         .entry("anthropic".to_string())
         .or_insert_with(|| ProviderLayer::Anthropic(AnthropicLayer::default()));
-    
+
     match providers.entries.get_mut("anthropic") {
         Some(ProviderLayer::Anthropic(ref mut l)) => l,
         _ => unreachable!(),
@@ -261,30 +287,42 @@ impl CliSource {
 }
 
 impl ConfigSource for CliSource {
-    fn name(&self) -> &'static str { "cli" }
-    fn precedence(&self) -> Precedence { Precedence::Cli }
+    fn name(&self) -> &'static str {
+        "cli"
+    }
+    fn precedence(&self) -> Precedence {
+        Precedence::Cli
+    }
 
     fn load(&self) -> Result<ConfigLayer, ConfigError> {
         debug!("loading CLI overrides");
         let mut layer = ConfigLayer::default();
 
         if let Some(ref provider) = self.overrides.provider {
-            layer.global.get_or_insert_with(GlobalLayer::default)
+            layer
+                .global
+                .get_or_insert_with(GlobalLayer::default)
                 .default_provider = Some(provider.clone());
         }
 
         if let Some(ref workspace) = self.overrides.workspace {
-            layer.global.get_or_insert_with(GlobalLayer::default)
+            layer
+                .global
+                .get_or_insert_with(GlobalLayer::default)
                 .workspace_root = Some(workspace.clone());
         }
 
         if let Some(ref level) = self.overrides.log_level {
-            layer.logging.get_or_insert_with(LoggingLayer::default)
+            layer
+                .logging
+                .get_or_insert_with(LoggingLayer::default)
                 .level = Some(level.clone());
         }
 
         if let Some(ref format) = self.overrides.log_format {
-            layer.logging.get_or_insert_with(LoggingLayer::default)
+            layer
+                .logging
+                .get_or_insert_with(LoggingLayer::default)
                 .format = Some(format.clone());
         }
 

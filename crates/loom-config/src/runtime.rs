@@ -260,19 +260,26 @@ impl LoomConfig {
 fn build_global_config(layer: Option<GlobalLayer>) -> Result<GlobalConfig, ConfigError> {
     let layer = layer.unwrap_or_default();
     Ok(GlobalConfig {
-        default_provider: layer.default_provider.unwrap_or_else(|| "anthropic".to_string()),
-        model_preferences: layer.model_preferences.map(|mp| ModelPreferences {
-            default: mp.default,
-            code: mp.code,
-            chat: mp.chat,
-            small: mp.small,
-            large: mp.large,
-        }).unwrap_or_default(),
+        default_provider: layer
+            .default_provider
+            .unwrap_or_else(|| "anthropic".to_string()),
+        model_preferences: layer
+            .model_preferences
+            .map(|mp| ModelPreferences {
+                default: mp.default,
+                code: mp.code,
+                chat: mp.chat,
+                small: mp.small,
+                large: mp.large,
+            })
+            .unwrap_or_default(),
         workspace_root: layer.workspace_root,
     })
 }
 
-fn build_providers_config(layer: Option<ProvidersLayer>) -> Result<HashMap<String, ProviderConfig>, ConfigError> {
+fn build_providers_config(
+    layer: Option<ProvidersLayer>,
+) -> Result<HashMap<String, ProviderConfig>, ConfigError> {
     let mut providers = HashMap::new();
 
     if let Some(pl) = layer {
@@ -280,17 +287,25 @@ fn build_providers_config(layer: Option<ProvidersLayer>) -> Result<HashMap<Strin
             let config = match provider_layer {
                 ProviderLayer::OpenAi(l) => ProviderConfig::OpenAi(OpenAiConfig {
                     api_key: l.api_key,
-                    base_url: l.base_url.unwrap_or_else(|| "https://api.openai.com/v1".to_string()),
+                    base_url: l
+                        .base_url
+                        .unwrap_or_else(|| "https://api.openai.com/v1".to_string()),
                     default_model: l.default_model.unwrap_or_else(|| "gpt-4o".to_string()),
                     organization: l.organization,
                 }),
                 ProviderLayer::Anthropic(l) => ProviderConfig::Anthropic(AnthropicConfig {
                     api_key: l.api_key,
-                    base_url: l.base_url.unwrap_or_else(|| "https://api.anthropic.com".to_string()),
-                    default_model: l.default_model.unwrap_or_else(|| "claude-sonnet-4-20250514".to_string()),
+                    base_url: l
+                        .base_url
+                        .unwrap_or_else(|| "https://api.anthropic.com".to_string()),
+                    default_model: l
+                        .default_model
+                        .unwrap_or_else(|| "claude-sonnet-4-20250514".to_string()),
                 }),
                 ProviderLayer::Ollama(l) => ProviderConfig::Ollama(OllamaConfig {
-                    host: l.host.unwrap_or_else(|| "http://localhost:11434".to_string()),
+                    host: l
+                        .host
+                        .unwrap_or_else(|| "http://localhost:11434".to_string()),
                     default_model: l.default_model.unwrap_or_else(|| "llama3".to_string()),
                 }),
                 ProviderLayer::Custom(l) => ProviderConfig::Custom(GenericProviderConfig {
@@ -309,11 +324,14 @@ fn build_providers_config(layer: Option<ProvidersLayer>) -> Result<HashMap<Strin
 
 fn build_tools_config(layer: Option<ToolsLayer>) -> ToolsConfig {
     let layer = layer.unwrap_or_default();
-    let workspace = layer.workspace.map(|w| WorkspaceConfig {
-        root: w.root,
-        allow_outside_workspace: w.allow_outside_workspace.unwrap_or(false),
-        allowed_paths: w.allowed_paths.unwrap_or_default(),
-    }).unwrap_or_default();
+    let workspace = layer
+        .workspace
+        .map(|w| WorkspaceConfig {
+            root: w.root,
+            allow_outside_workspace: w.allow_outside_workspace.unwrap_or(false),
+            allowed_paths: w.allowed_paths.unwrap_or_default(),
+        })
+        .unwrap_or_default();
 
     ToolsConfig {
         max_file_size_bytes: layer.max_file_size_bytes.unwrap_or(1024 * 1024),

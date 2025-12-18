@@ -94,10 +94,7 @@ impl IntoResponse for ServerError {
                 StatusCode::CONFLICT,
                 ErrorResponse {
                     error: "conflict".to_string(),
-                    message: format!(
-                        "Version conflict: expected {}, got {}",
-                        expected, actual
-                    ),
+                    message: format!("Version conflict: expected {}, got {}", expected, actual),
                     server_version: Some(*expected),
                     client_version: Some(*actual),
                 },

@@ -13,21 +13,23 @@ pub fn validate_config(config: &LoomConfig) -> Result<(), ConfigError> {
     validate_providers(config)?;
     validate_retry(config)?;
     validate_tools(config)?;
-    
+
     Ok(())
 }
 
 fn validate_global(config: &LoomConfig) -> Result<(), ConfigError> {
     // If providers are configured, default_provider should exist
-    if !config.providers.is_empty() {
-        if !config.providers.contains_key(&config.global.default_provider) {
-            // Warn but don't fail - provider might be coming from env var at runtime
-            warn!(
-                default_provider = %config.global.default_provider,
-                available = ?config.providers.keys().collect::<Vec<_>>(),
-                "default_provider not found in configured providers"
-            );
-        }
+    if !config.providers.is_empty()
+        && !config
+            .providers
+            .contains_key(&config.global.default_provider)
+    {
+        // Warn but don't fail - provider might be coming from env var at runtime
+        warn!(
+            default_provider = %config.global.default_provider,
+            available = ?config.providers.keys().collect::<Vec<_>>(),
+            "default_provider not found in configured providers"
+        );
     }
 
     Ok(())
@@ -188,7 +190,7 @@ mod tests {
     fn test_zero_max_attempts_fails() {
         let mut config = minimal_config();
         config.retry.max_attempts = 0;
-        
+
         let result = validate_config(&config);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("max_attempts"));
@@ -199,7 +201,7 @@ mod tests {
     fn test_excessive_max_attempts_fails() {
         let mut config = minimal_config();
         config.retry.max_attempts = 100;
-        
+
         let result = validate_config(&config);
         assert!(result.is_err());
     }
@@ -210,7 +212,7 @@ mod tests {
         let mut config = minimal_config();
         config.retry.base_delay = Duration::from_secs(60);
         config.retry.max_delay = Duration::from_secs(30);
-        
+
         let result = validate_config(&config);
         assert!(result.is_err());
     }
@@ -219,15 +221,16 @@ mod tests {
     #[test]
     fn test_empty_provider_base_url_fails() {
         let mut config = minimal_config();
-        config.providers.insert("test".to_string(), ProviderConfig::OpenAi(
-            crate::runtime::OpenAiConfig {
+        config.providers.insert(
+            "test".to_string(),
+            ProviderConfig::OpenAi(crate::runtime::OpenAiConfig {
                 api_key: Some(loom_secret::SecretString::new("key".to_string())),
                 base_url: "".to_string(),
                 default_model: "model".to_string(),
                 organization: None,
-            }
-        ));
-        
+            }),
+        );
+
         let result = validate_config(&config);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("base_url"));

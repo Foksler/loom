@@ -257,27 +257,22 @@ mod tests {
             ..cfg_with_jitter.clone()
         };
 
-        let delays_without_jitter: Vec<Duration> =
-            (0..10).map(|_| calculate_delay(&cfg_without_jitter, 1)).collect();
+        let delays_without_jitter: Vec<Duration> = (0..10)
+            .map(|_| calculate_delay(&cfg_without_jitter, 1))
+            .collect();
 
-        let delays_with_jitter: Vec<Duration> =
-            (0..10).map(|_| calculate_delay(&cfg_with_jitter, 1)).collect();
+        let delays_with_jitter: Vec<Duration> = (0..10)
+            .map(|_| calculate_delay(&cfg_with_jitter, 1))
+            .collect();
 
-        let all_same_without_jitter = delays_without_jitter
-            .windows(2)
-            .all(|w| w[0] == w[1]);
+        let all_same_without_jitter = delays_without_jitter.windows(2).all(|w| w[0] == w[1]);
         assert!(
             all_same_without_jitter,
             "delays without jitter should be identical"
         );
 
-        let all_same_with_jitter = delays_with_jitter
-            .windows(2)
-            .all(|w| w[0] == w[1]);
-        assert!(
-            !all_same_with_jitter,
-            "delays with jitter should vary"
-        );
+        let all_same_with_jitter = delays_with_jitter.windows(2).all(|w| w[0] == w[1]);
+        assert!(!all_same_with_jitter, "delays with jitter should vary");
     }
 
     /// Purpose: Verifies that the calculated delay never exceeds max_delay,

@@ -36,7 +36,7 @@ fn try_parse_scp_style(raw: &str) -> Option<String> {
     }
 
     let (user_host, path) = raw.split_once(':')?;
-    let host = user_host.split('@').last()?;
+    let host = user_host.split('@').next_back()?;
 
     if host.is_empty() || path.is_empty() {
         return None;

@@ -304,8 +304,7 @@ mod tests {
     /// Important for ensuring requests go to the correct endpoint.
     #[test]
     fn generate_content_url_non_streaming() {
-        let config = VertexConfig::new("my-project", "us-central1")
-            .with_model("gemini-1.5-pro");
+        let config = VertexConfig::new("my-project", "us-central1").with_model("gemini-1.5-pro");
         let client = VertexClient::new(config).unwrap();
         let url = client.generate_content_url(false);
         assert_eq!(
@@ -318,8 +317,7 @@ mod tests {
     /// Important for ensuring streaming requests use streamGenerateContent endpoint.
     #[test]
     fn generate_content_url_streaming() {
-        let config = VertexConfig::new("my-project", "europe-west1")
-            .with_model("gemini-2.0-flash");
+        let config = VertexConfig::new("my-project", "europe-west1").with_model("gemini-2.0-flash");
         let client = VertexClient::new(config).unwrap();
         let url = client.generate_content_url(true);
         assert_eq!(
@@ -332,8 +330,7 @@ mod tests {
     /// Important for testing against local mock servers.
     #[test]
     fn custom_base_url() {
-        let config = VertexConfig::new("proj", "us-west1")
-            .with_base_url("http://localhost:8080");
+        let config = VertexConfig::new("proj", "us-west1").with_base_url("http://localhost:8080");
         let client = VertexClient::new(config).unwrap();
         let url = client.generate_content_url(false);
         assert!(url.starts_with("http://localhost:8080"));

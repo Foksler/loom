@@ -59,13 +59,15 @@ impl GithubAppConfig {
     /// - Must have a host
     /// - Trailing slashes are normalized
     fn validate_and_normalize_base_url(raw: &str) -> Result<Url, GithubAppError> {
-        let url = Url::parse(raw)
-            .map_err(|e| GithubAppError::Config(format!("Invalid GitHub base URL '{}': {}", raw, e)))?;
+        let url = Url::parse(raw).map_err(|e| {
+            GithubAppError::Config(format!("Invalid GitHub base URL '{}': {}", raw, e))
+        })?;
 
         if url.scheme() != "https" {
-            return Err(GithubAppError::Config(
-                format!("GitHub base URL must use https, got '{}'", url.scheme()),
-            ));
+            return Err(GithubAppError::Config(format!(
+                "GitHub base URL must use https, got '{}'",
+                url.scheme()
+            )));
         }
 
         let host = url.host_str().ok_or_else(|| {
@@ -109,13 +111,15 @@ impl GithubAppConfig {
         let app_id_str = env::var("LOOM_GITHUB_APP_ID")
             .map_err(|_| GithubAppError::Config("LOOM_GITHUB_APP_ID not set".to_string()))?;
 
-        let app_id: u64 = app_id_str
-            .parse()
-            .map_err(|_| GithubAppError::Config(format!("Invalid LOOM_GITHUB_APP_ID: {}", app_id_str)))?;
+        let app_id: u64 = app_id_str.parse().map_err(|_| {
+            GithubAppError::Config(format!("Invalid LOOM_GITHUB_APP_ID: {}", app_id_str))
+        })?;
 
         let private_key_pem = load_secret_env("LOOM_GITHUB_APP_PRIVATE_KEY")
             .map_err(|e| GithubAppError::Config(e.to_string()))?
-            .ok_or_else(|| GithubAppError::Config("LOOM_GITHUB_APP_PRIVATE_KEY not set".to_string()))?;
+            .ok_or_else(|| {
+                GithubAppError::Config("LOOM_GITHUB_APP_PRIVATE_KEY not set".to_string())
+            })?;
 
         if private_key_pem.expose().is_empty() {
             return Err(GithubAppError::Config(
@@ -126,10 +130,11 @@ impl GithubAppConfig {
         let webhook_secret = load_secret_env("LOOM_GITHUB_APP_WEBHOOK_SECRET")
             .map_err(|e| GithubAppError::Config(e.to_string()))?;
 
-        let app_slug = env::var("LOOM_GITHUB_APP_SLUG").unwrap_or_else(|_| DEFAULT_APP_SLUG.to_string());
-        
-        let base_url_raw = env::var("LOOM_GITHUB_APP_BASE_URL")
-            .unwrap_or_else(|_| DEFAULT_BASE_URL.to_string());
+        let app_slug =
+            env::var("LOOM_GITHUB_APP_SLUG").unwrap_or_else(|_| DEFAULT_APP_SLUG.to_string());
+
+        let base_url_raw =
+            env::var("LOOM_GITHUB_APP_BASE_URL").unwrap_or_else(|_| DEFAULT_BASE_URL.to_string());
         let base_url = Self::validate_and_normalize_base_url(&base_url_raw)?;
 
         Ok(Self {
@@ -203,7 +208,10 @@ impl GithubAppConfig {
     /// Get the installation URL for users to install the app.
     pub fn installation_url(&self) -> String {
         if self.base_url.as_str().starts_with(DEFAULT_BASE_URL) {
-            format!("https://github.com/apps/{}/installations/new", self.app_slug)
+            format!(
+                "https://github.com/apps/{}/installations/new",
+                self.app_slug
+            )
         } else {
             let base = self.base_url.as_str().trim_end_matches("/api/v3");
             format!("{}/apps/{}/installations/new", base, self.app_slug)
@@ -220,7 +228,10 @@ mod tests {
         let config = GithubAppConfig::new(12345, "test-private-key");
         assert_eq!(config.app_id(), 12345);
         assert_eq!(config.private_key_pem(), "test-private-key");
-        assert!(config.base_url().as_str().starts_with("https://api.github.com"));
+        assert!(config
+            .base_url()
+            .as_str()
+            .starts_with("https://api.github.com"));
         assert_eq!(config.app_slug(), DEFAULT_APP_SLUG);
         assert!(config.webhook_secret().is_none());
     }
@@ -232,7 +243,10 @@ mod tests {
             .with_app_slug("my-app")
             .with_webhook_secret("secret123");
 
-        assert_eq!(config.base_url().as_str(), "https://github.example.com/api/v3");
+        assert_eq!(
+            config.base_url().as_str(),
+            "https://github.example.com/api/v3"
+        );
         assert_eq!(config.app_slug(), "my-app");
         assert_eq!(config.webhook_secret(), Some("secret123"));
     }
@@ -259,16 +273,20 @@ mod tests {
 
     #[test]
     fn test_base_url_validation_accepts_github_enterprise() {
-        let result = GithubAppConfig::validate_and_normalize_base_url("https://github.example.com/api/v3");
+        let result =
+            GithubAppConfig::validate_and_normalize_base_url("https://github.example.com/api/v3");
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_with_base_url_invalid_keeps_previous() {
-        let config = GithubAppConfig::new(12345, "key")
-            .with_base_url("http://insecure.example.com");
-        
-        assert!(config.base_url().as_str().starts_with("https://api.github.com"));
+        let config =
+            GithubAppConfig::new(12345, "key").with_base_url("http://insecure.example.com");
+
+        assert!(config
+            .base_url()
+            .as_str()
+            .starts_with("https://api.github.com"));
     }
 
     #[test]
@@ -295,10 +313,10 @@ mod tests {
     /// This is critical for security - secrets must never appear in logs.
     #[test]
     fn test_debug_redacts_secrets() {
-        let config = GithubAppConfig::new(12345, "super-secret-key")
-            .with_webhook_secret("webhook-secret");
+        let config =
+            GithubAppConfig::new(12345, "super-secret-key").with_webhook_secret("webhook-secret");
         let debug_str = format!("{:?}", config);
-        
+
         assert!(!debug_str.contains("super-secret-key"));
         assert!(!debug_str.contains("webhook-secret"));
         assert!(debug_str.contains("[REDACTED]"));

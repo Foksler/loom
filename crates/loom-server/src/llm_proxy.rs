@@ -20,14 +20,20 @@ use crate::{api::AppState, error::ServerError};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum LlmStreamEvent {
-    TextDelta { content: String },
+    TextDelta {
+        content: String,
+    },
     ToolCallDelta {
         call_id: String,
         tool_name: String,
         arguments_fragment: String,
     },
-    Completed { response: LlmProxyResponse },
-    Error { message: String },
+    Completed {
+        response: LlmProxyResponse,
+    },
+    Error {
+        message: String,
+    },
 }
 
 /// Wire format for LLM response, serializable for proxy communication.
@@ -65,7 +71,9 @@ pub async fn proxy_anthropic_complete(
 
     if !service.has_anthropic() {
         tracing::error!("proxy_anthropic_complete: Anthropic provider not configured");
-        return Err(ServerError::ServiceUnavailable("Anthropic provider is not configured on the server".into()));
+        return Err(ServerError::ServiceUnavailable(
+            "Anthropic provider is not configured on the server".into(),
+        ));
     }
 
     tracing::debug!(
@@ -75,7 +83,10 @@ pub async fn proxy_anthropic_complete(
         "proxy_anthropic_complete: sending request"
     );
 
-    let response = service.complete_anthropic(request).await.map_err(map_llm_error)?;
+    let response = service
+        .complete_anthropic(request)
+        .await
+        .map_err(map_llm_error)?;
 
     tracing::info!(
         finish_reason = ?response.finish_reason,
@@ -99,7 +110,9 @@ pub async fn proxy_anthropic_stream(
 
     if !service.has_anthropic() {
         tracing::error!("proxy_anthropic_stream: Anthropic provider not configured");
-        return Err(ServerError::ServiceUnavailable("Anthropic provider is not configured on the server".into()));
+        return Err(ServerError::ServiceUnavailable(
+            "Anthropic provider is not configured on the server".into(),
+        ));
     }
 
     tracing::debug!(
@@ -109,7 +122,10 @@ pub async fn proxy_anthropic_stream(
         "proxy_anthropic_stream: starting stream"
     );
 
-    let stream = service.complete_streaming_anthropic(request).await.map_err(map_llm_error)?;
+    let stream = service
+        .complete_streaming_anthropic(request)
+        .await
+        .map_err(map_llm_error)?;
     Ok(create_sse_response(stream))
 }
 
@@ -126,7 +142,9 @@ pub async fn proxy_openai_complete(
 
     if !service.has_openai() {
         tracing::error!("proxy_openai_complete: OpenAI provider not configured");
-        return Err(ServerError::ServiceUnavailable("OpenAI provider is not configured on the server".into()));
+        return Err(ServerError::ServiceUnavailable(
+            "OpenAI provider is not configured on the server".into(),
+        ));
     }
 
     tracing::debug!(
@@ -136,7 +154,10 @@ pub async fn proxy_openai_complete(
         "proxy_openai_complete: sending request"
     );
 
-    let response = service.complete_openai(request).await.map_err(map_llm_error)?;
+    let response = service
+        .complete_openai(request)
+        .await
+        .map_err(map_llm_error)?;
 
     tracing::info!(
         finish_reason = ?response.finish_reason,
@@ -160,7 +181,9 @@ pub async fn proxy_openai_stream(
 
     if !service.has_openai() {
         tracing::error!("proxy_openai_stream: OpenAI provider not configured");
-        return Err(ServerError::ServiceUnavailable("OpenAI provider is not configured on the server".into()));
+        return Err(ServerError::ServiceUnavailable(
+            "OpenAI provider is not configured on the server".into(),
+        ));
     }
 
     tracing::debug!(
@@ -170,7 +193,10 @@ pub async fn proxy_openai_stream(
         "proxy_openai_stream: starting stream"
     );
 
-    let stream = service.complete_streaming_openai(request).await.map_err(map_llm_error)?;
+    let stream = service
+        .complete_streaming_openai(request)
+        .await
+        .map_err(map_llm_error)?;
     Ok(create_sse_response(stream))
 }
 
@@ -187,7 +213,9 @@ pub async fn proxy_vertex_complete(
 
     if !service.has_vertex() {
         tracing::error!("proxy_vertex_complete: Vertex provider not configured");
-        return Err(ServerError::ServiceUnavailable("Vertex provider is not configured on the server".into()));
+        return Err(ServerError::ServiceUnavailable(
+            "Vertex provider is not configured on the server".into(),
+        ));
     }
 
     tracing::debug!(
@@ -197,7 +225,10 @@ pub async fn proxy_vertex_complete(
         "proxy_vertex_complete: sending request"
     );
 
-    let response = service.complete_vertex(request).await.map_err(map_llm_error)?;
+    let response = service
+        .complete_vertex(request)
+        .await
+        .map_err(map_llm_error)?;
 
     tracing::info!(
         finish_reason = ?response.finish_reason,
@@ -221,7 +252,9 @@ pub async fn proxy_vertex_stream(
 
     if !service.has_vertex() {
         tracing::error!("proxy_vertex_stream: Vertex provider not configured");
-        return Err(ServerError::ServiceUnavailable("Vertex provider is not configured on the server".into()));
+        return Err(ServerError::ServiceUnavailable(
+            "Vertex provider is not configured on the server".into(),
+        ));
     }
 
     tracing::debug!(
@@ -231,12 +264,17 @@ pub async fn proxy_vertex_stream(
         "proxy_vertex_stream: starting stream"
     );
 
-    let stream = service.complete_streaming_vertex(request).await.map_err(map_llm_error)?;
+    let stream = service
+        .complete_streaming_vertex(request)
+        .await
+        .map_err(map_llm_error)?;
     Ok(create_sse_response(stream))
 }
 
 /// Creates an SSE response from an LlmStream.
-fn create_sse_response(stream: LlmStream) -> Sse<impl futures::Stream<Item = Result<Event, Infallible>>> {
+fn create_sse_response(
+    stream: LlmStream,
+) -> Sse<impl futures::Stream<Item = Result<Event, Infallible>>> {
     let (tx, rx) = tokio::sync::mpsc::channel::<Result<Event, Infallible>>(32);
 
     tokio::spawn(async move {

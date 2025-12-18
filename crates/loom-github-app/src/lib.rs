@@ -15,8 +15,8 @@ pub use config::GithubAppConfig;
 pub use error::GithubAppError;
 pub use loom_http_retry::RetryConfig;
 pub use types::{
-    AppInfoResponse, CodeSearchItem, CodeSearchRequest, CodeSearchResponse,
-    FileContents, FileContentsRequest, Installation, InstallationAccount,
-    InstallationStatusResponse, RepoInfoRequest, Repository,
+    AppInfoResponse, CodeSearchItem, CodeSearchRequest, CodeSearchResponse, FileContents,
+    FileContentsRequest, Installation, InstallationAccount, InstallationStatusResponse,
+    RepoInfoRequest, Repository,
 };
 pub use webhook::verify_webhook_signature;

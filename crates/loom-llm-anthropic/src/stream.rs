@@ -139,7 +139,7 @@ where
         }
 
         loop {
-            if let Some(event) = try_parse_event(&mut this.buffer, &mut this.state) {
+            if let Some(event) = try_parse_event(this.buffer, this.state) {
                 match event {
                     Ok(Some(llm_event)) => {
                         if matches!(llm_event, LlmEvent::Completed(_) | LlmEvent::Error(_)) {

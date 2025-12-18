@@ -146,7 +146,8 @@ mod tests {
     #[tokio::test]
     async fn parses_text_delta_event() {
         let sse_data = b"event: llm\ndata: {\"type\":\"text_delta\",\"content\":\"Hello\"}\n\n";
-        let stream = futures::stream::once(async { Ok::<_, reqwest::Error>(Bytes::from_static(sse_data)) });
+        let stream =
+            futures::stream::once(async { Ok::<_, reqwest::Error>(Bytes::from_static(sse_data)) });
         let mut proxy_stream = ProxyLlmStream::new(Box::pin(stream));
 
         let event = proxy_stream.next().await;
@@ -156,7 +157,8 @@ mod tests {
     #[tokio::test]
     async fn parses_tool_call_delta_event() {
         let sse_data = b"event: llm\ndata: {\"type\":\"tool_call_delta\",\"call_id\":\"123\",\"tool_name\":\"read\",\"arguments_fragment\":\"{\\\"path\\\":\"}\n\n";
-        let stream = futures::stream::once(async { Ok::<_, reqwest::Error>(Bytes::from_static(sse_data)) });
+        let stream =
+            futures::stream::once(async { Ok::<_, reqwest::Error>(Bytes::from_static(sse_data)) });
         let mut proxy_stream = ProxyLlmStream::new(Box::pin(stream));
 
         let event = proxy_stream.next().await;
@@ -170,11 +172,14 @@ mod tests {
     #[tokio::test]
     async fn parses_error_event() {
         let sse_data = b"event: llm\ndata: {\"type\":\"error\",\"message\":\"rate limited\"}\n\n";
-        let stream = futures::stream::once(async { Ok::<_, reqwest::Error>(Bytes::from_static(sse_data)) });
+        let stream =
+            futures::stream::once(async { Ok::<_, reqwest::Error>(Bytes::from_static(sse_data)) });
         let mut proxy_stream = ProxyLlmStream::new(Box::pin(stream));
 
         let event = proxy_stream.next().await;
-        assert!(matches!(event, Some(LlmEvent::Error(LlmError::Api(msg))) if msg == "rate limited"));
+        assert!(
+            matches!(event, Some(LlmEvent::Error(LlmError::Api(msg))) if msg == "rate limited")
+        );
     }
 
     #[tokio::test]
@@ -195,7 +200,8 @@ mod tests {
     #[tokio::test]
     async fn ignores_non_llm_events() {
         let sse_data = b"event: ping\ndata: {}\n\nevent: llm\ndata: {\"type\":\"text_delta\",\"content\":\"Hi\"}\n\n";
-        let stream = futures::stream::once(async { Ok::<_, reqwest::Error>(Bytes::from_static(sse_data)) });
+        let stream =
+            futures::stream::once(async { Ok::<_, reqwest::Error>(Bytes::from_static(sse_data)) });
         let mut proxy_stream = ProxyLlmStream::new(Box::pin(stream));
 
         let event = proxy_stream.next().await;
@@ -204,8 +210,8 @@ mod tests {
 
     mod proptest_streaming {
         use super::*;
-        use proptest::prelude::*;
         use proptest::collection::vec;
+        use proptest::prelude::*;
 
         fn sse_event_for_text(content: &str) -> String {
             let escaped = content.replace('\\', "\\\\").replace('"', "\\\"");

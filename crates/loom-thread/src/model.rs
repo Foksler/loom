@@ -87,16 +87,12 @@ impl From<&loom_core::Role> for MessageRole {
 /// - Public: may be listed/exposed publicly
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum ThreadVisibility {
+    #[default]
     Organization,
     Private,
     Public,
-}
-
-impl Default for ThreadVisibility {
-    fn default() -> Self {
-        ThreadVisibility::Organization
-    }
 }
 
 impl ThreadVisibility {
@@ -219,9 +215,7 @@ impl From<&loom_core::AgentState> for AgentStateSnapshot {
                     })
                     .collect(),
             },
-            loom_core::AgentState::Error {
-                error, retries, ..
-            } => Self {
+            loom_core::AgentState::Error { error, retries, .. } => Self {
                 kind: AgentStateKind::Error,
                 retries: *retries,
                 last_error: Some(error.to_string()),
@@ -310,7 +304,7 @@ pub struct Thread {
     /// Server-side visibility for synced threads
     #[serde(default)]
     pub visibility: ThreadVisibility,
-    
+
     /// If true, this thread is local-only and NEVER syncs to server
     #[serde(default)]
     pub is_private: bool,
@@ -653,14 +647,24 @@ mod tests {
         let restored: Thread = serde_json::from_str(&json).expect("deserialize");
 
         assert_eq!(restored.git_branch, Some("feature/my-branch".to_string()));
-        assert_eq!(restored.git_remote_url, Some("github.com/owner/repo".to_string()));
+        assert_eq!(
+            restored.git_remote_url,
+            Some("github.com/owner/repo".to_string())
+        );
 
         let summary = ThreadSummary::from(&thread);
         let summary_json = serde_json::to_string(&summary).expect("serialize summary");
-        let restored_summary: ThreadSummary = serde_json::from_str(&summary_json).expect("deserialize summary");
+        let restored_summary: ThreadSummary =
+            serde_json::from_str(&summary_json).expect("deserialize summary");
 
-        assert_eq!(restored_summary.git_branch, Some("feature/my-branch".to_string()));
-        assert_eq!(restored_summary.git_remote_url, Some("github.com/owner/repo".to_string()));
+        assert_eq!(
+            restored_summary.git_branch,
+            Some("feature/my-branch".to_string())
+        );
+        assert_eq!(
+            restored_summary.git_remote_url,
+            Some("github.com/owner/repo".to_string())
+        );
     }
 
     /// **Property: Git metadata None values are omitted from JSON**
@@ -722,9 +726,18 @@ mod tests {
         let json = serde_json::to_string(&thread).expect("serialize");
         let restored: Thread = serde_json::from_str(&json).expect("deserialize");
 
-        assert_eq!(restored.git_initial_branch, Some("feature/add-auth".to_string()));
-        assert_eq!(restored.git_initial_commit_sha, Some("abc1234def5678".to_string()));
-        assert_eq!(restored.git_current_commit_sha, Some("def5678abc1234".to_string()));
+        assert_eq!(
+            restored.git_initial_branch,
+            Some("feature/add-auth".to_string())
+        );
+        assert_eq!(
+            restored.git_initial_commit_sha,
+            Some("abc1234def5678".to_string())
+        );
+        assert_eq!(
+            restored.git_current_commit_sha,
+            Some("def5678abc1234".to_string())
+        );
         assert_eq!(restored.git_start_dirty, Some(true));
         assert_eq!(restored.git_end_dirty, Some(false));
         assert_eq!(restored.git_commits.len(), 3);
@@ -734,9 +747,16 @@ mod tests {
 
         let summary = ThreadSummary::from(&thread);
         let summary_json = serde_json::to_string(&summary).expect("serialize summary");
-        let restored_summary: ThreadSummary = serde_json::from_str(&summary_json).expect("deserialize summary");
+        let restored_summary: ThreadSummary =
+            serde_json::from_str(&summary_json).expect("deserialize summary");
 
-        assert_eq!(restored_summary.git_initial_commit_sha, Some("abc1234def5678".to_string()));
-        assert_eq!(restored_summary.git_current_commit_sha, Some("def5678abc1234".to_string()));
+        assert_eq!(
+            restored_summary.git_initial_commit_sha,
+            Some("abc1234def5678".to_string())
+        );
+        assert_eq!(
+            restored_summary.git_current_commit_sha,
+            Some("def5678abc1234".to_string())
+        );
     }
 }

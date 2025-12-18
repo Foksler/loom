@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use loom_core::{ToolContext, ToolError};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::Tool;
 
@@ -27,7 +27,7 @@ impl ReadFileTool {
         Self
     }
 
-    fn validate_path(path: &PathBuf, workspace_root: &PathBuf) -> Result<PathBuf, ToolError> {
+    fn validate_path(path: &PathBuf, workspace_root: &Path) -> Result<PathBuf, ToolError> {
         let absolute_path = if path.is_absolute() {
             path.clone()
         } else {
@@ -40,7 +40,7 @@ impl ReadFileTool {
 
         let workspace_canonical = workspace_root
             .canonicalize()
-            .map_err(|_| ToolError::FileNotFound(workspace_root.clone()))?;
+            .map_err(|_| ToolError::FileNotFound(workspace_root.to_path_buf()))?;
 
         if !canonical.starts_with(&workspace_canonical) {
             return Err(ToolError::PathOutsideWorkspace(canonical));

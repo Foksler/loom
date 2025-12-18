@@ -81,8 +81,8 @@ pub fn verify_webhook_signature(
 ///
 /// The signature in the format `sha256=<hex>`
 pub fn compute_webhook_signature(secret: &str, body: &[u8]) -> String {
-    let mut mac = HmacSha256::new_from_slice(secret.as_bytes())
-        .expect("HMAC can accept any key length");
+    let mut mac =
+        HmacSha256::new_from_slice(secret.as_bytes()).expect("HMAC can accept any key length");
     mac.update(body);
     let result = mac.finalize();
     format!("sha256={}", hex::encode(result.into_bytes()))
@@ -108,21 +108,30 @@ mod tests {
         let signature = "sha256=0000000000000000000000000000000000000000000000000000000000000000";
         let result = verify_webhook_signature(TEST_SECRET, signature, TEST_BODY);
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), GithubAppError::InvalidWebhookSignature));
+        assert!(matches!(
+            result.unwrap_err(),
+            GithubAppError::InvalidWebhookSignature
+        ));
     }
 
     #[test]
     fn test_verify_wrong_prefix() {
         let result = verify_webhook_signature(TEST_SECRET, "sha1=abc123", TEST_BODY);
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), GithubAppError::InvalidWebhookSignature));
+        assert!(matches!(
+            result.unwrap_err(),
+            GithubAppError::InvalidWebhookSignature
+        ));
     }
 
     #[test]
     fn test_verify_invalid_hex() {
         let result = verify_webhook_signature(TEST_SECRET, "sha256=not-valid-hex", TEST_BODY);
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), GithubAppError::InvalidWebhookSignature));
+        assert!(matches!(
+            result.unwrap_err(),
+            GithubAppError::InvalidWebhookSignature
+        ));
     }
 
     #[test]
@@ -131,7 +140,10 @@ mod tests {
         let tampered_body = b"{\"action\": \"deleted\"}";
         let result = verify_webhook_signature(TEST_SECRET, &signature, tampered_body);
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), GithubAppError::InvalidWebhookSignature));
+        assert!(matches!(
+            result.unwrap_err(),
+            GithubAppError::InvalidWebhookSignature
+        ));
     }
 
     #[test]
@@ -139,7 +151,10 @@ mod tests {
         let signature = compute_webhook_signature(TEST_SECRET, TEST_BODY);
         let result = verify_webhook_signature("wrong-secret", &signature, TEST_BODY);
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), GithubAppError::InvalidWebhookSignature));
+        assert!(matches!(
+            result.unwrap_err(),
+            GithubAppError::InvalidWebhookSignature
+        ));
     }
 
     #[test]
@@ -173,12 +188,12 @@ mod tests {
             tamper_index in 0usize..500usize
         ) {
             let signature = compute_webhook_signature(&secret, &body);
-            
+
             // Create tampered body by flipping a byte
             let mut tampered = body.clone();
             let idx = tamper_index % tampered.len();
             tampered[idx] = tampered[idx].wrapping_add(1);
-            
+
             // If the body changed, verification should fail
             if tampered != body {
                 let result = verify_webhook_signature(&secret, &signature, &tampered);
@@ -213,7 +228,7 @@ mod tests {
             let signature = compute_webhook_signature(&secret, &body);
             prop_assert!(signature.starts_with("sha256="));
             prop_assert_eq!(signature.len(), "sha256=".len() + 64);
-            
+
             // Verify all characters after prefix are hex
             let hex_part = &signature["sha256=".len()..];
             prop_assert!(hex_part.chars().all(|c| c.is_ascii_hexdigit()));

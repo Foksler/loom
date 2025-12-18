@@ -137,8 +137,12 @@ fn try_parse_next_event(
             if data == "[DONE]" {
                 debug!("Received [DONE] marker");
                 *finished = true;
-                let response =
-                    build_final_response(accumulated_content, accumulated_tool_calls, usage, finish_reason);
+                let response = build_final_response(
+                    accumulated_content,
+                    accumulated_tool_calls,
+                    usage,
+                    finish_reason,
+                );
                 return Some(LlmEvent::Completed(response));
             }
 
@@ -167,8 +171,7 @@ fn try_parse_next_event(
 
                         if let Some(tool_calls) = &choice.delta.tool_calls {
                             for tc_delta in tool_calls {
-                                let acc =
-                                    accumulated_tool_calls.entry(tc_delta.index).or_default();
+                                let acc = accumulated_tool_calls.entry(tc_delta.index).or_default();
 
                                 if let Some(id) = &tc_delta.id {
                                     acc.id = id.clone();
@@ -202,9 +205,7 @@ fn try_parse_next_event(
                             message = %error_response.error.message,
                             "OpenAI API error in stream"
                         );
-                        return Some(LlmEvent::Error(LlmError::Api(
-                            error_response.error.message,
-                        )));
+                        return Some(LlmEvent::Error(LlmError::Api(error_response.error.message)));
                     }
 
                     warn!(error = %e, data = data, "Failed to parse stream chunk");

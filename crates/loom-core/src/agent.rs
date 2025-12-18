@@ -35,6 +35,7 @@ pub enum AgentAction {
 pub struct Agent {
     state: AgentState,
     config: AgentConfig,
+    #[allow(dead_code)]
     llm: Arc<dyn LlmClient>,
     tools: Vec<ToolDefinition>,
 }
@@ -139,9 +140,10 @@ impl Agent {
             ) => AgentAction::DisplayMessage(content),
 
             // CallingLlm + LlmEvent::ToolCallDelta -> stay in CallingLlm
-            (AgentState::CallingLlm { .. }, AgentEvent::LlmEvent(LlmEvent::ToolCallDelta { .. })) => {
-                AgentAction::WaitForInput
-            }
+            (
+                AgentState::CallingLlm { .. },
+                AgentEvent::LlmEvent(LlmEvent::ToolCallDelta { .. }),
+            ) => AgentAction::WaitForInput,
 
             // CallingLlm + LlmEvent::Completed -> ProcessingLlmResponse
             (
@@ -266,7 +268,8 @@ impl Agent {
                         {
                             let content = match outcome {
                                 ToolExecutionOutcome::Success { output, .. } => {
-                                    serde_json::to_string(output).unwrap_or_else(|_| "{}".to_string())
+                                    serde_json::to_string(output)
+                                        .unwrap_or_else(|_| "{}".to_string())
                                 }
                                 ToolExecutionOutcome::Error { error, .. } => {
                                     format!("Error: {}", error)
@@ -383,7 +386,7 @@ mod tests {
     use proptest::prelude::*;
 
     /// Mock LLM client for testing agent state transitions.
-    /// 
+    ///
     /// This mock is intentionally unimplemented as the Agent tests focus on
     /// state machine transitions triggered by events, not actual LLM calls.
     struct MockLlmClient;
@@ -430,7 +433,7 @@ mod tests {
     }
 
     /// **Test: Agent starts in WaitingForUserInput state**
-    /// 
+    ///
     /// This test verifies the fundamental invariant that a newly created agent
     /// is always in the WaitingForUserInput state. This is critical because:
     /// - The agent must be ready to receive user input immediately after creation
@@ -439,7 +442,7 @@ mod tests {
     #[test]
     fn test_initial_state_is_waiting_for_user_input() {
         let agent = create_test_agent();
-        
+
         match agent.state() {
             AgentState::WaitingForUserInput { conversation } => {
                 assert!(
@@ -447,32 +450,32 @@ mod tests {
                     "new agent should have empty conversation"
                 );
             }
-            other => panic!(
-                "expected WaitingForUserInput, got {}",
-                other.name()
-            ),
+            other => panic!("expected WaitingForUserInput, got {}", other.name()),
         }
     }
 
     /// **Test: UserInput event triggers transition to CallingLlm with SendLlmRequest action**
-    /// 
+    ///
     /// This test verifies the primary user interaction flow:
     /// - When user provides input, agent must transition to CallingLlm
     /// - The action must be SendLlmRequest containing the user's message
     /// - The request should include all configured parameters (model, tools, etc.)
-    /// 
+    ///
     /// This is essential because it's the entry point for all agent interactions.
     #[test]
     fn test_user_input_transitions_to_calling_llm() {
         let mut agent = create_test_agent();
         let user_message = Message::user("Hello, agent!");
-        
+
         let action = agent
             .handle_event(AgentEvent::UserInput(user_message.clone()))
             .expect("handle_event should succeed");
-        
+
         match agent.state() {
-            AgentState::CallingLlm { conversation, retries } => {
+            AgentState::CallingLlm {
+                conversation,
+                retries,
+            } => {
                 assert_eq!(*retries, 0, "retries should start at 0");
                 assert_eq!(
                     conversation.messages.len(),
@@ -484,7 +487,7 @@ mod tests {
             }
             other => panic!("expected CallingLlm, got {}", other.name()),
         }
-        
+
         match action {
             AgentAction::SendLlmRequest(request) => {
                 assert_eq!(request.messages.len(), 1);
@@ -495,32 +498,32 @@ mod tests {
     }
 
     /// **Test: TextDelta event keeps agent in CallingLlm with DisplayMessage action**
-    /// 
+    ///
     /// This test verifies streaming response handling:
     /// - TextDelta events should NOT cause state transitions
     /// - The agent must emit DisplayMessage actions for UI rendering
     /// - Multiple TextDeltas should be handled without state changes
-    /// 
+    ///
     /// Critical for ensuring streaming LLM responses display correctly to users.
     #[test]
     fn test_text_delta_stays_in_calling_llm() {
         let mut agent = create_test_agent();
-        
+
         agent
             .handle_event(AgentEvent::UserInput(Message::user("test")))
             .expect("handle_event should succeed");
-        
+
         let action = agent
             .handle_event(AgentEvent::LlmEvent(LlmEvent::TextDelta {
                 content: "Hello".to_string(),
             }))
             .expect("handle_event should succeed");
-        
+
         assert!(
             matches!(agent.state(), AgentState::CallingLlm { .. }),
             "should stay in CallingLlm after TextDelta"
         );
-        
+
         match action {
             AgentAction::DisplayMessage(content) => {
                 assert_eq!(content, "Hello");
@@ -530,26 +533,26 @@ mod tests {
     }
 
     /// **Test: Completed event transitions to WaitingForUserInput when no tools**
-    /// 
+    ///
     /// This test verifies the completion flow for simple responses:
     /// - When LLM responds without tool calls, agent should return to idle
     /// - The response message must be appended to conversation history
     /// - Agent should emit WaitForInput action
-    /// 
+    ///
     /// This is the happy path for conversational interactions without tool use.
     #[test]
     fn test_completed_without_tools_transitions_to_waiting() {
         let mut agent = create_test_agent();
-        
+
         agent
             .handle_event(AgentEvent::UserInput(Message::user("test")))
             .expect("handle_event should succeed");
-        
+
         let response = create_simple_response("I'm a helpful assistant!");
         let action = agent
             .handle_event(AgentEvent::LlmEvent(LlmEvent::Completed(response)))
             .expect("handle_event should succeed");
-        
+
         match agent.state() {
             AgentState::WaitingForUserInput { conversation } => {
                 assert_eq!(
@@ -561,7 +564,7 @@ mod tests {
             }
             other => panic!("expected WaitingForUserInput, got {}", other.name()),
         }
-        
+
         assert!(
             matches!(action, AgentAction::WaitForInput),
             "expected WaitForInput action"
@@ -569,32 +572,32 @@ mod tests {
     }
 
     /// **Test: Completed event transitions to ExecutingTools when tools present**
-    /// 
+    ///
     /// This test verifies the tool execution flow initiation:
     /// - When LLM requests tool calls, agent must transition to ExecutingTools
     /// - The action must be ExecuteTools with all requested tool calls
     /// - Tool executions should be tracked in pending state
-    /// 
+    ///
     /// Essential for the agent's ability to use tools as requested by the LLM.
     #[test]
     fn test_completed_with_tools_transitions_to_executing_tools() {
         let mut agent = create_test_agent();
-        
+
         agent
             .handle_event(AgentEvent::UserInput(Message::user("read a file")))
             .expect("handle_event should succeed");
-        
+
         let tool_calls = vec![ToolCall {
             id: "call_123".to_string(),
             tool_name: "read_file".to_string(),
             arguments_json: serde_json::json!({"path": "/test.txt"}),
         }];
         let response = create_response_with_tools(tool_calls.clone());
-        
+
         let action = agent
             .handle_event(AgentEvent::LlmEvent(LlmEvent::Completed(response)))
             .expect("handle_event should succeed");
-        
+
         match agent.state() {
             AgentState::ExecutingTools { executions, .. } => {
                 assert_eq!(executions.len(), 1);
@@ -603,7 +606,7 @@ mod tests {
             }
             other => panic!("expected ExecutingTools, got {}", other.name()),
         }
-        
+
         match action {
             AgentAction::ExecuteTools(calls) => {
                 assert_eq!(calls.len(), 1);
@@ -614,39 +617,37 @@ mod tests {
     }
 
     /// **Test: LLM error with retries remaining transitions to Error state**
-    /// 
+    ///
     /// This test verifies error handling with retry capability:
     /// - Errors should transition to Error state when retries remain
     /// - Retry count should be incremented
     /// - Agent should wait for retry timeout (WaitForInput action)
-    /// 
+    ///
     /// Critical for resilience against transient LLM failures.
     #[test]
     fn test_llm_error_with_retries_transitions_to_error() {
         let mut config = AgentConfig::default();
         config.max_retries = 3;
         let mut agent = create_test_agent_with_config(config);
-        
+
         agent
             .handle_event(AgentEvent::UserInput(Message::user("test")))
             .expect("handle_event should succeed");
-        
+
         let action = agent
             .handle_event(AgentEvent::LlmEvent(LlmEvent::Error(LlmError::Timeout)))
             .expect("handle_event should succeed");
-        
+
         match agent.state() {
             AgentState::Error {
-                retries,
-                origin,
-                ..
+                retries, origin, ..
             } => {
                 assert_eq!(*retries, 1, "retry count should be incremented");
                 assert_eq!(*origin, ErrorOrigin::Llm);
             }
             other => panic!("expected Error state, got {}", other.name()),
         }
-        
+
         assert!(
             matches!(action, AgentAction::WaitForInput),
             "should wait for retry timeout"
@@ -654,42 +655,42 @@ mod tests {
     }
 
     /// **Test: LLM error at max retries transitions to WaitingForUserInput with error display**
-    /// 
+    ///
     /// This test verifies error handling when retries are exhausted:
     /// - When max_retries is reached, agent should give up and return to idle
     /// - Error must be displayed to user via DisplayError action
     /// - Agent should be ready to accept new user input
-    /// 
+    ///
     /// Essential for preventing infinite retry loops and informing users of failures.
     #[test]
     fn test_llm_error_at_max_retries_transitions_to_waiting() {
         let mut config = AgentConfig::default();
         config.max_retries = 2;
         let mut agent = create_test_agent_with_config(config);
-        
+
         agent
             .handle_event(AgentEvent::UserInput(Message::user("test")))
             .expect("handle_event should succeed");
-        
+
         agent
             .handle_event(AgentEvent::LlmEvent(LlmEvent::Error(LlmError::Timeout)))
             .expect("handle_event should succeed");
-        
+
         agent
             .handle_event(AgentEvent::RetryTimeoutFired)
             .expect("handle_event should succeed");
-        
+
         let action = agent
             .handle_event(AgentEvent::LlmEvent(LlmEvent::Error(LlmError::Api(
                 "server error".to_string(),
             ))))
             .expect("handle_event should succeed");
-        
+
         assert!(
             matches!(agent.state(), AgentState::WaitingForUserInput { .. }),
             "should return to WaitingForUserInput after max retries"
         );
-        
+
         match action {
             AgentAction::DisplayError(msg) => {
                 assert!(
@@ -702,43 +703,43 @@ mod tests {
     }
 
     /// **Test: RetryTimeoutFired in Error state transitions back to CallingLlm**
-    /// 
+    ///
     /// This test verifies the retry mechanism:
     /// - RetryTimeoutFired should trigger a retry attempt
     /// - Agent should return to CallingLlm with preserved retry count
     /// - A new SendLlmRequest action should be emitted
-    /// 
+    ///
     /// Critical for automatic recovery from transient failures.
     #[test]
     fn test_retry_timeout_fired_transitions_to_calling_llm() {
         let mut config = AgentConfig::default();
         config.max_retries = 3;
         let mut agent = create_test_agent_with_config(config);
-        
+
         agent
             .handle_event(AgentEvent::UserInput(Message::user("test")))
             .expect("handle_event should succeed");
-        
+
         agent
             .handle_event(AgentEvent::LlmEvent(LlmEvent::Error(LlmError::Timeout)))
             .expect("handle_event should succeed");
-        
+
         assert!(
             matches!(agent.state(), AgentState::Error { retries: 1, .. }),
             "should be in Error state with 1 retry"
         );
-        
+
         let action = agent
             .handle_event(AgentEvent::RetryTimeoutFired)
             .expect("handle_event should succeed");
-        
+
         match agent.state() {
             AgentState::CallingLlm { retries, .. } => {
                 assert_eq!(*retries, 1, "retry count should be preserved");
             }
             other => panic!("expected CallingLlm, got {}", other.name()),
         }
-        
+
         assert!(
             matches!(action, AgentAction::SendLlmRequest(_)),
             "should emit SendLlmRequest for retry"
@@ -746,21 +747,21 @@ mod tests {
     }
 
     /// **Test: All tools completed transitions to CallingLlm with tool results**
-    /// 
+    ///
     /// This test verifies the tool completion flow:
     /// - When all tools complete, agent should call LLM with results
     /// - Tool results must be added to conversation as Tool messages
     /// - Agent should transition to CallingLlm to continue the conversation
-    /// 
+    ///
     /// Essential for the agentic loop where LLM can use tool results.
     #[test]
     fn test_all_tools_completed_transitions_to_calling_llm() {
         let mut agent = create_test_agent();
-        
+
         agent
             .handle_event(AgentEvent::UserInput(Message::user("read a file")))
             .expect("handle_event should succeed");
-        
+
         let tool_calls = vec![
             ToolCall {
                 id: "call_1".to_string(),
@@ -774,11 +775,11 @@ mod tests {
             },
         ];
         let response = create_response_with_tools(tool_calls);
-        
+
         agent
             .handle_event(AgentEvent::LlmEvent(LlmEvent::Completed(response)))
             .expect("handle_event should succeed");
-        
+
         agent
             .handle_event(AgentEvent::ToolCompleted {
                 call_id: "call_1".to_string(),
@@ -788,12 +789,12 @@ mod tests {
                 },
             })
             .expect("handle_event should succeed");
-        
+
         assert!(
             matches!(agent.state(), AgentState::ExecutingTools { .. }),
             "should still be executing tools (one remaining)"
         );
-        
+
         let action = agent
             .handle_event(AgentEvent::ToolCompleted {
                 call_id: "call_2".to_string(),
@@ -803,9 +804,12 @@ mod tests {
                 },
             })
             .expect("handle_event should succeed");
-        
+
         match agent.state() {
-            AgentState::CallingLlm { conversation, retries } => {
+            AgentState::CallingLlm {
+                conversation,
+                retries,
+            } => {
                 assert_eq!(*retries, 0, "retries should reset after tools complete");
                 let tool_msgs: Vec<_> = conversation
                     .messages
@@ -816,7 +820,7 @@ mod tests {
             }
             other => panic!("expected CallingLlm, got {}", other.name()),
         }
-        
+
         assert!(
             matches!(action, AgentAction::SendLlmRequest(_)),
             "should send LLM request with tool results"
@@ -824,21 +828,21 @@ mod tests {
     }
 
     /// **Test: ShutdownRequested from any state transitions to ShuttingDown**
-    /// 
+    ///
     /// This test verifies graceful shutdown from all possible states:
     /// - ShutdownRequested must always succeed regardless of current state
     /// - Agent must transition to ShuttingDown state
     /// - Shutdown action must be emitted
-    /// 
+    ///
     /// Critical for clean application termination and resource cleanup.
     #[test]
     fn test_shutdown_requested_from_waiting_for_input() {
         let mut agent = create_test_agent();
-        
+
         let action = agent
             .handle_event(AgentEvent::ShutdownRequested)
             .expect("handle_event should succeed");
-        
+
         assert!(
             matches!(agent.state(), AgentState::ShuttingDown),
             "should transition to ShuttingDown"
@@ -852,15 +856,15 @@ mod tests {
     #[test]
     fn test_shutdown_requested_from_calling_llm() {
         let mut agent = create_test_agent();
-        
+
         agent
             .handle_event(AgentEvent::UserInput(Message::user("test")))
             .expect("handle_event should succeed");
-        
+
         let action = agent
             .handle_event(AgentEvent::ShutdownRequested)
             .expect("handle_event should succeed");
-        
+
         assert!(
             matches!(agent.state(), AgentState::ShuttingDown),
             "should transition to ShuttingDown from CallingLlm"
@@ -871,18 +875,18 @@ mod tests {
     #[test]
     fn test_shutdown_requested_from_error_state() {
         let mut agent = create_test_agent();
-        
+
         agent
             .handle_event(AgentEvent::UserInput(Message::user("test")))
             .expect("handle_event should succeed");
         agent
             .handle_event(AgentEvent::LlmEvent(LlmEvent::Error(LlmError::Timeout)))
             .expect("handle_event should succeed");
-        
+
         let action = agent
             .handle_event(AgentEvent::ShutdownRequested)
             .expect("handle_event should succeed");
-        
+
         assert!(
             matches!(agent.state(), AgentState::ShuttingDown),
             "should transition to ShuttingDown from Error"
@@ -891,21 +895,21 @@ mod tests {
     }
 
     /// **Test: Invalid state transitions are handled gracefully**
-    /// 
+    ///
     /// This test verifies robustness against invalid event sequences:
     /// - Invalid transitions should not crash the agent
     /// - Agent should remain in current state or return to safe state
     /// - WaitForInput action should be returned as a safe default
-    /// 
+    ///
     /// Important for system stability under unexpected conditions.
     #[test]
     fn test_invalid_transition_returns_wait_for_input() {
         let mut agent = create_test_agent();
-        
+
         let action = agent
             .handle_event(AgentEvent::RetryTimeoutFired)
             .expect("handle_event should succeed");
-        
+
         assert!(
             matches!(agent.state(), AgentState::WaitingForUserInput { .. }),
             "should stay in WaitingForUserInput"
@@ -918,7 +922,7 @@ mod tests {
 
     proptest! {
         /// **Property test: Agent always starts in WaitingForUserInput regardless of config**
-        /// 
+        ///
         /// This property verifies that the initial state invariant holds for all
         /// valid configurations. Essential for ensuring consistent agent behavior
         /// across different deployment configurations.
@@ -933,7 +937,7 @@ mod tests {
                 ..AgentConfig::default()
             };
             let agent = create_test_agent_with_config(config);
-            
+
             prop_assert!(
                 matches!(agent.state(), AgentState::WaitingForUserInput { .. }),
                 "agent must start in WaitingForUserInput"
@@ -941,11 +945,11 @@ mod tests {
         }
 
         /// **Property test: UserInput always transitions from WaitingForUserInput to CallingLlm**
-        /// 
+        ///
         /// This property verifies that user input handling is deterministic:
         /// - Any valid user message must trigger CallingLlm transition
         /// - The message content must be preserved in the request
-        /// 
+        ///
         /// Ensures the fundamental user interaction contract is maintained.
         #[test]
         fn user_input_always_triggers_llm_call(
@@ -953,14 +957,14 @@ mod tests {
         ) {
             let mut agent = create_test_agent();
             let message = Message::user(&content);
-            
+
             let action = agent.handle_event(AgentEvent::UserInput(message)).unwrap();
-            
+
             prop_assert!(
                 matches!(agent.state(), AgentState::CallingLlm { .. }),
                 "must transition to CallingLlm"
             );
-            
+
             if let AgentAction::SendLlmRequest(request) = action {
                 prop_assert_eq!(
                     request.messages.last().map(|m| m.content.as_str()),
@@ -973,11 +977,11 @@ mod tests {
         }
 
         /// **Property test: Retry count never exceeds max_retries**
-        /// 
+        ///
         /// This property verifies the retry bound invariant:
         /// - After max_retries errors, agent must stop retrying
         /// - Agent should transition to WaitingForUserInput at the limit
-        /// 
+        ///
         /// Prevents infinite retry loops that could exhaust resources.
         #[test]
         fn retry_count_bounded_by_max_retries(
@@ -988,24 +992,24 @@ mod tests {
                 ..AgentConfig::default()
             };
             let mut agent = create_test_agent_with_config(config);
-            
+
             agent.handle_event(AgentEvent::UserInput(Message::user("test"))).unwrap();
-            
+
             for _ in 0..max_retries {
                 let result = agent.handle_event(
                     AgentEvent::LlmEvent(LlmEvent::Error(LlmError::Timeout))
                 );
                 prop_assert!(result.is_ok());
-                
+
                 if matches!(agent.state(), AgentState::Error { .. }) {
                     agent.handle_event(AgentEvent::RetryTimeoutFired).unwrap();
                 }
             }
-            
+
             agent.handle_event(
                 AgentEvent::LlmEvent(LlmEvent::Error(LlmError::Timeout))
             ).unwrap();
-            
+
             prop_assert!(
                 matches!(agent.state(), AgentState::WaitingForUserInput { .. }),
                 "must return to WaitingForUserInput after max retries"
@@ -1013,31 +1017,31 @@ mod tests {
         }
 
         /// **Property test: ShutdownRequested always results in ShuttingDown state**
-        /// 
+        ///
         /// This property verifies shutdown is always possible:
         /// - From any reachable state, ShutdownRequested must succeed
         /// - Result must always be ShuttingDown state
-        /// 
+        ///
         /// Critical safety property for graceful termination.
         #[test]
         fn shutdown_always_succeeds(
             num_user_inputs in 0usize..3,
         ) {
             let mut agent = create_test_agent();
-            
+
             for i in 0..num_user_inputs {
                 agent.handle_event(AgentEvent::UserInput(
                     Message::user(format!("message {}", i))
                 )).unwrap();
-                
+
                 let response = create_simple_response("response");
                 agent.handle_event(
                     AgentEvent::LlmEvent(LlmEvent::Completed(response))
                 ).unwrap();
             }
-            
+
             let action = agent.handle_event(AgentEvent::ShutdownRequested).unwrap();
-            
+
             prop_assert!(
                 matches!(agent.state(), AgentState::ShuttingDown),
                 "must be in ShuttingDown state"

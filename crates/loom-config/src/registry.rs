@@ -17,7 +17,9 @@ pub struct ConfigRegistry {
 impl ConfigRegistry {
     /// Create a new empty registry.
     pub fn new() -> Self {
-        Self { sources: Vec::new() }
+        Self {
+            sources: Vec::new(),
+        }
     }
 
     /// Register a configuration source.
@@ -35,7 +37,10 @@ impl ConfigRegistry {
         let mut sorted_sources: Vec<_> = self.sources.iter().collect();
         sorted_sources.sort_by_key(|s| s.precedence());
 
-        info!(source_count = sorted_sources.len(), "loading configuration from sources");
+        info!(
+            source_count = sorted_sources.len(),
+            "loading configuration from sources"
+        );
 
         // Merge all layers
         let mut merged = ConfigLayer::default();
@@ -89,7 +94,7 @@ mod tests {
     fn test_registry_registers_sources() {
         let mut registry = ConfigRegistry::new();
         assert_eq!(registry.source_count(), 0);
-        
+
         registry.register(Box::new(DefaultsSource));
         assert_eq!(registry.source_count(), 1);
     }
@@ -98,7 +103,7 @@ mod tests {
     fn test_registry_loads_with_defaults() {
         let mut registry = ConfigRegistry::new();
         registry.register(Box::new(DefaultsSource));
-        
+
         let paths = PathsConfig {
             user_config_file: "/tmp/test/config.toml".into(),
             system_config_file: "/etc/loom/config.toml".into(),
@@ -109,7 +114,7 @@ mod tests {
 
         let config = registry.load(paths);
         assert!(config.is_ok());
-        
+
         let config = config.unwrap();
         assert_eq!(config.global.default_provider, "anthropic");
     }
@@ -126,9 +131,13 @@ mod tests {
         }
 
         impl ConfigSource for MockSource {
-            fn name(&self) -> &'static str { self.name }
-            fn precedence(&self) -> Precedence { self.precedence }
-            
+            fn name(&self) -> &'static str {
+                self.name
+            }
+            fn precedence(&self) -> Precedence {
+                self.precedence
+            }
+
             fn load(&self) -> Result<ConfigLayer, ConfigError> {
                 let mut layer = ConfigLayer::default();
                 layer.global = Some(crate::layer::GlobalLayer {
@@ -140,7 +149,7 @@ mod tests {
         }
 
         let mut registry = ConfigRegistry::new();
-        
+
         // Add in wrong order - registry should sort
         registry.register(Box::new(MockSource {
             name: "cli",
@@ -162,7 +171,7 @@ mod tests {
         };
 
         let config = registry.load(paths).unwrap();
-        
+
         // CLI has higher precedence, so its value wins
         assert_eq!(config.global.default_provider, "cli-provider");
     }

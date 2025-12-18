@@ -186,9 +186,8 @@ fn get_remote_url(path: &Path, remote: &str) -> Result<Option<String>, GitError>
 }
 
 fn first_remote_name(path: &Path) -> Result<Option<String>, GitError> {
-    run_git(path, &["remote"]).map(|output| {
-        output.and_then(|s| s.lines().next().map(|s| s.to_string()))
-    })
+    run_git(path, &["remote"])
+        .map(|output| output.and_then(|s| s.lines().next().map(|s| s.to_string())))
 }
 
 fn run_git(path: &Path, args: &[&str]) -> Result<Option<String>, GitError> {
@@ -347,7 +346,10 @@ mod tests {
         assert!(result.is_some());
 
         let metadata = result.unwrap();
-        assert_eq!(metadata.remote_slug, Some("github.com/owner/repo".to_string()));
+        assert_eq!(
+            metadata.remote_slug,
+            Some("github.com/owner/repo".to_string())
+        );
     }
 
     /// Test: Origin is preferred over other remotes.
@@ -365,7 +367,10 @@ mod tests {
 
         let result = detect_repo_metadata(temp.path()).unwrap();
         let metadata = result.unwrap();
-        assert_eq!(metadata.remote_slug, Some("github.com/origin/repo".to_string()));
+        assert_eq!(
+            metadata.remote_slug,
+            Some("github.com/origin/repo".to_string())
+        );
     }
 
     /// Test: Upstream is used when origin is absent.
@@ -383,7 +388,10 @@ mod tests {
 
         let result = detect_repo_metadata(temp.path()).unwrap();
         let metadata = result.unwrap();
-        assert_eq!(metadata.remote_slug, Some("github.com/upstream/repo".to_string()));
+        assert_eq!(
+            metadata.remote_slug,
+            Some("github.com/upstream/repo".to_string())
+        );
     }
 
     /// Test: Falls back to first remote when origin/upstream absent.
@@ -399,7 +407,10 @@ mod tests {
 
         let result = detect_repo_metadata(temp.path()).unwrap();
         let metadata = result.unwrap();
-        assert_eq!(metadata.remote_slug, Some("github.com/custom/repo".to_string()));
+        assert_eq!(
+            metadata.remote_slug,
+            Some("github.com/custom/repo".to_string())
+        );
     }
 
     /// Test: current_branch returns None for detached HEAD.
@@ -442,7 +453,10 @@ mod tests {
         assert!(result.is_some());
 
         let metadata = result.unwrap();
-        assert_eq!(metadata.remote_slug, Some("github.com/owner/repo".to_string()));
+        assert_eq!(
+            metadata.remote_slug,
+            Some("github.com/owner/repo".to_string())
+        );
     }
 
     /// Test: head_commit_sha returns full 40-character SHA in a git repository.
@@ -461,7 +475,10 @@ mod tests {
 
         let sha = sha.unwrap();
         assert_eq!(sha.len(), 40, "SHA should be full 40 characters");
-        assert!(sha.chars().all(|c| c.is_ascii_hexdigit()), "SHA should be hex");
+        assert!(
+            sha.chars().all(|c| c.is_ascii_hexdigit()),
+            "SHA should be hex"
+        );
     }
 
     /// Test: is_dirty returns false for a clean repository.
@@ -513,7 +530,10 @@ mod tests {
 
         let status = status.unwrap();
         assert!(status.branch.is_some());
-        assert_eq!(status.remote_slug, Some("github.com/owner/repo".to_string()));
+        assert_eq!(
+            status.remote_slug,
+            Some("github.com/owner/repo".to_string())
+        );
         assert!(status.head.is_some());
 
         let head = status.head.unwrap();

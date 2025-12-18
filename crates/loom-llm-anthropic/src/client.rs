@@ -68,7 +68,10 @@ impl AnthropicClient {
     }
 
     #[instrument(skip(self, request), fields(model = %self.config.model))]
-    async fn send_request(&self, request: &AnthropicRequest) -> Result<reqwest::Response, ClientError> {
+    async fn send_request(
+        &self,
+        request: &AnthropicRequest,
+    ) -> Result<reqwest::Response, ClientError> {
         let url = self.messages_url();
         debug!(url = %url, "Sending request to Anthropic API");
         trace!(request = ?request, "Request payload");
@@ -95,14 +98,12 @@ impl AnthropicClient {
         debug!(status = %status, "Received response");
 
         if !status.is_success() {
-            let retryable = matches!(
-                status.as_u16(),
-                408 | 429 | 500 | 502 | 503 | 504
-            );
+            let retryable = matches!(status.as_u16(), 408 | 429 | 500 | 502 | 503 | 504);
             let error_body = response.text().await.unwrap_or_default();
             error!(status = %status, body = %error_body, retryable = retryable, "API error response");
 
-            let message = if let Ok(api_error) = serde_json::from_str::<AnthropicError>(&error_body) {
+            let message = if let Ok(api_error) = serde_json::from_str::<AnthropicError>(&error_body)
+            {
                 api_error.error.message
             } else {
                 error_body

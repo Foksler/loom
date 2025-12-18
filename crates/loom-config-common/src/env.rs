@@ -265,7 +265,10 @@ mod tests {
 
             let result = load_secret_env(unique_var);
             assert!(result.is_err());
-            assert!(matches!(result.unwrap_err(), SecretEnvError::EmptyPath { .. }));
+            assert!(matches!(
+                result.unwrap_err(),
+                SecretEnvError::EmptyPath { .. }
+            ));
 
             env::remove_var(format!("{unique_var}_FILE"));
         }
@@ -295,7 +298,10 @@ mod tests {
 
             let result = require_secret_env(unique_var);
             assert!(result.is_err());
-            assert!(matches!(result.unwrap_err(), RequiredSecretError::Missing { .. }));
+            assert!(matches!(
+                result.unwrap_err(),
+                RequiredSecretError::Missing { .. }
+            ));
         }
     }
 }

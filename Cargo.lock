@@ -1765,6 +1765,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "loom-core",
+ "loom-http-retry",
  "proptest",
  "reqwest",
  "serde",

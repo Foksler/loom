@@ -51,7 +51,7 @@ impl std::str::FromStr for LlmProvider {
 ///
 /// API keys are stored as [`SecretString`] to prevent accidental logging.
 /// Use `.expose()` to access the actual key value when needed.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct LlmServiceConfig {
     pub provider: LlmProvider,
     pub anthropic_api_key: Option<SecretString>,
@@ -77,22 +77,6 @@ impl std::fmt::Debug for LlmServiceConfig {
             .field("vertex_location", &self.vertex_location)
             .field("vertex_model", &self.vertex_model)
             .finish()
-    }
-}
-
-impl Default for LlmServiceConfig {
-    fn default() -> Self {
-        Self {
-            provider: LlmProvider::default(),
-            anthropic_api_key: None,
-            anthropic_model: None,
-            openai_api_key: None,
-            openai_model: None,
-            openai_organization: None,
-            vertex_project: None,
-            vertex_location: None,
-            vertex_model: None,
-        }
     }
 }
 
@@ -224,15 +208,42 @@ mod tests {
         /// This is important because environment variables may have varying case.
         #[test]
         fn parsing_is_case_insensitive() {
-            assert_eq!("anthropic".parse::<LlmProvider>().unwrap(), LlmProvider::Anthropic);
-            assert_eq!("ANTHROPIC".parse::<LlmProvider>().unwrap(), LlmProvider::Anthropic);
-            assert_eq!("Anthropic".parse::<LlmProvider>().unwrap(), LlmProvider::Anthropic);
-            assert_eq!("openai".parse::<LlmProvider>().unwrap(), LlmProvider::OpenAi);
-            assert_eq!("OPENAI".parse::<LlmProvider>().unwrap(), LlmProvider::OpenAi);
-            assert_eq!("OpenAI".parse::<LlmProvider>().unwrap(), LlmProvider::OpenAi);
-            assert_eq!("vertex".parse::<LlmProvider>().unwrap(), LlmProvider::Vertex);
-            assert_eq!("VERTEX".parse::<LlmProvider>().unwrap(), LlmProvider::Vertex);
-            assert_eq!("Vertex".parse::<LlmProvider>().unwrap(), LlmProvider::Vertex);
+            assert_eq!(
+                "anthropic".parse::<LlmProvider>().unwrap(),
+                LlmProvider::Anthropic
+            );
+            assert_eq!(
+                "ANTHROPIC".parse::<LlmProvider>().unwrap(),
+                LlmProvider::Anthropic
+            );
+            assert_eq!(
+                "Anthropic".parse::<LlmProvider>().unwrap(),
+                LlmProvider::Anthropic
+            );
+            assert_eq!(
+                "openai".parse::<LlmProvider>().unwrap(),
+                LlmProvider::OpenAi
+            );
+            assert_eq!(
+                "OPENAI".parse::<LlmProvider>().unwrap(),
+                LlmProvider::OpenAi
+            );
+            assert_eq!(
+                "OpenAI".parse::<LlmProvider>().unwrap(),
+                LlmProvider::OpenAi
+            );
+            assert_eq!(
+                "vertex".parse::<LlmProvider>().unwrap(),
+                LlmProvider::Vertex
+            );
+            assert_eq!(
+                "VERTEX".parse::<LlmProvider>().unwrap(),
+                LlmProvider::Vertex
+            );
+            assert_eq!(
+                "Vertex".parse::<LlmProvider>().unwrap(),
+                LlmProvider::Vertex
+            );
         }
 
         /// Verifies that invalid provider strings produce appropriate errors.
@@ -282,9 +293,18 @@ mod tests {
                 .with_openai_organization("org-123");
 
             assert_eq!(config.provider, LlmProvider::OpenAi);
-            assert_eq!(config.anthropic_api_key.as_ref().map(|s| s.expose().as_str()), Some("anthropic-key"));
+            assert_eq!(
+                config
+                    .anthropic_api_key
+                    .as_ref()
+                    .map(|s| s.expose().as_str()),
+                Some("anthropic-key")
+            );
             assert_eq!(config.anthropic_model, Some("claude-3".to_string()));
-            assert_eq!(config.openai_api_key.as_ref().map(|s| s.expose().as_str()), Some("openai-key"));
+            assert_eq!(
+                config.openai_api_key.as_ref().map(|s| s.expose().as_str()),
+                Some("openai-key")
+            );
             assert_eq!(config.openai_model, Some("gpt-4".to_string()));
             assert_eq!(config.openai_organization, Some("org-123".to_string()));
         }

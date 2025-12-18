@@ -28,10 +28,7 @@ pub enum GithubAppError {
 
     /// GitHub API returned an error.
     #[error("GitHub API error: {status} - {message}")]
-    ApiError {
-        status: u16,
-        message: String,
-    },
+    ApiError { status: u16, message: String },
 
     /// Invalid or unparseable response.
     #[error("Invalid response from GitHub: {0}")]
@@ -47,10 +44,7 @@ pub enum GithubAppError {
 
     /// Installation not found for repository.
     #[error("GitHub App not installed for {owner}/{repo}")]
-    InstallationNotFound {
-        owner: String,
-        repo: String,
-    },
+    InstallationNotFound { owner: String, repo: String },
 
     /// Webhook signature verification failed.
     #[error("Invalid webhook signature")]

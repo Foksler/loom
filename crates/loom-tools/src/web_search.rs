@@ -2,6 +2,7 @@
 
 use async_trait::async_trait;
 use loom_core::{ToolContext, ToolError};
+use loom_http_retry::{retry, RetryConfig};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
@@ -75,12 +76,14 @@ impl Tool for WebSearchTool {
         args: serde_json::Value,
         _ctx: &ToolContext,
     ) -> Result<serde_json::Value, ToolError> {
-        let args: WebSearchArgs = serde_json::from_value(args)
-            .map_err(|e| ToolError::Serialization(e.to_string()))?;
+        let args: WebSearchArgs =
+            serde_json::from_value(args).map_err(|e| ToolError::Serialization(e.to_string()))?;
 
         let query = args.query.trim().to_string();
         if query.is_empty() {
-            return Err(ToolError::InvalidArguments("query must not be empty".to_string()));
+            return Err(ToolError::InvalidArguments(
+                "query must not be empty".to_string(),
+            ));
         }
 
         let max_results = args.max_results.unwrap_or(5).min(10);
@@ -98,24 +101,35 @@ impl Tool for WebSearchTool {
             max_results,
         };
 
-        let response = self.client
-            .post(&url)
-            .json(&request_body)
-            .timeout(std::time::Duration::from_secs(30))
-            .send()
-            .await
-            .map_err(|e| {
-                if e.is_timeout() {
-                    tracing::warn!(error = %e, "web_search: server timeout");
-                    ToolError::Timeout
-                } else {
-                    tracing::error!(error = %e, "web_search: network error");
-                    ToolError::Io(e.to_string())
-                }
-            })?;
+        let retry_config = RetryConfig::default();
+        let response = retry(&retry_config, || {
+            let client = &self.client;
+            let url = &url;
+            let request_body = &request_body;
+            async move {
+                client
+                    .post(url)
+                    .json(request_body)
+                    .timeout(std::time::Duration::from_secs(30))
+                    .send()
+                    .await
+            }
+        })
+        .await
+        .map_err(|e| {
+            if e.is_timeout() {
+                tracing::warn!(error = %e, "web_search: server timeout");
+                ToolError::Timeout
+            } else {
+                tracing::error!(error = %e, "web_search: network error");
+                ToolError::Io(e.to_string())
+            }
+        })?;
 
         let status = response.status();
-        let body = response.text().await
+        let body = response
+            .text()
+            .await
             .map_err(|e| ToolError::Io(e.to_string()))?;
 
         if !status.is_success() {
@@ -130,8 +144,8 @@ impl Tool for WebSearchTool {
             )));
         }
 
-        let value: serde_json::Value = serde_json::from_str(&body)
-            .map_err(|e| ToolError::Serialization(e.to_string()))?;
+        let value: serde_json::Value =
+            serde_json::from_str(&body).map_err(|e| ToolError::Serialization(e.to_string()))?;
 
         tracing::debug!(
             query = %query,
@@ -151,11 +165,13 @@ mod tests {
     #[tokio::test]
     async fn test_empty_query_returns_error() {
         let tool = WebSearchTool::new("http://localhost:8080");
-        let ctx = ToolContext { workspace_root: PathBuf::from("/tmp") };
-        
+        let ctx = ToolContext {
+            workspace_root: PathBuf::from("/tmp"),
+        };
+
         let result = tool.invoke(serde_json::json!({"query": ""}), &ctx).await;
         assert!(matches!(result, Err(ToolError::InvalidArguments(_))));
-        
+
         let result = tool.invoke(serde_json::json!({"query": "   "}), &ctx).await;
         assert!(matches!(result, Err(ToolError::InvalidArguments(_))));
     }
@@ -163,9 +179,13 @@ mod tests {
     #[tokio::test]
     async fn test_whitespace_only_query_returns_error() {
         let tool = WebSearchTool::new("http://localhost:8080");
-        let ctx = ToolContext { workspace_root: PathBuf::from("/tmp") };
-        
-        let result = tool.invoke(serde_json::json!({"query": "\t\n  "}), &ctx).await;
+        let ctx = ToolContext {
+            workspace_root: PathBuf::from("/tmp"),
+        };
+
+        let result = tool
+            .invoke(serde_json::json!({"query": "\t\n  "}), &ctx)
+            .await;
         assert!(matches!(result, Err(ToolError::InvalidArguments(_))));
     }
 }

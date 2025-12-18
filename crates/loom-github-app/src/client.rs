@@ -15,8 +15,8 @@ use crate::config::GithubAppConfig;
 use crate::error::GithubAppError;
 use crate::jwt::generate_app_jwt;
 use crate::types::{
-    AccessTokenResponse, CodeSearchItem, CodeSearchRequest, CodeSearchResponse,
-    FileContents, Installation, Repository,
+    AccessTokenResponse, CodeSearchItem, CodeSearchRequest, CodeSearchResponse, FileContents,
+    Installation, Repository,
 };
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
@@ -154,7 +154,10 @@ impl GithubAppClient {
         let jwt = generate_app_jwt(self.config.app_id(), self.config.private_key_pem())?;
 
         let mut cache = self.app_jwt_cache.lock().await;
-        *cache = Some(CachedToken::new(jwt.clone(), Duration::from_secs(JWT_VALIDITY_SECS)));
+        *cache = Some(CachedToken::new(
+            jwt.clone(),
+            Duration::from_secs(JWT_VALIDITY_SECS),
+        ));
 
         Ok(jwt)
     }
@@ -163,7 +166,10 @@ impl GithubAppClient {
     ///
     /// Uses per-installation locking to prevent concurrent token fetches.
     #[instrument(skip(self))]
-    pub(crate) async fn get_installation_token(&self, installation_id: i64) -> Result<String, GithubAppError> {
+    pub(crate) async fn get_installation_token(
+        &self,
+        installation_id: i64,
+    ) -> Result<String, GithubAppError> {
         // Fast path: check cache without lock
         {
             let cache = self.installation_token_cache.lock().await;
@@ -184,7 +190,10 @@ impl GithubAppClient {
             let cache = self.installation_token_cache.lock().await;
             if let Some(cached) = cache.get(&installation_id) {
                 if cached.is_valid(Duration::from_secs(TOKEN_REFRESH_MARGIN_SECS)) {
-                    trace!(installation_id, "Using cached installation token (post-lock)");
+                    trace!(
+                        installation_id,
+                        "Using cached installation token (post-lock)"
+                    );
                     return Ok(cached.token.clone());
                 }
             }
@@ -201,11 +210,19 @@ impl GithubAppClient {
     }
 
     /// Fetch a new installation access token from GitHub.
-    async fn fetch_installation_token(&self, installation_id: i64) -> Result<(String, Duration), GithubAppError> {
+    async fn fetch_installation_token(
+        &self,
+        installation_id: i64,
+    ) -> Result<(String, Duration), GithubAppError> {
         let jwt = self.get_app_jwt().await?;
 
-        let url = self.config.base_url()
-            .join(&format!("app/installations/{}/access_tokens", installation_id))
+        let url = self
+            .config
+            .base_url()
+            .join(&format!(
+                "app/installations/{}/access_tokens",
+                installation_id
+            ))
             .map_err(|e| GithubAppError::Config(format!("Invalid URL: {}", e)))?;
 
         let response = self
@@ -230,12 +247,12 @@ impl GithubAppClient {
         if !status.is_success() {
             let body = response.text().await.unwrap_or_default();
             let err = map_github_error(status, &body);
-            
+
             // If 401 on token fetch, invalidate JWT and propagate
             if matches!(err, GithubAppError::Unauthorized) {
                 self.invalidate_app_jwt().await;
             }
-            
+
             return Err(err);
         }
 
@@ -259,7 +276,12 @@ impl GithubAppClient {
         let github_query = request.to_github_query();
 
         retry(&self.config.retry_config, || {
-            self.search_code_with_refresh(installation_id, &github_query, request.per_page, request.page)
+            self.search_code_with_refresh(
+                installation_id,
+                &github_query,
+                request.per_page,
+                request.page,
+            )
         })
         .await
     }
@@ -273,14 +295,15 @@ impl GithubAppClient {
         page: u32,
     ) -> Result<CodeSearchResponse, GithubAppError> {
         let token = self.get_installation_token(installation_id).await?;
-        
+
         match self.search_code_inner(&token, query, per_page, page).await {
             Ok(resp) => Ok(resp),
             Err(GithubAppError::Unauthorized) => {
                 info!(installation_id, "Got 401, refreshing installation token");
                 self.invalidate_installation_token(installation_id).await;
                 let fresh_token = self.get_installation_token(installation_id).await?;
-                self.search_code_inner(&fresh_token, query, per_page, page).await
+                self.search_code_inner(&fresh_token, query, per_page, page)
+                    .await
             }
             Err(e) => Err(e),
         }
@@ -293,7 +316,9 @@ impl GithubAppClient {
         per_page: u32,
         page: u32,
     ) -> Result<CodeSearchResponse, GithubAppError> {
-        let mut url = self.config.base_url()
+        let mut url = self
+            .config
+            .base_url()
             .join("search/code")
             .map_err(|e| GithubAppError::Config(format!("Invalid URL: {}", e)))?;
 
@@ -376,7 +401,7 @@ impl GithubAppClient {
         repo: &str,
     ) -> Result<Repository, GithubAppError> {
         let token = self.get_installation_token(installation_id).await?;
-        
+
         match self.get_repository_inner(&token, owner, repo).await {
             Ok(resp) => Ok(resp),
             Err(GithubAppError::Unauthorized) => {
@@ -395,7 +420,9 @@ impl GithubAppClient {
         owner: &str,
         repo: &str,
     ) -> Result<Repository, GithubAppError> {
-        let url = self.config.base_url()
+        let url = self
+            .config
+            .base_url()
             .join(&format!("repos/{}/{}", owner, repo))
             .map_err(|e| GithubAppError::Config(format!("Invalid URL: {}", e)))?;
 
@@ -467,14 +494,18 @@ impl GithubAppClient {
         git_ref: Option<&str>,
     ) -> Result<FileContents, GithubAppError> {
         let token = self.get_installation_token(installation_id).await?;
-        
-        match self.get_file_contents_inner(&token, owner, repo, path, git_ref).await {
+
+        match self
+            .get_file_contents_inner(&token, owner, repo, path, git_ref)
+            .await
+        {
             Ok(resp) => Ok(resp),
             Err(GithubAppError::Unauthorized) => {
                 info!(installation_id, "Got 401, refreshing installation token");
                 self.invalidate_installation_token(installation_id).await;
                 let fresh_token = self.get_installation_token(installation_id).await?;
-                self.get_file_contents_inner(&fresh_token, owner, repo, path, git_ref).await
+                self.get_file_contents_inner(&fresh_token, owner, repo, path, git_ref)
+                    .await
             }
             Err(e) => Err(e),
         }
@@ -489,8 +520,13 @@ impl GithubAppClient {
         git_ref: Option<&str>,
     ) -> Result<FileContents, GithubAppError> {
         let path_encoded = urlencoding::encode(path);
-        let mut url = self.config.base_url()
-            .join(&format!("repos/{}/{}/contents/{}", owner, repo, path_encoded))
+        let mut url = self
+            .config
+            .base_url()
+            .join(&format!(
+                "repos/{}/{}/contents/{}",
+                owner, repo, path_encoded
+            ))
             .map_err(|e| GithubAppError::Config(format!("Invalid URL: {}", e)))?;
 
         if let Some(r) = git_ref {
@@ -533,7 +569,9 @@ impl GithubAppClient {
             path: content_response.path,
             sha: content_response.sha,
             size: content_response.size,
-            encoding: content_response.encoding.unwrap_or_else(|| "base64".to_string()),
+            encoding: content_response
+                .encoding
+                .unwrap_or_else(|| "base64".to_string()),
             content: content_response.content.unwrap_or_default(),
         })
     }
@@ -549,8 +587,13 @@ impl GithubAppClient {
         .await
     }
 
-    async fn list_installations_inner(&self, jwt: &str) -> Result<Vec<Installation>, GithubAppError> {
-        let url = self.config.base_url()
+    async fn list_installations_inner(
+        &self,
+        jwt: &str,
+    ) -> Result<Vec<Installation>, GithubAppError> {
+        let url = self
+            .config
+            .base_url()
             .join("app/installations")
             .map_err(|e| GithubAppError::Config(format!("Invalid URL: {}", e)))?;
 
@@ -609,7 +652,9 @@ impl GithubAppClient {
         owner: &str,
         repo: &str,
     ) -> Result<Installation, GithubAppError> {
-        let url = self.config.base_url()
+        let url = self
+            .config
+            .base_url()
             .join(&format!("repos/{}/{}/installation", owner, repo))
             .map_err(|e| GithubAppError::Config(format!("Invalid URL: {}", e)))?;
 
@@ -645,7 +690,10 @@ impl GithubAppClient {
             GithubAppError::InvalidResponse(format!("JSON parse error: {}", e))
         })?;
 
-        debug!(installation_id = installation.id, "Repository installation found");
+        debug!(
+            installation_id = installation.id,
+            "Repository installation found"
+        );
 
         Ok(installation)
     }
@@ -698,9 +746,9 @@ pub(crate) fn map_github_error(status: StatusCode, body: &str) -> GithubAppError
 
 /// Parse the expires_at timestamp from GitHub into a Duration.
 pub(crate) fn parse_expiry_duration(expires_at: &str) -> Result<Duration, GithubAppError> {
-    let expires_at_dt: DateTime<Utc> = expires_at
-        .parse()
-        .map_err(|e| GithubAppError::InvalidResponse(format!("Invalid expires_at: {} - {}", expires_at, e)))?;
+    let expires_at_dt: DateTime<Utc> = expires_at.parse().map_err(|e| {
+        GithubAppError::InvalidResponse(format!("Invalid expires_at: {} - {}", expires_at, e))
+    })?;
 
     let now = Utc::now();
     let duration = expires_at_dt

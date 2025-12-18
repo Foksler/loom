@@ -149,9 +149,7 @@ impl ThreadRepository {
         let m3 = include_str!("../migrations/003_add_git_metadata.sql");
         if let Err(e) = sqlx::query(m3).execute(pool).await {
             let msg = e.to_string();
-            if !msg.contains("duplicate column")
-                && !msg.contains("already exists")
-            {
+            if !msg.contains("duplicate column") && !msg.contains("already exists") {
                 return Err(e.into());
             }
         }
@@ -175,17 +173,19 @@ impl ThreadRepository {
         // Migration 005: FTS5 search
         // Parse statements carefully: split CREATE VIRTUAL TABLE from triggers
         let m5 = include_str!("../migrations/005_thread_fts.sql");
-        
+
         // Find the CREATE VIRTUAL TABLE statement (ends with ");")
         if let Some(vt_end) = m5.find(");") {
             let create_vt = &m5[..vt_end + 2];
             if let Err(e) = sqlx::query(create_vt.trim()).execute(pool).await {
                 let msg = e.to_string();
-                if !msg.contains("already exists") && !msg.contains("table thread_fts already exists") {
+                if !msg.contains("already exists")
+                    && !msg.contains("table thread_fts already exists")
+                {
                     tracing::warn!(error = %e, "FTS CREATE VIRTUAL TABLE failed");
                 }
             }
-            
+
             // Parse triggers (split remaining text by "END;")
             let remaining = &m5[vt_end + 2..];
             for trigger_block in remaining.split("END;") {
@@ -208,9 +208,7 @@ impl ThreadRepository {
         for stmt in m6.split(';').filter(|s| !s.trim().is_empty()) {
             if let Err(e) = sqlx::query(stmt).execute(pool).await {
                 let msg = e.to_string();
-                if !msg.contains("already exists")
-                    && !msg.contains("duplicate column")
-                {
+                if !msg.contains("already exists") && !msg.contains("duplicate column") {
                     return Err(e.into());
                 }
             }
@@ -1180,19 +1178,29 @@ impl ThreadRepository {
     }
 
     /// List all installations.
+    #[allow(clippy::type_complexity)]
     pub async fn list_github_installations(&self) -> Result<Vec<GithubInstallation>, ServerError> {
-        let rows: Vec<(i64, i64, String, String, Option<String>, String, Option<String>, String, String)> =
-            sqlx::query_as(
-                r#"
+        let rows: Vec<(
+            i64,
+            i64,
+            String,
+            String,
+            Option<String>,
+            String,
+            Option<String>,
+            String,
+            String,
+        )> = sqlx::query_as(
+            r#"
                 SELECT
                     installation_id, account_id, account_login, account_type,
                     app_slug, repositories_selection, suspended_at, created_at, updated_at
                 FROM github_installations
                 ORDER BY account_login
                 "#,
-            )
-            .fetch_all(&self.pool)
-            .await?;
+        )
+        .fetch_all(&self.pool)
+        .await?;
 
         let installations = rows
             .into_iter()
@@ -1365,7 +1373,10 @@ mod tests {
 
         let loaded = repo.get(&thread.id).await.unwrap().unwrap();
         assert_eq!(loaded.git_branch, Some("feature/test".to_string()));
-        assert_eq!(loaded.git_remote_url, Some("github.com/alice/project".to_string()));
+        assert_eq!(
+            loaded.git_remote_url,
+            Some("github.com/alice/project".to_string())
+        );
     }
 
     #[tokio::test]
@@ -1379,12 +1390,16 @@ mod tests {
 
         repo.insert(&thread).await.unwrap();
 
-        let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM thread_commits WHERE thread_id = ?")
-            .bind(thread.id.as_str())
-            .fetch_one(&repo.pool)
-            .await
-            .unwrap();
-        assert_eq!(count.0, 2, "Expected 2 commits to be recorded in thread_commits");
+        let count: (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM thread_commits WHERE thread_id = ?")
+                .bind(thread.id.as_str())
+                .fetch_one(&repo.pool)
+                .await
+                .unwrap();
+        assert_eq!(
+            count.0, 2,
+            "Expected 2 commits to be recorded in thread_commits"
+        );
 
         let initial: (i32,) = sqlx::query_as(
             "SELECT is_initial FROM thread_commits WHERE thread_id = ? AND commit_sha = ?",
@@ -1422,11 +1437,26 @@ mod tests {
 
     #[test]
     fn test_normalize_cache_query() {
-        assert_eq!(ThreadRepository::normalize_cache_query("Hello World"), "hello world");
-        assert_eq!(ThreadRepository::normalize_cache_query("  multiple   spaces  "), "multiple spaces");
-        assert_eq!(ThreadRepository::normalize_cache_query("UPPERCASE"), "uppercase");
-        assert_eq!(ThreadRepository::normalize_cache_query("  trim  me  "), "trim me");
-        assert_eq!(ThreadRepository::normalize_cache_query("already normalized"), "already normalized");
+        assert_eq!(
+            ThreadRepository::normalize_cache_query("Hello World"),
+            "hello world"
+        );
+        assert_eq!(
+            ThreadRepository::normalize_cache_query("  multiple   spaces  "),
+            "multiple spaces"
+        );
+        assert_eq!(
+            ThreadRepository::normalize_cache_query("UPPERCASE"),
+            "uppercase"
+        );
+        assert_eq!(
+            ThreadRepository::normalize_cache_query("  trim  me  "),
+            "trim me"
+        );
+        assert_eq!(
+            ThreadRepository::normalize_cache_query("already normalized"),
+            "already normalized"
+        );
     }
 
     #[tokio::test]
@@ -1438,7 +1468,10 @@ mod tests {
         repo.insert(&thread).await.unwrap();
 
         // Search by branch name
-        let hits = repo.search("unique-test-branch", None, 10, 0).await.unwrap();
+        let hits = repo
+            .search("unique-test-branch", None, 10, 0)
+            .await
+            .unwrap();
         assert!(hits.len() >= 1, "Expected at least 1 hit for branch search");
     }
 }

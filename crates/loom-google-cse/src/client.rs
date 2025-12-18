@@ -83,9 +83,8 @@ impl CseClient {
     }
 
     async fn search_inner(&self, query: &str, num: u32) -> Result<CseResponse, CseError> {
-        let mut url = Url::parse(&self.base_url).map_err(|e| {
-            CseError::InvalidResponse(format!("Invalid base URL: {}", e))
-        })?;
+        let mut url = Url::parse(&self.base_url)
+            .map_err(|e| CseError::InvalidResponse(format!("Invalid base URL: {}", e)))?;
 
         url.query_pairs_mut()
             .append_pair("key", &self.api_key)
@@ -96,19 +95,14 @@ impl CseClient {
         debug!(url = %self.base_url, "Sending search request to Google CSE");
         trace!(query = %query, num = num, "Search parameters");
 
-        let response = self
-            .http_client
-            .get(url)
-            .send()
-            .await
-            .map_err(|e| {
-                if e.is_timeout() {
-                    error!("Request timed out");
-                    return CseError::Timeout;
-                }
-                error!(error = %e, "Network error during CSE request");
-                CseError::Network(e)
-            })?;
+        let response = self.http_client.get(url).send().await.map_err(|e| {
+            if e.is_timeout() {
+                error!("Request timed out");
+                return CseError::Timeout;
+            }
+            error!(error = %e, "Network error during CSE request");
+            CseError::Network(e)
+        })?;
 
         let status = response.status();
         debug!(status = %status, "Received response from Google CSE");
@@ -170,7 +164,10 @@ impl CseClient {
             })
             .collect();
 
-        debug!(result_count = results.len(), "Search completed successfully");
+        debug!(
+            result_count = results.len(),
+            "Search completed successfully"
+        );
 
         Ok(CseResponse {
             query: query.to_string(),

@@ -1,6 +1,8 @@
 //! Vertex AI-specific API types and conversions.
 
-use loom_core::{LlmError, LlmRequest, LlmResponse, Message, Role, ToolCall, ToolDefinition, Usage};
+use loom_core::{
+    LlmError, LlmRequest, LlmResponse, Message, Role, ToolCall, ToolDefinition, Usage,
+};
 use serde::{Deserialize, Serialize};
 
 /// Configuration for the Vertex AI client.
@@ -76,9 +78,7 @@ pub struct VertexContent {
 #[serde(untagged)]
 pub enum VertexPart {
     /// Text content.
-    Text {
-        text: String,
-    },
+    Text { text: String },
     /// Function call from the model.
     FunctionCall {
         #[serde(rename = "functionCall")]
@@ -184,6 +184,7 @@ pub struct VertexError {
 
 /// Error detail structure.
 #[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
 pub struct VertexErrorDetail {
     /// Error message.
     pub message: String,
@@ -349,8 +350,7 @@ mod tests {
 
     #[test]
     fn request_conversion_basic() {
-        let request = LlmRequest::new("gemini-1.5-pro")
-            .with_messages(vec![Message::user("Hello")]);
+        let request = LlmRequest::new("gemini-1.5-pro").with_messages(vec![Message::user("Hello")]);
         let vertex_req = VertexRequest::from(&request);
 
         assert_eq!(vertex_req.contents.len(), 1);

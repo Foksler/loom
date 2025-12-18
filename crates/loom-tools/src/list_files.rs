@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use loom_core::{ToolContext, ToolError};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::Tool;
 
@@ -31,7 +31,7 @@ impl ListFilesTool {
         Self
     }
 
-    fn validate_path(path: &PathBuf, workspace_root: &PathBuf) -> Result<PathBuf, ToolError> {
+    fn validate_path(path: &PathBuf, workspace_root: &Path) -> Result<PathBuf, ToolError> {
         let absolute_path = if path.is_absolute() {
             path.clone()
         } else {
@@ -44,7 +44,7 @@ impl ListFilesTool {
 
         let workspace_canonical = workspace_root
             .canonicalize()
-            .map_err(|_| ToolError::FileNotFound(workspace_root.clone()))?;
+            .map_err(|_| ToolError::FileNotFound(workspace_root.to_path_buf()))?;
 
         if !canonical.starts_with(&workspace_canonical) {
             return Err(ToolError::PathOutsideWorkspace(canonical));
@@ -208,9 +208,7 @@ mod tests {
         let tool = ListFilesTool::new();
         let ctx = ToolContext::new(workspace.path().to_path_buf());
 
-        let result = tool
-            .invoke(serde_json::json!({"root": "/etc"}), &ctx)
-            .await;
+        let result = tool.invoke(serde_json::json!({"root": "/etc"}), &ctx).await;
 
         assert!(matches!(result, Err(ToolError::PathOutsideWorkspace(_))));
     }

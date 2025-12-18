@@ -199,29 +199,53 @@ mod tests {
     #[test]
     fn constructs_correct_anthropic_urls() {
         let client = ProxyLlmClient::anthropic("http://localhost:8080");
-        assert_eq!(client.complete_url(), "http://localhost:8080/proxy/anthropic/complete");
-        assert_eq!(client.stream_url(), "http://localhost:8080/proxy/anthropic/stream");
+        assert_eq!(
+            client.complete_url(),
+            "http://localhost:8080/proxy/anthropic/complete"
+        );
+        assert_eq!(
+            client.stream_url(),
+            "http://localhost:8080/proxy/anthropic/stream"
+        );
     }
 
     #[test]
     fn constructs_correct_openai_urls() {
         let client = ProxyLlmClient::openai("http://localhost:8080");
-        assert_eq!(client.complete_url(), "http://localhost:8080/proxy/openai/complete");
-        assert_eq!(client.stream_url(), "http://localhost:8080/proxy/openai/stream");
+        assert_eq!(
+            client.complete_url(),
+            "http://localhost:8080/proxy/openai/complete"
+        );
+        assert_eq!(
+            client.stream_url(),
+            "http://localhost:8080/proxy/openai/stream"
+        );
     }
 
     #[test]
     fn constructs_correct_vertex_urls() {
         let client = ProxyLlmClient::vertex("http://localhost:8080");
-        assert_eq!(client.complete_url(), "http://localhost:8080/proxy/vertex/complete");
-        assert_eq!(client.stream_url(), "http://localhost:8080/proxy/vertex/stream");
+        assert_eq!(
+            client.complete_url(),
+            "http://localhost:8080/proxy/vertex/complete"
+        );
+        assert_eq!(
+            client.stream_url(),
+            "http://localhost:8080/proxy/vertex/stream"
+        );
     }
 
     #[test]
     fn handles_trailing_slash_in_base_url() {
         let client = ProxyLlmClient::anthropic("http://localhost:8080/");
-        assert_eq!(client.complete_url(), "http://localhost:8080/proxy/anthropic/complete");
-        assert_eq!(client.stream_url(), "http://localhost:8080/proxy/anthropic/stream");
+        assert_eq!(
+            client.complete_url(),
+            "http://localhost:8080/proxy/anthropic/complete"
+        );
+        assert_eq!(
+            client.stream_url(),
+            "http://localhost:8080/proxy/anthropic/stream"
+        );
     }
 
     #[test]

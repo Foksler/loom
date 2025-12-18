@@ -25,12 +25,16 @@ impl LocalThreadStore {
 
     /// Search threads locally using substring matching.
     /// Used as fallback when server is unavailable.
-    pub async fn search(&self, query: &str, limit: usize) -> Result<Vec<ThreadSummary>, ThreadStoreError> {
+    pub async fn search(
+        &self,
+        query: &str,
+        limit: usize,
+    ) -> Result<Vec<ThreadSummary>, ThreadStoreError> {
         let query_lower = query.to_lowercase();
         let all_threads = self.list(1000).await?;
-        
+
         let mut matches = Vec::new();
-        
+
         for summary in all_threads {
             if let Some(thread) = self.load(&summary.id).await? {
                 if self.matches_query(&thread, &query_lower) {
@@ -38,68 +42,77 @@ impl LocalThreadStore {
                 }
             }
         }
-        
+
         // Sort by last_activity_at DESC
         matches.sort_by(|a, b| b.last_activity_at.cmp(&a.last_activity_at));
         matches.truncate(limit);
-        
+
         Ok(matches)
     }
-    
+
     fn matches_query(&self, thread: &Thread, query: &str) -> bool {
         // Check title
-        if thread.metadata.title.as_ref()
+        if thread
+            .metadata
+            .title
+            .as_ref()
             .map(|t| t.to_lowercase().contains(query))
-            .unwrap_or(false) {
+            .unwrap_or(false)
+        {
             return true;
         }
-        
+
         // Check git branch
-        if thread.git_branch.as_ref()
+        if thread
+            .git_branch
+            .as_ref()
             .map(|b| b.to_lowercase().contains(query))
-            .unwrap_or(false) {
+            .unwrap_or(false)
+        {
             return true;
         }
-        
+
         // Check git remote URL
-        if thread.git_remote_url.as_ref()
+        if thread
+            .git_remote_url
+            .as_ref()
             .map(|u| u.to_lowercase().contains(query))
-            .unwrap_or(false) {
+            .unwrap_or(false)
+        {
             return true;
         }
-        
+
         // Check commits (prefix match for SHAs)
         for sha in &thread.git_commits {
             if sha.to_lowercase().starts_with(query) {
                 return true;
             }
         }
-        
+
         // Check tags
         for tag in &thread.metadata.tags {
             if tag.to_lowercase().contains(query) {
                 return true;
             }
         }
-        
+
         // Check message content
         for msg in &thread.conversation.messages {
             if msg.content.to_lowercase().contains(query) {
                 return true;
             }
         }
-        
+
         false
     }
 
     pub fn from_xdg() -> Result<Self, ThreadStoreError> {
-        let data_dir = dirs::data_dir()
-            .ok_or_else(|| {
-                ThreadStoreError::Io(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "could not determine XDG data directory",
-                ))
-            })?;
+        let data_dir = dirs::data_dir().ok_or_else(|| {
+            ThreadStoreError::Io(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "could not determine XDG data directory",
+            ))
+        })?;
 
         let threads_dir = data_dir.join("loom").join("threads");
         std::fs::create_dir_all(&threads_dir)?;
@@ -207,11 +220,7 @@ impl ThreadStore for LocalThreadStore {
 
         summaries.sort_by(|a, b| b.last_activity_at.cmp(&a.last_activity_at));
 
-        debug!(
-            count = summaries.len(),
-            limit = limit,
-            "listed threads"
-        );
+        debug!(count = summaries.len(), limit = limit, "listed threads");
 
         Ok(summaries)
     }

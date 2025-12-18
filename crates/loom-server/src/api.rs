@@ -8,16 +8,16 @@ use axum::{
     routing::{delete, get, post, put},
     Json, Router,
 };
-use tower_http::services::ServeDir;
-use loom_thread::{Thread, ThreadId, ThreadSummary};
-use loom_google_cse::{CseClient, CseError, CseRequest};
 use loom_github_app::{
-    GithubAppClient, GithubAppConfig, GithubAppError,
-    CodeSearchRequest, AppInfoResponse, InstallationStatusResponse,
+    AppInfoResponse, CodeSearchRequest, GithubAppClient, GithubAppConfig, GithubAppError,
+    InstallationStatusResponse,
 };
+use loom_google_cse::{CseClient, CseError, CseRequest};
 use loom_llm_service::LlmService;
+use loom_thread::{Thread, ThreadId, ThreadSummary};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tower_http::services::ServeDir;
 
 use crate::llm_proxy;
 
@@ -53,18 +53,16 @@ pub fn create_app_state(repo: Arc<ThreadRepository>) -> AppState {
     };
 
     let github_client = match GithubAppConfig::from_env() {
-        Ok(config) => {
-            match GithubAppClient::new(config) {
-                Ok(client) => {
-                    tracing::info!("GitHub App configured, creating client");
-                    Some(Arc::new(client))
-                }
-                Err(e) => {
-                    tracing::warn!(error = %e, "Failed to create GitHub App client");
-                    None
-                }
+        Ok(config) => match GithubAppClient::new(config) {
+            Ok(client) => {
+                tracing::info!("GitHub App configured, creating client");
+                Some(Arc::new(client))
             }
-        }
+            Err(e) => {
+                tracing::warn!(error = %e, "Failed to create GitHub App client");
+                None
+            }
+        },
         Err(_) => {
             tracing::info!("GitHub App not configured");
             None
@@ -86,7 +84,12 @@ pub fn create_app_state(repo: Arc<ThreadRepository>) -> AppState {
         }
     };
 
-    AppState { repo, cse_client, github_client, llm_service }
+    AppState {
+        repo,
+        cse_client,
+        github_client,
+        llm_service,
+    }
 }
 
 /// Create the API router with all routes.
@@ -98,7 +101,10 @@ pub fn create_router(state: AppState) -> Router {
         .route("/v1/threads/{id}", put(upsert_thread))
         .route("/v1/threads/{id}", get(get_thread))
         .route("/v1/threads/{id}", delete(delete_thread))
-        .route("/v1/threads/{id}/visibility", post(update_thread_visibility))
+        .route(
+            "/v1/threads/{id}/visibility",
+            post(update_thread_visibility),
+        )
         .route("/v1/threads", get(list_threads))
         .route("/v1/auth/login", post(login_stub))
         .route("/v1/auth/logout", post(logout_stub))
@@ -107,15 +113,33 @@ pub fn create_router(state: AppState) -> Router {
         // GitHub App endpoints
         .route("/v1/github/app", get(get_github_app_info))
         .route("/v1/github/webhook", post(github_webhook))
-        .route("/v1/github/installations/by-repo", get(get_github_installation_by_repo))
+        .route(
+            "/v1/github/installations/by-repo",
+            get(get_github_installation_by_repo),
+        )
         .route("/proxy/github/search-code", post(proxy_github_search_code))
         .route("/proxy/github/repo-info", post(proxy_github_repo_info))
-        .route("/proxy/github/file-contents", post(proxy_github_file_contents))
-        .route("/proxy/anthropic/complete", post(llm_proxy::proxy_anthropic_complete))
-        .route("/proxy/anthropic/stream", post(llm_proxy::proxy_anthropic_stream))
-        .route("/proxy/openai/complete", post(llm_proxy::proxy_openai_complete))
+        .route(
+            "/proxy/github/file-contents",
+            post(proxy_github_file_contents),
+        )
+        .route(
+            "/proxy/anthropic/complete",
+            post(llm_proxy::proxy_anthropic_complete),
+        )
+        .route(
+            "/proxy/anthropic/stream",
+            post(llm_proxy::proxy_anthropic_stream),
+        )
+        .route(
+            "/proxy/openai/complete",
+            post(llm_proxy::proxy_openai_complete),
+        )
         .route("/proxy/openai/stream", post(llm_proxy::proxy_openai_stream))
-        .route("/proxy/vertex/complete", post(llm_proxy::proxy_vertex_complete))
+        .route(
+            "/proxy/vertex/complete",
+            post(llm_proxy::proxy_vertex_complete),
+        )
         .route("/proxy/vertex/stream", post(llm_proxy::proxy_vertex_stream))
         .nest_service("/bin", ServeDir::new(bin_dir))
         .with_state(state)
@@ -479,7 +503,12 @@ async fn search_threads(
 
     let hits = state
         .repo
-        .search(query, params.workspace.as_deref(), params.limit, params.offset)
+        .search(
+            query,
+            params.workspace.as_deref(),
+            params.limit,
+            params.offset,
+        )
         .await?;
 
     let response_hits = hits
@@ -500,7 +529,7 @@ async fn search_threads(
 /// GET /health - Comprehensive health check endpoint.
 async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
     use tokio::time::Instant;
-    
+
     let overall_start = Instant::now();
 
     // Run checks in parallel
@@ -510,7 +539,7 @@ async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
         health::check_google_cse(),
         health::check_github_app(state.github_client.clone())
     );
-    
+
     let llm_providers = health::check_llm_providers(state.llm_service.as_deref());
 
     let components = HealthComponents {
@@ -587,13 +616,17 @@ async fn proxy_cse(
 
         let response = CseProxyResponse {
             query: cached.query,
-            results: cached.results.into_iter().map(|item| CseProxyResultItem {
-                title: item.title,
-                url: item.url,
-                snippet: item.snippet,
-                display_link: item.display_link,
-                rank: item.rank,
-            }).collect(),
+            results: cached
+                .results
+                .into_iter()
+                .map(|item| CseProxyResultItem {
+                    title: item.title,
+                    url: item.url,
+                    snippet: item.snippet,
+                    display_link: item.display_link,
+                    rank: item.rank,
+                })
+                .collect(),
         };
 
         return Ok((StatusCode::OK, Json(response)));
@@ -620,7 +653,9 @@ async fn proxy_cse(
         }
         CseError::RateLimited => {
             tracing::warn!("proxy_cse: rate limited by Google CSE");
-            ServerError::ServiceUnavailable("Google CSE rate limit exceeded; try again later".into())
+            ServerError::ServiceUnavailable(
+                "Google CSE rate limit exceeded; try again later".into(),
+            )
         }
         CseError::Unauthorized => {
             tracing::error!("proxy_cse: invalid API key or CSE ID");
@@ -653,13 +688,17 @@ async fn proxy_cse(
 
     let response = CseProxyResponse {
         query: cse_response.query,
-        results: cse_response.results.into_iter().map(|item| CseProxyResultItem {
-            title: item.title,
-            url: item.url,
-            snippet: item.snippet,
-            display_link: item.display_link,
-            rank: item.rank,
-        }).collect(),
+        results: cse_response
+            .results
+            .into_iter()
+            .map(|item| CseProxyResultItem {
+                title: item.title,
+                url: item.url,
+                snippet: item.snippet,
+                display_link: item.display_link,
+                rank: item.rank,
+            })
+            .collect(),
     };
 
     Ok((StatusCode::OK, Json(response)))
@@ -692,7 +731,11 @@ async fn get_github_installation_by_repo(
     State(state): State<AppState>,
     Query(params): Query<GithubInstallationByRepoQuery>,
 ) -> Result<Json<InstallationStatusResponse>, ServerError> {
-    match state.repo.get_github_installation_for_repo(&params.owner, &params.repo).await? {
+    match state
+        .repo
+        .get_github_installation_for_repo(&params.owner, &params.repo)
+        .await?
+    {
         Some(info) => Ok(Json(InstallationStatusResponse::installed(
             info.installation_id,
             info.account_login,
@@ -743,7 +786,9 @@ async fn github_webhook(
     // 4. Verify signature
     if let Err(e) = loom_github_app::verify_webhook_signature(secret, sig_header, &body) {
         tracing::warn!(error = %e, "github_webhook: signature verification failed");
-        return Err(ServerError::Unauthorized("Invalid webhook signature".into()));
+        return Err(ServerError::Unauthorized(
+            "Invalid webhook signature".into(),
+        ));
     }
 
     // 5. Process the event
@@ -806,23 +851,29 @@ async fn handle_installation_webhook(state: &AppState, body: &[u8]) -> Result<()
                 .collect();
 
             if !repos.is_empty() {
-                state.repo.add_github_installation_repos(payload.installation.id, &repos).await?;
+                state
+                    .repo
+                    .add_github_installation_repos(payload.installation.id, &repos)
+                    .await?;
             }
         }
         "deleted" => {
-            state.repo.delete_github_installation(payload.installation.id).await?;
+            state
+                .repo
+                .delete_github_installation(payload.installation.id)
+                .await?;
         }
         "suspended" => {
-            state.repo.update_github_installation_suspension(
-                payload.installation.id,
-                Some(&now),
-            ).await?;
+            state
+                .repo
+                .update_github_installation_suspension(payload.installation.id, Some(&now))
+                .await?;
         }
         "unsuspended" => {
-            state.repo.update_github_installation_suspension(
-                payload.installation.id,
-                None,
-            ).await?;
+            state
+                .repo
+                .update_github_installation_suspension(payload.installation.id, None)
+                .await?;
         }
         _ => {
             tracing::debug!(action = %payload.action, "github_webhook: ignoring installation action");
@@ -833,7 +884,10 @@ async fn handle_installation_webhook(state: &AppState, body: &[u8]) -> Result<()
 }
 
 /// Handle installation_repositories webhook events.
-async fn handle_installation_repos_webhook(state: &AppState, body: &[u8]) -> Result<(), ServerError> {
+async fn handle_installation_repos_webhook(
+    state: &AppState,
+    body: &[u8],
+) -> Result<(), ServerError> {
     use loom_github_app::types::InstallationWebhookPayload;
 
     let payload: InstallationWebhookPayload = serde_json::from_slice(body)
@@ -863,12 +917,18 @@ async fn handle_installation_repos_webhook(state: &AppState, body: &[u8]) -> Res
                 }
             })
             .collect();
-        state.repo.add_github_installation_repos(payload.installation.id, &repos).await?;
+        state
+            .repo
+            .add_github_installation_repos(payload.installation.id, &repos)
+            .await?;
     }
 
     if !payload.repositories_removed.is_empty() {
         let repo_ids: Vec<i64> = payload.repositories_removed.iter().map(|r| r.id).collect();
-        state.repo.remove_github_installation_repos(&repo_ids).await?;
+        state
+            .repo
+            .remove_github_installation_repos(&repo_ids)
+            .await?;
     }
 
     Ok(())
@@ -963,16 +1023,19 @@ async fn proxy_github_repo_info(
         "proxy_github_repo_info: returning info"
     );
 
-    Ok((StatusCode::OK, Json(GithubRepoInfoResponse {
-        id: repo.id,
-        full_name: repo.full_name,
-        description: repo.description,
-        private: repo.private,
-        default_branch: repo.default_branch,
-        language: repo.language,
-        stargazers_count: repo.stargazers_count,
-        html_url: repo.html_url,
-    })))
+    Ok((
+        StatusCode::OK,
+        Json(GithubRepoInfoResponse {
+            id: repo.id,
+            full_name: repo.full_name,
+            description: repo.description,
+            private: repo.private,
+            default_branch: repo.default_branch,
+            language: repo.language,
+            stargazers_count: repo.stargazers_count,
+            html_url: repo.html_url,
+        }),
+    ))
 }
 
 /// POST /proxy/github/file-contents - Get file contents.
@@ -1023,14 +1086,17 @@ async fn proxy_github_file_contents(
         "proxy_github_file_contents: returning contents"
     );
 
-    Ok((StatusCode::OK, Json(GithubFileContentsResponse {
-        name: contents.name,
-        path: contents.path,
-        sha: contents.sha,
-        size: contents.size,
-        encoding: contents.encoding,
-        content: contents.content,
-    })))
+    Ok((
+        StatusCode::OK,
+        Json(GithubFileContentsResponse {
+            name: contents.name,
+            path: contents.path,
+            sha: contents.sha,
+            size: contents.size,
+            encoding: contents.encoding,
+            content: contents.content,
+        }),
+    ))
 }
 
 /// Map GitHub App errors to server errors.
@@ -1042,7 +1108,9 @@ fn map_github_error(err: GithubAppError) -> ServerError {
         }
         GithubAppError::RateLimited => {
             tracing::warn!("GitHub rate limit exceeded");
-            ServerError::ServiceUnavailable("GitHub API rate limit exceeded; try again later".into())
+            ServerError::ServiceUnavailable(
+                "GitHub API rate limit exceeded; try again later".into(),
+            )
         }
         GithubAppError::Unauthorized => {
             tracing::error!("GitHub unauthorized");
@@ -1142,12 +1210,20 @@ mod tests {
         let (app, _dir) = create_test_app().await;
 
         let response = app
-            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/health")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
 
         // Should be OK (healthy or degraded, depending on bin dir)
-        assert!(response.status() == StatusCode::OK || response.status() == StatusCode::SERVICE_UNAVAILABLE);
+        assert!(
+            response.status() == StatusCode::OK
+                || response.status() == StatusCode::SERVICE_UNAVAILABLE
+        );
     }
 
     #[tokio::test]
@@ -1155,11 +1231,18 @@ mod tests {
         let (app, _dir) = create_test_app().await;
 
         let response = app
-            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/health")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
 
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
         let health: serde_json::Value = serde_json::from_slice(&body).unwrap();
 
         // Verify response structure
@@ -1168,7 +1251,7 @@ mod tests {
         assert!(health.get("duration_ms").is_some());
         assert!(health.get("version").is_some());
         assert!(health.get("components").is_some());
-        
+
         let components = health.get("components").unwrap();
         assert!(components.get("database").is_some());
         assert!(components.get("bin_dir").is_some());
@@ -1313,7 +1396,9 @@ mod tests {
 
         assert_eq!(response.status(), StatusCode::OK);
 
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
         let updated: Thread = serde_json::from_slice(&body).unwrap();
         assert_eq!(updated.visibility, loom_thread::ThreadVisibility::Public);
     }
@@ -1415,11 +1500,11 @@ mod tests {
         // This test verifies that when CSE is not configured, we get an error
         // (cache miss path, then env var lookup fails)
         let (app, _dir) = create_test_app().await;
-        
+
         // Clear env vars to ensure CSE is not configured
         std::env::remove_var("LOOM_SERVER_GOOGLE_CSE_API_KEY");
         std::env::remove_var("LOOM_SERVER_GOOGLE_CSE_CX");
-        
+
         let response = app
             .oneshot(
                 Request::builder()
@@ -1431,7 +1516,7 @@ mod tests {
             )
             .await
             .unwrap();
-        
+
         // Should be 500 because CSE env vars are not set
         assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
     }

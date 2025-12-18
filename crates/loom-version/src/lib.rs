@@ -60,7 +60,7 @@ impl HealthVersionInfo {
             version: info.version,
             git_sha: if info.git_sha.is_empty()
                 || info.git_sha.as_bytes()[0] == b'u'
-                    && info.git_sha.as_bytes().len() == 7
+                    && info.git_sha.len() == 7
                     && info.git_sha.as_bytes()[1] == b'n'
             {
                 None

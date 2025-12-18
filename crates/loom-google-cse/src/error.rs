@@ -28,10 +28,7 @@ pub enum CseError {
 
     /// Google API returned an error status.
     #[error("Google API error: {status} - {message}")]
-    ApiError {
-        status: u16,
-        message: String,
-    },
+    ApiError { status: u16, message: String },
 }
 
 impl RetryableError for CseError {

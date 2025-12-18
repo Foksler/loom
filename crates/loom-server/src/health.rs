@@ -195,7 +195,9 @@ pub fn check_bin_dir() -> BinDirHealth {
 }
 
 /// Check LLM provider health by verifying if the service is configured.
-pub fn check_llm_providers(llm_service: Option<&loom_llm_service::LlmService>) -> LlmProvidersHealth {
+pub fn check_llm_providers(
+    llm_service: Option<&loom_llm_service::LlmService>,
+) -> LlmProvidersHealth {
     match llm_service {
         Some(service) => {
             let mut providers = Vec::new();
@@ -240,7 +242,7 @@ const CSE_CHECK_TIMEOUT: Duration = Duration::from_secs(5);
 /// Check Google CSE health by verifying configuration and optionally testing connectivity.
 pub async fn check_google_cse() -> GoogleCseHealth {
     use loom_google_cse::{CseClient, CseRequest};
-    
+
     let start = Instant::now();
 
     // Check if CSE is configured
@@ -252,26 +254,42 @@ pub async fn check_google_cse() -> GoogleCseHealth {
             // CSE is configured, try a simple search to verify connectivity
             let client = CseClient::new(key, cx_val);
             let request = CseRequest::new("test", 1);
-            
+
             match timeout(CSE_CHECK_TIMEOUT, client.search(request)).await {
                 Ok(Ok(_)) => (true, HealthStatus::Healthy, None),
                 Ok(Err(e)) => {
                     // Check if it's an auth error vs network error
                     let err_str = e.to_string();
                     if err_str.contains("Unauthorized") || err_str.contains("Invalid API key") {
-                        (true, HealthStatus::Unhealthy, Some("Invalid API key or CSE ID".to_string()))
+                        (
+                            true,
+                            HealthStatus::Unhealthy,
+                            Some("Invalid API key or CSE ID".to_string()),
+                        )
                     } else if err_str.contains("Rate limit") {
-                        (true, HealthStatus::Degraded, Some("Rate limited".to_string()))
+                        (
+                            true,
+                            HealthStatus::Degraded,
+                            Some("Rate limited".to_string()),
+                        )
                     } else {
                         (true, HealthStatus::Degraded, Some(err_str))
                     }
                 }
-                Err(_) => (true, HealthStatus::Degraded, Some("CSE health check timed out".to_string())),
+                Err(_) => (
+                    true,
+                    HealthStatus::Degraded,
+                    Some("CSE health check timed out".to_string()),
+                ),
             }
         }
         _ => {
             // Not configured - this is degraded, not unhealthy (CSE is optional)
-            (false, HealthStatus::Degraded, Some("Google CSE not configured".to_string()))
+            (
+                false,
+                HealthStatus::Degraded,
+                Some("Google CSE not configured".to_string()),
+            )
         }
     };
 
@@ -297,31 +315,29 @@ pub async fn check_github_app(client: Option<Arc<GithubAppClient>>) -> GithubApp
             HealthStatus::Degraded,
             Some("GitHub App not configured".to_string()),
         ),
-        Some(client) => {
-            match timeout(GITHUB_CHECK_TIMEOUT, client.list_installations()).await {
-                Ok(Ok(_)) => (true, HealthStatus::Healthy, None),
-                Ok(Err(e)) => {
-                    let status = match &e {
-                        GithubAppError::Unauthorized
-                        | GithubAppError::Config(_)
-                        | GithubAppError::Jwt(_) => HealthStatus::Unhealthy,
-                        GithubAppError::Timeout
-                        | GithubAppError::RateLimited
-                        | GithubAppError::Network(_) => HealthStatus::Degraded,
-                        GithubAppError::ApiError { status, .. } if *status >= 500 => {
-                            HealthStatus::Degraded
-                        }
-                        _ => HealthStatus::Degraded,
-                    };
-                    (true, status, Some(e.to_string()))
-                }
-                Err(_) => (
-                    true,
-                    HealthStatus::Degraded,
-                    Some("GitHub health check timed out".to_string()),
-                ),
+        Some(client) => match timeout(GITHUB_CHECK_TIMEOUT, client.list_installations()).await {
+            Ok(Ok(_)) => (true, HealthStatus::Healthy, None),
+            Ok(Err(e)) => {
+                let status = match &e {
+                    GithubAppError::Unauthorized
+                    | GithubAppError::Config(_)
+                    | GithubAppError::Jwt(_) => HealthStatus::Unhealthy,
+                    GithubAppError::Timeout
+                    | GithubAppError::RateLimited
+                    | GithubAppError::Network(_) => HealthStatus::Degraded,
+                    GithubAppError::ApiError { status, .. } if *status >= 500 => {
+                        HealthStatus::Degraded
+                    }
+                    _ => HealthStatus::Degraded,
+                };
+                (true, status, Some(e.to_string()))
             }
-        }
+            Err(_) => (
+                true,
+                HealthStatus::Degraded,
+                Some("GitHub health check timed out".to_string()),
+            ),
+        },
     };
 
     let latency_ms = start.elapsed().as_millis() as u64;
@@ -343,7 +359,10 @@ pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
         components.github_app.status,
     ];
 
-    if statuses.iter().any(|s| matches!(s, HealthStatus::Unhealthy)) {
+    if statuses
+        .iter()
+        .any(|s| matches!(s, HealthStatus::Unhealthy))
+    {
         HealthStatus::Unhealthy
     } else if statuses.iter().any(|s| matches!(s, HealthStatus::Degraded)) {
         HealthStatus::Degraded

@@ -333,7 +333,8 @@ mod tests {
         /// This is important because config fields are often Option<SecretString>.
         #[test]
         fn option_secret_debug_is_redacted() {
-            let secret: Option<Secret<String>> = Some(Secret::new("super-secret-value".to_string()));
+            let secret: Option<Secret<String>> =
+                Some(Secret::new("super-secret-value".to_string()));
             let debug = format!("{:?}", secret);
             assert!(debug.contains(REDACTED));
             assert!(!debug.contains("super-secret-value"));

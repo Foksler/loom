@@ -131,6 +131,9 @@ mod tests {
     fn test_workspace_config_path() {
         let result = workspace_config_path();
         assert!(result.is_ok());
-        assert!(result.unwrap().to_string_lossy().contains(".loom/config.toml"));
+        assert!(result
+            .unwrap()
+            .to_string_lossy()
+            .contains(".loom/config.toml"));
     }
 }
