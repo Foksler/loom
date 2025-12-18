@@ -1,5 +1,6 @@
 //! Loom thread persistence server binary.
 
+use clap::{Parser, Subcommand};
 use loom_server::{create_app_state, create_router, ServerConfig, ThreadRepository};
 use std::sync::Arc;
 use tower_http::{
@@ -8,8 +9,38 @@ use tower_http::{
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+mod version;
+
+/// Loom server - HTTP server for Loom thread persistence.
+#[derive(Parser, Debug)]
+#[command(
+    name = "loom-server",
+    about = "Loom thread persistence server",
+    version
+)]
+struct Args {
+    /// Subcommands for loom-server (e.g., `version`)
+    #[command(subcommand)]
+    command: Option<Command>,
+}
+
+#[derive(Subcommand, Debug)]
+enum Command {
+    /// Show version and build information
+    Version,
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Parse CLI arguments
+    let args = Args::parse();
+
+    // Handle subcommands that should not start the server
+    if let Some(Command::Version) = args.command {
+        println!("{}", version::format_version_info());
+        return Ok(());
+    }
+
     // Load .env file if present
     dotenvy::dotenv().ok();
 

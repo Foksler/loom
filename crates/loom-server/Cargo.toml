@@ -52,6 +52,10 @@ tracing-subscriber.workspace = true
 # Config
 dotenvy = "0.15"
 
+# CLI
+clap = { workspace = true }
+humantime = "2"
+
 [dev-dependencies]
 tempfile.workspace = true
 tokio-test.workspace = true
