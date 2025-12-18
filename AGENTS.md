@@ -7,6 +7,12 @@
 
 ## Development loop
 
-
+```bash
+make build    # Build workspace
+make test     # Run all tests
+make lint     # Run clippy
+make fix      # Auto-fix clippy + format
+make check    # Full CI check (format + lint + build + test)
+```
 
 
