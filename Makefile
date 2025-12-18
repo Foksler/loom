@@ -91,26 +91,32 @@ sbom: sbom-spdx sbom-cyclonedx
 release: build test sbom
 	@echo "Release build complete. Artifacts in target/debug/ and $(SBOM_DIR)/"
 
-# Docker container targets (using devenv + Nix)
+# Docker container targets (using Nix flake.nix + dockerTools)
 
-# Build loom-server Docker container via devenv/Nix
-# Output: OCI/Docker image (devenv handles image format)
+# Build loom-server Docker image via Nix flake
+# Output: OCI/Docker image tarball (./result)
 docker-build:
-	@echo "Building loom-server container via devenv/Nix..."
+	@echo "Building loom-server Docker image via Nix..."
 	@(set -e; \
-	  devenv container build loom-server; \
+	  nix --extra-experimental-features nix-command --extra-experimental-features flakes build .#loom-server-image -L --impure; \
 	  echo ""; \
-	  echo "✓ Docker container built successfully"; \
+	  echo "✓ Docker image built successfully"; \
+	  echo "  Output: ./result (OCI/Docker image tarball)"; \
 	  echo "  Image name: loom-server:latest"; \
-	  echo "  To load into Docker: docker load < result"; \
-	  echo "  To run: docker run --rm -p 8080:8080 loom-server:latest")
+	  echo ""; \
+	  echo "To load into Docker:"; \
+	  echo "  docker load < ./result"; \
+	  echo ""; \
+	  echo "To run:"; \
+	  echo "  docker run --rm -p 8080:8080 loom-server:latest")
 
 # Run loom-server container locally
-# Requires docker-build target to have run first
+# Builds image, loads into Docker, and runs it
 docker-run: docker-build
-	@echo "Loading container into Docker and running..."
+	@echo "Loading image into Docker and running..."
 	@(set -e; \
-	  docker load < result; \
+	  docker load < ./result; \
 	  echo ""; \
-	  echo "Starting loom-server container (Ctrl+C to stop)..."; \
+	  echo "✓ Starting loom-server container (Ctrl+C to stop)"; \
+	  echo ""; \
 	  docker run --rm -p 8080:8080 loom-server:latest)
