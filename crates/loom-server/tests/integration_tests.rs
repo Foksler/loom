@@ -7,10 +7,7 @@
 //! - Concurrent operations
 //! - Error handling and recovery
 
-use loom_server::{
-    LlmQueryHandler, SimpleRegexDetector, QueryTracer, TraceId,
-    ServerQueryManager,
-};
+use loom_server::{LlmQueryHandler, QueryTracer, ServerQueryManager, SimpleRegexDetector, TraceId};
 use std::sync::Arc;
 
 /// Tests query handler initialization.
@@ -22,10 +19,10 @@ fn test_component_rendering_integration() {
     // Initialize detector and query manager
     let detector = SimpleRegexDetector::new();
     let query_manager = Arc::new(ServerQueryManager::new());
-    
+
     // Create handler
     let handler = LlmQueryHandler::new(detector, query_manager);
-    
+
     // Verify handler was created
     assert!(std::mem::size_of_val(&handler) > 0);
 }
@@ -44,7 +41,7 @@ fn test_concurrent_api_requests() {
             LlmQueryHandler::new(detector, query_manager)
         })
         .collect();
-    
+
     // All should be successfully created
     assert_eq!(handlers.len(), 10);
 }
@@ -58,11 +55,11 @@ fn test_state_management_isolation() {
     // Create separate tracers with different query IDs
     let tracer1 = QueryTracer::new("query_1", Some("session_1".to_string()));
     let tracer2 = QueryTracer::new("query_2", Some("session_2".to_string()));
-    
+
     // Create trace IDs
     let trace_id_1 = TraceId::new();
     let trace_id_2 = TraceId::new();
-    
+
     // IDs should be different
     assert_ne!(trace_id_1, trace_id_2);
 }
@@ -77,7 +74,7 @@ fn test_error_handling_invalid_input() {
     let detector = SimpleRegexDetector::new();
     let query_manager = Arc::new(ServerQueryManager::new());
     let _handler = LlmQueryHandler::new(detector, query_manager);
-    
+
     // Should not panic or error on creation
     assert!(true);
 }
@@ -93,7 +90,7 @@ fn test_query_bridge_routing() {
     let query_manager = Arc::new(ServerQueryManager::new());
     let handler = LlmQueryHandler::new(detector, query_manager.clone());
     let tracer = QueryTracer::new("test_query", None);
-    
+
     // Verify all components exist
     assert!(std::mem::size_of_val(&handler) > 0);
     assert!(std::mem::size_of_val(&tracer) > 0);
@@ -109,12 +106,12 @@ fn test_recovery_from_transient_failure() {
     let detector_1 = SimpleRegexDetector::new();
     let manager_1 = Arc::new(ServerQueryManager::new());
     let handler_1 = LlmQueryHandler::new(detector_1, manager_1);
-    
+
     // Create second set
     let detector_2 = SimpleRegexDetector::new();
     let manager_2 = Arc::new(ServerQueryManager::new());
     let handler_2 = LlmQueryHandler::new(detector_2, manager_2);
-    
+
     // Both should work
     assert!(std::mem::size_of_val(&handler_1) > 0);
     assert!(std::mem::size_of_val(&handler_2) > 0);

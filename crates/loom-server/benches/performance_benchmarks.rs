@@ -7,7 +7,7 @@
 //! - State update performance
 //! - Concurrent request handling
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use loom_server::models::CreateQueryRequest;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -25,7 +25,7 @@ fn bench_query_creation(c: &mut Criterion) {
                     query: black_box("SELECT * FROM threads".to_string()),
                     context: None,
                 };
-                
+
                 // Simulate query creation overhead
                 request.id.clone()
             });
@@ -44,7 +44,7 @@ fn bench_query_creation_with_context(c: &mut Criterion) {
                     query: black_box("SELECT * FROM threads WHERE id = ?".to_string()),
                     context: Some(black_box("database".to_string())),
                 };
-                
+
                 request.id.clone()
             });
     });
@@ -56,7 +56,7 @@ fn bench_query_creation_with_context(c: &mut Criterion) {
 /// safe concurrency limits.
 fn bench_concurrent_queries(c: &mut Criterion) {
     let mut group = c.benchmark_group("concurrent_queries");
-    
+
     for count in [10, 50, 100, 500].iter() {
         group.bench_with_input(BenchmarkId::from_parameter(count), count, |b, &count| {
             b.to_async(tokio::runtime::Runtime::new().unwrap())
@@ -73,12 +73,12 @@ fn bench_concurrent_queries(c: &mut Criterion) {
                             })
                         })
                         .collect();
-                    
+
                     futures::future::join_all(handles).await
                 });
         });
     }
-    
+
     group.finish();
 }
 
@@ -87,7 +87,7 @@ fn bench_concurrent_queries(c: &mut Criterion) {
 /// Purpose: Measure how query size affects state management performance.
 fn bench_state_updates_by_size(c: &mut Criterion) {
     let mut group = c.benchmark_group("state_updates_by_size");
-    
+
     for size in [10, 100, 1000, 10000].iter() {
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, &size| {
             b.to_async(tokio::runtime::Runtime::new().unwrap())
@@ -98,12 +98,12 @@ fn bench_state_updates_by_size(c: &mut Criterion) {
                         query: black_box(query_data),
                         context: None,
                     };
-                    
+
                     request.query.len()
                 });
         });
     }
-    
+
     group.finish();
 }
 
@@ -125,9 +125,7 @@ fn bench_query_manager_operations(c: &mut Criterion) {
 /// Purpose: Measure cost of UUID generation used for request IDs.
 fn bench_uuid_generation(c: &mut Criterion) {
     c.bench_function("uuid_generation", |b| {
-        b.iter(|| {
-            uuid::Uuid::new_v4()
-        });
+        b.iter(|| uuid::Uuid::new_v4());
     });
 }
 
