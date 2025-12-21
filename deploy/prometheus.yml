@@ -1,0 +1,217 @@
+# Prometheus Configuration for Loom
+# Metrics collection and storage configuration
+
+global:
+  # Scrape interval
+  scrape_interval: 15s
+  
+  # Evaluation interval for alert rules
+  evaluation_interval: 15s
+  
+  # Default timeout for scraping
+  scrape_timeout: 10s
+  
+  # External labels added to all time series
+  external_labels:
+    monitor: 'loom-monitor'
+    environment: 'production'
+    region: 'us-east-1'
+
+# Alert manager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - 'alertmanager:9093'
+
+# Load rules once and periodically evaluate them
+rule_files:
+  # - "alert.rules.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Loom Server
+  - job_name: 'loom-server'
+    static_configs:
+      - targets: ['loom-server:9090']
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: '/metrics'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__scheme__]
+        target_label: scheme
+
+  # PostgreSQL (via postgres_exporter)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # Redis (via redis_exporter)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # Node metrics (via node_exporter)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__meta_nodename]
+        target_label: hostname
+
+  # Nginx (via nginx_exporter)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # Docker daemon metrics (via cadvisor)
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    metrics_path: '/metrics'
+
+# Remote storage (optional)
+remote_write:
+  # Uncomment to write to remote storage (e.g., Thanos, Cortex)
+  # - url: http://thanos-receive:19291/api/v1/receive
+  #   write_relabel_configs:
+  #     - source_labels: [__name__]
+  #       regex: '.*_total|.*_count|.*_sum|.*_bucket'
+  #       action: keep
+
+# Remote read (optional)
+remote_read:
+  # Uncomment to read from remote storage
+  # - url: http://thanos-query:9090/api/v1
+
+---
+# Alert Rules for Loom
+# file: alert.rules.yml
+groups:
+  - name: loom_alerts
+    interval: 1m
+    rules:
+      # Server is down
+      - alert: LoomServerDown
+        expr: up{job="loom-server"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Loom server is down"
+          description: "Loom server at {{ $labels.instance }} is down"
+
+      # High error rate
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{job="loom-server",status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{job="loom-server"}[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+      # High response time
+      - alert: HighResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket{job="loom-server"}[5m])) by (le)
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time detected"
+          description: "P95 response time is {{ $value }}s (threshold: 1s)"
+
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: |
+          (100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value | humanize }}%"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes)
+            / node_memory_MemTotal_bytes
+          ) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanize }}%"
+
+      # Database connection pool exhausted
+      - alert: DatabasePoolExhausted
+        expr: |
+          (db_pool_connections_in_use / db_pool_connections_max) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database connection pool near capacity"
+          description: "{{ $value | humanizePercentage }} of connections are in use"
+
+      # Redis unavailable
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache is not responding"
+
+      # Disk space low
+      - alert: DiskSpaceLow
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space"
+          description: "Disk usage is {{ $value | humanize }}% (threshold: 85%)"
+
+      # Request rate spike
+      - alert: RequestRateSpike
+        expr: |
+          (rate(http_requests_total{job="loom-server"}[5m]) /
+           rate(http_requests_total{job="loom-server"}[1h] offset 1h)) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Unusual request rate spike"
+          description: "Request rate increased {{ $value | humanize }}x"
