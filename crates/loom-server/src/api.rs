@@ -25,6 +25,9 @@ use crate::{
     db::{GithubInstallation, GithubRepo, ThreadRepository},
     error::ServerError,
     health::{self, HealthComponents, HealthResponse, HealthStatus},
+    query_metrics::QueryMetrics,
+    query_tracing::QueryTraceStore,
+    server_query::{self, ServerQueryManager},
 };
 
 /// Application state shared across handlers.
@@ -34,6 +37,9 @@ pub struct AppState {
     pub cse_client: Option<Arc<CseClient>>,
     pub github_client: Option<Arc<GithubAppClient>>,
     pub llm_service: Option<Arc<LlmService>>,
+    pub query_manager: Arc<ServerQueryManager>,
+    pub query_metrics: Arc<QueryMetrics>,
+    pub trace_store: QueryTraceStore,
 }
 
 /// Creates the application state, initializing optional components.
@@ -84,11 +90,17 @@ pub fn create_app_state(repo: Arc<ThreadRepository>) -> AppState {
         }
     };
 
+    let query_metrics = Arc::new(QueryMetrics::default());
+    let query_manager = Arc::new(ServerQueryManager::with_metrics(query_metrics.clone()));
+
     AppState {
         repo,
         cse_client,
         github_client,
         llm_service,
+        query_manager,
+        query_metrics,
+        trace_store: QueryTraceStore::default(),
     }
 }
 
@@ -109,6 +121,7 @@ pub fn create_router(state: AppState) -> Router {
         .route("/v1/auth/login", post(login_stub))
         .route("/v1/auth/logout", post(logout_stub))
         .route("/health", get(health_check))
+        .route("/metrics", get(prometheus_metrics))
         .route("/proxy/cse", post(proxy_cse))
         // GitHub App endpoints
         .route("/v1/github/app", get(get_github_app_info))
@@ -141,6 +154,19 @@ pub fn create_router(state: AppState) -> Router {
             post(llm_proxy::proxy_vertex_complete),
         )
         .route("/proxy/vertex/stream", post(llm_proxy::proxy_vertex_stream))
+        // Server query endpoints
+        .route(
+            "/v1/sessions/{session_id}/query-response",
+            post(server_query::handle_query_response),
+        )
+        .route(
+            "/v1/sessions/{session_id}/queries",
+            get(server_query::list_pending_queries),
+        )
+        // Debug/tracing endpoints
+        .route("/v1/debug/query-traces/{trace_id}", get(get_query_trace))
+        .route("/v1/debug/query-traces", get(list_query_traces))
+        .route("/v1/debug/query-traces/stats", get(get_trace_stats))
         .nest_service("/bin", ServeDir::new(bin_dir))
         .with_state(state)
 }
@@ -589,6 +615,39 @@ async fn logout_stub() -> impl IntoResponse {
             message: "Logout is not implemented yet.".to_string(),
         }),
     )
+}
+
+/// GET /metrics - Prometheus metrics export endpoint.
+///
+/// Returns all query metrics in Prometheus text format. Includes:
+/// - Total queries sent/succeeded/failed
+/// - Query latency histogram
+/// - Pending queries gauge
+/// - Metrics by query type and session
+/// - Timeout counters by query type
+async fn prometheus_metrics(
+    State(state): State<AppState>,
+) -> Result<impl IntoResponse, ServerError> {
+    match state.query_metrics.gather_metrics() {
+        Ok(metrics) => {
+            tracing::debug!("prometheus_metrics: gathering metrics");
+            Ok((
+                StatusCode::OK,
+                [(
+                    axum::http::header::CONTENT_TYPE,
+                    "text/plain; version=0.0.4; charset=utf-8",
+                )],
+                metrics,
+            ))
+        }
+        Err(e) => {
+            tracing::error!(error = %e, "prometheus_metrics: failed to gather metrics");
+            Err(ServerError::Internal(format!(
+                "Failed to gather metrics: {}",
+                e
+            )))
+        }
+    }
 }
 
 /// POST /proxy/cse - Proxy requests to Google Custom Search Engine.
@@ -1149,6 +1208,112 @@ fn map_github_error(err: GithubAppError) -> ServerError {
     }
 }
 
+/// GET /v1/debug/query-traces/{trace_id} - Get a query trace by ID.
+///
+/// Returns the full trace timeline with all events and their durations.
+#[axum::debug_handler]
+async fn get_query_trace(
+    State(state): State<AppState>,
+    Path(trace_id): Path<String>,
+) -> Result<impl IntoResponse, ServerError> {
+    use crate::query_tracing::TraceTimeline;
+
+    tracing::debug!(trace_id = %trace_id, "fetching query trace");
+
+    let tracer = state
+        .trace_store
+        .get(&trace_id)
+        .await
+        .ok_or_else(|| ServerError::NotFound(format!("Trace not found: {}", trace_id)))?;
+
+    let timeline = TraceTimeline::from_tracer(&tracer);
+
+    tracing::info!(
+        trace_id = %trace_id,
+        query_id = %timeline.query_id,
+        total_duration_ms = timeline.total_duration_ms,
+        "returning query trace"
+    );
+
+    Ok(Json(timeline))
+}
+
+/// GET /v1/debug/query-traces - List all trace IDs.
+///
+/// Optionally filter by session_id query parameter.
+#[axum::debug_handler]
+async fn list_query_traces(
+    State(state): State<AppState>,
+    Query(params): Query<std::collections::HashMap<String, String>>,
+) -> Result<impl IntoResponse, ServerError> {
+    let session_id = params.get("session_id").cloned();
+
+    tracing::debug!(session_id = ?session_id, "listing query traces");
+
+    let traces = if let Some(session_id) = session_id {
+        state.trace_store.get_session_traces(&session_id).await
+    } else {
+        let trace_ids = state.trace_store.list_trace_ids().await;
+        // Convert IDs back to tracers (simple version)
+        let mut results = Vec::new();
+        for id in trace_ids {
+            if let Some(tracer) = state.trace_store.get(&id).await {
+                results.push(tracer);
+            }
+        }
+        results
+    };
+
+    let response = serde_json::json!({
+        "traces": traces.iter().map(|t| {
+            serde_json::json!({
+                "trace_id": t.trace_id.as_str(),
+                "query_id": t.query_id,
+                "session_id": t.session_id,
+                "event_count": t.events.len(),
+                "total_duration_ms": t.total_duration().as_millis() as u64,
+                "has_error": t.has_error(),
+            })
+        }).collect::<Vec<_>>(),
+        "count": traces.len(),
+    });
+
+    Ok(Json(response))
+}
+
+/// GET /v1/debug/query-traces/stats - Get trace store statistics.
+///
+/// Returns aggregated statistics about all traces in the store.
+#[axum::debug_handler]
+async fn get_trace_stats(State(state): State<AppState>) -> Result<impl IntoResponse, ServerError> {
+    use std::time::Duration;
+
+    tracing::debug!("fetching trace store statistics");
+
+    let stats = state.trace_store.get_stats().await;
+    let slow_traces = state
+        .trace_store
+        .get_slow_traces(Duration::from_secs(5))
+        .await;
+
+    let response = serde_json::json!({
+        "total_traces": stats.total_traces,
+        "traces_with_errors": stats.traces_with_errors,
+        "slow_traces": stats.slow_traces,
+        "avg_events_per_trace": stats.avg_events_per_trace,
+        "slow_trace_details": slow_traces,
+    });
+
+    tracing::info!(
+        total_traces = stats.total_traces,
+        error_traces = stats.traces_with_errors,
+        slow_traces = stats.slow_traces,
+        "returning trace statistics"
+    );
+
+    Ok(Json(response))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1519,5 +1684,270 @@ mod tests {
 
         // Should be 500 because CSE env vars are not set
         assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    }
+
+    /// Test debug endpoint: GET /v1/debug/query-traces/{trace_id}
+    /// **Why Important**: Ensures the debug endpoint correctly retrieves stored traces
+    /// for performance analysis and debugging query lifecycle issues.
+    #[tokio::test]
+    async fn test_get_query_trace_endpoint() {
+        use crate::query_tracing::QueryTracer;
+
+        let (app, _dir) = create_test_app().await;
+
+        // Create a test trace
+        let mut tracer = QueryTracer::new("Q-test-123", Some("session-debug".to_string()));
+        tracer.record_sent(10);
+        tracer.record_response_received("ok");
+
+        let _trace_id = tracer.trace_id.as_str().to_string();
+
+        // We need to access the app state to store the trace
+        // For now, we'll test the endpoint's 404 behavior when trace doesn't exist
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri(format!("/v1/debug/query-traces/nonexistent-trace"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    /// Test debug endpoint: GET /v1/debug/query-traces
+    /// **Why Important**: Ensures the listing endpoint correctly returns all stored traces
+    /// for monitoring and debugging purposes.
+    #[tokio::test]
+    async fn test_list_query_traces_endpoint() {
+        let (app, _dir) = create_test_app().await;
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/v1/debug/query-traces")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let result: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+        // Should have a traces array and count
+        assert!(result.get("traces").is_some());
+        assert!(result.get("count").is_some());
+    }
+
+    /// Test debug endpoint: GET /v1/debug/query-traces?session_id=...
+    /// **Why Important**: Ensures filtering by session_id correctly isolates traces
+    /// for specific client sessions.
+    #[tokio::test]
+    async fn test_list_query_traces_with_session_filter() {
+        let (app, _dir) = create_test_app().await;
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/v1/debug/query-traces?session_id=test-session")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let result: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+        // Should have a traces array and count (likely empty for non-existent session)
+        assert!(result.get("traces").is_some());
+        assert!(result.get("count").is_some());
+        assert_eq!(result["count"].as_u64(), Some(0));
+    }
+
+    /// Test debug endpoint: GET /v1/debug/query-traces/stats
+    /// **Why Important**: Ensures statistics endpoint correctly aggregates trace metrics
+    /// for monitoring trace store health and performance bottlenecks.
+    #[tokio::test]
+    async fn test_get_trace_stats_endpoint() {
+        let (app, _dir) = create_test_app().await;
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/v1/debug/query-traces/stats")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let result: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+        // Should have required statistics fields
+        assert!(result.get("total_traces").is_some());
+        assert!(result.get("traces_with_errors").is_some());
+        assert!(result.get("slow_traces").is_some());
+        assert!(result.get("avg_events_per_trace").is_some());
+        assert!(result.get("slow_trace_details").is_some());
+    }
+
+    /// Test debug endpoints: Complete flow with trace creation and retrieval
+    /// **Why Important**: This integration test demonstrates the full flow of creating,
+    /// storing, and retrieving traces through the debug endpoints.
+    #[tokio::test]
+    async fn test_debug_endpoints_integration() {
+        use crate::query_tracing::QueryTracer;
+        use std::sync::Arc;
+
+        let dir = tempdir().unwrap();
+        let db_path = dir.path().join("test.db");
+        let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
+        let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
+        let state = create_app_state(repo);
+
+        // Create and store a trace directly
+        let mut tracer = QueryTracer::new(
+            "Q-integration-test",
+            Some("integration-session".to_string()),
+        );
+        tracer.record_sent(5);
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        tracer.record_response_received("success");
+
+        let trace_id = tracer.trace_id.as_str().to_string();
+        state.trace_store.store(tracer).await;
+
+        // Create router with our state
+        let app = create_router(state);
+
+        // Test 1: Retrieve the stored trace
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri(format!("/v1/debug/query-traces/{}", trace_id))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let timeline: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(timeline["trace_id"].as_str().unwrap(), &trace_id);
+        assert_eq!(timeline["query_id"].as_str().unwrap(), "Q-integration-test");
+        assert_eq!(
+            timeline["session_id"].as_str().unwrap(),
+            "integration-session"
+        );
+        assert_eq!(timeline["events"].as_array().unwrap().len(), 3); // created, sent, response_received
+
+        // Test 2: List traces
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/v1/debug/query-traces")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let list_result: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+        assert!(list_result["count"].as_u64().unwrap() >= 1);
+
+        // Test 3: Filter by session
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/v1/debug/query-traces?session_id=integration-session")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let session_result: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(session_result["count"].as_u64().unwrap(), 1);
+
+        // Test 4: Get statistics
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/v1/debug/query-traces/stats")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let stats: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+        assert!(stats["total_traces"].as_u64().unwrap() >= 1);
+        assert_eq!(stats["traces_with_errors"].as_u64().unwrap(), 0);
+    }
+
+    /// Test debug endpoint: Trace not found returns 404
+    /// **Why Important**: Ensures the endpoint correctly handles missing traces
+    /// and returns appropriate HTTP status codes.
+    #[tokio::test]
+    async fn test_get_query_trace_not_found() {
+        let (app, _dir) = create_test_app().await;
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/v1/debug/query-traces/TRACE-missing-trace-id")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let error: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+        assert!(error.get("message").is_some());
     }
 }

@@ -21,6 +21,7 @@ members = [
     "crates/loom-acp",
     "crates/loom-cli",
     "crates/loom-version",
+    "examples/query_bridge_examples",
 ]
 
 [workspace.package]

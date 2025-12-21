@@ -25,6 +25,8 @@ This directory contains the architectural specifications and design documentatio
 | [search-system.md](./search-system.md) | Full-text search with FTS5, commit SHA lookup, and CLI search command |
 | [secret-system.md](./secret-system.md) | Secret<T> type for safe handling of API keys and sensitive values |
 | [acp-system.md](./acp-system.md) | Agent Client Protocol (ACP) integration for editor-driven usage |
+| [server-query-phase-2.md](./server-query-phase-2.md) | Phase 2: Server-to-Client Query Bridge LLM Integration |
+| [phase3_websocket_planning.md](./phase3_websocket_planning.md) | Phase 3: WebSocket upgrade for persistent connections |
 
 ## Quick Reference
 
@@ -63,6 +65,18 @@ loom/
 - **Add Agent State**: See [state-machine.md](./state-machine.md#extension-guide)
 - **Add Config Source**: See [configuration-system.md](./configuration-system.md#6-configuration-registry-architecture)
 
+## Phase 2: Query Bridge Enhancements
+
+### New Documentation (Query Bridge Focus)
+
+The Query Bridge feature includes comprehensive production guides:
+
+- **[INTEGRATION_GUIDE.md](../INTEGRATION_GUIDE.md)** - How to integrate Query Bridge into existing LLM loop
+- **[PERFORMANCE_TUNING.md](../PERFORMANCE_TUNING.md)** - Latency optimization, timeout settings, detection tuning
+- **[SECURITY_HARDENING.md](../SECURITY_HARDENING.md)** - Security configuration, audit logging, rate limiting
+
+See [INDEX_QUERY_BRIDGE.md](../INDEX_QUERY_BRIDGE.md) for complete documentation index.
+
 ## Usage
 
 These specifications are designed to:
@@ -73,3 +87,12 @@ These specifications are designed to:
 4. **Maintain consistency** as the project evolves
 
 When extending Loom, consult the relevant specification first to understand the existing patterns and conventions.
+
+## Phase Roadmap
+
+| Phase | Status | Focus | Docs |
+|-------|--------|-------|------|
+| **Phase 1** | ✅ Complete | Core framework, types, manager, handler | [Implementation Guide](../IMPLEMENTATION_SERVER_CLIENT_QUERY_BRIDGE.md) |
+| **Phase 2** | ✅ Complete | LLM integration, extraction, context restoration | [Phase 2 Guide](../PHASE_2_IMPLEMENTATION_GUIDE.md) |
+| **Phase 3** | 📋 Planned | WebSocket upgrade, persistent connections | [WebSocket Planning](./phase3_websocket_planning.md) |
+| **Phase 4+** | 📋 Future | Editor integration, advanced query types | TBD |

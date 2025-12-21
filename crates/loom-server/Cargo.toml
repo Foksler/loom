@@ -56,7 +56,20 @@ dotenvy = "0.15"
 clap = { workspace = true }
 humantime = "2"
 
+# For LLM query detection
+async-trait = { workspace = true }
+regex = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+
+# Metrics
+prometheus = "0.13"
+
 [dev-dependencies]
 tempfile.workspace = true
 tokio-test.workspace = true
 proptest.workspace = true
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "query_bridge_benchmarks"
+harness = false

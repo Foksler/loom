@@ -70,6 +70,14 @@ impl ProxyLlmStream {
     }
 
     /// Converts a wire format LlmStreamEvent to a core LlmEvent.
+    ///
+    /// # Note on ServerQuery Events
+    ///
+    /// Server queries are converted to `Error` events since `LlmEvent` does not
+    /// have a dedicated ServerQuery variant. The client layer (outside of the proxy)
+    /// must handle server queries that come through the SSE stream before they
+    /// reach this proxy layer. This preserves the separation between the proxy's
+    /// concerns (wire format conversion) and the server's concerns (query management).
     fn convert_stream_event(&self, event: LlmStreamEvent) -> LlmEvent {
         match event {
             LlmStreamEvent::TextDelta { content } => LlmEvent::TextDelta { content },
@@ -82,6 +90,16 @@ impl ProxyLlmStream {
                 tool_name,
                 arguments_fragment,
             },
+            LlmStreamEvent::ServerQuery(query) => {
+                tracing::debug!(
+                    query_id = %query.id,
+                    "received server_query in SSE stream; handling at client layer"
+                );
+                LlmEvent::Error(LlmError::Api(format!(
+                    "server_query events should be handled at client layer: {}",
+                    query.id
+                )))
+            }
             LlmStreamEvent::Completed { response } => LlmEvent::Completed(response.into()),
             LlmStreamEvent::Error { message } => LlmEvent::Error(LlmError::Api(message)),
         }
@@ -206,6 +224,24 @@ mod tests {
 
         let event = proxy_stream.next().await;
         assert!(matches!(event, Some(LlmEvent::TextDelta { content }) if content == "Hi"));
+    }
+
+    #[tokio::test]
+    async fn parses_server_query_event() {
+        let sse_data = br#"event: llm
+data: {"type":"server_query","id":"Q-0123456789abcdef0123456789abcdef","kind":{"type":"read_file","path":"/test.txt"},"sent_at":"2025-01-01T00:00:00Z","timeout_secs":30,"metadata":{}}
+
+"#;
+        let stream = futures::stream::once(async {
+            Ok::<_, reqwest::Error>(Bytes::from(sse_data.to_vec()))
+        });
+        let mut proxy_stream = ProxyLlmStream::new(Box::pin(stream));
+
+        let event = proxy_stream.next().await;
+        // Server queries are converted to errors since LlmEvent doesn't have a ServerQuery variant
+        assert!(
+            matches!(event, Some(LlmEvent::Error(LlmError::Api(msg))) if msg.contains("server_query events should be handled at client layer"))
+        );
     }
 
     mod proptest_streaming {

@@ -9,8 +9,26 @@ pub mod db;
 pub mod error;
 pub mod health;
 pub mod llm_proxy;
+pub mod llm_query_handler;
+pub mod llm_query_processor;
+pub mod query_metrics;
+pub mod query_security;
+pub mod query_tracing;
+pub mod server_query;
+pub mod websocket;
+
+#[cfg(test)]
+mod tests;
 
 pub use api::{create_app_state, create_router, AppState};
 pub use config::ServerConfig;
 pub use db::{GithubInstallation, GithubInstallationInfo, GithubRepo, ThreadRepository};
 pub use error::ServerError;
+pub use llm_query_handler::{LlmQueryHandler, SimpleRegexDetector};
+pub use llm_query_processor::LlmQueryProcessor;
+pub use query_metrics::QueryMetrics;
+pub use query_security::{
+    PathSanitizer, QueryValidator, RateLimiter, ResultValidator, SecurityError,
+};
+pub use query_tracing::{QueryTraceStore, QueryTracer, TraceEvent, TraceId, TraceTimeline};
+pub use server_query::ServerQueryManager;

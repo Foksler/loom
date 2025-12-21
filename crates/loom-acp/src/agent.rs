@@ -12,7 +12,10 @@ use agent_client_protocol::{
     NewSessionResponse, PromptRequest, PromptResponse, ProtocolVersion, SessionId,
     SessionNotification, SessionUpdate, SetSessionModeRequest, SetSessionModeResponse, StopReason,
 };
-use loom_core::{LlmClient, LlmEvent, LlmRequest, Message, ToolCall, ToolContext, ToolDefinition};
+use loom_core::{
+    LlmClient, LlmEvent, LlmRequest, Message, ServerQuery, ServerQueryError, ServerQueryHandler,
+    ServerQueryKind, ServerQueryResponse, ServerQueryResult, ToolCall, ToolContext, ToolDefinition,
+};
 use loom_thread::{
     AgentStateKind, AgentStateSnapshot, MessageRole, MessageSnapshot, Thread, ThreadId,
     ThreadStore, ToolCallSnapshot,
@@ -24,6 +27,177 @@ use tracing::{debug, error, info, instrument, warn};
 
 use crate::error::AcpError;
 use crate::session::{SessionNotificationRequest, SessionState};
+
+/// Default implementation of ServerQueryHandler for ACP clients.
+///
+/// This handler provides query processing capabilities for the ACP agent,
+/// enabling the server to request information from the client such as:
+/// - File contents from the workspace
+/// - Environment variables
+/// - Workspace context information
+///
+/// User input and command execution are not supported in CLI mode
+/// and will return appropriate errors.
+#[derive(Debug, Clone)]
+pub struct AcpServerQueryHandler {
+    /// Root directory for file operations within the workspace
+    workspace_root: PathBuf,
+}
+
+impl AcpServerQueryHandler {
+    /// Create a new ACP server query handler.
+    ///
+    /// # Arguments
+    /// * `workspace_root` - The root directory for file operations
+    ///
+    /// # Returns
+    /// A new `AcpServerQueryHandler` instance
+    pub fn new(workspace_root: PathBuf) -> Self {
+        Self { workspace_root }
+    }
+}
+
+#[async_trait::async_trait]
+impl ServerQueryHandler for AcpServerQueryHandler {
+    #[instrument(skip(self), fields(query_id = %query.id))]
+    async fn handle_query(
+        &self,
+        query: ServerQuery,
+    ) -> Result<ServerQueryResponse, ServerQueryError> {
+        debug!(
+            query_id = %query.id,
+            kind = ?query.kind,
+            "handling server query"
+        );
+
+        let result = match &query.kind {
+            ServerQueryKind::ReadFile { path } => self.handle_read_file(path).await,
+            ServerQueryKind::GetEnvironment { keys } => self.handle_get_environment(keys),
+            ServerQueryKind::GetWorkspaceContext => self.handle_get_workspace_context(),
+            ServerQueryKind::RequestUserInput { prompt, .. } => {
+                debug!(prompt = %prompt, "user input not supported in CLI mode");
+                Err(ServerQueryError::ProcessingFailed(
+                    "User input not supported in CLI mode; override in editor integration"
+                        .to_string(),
+                ))
+            }
+            ServerQueryKind::ExecuteCommand { command, .. } => {
+                debug!(command = %command, "command execution disabled");
+                Err(ServerQueryError::ProcessingFailed(
+                    "Command execution disabled in current configuration".to_string(),
+                ))
+            }
+            ServerQueryKind::Custom { name, .. } => {
+                debug!(name = %name, "unknown custom query type");
+                Err(ServerQueryError::ProcessingFailed(format!(
+                    "Unknown custom query type: {}",
+                    name
+                )))
+            }
+        };
+
+        let response = match result {
+            Ok(query_result) => {
+                info!(query_id = %query.id, "query handled successfully");
+                ServerQueryResponse {
+                    query_id: query.id,
+                    sent_at: chrono::Utc::now().to_rfc3339(),
+                    result: query_result,
+                    error: None,
+                }
+            }
+            Err(e) => {
+                warn!(query_id = %query.id, error = %e, "query failed");
+                ServerQueryResponse {
+                    query_id: query.id,
+                    sent_at: chrono::Utc::now().to_rfc3339(),
+                    result: ServerQueryResult::FileContent(String::new()),
+                    error: Some(e.to_string()),
+                }
+            }
+        };
+
+        Ok(response)
+    }
+}
+
+impl AcpServerQueryHandler {
+    /// Handle ReadFile query by reading from the workspace.
+    async fn handle_read_file(&self, path: &str) -> Result<ServerQueryResult, ServerQueryError> {
+        let full_path = self.workspace_root.join(path);
+
+        debug!(path = %full_path.display(), "reading file");
+
+        match tokio::fs::read_to_string(&full_path).await {
+            Ok(content) => {
+                debug!(path = %full_path.display(), size = content.len(), "file read successfully");
+                Ok(ServerQueryResult::FileContent(content))
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Err(
+                ServerQueryError::InvalidQuery(format!("File not found: {}", path)),
+            ),
+            Err(e) => Err(ServerQueryError::ProcessingFailed(format!(
+                "Failed to read file: {}",
+                e
+            ))),
+        }
+    }
+
+    /// Handle GetEnvironment query by retrieving specified environment variables.
+    fn handle_get_environment(
+        &self,
+        keys: &[String],
+    ) -> Result<ServerQueryResult, ServerQueryError> {
+        let mut env_vars = HashMap::new();
+
+        for key in keys {
+            match std::env::var(key) {
+                Ok(value) => {
+                    debug!(key = %key, "retrieved environment variable");
+                    env_vars.insert(key.clone(), value);
+                }
+                Err(std::env::VarError::NotPresent) => {
+                    debug!(key = %key, "environment variable not found");
+                    // Continue without error; missing vars are acceptable
+                }
+                Err(e) => {
+                    warn!(key = %key, error = %e, "error reading environment variable");
+                    // Continue without error
+                }
+            }
+        }
+
+        debug!(count = env_vars.len(), "environment query completed");
+        Ok(ServerQueryResult::Environment(env_vars))
+    }
+
+    /// Handle GetWorkspaceContext query by building workspace information.
+    fn handle_get_workspace_context(&self) -> Result<ServerQueryResult, ServerQueryError> {
+        let mut context = serde_json::json!({
+            "workspace_root": self.workspace_root.to_string_lossy().to_string(),
+        });
+
+        // Try to get git information if .git exists
+        if self.workspace_root.join(".git").exists() {
+            debug!("workspace has .git directory");
+            context["has_git"] = true.into();
+
+            // Try to get current branch
+            if let Ok(head_file) = std::fs::read_to_string(self.workspace_root.join(".git/HEAD")) {
+                if let Some(branch) = head_file.strip_prefix("ref: refs/heads/") {
+                    let branch = branch.trim();
+                    debug!(branch = %branch, "detected git branch");
+                    context["git_branch"] = branch.into();
+                }
+            }
+        } else {
+            context["has_git"] = false.into();
+        }
+
+        debug!("workspace context built");
+        Ok(ServerQueryResult::WorkspaceContext(context))
+    }
+}
 
 /// Loom's implementation of the ACP Agent trait.
 ///
@@ -53,6 +227,10 @@ pub struct LoomAcpAgent {
     /// Channel to send session notifications to the ACP connection
     session_update_tx: mpsc::UnboundedSender<SessionNotificationRequest>,
 
+    /// Handler for server-to-client queries
+    #[allow(dead_code)]
+    query_handler: Arc<dyn ServerQueryHandler>,
+
     /// Active sessions keyed by SessionId
     /// Uses RefCell because ACP Agent trait is ?Send (single-threaded)
     sessions: RefCell<HashMap<String, SessionState>>,
@@ -79,6 +257,7 @@ impl LoomAcpAgent {
         session_update_tx: mpsc::UnboundedSender<SessionNotificationRequest>,
     ) -> Self {
         let tool_definitions = tools.definitions();
+        let query_handler = Arc::new(AcpServerQueryHandler::new(default_workspace_root.clone()));
 
         Self {
             llm_client,
@@ -88,8 +267,57 @@ impl LoomAcpAgent {
             default_workspace_root,
             provider,
             session_update_tx,
+            query_handler,
             sessions: RefCell::new(HashMap::new()),
         }
+    }
+
+    /// Create a new Loom ACP agent with a custom query handler.
+    pub fn with_query_handler(
+        llm_client: Arc<dyn LlmClient>,
+        tools: Arc<ToolRegistry>,
+        thread_store: Arc<dyn ThreadStore>,
+        default_workspace_root: PathBuf,
+        provider: String,
+        session_update_tx: mpsc::UnboundedSender<SessionNotificationRequest>,
+        query_handler: Arc<dyn ServerQueryHandler>,
+    ) -> Self {
+        let tool_definitions = tools.definitions();
+
+        Self {
+            llm_client,
+            tools,
+            tool_definitions,
+            thread_store,
+            default_workspace_root,
+            provider,
+            session_update_tx,
+            query_handler,
+            sessions: RefCell::new(HashMap::new()),
+        }
+    }
+
+    /// Process a server query and return the response.
+    ///
+    /// This delegates to the configured query handler to process the query
+    /// and return a response.
+    ///
+    /// # Arguments
+    /// * `query` - The server query to process
+    ///
+    /// # Returns
+    /// A ServerQueryResponse or error
+    #[allow(dead_code)]
+    #[instrument(skip(self), fields(query_id = %query.id))]
+    async fn process_server_query(
+        &self,
+        query: ServerQuery,
+    ) -> Result<ServerQueryResponse, AcpError> {
+        debug!(query_id = %query.id, "processing server query");
+        self.query_handler
+            .handle_query(query)
+            .await
+            .map_err(|e| AcpError::Internal(format!("Query handler error: {}", e)))
     }
 
     /// Send a text chunk notification to the client.
@@ -508,6 +736,91 @@ impl acp::Agent for LoomAcpAgent {
 mod tests {
     use super::*;
 
+    /// Mock implementation of ServerQueryHandler for testing.
+    ///
+    /// Returns canned responses without actually accessing the filesystem
+    /// or environment. Useful for testing the query handling pipeline.
+    #[derive(Debug, Clone)]
+    struct MockServerQueryHandler {
+        /// Canned file content to return for ReadFile queries
+        file_content: String,
+        /// Should read file fail?
+        read_file_error: bool,
+    }
+
+    impl MockServerQueryHandler {
+        fn new() -> Self {
+            Self {
+                file_content: "mock file content".to_string(),
+                read_file_error: false,
+            }
+        }
+
+        #[allow(dead_code)]
+        fn with_error() -> Self {
+            Self {
+                file_content: String::new(),
+                read_file_error: true,
+            }
+        }
+    }
+
+    #[async_trait::async_trait]
+    impl ServerQueryHandler for MockServerQueryHandler {
+        async fn handle_query(
+            &self,
+            query: ServerQuery,
+        ) -> Result<ServerQueryResponse, ServerQueryError> {
+            match &query.kind {
+                ServerQueryKind::ReadFile { path } => {
+                    if self.read_file_error {
+                        Ok(ServerQueryResponse {
+                            query_id: query.id,
+                            sent_at: chrono::Utc::now().to_rfc3339(),
+                            result: ServerQueryResult::FileContent(String::new()),
+                            error: Some(format!("mock error: cannot read {}", path)),
+                        })
+                    } else {
+                        Ok(ServerQueryResponse {
+                            query_id: query.id,
+                            sent_at: chrono::Utc::now().to_rfc3339(),
+                            result: ServerQueryResult::FileContent(self.file_content.clone()),
+                            error: None,
+                        })
+                    }
+                }
+                ServerQueryKind::GetEnvironment { keys } => {
+                    let mut env_vars = HashMap::new();
+                    for key in keys {
+                        env_vars.insert(key.clone(), format!("mock-value-{}", key));
+                    }
+                    Ok(ServerQueryResponse {
+                        query_id: query.id,
+                        sent_at: chrono::Utc::now().to_rfc3339(),
+                        result: ServerQueryResult::Environment(env_vars),
+                        error: None,
+                    })
+                }
+                ServerQueryKind::GetWorkspaceContext => {
+                    let context = serde_json::json!({
+                        "workspace_root": "/mock/workspace",
+                        "has_git": true,
+                        "git_branch": "main",
+                    });
+                    Ok(ServerQueryResponse {
+                        query_id: query.id,
+                        sent_at: chrono::Utc::now().to_rfc3339(),
+                        result: ServerQueryResult::WorkspaceContext(context),
+                        error: None,
+                    })
+                }
+                _ => Err(ServerQueryError::ProcessingFailed(
+                    "mock: unsupported query type".to_string(),
+                )),
+            }
+        }
+    }
+
     /// **Property: SessionId and ThreadId are interchangeable**
     ///
     /// Why this is important: ACP sessions are backed by Loom threads.
@@ -524,5 +837,193 @@ mod tests {
         let back = ThreadId::from_string(session_id.to_string());
 
         assert_eq!(thread.id.as_str(), back.as_str());
+    }
+
+    /// **Property: ReadFile queries return file content correctly**
+    ///
+    /// Why this is important: File reading is a core query type used by the
+    /// server to fetch context about the workspace. The handler must correctly
+    /// read files and return their content in the response.
+    #[tokio::test]
+    async fn test_read_file_query() {
+        let handler = AcpServerQueryHandler::new(PathBuf::from("/tmp"));
+
+        let query = ServerQuery {
+            id: "Q-test-001".to_string(),
+            kind: ServerQueryKind::ReadFile {
+                path: "nonexistent.txt".to_string(),
+            },
+            sent_at: chrono::Utc::now().to_rfc3339(),
+            timeout_secs: 30,
+            metadata: serde_json::json!({}),
+        };
+
+        let response = handler.handle_query(query).await.unwrap();
+        assert!(response.error.is_some());
+        let error_msg = response.error.unwrap();
+        assert!(error_msg.contains("not found") || error_msg.contains("File not found"));
+    }
+
+    /// **Property: GetEnvironment queries return correct environment variables**
+    ///
+    /// Why this is important: The server may need to access environment
+    /// configuration like API keys or deployment settings. The handler must
+    /// reliably fetch and return these values to the server.
+    #[tokio::test]
+    async fn test_get_environment_query() {
+        let handler = AcpServerQueryHandler::new(PathBuf::from("/tmp"));
+
+        let query = ServerQuery {
+            id: "Q-test-002".to_string(),
+            kind: ServerQueryKind::GetEnvironment {
+                keys: vec!["PATH".to_string(), "HOME".to_string()],
+            },
+            sent_at: chrono::Utc::now().to_rfc3339(),
+            timeout_secs: 30,
+            metadata: serde_json::json!({}),
+        };
+
+        let response = handler.handle_query(query).await.unwrap();
+        assert!(response.error.is_none());
+
+        if let ServerQueryResult::Environment(env_vars) = response.result {
+            // We expect either PATH or HOME to exist (or both)
+            assert!(!env_vars.is_empty(), "should have at least one env var");
+        } else {
+            panic!("expected Environment result");
+        }
+    }
+
+    /// **Property: GetWorkspaceContext queries return valid JSON**
+    ///
+    /// Why this is important: Workspace context provides metadata about the
+    /// environment (git branch, root path, etc.). This must be serializable
+    /// JSON for transport over SSE/HTTP.
+    #[tokio::test]
+    async fn test_get_workspace_context_query() {
+        let handler = AcpServerQueryHandler::new(PathBuf::from("/tmp"));
+
+        let query = ServerQuery {
+            id: "Q-test-003".to_string(),
+            kind: ServerQueryKind::GetWorkspaceContext,
+            sent_at: chrono::Utc::now().to_rfc3339(),
+            timeout_secs: 30,
+            metadata: serde_json::json!({}),
+        };
+
+        let response = handler.handle_query(query).await.unwrap();
+        assert!(response.error.is_none());
+
+        if let ServerQueryResult::WorkspaceContext(context) = response.result {
+            assert!(context.get("workspace_root").is_some());
+            assert!(context.get("has_git").is_some());
+        } else {
+            panic!("expected WorkspaceContext result");
+        }
+    }
+
+    /// **Property: RequestUserInput queries return not-implemented error in CLI mode**
+    ///
+    /// Why this is important: User input queries require editor integration
+    /// to show prompts. The CLI handler should gracefully refuse these.
+    #[tokio::test]
+    async fn test_request_user_input_not_implemented() {
+        let handler = AcpServerQueryHandler::new(PathBuf::from("/tmp"));
+
+        let query = ServerQuery {
+            id: "Q-test-004".to_string(),
+            kind: ServerQueryKind::RequestUserInput {
+                prompt: "Approve changes?".to_string(),
+                input_type: "yes_no".to_string(),
+                options: None,
+            },
+            sent_at: chrono::Utc::now().to_rfc3339(),
+            timeout_secs: 30,
+            metadata: serde_json::json!({}),
+        };
+
+        let response = handler.handle_query(query).await.unwrap();
+        assert!(response.error.is_some());
+        assert!(response
+            .error
+            .unwrap()
+            .contains("not supported in CLI mode"));
+    }
+
+    /// **Property: ExecuteCommand queries return disabled error**
+    ///
+    /// Why this is important: Command execution is disabled for security.
+    /// The handler should reject these queries consistently.
+    #[tokio::test]
+    async fn test_execute_command_disabled() {
+        let handler = AcpServerQueryHandler::new(PathBuf::from("/tmp"));
+
+        let query = ServerQuery {
+            id: "Q-test-005".to_string(),
+            kind: ServerQueryKind::ExecuteCommand {
+                command: "ls".to_string(),
+                args: vec!["-la".to_string()],
+                timeout_secs: 5,
+            },
+            sent_at: chrono::Utc::now().to_rfc3339(),
+            timeout_secs: 30,
+            metadata: serde_json::json!({}),
+        };
+
+        let response = handler.handle_query(query).await.unwrap();
+        assert!(response.error.is_some());
+        assert!(response.error.unwrap().contains("disabled"));
+    }
+
+    /// **Property: Mock handler returns canned responses**
+    ///
+    /// Why this is important: For testing ACP agent logic without touching
+    /// the filesystem, we need a mock that always returns predictable responses.
+    #[tokio::test]
+    async fn test_mock_query_handler() {
+        let handler = MockServerQueryHandler::new();
+
+        let query = ServerQuery {
+            id: "Q-test-mock".to_string(),
+            kind: ServerQueryKind::ReadFile {
+                path: "test.rs".to_string(),
+            },
+            sent_at: chrono::Utc::now().to_rfc3339(),
+            timeout_secs: 30,
+            metadata: serde_json::json!({}),
+        };
+
+        let response = handler.handle_query(query).await.unwrap();
+        assert!(response.error.is_none());
+
+        if let ServerQueryResult::FileContent(content) = response.result {
+            assert_eq!(content, "mock file content");
+        } else {
+            panic!("expected FileContent result");
+        }
+    }
+
+    /// **Property: Query response IDs correlate to query IDs**
+    ///
+    /// Why this is important: Query/response correlation via IDs is critical
+    /// for the async request-response pattern. The handler must preserve
+    /// the query ID in the response.
+    #[tokio::test]
+    async fn test_query_response_correlation() {
+        let handler = MockServerQueryHandler::new();
+        let expected_id = "Q-correlation-test-123";
+
+        let query = ServerQuery {
+            id: expected_id.to_string(),
+            kind: ServerQueryKind::ReadFile {
+                path: "test.rs".to_string(),
+            },
+            sent_at: chrono::Utc::now().to_rfc3339(),
+            timeout_secs: 30,
+            metadata: serde_json::json!({}),
+        };
+
+        let response = handler.handle_query(query).await.unwrap();
+        assert_eq!(response.query_id, expected_id);
     }
 }

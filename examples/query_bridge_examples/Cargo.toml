@@ -1,0 +1,24 @@
+[package]
+name = "query_bridge_examples"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "query_bridge_examples"
+path = "src/main.rs"
+
+[[example]]
+name = "query_bridge_scenarios"
+path = "examples/query_bridge_scenarios.rs"
+
+[dependencies]
+loom-core = { path = "../../crates/loom-core" }
+tokio = { version = "1", features = ["full"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+async-trait = "0.1"
+chrono = { version = "0.4", features = ["serde"] }

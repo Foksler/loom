@@ -9,7 +9,9 @@ use axum::{
     },
     Json,
 };
-use loom_core::{LlmError, LlmEvent, LlmRequest, LlmStream, Message, ToolCall, Usage};
+use loom_core::{
+    server_query::ServerQuery, LlmError, LlmEvent, LlmRequest, LlmStream, Message, ToolCall, Usage,
+};
 use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
 use tokio_stream::wrappers::ReceiverStream;
@@ -17,6 +19,25 @@ use tokio_stream::wrappers::ReceiverStream;
 use crate::{api::AppState, error::ServerError};
 
 /// Wire format for LLM streaming events sent over SSE.
+///
+/// # Event Types
+///
+/// - `TextDelta`: Incremental text content from the assistant
+/// - `ToolCallDelta`: Incremental tool call argument data
+/// - `ServerQuery`: A query sent from server to client (structured as SSE event with `event: llm`)
+/// - `Completed`: The completion has finished successfully
+/// - `Error`: An error occurred during streaming
+///
+/// # SSE Format
+///
+/// All events are formatted as SSE with `event: llm` header:
+/// ```text
+/// event: llm
+/// data: {"type":"text_delta","content":"..."}
+///
+/// event: llm
+/// data: {"type":"server_query","id":"Q-...","kind":{...},...}
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum LlmStreamEvent {
@@ -28,6 +49,10 @@ pub enum LlmStreamEvent {
         tool_name: String,
         arguments_fragment: String,
     },
+    /// A query sent from server to client during streaming.
+    /// The query must be processed by the client and a response sent back via
+    /// the query response endpoint: `POST /v1/sessions/{session_id}/query-response`
+    ServerQuery(ServerQuery),
     Completed {
         response: LlmProxyResponse,
     },
@@ -272,6 +297,20 @@ pub async fn proxy_vertex_stream(
 }
 
 /// Creates an SSE response from an LlmStream.
+///
+/// # Server Query Integration (Phase 2)
+///
+/// This function will be extended to check for pending server queries via the
+/// ServerQueryManager and interleave them with LLM events. Server queries will be:
+///
+/// 1. Checked after each LLM event using `query_manager.list_pending(session_id)`
+/// 2. Sent as `LlmStreamEvent::ServerQuery` over SSE with `event: llm`
+/// 3. Awaited for client responses via the `/v1/sessions/{session_id}/query-response` endpoint
+///
+/// Current infrastructure supports this:
+/// - `LlmStreamEvent::ServerQuery` variant defined
+/// - Serialization/deserialization tested
+/// - Parser in `ProxyLlmStream` handles conversion
 fn create_sse_response(
     stream: LlmStream,
 ) -> Sse<impl futures::Stream<Item = Result<Event, Infallible>>> {
@@ -465,6 +504,35 @@ mod tests {
             prop_assert_eq!(response.message.content, deserialized.message.content);
             prop_assert_eq!(response.usage.as_ref().unwrap().input_tokens, deserialized.usage.as_ref().unwrap().input_tokens);
             prop_assert_eq!(response.usage.as_ref().unwrap().output_tokens, deserialized.usage.as_ref().unwrap().output_tokens);
+        }
+
+        /// Validates that LlmStreamEvent server_query events serialize correctly.
+        /// **Why Important**: Server queries must be accurately transmitted through SSE,
+        /// as they are critical for server-client communication during streaming.
+        #[test]
+        fn server_query_stream_event_serialization_roundtrip(query_id in "Q-[a-f0-9]{32}") {
+            use loom_core::server_query::ServerQueryKind;
+
+            let query = loom_core::server_query::ServerQuery {
+                id: query_id,
+                kind: ServerQueryKind::ReadFile { path: "/test.txt".to_string() },
+                sent_at: "2025-01-01T00:00:00Z".to_string(),
+                timeout_secs: 30,
+                metadata: serde_json::json!({}),
+            };
+
+            let event = LlmStreamEvent::ServerQuery(query.clone());
+            let json = serde_json::to_string(&event).expect("serialization should succeed");
+            let deserialized: LlmStreamEvent = serde_json::from_str(&json)
+                .expect("deserialization should succeed");
+
+            match deserialized {
+                LlmStreamEvent::ServerQuery(deserialized_query) => {
+                    prop_assert_eq!(query.id, deserialized_query.id);
+                    prop_assert_eq!(query.timeout_secs, deserialized_query.timeout_secs);
+                }
+                _ => prop_assert!(false, "expected ServerQuery variant"),
+            }
         }
     }
 }

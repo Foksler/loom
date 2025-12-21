@@ -1,0 +1,139 @@
+================================================================================
+QUERY SECURITY IMPLEMENTATION SUMMARY
+================================================================================
+
+FILE: crates/loom-server/src/query_security.rs (604 lines)
+
+COMPONENTS IMPLEMENTED:
+  ✓ SecurityError enum (10 error variants)
+  ✓ QueryValidator struct (4 validation methods)
+  ✓ PathSanitizer struct (workspace containment, null-byte detection)
+  ✓ RateLimiter struct (token bucket algorithm, per-session)
+  ✓ ResultValidator struct (size limits, error sanitization)
+
+EXPORTED VIA: crates/loom-server/src/lib.rs
+
+PUBLIC TYPES:
+  - SecurityError: Structured error types for validation failures
+  - QueryValidator: Input validation for queries (size, timeout, path, JSON)
+  - PathSanitizer: Path normalization and workspace containment
+  - RateLimiter: Token bucket rate limiting with per-session tracking
+  - ResultValidator: Response validation and error sanitization
+
+TEST COVERAGE:
+  - 18 unit tests (all categories covered)
+  - 3 property-based tests (with documentation)
+  - Total: 21 tests for invariant verification
+
+KEY FEATURES:
+
+1. QUERY VALIDATION
+   ✓ Size limit enforcement (default: 10 KB)
+   ✓ Timeout bounds checking (1-300 seconds)
+   ✓ Path escape detection (../ blocked)
+   ✓ Blocked path enforcement (/etc, /root, /sys)
+   ✓ JSON payload validation
+
+2. PATH SECURITY
+   ✓ Workspace root containment
+   ✓ Canonical path resolution
+   ✓ Null byte injection detection
+   ✓ Absolute path rejection
+   ✓ Directory traversal prevention
+
+3. RATE LIMITING
+   ✓ Token bucket algorithm
+   ✓ Per-session isolation
+   ✓ Async-safe implementation
+   ✓ Configurable rates (default: 100 queries/min)
+   ✓ Configurable token bucket size
+
+4. RESULT VALIDATION
+   ✓ Response structure validation
+   ✓ Size limits (default: 100 MB)
+   ✓ Malformed JSON detection
+   ✓ Error message sanitization (removes paths/traces)
+
+TESTING METHODOLOGY:
+
+Unit Tests:
+  - Path escape rejection (various patterns)
+  - Query size boundaries
+  - Timeout bounds enforcement
+  - Blocked path rejection
+  - Valid path acceptance
+  - JSON parsing validation
+  - Rate limit enforcement
+  - Result size limits
+  - Error message sanitization
+
+Property-Based Tests:
+  1. Small queries always pass (0-5 KB)
+     Purpose: Ensure legitimate queries never rejected
+
+  2. Paths with .. always rejected
+     Purpose: Reliable directory traversal prevention
+
+  3. Invalid timeouts always rejected (outside 1-300s)
+     Purpose: Consistent timeout bound enforcement
+
+STRUCTURED LOGGING:
+  All security events logged with:
+  - Event type (validation_failed, rate_limit_exceeded, etc)
+  - Context data (session_id, size, path, etc)
+  - Security implications
+
+THREAD SAFETY:
+  - QueryValidator: Immutable (safe to share)
+  - PathSanitizer: Immutable (safe to share)
+  - RateLimiter: Async-safe (Arc<RwLock>)
+  - ResultValidator: Immutable (safe to share)
+
+PERFORMANCE:
+  - Most operations: O(1) constant time
+  - Path canonicalization: O(n) per path
+  - Rate limiter: O(1) amortized per check
+  - Result validation: O(n) per result
+
+CONFIGURATION EXAMPLES:
+
+Default:
+  let validator = QueryValidator::new();
+  let limiter = RateLimiter::new();
+
+Custom:
+  let validator = QueryValidator::with_limits(
+      5 * 1024,      // 5 KB max
+      100,           // 100 queries/session
+      (5, 600),      // 5-600 second timeouts
+      vec!["/etc", "/root", "/sys"],
+  );
+
+  let limiter = RateLimiter::with_rate(200.0/60.0, 200);
+
+INTEGRATION:
+
+1. Add to your handler:
+   use loom_server::{QueryValidator, RateLimiter, PathSanitizer};
+
+2. Create validators:
+   let validator = QueryValidator::new();
+   let limiter = RateLimiter::new();
+
+3. Use in handlers:
+   validator.validate_size(&query)?;
+   limiter.check_rate_limit(&session_id).await?;
+   validator.validate_path(&path)?;
+
+BUILD STATUS: ✓ COMPILES SUCCESSFULLY
+  - No warnings in query_security.rs
+  - All public types exported
+  - Integration verified
+
+DOCUMENTATION: ✓ COMPLETE
+  - Module-level documentation with examples
+  - Method documentation with purpose and parameters
+  - Test documentation with reasoning
+  - Separate implementation guide: QUERY_SECURITY_IMPLEMENTATION.md
+
+================================================================================
