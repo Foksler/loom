@@ -1,0 +1,13 @@
+# Playwright test artifacts
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Screenshots and videos
+/__screenshots__/
+/__videos__/
+
+# Temporary test files
+*.tmp
+*.log

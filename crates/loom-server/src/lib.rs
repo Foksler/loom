@@ -16,6 +16,7 @@ pub mod query_security;
 pub mod query_tracing;
 pub mod server_query;
 pub mod websocket;
+pub mod web_integration;
 
 #[cfg(test)]
 mod tests;

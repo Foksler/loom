@@ -5,7 +5,41 @@
 GITLEAKS_REPO := https://raw.githubusercontent.com/gitleaks/gitleaks/master
 GITLEAKS_VENDOR_DIR := crates/loom-redact/third_party/gitleaks
 
-.PHONY: all build test lint format check clean update-gitleaks sbom sbom-spdx sbom-cyclonedx release docker-build docker-run
+.PHONY: all build test lint format check clean help dev update-gitleaks sbom sbom-spdx sbom-cyclonedx release docker-build docker-run test-e2e test-e2e-ui test-e2e-debug
+
+# Help target
+help:
+	@echo "Loom Makefile Targets"
+	@echo "===================="
+	@echo ""
+	@echo "Core Development:"
+	@echo "  make build              - Build entire workspace"
+	@echo "  make test               - Run all tests"
+	@echo "  make lint               - Run clippy linter"
+	@echo "  make format             - Format code with rustfmt"
+	@echo "  make check-format       - Check formatting without modifying"
+	@echo "  make fix                - Auto-fix clippy issues and format"
+	@echo "  make check              - Full CI checks (format + lint + build + test)"
+	@echo "  make dev                - Watch mode for development"
+	@echo ""
+	@echo "Code Quality:"
+	@echo "  make sbom               - Generate SBOM (SPDX and CycloneDX)"
+	@echo "  make sbom-spdx          - Generate SPDX SBOM"
+	@echo "  make sbom-cyclonedx     - Generate CycloneDX SBOM"
+	@echo ""
+	@echo "Testing:"
+	@echo "  make test-e2e           - Run E2E tests"
+	@echo "  make test-e2e-ui        - Run E2E tests in UI mode"
+	@echo "  make test-e2e-debug     - Run E2E tests in debug mode"
+	@echo ""
+	@echo "Docker:"
+	@echo "  make docker-build       - Build Docker image"
+	@echo "  make docker-run         - Build and run Docker container"
+	@echo ""
+	@echo "Release:"
+	@echo "  make release            - Build release (build + test + SBOM)"
+	@echo "  make update-gitleaks    - Update gitleaks rules from upstream"
+	@echo "  make clean              - Clean build artifacts"
 
 # Default target
 all: format lint build test
@@ -34,6 +68,14 @@ format:
 # Check formatting without modifying files
 check-format:
 	cargo fmt --all -- --check
+
+# Development watch mode
+dev:
+	@echo "Starting development watch mode..."
+	@echo "Watching for file changes and rebuilding..."
+	@cargo watch -c -q -w src -w crates -x "build --all" -x "test --lib" 2>/dev/null || \
+		(echo "Note: cargo-watch not installed. Install with: cargo install cargo-watch" && \
+		 echo "For now, run 'cargo build' manually after changes")
 
 # Run all checks (format check + lint + build + test)
 check: check-format lint build test
@@ -120,3 +162,20 @@ docker-run: docker-build
 	  echo "✓ Starting loom-server container (Ctrl+C to stop)"; \
 	  echo ""; \
 	  docker run --rm -p 8080:8080 loom-server:latest)
+
+# E2E Testing targets
+
+# Run E2E tests
+test-e2e:
+	@echo "Running E2E tests..."
+	cd crates/loom-web && npm run test:e2e
+
+# Run E2E tests in UI mode (interactive)
+test-e2e-ui:
+	@echo "Running E2E tests in UI mode..."
+	cd crates/loom-web && npm run test:e2e:ui
+
+# Run E2E tests in debug mode
+test-e2e-debug:
+	@echo "Running E2E tests in debug mode..."
+	cd crates/loom-web && npm run test:e2e:debug

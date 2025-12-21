@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # Web UI - built from Dockerfile.web
+  loom-web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+    container_name: loom-web
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - loom-server
+    networks:
+      - loom-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # Loom Server (API backend)
+  # Uncomment and configure if running server in container
+  # loom-server:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/Dockerfile.server
+  #   container_name: loom-server
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     - RUST_LOG=info
+  #     - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/loom
+  #   depends_on:
+  #     - postgres
+  #   networks:
+  #     - loom-network
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+  #     interval: 30s
+  #     timeout: 3s
+  #     retries: 3
+  #     start_period: 10s
+
+  # PostgreSQL database (optional)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: loom-postgres
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=postgres
+  #     - POSTGRES_DB=loom
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - loom-network
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+networks:
+  loom-network:
+    driver: bridge
+
+# volumes:
+#   postgres_data:

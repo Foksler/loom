@@ -4,46 +4,249 @@ on:
   push:
     branches: [main, master]
   pull_request:
+    branches: [main, master]
 
 env:
   CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  RUST_LOG: debug
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  check:
-    name: Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo check --all
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo test --all
-
+  # Format checking
   fmt:
-    name: Format
+    name: Rustfmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
+      
       - run: cargo fmt --all -- --check
-
+      
+  # Linter checks
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
+      
       - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --all -- -D warnings
+        with:
+          cache-on-failure: "true"
+      
+      - name: Run clippy
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      
+  # Cargo check
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust: [stable, nightly]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+      
+      - name: Cargo check
+        run: cargo check --workspace --all-targets
+      
+  # Unit tests
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dtolnay/rust-toolchain@stable
+      
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+      
+      - name: Run tests
+        run: cargo test --workspace --lib --bins
+        
+      - name: Run doc tests
+        run: cargo test --doc --workspace
+      
+  # Integration tests
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dtolnay/rust-toolchain@stable
+      
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+      
+      - name: Run integration tests
+        run: cargo test --test '*'
+        timeout-minutes: 10
+      
+  # Security audit
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: rustsec/audit-check-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+  # Build all targets
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dtolnay/rust-toolchain@stable
+      
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+      
+      - name: Build workspace
+        run: cargo build --workspace --release
+        
+  # Build web UI
+  build-web:
+    name: Build Web UI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dtolnay/rust-toolchain@stable
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+      
+      - name: Install dependencies
+        run: cd crates/loom-web && npm ci
+      
+      - name: Build web UI
+        run: cd crates/loom-web && npm run build
+        
+  # Dependency analysis
+  dependencies:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dtolnay/rust-toolchain@stable
+      
+      - uses: EmbarkStudios/cargo-deny-action@v1
+        with:
+          arguments: --all-features
+          
+  # Unused dependencies
+  unused-deps:
+    name: Unused Dependencies
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dtolnay/rust-toolchain@nightly
+      
+      - uses: Swatinem/rust-cache@v2
+      
+      - name: Check unused dependencies
+        run: cargo +nightly udeps --all-targets
+        
+  # Documentation
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dtolnay/rust-toolchain@stable
+      
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+      
+      - name: Check docs
+        run: cargo doc --no-deps --document-private-items
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+          
+  # Combined status check
+  ci-complete:
+    name: CI Complete
+    needs: [fmt, clippy, check, test, integration-tests, security-audit, build, build-web, dependencies, docs]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check job status
+        run: |
+          if [[ "${{ needs.fmt.result }}" != "success" ]]; then
+            echo "::error::Rustfmt check failed"
+            exit 1
+          fi
+          if [[ "${{ needs.clippy.result }}" != "success" ]]; then
+            echo "::error::Clippy check failed"
+            exit 1
+          fi
+          if [[ "${{ needs.check.result }}" != "success" ]]; then
+            echo "::error::Cargo check failed"
+            exit 1
+          fi
+          if [[ "${{ needs.test.result }}" != "success" ]]; then
+            echo "::error::Tests failed"
+            exit 1
+          fi
+          if [[ "${{ needs.integration-tests.result }}" != "success" ]]; then
+            echo "::error::Integration tests failed"
+            exit 1
+          fi
+          if [[ "${{ needs.security-audit.result }}" != "success" ]]; then
+            echo "::error::Security audit failed"
+            exit 1
+          fi
+          if [[ "${{ needs.build.result }}" != "success" ]]; then
+            echo "::error::Build failed"
+            exit 1
+          fi
+          if [[ "${{ needs.build-web.result }}" != "success" ]]; then
+            echo "::error::Web UI build failed"
+            exit 1
+          fi
+          if [[ "${{ needs.dependencies.result }}" != "success" ]]; then
+            echo "::error::Dependency check failed"
+            exit 1
+          fi
+          if [[ "${{ needs.docs.result }}" != "success" ]]; then
+            echo "::error::Documentation check failed"
+            exit 1
+          fi
+          echo "✓ All CI checks passed"

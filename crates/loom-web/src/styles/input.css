@@ -1,0 +1,131 @@
+/* Loom Web UI - Main stylesheet */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens - CSS variables */
+:root {
+  --color-brand: 3 102 214;
+  --color-brand-dark: 2 68 150;
+  --color-neutral: 55 53 47;
+  --color-neutral-light: 242 241 239;
+  --radius-md: 0.5rem;
+}
+
+/* Global element defaults */
+@layer base {
+  body {
+    @apply bg-white text-gray-900;
+  }
+
+  h1 {
+    @apply text-4xl font-bold mb-4;
+  }
+
+  h2 {
+    @apply text-2xl font-bold mb-2;
+  }
+
+  h3 {
+    @apply text-lg font-semibold mb-1;
+  }
+
+  p {
+    @apply text-base leading-relaxed;
+  }
+
+  a {
+    @apply text-blue-600 hover:text-blue-700 underline;
+  }
+}
+
+/* Component utility classes */
+@layer components {
+  /* Button base */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors;
+  }
+
+  .btn-primary {
+    @apply btn bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800;
+  }
+
+  .btn-secondary {
+    @apply btn bg-gray-200 text-gray-900 hover:bg-gray-300 active:bg-gray-400;
+  }
+
+  .btn-ghost {
+    @apply btn text-gray-700 hover:bg-gray-100 active:bg-gray-200;
+  }
+
+  .btn-destructive {
+    @apply btn bg-red-600 text-white hover:bg-red-700 active:bg-red-800;
+  }
+
+  /* Input base */
+  .input {
+    @apply block w-full px-3 py-2 rounded-md border border-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  }
+
+  .input-sm {
+    @apply px-2.5 py-1.5 text-sm;
+  }
+
+  .input-lg {
+    @apply px-4 py-2.5 text-base;
+  }
+
+  /* Card / panel */
+  .card {
+    @apply rounded-lg border border-gray-200 bg-white p-4 shadow-sm;
+  }
+
+  .card-elevated {
+    @apply card shadow-md;
+  }
+
+  /* Text utilities */
+  .text-muted {
+    @apply text-gray-500;
+  }
+
+  .text-error {
+    @apply text-red-600;
+  }
+
+  .text-success {
+    @apply text-green-600;
+  }
+
+  .text-warning {
+    @apply text-yellow-600;
+  }
+}
+
+/* Animations */
+@layer utilities {
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
