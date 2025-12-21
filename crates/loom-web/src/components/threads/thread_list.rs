@@ -19,7 +19,8 @@ pub fn ThreadList(
 
     /// Callback when thread is selected
     #[prop(optional)]
-    on_select: Option<Box<dyn Fn(String) -> () + Send + Sync + 'static>>,
+    #[allow(dead_code)]
+    _on_select: Option<Box<dyn Fn(String) + Send + Sync + 'static>>,
 
     /// Optional CSS class
     #[prop(optional)]

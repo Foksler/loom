@@ -39,13 +39,7 @@ pub fn Toggle(
 ) -> impl IntoView {
     let checked_signal = RwSignal::new(checked);
 
-    let container_class = format!(
-        "flex items-center gap-3 {}",
-        match class {
-            Some(c) => c,
-            None => String::new(),
-        }
-    );
+    let container_class = format!("flex items-center gap-3 {}", class.unwrap_or_default());
 
     view! {
         <div class=container_class>

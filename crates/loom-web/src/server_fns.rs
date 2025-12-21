@@ -48,8 +48,8 @@ pub struct MessageSnapshot {
 
 /// Get the loom-server base URL from environment
 fn get_loom_server_url() -> Result<String, ServerFnError> {
-    let url = std::env::var("LOOM_SERVER_URL")
-        .unwrap_or_else(|_| "http://localhost:3000".to_string());
+    let url =
+        std::env::var("LOOM_SERVER_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
     debug!(url = %url, "Using loom-server URL");
     Ok(url)
 }
@@ -74,22 +74,15 @@ pub async fn get_threads() -> Result<Vec<ThreadSummary>, ServerFnError> {
 
     debug!(url = %url, "Making HTTP GET request");
 
-    let response = reqwest::Client::new()
-        .get(&url)
-        .send()
-        .await
-        .map_err(|e| {
-            error!(error = %e, "Failed to fetch threads");
-            ServerFnError::new(format!("Failed to fetch threads: {}", e))
-        })?;
+    let response = reqwest::Client::new().get(&url).send().await.map_err(|e| {
+        error!(error = %e, "Failed to fetch threads");
+        ServerFnError::new(format!("Failed to fetch threads: {}", e))
+    })?;
 
     if !response.status().is_success() {
         let status = response.status();
         error!(status = %status, "Server returned error");
-        return Err(ServerFnError::new(format!(
-            "Server error: {}",
-            status
-        )));
+        return Err(ServerFnError::new(format!("Server error: {}", status)));
     }
 
     let threads: Vec<ThreadSummary> = response.json().await.map_err(|e| {
@@ -127,18 +120,18 @@ pub async fn get_thread(id: String) -> Result<Thread, ServerFnError> {
     }
 
     let server_url = get_loom_server_url()?;
-    let url = format!("{}/api/web/threads/{}", server_url, urlencoding::encode(&id));
+    let url = format!(
+        "{}/api/web/threads/{}",
+        server_url,
+        urlencoding::encode(&id)
+    );
 
     debug!(url = %url, "Making HTTP GET request");
 
-    let response = reqwest::Client::new()
-        .get(&url)
-        .send()
-        .await
-        .map_err(|e| {
-            error!(error = %e, "Failed to fetch thread");
-            ServerFnError::new(format!("Failed to fetch thread: {}", e))
-        })?;
+    let response = reqwest::Client::new().get(&url).send().await.map_err(|e| {
+        error!(error = %e, "Failed to fetch thread");
+        ServerFnError::new(format!("Failed to fetch thread: {}", e))
+    })?;
 
     if response.status() == 404 {
         error!(thread_id = %id, "Thread not found");
@@ -148,10 +141,7 @@ pub async fn get_thread(id: String) -> Result<Thread, ServerFnError> {
     if !response.status().is_success() {
         let status = response.status();
         error!(status = %status, "Server returned error");
-        return Err(ServerFnError::new(format!(
-            "Server error: {}",
-            status
-        )));
+        return Err(ServerFnError::new(format!("Server error: {}", status)));
     }
 
     let thread: Thread = response.json().await.map_err(|e| {
@@ -225,10 +215,7 @@ pub async fn create_thread(title: String) -> Result<Thread, ServerFnError> {
     if !response.status().is_success() {
         let status = response.status();
         error!(status = %status, "Server returned error");
-        return Err(ServerFnError::new(format!(
-            "Server error: {}",
-            status
-        )));
+        return Err(ServerFnError::new(format!("Server error: {}", status)));
     }
 
     let thread: Thread = response.json().await.map_err(|e| {
@@ -283,7 +270,11 @@ pub async fn update_thread(id: String, title: String) -> Result<Thread, ServerFn
     }
 
     let server_url = get_loom_server_url()?;
-    let url = format!("{}/api/web/threads/{}", server_url, urlencoding::encode(&id));
+    let url = format!(
+        "{}/api/web/threads/{}",
+        server_url,
+        urlencoding::encode(&id)
+    );
 
     let body = serde_json::json!({
         "title": title
@@ -309,10 +300,7 @@ pub async fn update_thread(id: String, title: String) -> Result<Thread, ServerFn
     if !response.status().is_success() {
         let status = response.status();
         error!(status = %status, "Server returned error");
-        return Err(ServerFnError::new(format!(
-            "Server error: {}",
-            status
-        )));
+        return Err(ServerFnError::new(format!("Server error: {}", status)));
     }
 
     let thread: Thread = response.json().await.map_err(|e| {
@@ -350,7 +338,11 @@ pub async fn delete_thread(id: String) -> Result<(), ServerFnError> {
     }
 
     let server_url = get_loom_server_url()?;
-    let url = format!("{}/api/web/threads/{}", server_url, urlencoding::encode(&id));
+    let url = format!(
+        "{}/api/web/threads/{}",
+        server_url,
+        urlencoding::encode(&id)
+    );
 
     debug!(thread_id = %id, url = %url, "Making HTTP DELETE request");
 
@@ -371,10 +363,7 @@ pub async fn delete_thread(id: String) -> Result<(), ServerFnError> {
     if !response.status().is_success() {
         let status = response.status();
         error!(status = %status, "Server returned error");
-        return Err(ServerFnError::new(format!(
-            "Server error: {}",
-            status
-        )));
+        return Err(ServerFnError::new(format!("Server error: {}", status)));
     }
 
     info!(thread_id = %id, "Successfully deleted thread");
@@ -421,22 +410,15 @@ pub async fn search_threads(query: String) -> Result<Vec<ThreadSummary>, ServerF
 
     debug!(query = %query, url = %url, "Making HTTP GET request");
 
-    let response = reqwest::Client::new()
-        .get(&url)
-        .send()
-        .await
-        .map_err(|e| {
-            error!(error = %e, "Failed to search threads");
-            ServerFnError::new(format!("Failed to search threads: {}", e))
-        })?;
+    let response = reqwest::Client::new().get(&url).send().await.map_err(|e| {
+        error!(error = %e, "Failed to search threads");
+        ServerFnError::new(format!("Failed to search threads: {}", e))
+    })?;
 
     if !response.status().is_success() {
         let status = response.status();
         error!(status = %status, "Server returned error");
-        return Err(ServerFnError::new(format!(
-            "Server error: {}",
-            status
-        )));
+        return Err(ServerFnError::new(format!("Server error: {}", status)));
     }
 
     let threads: Vec<ThreadSummary> = response.json().await.map_err(|e| {

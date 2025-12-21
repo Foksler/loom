@@ -144,7 +144,7 @@ pub async fn create_thread(title: String) -> Result<Thread, ServerFnError> {
     // Generate new thread ID
     let thread_id = format!(
         "thread_{}",
-        Uuid::new_v4().to_string().replace("-", "")[..12].to_string()
+        &Uuid::new_v4().to_string().replace("-", "")[..12]
     );
     let now = Utc::now();
 
@@ -202,9 +202,7 @@ pub async fn add_message(
 
     if content.is_empty() {
         error!(thread_id = %thread_id, "Cannot add message: content is empty");
-        return Err(ServerFnError::new(
-            "Message content cannot be empty",
-        ));
+        return Err(ServerFnError::new("Message content cannot be empty"));
     }
 
     if content.len() > 10_000 {
@@ -219,7 +217,7 @@ pub async fn add_message(
     }
 
     // Validate role
-    let valid_roles = vec!["user", "assistant", "system"];
+    let valid_roles = ["user", "assistant", "system"];
     if !valid_roles.contains(&role.as_str()) {
         error!(role = %role, "Invalid message role");
         return Err(ServerFnError::new(
@@ -228,10 +226,7 @@ pub async fn add_message(
     }
 
     // Generate message ID
-    let message_id = format!(
-        "msg_{}",
-        Uuid::new_v4().to_string().replace("-", "")[..12].to_string()
-    );
+    let message_id = format!("msg_{}", &Uuid::new_v4().to_string().replace("-", "")[..12]);
     let now = Utc::now();
 
     // TODO: Insert into SQLite database

@@ -35,7 +35,7 @@ pub fn ThreadHeader(
 
     /// Callback for action menu selections
     #[prop(optional)]
-    on_action: Option<Box<dyn Fn(ThreadAction) -> () + 'static>>,
+    on_action: Option<Box<dyn Fn(ThreadAction) + 'static>>,
 
     /// Optional CSS class
     #[prop(optional)]
@@ -43,7 +43,7 @@ pub fn ThreadHeader(
 ) -> impl IntoView {
     use std::rc::Rc;
     let on_action = Rc::new(on_action);
-    
+
     let status_variant = match thread.status {
         ThreadStatus::Active => BadgeVariant::Green,
         ThreadStatus::Archived => BadgeVariant::Gray,

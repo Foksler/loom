@@ -5,8 +5,8 @@ use crate::components::primitives::{Spinner, SpinnerSize};
 /// Displays a list of messages with auto-scroll to bottom,
 /// loading indicator, and empty state handling.
 use crate::prelude::*;
-use leptos::prelude::{Effect, RwSignal, NodeRef};
 use leptos::html;
+use leptos::prelude::{Effect, NodeRef, RwSignal};
 use loom_core::message::Message;
 
 /// ConversationView component
@@ -42,7 +42,7 @@ pub fn ConversationView(
     Effect::new(move || {
         let _len = messages_signal.get().len();
         if let Some(el) = node_ref.get() {
-            let _ = el.set_scroll_top(el.scroll_height());
+            el.set_scroll_top(el.scroll_height());
         }
     });
 

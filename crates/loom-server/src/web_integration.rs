@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use tracing::{debug, error, info, instrument};
 
 /// Request to add a message to a thread.
-/// 
+///
 /// This is sent from loom-web's `add_message()` server function.
 #[derive(Debug, Deserialize)]
 pub struct AddMessageRequest {
@@ -47,7 +47,11 @@ pub async fn get_threads_handler(
     State(state): State<crate::api::AppState>,
     Query(params): Query<ListQuery>,
 ) -> Result<Json<Vec<ThreadSummary>>, ServerError> {
-    info!(limit = params.limit, offset = params.offset, "Fetching threads");
+    info!(
+        limit = params.limit,
+        offset = params.offset,
+        "Fetching threads"
+    );
 
     let threads = state
         .repo
@@ -104,7 +108,9 @@ pub async fn create_thread_handler(
 
     if req.title.is_empty() {
         error!("Cannot create thread: title is empty");
-        return Err(ServerError::BadRequest("Thread title cannot be empty".into()));
+        return Err(ServerError::BadRequest(
+            "Thread title cannot be empty".into(),
+        ));
     }
 
     if req.title.len() > 500 {
@@ -124,7 +130,7 @@ pub async fn create_thread_handler(
     let mut thread = Thread::new();
     thread.id = thread_id.clone();
     thread.metadata.title = Some(req.title.clone());
-    
+
     // Upsert to database
     let thread = state.repo.upsert(&thread, None).await?;
 
@@ -151,7 +157,9 @@ pub async fn update_thread_handler(
 
     if req.title.is_empty() {
         error!(thread_id = %id, "Cannot update thread: title is empty");
-        return Err(ServerError::BadRequest("Thread title cannot be empty".into()));
+        return Err(ServerError::BadRequest(
+            "Thread title cannot be empty".into(),
+        ));
     }
 
     if req.title.len() > 500 {
@@ -236,7 +244,9 @@ pub async fn search_threads_handler(
     // Validate query
     if params.q.is_empty() {
         error!("Cannot search: query is empty");
-        return Err(ServerError::BadRequest("Search query cannot be empty".into()));
+        return Err(ServerError::BadRequest(
+            "Search query cannot be empty".into(),
+        ));
     }
 
     if params.q.len() > 200 {
@@ -248,7 +258,12 @@ pub async fn search_threads_handler(
 
     let results = state
         .repo
-        .search(&params.q, params.workspace.as_deref(), params.limit, params.offset)
+        .search(
+            &params.q,
+            params.workspace.as_deref(),
+            params.limit,
+            params.offset,
+        )
         .await?;
 
     info!(query = %params.q, result_count = results.len(), "Search completed");

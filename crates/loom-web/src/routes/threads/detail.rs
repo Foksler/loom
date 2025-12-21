@@ -20,25 +20,21 @@ pub fn ThreadDetailPage() -> impl IntoView {
     let params = use_params_map();
 
     // Get thread ID from route params
-    let thread_id = Memo::new(move |_| params.with(|p| p.get("id").and_then(|id| Some(id.clone()))));
+    let thread_id = Memo::new(move |_| params.with(|p| p.get("id")));
 
     // Create mock thread data
     let thread_data = Memo::new(move |_| {
-        if let Some(thread_id) = thread_id.get() {
-            Some(Thread {
-                id: thread_id.clone(),
-                title: format!("Thread: {}", thread_id),
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                model: "gpt-4-turbo".to_string(),
-                status: ThreadStatus::Active,
-                messages: vec![],
-                repository: None,
-                tools: vec![],
-            })
-        } else {
-            None
-        }
+        thread_id.get().map(|thread_id| Thread {
+            id: thread_id.clone(),
+            title: format!("Thread: {}", thread_id),
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            model: "gpt-4-turbo".to_string(),
+            status: ThreadStatus::Active,
+            messages: vec![],
+            repository: None,
+            tools: vec![],
+        })
     });
 
     view! {

@@ -49,6 +49,7 @@ pub enum StreamEvent {
 /// Wire format for LLM streaming events from SSE
 #[derive(serde::Deserialize, Debug, Clone)]
 #[serde(tag = "type", rename_all = "snake_case")]
+#[allow(dead_code)]
 enum SseStreamEvent {
     TextDelta {
         content: String,
@@ -69,14 +70,16 @@ enum SseStreamEvent {
 /// Manages a single streaming connection
 struct StreamConnection {
     event_source: Option<web_sys::EventSource>,
+    #[allow(dead_code)]
     closure: Option<Closure<dyn FnMut(web_sys::MessageEvent)>>,
+    #[allow(dead_code)]
     error_closure: Option<Closure<dyn FnMut(web_sys::Event)>>,
 }
 
 impl Drop for StreamConnection {
     fn drop(&mut self) {
         if let Some(es) = self.event_source.take() {
-            let _ = es.close();
+            es.close();
         }
     }
 }

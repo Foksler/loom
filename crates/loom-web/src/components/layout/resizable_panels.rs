@@ -82,7 +82,6 @@ where
 
     // Handle mouse move during drag
     let on_document_mouse_move = {
-        let container_ref = container_ref.clone();
         move |event: MouseEvent| {
             if !is_dragging.get() {
                 return;

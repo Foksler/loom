@@ -59,9 +59,7 @@ mod tests {
         thread.metadata.title = Some("Test Retrieval".to_string());
         let thread_id = thread.id.clone();
 
-        repo.upsert(&thread, None)
-            .await
-            .expect("Failed to upsert");
+        repo.upsert(&thread, None).await.expect("Failed to upsert");
 
         // Retrieve it
         let retrieved = repo
@@ -71,10 +69,7 @@ mod tests {
             .expect("Thread not found");
 
         assert_eq!(retrieved.id, thread_id);
-        assert_eq!(
-            retrieved.metadata.title,
-            Some("Test Retrieval".to_string())
-        );
+        assert_eq!(retrieved.metadata.title, Some("Test Retrieval".to_string()));
     }
 
     /// Test deleting a thread (soft delete)
@@ -86,9 +81,7 @@ mod tests {
         thread.metadata.title = Some("To Delete".to_string());
         let thread_id = thread.id.clone();
 
-        repo.upsert(&thread, None)
-            .await
-            .expect("Failed to upsert");
+        repo.upsert(&thread, None).await.expect("Failed to upsert");
 
         // Delete it
         let deleted = repo.delete(&thread_id).await.expect("Failed to delete");
@@ -111,9 +104,7 @@ mod tests {
         for i in 1..=3 {
             let mut thread = Thread::new();
             thread.metadata.title = Some(format!("Thread {}", i));
-            repo.upsert(&thread, None)
-                .await
-                .expect("Failed to upsert");
+            repo.upsert(&thread, None).await.expect("Failed to upsert");
         }
 
         // List them
@@ -133,9 +124,7 @@ mod tests {
         // Create threads with searchable content
         let mut thread = Thread::new();
         thread.metadata.title = Some("Rust Integration Testing".to_string());
-        repo.upsert(&thread, None)
-            .await
-            .expect("Failed to upsert");
+        repo.upsert(&thread, None).await.expect("Failed to upsert");
 
         // Note: Search might not work without full-text index,
         // but the endpoint should at least be callable

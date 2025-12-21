@@ -45,7 +45,7 @@ pub fn PromptComposer(
 ) -> impl IntoView {
     use std::rc::Rc;
     let on_submit = Rc::new(on_submit);
-    
+
     let (input_value, set_input_value) = signal(String::new());
 
     let on_submit_keydown = on_submit.clone();

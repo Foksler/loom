@@ -63,7 +63,7 @@ pub fn ProgressBar(
     #[prop(optional)]
     class: Option<String>,
 ) -> impl IntoView {
-    let clamped_value = value.max(0).min(100);
+    let clamped_value = value.clamp(0, 100);
 
     let size_class = match size {
         ProgressBarSize::Sm => "h-1",

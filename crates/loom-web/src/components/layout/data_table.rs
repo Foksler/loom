@@ -141,7 +141,7 @@ pub fn DataTable(
     let rows_for_pages = rows.clone();
     let total_pages = Memo::new(move |_| {
         if pagination {
-            (rows_for_pages.len() + page_size - 1) / page_size
+            rows_for_pages.len().div_ceil(page_size)
         } else {
             1
         }

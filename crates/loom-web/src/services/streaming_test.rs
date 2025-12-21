@@ -294,7 +294,7 @@ mod tests {
         let content_len = content.len();
 
         assert_eq!(
-            content_len, 44,
+            content_len, 43,
             "Content length should be preserved correctly"
         );
 

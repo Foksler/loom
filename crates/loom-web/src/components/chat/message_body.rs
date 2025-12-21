@@ -89,7 +89,11 @@ fn RenderText(
 enum MarkdownPart {
     Bold(String),
     Italic(String),
-    Link { text: String, url: String },
+    Link {
+        text: String,
+        #[allow(dead_code)]
+        url: String,
+    },
     Code(String),
     Plain(String),
 }
@@ -127,7 +131,7 @@ fn parse_markdown(text: &str) -> Vec<MarkdownPart> {
                 }
                 let delim = ch;
                 let mut italic_text = String::new();
-                while let Some(c) = chars.next() {
+                for c in chars.by_ref() {
                     if c == delim {
                         break;
                     }
@@ -142,7 +146,7 @@ fn parse_markdown(text: &str) -> Vec<MarkdownPart> {
                     current.clear();
                 }
                 let mut code_text = String::new();
-                while let Some(c) = chars.next() {
+                for c in chars.by_ref() {
                     if c == '`' {
                         break;
                     }
@@ -157,7 +161,7 @@ fn parse_markdown(text: &str) -> Vec<MarkdownPart> {
                     current.clear();
                 }
                 let mut link_text = String::new();
-                while let Some(c) = chars.next() {
+                for c in chars.by_ref() {
                     if c == ']' {
                         break;
                     }
@@ -167,7 +171,7 @@ fn parse_markdown(text: &str) -> Vec<MarkdownPart> {
                 if chars.peek() == Some(&'(') {
                     chars.next();
                     let mut url = String::new();
-                    while let Some(c) = chars.next() {
+                    for c in chars.by_ref() {
                         if c == ')' {
                             break;
                         }

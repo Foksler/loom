@@ -100,7 +100,7 @@ pub fn StyleguideQueryPage() -> impl IntoView {
                     Vertical timeline showing query execution steps with status indicators.
                 </p>
                 <QueryTimeline
-                    steps=sample_steps.clone().into()
+                    steps=sample_steps.clone()
                 />
             </section>
 
@@ -110,7 +110,7 @@ pub fn StyleguideQueryPage() -> impl IntoView {
                 <p class="text-gray-600 mb-4">
                     List of tools called during query execution with execution times and results.
                 </p>
-                <ToolInvocationList invocations=sample_invocations.into() />
+                <ToolInvocationList invocations=sample_invocations />
             </section>
 
             {/* State Machine Trace section */}
@@ -119,7 +119,7 @@ pub fn StyleguideQueryPage() -> impl IntoView {
                 <p class="text-gray-600 mb-4">
                     Timeline of state transitions showing the flow through the query processing pipeline.
                 </p>
-                <StateMachineTrace trace=sample_transitions.into() />
+                <StateMachineTrace trace=sample_transitions />
             </section>
 
             {/* Collapsed Timeline Example */}
@@ -129,7 +129,7 @@ pub fn StyleguideQueryPage() -> impl IntoView {
                     Example of timeline at an early execution stage.
                 </p>
                 <QueryTimeline
-                    steps=sample_steps.clone().into()
+                    steps=sample_steps.clone()
                 />
             </section>
         </div>

@@ -86,7 +86,7 @@ pub fn ThreadListPage() -> impl IntoView {
             {/* Thread list */}
             <ThreadList
                 threads=filtered_threads.get()
-                on_select=Box::new(handle_select)
+                _on_select=Box::new(handle_select)
             />
         </div>
     }

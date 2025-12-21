@@ -25,7 +25,7 @@ pub fn ThreadListItem(
 
     /// Callback when clicked
     #[prop(optional)]
-    on_click: Option<Box<dyn Fn(String) -> () + Send + Sync + 'static>>,
+    on_click: Option<Box<dyn Fn(String) + Send + Sync + 'static>>,
 
     /// Optional CSS class
     #[prop(optional)]

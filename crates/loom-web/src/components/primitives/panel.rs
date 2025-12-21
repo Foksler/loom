@@ -67,8 +67,8 @@ pub fn Panel(
         },
         match (border_class, &class) {
             ("", None) => String::new(),
-            ("", Some(c)) => format!("{}", c),
-            (b, None) => format!("{}", b),
+            ("", Some(c)) => c.to_string(),
+            (b, None) => b.to_string(),
             (b, Some(c)) => format!("{} {}", b, c),
         }
     );

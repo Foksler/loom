@@ -34,9 +34,9 @@ pub fn MessageBubble(
     #[prop(optional)]
     class: Option<String>,
 ) -> impl IntoView {
-    use loom_core::message::Role;
     use leptos::prelude::RwSignal;
-    
+    use loom_core::message::Role;
+
     let message = RwSignal::new(message);
 
     let (bg_class, text_class, align_class) = match message.get().role {

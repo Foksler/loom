@@ -68,7 +68,7 @@ pub fn Chip(
 
     let has_on_remove = on_remove.is_some();
     let on_remove = std::sync::Arc::new(on_remove);
-    
+
     view! {
         <span
             class=format!(

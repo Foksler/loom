@@ -73,7 +73,7 @@ pub fn Spinner(
         width_class,
         height_class,
         match &class {
-            Some(c) => format!("{}", c),
+            Some(c) => c.to_string(),
             None => String::new(),
         }
     );

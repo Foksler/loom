@@ -64,8 +64,8 @@ pub fn DiffView(
                         <tbody>
                             {(0..before_lines.len().max(after_lines.len()))
                                 .map(|i| {
-                                    let before_line = before_lines.get(i).map(|s| s.clone());
-                                    let after_line = after_lines.get(i).map(|s| s.clone());
+                                    let before_line = before_lines.get(i).cloned();
+                                    let after_line = after_lines.get(i).cloned();
 
                                     let (is_same, is_deleted, is_added) = match (&before_line, &after_line) {
                                         (Some(b), Some(a)) if b == a => (true, false, false),
@@ -73,8 +73,8 @@ pub fn DiffView(
                                         (_, Some(_)) => (false, false, true),
                                         _ => (false, false, false),
                                     };
-                                    
-                                    let content = if is_same {
+
+                                    if is_same {
                                         view! {
                                             <tr class="border-b border-gray-700">
                                                 <td class="w-1/2 px-4 py-2 bg-gray-800">
@@ -111,9 +111,7 @@ pub fn DiffView(
                                         view! {
                                             <tr></tr>
                                         }.into_any()
-                                    };
-
-                                    content
+                                    }
                                 })
                                 .collect_view()}
                         </tbody>

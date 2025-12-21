@@ -46,8 +46,8 @@ pub fn ThreadMetadataPanel(
                 {
                     let repo = thread.repository.clone();
                     let tools = thread.tools.clone();
-                    let created = thread.created_at.clone();
-                    let updated = thread.updated_at.clone();
+                    let created = thread.created_at;
+                    let updated = thread.updated_at;
                     let model = thread.model.clone();
                     let repo_check = repo.clone();
                     let tools_check = tools.clone();
