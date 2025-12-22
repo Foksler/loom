@@ -11,10 +11,8 @@ in
   # https://devenv.sh/packages/
   packages = [
     pkgs.git
-    pkgs.nodejs_20
     pkgs.watchexec
     pkgs.cargo-watch
-    pkgs.cargo-leptos
   ];
 
   # https://devenv.sh/languages/
@@ -22,6 +20,13 @@ in
     enable = true;
     components = [ "rustc" "cargo" "clippy" "rustfmt" "rust-analyzer" ];
   };
+
+  languages.javascript = {
+    enable = true;
+    pnpm.enable = true;
+  };
+
+  languages.typescript.enable = true;
 
   # https://devenv.sh/processes/
   # processes.dev.exec = "${lib.getExe pkgs.watchexec} -n -- ls -la";
