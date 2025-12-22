@@ -131,29 +131,6 @@ jobs:
       - name: Build workspace
         run: cargo build --workspace --release
         
-  # Build web UI
-  build-web:
-    name: Build Web UI
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: dtolnay/rust-toolchain@stable
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-      
-      - uses: Swatinem/rust-cache@v2
-        with:
-          cache-on-failure: "true"
-      
-      - name: Install dependencies
-        run: cd crates/loom-web && npm ci
-      
-      - name: Build web UI
-        run: cd crates/loom-web && npm run build
-        
   # Dependency analysis
   dependencies:
     name: Dependency Check
@@ -203,7 +180,7 @@ jobs:
   # Combined status check
   ci-complete:
     name: CI Complete
-    needs: [fmt, clippy, check, test, integration-tests, security-audit, build, build-web, dependencies, docs]
+    needs: [fmt, clippy, check, test, integration-tests, security-audit, build, dependencies, docs]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -235,10 +212,6 @@ jobs:
           fi
           if [[ "${{ needs.build.result }}" != "success" ]]; then
             echo "::error::Build failed"
-            exit 1
-          fi
-          if [[ "${{ needs.build-web.result }}" != "success" ]]; then
-            echo "::error::Web UI build failed"
             exit 1
           fi
           if [[ "${{ needs.dependencies.result }}" != "success" ]]; then

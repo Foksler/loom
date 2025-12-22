@@ -184,20 +184,6 @@ mod tests {
 }
 ```
 
-### Web Code (Leptos/TypeScript)
-
-```bash
-# Format web code
-cd crates/loom-web
-npm run format
-
-# Lint web code
-npm run lint
-
-# Type checking
-npm run check
-```
-
 ## Commit Message Format
 
 Follow the [Conventional Commits](https://www.conventionalcommits.org/) format:
@@ -228,7 +214,6 @@ Must be one of:
 The scope specifies what area of the code is affected:
 - `loom-core` - Core functionality
 - `loom-server` - Server implementation
-- `loom-web` - Web UI
 - `loom-cli` - Command-line interface
 - `llm` - LLM providers (anthropic, openai, etc)
 - Or any other relevant scope
@@ -264,15 +249,6 @@ allowing clients to receive results incrementally instead
 of waiting for complete results.
 
 Fixes #456
-```
-
-```
-fix(loom-web): prevent memory leak in query component
-
-Properly clean up event listeners when component unmounts
-to prevent accumulation of listeners in long-lived pages.
-
-Fixes #789
 ```
 
 ```

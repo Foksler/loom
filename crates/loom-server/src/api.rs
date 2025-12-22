@@ -109,32 +109,7 @@ pub fn create_router(state: AppState) -> Router {
     let bin_dir = std::env::var("LOOM_SERVER_BIN_DIR").unwrap_or_else(|_| "./bin".to_string());
 
     Router::new()
-        // Web UI integration routes (for Leptos server functions)
-        .route(
-            "/api/web/threads",
-            get(crate::web_integration::get_threads_handler),
-        )
-        .route(
-            "/api/web/threads/search",
-            get(crate::web_integration::search_threads_handler),
-        )
-        .route(
-            "/api/web/threads/{id}",
-            get(crate::web_integration::get_thread_handler),
-        )
-        .route(
-            "/api/web/threads/{id}",
-            put(crate::web_integration::create_thread_handler),
-        )
-        .route(
-            "/api/web/threads/{id}",
-            post(crate::web_integration::update_thread_handler),
-        )
-        .route(
-            "/api/web/threads/{id}",
-            delete(crate::web_integration::delete_thread_handler),
-        )
-        // Server API routes (for direct REST access)
+        // Server API routes
         .route("/v1/threads/search", get(search_threads))
         .route("/v1/threads/{id}", put(upsert_thread))
         .route("/v1/threads/{id}", get(get_thread))

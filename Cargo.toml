@@ -21,7 +21,6 @@ members = [
     "crates/loom-acp",
     "crates/loom-cli",
     "crates/loom-version",
-    "crates/loom-web",
     "examples/query_bridge_examples",
 ]
 

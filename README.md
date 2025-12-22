@@ -56,7 +56,6 @@ Loom consists of several integrated components:
 |-----------|---------|----------|
 | **loom-core** | Tracing engine and query processor | Rust |
 | **loom-server** | REST API and WebSocket server | Rust |
-| **loom-web** | Web UI for visualization | Leptos/Rust |
 | **loom-cli** | Command-line interface | Rust |
 
 ### Key Features

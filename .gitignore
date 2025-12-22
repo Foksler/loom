@@ -45,3 +45,6 @@ Thumbs.db
 # Container/OCI build artifacts
 /result
 /result-*
+
+# Database files
+loom.db*
