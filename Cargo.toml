@@ -24,14 +24,13 @@ members = [
 	"crates/loom-thread",
 	"crates/loom-tools",
 	"crates/loom-version",
-	"examples/query_bridge_examples",
 ]
 
 [workspace.package]
 version = "0.1.0"
 authors = ["Geoffrey Huntley"]
 edition = "2021"
-license = "MIT"
+license = "LicenseRef-Proprietary"
 repository = "https://github.com/ghuntley/loom"
 
 [workspace.dependencies]
