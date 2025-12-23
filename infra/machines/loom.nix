@@ -60,8 +60,8 @@
   boot.loader.grub.device = "/dev/sda";
   boot.loader.grub.useOSProber = true;
 
-  # Set lathe-specific secrets file
-  sops.defaultSopsFile = ../secrets/lathe.yaml;
+  # Set loom-specific secrets file
+  sops.defaultSopsFile = ../secrets/loom.yaml;
   
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
