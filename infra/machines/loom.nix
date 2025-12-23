@@ -62,6 +62,12 @@
 
   # Set loom-specific secrets file
   sops.defaultSopsFile = ../secrets/loom.yaml;
+
+  # SSH deploy key for auto-update git authentication
+  sops.secrets.nixos-auto-deploy-key = {
+    owner = "root";
+    mode = "0400";
+  };
   
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
@@ -70,8 +76,9 @@
   # Auto-update NixOS from git repository
   services.nixos-auto-update = {
     enable = true;
-    repository = "https://github.com/ghuntley/loom.git";
+    repository = "git@github.com:ghuntley/loom.git";
     branch = "trunk";
     flakeAttr = "virtualMachine";
+    sshKeyFile = config.sops.secrets.nixos-auto-deploy-key.path;
   };
 }
