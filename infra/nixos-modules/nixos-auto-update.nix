@@ -74,10 +74,15 @@ in
 
         echo "[$(date -Iseconds)] Starting nixos-auto-update..."
 
-        # Clone if not exists, otherwise fetch and reset
-        if [ ! -d "$REPO_PATH/.git" ]; then
+        # Clone or update repository
+        clone_repo() {
           echo "Cloning repository..."
+          rm -rf "$REPO_PATH"
           git clone --branch "$BRANCH" --single-branch "$REPO_URL" "$REPO_PATH"
+        }
+
+        if [ ! -d "$REPO_PATH/.git" ]; then
+          clone_repo
         else
           echo "Updating repository..."
           cd "$REPO_PATH"
@@ -89,18 +94,26 @@ in
             git remote set-url origin "$REPO_URL"
           fi
           
-          git fetch origin "$BRANCH"
-          
-          LOCAL_REV=$(git rev-parse HEAD)
-          REMOTE_REV=$(git rev-parse "origin/$BRANCH")
-          
-          if [ "$LOCAL_REV" = "$REMOTE_REV" ]; then
-            echo "Already up to date at $LOCAL_REV"
-            exit 0
+          # Try to fetch; if it fails, delete and re-clone
+          if ! git fetch origin "$BRANCH"; then
+            echo "Fetch failed, deleting cache and re-cloning..."
+            clone_repo
+          else
+            LOCAL_REV=$(git rev-parse HEAD)
+            REMOTE_REV=$(git rev-parse "origin/$BRANCH")
+            
+            if [ "$LOCAL_REV" = "$REMOTE_REV" ]; then
+              echo "Already up to date at $LOCAL_REV"
+              exit 0
+            fi
+            
+            echo "Updating from $LOCAL_REV to $REMOTE_REV"
+            # Try reset; if it fails, delete and re-clone
+            if ! git reset --hard "origin/$BRANCH"; then
+              echo "Reset failed, deleting cache and re-cloning..."
+              clone_repo
+            fi
           fi
-          
-          echo "Updating from $LOCAL_REV to $REMOTE_REV"
-          git reset --hard "origin/$BRANCH"
         fi
 
         cd "$REPO_PATH"
