@@ -81,6 +81,14 @@ in
         else
           echo "Updating repository..."
           cd "$REPO_PATH"
+          
+          # Update remote URL if it changed
+          CURRENT_URL=$(git remote get-url origin)
+          if [ "$CURRENT_URL" != "$REPO_URL" ]; then
+            echo "Updating remote URL from $CURRENT_URL to $REPO_URL"
+            git remote set-url origin "$REPO_URL"
+          fi
+          
           git fetch origin "$BRANCH"
           
           LOCAL_REV=$(git rev-parse HEAD)
