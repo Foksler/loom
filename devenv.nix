@@ -23,6 +23,7 @@ in
 
   languages.javascript = {
     enable = true;
+    yarn.enable = true;
     pnpm.enable = true;
   };
 

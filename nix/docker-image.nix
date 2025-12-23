@@ -1,15 +1,33 @@
-# Nix expression for building loom-server Docker image
+# Nix expression for building loom-server Docker image with loom-web
 # Uses nixpkgs.dockerTools for reproducible image builds
 { pkgs }:
 
 let
   loomServer = (import ./loom-server.nix { inherit pkgs; });
+  
+  # Build loom-web using pnpm
+  loomWeb = pkgs.buildNpmPackage {
+    pname = "loom-web";
+    version = "0.1.0";
+    src = ../web/loom-web;
+    
+    npmDepsHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # TODO: Update after first build
+    
+    buildPhase = ''
+      pnpm build
+    '';
+    
+    installPhase = ''
+      mkdir -p $out
+      cp -r build/* $out/
+    '';
+  };
 in
 pkgs.dockerTools.buildImage {
   name = "loom-server";
   tag = "latest";
 
-  # Copy binary and runtime dependencies to image root
+  # Copy binary, web assets, and runtime dependencies to image root
   copyToRoot = pkgs.buildEnv {
     name = "image-root";
     paths = [
@@ -18,6 +36,12 @@ pkgs.dockerTools.buildImage {
     ];
     pathsToLink = [ "/bin" "/etc" ];
   };
+
+  # Additional contents: web assets
+  extraCommands = ''
+    mkdir -p var/www/loom-web
+    cp -r ${loomWeb}/* var/www/loom-web/
+  '';
 
   # Container configuration
   config = {
@@ -36,6 +60,7 @@ pkgs.dockerTools.buildImage {
     Env = [
       "RUST_LOG=info"
       "PATH=/usr/bin:/bin"
+      "LOOM_SERVER_WEB_DIR=/var/www/loom-web"
     ];
 
     # Working directory

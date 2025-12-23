@@ -17,7 +17,7 @@ use loom_llm_service::LlmService;
 use loom_thread::{Thread, ThreadId, ThreadSummary};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tower_http::services::ServeDir;
+use tower_http::services::{ServeDir, ServeFile};
 
 use crate::llm_proxy;
 
@@ -107,8 +107,9 @@ pub fn create_app_state(repo: Arc<ThreadRepository>) -> AppState {
 /// Create the API router with all routes.
 pub fn create_router(state: AppState) -> Router {
     let bin_dir = std::env::var("LOOM_SERVER_BIN_DIR").unwrap_or_else(|_| "./bin".to_string());
+    let web_dir = std::env::var("LOOM_SERVER_WEB_DIR").ok();
 
-    Router::new()
+    let mut router = Router::new()
         // Server API routes
         .route("/v1/threads/search", get(search_threads))
         .route("/v1/threads/{id}", put(upsert_thread))
@@ -169,7 +170,19 @@ pub fn create_router(state: AppState) -> Router {
         .route("/v1/debug/query-traces", get(list_query_traces))
         .route("/v1/debug/query-traces/stats", get(get_trace_stats))
         .nest_service("/bin", ServeDir::new(bin_dir))
-        .with_state(state)
+        .with_state(state);
+
+    // Serve static web assets if LOOM_SERVER_WEB_DIR is set
+    // This serves the built loom-web SPA
+    if let Some(web_path) = web_dir {
+        tracing::info!(web_dir = %web_path, "serving static web assets");
+        // Serve static files and fall back to index.html for SPA routing
+        router = router.fallback_service(
+            ServeDir::new(&web_path).fallback(ServeFile::new(format!("{}/index.html", web_path))),
+        );
+    }
+
+    router
 }
 
 /// Query parameters for listing threads.
