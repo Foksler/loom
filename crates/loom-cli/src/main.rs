@@ -7,10 +7,12 @@
 //! coding agents. It supports multiple LLM providers and includes tools
 //! for file system operations.
 
-use std::io::{self, BufRead, Write};
+use std::io::{self, Write};
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+
+use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::sync::watch;
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -359,7 +361,7 @@ async fn execute_tool(
 	tool_ctx,
 	thread,
 	thread_store,
-	shutdown_flag,
+	shutdown_rx,
 	workspace,
 	auto_commit_service
 ))]
@@ -370,11 +372,12 @@ async fn run_repl(
 	tool_ctx: &ToolContext,
 	thread: &mut Thread,
 	thread_store: &dyn ThreadStore,
-	shutdown_flag: Arc<AtomicBool>,
+	mut shutdown_rx: watch::Receiver<bool>,
 	workspace: &std::path::Path,
 	auto_commit_service: Option<&AutoCommitService<AutoCommitGitClient, ProxyLlmClient>>,
 ) -> Result<()> {
-	let stdin = io::stdin();
+	let stdin = tokio::io::stdin();
+	let mut reader = BufReader::new(stdin);
 	let mut stdout = io::stdout();
 
 	println!("Welcome to Loom - AI-powered coding assistant");
@@ -384,197 +387,211 @@ async fn run_repl(
 	let mut messages: Vec<Message> = Vec::new();
 
 	loop {
-		// Check if shutdown was requested
-		if shutdown_flag.load(Ordering::Relaxed) {
-			info!("shutdown requested, saving thread");
-			snapshot_git_state(thread, workspace);
-			thread.touch();
-			if let Err(e) = thread_store.save(thread).await {
-				warn!(error = %e, "failed to save thread on shutdown");
-			}
-			println!("\nInterrupted. Thread saved. Goodbye!");
-			break;
-		}
-
 		print!("> ");
 		stdout.flush()?;
 
 		let mut input = String::new();
-		let bytes_read = stdin.lock().read_line(&mut input)?;
 
-		if bytes_read == 0 {
-			info!("EOF received, shutting down");
-			snapshot_git_state(thread, workspace);
-			thread.touch();
-			if let Err(e) = thread_store.save(thread).await {
-				warn!(error = %e, "failed to save thread on exit");
+		tokio::select! {
+			biased;
+
+			_ = shutdown_rx.changed() => {
+				if *shutdown_rx.borrow() {
+					info!("shutdown requested, saving thread");
+					snapshot_git_state(thread, workspace);
+					thread.touch();
+					if let Err(e) = thread_store.save(thread).await {
+						warn!(error = %e, "failed to save thread on shutdown");
+					}
+					println!("Interrupted. Thread saved. Goodbye!");
+					break;
+				}
 			}
-			break;
-		}
 
-		// Check shutdown again after potentially blocking read
-		if shutdown_flag.load(Ordering::Relaxed) {
-			info!("shutdown requested after input, saving thread");
-			snapshot_git_state(thread, workspace);
-			thread.touch();
-			if let Err(e) = thread_store.save(thread).await {
-				warn!(error = %e, "failed to save thread on shutdown");
-			}
-			println!("\nInterrupted. Thread saved. Goodbye!");
-			break;
-		}
-
-		let input = input.trim();
-		if input.is_empty() {
-			continue;
-		}
-
-		debug!(input_length = input.len(), "received user input");
-
-		let user_message = Message::user(input);
-		messages.push(user_message.clone());
-
-		thread
-			.conversation
-			.messages
-			.push(MessageSnapshot::from(&user_message));
-
-		let request = loom_core::LlmRequest::new("default")
-			.with_messages(messages.clone())
-			.with_tools(tool_definitions.to_vec());
-
-		match llm_client.complete_streaming(request).await {
-			Ok(mut stream) => {
-				let mut assistant_content = String::new();
-				let mut tool_calls: Vec<ToolCall> = Vec::new();
-
-				while let Some(event) = stream.next().await {
-					match event {
-						LlmEvent::TextDelta { content } => {
-							print!("{}", content);
-							let _ = io::stdout().flush();
-							assistant_content.push_str(&content);
+			result = reader.read_line(&mut input) => {
+				match result {
+					Ok(0) => {
+						info!("EOF received, shutting down");
+						snapshot_git_state(thread, workspace);
+						thread.touch();
+						if let Err(e) = thread_store.save(thread).await {
+							warn!(error = %e, "failed to save thread on exit");
 						}
-						LlmEvent::ToolCallDelta {
-							call_id,
-							tool_name,
-							arguments_fragment,
-						} => {
-							debug!(
-									call_id = %call_id,
-									tool_name = %tool_name,
-									fragment_len = arguments_fragment.len(),
-									"tool call delta"
-							);
+						break;
+					}
+					Ok(_) => {
+						let input = input.trim();
+						if input.is_empty() {
+							continue;
 						}
-						LlmEvent::Completed(response) => {
-							info!(
-									finish_reason = ?response.finish_reason,
-									"LLM response complete"
-							);
-							println!();
-							tool_calls = response.tool_calls;
-							if !response.message.content.is_empty() {
-								assistant_content = response.message.content.clone();
+
+						debug!(input_length = input.len(), "received user input");
+
+						let user_message = Message::user(input);
+						messages.push(user_message.clone());
+
+						thread
+							.conversation
+							.messages
+							.push(MessageSnapshot::from(&user_message));
+
+						let request = loom_core::LlmRequest::new("default")
+							.with_messages(messages.clone())
+							.with_tools(tool_definitions.to_vec());
+
+						match llm_client.complete_streaming(request).await {
+							Ok(mut stream) => {
+								let mut assistant_content = String::new();
+								let mut tool_calls: Vec<ToolCall> = Vec::new();
+
+								while let Some(event) = stream.next().await {
+									match event {
+										LlmEvent::TextDelta { content } => {
+											print!("{}", content);
+											let _ = io::stdout().flush();
+											assistant_content.push_str(&content);
+										}
+										LlmEvent::ToolCallDelta {
+											call_id,
+											tool_name,
+											arguments_fragment,
+										} => {
+											debug!(
+												call_id = %call_id,
+												tool_name = %tool_name,
+												fragment_len = arguments_fragment.len(),
+												"tool call delta"
+											);
+										}
+										LlmEvent::Completed(response) => {
+											info!(
+												finish_reason = ?response.finish_reason,
+												"LLM response complete"
+											);
+											println!();
+											tool_calls = response.tool_calls;
+											if !response.message.content.is_empty() {
+												assistant_content = response.message.content.clone();
+											}
+										}
+										LlmEvent::Error(e) => {
+											error!(error = ?e, "LLM stream error");
+										}
+									}
+								}
+
+								messages.push(Message::assistant_with_tool_calls(
+									&assistant_content,
+									tool_calls.clone(),
+								));
+
+								thread.conversation.messages.push(MessageSnapshot {
+									role: MessageRole::Assistant,
+									content: assistant_content.clone(),
+									tool_call_id: None,
+									tool_name: None,
+									tool_calls: if tool_calls.is_empty() {
+										None
+									} else {
+										Some(
+											tool_calls
+												.iter()
+												.map(|tc| ToolCallSnapshot {
+													id: tc.id.clone(),
+													tool_name: tc.tool_name.clone(),
+													arguments_json: tc.arguments_json.clone(),
+												})
+												.collect(),
+										)
+									},
+								});
+
+								let mut tool_outcomes: Vec<(String, bool)> = Vec::new();
+								for tool_call in &tool_calls {
+									info!(
+										tool_name = %tool_call.tool_name,
+										tool_id = %tool_call.id,
+										"executing tool call"
+									);
+
+									let outcome =
+										execute_tool(tool_registry, tool_call, tool_ctx).await;
+									let succeeded =
+										matches!(&outcome, ToolExecutionOutcome::Success { .. });
+									tool_outcomes.push((tool_call.tool_name.clone(), succeeded));
+
+									let (tool_result, is_error) = match &outcome {
+										ToolExecutionOutcome::Success { output, .. } => {
+											(output.to_string(), false)
+										}
+										ToolExecutionOutcome::Error { error, .. } => {
+											(format!("Error: {}", error), true)
+										}
+									};
+
+									if is_error {
+										warn!(tool_id = %tool_call.id, result = %tool_result, "tool returned error");
+									} else {
+										debug!(
+											tool_id = %tool_call.id,
+											"tool completed successfully"
+										);
+									}
+
+									messages.push(Message::tool(
+										&tool_call.id,
+										&tool_call.tool_name,
+										&tool_result,
+									));
+
+									thread.conversation.messages.push(MessageSnapshot {
+										role: MessageRole::Tool,
+										content: tool_result.clone(),
+										tool_call_id: Some(tool_call.id.clone()),
+										tool_name: Some(tool_call.tool_name.clone()),
+										tool_calls: None,
+									});
+								}
+
+								if !tool_calls.is_empty() {
+									if let Some(auto_commit_svc) = auto_commit_service {
+										let completed: Vec<CompletedToolInfo> = tool_outcomes
+											.iter()
+											.map(|(name, succeeded)| CompletedToolInfo {
+												tool_name: name.clone(),
+												succeeded: *succeeded,
+											})
+											.collect();
+
+										run_auto_commit(auto_commit_svc, workspace, &completed)
+											.await;
+									}
+								}
+
+								thread.agent_state = AgentStateSnapshot {
+									kind: AgentStateKind::WaitingForUserInput,
+									retries: 0,
+									last_error: None,
+									pending_tool_calls: Vec::new(),
+								};
+								snapshot_git_state(thread, workspace);
+								thread.touch();
+
+								if let Err(e) = thread_store.save(thread).await {
+									warn!(error = %e, "failed to save thread");
+								}
+							}
+							Err(e) => {
+								error!(error = %e, "failed to start LLM request");
+								eprintln!("Error: {}", e);
 							}
 						}
-						LlmEvent::Error(e) => {
-							error!(error = ?e, "LLM stream error");
-						}
+					}
+					Err(e) => {
+						error!(error = %e, "failed to read input");
+						break;
 					}
 				}
-
-				messages.push(Message::assistant_with_tool_calls(&assistant_content, tool_calls.clone()));
-
-				thread.conversation.messages.push(MessageSnapshot {
-					role: MessageRole::Assistant,
-					content: assistant_content.clone(),
-					tool_call_id: None,
-					tool_name: None,
-					tool_calls: if tool_calls.is_empty() {
-						None
-					} else {
-						Some(
-							tool_calls
-								.iter()
-								.map(|tc| ToolCallSnapshot {
-									id: tc.id.clone(),
-									tool_name: tc.tool_name.clone(),
-									arguments_json: tc.arguments_json.clone(),
-								})
-								.collect(),
-						)
-					},
-				});
-
-				let mut tool_outcomes: Vec<(String, bool)> = Vec::new();
-				for tool_call in &tool_calls {
-					info!(
-							tool_name = %tool_call.tool_name,
-							tool_id = %tool_call.id,
-							"executing tool call"
-					);
-
-					let outcome = execute_tool(tool_registry, tool_call, tool_ctx).await;
-					let succeeded = matches!(&outcome, ToolExecutionOutcome::Success { .. });
-					tool_outcomes.push((tool_call.tool_name.clone(), succeeded));
-
-					let (tool_result, is_error) = match &outcome {
-						ToolExecutionOutcome::Success { output, .. } => (output.to_string(), false),
-						ToolExecutionOutcome::Error { error, .. } => (format!("Error: {}", error), true),
-					};
-
-					if is_error {
-						warn!(tool_id = %tool_call.id, result = %tool_result, "tool returned error");
-					} else {
-						debug!(tool_id = %tool_call.id, "tool completed successfully");
-					}
-
-					messages.push(Message::tool(
-						&tool_call.id,
-						&tool_call.tool_name,
-						&tool_result,
-					));
-
-					thread.conversation.messages.push(MessageSnapshot {
-						role: MessageRole::Tool,
-						content: tool_result.clone(),
-						tool_call_id: Some(tool_call.id.clone()),
-						tool_name: Some(tool_call.tool_name.clone()),
-						tool_calls: None,
-					});
-				}
-
-				if !tool_calls.is_empty() {
-					if let Some(auto_commit_svc) = auto_commit_service {
-						let completed: Vec<CompletedToolInfo> = tool_outcomes
-							.iter()
-							.map(|(name, succeeded)| CompletedToolInfo {
-								tool_name: name.clone(),
-								succeeded: *succeeded,
-							})
-							.collect();
-
-						run_auto_commit(auto_commit_svc, workspace, &completed).await;
-					}
-				}
-
-				thread.agent_state = AgentStateSnapshot {
-					kind: AgentStateKind::WaitingForUserInput,
-					retries: 0,
-					last_error: None,
-					pending_tool_calls: Vec::new(),
-				};
-				snapshot_git_state(thread, workspace);
-				thread.touch();
-
-				if let Err(e) = thread_store.save(thread).await {
-					warn!(error = %e, "failed to save thread");
-				}
-			}
-			Err(e) => {
-				error!(error = %e, "failed to start LLM request");
-				eprintln!("Error: {}", e);
 			}
 		}
 	}
@@ -627,8 +644,8 @@ async fn start_repl_session(
 			"initialized"
 	);
 
-	let shutdown_flag = Arc::new(AtomicBool::new(false));
-	setup_ctrlc_handler(shutdown_flag.clone())?;
+	let (shutdown_tx, shutdown_rx) = watch::channel(false);
+	setup_ctrlc_handler(shutdown_tx)?;
 
 	run_repl(
 		llm_client.as_ref(),
@@ -637,7 +654,7 @@ async fn start_repl_session(
 		&tool_ctx,
 		&mut thread,
 		thread_store.as_ref(),
-		shutdown_flag,
+		shutdown_rx,
 		&workspace,
 		auto_commit_service.as_ref(),
 	)
@@ -1220,11 +1237,10 @@ async fn run_acp_agent(
 		.await
 }
 
-fn setup_ctrlc_handler(shutdown_flag: Arc<AtomicBool>) -> Result<()> {
+fn setup_ctrlc_handler(shutdown_tx: watch::Sender<bool>) -> Result<()> {
 	ctrlc::set_handler(move || {
 		info!("received Ctrl+C, requesting shutdown");
-		shutdown_flag.store(true, Ordering::Relaxed);
-		// Print newline to clean up prompt
+		let _ = shutdown_tx.send(true);
 		eprintln!();
 	})
 	.context("failed to set Ctrl+C handler")?;
