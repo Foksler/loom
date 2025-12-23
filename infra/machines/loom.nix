@@ -80,5 +80,6 @@
     branch = "trunk";
     flakeAttr = "virtualMachine";
     sshKeyFile = config.sops.secrets.nixos-auto-deploy-key.path;
+    interval = "*:*";  # every minute
   };
 }
