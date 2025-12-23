@@ -92,6 +92,42 @@ in
       ''}";
       types = [ "text" ];
     };
+    
+    # Ensure loom-server flake package compiles
+    loom-server-build = {
+      enable = true;
+      name = "Build loom-server";
+      entry = "${pkgs.writeShellScript "loom-server-build" ''
+        echo "🔨 Building loom-server..."
+        export NIXPKGS_ALLOW_UNFREE=1
+        if ! nix build .#loom-server --no-link --impure 2>&1; then
+          echo "❌ BLOCKED: loom-server failed to compile!"
+          echo "Fix the build errors before committing."
+          exit 1
+        fi
+        echo "✅ loom-server builds successfully"
+      ''}";
+      pass_filenames = false;
+      always_run = true;
+    };
+    
+    # Ensure loom-web flake package compiles
+    loom-web-build = {
+      enable = true;
+      name = "Build loom-web";
+      entry = "${pkgs.writeShellScript "loom-web-build" ''
+        echo "🔨 Building loom-web..."
+        export NIXPKGS_ALLOW_UNFREE=1
+        if ! nix build .#loom-web --no-link --impure 2>&1; then
+          echo "❌ BLOCKED: loom-web failed to compile!"
+          echo "Fix the build errors before committing."
+          exit 1
+        fi
+        echo "✅ loom-web builds successfully"
+      ''}";
+      pass_filenames = false;
+      always_run = true;
+    };
   };
 
   # See full reference at https://devenv.sh/reference/options/
