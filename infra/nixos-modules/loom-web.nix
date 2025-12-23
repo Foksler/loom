@@ -166,10 +166,7 @@ in
     };
 
     networking.firewall = mkIf cfg.openFirewall {
-      allowedTCPPorts = [ cfg.port ] ++ (optionals cfg.enableSSL [ 443 ]);
+      allowedTCPPorts = [ cfg.port ] ++ (optionals cfg.enableSSL [ 443 80 ]);
     };
-
-    # Allow access via Tailscale
-    networking.firewall.interfaces."tailscale0".allowedTCPPorts = [ cfg.port ];
   };
 }

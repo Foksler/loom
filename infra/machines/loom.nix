@@ -159,7 +159,4 @@
     enableSSL = true;
     acmeEmail = "ghuntley@ghuntley.com";
   };
-
-  networking.firewall.allowedTCPPorts = [ 80 443 ];
-
 }
