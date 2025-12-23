@@ -25,16 +25,13 @@ in
     pkgs.docker
     pkgs.dprint      # Universal code formatter (replaces prettier + rustfmt)
     pkgs.git
-    pkgs.helm
     pkgs.jq
-    pkgs.kubectl
+    pkgs.lazygit
     tools.license    # License header management tool
-    pkgs.lld         # Backup fast linker
     pkgs.nixos-rebuild
     pkgs.nodejs_22   # Node.js for web tooling compatibility
     pkgs.pnpm_9
     pkgs.redis
-    pkgs.sccache
     pkgs.skopeo
     pkgs.sops
     pkgs.ssh-to-age
