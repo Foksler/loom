@@ -69,7 +69,7 @@ prometheus = "0.13"
 
 # OpenAPI documentation
 utoipa = { version = "5", features = ["axum_extras", "uuid", "chrono"] }
-utoipa-swagger-ui = { version = "9", features = ["axum"] }
+utoipa-swagger-ui = { version = "9", features = ["axum", "vendored"] }
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }

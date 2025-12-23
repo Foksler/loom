@@ -45,7 +45,7 @@
           pkgsWithTools = pkgs.extend toolsOverlay;
         in
         {
-          inherit (pkgs) smtprelay;
+          inherit (pkgs) smtprelay loom-server loom-web;
           inherit (pkgsWithTools) license;
         };
     };

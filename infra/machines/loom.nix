@@ -21,6 +21,8 @@
     ../nixos-modules/user.nix
     ../nixos-modules/vscode-server.nix
     ../nixos-modules/nixos-auto-update.nix
+    ../nixos-modules/loom-server.nix
+    ../nixos-modules/loom-web.nix
   ];
 
   # Machine-specific configuration
@@ -68,6 +70,38 @@
     owner = "root";
     mode = "0400";
   };
+
+  # Loom server secrets
+  sops.secrets.loom-anthropic-api-key = {
+    owner = "loom-server";
+    mode = "0400";
+  };
+
+  # Optional: Uncomment if using OpenAI
+  # sops.secrets.loom-openai-api-key = {
+  #   owner = "loom-server";
+  #   mode = "0400";
+  # };
+
+  # Optional: Uncomment if using GitHub App
+  # sops.secrets.loom-github-app-id = {
+  #   owner = "loom-server";
+  #   mode = "0400";
+  # };
+  # sops.secrets.loom-github-app-private-key = {
+  #   owner = "loom-server";
+  #   mode = "0400";
+  # };
+  # sops.secrets.loom-github-webhook-secret = {
+  #   owner = "loom-server";
+  #   mode = "0400";
+  # };
+
+  # Optional: Uncomment if using Google Custom Search
+  # sops.secrets.loom-google-cse-api-key = {
+  #   owner = "loom-server";
+  #   mode = "0400";
+  # };
   
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
@@ -81,5 +115,56 @@
     flakeAttr = "virtualMachine";
     sshKeyFile = config.sops.secrets.nixos-auto-deploy-key.path;
     interval = "*:*";  # every minute
+  };
+
+  # Loom Server - API backend
+  services.loom-server = {
+    enable = true;
+    host = "127.0.0.1";
+    port = 8080;
+    databasePath = "/var/lib/loom-server/loom.db";
+    logLevel = "trace";
+
+    anthropic = {
+      enable = true;
+      apiKeyFile = config.sops.secrets.loom-anthropic-api-key.path;
+      model = "claude-sonnet-4-20250514";
+    };
+
+    # Optional: Enable OpenAI
+    # openai = {
+    #   enable = true;
+    #   apiKeyFile = config.sops.secrets.loom-openai-api-key.path;
+    #   model = "gpt-4o";
+    # };
+
+    # Optional: Enable GitHub App
+    # githubApp = {
+    #   enable = true;
+    #   appIdFile = config.sops.secrets.loom-github-app-id.path;
+    #   privateKeyFile = config.sops.secrets.loom-github-app-private-key.path;
+    #   webhookSecretFile = config.sops.secrets.loom-github-webhook-secret.path;
+    # };
+
+    # Optional: Enable Google Custom Search
+    # googleCse = {
+    #   enable = true;
+    #   apiKeyFile = config.sops.secrets.loom-google-cse-api-key.path;
+    #   searchEngineId = "your-search-engine-id";
+    # };
+  };
+
+  # Loom Web - Web frontend
+  services.loom-web = {
+    enable = true;
+    port = 3000;
+    serverUrl = "http://127.0.0.1:8080";
+    
+    # For production with a domain:
+    domain = "loom.ghuntley.com";
+    enableSSL = true;
+    acmeEmail = "ghuntley@ghuntley.com";
+    
+    enableSSL = true;
   };
 }
