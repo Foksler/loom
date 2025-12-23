@@ -33,6 +33,7 @@ AI-powered coding agent written in Rust.
 | [acp-system.md](./acp-system.md)                               | Agent Client Protocol (ACP) integration for editor-driven usage                     |
 | [server-query-phase-2.md](./server-query-phase-2.md)           | Phase 2: Server-to-Client Query Bridge LLM Integration                              |
 | [phase3_websocket_planning.md](./phase3_websocket_planning.md) | Phase 3: WebSocket upgrade for persistent connections                               |
+| [api-documentation.md](./api-documentation.md)                 | OpenAPI documentation system using utoipa and Swagger UI                            |
 
 ## Quick Reference
 

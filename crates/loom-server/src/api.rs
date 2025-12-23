@@ -12,21 +12,23 @@ use axum::{
 	Json, Router,
 };
 use loom_github_app::{
-	AppInfoResponse, CodeSearchRequest, GithubAppClient, GithubAppConfig, GithubAppError,
-	InstallationStatusResponse,
+	AppInfoResponse, CodeSearchRequest, CodeSearchResponse, GithubAppClient, GithubAppConfig,
+	GithubAppError, InstallationStatusResponse,
 };
 use loom_google_cse::{CseClient, CseError, CseRequest};
 use loom_llm_service::LlmService;
 use loom_thread::{Thread, ThreadId, ThreadSummary};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use utoipa::{IntoParams, OpenApi, ToSchema};
+use utoipa_swagger_ui::SwaggerUi;
 use tower_http::services::{ServeDir, ServeFile};
 
 use crate::llm_proxy;
 
 use crate::{
 	db::{GithubInstallation, GithubRepo, ThreadRepository},
-	error::ServerError,
+	error::{ErrorResponse, ServerError},
 	health::{self, HealthComponents, HealthResponse, HealthStatus},
 	query_metrics::QueryMetrics,
 	query_tracing::QueryTraceStore,
@@ -175,6 +177,12 @@ pub fn create_router(state: AppState) -> Router {
         .nest_service("/bin", ServeDir::new(bin_dir))
         .with_state(state);
 
+	// Add OpenAPI documentation
+	router = router.merge(
+		SwaggerUi::new("/docs")
+			.url("/docs/openapi.json", crate::api_docs::ApiDoc::openapi())
+	);
+
 	// Serve static web assets if LOOM_SERVER_WEB_DIR is set
 	// This serves the built loom-web SPA
 	if let Some(web_path) = web_dir {
@@ -189,7 +197,7 @@ pub fn create_router(state: AppState) -> Router {
 }
 
 /// Query parameters for listing threads.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, IntoParams)]
 pub struct ListParams {
 	/// Filter by workspace root.
 	pub workspace: Option<String>,
@@ -210,7 +218,7 @@ fn default_search_limit() -> u32 {
 }
 
 /// Query parameters for search endpoint
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, IntoParams)]
 pub struct SearchParams {
 	/// Search query
 	pub q: String,
@@ -225,7 +233,7 @@ pub struct SearchParams {
 }
 
 /// Search response
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct SearchResponse {
 	pub hits: Vec<SearchResponseHit>,
 	pub limit: u32,
@@ -233,7 +241,7 @@ pub struct SearchResponse {
 }
 
 /// Single search hit in the response
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct SearchResponseHit {
 	#[serde(flatten)]
 	pub summary: ThreadSummary,
@@ -241,13 +249,13 @@ pub struct SearchResponseHit {
 }
 
 /// Request body for updating thread visibility.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct UpdateVisibilityRequest {
 	pub visibility: loom_thread::ThreadVisibility,
 }
 
 /// Response for list endpoint.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct ListResponse {
 	pub threads: Vec<ThreadSummary>,
 	pub total: u64,
@@ -256,28 +264,28 @@ pub struct ListResponse {
 }
 
 /// Response for authentication stub endpoints.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct AuthStubResponse {
 	pub status: String,
 	pub message: String,
 }
 
 /// Request body for CSE proxy endpoint.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct CseProxyRequest {
 	pub query: String,
 	pub max_results: Option<u32>,
 }
 
 /// Response for CSE proxy endpoint.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct CseProxyResponse {
 	pub query: String,
 	pub results: Vec<CseProxyResultItem>,
 }
 
 /// Single result item in CSE proxy response.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct CseProxyResultItem {
 	pub title: String,
 	pub url: String,
@@ -287,14 +295,14 @@ pub struct CseProxyResultItem {
 }
 
 /// Query parameters for GitHub installation lookup by repo.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, IntoParams)]
 pub struct GithubInstallationByRepoQuery {
 	pub owner: String,
 	pub repo: String,
 }
 
 /// Request body for GitHub code search proxy.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct GithubSearchCodeRequest {
 	pub owner: String,
 	pub repo: String,
@@ -314,14 +322,14 @@ fn default_github_page() -> u32 {
 }
 
 /// Request body for GitHub repo info proxy.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct GithubRepoInfoRequest {
 	pub owner: String,
 	pub repo: String,
 }
 
 /// Request body for GitHub file contents proxy.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct GithubFileContentsRequest {
 	pub owner: String,
 	pub repo: String,
@@ -331,7 +339,7 @@ pub struct GithubFileContentsRequest {
 }
 
 /// Simplified repository info response.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct GithubRepoInfoResponse {
 	pub id: i64,
 	pub full_name: String,
@@ -344,7 +352,7 @@ pub struct GithubRepoInfoResponse {
 }
 
 /// Simplified file contents response.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct GithubFileContentsResponse {
 	pub name: String,
 	pub path: String,
@@ -357,6 +365,21 @@ pub struct GithubFileContentsResponse {
 /// PUT /v1/threads/{id} - Create or update a thread.
 ///
 /// Supports optimistic concurrency via If-Match header.
+#[utoipa::path(
+    put,
+    path = "/v1/threads/{id}",
+    params(
+        ("id" = String, Path, description = "Thread ID")
+    ),
+    request_body = Thread,
+    responses(
+        (status = 200, description = "Thread created or updated", body = Thread),
+        (status = 400, description = "Invalid request", body = ErrorResponse),
+        (status = 409, description = "Version conflict", body = ErrorResponse),
+        (status = 500, description = "Internal server error", body = ErrorResponse)
+    ),
+    tag = "threads"
+)]
 #[axum::debug_handler]
 async fn upsert_thread(
 	State(state): State<AppState>,
@@ -400,6 +423,19 @@ async fn upsert_thread(
 }
 
 /// GET /v1/threads/{id} - Get a thread by ID.
+#[utoipa::path(
+    get,
+    path = "/v1/threads/{id}",
+    params(
+        ("id" = String, Path, description = "Thread ID")
+    ),
+    responses(
+        (status = 200, description = "Thread found", body = Thread),
+        (status = 404, description = "Thread not found", body = ErrorResponse),
+        (status = 500, description = "Internal server error", body = ErrorResponse)
+    ),
+    tag = "threads"
+)]
 #[axum::debug_handler]
 async fn get_thread(
 	State(state): State<AppState>,
@@ -419,6 +455,16 @@ async fn get_thread(
 }
 
 /// GET /v1/threads - List threads.
+#[utoipa::path(
+    get,
+    path = "/v1/threads",
+    params(ListParams),
+    responses(
+        (status = 200, description = "List of threads", body = ListResponse),
+        (status = 500, description = "Internal server error", body = ErrorResponse)
+    ),
+    tag = "threads"
+)]
 #[axum::debug_handler]
 async fn list_threads(
 	State(state): State<AppState>,
@@ -449,6 +495,19 @@ async fn list_threads(
 }
 
 /// DELETE /v1/threads/{id} - Soft-delete a thread.
+#[utoipa::path(
+    delete,
+    path = "/v1/threads/{id}",
+    params(
+        ("id" = String, Path, description = "Thread ID")
+    ),
+    responses(
+        (status = 204, description = "Thread deleted"),
+        (status = 404, description = "Thread not found", body = ErrorResponse),
+        (status = 500, description = "Internal server error", body = ErrorResponse)
+    ),
+    tag = "threads"
+)]
 #[axum::debug_handler]
 async fn delete_thread(
 	State(state): State<AppState>,
@@ -472,6 +531,21 @@ async fn delete_thread(
 ///
 /// Allows changing the visibility of a thread without syncing the full thread
 /// content. Supports optimistic concurrency via If-Match header.
+#[utoipa::path(
+    post,
+    path = "/v1/threads/{id}/visibility",
+    params(
+        ("id" = String, Path, description = "Thread ID")
+    ),
+    request_body = UpdateVisibilityRequest,
+    responses(
+        (status = 200, description = "Visibility updated", body = Thread),
+        (status = 404, description = "Thread not found", body = ErrorResponse),
+        (status = 409, description = "Version conflict", body = ErrorResponse),
+        (status = 500, description = "Internal server error", body = ErrorResponse)
+    ),
+    tag = "threads"
+)]
 #[axum::debug_handler]
 async fn update_thread_visibility(
 	State(state): State<AppState>,
@@ -525,6 +599,17 @@ async fn update_thread_visibility(
 }
 
 /// GET /v1/threads/search - Search threads.
+#[utoipa::path(
+    get,
+    path = "/v1/threads/search",
+    params(SearchParams),
+    responses(
+        (status = 200, description = "Search results", body = SearchResponse),
+        (status = 400, description = "Invalid search query", body = ErrorResponse),
+        (status = 500, description = "Internal server error", body = ErrorResponse)
+    ),
+    tag = "threads"
+)]
 #[axum::debug_handler]
 async fn search_threads(
 	State(state): State<AppState>,
@@ -569,6 +654,15 @@ async fn search_threads(
 	}))
 }
 
+#[utoipa::path(
+    get,
+    path = "/health",
+    responses(
+        (status = 200, description = "System is healthy", body = HealthResponse),
+        (status = 503, description = "System is unhealthy", body = HealthResponse)
+    ),
+    tag = "health"
+)]
 /// GET /health - Comprehensive health check endpoint.
 async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
 	use tokio::time::Instant;
@@ -612,6 +706,14 @@ async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
 	(http_status, Json(response))
 }
 
+#[utoipa::path(
+    post,
+    path = "/v1/auth/login",
+    responses(
+        (status = 501, description = "Not implemented", body = AuthStubResponse)
+    ),
+    tag = "auth"
+)]
 /// POST /v1/auth/login - Stub login endpoint.
 async fn login_stub() -> impl IntoResponse {
 	(
@@ -623,6 +725,14 @@ async fn login_stub() -> impl IntoResponse {
 	)
 }
 
+#[utoipa::path(
+    post,
+    path = "/v1/auth/logout",
+    responses(
+        (status = 501, description = "Not implemented", body = AuthStubResponse)
+    ),
+    tag = "auth"
+)]
 /// POST /v1/auth/logout - Stub logout endpoint.
 async fn logout_stub() -> impl IntoResponse {
 	(
@@ -634,6 +744,14 @@ async fn logout_stub() -> impl IntoResponse {
 	)
 }
 
+#[utoipa::path(
+    get,
+    path = "/metrics",
+    responses(
+        (status = 200, description = "Prometheus metrics", content_type = "text/plain")
+    ),
+    tag = "health"
+)]
 /// GET /metrics - Prometheus metrics export endpoint.
 ///
 /// Returns all query metrics in Prometheus text format. Includes:
@@ -667,6 +785,17 @@ async fn prometheus_metrics(
 	}
 }
 
+#[utoipa::path(
+    post,
+    path = "/proxy/cse",
+    request_body = CseProxyRequest,
+    responses(
+        (status = 200, description = "Search results", body = CseProxyResponse),
+        (status = 400, description = "Invalid request", body = ErrorResponse),
+        (status = 500, description = "CSE not configured or error", body = ErrorResponse)
+    ),
+    tag = "google-cse"
+)]
 /// POST /proxy/cse - Proxy requests to Google Custom Search Engine.
 #[axum::debug_handler]
 async fn proxy_cse(
@@ -782,6 +911,15 @@ async fn proxy_cse(
 // GitHub App Handlers
 // ============================================================================
 
+#[utoipa::path(
+    get,
+    path = "/v1/github/app",
+    responses(
+        (status = 200, description = "GitHub App info", body = AppInfoResponse),
+        (status = 500, description = "GitHub App not configured", body = ErrorResponse)
+    ),
+    tag = "github"
+)]
 /// GET /v1/github/app - Get GitHub App configuration info.
 #[axum::debug_handler]
 async fn get_github_app_info(State(state): State<AppState>) -> impl IntoResponse {
@@ -799,6 +937,16 @@ async fn get_github_app_info(State(state): State<AppState>) -> impl IntoResponse
 	}
 }
 
+#[utoipa::path(
+    get,
+    path = "/v1/github/installations/by-repo",
+    params(GithubInstallationByRepoQuery),
+    responses(
+        (status = 200, description = "Installation status", body = InstallationStatusResponse),
+        (status = 500, description = "GitHub App not configured", body = ErrorResponse)
+    ),
+    tag = "github"
+)]
 /// GET /v1/github/installations/by-repo - Check if app is installed for a repo.
 #[axum::debug_handler]
 async fn get_github_installation_by_repo(
@@ -1008,6 +1156,17 @@ async fn handle_installation_repos_webhook(
 	Ok(())
 }
 
+#[utoipa::path(
+    post,
+    path = "/proxy/github/search-code",
+    request_body = GithubSearchCodeRequest,
+    responses(
+        (status = 200, description = "Code search results", body = CodeSearchResponse),
+        (status = 400, description = "Invalid request", body = ErrorResponse),
+        (status = 500, description = "GitHub error", body = ErrorResponse)
+    ),
+    tag = "github"
+)]
 /// POST /proxy/github/search-code - Proxy code search requests.
 #[axum::debug_handler]
 async fn proxy_github_search_code(
@@ -1057,6 +1216,17 @@ async fn proxy_github_search_code(
 	Ok((StatusCode::OK, Json(response)))
 }
 
+#[utoipa::path(
+    post,
+    path = "/proxy/github/repo-info",
+    request_body = GithubRepoInfoRequest,
+    responses(
+        (status = 200, description = "Repository info", body = GithubRepoInfoResponse),
+        (status = 404, description = "Repository not found", body = ErrorResponse),
+        (status = 500, description = "GitHub error", body = ErrorResponse)
+    ),
+    tag = "github"
+)]
 /// POST /proxy/github/repo-info - Get repository metadata.
 #[axum::debug_handler]
 async fn proxy_github_repo_info(
@@ -1112,6 +1282,17 @@ async fn proxy_github_repo_info(
 	))
 }
 
+#[utoipa::path(
+    post,
+    path = "/proxy/github/file-contents",
+    request_body = GithubFileContentsRequest,
+    responses(
+        (status = 200, description = "File contents", body = GithubFileContentsResponse),
+        (status = 404, description = "File not found", body = ErrorResponse),
+        (status = 500, description = "GitHub error", body = ErrorResponse)
+    ),
+    tag = "github"
+)]
 /// POST /proxy/github/file-contents - Get file contents.
 #[axum::debug_handler]
 async fn proxy_github_file_contents(
@@ -1221,6 +1402,18 @@ fn map_github_error(err: GithubAppError) -> ServerError {
 	}
 }
 
+#[utoipa::path(
+    get,
+    path = "/v1/debug/query-traces/{trace_id}",
+    params(
+        ("trace_id" = String, Path, description = "Trace ID")
+    ),
+    responses(
+        (status = 200, description = "Trace timeline"),
+        (status = 404, description = "Trace not found", body = ErrorResponse)
+    ),
+    tag = "debug"
+)]
 /// GET /v1/debug/query-traces/{trace_id} - Get a query trace by ID.
 ///
 /// Returns the full trace timeline with all events and their durations.
@@ -1251,6 +1444,17 @@ async fn get_query_trace(
 	Ok(Json(timeline))
 }
 
+#[utoipa::path(
+    get,
+    path = "/v1/debug/query-traces",
+    params(
+        ("session_id" = Option<String>, Query, description = "Filter by session ID")
+    ),
+    responses(
+        (status = 200, description = "List of traces")
+    ),
+    tag = "debug"
+)]
 /// GET /v1/debug/query-traces - List all trace IDs.
 ///
 /// Optionally filter by session_id query parameter.
@@ -1294,6 +1498,14 @@ async fn list_query_traces(
 	Ok(Json(response))
 }
 
+#[utoipa::path(
+    get,
+    path = "/v1/debug/query-traces/stats",
+    responses(
+        (status = 200, description = "Trace statistics")
+    ),
+    tag = "debug"
+)]
 /// GET /v1/debug/query-traces/stats - Get trace store statistics.
 ///
 /// Returns aggregated statistics about all traces in the store.

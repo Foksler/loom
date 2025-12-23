@@ -9,7 +9,12 @@ edition.workspace = true
 license.workspace = true
 description = "GitHub App client for Loom"
 
+[features]
+default = []
+openapi = ["dep:utoipa"]
+
 [dependencies]
+utoipa = { version = "5", optional = true }
 loom-config-common.workspace = true
 loom-http-retry = { path = "../loom-http-retry" }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }

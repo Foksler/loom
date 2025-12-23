@@ -84,6 +84,9 @@ dirs = "5"
 # Secrets
 zeroize = { version = "1", features = ["zeroize_derive"] }
 
+# OpenAPI documentation
+utoipa = { version = "5", features = ["axum_extras", "uuid", "chrono"] }
+
 # Internal crates
 loom-config-common = { path = "crates/loom-config-common" }
 loom-secret = { path = "crates/loom-secret" }

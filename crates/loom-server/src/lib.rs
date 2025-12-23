@@ -19,6 +19,7 @@ pub mod query_security;
 pub mod query_tracing;
 pub mod server_query;
 pub mod websocket;
+pub mod api_docs;
 
 #[cfg(test)]
 mod tests;
@@ -35,3 +36,4 @@ pub use query_security::{
 };
 pub use query_tracing::{QueryTraceStore, QueryTracer, TraceEvent, TraceId, TraceTimeline};
 pub use server_query::ServerQueryManager;
+pub use api_docs::ApiDoc;

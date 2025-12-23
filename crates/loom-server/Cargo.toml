@@ -20,11 +20,11 @@ path = "src/lib.rs"
 [dependencies]
 futures = { workspace = true }
 loom-core = { path = "../loom-core" }
-loom-github-app = { path = "../loom-github-app" }
-loom-google-cse = { path = "../loom-google-cse" }
+loom-github-app = { path = "../loom-github-app", features = ["openapi"] }
+loom-google-cse = { path = "../loom-google-cse", features = ["openapi"] }
 loom-llm-service = { path = "../loom-llm-service" }
-loom-thread = { path = "../loom-thread" }
-loom-version = { path = "../loom-version", features = ["serde"] }
+loom-thread = { path = "../loom-thread", features = ["openapi"] }
+loom-version = { path = "../loom-version", features = ["serde", "utoipa"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 tokio-stream = "0.1"
 
@@ -67,12 +67,13 @@ uuid = { version = "1", features = ["v4", "serde"] }
 # Metrics
 prometheus = "0.13"
 
+# OpenAPI documentation
+utoipa = { version = "5", features = ["axum_extras", "uuid", "chrono"] }
+utoipa-swagger-ui = { version = "9", features = ["axum"] }
+
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
 proptest.workspace = true
 tempfile.workspace = true
 tokio-test.workspace = true
 
-[[bench]]
-name = "query_bridge_benchmarks"
-harness = false

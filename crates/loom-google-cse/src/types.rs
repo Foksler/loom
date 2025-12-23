@@ -6,6 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Request parameters for a CSE search.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Debug, Clone)]
 pub struct CseRequest {
 	pub query: String,
@@ -24,6 +25,7 @@ impl CseRequest {
 }
 
 /// Response from a CSE search.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CseResponse {
 	pub query: String,
@@ -31,6 +33,7 @@ pub struct CseResponse {
 }
 
 /// A single search result item.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CseResultItem {
 	pub title: String,

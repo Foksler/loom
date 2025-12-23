@@ -14,6 +14,7 @@ fn default_page() -> u32 {
 }
 
 /// Code search request.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CodeSearchRequest {
 	/// Search query (GitHub search syntax).
@@ -61,6 +62,7 @@ impl CodeSearchRequest {
 }
 
 /// Code search response.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CodeSearchResponse {
 	/// Total number of matching results.
@@ -72,6 +74,7 @@ pub struct CodeSearchResponse {
 }
 
 /// Single code search result item.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CodeSearchItem {
 	/// File name.
@@ -89,6 +92,7 @@ pub struct CodeSearchItem {
 }
 
 /// Repository info request.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RepoInfoRequest {
 	/// Repository owner.
@@ -108,6 +112,7 @@ impl RepoInfoRequest {
 }
 
 /// Repository metadata.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Repository {
 	/// GitHub repository ID.
@@ -129,6 +134,7 @@ pub struct Repository {
 }
 
 /// File contents request.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileContentsRequest {
 	/// Repository owner.
@@ -161,6 +167,7 @@ impl FileContentsRequest {
 }
 
 /// File contents response.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileContents {
 	/// File name.
@@ -197,6 +204,7 @@ impl FileContents {
 }
 
 /// GitHub App installation.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Installation {
 	/// Installation ID.
@@ -210,6 +218,7 @@ pub struct Installation {
 }
 
 /// Account that owns a GitHub App installation.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallationAccount {
 	/// Account ID.
@@ -240,6 +249,7 @@ pub struct GitHubErrorResponse {
 }
 
 /// Webhook payload for installation events.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallationWebhookPayload {
 	/// The action that triggered the webhook.
@@ -258,6 +268,7 @@ pub struct InstallationWebhookPayload {
 }
 
 /// Repository information in webhook payloads.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebhookRepository {
 	/// Repository ID.
@@ -271,6 +282,7 @@ pub struct WebhookRepository {
 }
 
 /// Server response for app info endpoint.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppInfoResponse {
 	/// Whether the GitHub App is configured.
@@ -282,6 +294,7 @@ pub struct AppInfoResponse {
 }
 
 /// Server response for installation status by repo.
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallationStatusResponse {
 	/// Whether the app is installed for this repo.

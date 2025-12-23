@@ -5,6 +5,7 @@
 
 use serde::Serialize;
 use std::path::Path;
+use utoipa::ToSchema;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::{timeout, Instant};
@@ -14,7 +15,7 @@ use loom_github_app::{GithubAppClient, GithubAppError};
 use crate::db::ThreadRepository;
 
 /// Health status for components and overall system.
-#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq, ToSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum HealthStatus {
 	Healthy,
@@ -24,7 +25,7 @@ pub enum HealthStatus {
 }
 
 /// Database component health.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct DatabaseHealth {
 	pub status: HealthStatus,
 	pub latency_ms: u64,
@@ -33,7 +34,7 @@ pub struct DatabaseHealth {
 }
 
 /// Binary directory component health.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct BinDirHealth {
 	pub status: HealthStatus,
 	pub latency_ms: u64,
@@ -47,7 +48,7 @@ pub struct BinDirHealth {
 }
 
 /// Individual LLM provider health.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct LlmProviderHealth {
 	pub name: String,
 	pub status: HealthStatus,
@@ -58,14 +59,14 @@ pub struct LlmProviderHealth {
 }
 
 /// LLM providers component health.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct LlmProvidersHealth {
 	pub status: HealthStatus,
 	pub providers: Vec<LlmProviderHealth>,
 }
 
 /// Google CSE component health.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct GoogleCseHealth {
 	pub status: HealthStatus,
 	pub latency_ms: u64,
@@ -75,7 +76,7 @@ pub struct GoogleCseHealth {
 }
 
 /// GitHub App component health.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct GithubAppHealth {
 	pub status: HealthStatus,
 	pub latency_ms: u64,
@@ -85,7 +86,7 @@ pub struct GithubAppHealth {
 }
 
 /// All health check components.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct HealthComponents {
 	pub database: DatabaseHealth,
 	pub bin_dir: BinDirHealth,
@@ -95,7 +96,7 @@ pub struct HealthComponents {
 }
 
 /// Complete health check response.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct HealthResponse {
 	pub status: HealthStatus,
 	pub timestamp: String,

@@ -10,6 +10,8 @@ shadow_rs::shadow!(build);
 
 #[cfg(feature = "serde")]
 use serde::Serialize;
+#[cfg(feature = "utoipa")]
+use utoipa::ToSchema;
 
 /// Platform string in `{os}-{arch}` format, e.g. "linux-x86_64".
 ///
@@ -46,6 +48,7 @@ impl BuildInfo {
 ///
 /// Fields are optional to handle cases where git info is unavailable.
 #[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "utoipa", derive(ToSchema))]
 #[derive(Debug, Clone, Copy)]
 pub struct HealthVersionInfo {
 	pub version: &'static str,

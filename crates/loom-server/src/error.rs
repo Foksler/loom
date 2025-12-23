@@ -9,6 +9,7 @@ use axum::{
 	Json,
 };
 use serde::Serialize;
+use utoipa::ToSchema;
 
 /// Server error types for thread operations.
 #[derive(Debug, thiserror::Error)]
@@ -59,7 +60,7 @@ pub enum ServerError {
 }
 
 /// Error response body.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct ErrorResponse {
 	pub error: String,
 	pub message: String,

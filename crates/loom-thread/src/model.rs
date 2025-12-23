@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::ThreadIdError;
 
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct ThreadId(String);
@@ -64,6 +65,7 @@ impl FromStr for ThreadId {
 	}
 }
 
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum MessageRole {
@@ -88,6 +90,7 @@ impl From<&loom_core::Role> for MessageRole {
 /// - Organization: visible to organization members (default)
 /// - Private: synced but only owner can see
 /// - Public: may be listed/exposed publicly
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 #[derive(Default)]
@@ -121,6 +124,7 @@ impl std::str::FromStr for ThreadVisibility {
 	}
 }
 
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MessageSnapshot {
 	pub role: MessageRole,
@@ -145,6 +149,7 @@ impl From<&loom_core::Message> for MessageSnapshot {
 	}
 }
 
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ToolCallSnapshot {
 	pub id: String,
@@ -152,11 +157,13 @@ pub struct ToolCallSnapshot {
 	pub arguments_json: serde_json::Value,
 }
 
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct ConversationSnapshot {
 	pub messages: Vec<MessageSnapshot>,
 }
 
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum AgentStateKind {
@@ -169,12 +176,14 @@ pub enum AgentStateKind {
 	ShuttingDown,
 }
 
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PendingToolCallSnapshot {
 	pub call_id: String,
 	pub tool_name: String,
 }
 
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AgentStateSnapshot {
 	pub kind: AgentStateKind,
@@ -241,6 +250,7 @@ impl From<&loom_core::AgentState> for AgentStateSnapshot {
 	}
 }
 
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct ThreadMetadata {
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -253,6 +263,7 @@ pub struct ThreadMetadata {
 	pub extra: HashMap<String, serde_json::Value>,
 }
 
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Thread {
 	pub id: ThreadId,
@@ -374,6 +385,7 @@ impl Default for Thread {
 	}
 }
 
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ThreadSummary {
 	pub id: ThreadId,
