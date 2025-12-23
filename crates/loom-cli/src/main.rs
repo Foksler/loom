@@ -950,7 +950,19 @@ async fn main() -> Result<()> {
 		let local_store =
 			LocalThreadStore::from_xdg().context("failed to create local thread store")?;
 
-		if let Ok(sync_url) = std::env::var("LOOM_THREAD_SYNC_URL") {
+		// Use LOOM_THREAD_SYNC_URL if set, otherwise default to localhost in debug builds
+		let sync_url = std::env::var("LOOM_THREAD_SYNC_URL").ok().or_else(|| {
+			#[cfg(debug_assertions)]
+			{
+				Some("http://localhost:8080/v1/".to_string())
+			}
+			#[cfg(not(debug_assertions))]
+			{
+				None
+			}
+		});
+
+		if let Some(sync_url) = sync_url {
 			let base_url = Url::parse(&sync_url).context("invalid LOOM_THREAD_SYNC_URL")?;
 			let http_client = reqwest::Client::new();
 
@@ -1105,9 +1117,9 @@ async fn main() -> Result<()> {
 				);
 
 				thread_store
-					.save(&updated)
+					.save_and_sync(&updated)
 					.await
-					.context("failed to save thread")?;
+					.context("failed to save and sync thread")?;
 
 				println!("Thread {} has been shared with support.", updated.id);
 			} else if let Some(v) = visibility {
@@ -1121,9 +1133,9 @@ async fn main() -> Result<()> {
 				);
 
 				thread_store
-					.save(&updated)
+					.save_and_sync(&updated)
 					.await
-					.context("failed to save thread with updated visibility")?;
+					.context("failed to save and sync thread with updated visibility")?;
 
 				println!(
 					"Updated visibility of {} to {:?}.",

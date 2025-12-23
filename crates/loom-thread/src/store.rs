@@ -15,6 +15,15 @@ pub trait ThreadStore: Send + Sync {
 	async fn save(&self, thread: &Thread) -> Result<(), ThreadStoreError>;
 	async fn list(&self, limit: u32) -> Result<Vec<ThreadSummary>, ThreadStoreError>;
 	async fn delete(&self, id: &ThreadId) -> Result<(), ThreadStoreError>;
+
+	/// Save locally and wait for sync to complete (blocking).
+	/// Unlike `save()` which syncs in the background, this method blocks until
+	/// the server sync completes or fails. Use this for commands like `share`
+	/// where the process exits immediately after saving.
+	async fn save_and_sync(&self, thread: &Thread) -> Result<(), ThreadStoreError> {
+		// Default implementation just delegates to save() for stores that don't support sync
+		self.save(thread).await
+	}
 }
 
 pub struct LocalThreadStore {

@@ -287,6 +287,49 @@ impl ThreadStore for SyncingThreadStore {
 		Ok(())
 	}
 
+	async fn save_and_sync(&self, thread: &Thread) -> Result<(), ThreadStoreError> {
+		self.local.save(thread).await?;
+
+		if thread.is_private {
+			debug!(
+					thread_id = %thread.id,
+					"skipping sync for private (local-only) thread"
+			);
+			return Ok(());
+		}
+
+		if let Some(sync_client) = &self.sync_client {
+			info!(
+					thread_id = %thread.id,
+					"syncing thread to server (blocking)"
+			);
+
+			match sync_client.upsert_thread(thread).await {
+				Ok(()) => {
+					info!(
+							thread_id = %thread.id,
+							"thread synced to server"
+					);
+				}
+				Err(e) => {
+					error!(
+							thread_id = %thread.id,
+							error = %e,
+							"sync to server failed"
+					);
+					return Err(ThreadStoreError::Sync(e));
+				}
+			}
+		} else {
+			debug!(
+					thread_id = %thread.id,
+					"no sync client configured, skipping server sync"
+			);
+		}
+
+		Ok(())
+	}
+
 	async fn list(&self, limit: u32) -> Result<Vec<ThreadSummary>, ThreadStoreError> {
 		self.local.list(limit).await
 	}
