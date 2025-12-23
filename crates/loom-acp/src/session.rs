@@ -59,6 +59,19 @@ impl SessionState {
 				content: snap.content.clone(),
 				tool_call_id: snap.tool_call_id.clone(),
 				name: snap.tool_name.clone(),
+				tool_calls: snap
+					.tool_calls
+					.as_ref()
+					.map(|tcs| {
+						tcs.iter()
+							.map(|tc| loom_core::ToolCall {
+								id: tc.id.clone(),
+								tool_name: tc.tool_name.clone(),
+								arguments_json: tc.arguments_json.clone(),
+							})
+							.collect()
+					})
+					.unwrap_or_default(),
 			})
 			.collect();
 

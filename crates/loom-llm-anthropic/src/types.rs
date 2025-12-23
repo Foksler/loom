@@ -168,10 +168,30 @@ impl From<&LlmRequest> for AnthropicRequest {
 					});
 				}
 				Role::Assistant => {
-					messages.push(AnthropicMessage {
-						role: "assistant".to_string(),
-						content: AnthropicMessageContent::Text(msg.content.clone()),
-					});
+					if msg.tool_calls.is_empty() {
+						messages.push(AnthropicMessage {
+							role: "assistant".to_string(),
+							content: AnthropicMessageContent::Text(msg.content.clone()),
+						});
+					} else {
+						let mut blocks: Vec<AnthropicContent> = Vec::new();
+						if !msg.content.is_empty() {
+							blocks.push(AnthropicContent::Text {
+								text: msg.content.clone(),
+							});
+						}
+						for tc in &msg.tool_calls {
+							blocks.push(AnthropicContent::ToolUse(AnthropicToolUse {
+								id: tc.id.clone(),
+								name: tc.tool_name.clone(),
+								input: tc.arguments_json.clone(),
+							}));
+						}
+						messages.push(AnthropicMessage {
+							role: "assistant".to_string(),
+							content: AnthropicMessageContent::Blocks(blocks),
+						});
+					}
 				}
 				Role::Tool => {
 					if let Some(tool_call_id) = &msg.tool_call_id {

@@ -483,7 +483,7 @@ async fn run_repl(
 					}
 				}
 
-				messages.push(Message::assistant(&assistant_content));
+				messages.push(Message::assistant_with_tool_calls(&assistant_content, tool_calls.clone()));
 
 				thread.conversation.messages.push(MessageSnapshot {
 					role: MessageRole::Assistant,

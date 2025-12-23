@@ -22,6 +22,8 @@ pub struct Message {
 	pub tool_call_id: Option<String>,
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub name: Option<String>,
+	#[serde(default, skip_serializing_if = "Vec::is_empty")]
+	pub tool_calls: Vec<ToolCall>,
 }
 
 impl Message {
@@ -31,6 +33,7 @@ impl Message {
 			content: content.into(),
 			tool_call_id: None,
 			name: None,
+			tool_calls: Vec::new(),
 		}
 	}
 
@@ -40,6 +43,7 @@ impl Message {
 			content: content.into(),
 			tool_call_id: None,
 			name: None,
+			tool_calls: Vec::new(),
 		}
 	}
 
@@ -49,6 +53,17 @@ impl Message {
 			content: content.into(),
 			tool_call_id: None,
 			name: None,
+			tool_calls: Vec::new(),
+		}
+	}
+
+	pub fn assistant_with_tool_calls(content: impl Into<String>, tool_calls: Vec<ToolCall>) -> Self {
+		Self {
+			role: Role::Assistant,
+			content: content.into(),
+			tool_call_id: None,
+			name: None,
+			tool_calls,
 		}
 	}
 
@@ -62,6 +77,7 @@ impl Message {
 			content: content.into(),
 			tool_call_id: Some(tool_call_id.into()),
 			name: Some(name.into()),
+			tool_calls: Vec::new(),
 		}
 	}
 }

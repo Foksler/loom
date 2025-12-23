@@ -324,6 +324,7 @@ impl Agent {
 								content,
 								tool_call_id: Some(call_id.clone()),
 								name: None,
+								tool_calls: Vec::new(),
 							});
 						}
 					}

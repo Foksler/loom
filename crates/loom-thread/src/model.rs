@@ -139,12 +139,26 @@ pub struct MessageSnapshot {
 
 impl From<&loom_core::Message> for MessageSnapshot {
 	fn from(msg: &loom_core::Message) -> Self {
+		let tool_calls = if msg.tool_calls.is_empty() {
+			None
+		} else {
+			Some(
+				msg.tool_calls
+					.iter()
+					.map(|tc| ToolCallSnapshot {
+						id: tc.id.clone(),
+						tool_name: tc.tool_name.clone(),
+						arguments_json: tc.arguments_json.clone(),
+					})
+					.collect(),
+			)
+		};
 		Self {
 			role: MessageRole::from(&msg.role),
 			content: msg.content.clone(),
 			tool_call_id: msg.tool_call_id.clone(),
 			tool_name: msg.name.clone(),
-			tool_calls: None,
+			tool_calls,
 		}
 	}
 }

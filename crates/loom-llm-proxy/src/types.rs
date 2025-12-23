@@ -140,6 +140,7 @@ mod tests {
 									content,
 									tool_call_id: None,
 									name: None,
+									tool_calls: Vec::new(),
 							},
 							tool_calls: vec![],
 							usage: Some(Usage { input_tokens, output_tokens }),
