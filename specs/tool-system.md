@@ -398,6 +398,67 @@ or specialized knowledge.
 - `LOOM_SERVER_URL`: Server URL for proxy requests (default: `http://127.0.0.1:8080`)
 - `LOOM_ORACLE_MODEL`: Default model when not specified in args (default: `gpt-4o`)
 
+### bash
+
+**Location:**
+[crates/loom-tools/src/bash.rs](file:///home/ghuntley/loom/crates/loom-tools/src/bash.rs)
+
+Executes shell commands in the workspace directory.
+
+**Input Schema:**
+
+```json
+{
+	"type": "object",
+	"properties": {
+		"command": {
+			"type": "string",
+			"description": "The shell command to execute"
+		},
+		"cwd": {
+			"type": "string",
+			"description": "Working directory relative to workspace (default: workspace root)"
+		},
+		"timeout_secs": {
+			"type": "integer",
+			"minimum": 1,
+			"maximum": 300,
+			"description": "Timeout in seconds (default: 60, max: 300)"
+		}
+	},
+	"required": ["command"]
+}
+```
+
+**Output:**
+
+```json
+{
+	"exit_code": 0,
+	"stdout": "command output...",
+	"stderr": "",
+	"timed_out": false,
+	"truncated": false
+}
+```
+
+**Behavior:**
+
+- Executes commands using the system shell (`sh -c` on Unix)
+- Working directory defaults to `workspace_root`, can be overridden with `cwd`
+- Commands are killed after timeout (default 60s, max 300s)
+- Output is truncated to 256KB per stream (stdout/stderr)
+- Returns exit code, stdout, stderr, timeout status, and truncation status
+- If command is killed by timeout, `exit_code` may be `null` and `timed_out` is `true`
+
+**Security Considerations:**
+
+- Commands run with the same permissions as the Loom process
+- The `cwd` parameter is validated to be within workspace boundaries
+- No shell escaping is performed—the command is passed directly to `sh -c`
+- Users should be aware that arbitrary commands can be executed
+- Consider future sandboxing options for untrusted environments
+
 ### web_search
 
 **Location:**
