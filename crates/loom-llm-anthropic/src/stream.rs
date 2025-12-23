@@ -277,8 +277,23 @@ fn process_stream_event(
 						name = %builder.name,
 						"Tool call completed"
 				);
-				let arguments: serde_json::Value =
-					serde_json::from_str(&builder.arguments_json).unwrap_or_default();
+				let mut arguments: serde_json::Value =
+					serde_json::from_str(&builder.arguments_json).unwrap_or_else(|e| {
+						if !builder.arguments_json.is_empty() {
+							warn!(
+								index,
+								id = %builder.id,
+								name = %builder.name,
+								error = %e,
+								raw = %builder.arguments_json,
+								"Failed to parse tool arguments JSON, defaulting to empty object"
+							);
+						}
+						serde_json::Value::Object(serde_json::Map::new())
+					});
+				if arguments.is_null() {
+					arguments = serde_json::Value::Object(serde_json::Map::new());
+				}
 				state.accumulated_tool_calls.push(ToolCall {
 					id: builder.id,
 					tool_name: builder.name,
@@ -374,5 +389,28 @@ mod tests {
 		let result = process_stream_event(event, &mut state).unwrap();
 
 		assert!(matches!(result, Some(LlmEvent::Completed(_))));
+	}
+
+	#[test]
+	fn test_tool_call_with_no_arguments_defaults_to_empty_object() {
+		let mut state = StreamState::default();
+
+		let start_json = r#"{"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"tool_123","name":"list_files"}}"#;
+		let start_event: StreamEvent = serde_json::from_str(start_json).unwrap();
+		process_stream_event(start_event, &mut state).unwrap();
+
+		let stop_json = r#"{"type":"content_block_stop","index":0}"#;
+		let stop_event: StreamEvent = serde_json::from_str(stop_json).unwrap();
+		process_stream_event(stop_event, &mut state).unwrap();
+
+		assert_eq!(state.accumulated_tool_calls.len(), 1);
+		assert!(
+			state.accumulated_tool_calls[0].arguments_json.is_object(),
+			"Tool arguments should be an object, not null"
+		);
+		assert_eq!(
+			state.accumulated_tool_calls[0].arguments_json,
+			serde_json::json!({})
+		);
 	}
 }

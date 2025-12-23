@@ -250,10 +250,17 @@ fn build_final_response(
 	let tool_calls_vec: Vec<ToolCall> = tool_calls
 		.values()
 		.filter(|tc| !tc.name.is_empty())
-		.map(|tc| ToolCall {
-			id: tc.call_id.clone(),
-			tool_name: tc.name.clone(),
-			arguments_json: serde_json::from_str(&tc.arguments).unwrap_or(serde_json::Value::Null),
+		.map(|tc| {
+			let mut arguments = serde_json::from_str(&tc.arguments)
+				.unwrap_or_else(|_| serde_json::Value::Object(serde_json::Map::new()));
+			if arguments.is_null() {
+				arguments = serde_json::Value::Object(serde_json::Map::new());
+			}
+			ToolCall {
+				id: tc.call_id.clone(),
+				tool_name: tc.name.clone(),
+				arguments_json: arguments,
+			}
 		})
 		.collect();
 
