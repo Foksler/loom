@@ -1,3 +1,6 @@
+-- Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+-- SPDX-License-Identifier: Proprietary
+
 -- First-class repository table for deduplication and analytics
 CREATE TABLE IF NOT EXISTS repos (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,

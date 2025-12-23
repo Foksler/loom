@@ -1,85 +1,52 @@
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+# SPDX-License-Identifier: Proprietary
+
 {
-  description = "Loom - AI-powered coding assistant";
+  description = "NixOS machine configurations";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixos-vscode-server = {
+      url = "github:nix-community/nixos-vscode-server";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = (import nixpkgs {
-          inherit system;
-          config = {
-            allowUnfree = true;
-          };
-        });
-      in
-      {
-        packages = {
-          # Rust binary
-          loom-server = (import ./nix/loom-server.nix { inherit pkgs; });
+  outputs = { self, nixpkgs, nixos-vscode-server, sops-nix }:
+    let
+      overlay = import ./infra/pkgs;
+      toolsOverlay = import ./tools/pkgs;
+      mkSystem = modules: nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = modules ++ [
+          ({ config, pkgs, ... }: {
+            nixpkgs.overlays = [ overlay toolsOverlay ];
+          })
+        ];
+      };
+    in
+    {
+      nixosConfigurations = {
+        virtualMachine = mkSystem [
+          ./infra/machines/loom.nix
+          nixos-vscode-server.nixosModules.default
+          sops-nix.nixosModules.sops
+        ];
+        
+      };
 
-          # Docker image
-          loom-server-image = (import ./nix/docker-image.nix { inherit pkgs; });
-
-          # Default package
-          default = self.packages.${system}.loom-server;
+      packages.x86_64-linux = 
+        let
+          pkgs = nixpkgs.legacyPackages.x86_64-linux.extend overlay;
+          pkgsWithTools = pkgs.extend toolsOverlay;
+        in
+        {
+          inherit (pkgs) smtprelay;
+          inherit (pkgsWithTools) license;
         };
-
-        apps = {
-          # Build and load Docker image
-          docker-build = {
-            type = "app";
-            program = toString (pkgs.writeShellScript "docker-build" ''
-              set -e
-              echo "Building loom-server Docker image..."
-              nix build .#loom-server-image
-              echo ""
-              echo "✓ Docker image built successfully"
-              echo "  Output: ./result (OCI/Docker image tarball)"
-              echo ""
-              echo "To load into Docker:"
-              echo "  docker load < ./result"
-              echo ""
-              echo "To run:"
-              echo "  docker run --rm -p 8080:8080 loom-server:latest"
-            '');
-          };
-
-          # Build, load, and run Docker image
-          docker-run = {
-            type = "app";
-            program = toString (pkgs.writeShellScript "docker-run" ''
-              set -e
-              echo "Building loom-server Docker image..."
-              nix build .#loom-server-image
-
-              echo "Loading image into Docker..."
-              docker load < ./result
-
-              echo ""
-              echo "✓ Starting loom-server container (Ctrl+C to stop)"
-              echo ""
-              docker run --rm -p 8080:8080 loom-server:latest
-            '');
-          };
-        };
-
-        devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            rustup
-            cargo
-            clippy
-            rustfmt
-            pkg-config
-            openssl
-            git
-            nix-prefetch-git
-            docker
-          ];
-        };
-      }
-    );
+    };
 }

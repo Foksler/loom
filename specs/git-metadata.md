@@ -1,7 +1,12 @@
+<!--
+ Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+ SPDX-License-Identifier: Proprietary
+-->
+
 # Git Metadata System Specification
 
-**Status:** Draft  
-**Version:** 2.0  
+**Status:** Draft\
+**Version:** 2.0\
 **Last Updated:** 2025-01-18
 
 ---
@@ -41,18 +46,19 @@ The Git Metadata System adds comprehensive repository context to Loom threads, e
 
 ### 2.1 Thread Git Metadata Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `git_branch` | `Option<String>` | Current branch name (updated on each sync) |
-| `git_remote_url` | `Option<String>` | Normalized remote URL slug (e.g., `github.com/owner/repo`) |
-| `git_initial_branch` | `Option<String>` | Branch when thread was created |
-| `git_initial_commit_sha` | `Option<String>` | HEAD commit SHA when thread was created |
-| `git_current_commit_sha` | `Option<String>` | Latest HEAD commit SHA |
-| `git_start_dirty` | `Option<bool>` | Whether working tree was dirty at thread creation |
-| `git_end_dirty` | `Option<bool>` | Whether working tree is dirty at last update |
-| `git_commits` | `Vec<String>` | All commit SHAs observed during session |
+| Field                    | Type             | Description                                                |
+| ------------------------ | ---------------- | ---------------------------------------------------------- |
+| `git_branch`             | `Option<String>` | Current branch name (updated on each sync)                 |
+| `git_remote_url`         | `Option<String>` | Normalized remote URL slug (e.g., `github.com/owner/repo`) |
+| `git_initial_branch`     | `Option<String>` | Branch when thread was created                             |
+| `git_initial_commit_sha` | `Option<String>` | HEAD commit SHA when thread was created                    |
+| `git_current_commit_sha` | `Option<String>` | Latest HEAD commit SHA                                     |
+| `git_start_dirty`        | `Option<bool>`   | Whether working tree was dirty at thread creation          |
+| `git_end_dirty`          | `Option<bool>`   | Whether working tree is dirty at last update               |
+| `git_commits`            | `Vec<String>`    | All commit SHAs observed during session                    |
 
 All fields are optional to support:
+
 - Non-git directories
 - Repositories without remotes (local-only)
 - Detached HEAD states
@@ -62,31 +68,31 @@ All fields are optional to support:
 
 ```json
 {
-  "id": "T-019b2b97-fddf-7602-a3e4-1c4a295110c0",
-  "version": 5,
-  "created_at": "2025-01-01T12:00:00Z",
-  "updated_at": "2025-01-01T12:05:00Z",
-  "last_activity_at": "2025-01-01T12:05:00Z",
-  
-  "workspace_root": "/home/alice/projects/my_app",
-  "cwd": "/home/alice/projects/my_app",
-  "loom_version": "0.4.0",
-  
-  "git_branch": "feature/add-logging",
-  "git_remote_url": "github.com/alice/my_app",
-  "git_initial_branch": "feature/add-logging",
-  "git_initial_commit_sha": "abc123def456...",
-  "git_current_commit_sha": "789xyz012...",
-  "git_start_dirty": false,
-  "git_end_dirty": true,
-  "git_commits": ["abc123def456...", "def456ghi789...", "789xyz012..."],
-  
-  "provider": "anthropic",
-  "model": "claude-sonnet-4-20250514",
-  
-  "conversation": { "messages": [] },
-  "agent_state": { "kind": "waiting_for_user_input", "retries": 0, "pending_tool_calls": [] },
-  "metadata": {}
+	"id": "T-019b2b97-fddf-7602-a3e4-1c4a295110c0",
+	"version": 5,
+	"created_at": "2025-01-01T12:00:00Z",
+	"updated_at": "2025-01-01T12:05:00Z",
+	"last_activity_at": "2025-01-01T12:05:00Z",
+
+	"workspace_root": "/home/alice/projects/my_app",
+	"cwd": "/home/alice/projects/my_app",
+	"loom_version": "0.4.0",
+
+	"git_branch": "feature/add-logging",
+	"git_remote_url": "github.com/alice/my_app",
+	"git_initial_branch": "feature/add-logging",
+	"git_initial_commit_sha": "abc123def456...",
+	"git_current_commit_sha": "789xyz012...",
+	"git_start_dirty": false,
+	"git_end_dirty": true,
+	"git_commits": ["abc123def456...", "def456ghi789...", "789xyz012..."],
+
+	"provider": "anthropic",
+	"model": "claude-sonnet-4-20250514",
+
+	"conversation": { "messages": [] },
+	"agent_state": { "kind": "waiting_for_user_input", "retries": 0, "pending_tool_calls": [] },
+	"metadata": {}
 }
 ```
 
@@ -97,97 +103,97 @@ All fields are optional to support:
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Thread {
-    pub id: ThreadId,
-    pub version: u64,
-    pub created_at: String,
-    pub updated_at: String,
-    pub last_activity_at: String,
+	pub id: ThreadId,
+	pub version: u64,
+	pub created_at: String,
+	pub updated_at: String,
+	pub last_activity_at: String,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub workspace_root: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub cwd: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub loom_version: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub workspace_root: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub cwd: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub loom_version: Option<String>,
 
-    /// Current git branch name (updated on each sync)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub git_branch: Option<String>,
+	/// Current git branch name (updated on each sync)
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub git_branch: Option<String>,
 
-    /// Normalized remote URL slug (e.g., "github.com/owner/repo")
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub git_remote_url: Option<String>,
+	/// Normalized remote URL slug (e.g., "github.com/owner/repo")
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub git_remote_url: Option<String>,
 
-    /// Branch when the thread was created
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub git_initial_branch: Option<String>,
+	/// Branch when the thread was created
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub git_initial_branch: Option<String>,
 
-    /// Commit SHA when the thread was created
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub git_initial_commit_sha: Option<String>,
+	/// Commit SHA when the thread was created
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub git_initial_commit_sha: Option<String>,
 
-    /// Latest known commit SHA
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub git_current_commit_sha: Option<String>,
+	/// Latest known commit SHA
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub git_current_commit_sha: Option<String>,
 
-    /// Whether working tree was dirty at thread creation
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub git_start_dirty: Option<bool>,
+	/// Whether working tree was dirty at thread creation
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub git_start_dirty: Option<bool>,
 
-    /// Whether working tree was dirty at last update
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub git_end_dirty: Option<bool>,
+	/// Whether working tree was dirty at last update
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub git_end_dirty: Option<bool>,
 
-    /// All commit SHAs observed during this session (chronological order)
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub git_commits: Vec<String>,
+	/// All commit SHAs observed during this session (chronological order)
+	#[serde(default, skip_serializing_if = "Vec::is_empty")]
+	pub git_commits: Vec<String>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub provider: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub model: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub provider: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub model: Option<String>,
 
-    pub visibility: ThreadVisibility,
-    pub is_private: bool,
-    pub is_shared_with_support: bool,
+	pub visibility: ThreadVisibility,
+	pub is_private: bool,
+	pub is_shared_with_support: bool,
 
-    pub conversation: ConversationSnapshot,
-    pub agent_state: AgentStateSnapshot,
-    pub metadata: ThreadMetadata,
+	pub conversation: ConversationSnapshot,
+	pub agent_state: AgentStateSnapshot,
+	pub metadata: ThreadMetadata,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ThreadSummary {
-    pub id: ThreadId,
-    pub version: u64,
-    pub created_at: String,
-    pub updated_at: String,
-    pub last_activity_at: String,
-    
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub title: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub workspace_root: Option<String>,
+	pub id: ThreadId,
+	pub version: u64,
+	pub created_at: String,
+	pub updated_at: String,
+	pub last_activity_at: String,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub git_branch: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub git_remote_url: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub git_initial_commit_sha: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub git_current_commit_sha: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub title: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub workspace_root: Option<String>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub provider: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub model: Option<String>,
-    
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub tags: Vec<String>,
-    pub message_count: usize,
-    pub is_pinned: bool,
-    pub visibility: ThreadVisibility,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub git_branch: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub git_remote_url: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub git_initial_commit_sha: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub git_current_commit_sha: Option<String>,
+
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub provider: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub model: Option<String>,
+
+	#[serde(default, skip_serializing_if = "Vec::is_empty")]
+	pub tags: Vec<String>,
+	pub message_count: usize,
+	pub is_pinned: bool,
+	pub visibility: ThreadVisibility,
 }
 ```
 
@@ -198,6 +204,7 @@ pub struct ThreadSummary {
 ### Purpose
 
 A dedicated crate for git operations that:
+
 - Uses standard `git` CLI (not libgit2)
 - Provides branch, remote, commit, and dirty state detection
 - Normalizes remote URLs to a consistent slug format
@@ -225,86 +232,90 @@ use std::path::Path;
 /// Commit information
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CommitInfo {
-    /// Full 40-character SHA
-    pub sha: String,
-    /// Optional short subject line
-    pub summary: Option<String>,
-    /// Commit timestamp (unix epoch seconds)
-    pub timestamp: Option<i64>,
+	/// Full 40-character SHA
+	pub sha: String,
+	/// Optional short subject line
+	pub summary: Option<String>,
+	/// Commit timestamp (unix epoch seconds)
+	pub timestamp: Option<i64>,
 }
 
 /// Full repository status
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RepoStatus {
-    /// Current branch name; None if detached HEAD
-    pub branch: Option<String>,
-    /// Normalized remote URL slug
-    pub remote_slug: Option<String>,
-    /// HEAD commit information
-    pub head: Option<CommitInfo>,
-    /// Whether working tree has uncommitted changes
-    pub is_dirty: Option<bool>,
+	/// Current branch name; None if detached HEAD
+	pub branch: Option<String>,
+	/// Normalized remote URL slug
+	pub remote_slug: Option<String>,
+	/// HEAD commit information
+	pub head: Option<CommitInfo>,
+	/// Whether working tree has uncommitted changes
+	pub is_dirty: Option<bool>,
 }
 
 /// Simple repository metadata (backward compatible)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RepoMetadata {
-    pub branch: Option<String>,
-    pub remote_slug: Option<String>,
+	pub branch: Option<String>,
+	pub remote_slug: Option<String>,
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum GitError {
-    #[error("not a git repository: {0}")]
-    NotAGitRepo(String),
-    #[error("git command failed: {cmd} {args:?}: {stderr}")]
-    CommandFailed { cmd: &'static str, args: Vec<String>, stderr: String },
-    #[error("git executable not found")]
-    GitNotInstalled,
-    #[error("io error: {0}")]
-    Io(#[from] std::io::Error),
+	#[error("not a git repository: {0}")]
+	NotAGitRepo(String),
+	#[error("git command failed: {cmd} {args:?}: {stderr}")]
+	CommandFailed {
+		cmd: &'static str,
+		args: Vec<String>,
+		stderr: String,
+	},
+	#[error("git executable not found")]
+	GitNotInstalled,
+	#[error("io error: {0}")]
+	Io(#[from] std::io::Error),
 }
 
 /// Detect full repository status including HEAD commit and dirty state
-pub fn detect_repo_status(path: &Path) -> Result<Option<RepoStatus>, GitError>;
+fn detect_repo_status(path: &Path) -> Result<Option<RepoStatus>, GitError>;
 
 /// Detect basic repository metadata (branch + remote)
-pub fn detect_repo_metadata(path: &Path) -> Result<Option<RepoMetadata>, GitError>;
+fn detect_repo_metadata(path: &Path) -> Result<Option<RepoMetadata>, GitError>;
 
 /// Get current branch name
-pub fn current_branch(path: &Path) -> Result<Option<String>, GitError>;
+fn current_branch(path: &Path) -> Result<Option<String>, GitError>;
 
 /// Get default remote URL (origin, then upstream, then first remote)
-pub fn default_remote_url(path: &Path) -> Result<Option<String>, GitError>;
+fn default_remote_url(path: &Path) -> Result<Option<String>, GitError>;
 
 /// Get HEAD commit SHA
-pub fn head_commit_sha(path: &Path) -> Result<Option<String>, GitError>;
+fn head_commit_sha(path: &Path) -> Result<Option<String>, GitError>;
 
 /// Check if working tree is dirty
-pub fn is_dirty(path: &Path) -> Result<Option<bool>, GitError>;
+fn is_dirty(path: &Path) -> Result<Option<bool>, GitError>;
 
 /// Normalize a git remote URL to "host/path" slug format
-pub fn normalize_remote_url(raw: &str) -> Option<String>;
+fn normalize_remote_url(raw: &str) -> Option<String>;
 ```
 
 ### Git Commands Used
 
-| Function | Command | Notes |
-|----------|---------|-------|
-| `current_branch` | `git rev-parse --abbrev-ref HEAD` | Returns "HEAD" if detached |
-| `default_remote_url` | `git remote get-url origin` | Fallback to upstream, then first |
-| `head_commit_sha` | `git rev-parse HEAD` | Full 40-char SHA |
-| `is_dirty` | `git status --porcelain` | Non-empty output = dirty |
-| `detect_repo_status` | Combines above + `git show -s --format=%H%n%ct%n%s HEAD` | |
+| Function             | Command                                                  | Notes                            |
+| -------------------- | -------------------------------------------------------- | -------------------------------- |
+| `current_branch`     | `git rev-parse --abbrev-ref HEAD`                        | Returns "HEAD" if detached       |
+| `default_remote_url` | `git remote get-url origin`                              | Fallback to upstream, then first |
+| `head_commit_sha`    | `git rev-parse HEAD`                                     | Full 40-char SHA                 |
+| `is_dirty`           | `git status --porcelain`                                 | Non-empty output = dirty         |
+| `detect_repo_status` | Combines above + `git show -s --format=%H%n%ct%n%s HEAD` |                                  |
 
 ### URL Normalization
 
 Converts various git remote URL formats to `host/path` slug:
 
-| Input | Output |
-|-------|--------|
-| `git@github.com:owner/repo.git` | `github.com/owner/repo` |
-| `https://github.com/owner/repo.git` | `github.com/owner/repo` |
+| Input                                 | Output                  |
+| ------------------------------------- | ----------------------- |
+| `git@github.com:owner/repo.git`       | `github.com/owner/repo` |
+| `https://github.com/owner/repo.git`   | `github.com/owner/repo` |
 | `ssh://git@gitlab.com/group/repo.git` | `gitlab.com/group/repo` |
 
 ---
@@ -490,6 +501,7 @@ WHERE t.git_initial_branch IS NOT NULL
 ### 6.1 Git State Snapshotting
 
 The CLI snapshots git state at two points:
+
 1. **Thread creation**: Capture initial state
 2. **Thread update/sync**: Capture current state, track new commits
 
@@ -497,45 +509,45 @@ The CLI snapshots git state at two points:
 use loom_git::detect_repo_status;
 
 pub fn snapshot_git_state(thread: &mut Thread, cwd: &Path) {
-    let status = match detect_repo_status(cwd) {
-        Ok(Some(s)) => s,
-        _ => return, // not a git repo
-    };
+	let status = match detect_repo_status(cwd) {
+		Ok(Some(s)) => s,
+		_ => return, // not a git repo
+	};
 
-    // Remote & repo slug (set once)
-    if thread.git_remote_url.is_none() {
-        thread.git_remote_url = status.remote_slug.clone();
-    }
+	// Remote & repo slug (set once)
+	if thread.git_remote_url.is_none() {
+		thread.git_remote_url = status.remote_slug.clone();
+	}
 
-    // Initial branch (set once)
-    if thread.git_initial_branch.is_none() {
-        thread.git_initial_branch = status.branch.clone();
-    }
-    
-    // Current branch (updated each time)
-    thread.git_branch = status.branch.clone();
+	// Initial branch (set once)
+	if thread.git_initial_branch.is_none() {
+		thread.git_initial_branch = status.branch.clone();
+	}
 
-    // Commit tracking
-    let head_sha = status.head.as_ref().map(|h| h.sha.clone());
-    
-    if thread.git_initial_commit_sha.is_none() {
-        thread.git_initial_commit_sha = head_sha.clone();
-    }
-    
-    if let Some(sha) = &head_sha {
-        thread.git_current_commit_sha = Some(sha.clone());
-        
-        // Track all commits observed during session
-        if !thread.git_commits.contains(sha) {
-            thread.git_commits.push(sha.clone());
-        }
-    }
+	// Current branch (updated each time)
+	thread.git_branch = status.branch.clone();
 
-    // Dirty state
-    if thread.git_start_dirty.is_none() {
-        thread.git_start_dirty = status.is_dirty;
-    }
-    thread.git_end_dirty = status.is_dirty;
+	// Commit tracking
+	let head_sha = status.head.as_ref().map(|h| h.sha.clone());
+
+	if thread.git_initial_commit_sha.is_none() {
+		thread.git_initial_commit_sha = head_sha.clone();
+	}
+
+	if let Some(sha) = &head_sha {
+		thread.git_current_commit_sha = Some(sha.clone());
+
+		// Track all commits observed during session
+		if !thread.git_commits.contains(sha) {
+			thread.git_commits.push(sha.clone());
+		}
+	}
+
+	// Dirty state
+	if thread.git_start_dirty.is_none() {
+		thread.git_start_dirty = status.is_dirty;
+	}
+	thread.git_end_dirty = status.is_dirty;
 }
 ```
 
@@ -555,20 +567,20 @@ On thread upsert, resolve or create `repo_id`:
 
 ```rust
 async fn get_or_create_repo_id(pool: &SqlitePool, slug: &str) -> Result<i64, ServerError> {
-    let now = chrono::Utc::now().to_rfc3339();
-    
-    sqlx::query("INSERT OR IGNORE INTO repos (slug, created_at) VALUES(?, ?)")
-        .bind(slug)
-        .bind(&now)
-        .execute(pool)
-        .await?;
+	let now = chrono::Utc::now().to_rfc3339();
 
-    let (id,): (i64,) = sqlx::query_as("SELECT id FROM repos WHERE slug = ?")
-        .bind(slug)
-        .fetch_one(pool)
-        .await?;
+	sqlx::query("INSERT OR IGNORE INTO repos (slug, created_at) VALUES(?, ?)")
+		.bind(slug)
+		.bind(&now)
+		.execute(pool)
+		.await?;
 
-    Ok(id)
+	let (id,): (i64,) = sqlx::query_as("SELECT id FROM repos WHERE slug = ?")
+		.bind(slug)
+		.fetch_one(pool)
+		.await?;
+
+	Ok(id)
 }
 ```
 
@@ -578,32 +590,34 @@ After upserting thread, insert commit records:
 
 ```rust
 async fn record_commits(
-    pool: &SqlitePool,
-    thread: &Thread,
-    repo_id: i64,
+	pool: &SqlitePool,
+	thread: &Thread,
+	repo_id: i64,
 ) -> Result<(), ServerError> {
-    for sha in &thread.git_commits {
-        let is_initial = Some(sha) == thread.git_initial_commit_sha.as_ref();
-        let is_final = Some(sha) == thread.git_current_commit_sha.as_ref();
+	for sha in &thread.git_commits {
+		let is_initial = Some(sha) == thread.git_initial_commit_sha.as_ref();
+		let is_final = Some(sha) == thread.git_current_commit_sha.as_ref();
 
-        sqlx::query(r#"
+		sqlx::query(
+			r#"
             INSERT OR IGNORE INTO thread_commits (
                 thread_id, repo_id, commit_sha, branch, is_dirty,
                 observed_at, is_initial, is_final
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        "#)
-        .bind(thread.id.as_str())
-        .bind(repo_id)
-        .bind(sha)
-        .bind(&thread.git_branch)
-        .bind(thread.git_end_dirty.unwrap_or(false) as i32)
-        .bind(&thread.updated_at)
-        .bind(is_initial as i32)
-        .bind(is_final as i32)
-        .execute(pool)
-        .await?;
-    }
-    Ok(())
+        "#,
+		)
+		.bind(thread.id.as_str())
+		.bind(repo_id)
+		.bind(sha)
+		.bind(&thread.git_branch)
+		.bind(thread.git_end_dirty.unwrap_or(false) as i32)
+		.bind(&thread.updated_at)
+		.bind(is_initial as i32)
+		.bind(is_final as i32)
+		.execute(pool)
+		.await?;
+	}
+	Ok(())
 }
 ```
 
@@ -615,58 +629,58 @@ async fn record_commits(
 
 ```rust
 proptest! {
-    /// **Property: Thread JSON roundtrip preserves all git metadata**
-    ///
-    /// Why: Git metadata is persisted to disk and synced to server.
-    /// Any data loss would break commit-based queries and time-travel.
-    #[test]
-    fn thread_git_metadata_roundtrip(
-        branch in proptest::option::of("[a-z][a-z0-9/-]{0,50}"),
-        remote in proptest::option::of("[a-z]+\\.[a-z]+/[a-z]+/[a-z]+"),
-        commits in proptest::collection::vec("[0-9a-f]{40}", 0..10),
-    ) {
-        let mut thread = Thread::new();
-        thread.git_branch = branch.clone();
-        thread.git_remote_url = remote.clone();
-        thread.git_initial_branch = branch.clone();
-        thread.git_initial_commit_sha = commits.first().cloned();
-        thread.git_current_commit_sha = commits.last().cloned();
-        thread.git_start_dirty = Some(false);
-        thread.git_end_dirty = Some(true);
-        thread.git_commits = commits.clone();
+		/// **Property: Thread JSON roundtrip preserves all git metadata**
+		///
+		/// Why: Git metadata is persisted to disk and synced to server.
+		/// Any data loss would break commit-based queries and time-travel.
+		#[test]
+		fn thread_git_metadata_roundtrip(
+				branch in proptest::option::of("[a-z][a-z0-9/-]{0,50}"),
+				remote in proptest::option::of("[a-z]+\\.[a-z]+/[a-z]+/[a-z]+"),
+				commits in proptest::collection::vec("[0-9a-f]{40}", 0..10),
+		) {
+				let mut thread = Thread::new();
+				thread.git_branch = branch.clone();
+				thread.git_remote_url = remote.clone();
+				thread.git_initial_branch = branch.clone();
+				thread.git_initial_commit_sha = commits.first().cloned();
+				thread.git_current_commit_sha = commits.last().cloned();
+				thread.git_start_dirty = Some(false);
+				thread.git_end_dirty = Some(true);
+				thread.git_commits = commits.clone();
 
-        let json = serde_json::to_string(&thread).unwrap();
-        let restored: Thread = serde_json::from_str(&json).unwrap();
+				let json = serde_json::to_string(&thread).unwrap();
+				let restored: Thread = serde_json::from_str(&json).unwrap();
 
-        prop_assert_eq!(restored.git_branch, branch);
-        prop_assert_eq!(restored.git_remote_url, remote);
-        prop_assert_eq!(restored.git_commits, commits);
-    }
+				prop_assert_eq!(restored.git_branch, branch);
+				prop_assert_eq!(restored.git_remote_url, remote);
+				prop_assert_eq!(restored.git_commits, commits);
+		}
 
-    /// **Property: Commit list only grows, never shrinks**
-    ///
-    /// Why: Commits represent historical observations. Removing commits
-    /// would break time-travel queries.
-    #[test]
-    fn commits_only_grow(
-        initial_commits in proptest::collection::vec("[0-9a-f]{40}", 0..5),
-        new_commits in proptest::collection::vec("[0-9a-f]{40}", 0..5),
-    ) {
-        let mut thread = Thread::new();
-        thread.git_commits = initial_commits.clone();
-        
-        // Simulate adding new commits (deduped)
-        for sha in &new_commits {
-            if !thread.git_commits.contains(sha) {
-                thread.git_commits.push(sha.clone());
-            }
-        }
-        
-        // All initial commits still present
-        for sha in &initial_commits {
-            prop_assert!(thread.git_commits.contains(sha));
-        }
-    }
+		/// **Property: Commit list only grows, never shrinks**
+		///
+		/// Why: Commits represent historical observations. Removing commits
+		/// would break time-travel queries.
+		#[test]
+		fn commits_only_grow(
+				initial_commits in proptest::collection::vec("[0-9a-f]{40}", 0..5),
+				new_commits in proptest::collection::vec("[0-9a-f]{40}", 0..5),
+		) {
+				let mut thread = Thread::new();
+				thread.git_commits = initial_commits.clone();
+
+				// Simulate adding new commits (deduped)
+				for sha in &new_commits {
+						if !thread.git_commits.contains(sha) {
+								thread.git_commits.push(sha.clone());
+						}
+				}
+
+				// All initial commits still present
+				for sha in &initial_commits {
+						prop_assert!(thread.git_commits.contains(sha));
+				}
+		}
 }
 ```
 
@@ -675,38 +689,35 @@ proptest! {
 ```rust
 #[tokio::test]
 async fn test_thread_commits_populated() {
-    let (repo, _dir) = create_test_repo().await;
-    
-    let mut thread = create_test_thread();
-    thread.git_remote_url = Some("github.com/test/repo".to_string());
-    thread.git_commits = vec![
-        "abc123".to_string(),
-        "def456".to_string(),
-    ];
-    thread.git_initial_commit_sha = Some("abc123".to_string());
-    thread.git_current_commit_sha = Some("def456".to_string());
-    
-    repo.upsert(&thread, None).await.unwrap();
-    
-    // Verify thread_commits table populated
-    let commits = repo.get_thread_commits(&thread.id).await.unwrap();
-    assert_eq!(commits.len(), 2);
+	let (repo, _dir) = create_test_repo().await;
+
+	let mut thread = create_test_thread();
+	thread.git_remote_url = Some("github.com/test/repo".to_string());
+	thread.git_commits = vec!["abc123".to_string(), "def456".to_string()];
+	thread.git_initial_commit_sha = Some("abc123".to_string());
+	thread.git_current_commit_sha = Some("def456".to_string());
+
+	repo.upsert(&thread, None).await.unwrap();
+
+	// Verify thread_commits table populated
+	let commits = repo.get_thread_commits(&thread.id).await.unwrap();
+	assert_eq!(commits.len(), 2);
 }
 
 #[tokio::test]
 async fn test_find_threads_by_commit() {
-    let (repo, _dir) = create_test_repo().await;
-    
-    // Create thread with specific commits
-    let mut thread = create_test_thread();
-    thread.git_remote_url = Some("github.com/test/repo".to_string());
-    thread.git_commits = vec!["abc123".to_string()];
-    repo.upsert(&thread, None).await.unwrap();
-    
-    // Query by commit
-    let threads = repo.find_by_commit("abc123").await.unwrap();
-    assert_eq!(threads.len(), 1);
-    assert_eq!(threads[0].id, thread.id);
+	let (repo, _dir) = create_test_repo().await;
+
+	// Create thread with specific commits
+	let mut thread = create_test_thread();
+	thread.git_remote_url = Some("github.com/test/repo".to_string());
+	thread.git_commits = vec!["abc123".to_string()];
+	repo.upsert(&thread, None).await.unwrap();
+
+	// Query by commit
+	let threads = repo.find_by_commit("abc123").await.unwrap();
+	assert_eq!(threads.len(), 1);
+	assert_eq!(threads[0].id, thread.id);
 }
 ```
 
@@ -761,6 +772,7 @@ Track branch name changes during a session for better analytics.
 ### 10.3 Commit Graph Analytics
 
 For advanced range queries, consider:
+
 - Storing parent commit relationships
 - Pre-computing merge-base information
 - Integration with external git hosting APIs

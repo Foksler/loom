@@ -1,7 +1,12 @@
+<!--
+ Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+ SPDX-License-Identifier: Proprietary
+-->
+
 # Distribution System Specification
 
-**Status:** Draft  
-**Version:** 1.0  
+**Status:** Draft\
+**Version:** 1.0\
 **Last Updated:** 2024-12-17
 
 ---
@@ -10,11 +15,13 @@
 
 ### Purpose
 
-This specification describes how Loom CLI binaries are built, distributed, and served to enable self-updating across platforms.
+This specification describes how Loom CLI binaries are built, distributed, and served to enable
+self-updating across platforms.
 
 ### Goals
 
-- **Multi-platform support**: Build for Linux (x86_64, aarch64), macOS (x86_64, aarch64), Windows (x86_64)
+- **Multi-platform support**: Build for Linux (x86_64, aarch64), macOS (x86_64, aarch64), Windows
+  (x86_64)
 - **Self-update**: CLI can update itself from the server
 - **Automated builds**: CI/CD builds all platforms automatically
 - **Version tracking**: Build info embedded in binaries
@@ -25,15 +32,16 @@ This specification describes how Loom CLI binaries are built, distributed, and s
 
 Platform strings follow the format `{os}-{arch}`:
 
-| Platform | Rust Target | Platform String |
-|----------|-------------|-----------------|
-| Linux x64 | `x86_64-unknown-linux-gnu` | `linux-x86_64` |
-| Linux ARM64 | `aarch64-unknown-linux-gnu` | `linux-aarch64` |
-| macOS Intel | `x86_64-apple-darwin` | `macos-x86_64` |
-| macOS Apple Silicon | `aarch64-apple-darwin` | `macos-aarch64` |
-| Windows x64 | `x86_64-pc-windows-msvc` | `windows-x86_64` |
+| Platform            | Rust Target                 | Platform String  |
+| ------------------- | --------------------------- | ---------------- |
+| Linux x64           | `x86_64-unknown-linux-gnu`  | `linux-x86_64`   |
+| Linux ARM64         | `aarch64-unknown-linux-gnu` | `linux-aarch64`  |
+| macOS Intel         | `x86_64-apple-darwin`       | `macos-x86_64`   |
+| macOS Apple Silicon | `aarch64-apple-darwin`      | `macos-aarch64`  |
+| Windows x64         | `x86_64-pc-windows-msvc`    | `windows-x86_64` |
 
 The platform string is derived at compile time:
+
 ```rust
 concat!(env!("CARGO_CFG_TARGET_OS"), "-", env!("CARGO_CFG_TARGET_ARCH"))
 ```
@@ -62,6 +70,7 @@ Output binaries are placed in `$LOOM_SERVER_BIN_DIR` (default: `./bin/`).
 ### 3.2 Build Info Embedding
 
 Each CLI binary embeds build information via `shadow-rs`:
+
 - Package version (from Cargo.toml)
 - Git commit SHA (short)
 - Build timestamp (RFC3339)
@@ -77,18 +86,18 @@ This info is displayed by `loom version` and sent as HTTP headers.
 
 The loom-server serves CLI binaries at `/bin/{platform}`:
 
-| Endpoint | File |
-|----------|------|
-| `GET /bin/linux-x86_64` | `$LOOM_SERVER_BIN_DIR/linux-x86_64` |
-| `GET /bin/linux-aarch64` | `$LOOM_SERVER_BIN_DIR/linux-aarch64` |
-| `GET /bin/macos-x86_64` | `$LOOM_SERVER_BIN_DIR/macos-x86_64` |
-| `GET /bin/macos-aarch64` | `$LOOM_SERVER_BIN_DIR/macos-aarch64` |
+| Endpoint                  | File                                  |
+| ------------------------- | ------------------------------------- |
+| `GET /bin/linux-x86_64`   | `$LOOM_SERVER_BIN_DIR/linux-x86_64`   |
+| `GET /bin/linux-aarch64`  | `$LOOM_SERVER_BIN_DIR/linux-aarch64`  |
+| `GET /bin/macos-x86_64`   | `$LOOM_SERVER_BIN_DIR/macos-x86_64`   |
+| `GET /bin/macos-aarch64`  | `$LOOM_SERVER_BIN_DIR/macos-aarch64`  |
 | `GET /bin/windows-x86_64` | `$LOOM_SERVER_BIN_DIR/windows-x86_64` |
 
 ### 4.2 Server Configuration
 
-| Environment Variable | Default | Description |
-|---------------------|---------|-------------|
+| Environment Variable  | Default | Description                            |
+| --------------------- | ------- | -------------------------------------- |
 | `LOOM_SERVER_BIN_DIR` | `./bin` | Directory containing platform binaries |
 
 ### 4.3 Directory Layout
@@ -125,10 +134,10 @@ loom update
 
 ### 5.3 Update Configuration
 
-| Environment Variable | Description |
-|---------------------|-------------|
+| Environment Variable   | Description                                             |
+| ---------------------- | ------------------------------------------------------- |
 | `LOOM_UPDATE_BASE_URL` | Base URL for updates (e.g., `https://loom.example.com`) |
-| `LOOM_THREAD_SYNC_URL` | Fallback: derives base URL from sync URL |
+| `LOOM_THREAD_SYNC_URL` | Fallback: derives base URL from sync URL                |
 
 ---
 
@@ -164,21 +173,21 @@ loom update
 
 ### 6.2 Build Matrix
 
-| Platform | Runner | Target |
-|----------|--------|--------|
-| linux-x86_64 | `ubuntu-latest` | `x86_64-unknown-linux-gnu` |
-| linux-aarch64 | `ubuntu-24.04-arm64` | `aarch64-unknown-linux-gnu` |
-| macos-x86_64 | `macos-13` | `x86_64-apple-darwin` |
-| macos-aarch64 | `macos-14` | `aarch64-apple-darwin` |
-| windows-x86_64 | `windows-latest` | `x86_64-pc-windows-msvc` |
+| Platform       | Runner               | Target                      |
+| -------------- | -------------------- | --------------------------- |
+| linux-x86_64   | `ubuntu-latest`      | `x86_64-unknown-linux-gnu`  |
+| linux-aarch64  | `ubuntu-24.04-arm64` | `aarch64-unknown-linux-gnu` |
+| macos-x86_64   | `macos-13`           | `x86_64-apple-darwin`       |
+| macos-aarch64  | `macos-14`           | `aarch64-apple-darwin`      |
+| windows-x86_64 | `windows-latest`     | `x86_64-pc-windows-msvc`    |
 
 ### 6.3 Artifacts
 
-| Artifact | Contents | Retention |
-|----------|----------|-----------|
-| `cli-{platform}` | Single platform CLI binary | 7 days |
-| `server-linux-x86_64` | Server binary | 7 days |
-| `loom-bundle` | Server + all CLI binaries tarball | 30 days |
+| Artifact              | Contents                          | Retention |
+| --------------------- | --------------------------------- | --------- |
+| `cli-{platform}`      | Single platform CLI binary        | 7 days    |
+| `server-linux-x86_64` | Server binary                     | 7 days    |
+| `loom-bundle`         | Server + all CLI binaries tarball | 30 days   |
 
 ---
 
@@ -186,14 +195,15 @@ loom update
 
 All HTTP requests from CLI to server include:
 
-| Header | Example |
-|--------|---------|
-| `X-Loom-Version` | `0.1.0` |
-| `X-Loom-Git-Sha` | `abc1234` |
+| Header                   | Example                |
+| ------------------------ | ---------------------- |
+| `X-Loom-Version`         | `0.1.0`                |
+| `X-Loom-Git-Sha`         | `abc1234`              |
 | `X-Loom-Build-Timestamp` | `2024-12-17T10:30:00Z` |
-| `X-Loom-Platform` | `linux-x86_64` |
+| `X-Loom-Platform`        | `linux-x86_64`         |
 
 These enable:
+
 - Server-side version analytics
 - Compatibility checks (future)
 - Targeted update recommendations (future)
@@ -217,11 +227,11 @@ See [container-system.md](./container-system.md) for full details.
 
 Containers are published to registry (e.g., ghcr.io) with tags:
 
-| Tag | Audience | Availability |
-|-----|----------|--------------|
-| `latest` | End users | On main branch |
+| Tag      | Audience            | Availability    |
+| -------- | ------------------- | --------------- |
+| `latest` | End users           | On main branch  |
 | `v0.1.0` | Release subscribers | On version tags |
-| `<sha>` | CI/traceability | All commits |
+| `<sha>`  | CI/traceability     | All commits     |
 
 ---
 
@@ -242,9 +252,9 @@ See [sbom-system.md](./sbom-system.md) for full details.
 
 SBOMs are attached to GitHub releases alongside binaries and container images:
 
-| Artifact | Format |
-|----------|--------|
-| `loom.spdx.json` | SPDX 2.3 (Linux Foundation standard) |
+| Artifact              | Format                                   |
+| --------------------- | ---------------------------------------- |
+| `loom.spdx.json`      | SPDX 2.3 (Linux Foundation standard)     |
 | `loom.cyclonedx.json` | CycloneDX 1.4 (DevOps/container tooling) |
 
 ---
@@ -252,31 +262,38 @@ SBOMs are attached to GitHub releases alongside binaries and container images:
 ## 10. Future Considerations
 
 ### 10.1 Signed Binaries
+
 - Sign binaries with a release key
 - Verify signatures before applying updates
 
 ### 10.2 Delta Updates
+
 - Download only changed bytes
 - Reduce bandwidth for minor updates
 
 ### 10.3 Update Channels
+
 - `stable`, `beta`, `nightly` channels
 - `loom update --channel beta`
 
 ### 10.4 Version Manifest
+
 - `GET /bin/manifest.json` returns available versions
 - CLI can show "update available" notifications
 
 ### 10.5 Multi-Architecture Containers
+
 - Build containers for x86_64 + aarch64
 - Use `docker buildx` or separate Nix builds per architecture
 - Push as manifest list for automatic platform selection
 
 ### 10.6 Container Image SBOMs
+
 - Generate image-level SBOMs with `syft` for Docker containers
 - Attach both source-level and image-level SBOMs to releases
 
 ### 10.7 Kubernetes Deployment
+
 - Publish Helm charts for easy K8s deployment
 - Include resource limits, liveness/readiness probes
 - Support StatefulSets for server persistence

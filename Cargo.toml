@@ -1,33 +1,36 @@
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+# SPDX-License-Identifier: Proprietary
+
 [workspace]
 resolver = "2"
 members = [
-    "crates/loom-secret",
-    "crates/loom-config-common",
-    "crates/loom-config",
-    "crates/loom-git",
-    "crates/loom-auto-commit",
-    "crates/loom-github-app",
-    "crates/loom-google-cse",
-    "crates/loom-http-retry",
-    "crates/loom-core",
-    "crates/loom-thread",
-    "crates/loom-server",
-    "crates/loom-llm-anthropic",
-    "crates/loom-llm-openai",
-    "crates/loom-llm-vertex",
-    "crates/loom-llm-service",
-    "crates/loom-llm-proxy",
-    "crates/loom-tools",
-    "crates/loom-acp",
-    "crates/loom-cli",
-    "crates/loom-version",
-    "examples/query_bridge_examples",
+	"crates/loom-acp",
+	"crates/loom-auto-commit",
+	"crates/loom-cli",
+	"crates/loom-config",
+	"crates/loom-config-common",
+	"crates/loom-core",
+	"crates/loom-git",
+	"crates/loom-github-app",
+	"crates/loom-google-cse",
+	"crates/loom-http-retry",
+	"crates/loom-llm-anthropic",
+	"crates/loom-llm-openai",
+	"crates/loom-llm-proxy",
+	"crates/loom-llm-service",
+	"crates/loom-llm-vertex",
+	"crates/loom-secret",
+	"crates/loom-server",
+	"crates/loom-thread",
+	"crates/loom-tools",
+	"crates/loom-version",
+	"examples/query_bridge_examples",
 ]
 
 [workspace.package]
 version = "0.1.0"
-edition = "2021"
 authors = ["Geoffrey Huntley"]
+edition = "2021"
 license = "MIT"
 repository = "https://github.com/ghuntley/loom"
 
@@ -43,8 +46,8 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
 # Error handling
-thiserror = "1"
 anyhow = "1"
+thiserror = "1"
 
 # Logging/tracing
 tracing = "0.1"
@@ -64,8 +67,8 @@ uuid = { version = "1", features = ["v4", "serde"] }
 
 # Testing
 proptest = "1"
-tokio-test = "0.4"
 tempfile = "3"
+tokio-test = "0.4"
 
 # Random (for jitter)
 fastrand = "2"
@@ -83,6 +86,6 @@ dirs = "5"
 zeroize = { version = "1", features = ["zeroize_derive"] }
 
 # Internal crates
-loom-secret = { path = "crates/loom-secret" }
 loom-config-common = { path = "crates/loom-config-common" }
+loom-secret = { path = "crates/loom-secret" }
 loom-version = { path = "crates/loom-version" }

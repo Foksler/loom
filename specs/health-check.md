@@ -1,7 +1,12 @@
+<!--
+ Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+ SPDX-License-Identifier: Proprietary
+-->
+
 # Health Check System Specification
 
-**Status:** Draft  
-**Version:** 1.1  
+**Status:** Draft\
+**Version:** 1.1\
 **Last Updated:** 2025-01-18
 
 ---
@@ -10,7 +15,9 @@
 
 ### Purpose
 
-The health check system provides endpoints for monitoring the operational status of loom-server components. It enables load balancers to route traffic appropriately and provides operators with diagnostic information.
+The health check system provides endpoints for monitoring the operational status of loom-server
+components. It enables load balancers to route traffic appropriately and provides operators with
+diagnostic information.
 
 ### Goals
 
@@ -25,21 +32,21 @@ The health check system provides endpoints for monitoring the operational status
 
 ### 2.1 Status Values
 
-| Status | Description | HTTP Code |
-|--------|-------------|-----------|
-| `healthy` | All components operational | 200 |
-| `degraded` | Non-critical components impaired | 200 |
-| `unhealthy` | Critical components failed | 503 |
-| `unknown` | Status cannot be determined | 503 |
+| Status      | Description                      | HTTP Code |
+| ----------- | -------------------------------- | --------- |
+| `healthy`   | All components operational       | 200       |
+| `degraded`  | Non-critical components impaired | 200       |
+| `unhealthy` | Critical components failed       | 503       |
+| `unknown`   | Status cannot be determined      | 503       |
 
 ### 2.2 Component Classification
 
-| Component | Criticality | Failure Impact |
-|-----------|-------------|----------------|
-| Database | Critical | `unhealthy` - service cannot function |
-| Binary Directory | Non-critical | `degraded` - updates unavailable |
-| LLM Providers | Non-critical | `degraded` - inference unavailable |
-| Google CSE | Non-critical | `degraded` - web search unavailable |
+| Component        | Criticality  | Failure Impact                        |
+| ---------------- | ------------ | ------------------------------------- |
+| Database         | Critical     | `unhealthy` - service cannot function |
+| Binary Directory | Non-critical | `degraded` - updates unavailable      |
+| LLM Providers    | Non-critical | `degraded` - inference unavailable    |
+| Google CSE       | Non-critical | `degraded` - web search unavailable   |
 
 ---
 
@@ -50,117 +57,121 @@ The health check system provides endpoints for monitoring the operational status
 Returns comprehensive health status with component details.
 
 **Request:**
+
 ```http
 GET /health HTTP/1.1
 Host: loom.example.com
 ```
 
 **Response (healthy):**
+
 ```json
 {
-  "status": "healthy",
-  "timestamp": "2025-01-01T12:34:56.789Z",
-  "duration_ms": 4,
-  "version": {
-    "version": "0.1.0",
-    "git_sha": "abc1234",
-    "build_timestamp": "2025-01-01T12:00:00Z"
-  },
-  "components": {
-    "database": {
-      "status": "healthy",
-      "latency_ms": 2
-    },
-    "bin_dir": {
-      "status": "healthy",
-      "latency_ms": 0,
-      "path": "./bin",
-      "exists": true,
-      "is_dir": true,
-      "file_count": 5
-    },
-    "llm_providers": {
-      "status": "unknown",
-      "providers": []
-    },
-    "google_cse": {
-      "status": "healthy",
-      "latency_ms": 245,
-      "configured": true
-    }
-  }
+	"status": "healthy",
+	"timestamp": "2025-01-01T12:34:56.789Z",
+	"duration_ms": 4,
+	"version": {
+		"version": "0.1.0",
+		"git_sha": "abc1234",
+		"build_timestamp": "2025-01-01T12:00:00Z"
+	},
+	"components": {
+		"database": {
+			"status": "healthy",
+			"latency_ms": 2
+		},
+		"bin_dir": {
+			"status": "healthy",
+			"latency_ms": 0,
+			"path": "./bin",
+			"exists": true,
+			"is_dir": true,
+			"file_count": 5
+		},
+		"llm_providers": {
+			"status": "unknown",
+			"providers": []
+		},
+		"google_cse": {
+			"status": "healthy",
+			"latency_ms": 245,
+			"configured": true
+		}
+	}
 }
 ```
 
 **Response (degraded):**
+
 ```json
 {
-  "status": "degraded",
-  "timestamp": "2025-01-01T12:34:56.789Z",
-  "duration_ms": 5,
-  "version": {
-    "version": "0.1.0"
-  },
-  "components": {
-    "database": {
-      "status": "healthy",
-      "latency_ms": 2
-    },
-    "bin_dir": {
-      "status": "degraded",
-      "latency_ms": 0,
-      "path": "./bin",
-      "exists": false,
-      "is_dir": false,
-      "error": "binary directory does not exist"
-    },
-    "llm_providers": {
-      "status": "unknown",
-      "providers": []
-    },
-    "google_cse": {
-      "status": "degraded",
-      "latency_ms": 0,
-      "configured": false,
-      "error": "Google CSE not configured"
-    }
-  }
+	"status": "degraded",
+	"timestamp": "2025-01-01T12:34:56.789Z",
+	"duration_ms": 5,
+	"version": {
+		"version": "0.1.0"
+	},
+	"components": {
+		"database": {
+			"status": "healthy",
+			"latency_ms": 2
+		},
+		"bin_dir": {
+			"status": "degraded",
+			"latency_ms": 0,
+			"path": "./bin",
+			"exists": false,
+			"is_dir": false,
+			"error": "binary directory does not exist"
+		},
+		"llm_providers": {
+			"status": "unknown",
+			"providers": []
+		},
+		"google_cse": {
+			"status": "degraded",
+			"latency_ms": 0,
+			"configured": false,
+			"error": "Google CSE not configured"
+		}
+	}
 }
 ```
 
 **Response (unhealthy):**
+
 ```json
 {
-  "status": "unhealthy",
-  "timestamp": "2025-01-01T12:34:56.789Z",
-  "duration_ms": 502,
-  "version": {
-    "version": "0.1.0"
-  },
-  "components": {
-    "database": {
-      "status": "unhealthy",
-      "latency_ms": 500,
-      "error": "database health check timed out"
-    },
-    "bin_dir": {
-      "status": "healthy",
-      "latency_ms": 0,
-      "path": "./bin",
-      "exists": true,
-      "is_dir": true,
-      "file_count": 5
-    },
-    "llm_providers": {
-      "status": "unknown",
-      "providers": []
-    },
-    "google_cse": {
-      "status": "healthy",
-      "latency_ms": 180,
-      "configured": true
-    }
-  }
+	"status": "unhealthy",
+	"timestamp": "2025-01-01T12:34:56.789Z",
+	"duration_ms": 502,
+	"version": {
+		"version": "0.1.0"
+	},
+	"components": {
+		"database": {
+			"status": "unhealthy",
+			"latency_ms": 500,
+			"error": "database health check timed out"
+		},
+		"bin_dir": {
+			"status": "healthy",
+			"latency_ms": 0,
+			"path": "./bin",
+			"exists": true,
+			"is_dir": true,
+			"file_count": 5
+		},
+		"llm_providers": {
+			"status": "unknown",
+			"providers": []
+		},
+		"google_cse": {
+			"status": "healthy",
+			"latency_ms": 180,
+			"configured": true
+		}
+	}
 }
 ```
 
@@ -179,6 +190,7 @@ SELECT 1
 **Timeout:** 500ms
 
 **Status mapping:**
+
 - Query succeeds → `healthy`
 - Query fails → `unhealthy`
 - Timeout → `unhealthy`
@@ -188,12 +200,14 @@ SELECT 1
 Verifies the CLI binary distribution directory exists and contains files.
 
 **Checks performed:**
+
 1. Path exists
 2. Path is a directory
 3. Directory is readable
 4. Directory contains files
 
 **Status mapping:**
+
 - Directory exists with files → `healthy`
 - Directory missing → `degraded`
 - Directory empty → `degraded`
@@ -204,10 +218,12 @@ Verifies the CLI binary distribution directory exists and contains files.
 Will verify connectivity to configured LLM provider APIs.
 
 **Planned checks:**
+
 - HTTP connectivity to provider base URL
 - Optional: lightweight API call (e.g., list models)
 
 **Status mapping:**
+
 - All providers reachable → `healthy`
 - Some providers unreachable → `degraded`
 - All providers unreachable → `degraded` (not unhealthy, as local features still work)
@@ -219,10 +235,12 @@ Verifies Google Custom Search Engine configuration and connectivity.
 **Timeout:** 5 seconds
 
 **Checks performed:**
+
 1. Environment variables configured (`LOOM_SERVER_GOOGLE_CSE_API_KEY`, `LOOM_SERVER_GOOGLE_CSE_CX`)
 2. API connectivity test (lightweight search query)
 
 **Status mapping:**
+
 - Configured and API responds → `healthy`
 - Configured but rate limited → `degraded`
 - Configured but timeout → `degraded`
@@ -237,11 +255,11 @@ Verifies Google Custom Search Engine configuration and connectivity.
 
 ```typescript
 interface HealthResponse {
-  status: "healthy" | "degraded" | "unhealthy" | "unknown";
-  timestamp: string;      // RFC3339
-  duration_ms: number;    // Total check duration
-  version: VersionInfo;
-  components: HealthComponents;
+	status: 'healthy' | 'degraded' | 'unhealthy' | 'unknown';
+	timestamp: string; // RFC3339
+	duration_ms: number; // Total check duration
+	version: VersionInfo;
+	components: HealthComponents;
 }
 ```
 
@@ -249,9 +267,9 @@ interface HealthResponse {
 
 ```typescript
 interface VersionInfo {
-  version: string;           // Package version
-  git_sha?: string;          // Git commit SHA
-  build_timestamp?: string;  // Build time (RFC3339)
+	version: string; // Package version
+	git_sha?: string; // Git commit SHA
+	build_timestamp?: string; // Build time (RFC3339)
 }
 ```
 
@@ -259,10 +277,10 @@ interface VersionInfo {
 
 ```typescript
 interface HealthComponents {
-  database: DatabaseHealth;
-  bin_dir: BinDirHealth;
-  llm_providers: LlmProvidersHealth;
-  google_cse: GoogleCseHealth;
+	database: DatabaseHealth;
+	bin_dir: BinDirHealth;
+	llm_providers: LlmProvidersHealth;
+	google_cse: GoogleCseHealth;
 }
 ```
 
@@ -270,9 +288,9 @@ interface HealthComponents {
 
 ```typescript
 interface DatabaseHealth {
-  status: HealthStatus;
-  latency_ms: number;
-  error?: string;
+	status: HealthStatus;
+	latency_ms: number;
+	error?: string;
 }
 ```
 
@@ -280,13 +298,13 @@ interface DatabaseHealth {
 
 ```typescript
 interface BinDirHealth {
-  status: HealthStatus;
-  latency_ms: number;
-  path: string;
-  exists: boolean;
-  is_dir: boolean;
-  file_count?: number;
-  error?: string;
+	status: HealthStatus;
+	latency_ms: number;
+	path: string;
+	exists: boolean;
+	is_dir: boolean;
+	file_count?: number;
+	error?: string;
 }
 ```
 
@@ -294,15 +312,15 @@ interface BinDirHealth {
 
 ```typescript
 interface LlmProvidersHealth {
-  status: HealthStatus;
-  providers: LlmProviderHealth[];
+	status: HealthStatus;
+	providers: LlmProviderHealth[];
 }
 
 interface LlmProviderHealth {
-  name: string;
-  status: HealthStatus;
-  latency_ms?: number;
-  error?: string;
+	name: string;
+	status: HealthStatus;
+	latency_ms?: number;
+	error?: string;
 }
 ```
 
@@ -310,10 +328,10 @@ interface LlmProviderHealth {
 
 ```typescript
 interface GoogleCseHealth {
-  status: HealthStatus;
-  latency_ms: number;
-  configured: boolean;
-  error?: string;
+	status: HealthStatus;
+	latency_ms: number;
+	configured: boolean;
+	error?: string;
 }
 ```
 
@@ -369,6 +387,7 @@ Component checks run in parallel using `tokio::join!` to minimize total latency.
 ### 7.2 Timeouts
 
 Each component check has an individual timeout to prevent slow checks from blocking the response:
+
 - Database: 500ms
 - Bin dir: 500ms (sync I/O, typically instant)
 - LLM providers: 300ms per provider (future)
@@ -376,7 +395,8 @@ Each component check has an individual timeout to prevent slow checks from block
 
 ### 7.3 Error Handling
 
-Errors are captured and reported in the `error` field rather than causing the endpoint to fail. This ensures partial information is always available.
+Errors are captured and reported in the `error` field rather than causing the endpoint to fail. This
+ensures partial information is always available.
 
 ---
 
@@ -390,12 +410,14 @@ Errors are captured and reported in the `error` field rather than causing the en
 ### 8.2 Health Check Caching
 
 For expensive remote checks (LLM providers), implement caching with TTL:
+
 - Cache duration: 10-30 seconds
 - Stale-while-revalidate pattern
 
 ### 8.3 Metrics Export
 
 Expose health metrics in Prometheus format:
+
 ```
 loom_health_status{component="database"} 1
 loom_health_latency_ms{component="database"} 2

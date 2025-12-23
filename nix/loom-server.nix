@@ -1,3 +1,6 @@
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+# SPDX-License-Identifier: Proprietary
+
 # Nix derivation for loom-server binary
 # Produces a reproducible, optimized binary for container deployment
 { pkgs }:

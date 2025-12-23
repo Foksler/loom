@@ -1,8 +1,13 @@
+<!--
+ Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+ SPDX-License-Identifier: Proprietary
+-->
+
 # Container System Specification
 
-**Status:** Implemented  
-**Version:** 1.0  
-**Last Updated:** 2024-12-19  
+**Status:** Implemented\
+**Version:** 1.0\
+**Last Updated:** 2024-12-19\
 **Build Status:** ✓ Successfully built Docker image (22 MB OCI tarball)
 
 ---
@@ -11,7 +16,8 @@
 
 ### Purpose
 
-This specification describes how Loom builds and distributes Docker/OCI containers for `loom-server` using Nix and devenv, enabling reproducible, minimal, and secure container images for deployment.
+This specification describes how Loom builds and distributes Docker/OCI containers for `loom-server`
+using Nix and devenv, enabling reproducible, minimal, and secure container images for deployment.
 
 ### Goals
 
@@ -112,6 +118,7 @@ Top-level Nix flake for reproducible builds:
 ```
 
 **Key features:**
+
 - **Locked inputs**: `flake.lock` pins exact nixpkgs version
 - **Multi-system**: Supports x86_64-linux, aarch64-linux, etc.
 - **Unfree packages**: allowUnfree=true for loom-server license
@@ -143,6 +150,7 @@ rustPlatform.buildRustPackage {
 ```
 
 **Properties:**
+
 - **Reproducible**: Cargo.lock + Nix pinning
 - **Optimized**: Release mode with stripping
 - **Minimal**: Only server binary, no workspace overhead
@@ -178,6 +186,7 @@ pkgs.dockerTools.buildImage {
 ```
 
 **Image properties:**
+
 - **Size**: 22 MB (binary: 21 MB + runtime: 1 MB)
 - **Contents**: loom-server binary + cacert (TLS certs)
 - **User**: 1000:1000 (non-root)
@@ -198,6 +207,7 @@ make build test docker-build sbom
 ```
 
 **Implementation:**
+
 ```makefile
 docker-build:
 	nix --extra-experimental-features nix-command \
@@ -228,12 +238,14 @@ docker-run: docker-build
 ### 4.2 Build and Run Locally
 
 **Build the Docker image:**
+
 ```bash
 cd /home/ghuntley/loom
 make docker-build
 ```
 
 **Output:**
+
 ```
 Building loom-server Docker image via Nix...
 ...
@@ -249,12 +261,14 @@ To run:
 ```
 
 **Load into Docker and run:**
+
 ```bash
 docker load < ./result
 docker run --rm -p 8080:8080 loom-server:latest
 ```
 
 **Or use convenience target:**
+
 ```bash
 make docker-run
 ```
@@ -262,12 +276,14 @@ make docker-run
 ### 4.3 Build Status & Artifacts
 
 ✓ **Successfully built** (2024-12-19)
+
 - **Location**: `/nix/store/.../docker-image-loom-server.tar.gz`
 - **Size**: 22 MB (optimized OCI/Docker tarball)
 - **Format**: Standard Docker loader format (manifest.json + layers)
 - **Build time**: ~8-10 minutes (first run, cached thereafter)
 
 **Image characteristics:**
+
 - Binary: 21 MB (loom-server, stripped, release-optimized)
 - Runtime: 1 MB (cacert for TLS)
 - User: 1000:1000 (non-root for security)
@@ -412,12 +428,12 @@ jobs:
 
 ### 5.2 Key Integration Points
 
-| Stage | Action |
-|-------|--------|
-| Build | `devenv container build loom-server` |
-| Load | `docker load < result` |
-| Tag | `docker tag loom-server:latest <registry>/<name>:<version>` |
-| Push | `docker push <registry>/<name>:<version>` |
+| Stage | Action                                                      |
+| ----- | ----------------------------------------------------------- |
+| Build | `devenv container build loom-server`                        |
+| Load  | `docker load < result`                                      |
+| Tag   | `docker tag loom-server:latest <registry>/<name>:<version>` |
+| Push  | `docker push <registry>/<name>:<version>`                   |
 
 ---
 
@@ -468,14 +484,14 @@ docker run -e LOOM_SERVER_PORT=8080 loom-server:latest
 
 ### 6.4 Security Posture
 
-| Aspect | Status | Notes |
-|--------|--------|-------|
-| Non-root | ✓ | Runs as UID 1000 |
-| No shell | ✓ | Binary only, no /bin/sh |
-| No compilers | ✓ | Nix closure excludes toolchain |
-| Stripped binary | ✓ | Debug symbols removed |
-| Read-only root | ✗ | Not enabled (can add if server doesn't write) |
-| Secrets | ✓ | Via env vars, not baked in |
+| Aspect          | Status | Notes                                         |
+| --------------- | ------ | --------------------------------------------- |
+| Non-root        | ✓      | Runs as UID 1000                              |
+| No shell        | ✓      | Binary only, no /bin/sh                       |
+| No compilers    | ✓      | Nix closure excludes toolchain                |
+| Stripped binary | ✓      | Debug symbols removed                         |
+| Read-only root  | ✗      | Not enabled (can add if server doesn't write) |
+| Secrets         | ✓      | Via env vars, not baked in                    |
 
 ---
 
@@ -540,6 +556,7 @@ docker run -v /path/to/data:/data \
 **Cause**: devenv version may not support containers, or command syntax differs.
 
 **Solution**:
+
 ```bash
 # Check devenv version
 devenv --version
@@ -553,6 +570,7 @@ nix build .#loom-server-image
 **Cause**: Output format mismatch or Docker daemon not running.
 
 **Solution**:
+
 ```bash
 # Ensure Docker is running
 docker ps
@@ -569,6 +587,7 @@ docker load < result -v
 **Cause**: Server binary crashed or misconfiguration.
 
 **Solution**:
+
 ```bash
 # Run with interactive shell to debug
 docker run --rm -it loom-server:latest \
@@ -584,6 +603,7 @@ docker run --rm loom-server:latest \
 **Cause**: Port 8080 is busy.
 
 **Solution**:
+
 ```bash
 # Use different local port
 docker run -p 9000:8080 loom-server:latest

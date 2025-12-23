@@ -1,8 +1,6 @@
 # Vendored gitleaks rules
 
-Source: https://github.com/gitleaks/gitleaks
-Branch: master
-Updated: 2025-12-18
+Source: https://github.com/gitleaks/gitleaks Branch: master Updated: 2025-12-18
 
 ## License
 

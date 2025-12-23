@@ -1,32 +1,41 @@
+<!--
+ Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+ SPDX-License-Identifier: Proprietary
+-->
+
 # HTTP Retry Strategy
 
 ## Overview
 
-Retry logic is critical for API reliability when interacting with external services like LLM providers. Network conditions, rate limits, and transient server errors can cause temporary failures that succeed on subsequent attempts. Without proper retry handling, applications would fail on recoverable errors, leading to poor user experience and wasted compute.
+Retry logic is critical for API reliability when interacting with external services like LLM
+providers. Network conditions, rate limits, and transient server errors can cause temporary failures
+that succeed on subsequent attempts. Without proper retry handling, applications would fail on
+recoverable errors, leading to poor user experience and wasted compute.
 
-The `loom-http-retry` crate provides a generic, configurable retry mechanism with exponential backoff and jitter, designed specifically for HTTP API clients.
+The `loom-http-retry` crate provides a generic, configurable retry mechanism with exponential
+backoff and jitter, designed specifically for HTTP API clients.
 
 ## RetryConfig Structure
 
 ```rust
 pub struct RetryConfig {
-    pub max_attempts: u32,
-    pub base_delay: Duration,
-    pub max_delay: Duration,
-    pub backoff_factor: f64,
-    pub jitter: bool,
-    pub retryable_statuses: Vec<StatusCode>,
+	pub max_attempts: u32,
+	pub base_delay: Duration,
+	pub max_delay: Duration,
+	pub backoff_factor: f64,
+	pub jitter: bool,
+	pub retryable_statuses: Vec<StatusCode>,
 }
 ```
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `max_attempts` | `u32` | `3` | Maximum number of attempts before giving up |
-| `base_delay` | `Duration` | `200ms` | Initial delay before first retry |
-| `max_delay` | `Duration` | `5s` | Maximum delay between retries (cap) |
-| `backoff_factor` | `f64` | `2.0` | Multiplier for exponential growth |
-| `jitter` | `bool` | `true` | Whether to add randomness to delays |
-| `retryable_statuses` | `Vec<StatusCode>` | `[429, 408, 502, 503, 504]` | HTTP status codes to retry |
+| Field                | Type              | Default                     | Description                                 |
+| -------------------- | ----------------- | --------------------------- | ------------------------------------------- |
+| `max_attempts`       | `u32`             | `3`                         | Maximum number of attempts before giving up |
+| `base_delay`         | `Duration`        | `200ms`                     | Initial delay before first retry            |
+| `max_delay`          | `Duration`        | `5s`                        | Maximum delay between retries (cap)         |
+| `backoff_factor`     | `f64`             | `2.0`                       | Multiplier for exponential growth           |
+| `jitter`             | `bool`            | `true`                      | Whether to add randomness to delays         |
+| `retryable_statuses` | `Vec<StatusCode>` | `[429, 408, 502, 503, 504]` | HTTP status codes to retry                  |
 
 Reference: [crates/loom-http-retry/src/lib.rs#L6-L32](../crates/loom-http-retry/src/lib.rs#L6-L32)
 
@@ -48,14 +57,14 @@ This produces delays in the range `[capped_delay × 0.5, capped_delay × 1.5]`.
 
 ### Example Progression (defaults, no jitter)
 
-| Attempt | Calculation | Delay |
-|---------|-------------|-------|
-| 0 | 200ms × 2^0 | 200ms |
-| 1 | 200ms × 2^1 | 400ms |
-| 2 | 200ms × 2^2 | 800ms |
-| 3 | 200ms × 2^3 | 1600ms |
-| 4 | 200ms × 2^4 | 3200ms |
-| 5 | 200ms × 2^5 | 5000ms (capped) |
+| Attempt | Calculation | Delay           |
+| ------- | ----------- | --------------- |
+| 0       | 200ms × 2^0 | 200ms           |
+| 1       | 200ms × 2^1 | 400ms           |
+| 2       | 200ms × 2^2 | 800ms           |
+| 3       | 200ms × 2^3 | 1600ms          |
+| 4       | 200ms × 2^4 | 3200ms          |
+| 5       | 200ms × 2^5 | 5000ms (capped) |
 
 Reference: [crates/loom-http-retry/src/lib.rs#L59-L71](../crates/loom-http-retry/src/lib.rs#L59-L71)
 
@@ -65,7 +74,7 @@ The trait defines which errors should trigger a retry:
 
 ```rust
 pub trait RetryableError {
-    fn is_retryable(&self) -> bool;
+	fn is_retryable(&self) -> bool;
 }
 ```
 
@@ -73,24 +82,24 @@ pub trait RetryableError {
 
 ```rust
 impl RetryableError for reqwest::Error {
-    fn is_retryable(&self) -> bool {
-        if self.is_timeout() || self.is_connect() {
-            return true;
-        }
+	fn is_retryable(&self) -> bool {
+		if self.is_timeout() || self.is_connect() {
+			return true;
+		}
 
-        if let Some(status) = self.status() {
-            let retryable_statuses = [
-                StatusCode::TOO_MANY_REQUESTS,    // 429
-                StatusCode::REQUEST_TIMEOUT,      // 408
-                StatusCode::BAD_GATEWAY,          // 502
-                StatusCode::SERVICE_UNAVAILABLE,  // 503
-                StatusCode::GATEWAY_TIMEOUT,      // 504
-            ];
-            return retryable_statuses.contains(&status);
-        }
+		if let Some(status) = self.status() {
+			let retryable_statuses = [
+				StatusCode::TOO_MANY_REQUESTS,   // 429
+				StatusCode::REQUEST_TIMEOUT,     // 408
+				StatusCode::BAD_GATEWAY,         // 502
+				StatusCode::SERVICE_UNAVAILABLE, // 503
+				StatusCode::GATEWAY_TIMEOUT,     // 504
+			];
+			return retryable_statuses.contains(&status);
+		}
 
-        false
-    }
+		false
+	}
 }
 ```
 
@@ -101,14 +110,14 @@ For custom error types, wrap the underlying error and implement `RetryableError`
 ```rust
 #[derive(Debug)]
 pub struct ClientError {
-    message: String,
-    retryable: bool,
+	message: String,
+	retryable: bool,
 }
 
 impl RetryableError for ClientError {
-    fn is_retryable(&self) -> bool {
-        self.retryable
-    }
+	fn is_retryable(&self) -> bool {
+		self.retryable
+	}
 }
 ```
 
@@ -118,14 +127,14 @@ Reference: [crates/loom-http-retry/src/lib.rs#L34-L57](../crates/loom-http-retry
 
 ### HTTP Status Codes
 
-| Code | Name | Reason |
-|------|------|--------|
-| 408 | Request Timeout | Client took too long; server may accept faster retry |
-| 429 | Too Many Requests | Rate limited; backoff gives quota time to reset |
-| 500 | Internal Server Error | Transient server issue may resolve |
-| 502 | Bad Gateway | Upstream server issue; may recover quickly |
-| 503 | Service Unavailable | Server overloaded or in maintenance |
-| 504 | Gateway Timeout | Upstream timeout; may succeed on retry |
+| Code | Name                  | Reason                                               |
+| ---- | --------------------- | ---------------------------------------------------- |
+| 408  | Request Timeout       | Client took too long; server may accept faster retry |
+| 429  | Too Many Requests     | Rate limited; backoff gives quota time to reset      |
+| 500  | Internal Server Error | Transient server issue may resolve                   |
+| 502  | Bad Gateway           | Upstream server issue; may recover quickly           |
+| 503  | Service Unavailable   | Server overloaded or in maintenance                  |
+| 504  | Gateway Timeout       | Upstream timeout; may succeed on retry               |
 
 ### Network Errors
 
@@ -167,15 +176,16 @@ All retry attempts are logged with context:
 
 ```rust
 warn!(
-    error = ?err,
-    attempt = attempt,
-    max_attempts = cfg.max_attempts,
-    delay_ms = delay.as_millis(),
-    "retrying after error"
+		error = ?err,
+		attempt = attempt,
+		max_attempts = cfg.max_attempts,
+		delay_ms = delay.as_millis(),
+		"retrying after error"
 );
 ```
 
-Reference: [crates/loom-http-retry/src/lib.rs#L73-L119](../crates/loom-http-retry/src/lib.rs#L73-L119)
+Reference:
+[crates/loom-http-retry/src/lib.rs#L73-L119](../crates/loom-http-retry/src/lib.rs#L73-L119)
 
 ## Design Decisions
 
@@ -195,7 +205,8 @@ Reference: [crates/loom-http-retry/src/lib.rs#L73-L119](../crates/loom-http-retr
 
 ### Jitter Importance
 
-Without jitter, clients that fail simultaneously will retry simultaneously, causing the **thundering herd problem**:
+Without jitter, clients that fail simultaneously will retry simultaneously, causing the **thundering
+herd problem**:
 
 ```
 Time 0:    [Client A fails] [Client B fails] [Client C fails]
@@ -220,22 +231,23 @@ Uses default `RetryConfig` with standard settings:
 
 ```rust
 impl AnthropicClient {
-    pub fn new(config: AnthropicConfig) -> Result<Self, LlmError> {
-        Ok(Self {
-            config,
-            http_client,
-            retry_config: RetryConfig::default(),  // 3 attempts, 200ms base, 5s max
-        })
-    }
+	pub fn new(config: AnthropicConfig) -> Result<Self, LlmError> {
+		Ok(Self {
+			config,
+			http_client,
+			retry_config: RetryConfig::default(), // 3 attempts, 200ms base, 5s max
+		})
+	}
 
-    pub fn with_retry_config(mut self, retry_config: RetryConfig) -> Self {
-        self.retry_config = retry_config;
-        self
-    }
+	pub fn with_retry_config(mut self, retry_config: RetryConfig) -> Self {
+		self.retry_config = retry_config;
+		self
+	}
 }
 ```
 
-Reference: [crates/loom-llm-anthropic/src/client.rs#L48-L64](../crates/loom-llm-anthropic/src/client.rs#L48-L64)
+Reference:
+[crates/loom-llm-anthropic/src/client.rs#L48-L64](../crates/loom-llm-anthropic/src/client.rs#L48-L64)
 
 ### OpenAI Client
 
@@ -258,7 +270,8 @@ let retry_config = RetryConfig {
 };
 ```
 
-Reference: [crates/loom-llm-openai/src/client.rs#L36-L74](../crates/loom-llm-openai/src/client.rs#L36-L74)
+Reference:
+[crates/loom-llm-openai/src/client.rs#L36-L74](../crates/loom-llm-openai/src/client.rs#L36-L74)
 
 ### Usage in Request Methods
 

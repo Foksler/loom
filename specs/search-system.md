@@ -1,7 +1,12 @@
+<!--
+ Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+ SPDX-License-Identifier: Proprietary
+-->
+
 # Thread Search System Specification
 
-**Status:** Draft  
-**Version:** 1.0  
+**Status:** Draft\
+**Version:** 1.0\
 **Last Updated:** 2025-01-18
 
 ---
@@ -10,7 +15,8 @@
 
 ### Purpose
 
-The Thread Search System enables users to find threads using full-text search across thread content, git metadata, and conversation history.
+The Thread Search System enables users to find threads using full-text search across thread content,
+git metadata, and conversation history.
 
 ### Primary Use Cases
 
@@ -44,12 +50,12 @@ loom search <query> [OPTIONS]
 
 ### Options
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `--limit <n>` | 20 | Maximum results |
-| `--offset <n>` | 0 | Pagination offset |
+| Option               | Default | Description         |
+| -------------------- | ------- | ------------------- |
+| `--limit <n>`        | 20      | Maximum results     |
+| `--offset <n>`       | 0       | Pagination offset   |
 | `--workspace <path>` | current | Filter by workspace |
-| `--json` | false | Output raw JSON |
+| `--json`             | false   | Output raw JSON     |
 
 ### Examples
 
@@ -126,12 +132,12 @@ GET /v1/threads/search
 
 ### Query Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `q` | string | Yes | Search query |
-| `workspace` | string | No | Filter by workspace root |
-| `limit` | u32 | No | Max results (default: 50) |
-| `offset` | u32 | No | Pagination offset (default: 0) |
+| Parameter   | Type   | Required | Description                    |
+| ----------- | ------ | -------- | ------------------------------ |
+| `q`         | string | Yes      | Search query                   |
+| `workspace` | string | No       | Filter by workspace root       |
+| `limit`     | u32    | No       | Max results (default: 50)      |
+| `offset`    | u32    | No       | Pagination offset (default: 0) |
 
 ### Response
 
@@ -150,10 +156,10 @@ GET /v1/threads/search
 
 ### Error Responses
 
-| Status | Condition |
-|--------|-----------|
-| 400 | Empty query string |
-| 500 | Database error |
+| Status | Condition          |
+| ------ | ------------------ |
+| 400    | Empty query string |
+| 500    | Database error     |
 
 ---
 
@@ -180,15 +186,15 @@ CREATE VIRTUAL TABLE IF NOT EXISTS thread_fts USING fts5(
 
 ### Indexed Fields
 
-| Field | Source | Purpose |
-|-------|--------|---------|
-| `thread_id` | `threads.id` | Join key (not searchable) |
-| `title` | `threads.title` or `metadata.title` | Thread title |
-| `body` | Flattened `conversation.messages[].content` | All message content |
-| `git_branch` | `threads.git_branch` | Branch name |
-| `git_remote_url` | `threads.git_remote_url` | Repository slug |
-| `git_commits` | `full_json.git_commits` (space-separated) | All commit SHAs |
-| `tags` | `metadata.tags` (space-separated) | Thread tags |
+| Field            | Source                                      | Purpose                   |
+| ---------------- | ------------------------------------------- | ------------------------- |
+| `thread_id`      | `threads.id`                                | Join key (not searchable) |
+| `title`          | `threads.title` or `metadata.title`         | Thread title              |
+| `body`           | Flattened `conversation.messages[].content` | All message content       |
+| `git_branch`     | `threads.git_branch`                        | Branch name               |
+| `git_remote_url` | `threads.git_remote_url`                    | Repository slug           |
+| `git_commits`    | `full_json.git_commits` (space-separated)   | All commit SHAs           |
+| `tags`           | `metadata.tags` (space-separated)           | Thread tags               |
 
 ### Tokenization
 
@@ -277,29 +283,31 @@ WHERE t.deleted_at IS NULL;
 
 ```rust
 pub async fn search(
-    &self,
-    query: &str,
-    workspace: Option<&str>,
-    limit: u32,
-    offset: u32,
+	&self,
+	query: &str,
+	workspace: Option<&str>,
+	limit: u32,
+	offset: u32,
 ) -> Result<Vec<ThreadSearchHit>, ServerError> {
-    // SHA-like heuristic: hex, 7–40 chars, no spaces
-    let is_sha_like = {
-        let q = query.trim();
-        q.len() >= 7
-            && q.len() <= 40
-            && !q.contains(char::is_whitespace)
-            && q.chars().all(|c| c.is_ascii_hexdigit())
-    };
+	// SHA-like heuristic: hex, 7–40 chars, no spaces
+	let is_sha_like = {
+		let q = query.trim();
+		q.len() >= 7
+			&& q.len() <= 40
+			&& !q.contains(char::is_whitespace)
+			&& q.chars().all(|c| c.is_ascii_hexdigit())
+	};
 
-    if is_sha_like {
-        let hits = self.search_by_commit_prefix(query, workspace, limit, offset).await?;
-        if !hits.is_empty() {
-            return Ok(hits);
-        }
-    }
+	if is_sha_like {
+		let hits = self
+			.search_by_commit_prefix(query, workspace, limit, offset)
+			.await?;
+		if !hits.is_empty() {
+			return Ok(hits);
+		}
+	}
 
-    self.search_fts(query, workspace, limit, offset).await
+	self.search_fts(query, workspace, limit, offset).await
 }
 ```
 
@@ -311,72 +319,82 @@ When server is unavailable, perform local substring search:
 
 ```rust
 pub fn search_local(
-    store: &LocalThreadStore,
-    query: &str,
-    limit: usize,
+	store: &LocalThreadStore,
+	query: &str,
+	limit: usize,
 ) -> Result<Vec<ThreadSummary>, ThreadStoreError> {
-    let query_lower = query.to_lowercase();
-    let mut matches = Vec::new();
+	let query_lower = query.to_lowercase();
+	let mut matches = Vec::new();
 
-    for summary in store.list(1000)? {
-        let thread = store.load(&summary.id)?;
-        if let Some(thread) = thread {
-            if matches_query(&thread, &query_lower) {
-                matches.push(ThreadSummary::from(&thread));
-            }
-        }
-    }
+	for summary in store.list(1000)? {
+		let thread = store.load(&summary.id)?;
+		if let Some(thread) = thread {
+			if matches_query(&thread, &query_lower) {
+				matches.push(ThreadSummary::from(&thread));
+			}
+		}
+	}
 
-    // Sort by last_activity_at DESC
-    matches.sort_by(|a, b| b.last_activity_at.cmp(&a.last_activity_at));
-    matches.truncate(limit);
+	// Sort by last_activity_at DESC
+	matches.sort_by(|a, b| b.last_activity_at.cmp(&a.last_activity_at));
+	matches.truncate(limit);
 
-    Ok(matches)
+	Ok(matches)
 }
 
 fn matches_query(thread: &Thread, query: &str) -> bool {
-    // Check title
-    if thread.metadata.title.as_ref()
-        .map(|t| t.to_lowercase().contains(query))
-        .unwrap_or(false) {
-        return true;
-    }
-    
-    // Check git fields
-    if thread.git_branch.as_ref()
-        .map(|b| b.to_lowercase().contains(query))
-        .unwrap_or(false) {
-        return true;
-    }
-    
-    if thread.git_remote_url.as_ref()
-        .map(|u| u.to_lowercase().contains(query))
-        .unwrap_or(false) {
-        return true;
-    }
-    
-    // Check commits
-    for sha in &thread.git_commits {
-        if sha.to_lowercase().starts_with(query) {
-            return true;
-        }
-    }
-    
-    // Check tags
-    for tag in &thread.metadata.tags {
-        if tag.to_lowercase().contains(query) {
-            return true;
-        }
-    }
-    
-    // Check message content
-    for msg in &thread.conversation.messages {
-        if msg.content.to_lowercase().contains(query) {
-            return true;
-        }
-    }
-    
-    false
+	// Check title
+	if thread
+		.metadata
+		.title
+		.as_ref()
+		.map(|t| t.to_lowercase().contains(query))
+		.unwrap_or(false)
+	{
+		return true;
+	}
+
+	// Check git fields
+	if thread
+		.git_branch
+		.as_ref()
+		.map(|b| b.to_lowercase().contains(query))
+		.unwrap_or(false)
+	{
+		return true;
+	}
+
+	if thread
+		.git_remote_url
+		.as_ref()
+		.map(|u| u.to_lowercase().contains(query))
+		.unwrap_or(false)
+	{
+		return true;
+	}
+
+	// Check commits
+	for sha in &thread.git_commits {
+		if sha.to_lowercase().starts_with(query) {
+			return true;
+		}
+	}
+
+	// Check tags
+	for tag in &thread.metadata.tags {
+		if tag.to_lowercase().contains(query) {
+			return true;
+		}
+	}
+
+	// Check message content
+	for msg in &thread.conversation.messages {
+		if msg.content.to_lowercase().contains(query) {
+			return true;
+		}
+	}
+
+	false
 }
 ```
 
@@ -388,27 +406,27 @@ fn matches_query(thread: &Thread, query: &str) -> bool {
 
 ```rust
 proptest! {
-    /// **Property: Search results include thread with matching commit SHA**
-    ///
-    /// Why: Primary use case is finding threads by commit.
-    #[test]
-    fn search_finds_thread_by_commit(sha in "[0-9a-f]{40}") {
-        // Create thread with commit, insert, search by prefix
-        // Assert thread is in results
-    }
+		/// **Property: Search results include thread with matching commit SHA**
+		///
+		/// Why: Primary use case is finding threads by commit.
+		#[test]
+		fn search_finds_thread_by_commit(sha in "[0-9a-f]{40}") {
+				// Create thread with commit, insert, search by prefix
+				// Assert thread is in results
+		}
 
-    /// **Property: FTS index stays in sync with threads table**
-    ///
-    /// Why: Triggers must maintain FTS correctness on all mutations.
-    #[test]
-    fn fts_sync_on_insert_update_delete(
-        title in "[a-z ]{5,50}",
-        new_title in "[a-z ]{5,50}",
-    ) {
-        // Insert -> search finds by title
-        // Update title -> search finds by new title, not old
-        // Delete -> search no longer finds
-    }
+		/// **Property: FTS index stays in sync with threads table**
+		///
+		/// Why: Triggers must maintain FTS correctness on all mutations.
+		#[test]
+		fn fts_sync_on_insert_update_delete(
+				title in "[a-z ]{5,50}",
+				new_title in "[a-z ]{5,50}",
+		) {
+				// Insert -> search finds by title
+				// Update title -> search finds by new title, not old
+				// Delete -> search no longer finds
+		}
 }
 ```
 
@@ -417,39 +435,39 @@ proptest! {
 ```rust
 #[tokio::test]
 async fn test_search_by_commit_sha_prefix() {
-    let (repo, _dir) = create_test_repo().await;
-    
-    let mut thread = create_test_thread();
-    thread.git_commits = vec!["abc123def456789012345678901234567890abcd".to_string()];
-    repo.upsert(&thread, None).await.unwrap();
-    
-    let hits = repo.search("abc123def", None, 10, 0).await.unwrap();
-    assert_eq!(hits.len(), 1);
-    assert_eq!(hits[0].summary.id, thread.id);
+	let (repo, _dir) = create_test_repo().await;
+
+	let mut thread = create_test_thread();
+	thread.git_commits = vec!["abc123def456789012345678901234567890abcd".to_string()];
+	repo.upsert(&thread, None).await.unwrap();
+
+	let hits = repo.search("abc123def", None, 10, 0).await.unwrap();
+	assert_eq!(hits.len(), 1);
+	assert_eq!(hits[0].summary.id, thread.id);
 }
 
 #[tokio::test]
 async fn test_search_by_title_keyword() {
-    let (repo, _dir) = create_test_repo().await;
-    
-    let mut thread = create_test_thread();
-    thread.metadata.title = Some("Fix authentication bug".to_string());
-    repo.upsert(&thread, None).await.unwrap();
-    
-    let hits = repo.search("authentication", None, 10, 0).await.unwrap();
-    assert_eq!(hits.len(), 1);
+	let (repo, _dir) = create_test_repo().await;
+
+	let mut thread = create_test_thread();
+	thread.metadata.title = Some("Fix authentication bug".to_string());
+	repo.upsert(&thread, None).await.unwrap();
+
+	let hits = repo.search("authentication", None, 10, 0).await.unwrap();
+	assert_eq!(hits.len(), 1);
 }
 
 #[tokio::test]
 async fn test_search_by_branch() {
-    let (repo, _dir) = create_test_repo().await;
-    
-    let mut thread = create_test_thread();
-    thread.git_branch = Some("feature/xyz".to_string());
-    repo.upsert(&thread, None).await.unwrap();
-    
-    let hits = repo.search("feature/xyz", None, 10, 0).await.unwrap();
-    assert_eq!(hits.len(), 1);
+	let (repo, _dir) = create_test_repo().await;
+
+	let mut thread = create_test_thread();
+	thread.git_branch = Some("feature/xyz".to_string());
+	repo.upsert(&thread, None).await.unwrap();
+
+	let hits = repo.search("feature/xyz", None, 10, 0).await.unwrap();
+	assert_eq!(hits.len(), 1);
 }
 ```
 
@@ -460,6 +478,7 @@ async fn test_search_by_branch() {
 ### 8.1 Field-Scoped Queries
 
 Support queries like:
+
 - `branch:feature/xyz`
 - `repo:github.com/owner/repo`
 - `sha:abc123`

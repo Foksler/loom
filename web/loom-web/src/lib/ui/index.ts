@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+ * SPDX-License-Identifier: Proprietary
+ */
+
 // Theme
 export { themeStore, type ThemeMode } from './theme';
 export { default as ThemeProvider } from './ThemeProvider.svelte';

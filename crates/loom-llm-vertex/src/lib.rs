@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+// SPDX-License-Identifier: Proprietary
+
 //! Google Vertex AI (Gemini) LLM client implementation for Loom.
 //!
 //! This crate provides an implementation of the `LlmClient` trait for Google's

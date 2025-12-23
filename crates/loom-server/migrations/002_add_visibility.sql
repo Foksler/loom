@@ -1,3 +1,6 @@
+-- Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+-- SPDX-License-Identifier: Proprietary
+
 -- 002_add_visibility.sql
 -- Add visibility column to threads table for access control.
 -- Visibility values: 'organization', 'private', 'public'

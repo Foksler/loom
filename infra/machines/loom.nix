@@ -1,0 +1,77 @@
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+# SPDX-License-Identifier: Proprietary
+
+{ config, lib, pkgs, modulesPath, ... }:
+
+{
+  imports = [
+    (modulesPath + "/profiles/qemu-guest.nix")
+    ../nixos-modules/base.nix
+    ../nixos-modules/i18n.nix
+    ../nixos-modules/known-hosts.nix
+    ../nixos-modules/nix-settings.nix
+    ../nixos-modules/pkgs.nix
+    ../nixos-modules/secrets.nix
+    ../nixos-modules/security-audit.nix
+    ../nixos-modules/ssh.nix
+    ../nixos-modules/sudo.nix
+    ../nixos-modules/sysctl.nix
+    ../nixos-modules/tailscale.nix
+    ../nixos-modules/time.nix
+    ../nixos-modules/user.nix
+    ../nixos-modules/vscode-server.nix
+    ../nixos-modules/nixos-auto-update.nix
+  ];
+
+  # Machine-specific configuration
+  networking.hostName = "loom";
+
+  # Networking
+  networking.networkmanager.enable = false;
+  networking.useDHCP = false;
+  networking.interfaces.eth0.ipv4.addresses = [{
+    address = "51.161.140.159";
+    prefixLength = 32; # 255.255.255.255
+  }];
+  networking.defaultGateway = "51.161.216.158";
+  networking.nameservers = [ 
+    "8.8.8.8"
+    "8.8.4.4"
+  ];
+
+
+  networking.firewall.enable = true;
+
+  # Hardware configuration
+  boot.initrd.availableKernelModules = [ "ata_piix" "uhci_hcd" "virtio_pci" "virtio_scsi" "sd_mod" "sr_mod" ];
+  boot.initrd.kernelModules = [ "kvm-amd" ];
+  boot.kernelModules = [ ];
+  boot.extraModulePackages = [ ];
+
+  fileSystems."/" =
+    { device = "/dev/disk/by-uuid/a331eca0-090b-4c81-a6a1-9521dbc66621";
+      fsType = "ext4";
+    };
+
+  swapDevices = [ ];
+
+  # Bootloader - machine specific
+  boot.loader.grub.enable = true;
+  boot.loader.grub.device = "/dev/sda";
+  boot.loader.grub.useOSProber = true;
+
+  # Set lathe-specific secrets file
+  sops.defaultSopsFile = ../secrets/lathe.yaml;
+  
+  nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
+
+  system.stateVersion = "25.11";
+
+  # Auto-update NixOS from git repository
+  services.nixos-auto-update = {
+    enable = true;
+    repository = "https://github.com/ghuntley/loom.git";
+    branch = "trunk";
+    flakeAttr = "virtualMachine";
+  };
+}

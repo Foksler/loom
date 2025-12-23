@@ -1,18 +1,28 @@
+<!--
+ Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+ SPDX-License-Identifier: Proprietary
+-->
+
 # Agent State Machine
 
 ## Overview
 
-The Loom agent uses an explicit, event-driven state machine to manage conversation flow and tool execution. This design provides:
+The Loom agent uses an explicit, event-driven state machine to manage conversation flow and tool
+execution. This design provides:
 
 - **Predictable behavior**: All state transitions are explicit and testable
 - **Clear ownership**: Each state carries its required context (conversation, retries, etc.)
 - **Graceful error recovery**: Built-in retry mechanisms with bounded attempts
 - **Clean separation**: The state machine logic is decoupled from I/O operations
 
-The state machine receives `AgentEvent`s and returns `AgentAction`s that the caller must execute. This inversion of control allows the caller to manage async operations (LLM calls, tool execution) while the state machine remains synchronous and pure.
+The state machine receives `AgentEvent`s and returns `AgentAction`s that the caller must execute.
+This inversion of control allows the caller to manage async operations (LLM calls, tool execution)
+while the state machine remains synchronous and pure.
 
 **Source files:**
-- [`crates/loom-core/src/state.rs`](../crates/loom-core/src/state.rs) - State and event type definitions
+
+- [`crates/loom-core/src/state.rs`](../crates/loom-core/src/state.rs) - State and event type
+  definitions
 - [`crates/loom-core/src/agent.rs`](../crates/loom-core/src/agent.rs) - State machine implementation
 
 ---
@@ -21,33 +31,44 @@ The state machine receives `AgentEvent`s and returns `AgentAction`s that the cal
 
 ### `AgentState` Enum
 
-| State | Description | Fields |
-|-------|-------------|--------|
-| `WaitingForUserInput` | Idle state, ready to accept user messages | `conversation: ConversationContext` |
-| `CallingLlm` | Making a request to the LLM provider | `conversation: ConversationContext`, `retries: u32` |
-| `ProcessingLlmResponse` | Handling a completed LLM response | `conversation: ConversationContext`, `response: LlmResponse` |
-| `ExecutingTools` | Running one or more tool calls in parallel | `conversation: ConversationContext`, `executions: Vec<ToolExecutionStatus>` |
-| `Error` | Recoverable error with retry capability | `conversation: ConversationContext`, `error: AgentError`, `retries: u32`, `origin: ErrorOrigin` |
-| `ShuttingDown` | Graceful shutdown in progress | (none) |
+| State                   | Description                                | Fields                                                                                          |
+| ----------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `WaitingForUserInput`   | Idle state, ready to accept user messages  | `conversation: ConversationContext`                                                             |
+| `CallingLlm`            | Making a request to the LLM provider       | `conversation: ConversationContext`, `retries: u32`                                             |
+| `ProcessingLlmResponse` | Handling a completed LLM response          | `conversation: ConversationContext`, `response: LlmResponse`                                    |
+| `ExecutingTools`        | Running one or more tool calls in parallel | `conversation: ConversationContext`, `executions: Vec<ToolExecutionStatus>`                     |
+| `Error`                 | Recoverable error with retry capability    | `conversation: ConversationContext`, `error: AgentError`, `retries: u32`, `origin: ErrorOrigin` |
+| `ShuttingDown`          | Graceful shutdown in progress              | (none)                                                                                          |
 
 ### State Details
 
 #### WaitingForUserInput
-The initial and terminal state for user turns. The agent is idle and awaits user input. The conversation context preserves all prior messages.
+
+The initial and terminal state for user turns. The agent is idle and awaits user input. The
+conversation context preserves all prior messages.
 
 #### CallingLlm
-Active LLM request in flight. The `retries` counter tracks how many retry attempts have been made for the current request.
+
+Active LLM request in flight. The `retries` counter tracks how many retry attempts have been made
+for the current request.
 
 #### ProcessingLlmResponse
-Transient state for examining an LLM response. Immediately transitions to either `ExecutingTools` (if tool calls present) or `WaitingForUserInput` (if text-only response).
+
+Transient state for examining an LLM response. Immediately transitions to either `ExecutingTools`
+(if tool calls present) or `WaitingForUserInput` (if text-only response).
 
 #### ExecutingTools
-Tracks multiple concurrent tool executions via `Vec<ToolExecutionStatus>`. Each execution progresses through `Pending` → `Running` → `Completed`.
+
+Tracks multiple concurrent tool executions via `Vec<ToolExecutionStatus>`. Each execution progresses
+through `Pending` → `Running` → `Completed`.
 
 #### Error
-Holds the failed state with retry information. The `origin` field (`Llm`, `Tool`, or `Io`) determines retry strategy.
+
+Holds the failed state with retry information. The `origin` field (`Llm`, `Tool`, or `Io`)
+determines retry strategy.
 
 #### ShuttingDown
+
 Terminal state. No transitions out; the agent should be dropped after reaching this state.
 
 ---
@@ -56,30 +77,30 @@ Terminal state. No transitions out; the agent should be dropped after reaching t
 
 ### `AgentEvent` Enum
 
-| Event | Description | Payload |
-|-------|-------------|---------|
-| `UserInput` | User submitted a message | `Message` |
-| `LlmEvent` | Event from the LLM provider | `LlmEvent` (see sub-variants) |
-| `ToolProgress` | Progress update from a running tool | `ToolProgressEvent` |
-| `ToolCompleted` | A tool execution finished | `call_id: String`, `outcome: ToolExecutionOutcome` |
-| `RetryTimeoutFired` | Retry backoff timer expired | (none) |
-| `ShutdownRequested` | Graceful shutdown requested | (none) |
+| Event               | Description                         | Payload                                            |
+| ------------------- | ----------------------------------- | -------------------------------------------------- |
+| `UserInput`         | User submitted a message            | `Message`                                          |
+| `LlmEvent`          | Event from the LLM provider         | `LlmEvent` (see sub-variants)                      |
+| `ToolProgress`      | Progress update from a running tool | `ToolProgressEvent`                                |
+| `ToolCompleted`     | A tool execution finished           | `call_id: String`, `outcome: ToolExecutionOutcome` |
+| `RetryTimeoutFired` | Retry backoff timer expired         | (none)                                             |
+| `ShutdownRequested` | Graceful shutdown requested         | (none)                                             |
 
 ### LlmEvent Sub-variants
 
-| Sub-variant | Description | Fields |
-|-------------|-------------|--------|
-| `TextDelta` | Incremental text content from the assistant | `content: String` |
+| Sub-variant     | Description                                 | Fields                                                               |
+| --------------- | ------------------------------------------- | -------------------------------------------------------------------- |
+| `TextDelta`     | Incremental text content from the assistant | `content: String`                                                    |
 | `ToolCallDelta` | Incremental tool call data during streaming | `call_id: String`, `tool_name: String`, `arguments_fragment: String` |
-| `Completed` | The completion finished successfully | `LlmResponse` |
-| `Error` | An error occurred during streaming | `LlmError` |
+| `Completed`     | The completion finished successfully        | `LlmResponse`                                                        |
+| `Error`         | An error occurred during streaming          | `LlmError`                                                           |
 
 ### ToolExecutionOutcome
 
-| Variant | Description | Fields |
-|---------|-------------|--------|
+| Variant   | Description                | Fields                                         |
+| --------- | -------------------------- | ---------------------------------------------- |
 | `Success` | Tool executed successfully | `call_id: String`, `output: serde_json::Value` |
-| `Error` | Tool execution failed | `call_id: String`, `error: ToolError` |
+| `Error`   | Tool execution failed      | `call_id: String`, `error: ToolError`          |
 
 ---
 
@@ -87,21 +108,21 @@ Terminal state. No transitions out; the agent should be dropped after reaching t
 
 ### Transition Table
 
-| Current State | Event | New State | Action |
-|--------------|-------|-----------|--------|
-| `WaitingForUserInput` | `UserInput(msg)` | `CallingLlm` | `SendLlmRequest` |
-| `CallingLlm` | `LlmEvent::TextDelta` | `CallingLlm` | `DisplayMessage` |
-| `CallingLlm` | `LlmEvent::ToolCallDelta` | `CallingLlm` | `WaitForInput` |
-| `CallingLlm` | `LlmEvent::Completed` | `ProcessingLlmResponse` | (internal processing) |
-| `CallingLlm` | `LlmEvent::Error` (retries < max) | `Error` | `WaitForInput` |
-| `CallingLlm` | `LlmEvent::Error` (retries >= max) | `WaitingForUserInput` | `DisplayError` |
-| `ProcessingLlmResponse` | (has tool calls) | `ExecutingTools` | `ExecuteTools` |
-| `ProcessingLlmResponse` | (no tool calls) | `WaitingForUserInput` | `WaitForInput` |
-| `ExecutingTools` | `ToolCompleted` (some pending) | `ExecutingTools` | `WaitForInput` |
-| `ExecutingTools` | `ToolCompleted` (all done) | `CallingLlm` | `SendLlmRequest` |
-| `Error` (origin=Llm) | `RetryTimeoutFired` | `CallingLlm` | `SendLlmRequest` |
-| *any state* | `ShutdownRequested` | `ShuttingDown` | `Shutdown` |
-| *invalid transition* | *any* | (unchanged) | `WaitForInput` |
+| Current State           | Event                              | New State               | Action                |
+| ----------------------- | ---------------------------------- | ----------------------- | --------------------- |
+| `WaitingForUserInput`   | `UserInput(msg)`                   | `CallingLlm`            | `SendLlmRequest`      |
+| `CallingLlm`            | `LlmEvent::TextDelta`              | `CallingLlm`            | `DisplayMessage`      |
+| `CallingLlm`            | `LlmEvent::ToolCallDelta`          | `CallingLlm`            | `WaitForInput`        |
+| `CallingLlm`            | `LlmEvent::Completed`              | `ProcessingLlmResponse` | (internal processing) |
+| `CallingLlm`            | `LlmEvent::Error` (retries < max)  | `Error`                 | `WaitForInput`        |
+| `CallingLlm`            | `LlmEvent::Error` (retries >= max) | `WaitingForUserInput`   | `DisplayError`        |
+| `ProcessingLlmResponse` | (has tool calls)                   | `ExecutingTools`        | `ExecuteTools`        |
+| `ProcessingLlmResponse` | (no tool calls)                    | `WaitingForUserInput`   | `WaitForInput`        |
+| `ExecutingTools`        | `ToolCompleted` (some pending)     | `ExecutingTools`        | `WaitForInput`        |
+| `ExecutingTools`        | `ToolCompleted` (all done)         | `CallingLlm`            | `SendLlmRequest`      |
+| `Error` (origin=Llm)    | `RetryTimeoutFired`                | `CallingLlm`            | `SendLlmRequest`      |
+| _any state_             | `ShutdownRequested`                | `ShuttingDown`          | `Shutdown`            |
+| _invalid transition_    | _any_                              | (unchanged)             | `WaitForInput`        |
 
 ---
 
@@ -111,14 +132,14 @@ Terminal state. No transitions out; the agent should be dropped after reaching t
 
 Actions are returned to the caller indicating what I/O operation to perform:
 
-| Action | Description | Payload |
-|--------|-------------|---------|
-| `SendLlmRequest` | Send a request to the LLM provider | `LlmRequest` |
-| `ExecuteTools` | Execute the specified tool calls | `Vec<ToolCall>` |
-| `WaitForInput` | Wait for the next event (idle) | (none) |
-| `DisplayMessage` | Show a message to the user | `String` |
-| `DisplayError` | Show an error to the user | `String` |
-| `Shutdown` | Terminate the agent | (none) |
+| Action           | Description                        | Payload         |
+| ---------------- | ---------------------------------- | --------------- |
+| `SendLlmRequest` | Send a request to the LLM provider | `LlmRequest`    |
+| `ExecuteTools`   | Execute the specified tool calls   | `Vec<ToolCall>` |
+| `WaitForInput`   | Wait for the next event (idle)     | (none)          |
+| `DisplayMessage` | Show a message to the user         | `String`        |
+| `DisplayError`   | Show an error to the user          | `String`        |
+| `Shutdown`       | Terminate the agent                | (none)          |
 
 ---
 
@@ -126,13 +147,17 @@ Actions are returned to the caller indicating what I/O operation to perform:
 
 ### Why Explicit State Machine vs Implicit
 
-1. **Testability**: Every state and transition can be unit tested in isolation. Property-based tests verify invariants like "shutdown always succeeds from any state".
+1. **Testability**: Every state and transition can be unit tested in isolation. Property-based tests
+   verify invariants like "shutdown always succeeds from any state".
 
-2. **Debuggability**: State transitions are logged with `tracing::info!`, making it easy to trace agent behavior in production.
+2. **Debuggability**: State transitions are logged with `tracing::info!`, making it easy to trace
+   agent behavior in production.
 
-3. **No Hidden State**: All context is carried explicitly in state variants. There are no ambient flags or mutable fields that could get out of sync.
+3. **No Hidden State**: All context is carried explicitly in state variants. There are no ambient
+   flags or mutable fields that could get out of sync.
 
-4. **Exhaustive Matching**: Rust's `match` ensures all state/event combinations are handled. New events or states trigger compiler errors until addressed.
+4. **Exhaustive Matching**: Rust's `match` ensures all state/event combinations are handled. New
+   events or states trigger compiler errors until addressed.
 
 ### Why Events Are Processed Synchronously
 
@@ -144,13 +169,17 @@ pub fn handle_event(&mut self, event: AgentEvent) -> AgentResult<AgentAction>
 
 **Rationale:**
 
-1. **Separation of Concerns**: The state machine decides *what* to do; the caller decides *how* to do it (async, parallel, etc.).
+1. **Separation of Concerns**: The state machine decides _what_ to do; the caller decides _how_ to
+   do it (async, parallel, etc.).
 
-2. **Backpressure**: The caller controls the pace of event delivery. No internal queues or background tasks.
+2. **Backpressure**: The caller controls the pace of event delivery. No internal queues or
+   background tasks.
 
-3. **Determinism**: Given the same sequence of events, the state machine produces the same sequence of actions—essential for testing and replay.
+3. **Determinism**: Given the same sequence of events, the state machine produces the same sequence
+   of actions—essential for testing and replay.
 
-4. **Flexibility**: The caller can implement different execution strategies (single-threaded, tokio, async-std) without changing the state machine.
+4. **Flexibility**: The caller can implement different execution strategies (single-threaded, tokio,
+   async-std) without changing the state machine.
 
 ### How Conversation Context Is Threaded
 
@@ -158,13 +187,19 @@ Each state variant that needs conversation history carries its own `Conversation
 
 ```rust
 pub enum AgentState {
-    WaitingForUserInput { conversation: ConversationContext },
-    CallingLlm { conversation: ConversationContext, retries: u32 },
-    // ...
+	WaitingForUserInput {
+		conversation: ConversationContext,
+	},
+	CallingLlm {
+		conversation: ConversationContext,
+		retries: u32,
+	},
+	// ...
 }
 ```
 
 During transitions, the context is cloned and updated:
+
 - `UserInput` → message appended to conversation
 - `LlmEvent::Completed` → assistant message appended
 - `ToolCompleted` (all done) → tool result messages appended
@@ -212,11 +247,11 @@ stateDiagram-v2
 1. **Add variant to `AgentState`** in `state.rs`:
    ```rust
    pub enum AgentState {
-       // existing variants...
-       NewState {
-           conversation: ConversationContext,
-           custom_field: CustomType,
-       },
+   	// existing variants...
+   	NewState {
+   		conversation: ConversationContext,
+   		custom_field: CustomType,
+   	},
    }
    ```
 
@@ -241,14 +276,15 @@ stateDiagram-v2
 1. **Add variant to `AgentEvent`** in `state.rs`:
    ```rust
    pub enum AgentEvent {
-       // existing variants...
-       NewEvent { payload: PayloadType },
+   	// existing variants...
+   	NewEvent { payload: PayloadType },
    }
    ```
 
 2. **Handle the event** in each relevant state within `handle_event()`.
 
-3. **Update the catch-all pattern** if needed—invalid transitions log a warning and return `WaitForInput`.
+3. **Update the catch-all pattern** if needed—invalid transitions log a warning and return
+   `WaitForInput`.
 
 4. **Add property tests** verifying the event is handled correctly from all reachable states.
 
@@ -257,8 +293,8 @@ stateDiagram-v2
 1. **Add variant to `AgentAction`** in `agent.rs`:
    ```rust
    pub enum AgentAction {
-       // existing variants...
-       NewAction(PayloadType),
+   	// existing variants...
+   	NewAction(PayloadType),
    }
    ```
 

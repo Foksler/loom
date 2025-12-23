@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights
+// reserved. SPDX-License-Identifier: Proprietary
+
 pub mod edit_file;
 pub mod list_files;
 pub mod oracle;

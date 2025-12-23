@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+// SPDX-License-Identifier: Proprietary
+
 //! Integration tests for loom-server.
 //!
 //! Comprehensive test suite covering:

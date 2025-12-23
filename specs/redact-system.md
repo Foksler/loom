@@ -1,7 +1,12 @@
+<!--
+ Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+ SPDX-License-Identifier: Proprietary
+-->
+
 # Redact System Specification
 
-**Status:** Proposed  
-**Version:** 1.0  
+**Status:** Proposed\
+**Version:** 1.0\
 **Last Updated:** 2024-12-18
 
 ---
@@ -10,7 +15,10 @@
 
 ### Purpose
 
-The `loom-redact` crate provides real-time secret detection and redaction for arbitrary text. It uses the comprehensive regex patterns from [gitleaks](https://github.com/gitleaks/gitleaks) (200+ patterns covering API keys, tokens, and secrets from major providers) to scan user input, LLM responses, and logs, replacing detected secrets with `[REDACTED:<rule-id>]` placeholders.
+The `loom-redact` crate provides real-time secret detection and redaction for arbitrary text. It
+uses the comprehensive regex patterns from [gitleaks](https://github.com/gitleaks/gitleaks) (200+
+patterns covering API keys, tokens, and secrets from major providers) to scan user input, LLM
+responses, and logs, replacing detected secrets with `[REDACTED:<rule-id>]` placeholders.
 
 ### Goals
 
@@ -28,14 +36,15 @@ The `loom-redact` crate provides real-time secret detection and redaction for ar
 
 ### Relationship to loom-secret
 
-| Crate | Purpose |
-|-------|---------|
+| Crate         | Purpose                                                                                       |
+| ------------- | --------------------------------------------------------------------------------------------- |
 | `loom-secret` | **Compile-time protection**: Wraps known secrets in `Secret<T>` to prevent accidental logging |
-| `loom-redact` | **Runtime detection**: Scans arbitrary text to find and redact unknown/leaked secrets |
+| `loom-redact` | **Runtime detection**: Scans arbitrary text to find and redact unknown/leaked secrets         |
 
 These crates are complementary:
-- `loom-secret` prevents secrets you *know about* from leaking
-- `loom-redact` catches secrets you *didn't know about* or that leaked anyway
+
+- `loom-secret` prevents secrets you _know about_ from leaking
+- `loom-redact` catches secrets you _didn't know about_ or that leaked anyway
 
 ---
 
@@ -105,27 +114,27 @@ stopwords = ["test", "example"]
 
 ### What We Extract
 
-| Field | Usage in loom-redact |
-|-------|---------------------|
-| `id` | Rule identifier for `[REDACTED:<id>]` placeholder |
-| `description` | Documentation only (not used at runtime) |
-| `regex` | Detection pattern (compiled to Rust `Regex`) |
-| `entropy` | Minimum Shannon entropy threshold |
-| `secretGroup` | Which capture group contains the secret (default: 0) |
-| `keywords` | Fast pre-filter strings (lowercase substring check) |
-| `allowlists[].regexes` | False positive patterns to skip |
-| `allowlists[].stopwords` | Substrings indicating false positives |
-| `allowlists[].regexTarget` | "match" or "line" (we only use "match") |
+| Field                      | Usage in loom-redact                                 |
+| -------------------------- | ---------------------------------------------------- |
+| `id`                       | Rule identifier for `[REDACTED:<id>]` placeholder    |
+| `description`              | Documentation only (not used at runtime)             |
+| `regex`                    | Detection pattern (compiled to Rust `Regex`)         |
+| `entropy`                  | Minimum Shannon entropy threshold                    |
+| `secretGroup`              | Which capture group contains the secret (default: 0) |
+| `keywords`                 | Fast pre-filter strings (lowercase substring check)  |
+| `allowlists[].regexes`     | False positive patterns to skip                      |
+| `allowlists[].stopwords`   | Substrings indicating false positives                |
+| `allowlists[].regexTarget` | "match" or "line" (we only use "match")              |
 
 ### What We Ignore
 
-| Field | Reason |
-|-------|--------|
-| `path` | Path-based filtering not relevant for log scanning |
-| `allowlists[].commits` | Git commit filtering not applicable |
-| `allowlists[].paths` | Path filtering not applicable |
-| `RequiredRules` | Composite rule dependencies not needed |
-| `SkipReport` | Reporting control not applicable |
+| Field                  | Reason                                             |
+| ---------------------- | -------------------------------------------------- |
+| `path`                 | Path-based filtering not relevant for log scanning |
+| `allowlists[].commits` | Git commit filtering not applicable                |
+| `allowlists[].paths`   | Path filtering not applicable                      |
+| `RequiredRules`        | Composite rule dependencies not needed             |
+| `SkipReport`           | Reporting control not applicable                   |
 
 ---
 
@@ -143,32 +152,32 @@ stopwords = ["test", "example"]
 ```rust
 // Pseudocode
 fn main() {
-    // 1. Read vendored gitleaks.toml
-    let toml = read("third_party/gitleaks/gitleaks.toml");
-    let config: GitleaksConfig = parse(toml);
-    
-    // 2. Generate Rust code
-    let mut generated = String::new();
-    let mut unsupported = Vec::new();
-    
-    for rule in config.rules {
-        if let Some(regex_str) = rule.regex {
-            // 3. Validate regex compiles in Rust
-            match regex::Regex::new(&regex_str) {
-                Ok(_) => emit_rule(&mut generated, &rule),
-                Err(e) => {
-                    eprintln!("cargo:warning=Skipping {}: {}", rule.id, e);
-                    unsupported.push(rule.id);
-                }
-            }
-        }
-    }
-    
-    // 4. Write to OUT_DIR/generated_rules.rs
-    write(out_dir().join("generated_rules.rs"), generated);
-    
-    // 5. Rerun if TOML changes
-    println!("cargo:rerun-if-changed=third_party/gitleaks/gitleaks.toml");
+	// 1. Read vendored gitleaks.toml
+	let toml = read("third_party/gitleaks/gitleaks.toml");
+	let config: GitleaksConfig = parse(toml);
+
+	// 2. Generate Rust code
+	let mut generated = String::new();
+	let mut unsupported = Vec::new();
+
+	for rule in config.rules {
+		if let Some(regex_str) = rule.regex {
+			// 3. Validate regex compiles in Rust
+			match regex::Regex::new(&regex_str) {
+				Ok(_) => emit_rule(&mut generated, &rule),
+				Err(e) => {
+					eprintln!("cargo:warning=Skipping {}: {}", rule.id, e);
+					unsupported.push(rule.id);
+				}
+			}
+		}
+	}
+
+	// 4. Write to OUT_DIR/generated_rules.rs
+	write(out_dir().join("generated_rules.rs"), generated);
+
+	// 5. Rerun if TOML changes
+	println!("cargo:rerun-if-changed=third_party/gitleaks/gitleaks.toml");
 }
 ```
 
@@ -180,34 +189,35 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 
 pub static RULES: Lazy<Vec<RuleSpec>> = Lazy::new(|| {
-    vec![
-        RuleSpec {
-            id: "anthropic-api-key",
-            regex: Regex::new(r"\b(sk-ant-api03-...)").unwrap(),
-            secret_group: 1,
-            entropy: Some(3.5),
-            keywords: &["sk-ant-api03"],
-            allowlists: &[...],
-        },
-        // ... 200+ more rules
-    ]
+	vec![
+			RuleSpec {
+					id: "anthropic-api-key",
+					regex: Regex::new(r"\b(sk-ant-api03-...)").unwrap(),
+					secret_group: 1,
+					entropy: Some(3.5),
+					keywords: &["sk-ant-api03"],
+					allowlists: &[...],
+			},
+			// ... 200+ more rules
+	]
 });
 ```
 
 ### Regex Compatibility (Go/RE2 → Rust)
 
-| Feature | Go/RE2 | Rust `regex` | Handling |
-|---------|--------|--------------|----------|
-| Inline flags `(?i)` | ✓ | ✓ | Compatible |
-| Scoped flags `(?i:...)` | ✓ | ✓ | Compatible |
-| Negative scoped `(?-i:...)` | ✓ | ✓ | Compatible |
-| POSIX classes `[[:alnum:]]` | ✓ | ✓ | Compatible |
-| Named groups `(?P<name>)` | ✓ | ✓ | Compatible |
-| Lookahead `(?=...)` | ✓ | ✗ | **Skip rule** |
-| Lookbehind `(?<=...)` | Partial | ✗ | **Skip rule** |
-| Backreferences | ✗ | ✗ | N/A |
+| Feature                     | Go/RE2  | Rust `regex` | Handling      |
+| --------------------------- | ------- | ------------ | ------------- |
+| Inline flags `(?i)`         | ✓       | ✓            | Compatible    |
+| Scoped flags `(?i:...)`     | ✓       | ✓            | Compatible    |
+| Negative scoped `(?-i:...)` | ✓       | ✓            | Compatible    |
+| POSIX classes `[[:alnum:]]` | ✓       | ✓            | Compatible    |
+| Named groups `(?P<name>)`   | ✓       | ✓            | Compatible    |
+| Lookahead `(?=...)`         | ✓       | ✗            | **Skip rule** |
+| Lookbehind `(?<=...)`       | Partial | ✗            | **Skip rule** |
+| Backreferences              | ✗       | ✗            | N/A           |
 
 Rules with unsupported features are:
+
 1. Logged as `cargo:warning`
 2. Documented in README
 3. Can be manually patched in vendored TOML if critical
@@ -221,23 +231,23 @@ Rules with unsupported features are:
 ```rust
 /// A compiled secret detection rule.
 pub struct RuleSpec {
-    /// Unique rule identifier (e.g., "anthropic-api-key")
-    pub id: &'static str,
-    
-    /// Compiled detection regex
-    pub regex: &'static Regex,
-    
-    /// Which capture group contains the secret (0 = whole match)
-    pub secret_group: u32,
-    
-    /// Minimum Shannon entropy for a match to be considered valid
-    pub entropy: Option<f32>,
-    
-    /// Lowercase keywords for fast pre-filtering
-    pub keywords: &'static [&'static str],
-    
-    /// Allowlists for false positive filtering
-    pub allowlists: &'static [Allowlist],
+	/// Unique rule identifier (e.g., "anthropic-api-key")
+	pub id: &'static str,
+
+	/// Compiled detection regex
+	pub regex: &'static Regex,
+
+	/// Which capture group contains the secret (0 = whole match)
+	pub secret_group: u32,
+
+	/// Minimum Shannon entropy for a match to be considered valid
+	pub entropy: Option<f32>,
+
+	/// Lowercase keywords for fast pre-filtering
+	pub keywords: &'static [&'static str],
+
+	/// Allowlists for false positive filtering
+	pub allowlists: &'static [Allowlist],
 }
 ```
 
@@ -246,11 +256,11 @@ pub struct RuleSpec {
 ```rust
 /// Filters for reducing false positives.
 pub struct Allowlist {
-    /// Patterns that indicate a false positive
-    pub regexes: &'static [&'static Regex],
-    
-    /// Substrings that indicate a false positive
-    pub stopwords: &'static [&'static str],
+	/// Patterns that indicate a false positive
+	pub regexes: &'static [&'static Regex],
+
+	/// Substrings that indicate a false positive
+	pub stopwords: &'static [&'static str],
 }
 ```
 
@@ -263,31 +273,31 @@ pub struct Allowlist {
 ```rust
 /// A secret redactor using gitleaks-derived patterns.
 pub struct Redactor {
-    rules: &'static [RuleSpec],
+	rules: &'static [RuleSpec],
 }
 
 impl Redactor {
-    /// Create a redactor with all compiled rules.
-    pub fn new() -> Self;
-    
-    /// Redact all detected secrets in the input string.
-    ///
-    /// Returns a new string with secrets replaced by `[REDACTED:<rule-id>]`.
-    pub fn redact(&self, input: &str) -> String;
-    
-    /// Check if the input contains any detectable secrets.
-    pub fn contains_secret(&self, input: &str) -> bool;
+	/// Create a redactor with all compiled rules.
+	fn new() -> Self;
+
+	/// Redact all detected secrets in the input string.
+	///
+	/// Returns a new string with secrets replaced by `[REDACTED:<rule-id>]`.
+	fn redact(&self, input: &str) -> String;
+
+	/// Check if the input contains any detectable secrets.
+	fn contains_secret(&self, input: &str) -> bool;
 }
 
 impl Default for Redactor {
-    fn default() -> Self {
-        Self::new()
-    }
+	fn default() -> Self {
+		Self::new()
+	}
 }
 
 /// Convenience function to redact secrets using the default redactor.
 pub fn redact(input: &str) -> String {
-    Redactor::default().redact(input)
+	Redactor::default().redact(input)
 }
 ```
 
@@ -301,6 +311,7 @@ After:  "export ANTHROPIC_API_KEY=[REDACTED:anthropic-api-key]"
 ```
 
 This format:
+
 - Clearly indicates redaction occurred
 - Identifies which rule matched (for debugging)
 - Does not itself match any secret pattern (idempotence)
@@ -447,46 +458,47 @@ result
 
 ## 8. Entropy Calculation
 
-Shannon entropy measures the randomness of a string. Higher entropy indicates more randomness (more likely to be a real secret).
+Shannon entropy measures the randomness of a string. Higher entropy indicates more randomness (more
+likely to be a real secret).
 
 ```rust
 /// Calculate Shannon entropy (bits per character) of a string.
 pub fn shannon_entropy(s: &str) -> f32 {
-    if s.is_empty() {
-        return 0.0;
-    }
-    
-    let mut counts = [0u32; 256];
-    let bytes = s.as_bytes();
-    
-    for &b in bytes {
-        counts[b as usize] += 1;
-    }
-    
-    let len = bytes.len() as f32;
-    let mut entropy = 0.0f32;
-    
-    for &count in &counts {
-        if count > 0 {
-            let p = count as f32 / len;
-            entropy -= p * p.log2();
-        }
-    }
-    
-    entropy
+	if s.is_empty() {
+		return 0.0;
+	}
+
+	let mut counts = [0u32; 256];
+	let bytes = s.as_bytes();
+
+	for &b in bytes {
+		counts[b as usize] += 1;
+	}
+
+	let len = bytes.len() as f32;
+	let mut entropy = 0.0f32;
+
+	for &count in &counts {
+		if count > 0 {
+			let p = count as f32 / len;
+			entropy -= p * p.log2();
+		}
+	}
+
+	entropy
 }
 ```
 
 ### Typical Entropy Values
 
-| Content Type | Entropy (bits) |
-|-------------|----------------|
-| All same character ("aaaa") | 0.0 |
-| English text | 2.5 - 4.0 |
-| Base64 encoded | 5.0 - 6.0 |
-| Random hex | 3.5 - 4.0 |
-| Random alphanumeric | 5.0 - 6.0 |
-| API keys (high entropy) | 4.5+ |
+| Content Type                | Entropy (bits) |
+| --------------------------- | -------------- |
+| All same character ("aaaa") | 0.0            |
+| English text                | 2.5 - 4.0      |
+| Base64 encoded              | 5.0 - 6.0      |
+| Random hex                  | 3.5 - 4.0      |
+| Random alphanumeric         | 5.0 - 6.0      |
+| API keys (high entropy)     | 4.5+           |
 
 ---
 
@@ -500,22 +512,22 @@ Following loom's testing philosophy, property tests verify invariants across ran
 
 ```rust
 proptest! {
-    /// **Property: AWS-like access keys are always redacted**
-    /// 
-    /// This verifies that generated patterns matching AWS access key
-    /// format (AKIA prefix + 16 alphanumeric chars) are detected
-    /// and replaced with the appropriate redaction marker.
-    #[test]
-    fn aws_access_keys_are_redacted(suffix in "[A-Z2-7]{16}") {
-        let key = format!("AKIA{}", suffix);
-        let input = format!("export AWS_ACCESS_KEY_ID={}", key);
-        let output = redact(&input);
-        
-        prop_assert!(!output.contains(&key), 
-            "AWS key should be redacted");
-        prop_assert!(output.contains("[REDACTED:aws-access-token]"),
-            "Should contain redaction marker");
-    }
+		/// **Property: AWS-like access keys are always redacted**
+		///
+		/// This verifies that generated patterns matching AWS access key
+		/// format (AKIA prefix + 16 alphanumeric chars) are detected
+		/// and replaced with the appropriate redaction marker.
+		#[test]
+		fn aws_access_keys_are_redacted(suffix in "[A-Z2-7]{16}") {
+				let key = format!("AKIA{}", suffix);
+				let input = format!("export AWS_ACCESS_KEY_ID={}", key);
+				let output = redact(&input);
+
+				prop_assert!(!output.contains(&key),
+						"AWS key should be redacted");
+				prop_assert!(output.contains("[REDACTED:aws-access-token]"),
+						"Should contain redaction marker");
+		}
 }
 ```
 
@@ -523,19 +535,19 @@ proptest! {
 
 ```rust
 proptest! {
-    /// **Property: Redacting twice produces the same result**
-    /// 
-    /// This ensures our redaction markers themselves do not trigger
-    /// any detection patterns, preventing infinite expansion or
-    /// corruption of already-redacted content.
-    #[test]
-    fn redaction_is_idempotent(input in ".*") {
-        let once = redact(&input);
-        let twice = redact(&once);
-        
-        prop_assert_eq!(once, twice,
-            "Redacting already-redacted content should be a no-op");
-    }
+		/// **Property: Redacting twice produces the same result**
+		///
+		/// This ensures our redaction markers themselves do not trigger
+		/// any detection patterns, preventing infinite expansion or
+		/// corruption of already-redacted content.
+		#[test]
+		fn redaction_is_idempotent(input in ".*") {
+				let once = redact(&input);
+				let twice = redact(&once);
+
+				prop_assert_eq!(once, twice,
+						"Redacting already-redacted content should be a no-op");
+		}
 }
 ```
 
@@ -543,21 +555,21 @@ proptest! {
 
 ```rust
 proptest! {
-    /// **Property: Normal text is not over-redacted**
-    /// 
-    /// This is a heuristic check: for random low-entropy text,
-    /// we expect few or no redactions. This catches overly broad
-    /// patterns that would harm observability.
-    #[test]
-    fn english_like_text_preserved(input in "[a-zA-Z .,!?]{0,100}") {
-        let output = redact(&input);
-        
-        // Most normal text should pass through unchanged
-        // Allow for rare false positives
-        let redaction_count = output.matches("[REDACTED:").count();
-        prop_assert!(redaction_count <= 1,
-            "Normal text should rarely trigger redaction");
-    }
+		/// **Property: Normal text is not over-redacted**
+		///
+		/// This is a heuristic check: for random low-entropy text,
+		/// we expect few or no redactions. This catches overly broad
+		/// patterns that would harm observability.
+		#[test]
+		fn english_like_text_preserved(input in "[a-zA-Z .,!?]{0,100}") {
+				let output = redact(&input);
+
+				// Most normal text should pass through unchanged
+				// Allow for rare false positives
+				let redaction_count = output.matches("[REDACTED:").count();
+				prop_assert!(redaction_count <= 1,
+						"Normal text should rarely trigger redaction");
+		}
 }
 ```
 
@@ -566,38 +578,38 @@ proptest! {
 ```rust
 #[test]
 fn test_anthropic_api_key_redacted() {
-    let input = "ANTHROPIC_API_KEY=sk-ant-api03-abc123...";
-    let output = redact(&input);
-    
-    assert!(!output.contains("sk-ant-api03"));
-    assert!(output.contains("[REDACTED:anthropic-api-key]"));
+	let input = "ANTHROPIC_API_KEY=sk-ant-api03-abc123...";
+	let output = redact(&input);
+
+	assert!(!output.contains("sk-ant-api03"));
+	assert!(output.contains("[REDACTED:anthropic-api-key]"));
 }
 
 #[test]
 fn test_openai_api_key_redacted() {
-    let input = "OPENAI_API_KEY=sk-proj-abc123...";
-    let output = redact(&input);
-    
-    assert!(!output.contains("sk-proj-"));
-    assert!(output.contains("[REDACTED:"));
+	let input = "OPENAI_API_KEY=sk-proj-abc123...";
+	let output = redact(&input);
+
+	assert!(!output.contains("sk-proj-"));
+	assert!(output.contains("[REDACTED:"));
 }
 
 #[test]
 fn test_github_pat_redacted() {
-    let input = "gh pat: ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-    let output = redact(&input);
-    
-    assert!(!output.contains("ghp_"));
-    assert!(output.contains("[REDACTED:github-pat]"));
+	let input = "gh pat: ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+	let output = redact(&input);
+
+	assert!(!output.contains("ghp_"));
+	assert!(output.contains("[REDACTED:github-pat]"));
 }
 
 #[test]
 fn test_aws_credentials_redacted() {
-    let input = "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE";
-    let output = redact(&input);
-    
-    assert!(!output.contains("AKIAIOSFODNN7EXAMPLE"));
-    assert!(output.contains("[REDACTED:aws-access-token]"));
+	let input = "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE";
+	let output = redact(&input);
+
+	assert!(!output.contains("AKIAIOSFODNN7EXAMPLE"));
+	assert!(output.contains("[REDACTED:aws-access-token]"));
 }
 ```
 
@@ -606,23 +618,23 @@ fn test_aws_credentials_redacted() {
 ```rust
 #[test]
 fn test_multiple_secrets_in_log() {
-    let log = r#"
+	let log = r#"
         [INFO] Connecting with API key: sk-ant-api03-xxx...
         [DEBUG] GitHub token: ghp_yyyyyy
         [ERROR] AWS credentials: AKIAIOSFODNN7EXAMPLE
     "#;
-    
-    let output = redact(log);
-    
-    // All secrets should be redacted
-    assert!(!output.contains("sk-ant-api03"));
-    assert!(!output.contains("ghp_"));
-    assert!(!output.contains("AKIA"));
-    
-    // Structure should be preserved
-    assert!(output.contains("[INFO]"));
-    assert!(output.contains("[DEBUG]"));
-    assert!(output.contains("[ERROR]"));
+
+	let output = redact(log);
+
+	// All secrets should be redacted
+	assert!(!output.contains("sk-ant-api03"));
+	assert!(!output.contains("ghp_"));
+	assert!(!output.contains("AKIA"));
+
+	// Structure should be preserved
+	assert!(output.contains("[INFO]"));
+	assert!(output.contains("[DEBUG]"));
+	assert!(output.contains("[ERROR]"));
 }
 ```
 
@@ -675,39 +687,41 @@ If critical rules are skipped due to regex incompatibility:
 
 ### Keyword Pre-filtering
 
-The primary optimization. Most rules include keywords that must appear (case-insensitive) for the pattern to apply:
+The primary optimization. Most rules include keywords that must appear (case-insensitive) for the
+pattern to apply:
 
-| Rule | Keywords |
-|------|----------|
-| `anthropic-api-key` | `["sk-ant-api03"]` |
-| `github-pat` | `["ghp_"]` |
-| `aws-access-token` | `["akia", "asia", "abia", "acca", "a3t"]` |
+| Rule                | Keywords                                  |
+| ------------------- | ----------------------------------------- |
+| `anthropic-api-key` | `["sk-ant-api03"]`                        |
+| `github-pat`        | `["ghp_"]`                                |
+| `aws-access-token`  | `["akia", "asia", "abia", "acca", "a3t"]` |
 
 For a typical log line, only 1-5 rules will actually run their regex.
 
 ### Lazy Compilation
 
-All regexes are compiled once on first use via `once_cell::sync::Lazy`. Subsequent calls reuse the compiled patterns.
+All regexes are compiled once on first use via `once_cell::sync::Lazy`. Subsequent calls reuse the
+compiled patterns.
 
 ### Benchmarking Guidelines
 
 ```rust
 #[bench]
 fn bench_redact_clean_log(b: &mut Bencher) {
-    let log = "Normal log line without any secrets";
-    b.iter(|| redact(log));
+	let log = "Normal log line without any secrets";
+	b.iter(|| redact(log));
 }
 
 #[bench]
 fn bench_redact_with_secret(b: &mut Bencher) {
-    let log = "export OPENAI_API_KEY=sk-...";
-    b.iter(|| redact(log));
+	let log = "export OPENAI_API_KEY=sk-...";
+	b.iter(|| redact(log));
 }
 
 #[bench]
 fn bench_redact_large_input(b: &mut Bencher) {
-    let log = "a".repeat(10_000);
-    b.iter(|| redact(&log));
+	let log = "a".repeat(10_000);
+	b.iter(|| redact(&log));
 }
 ```
 
@@ -719,33 +733,33 @@ Target performance: <1ms for typical log lines, <10ms for 10KB inputs.
 
 ### Potential Enhancements
 
-| Feature | Description |
-|---------|-------------|
-| **Configurable rule sets** | Enable/disable specific rules |
-| **Custom patterns** | Add loom-specific patterns |
+| Feature                     | Description                                |
+| --------------------------- | ------------------------------------------ |
+| **Configurable rule sets**  | Enable/disable specific rules              |
+| **Custom patterns**         | Add loom-specific patterns                 |
 | **Aho-Corasick pre-filter** | Single-pass keyword matching for all rules |
-| **fancy-regex fallback** | Support lookahead for critical patterns |
-| **Streaming redaction** | Process large inputs in chunks |
+| **fancy-regex fallback**    | Support lookahead for critical patterns    |
+| **Streaming redaction**     | Process large inputs in chunks             |
 
 ### Integration Points
 
 ```rust
 // In loom-tools (file reading)
 pub fn read_file(path: &Path) -> Result<String> {
-    let content = fs::read_to_string(path)?;
-    Ok(loom_redact::redact(&content))
+	let content = fs::read_to_string(path)?;
+	Ok(loom_redact::redact(&content))
 }
 
 // In loom-llm-proxy (response streaming)
 pub fn process_chunk(chunk: &str) -> String {
-    loom_redact::redact(chunk)
+	loom_redact::redact(chunk)
 }
 
 // In tracing subscriber (log output)
 impl<S: Subscriber> Layer<S> for RedactingLayer {
-    fn on_event(&self, event: &Event<'_>, ctx: Context<'_, S>) {
-        // Redact event message before output
-    }
+	fn on_event(&self, event: &Event<'_>, ctx: Context<'_, S>) {
+		// Redact event message before output
+	}
 }
 ```
 
@@ -755,16 +769,16 @@ impl<S: Subscriber> Layer<S> for RedactingLayer {
 
 The following categories of secrets are detected (partial list):
 
-| Category | Examples |
-|----------|----------|
-| **AI/LLM** | Anthropic, OpenAI, Cohere, HuggingFace, Perplexity |
-| **Cloud Providers** | AWS, GCP, Azure, DigitalOcean, Heroku |
-| **Version Control** | GitHub, GitLab, Bitbucket |
-| **Communication** | Slack, Discord, Twilio, Telegram, SendGrid |
-| **Payment** | Stripe, Square, Coinbase, PayPal |
-| **Infrastructure** | Kubernetes, Docker, Vault, Terraform |
-| **Monitoring** | Datadog, Sentry, New Relic, Grafana |
-| **Generic** | Private keys, JWTs, API keys, passwords |
+| Category            | Examples                                           |
+| ------------------- | -------------------------------------------------- |
+| **AI/LLM**          | Anthropic, OpenAI, Cohere, HuggingFace, Perplexity |
+| **Cloud Providers** | AWS, GCP, Azure, DigitalOcean, Heroku              |
+| **Version Control** | GitHub, GitLab, Bitbucket                          |
+| **Communication**   | Slack, Discord, Twilio, Telegram, SendGrid         |
+| **Payment**         | Stripe, Square, Coinbase, PayPal                   |
+| **Infrastructure**  | Kubernetes, Docker, Vault, Terraform               |
+| **Monitoring**      | Datadog, Sentry, New Relic, Grafana                |
+| **Generic**         | Private keys, JWTs, API keys, passwords            |
 
 Full list: See `third_party/gitleaks/gitleaks.toml`
 
@@ -774,11 +788,11 @@ Full list: See `third_party/gitleaks/gitleaks.toml`
 
 ### Patterns That May Need Patching
 
-| Pattern Feature | Example | Fix |
-|-----------------|---------|-----|
-| Positive lookahead `(?=)` | `(?=.*[A-Z])` | Remove or rewrite |
-| Negative lookahead `(?!)` | `(?!test)` | Remove or use allowlist |
-| Lookbehind `(?<=)` | `(?<=Bearer )` | Remove prefix from match |
+| Pattern Feature           | Example        | Fix                      |
+| ------------------------- | -------------- | ------------------------ |
+| Positive lookahead `(?=)` | `(?=.*[A-Z])`  | Remove or rewrite        |
+| Negative lookahead `(?!)` | `(?!test)`     | Remove or use allowlist  |
+| Lookbehind `(?<=)`        | `(?<=Bearer )` | Remove prefix from match |
 
 ### Known Incompatible Patterns
 
@@ -788,11 +802,11 @@ Full list: See `third_party/gitleaks/gitleaks.toml`
 
 ## Appendix C: Entropy Thresholds by Rule
 
-| Rule Category | Typical Entropy | Threshold |
-|--------------|-----------------|-----------|
-| AWS access keys | 3.5 - 4.0 | 3.0 |
-| Generic API keys | 3.5 - 4.5 | 3.5 |
-| Private keys (Base64) | 5.0 - 6.0 | 4.5 |
-| JWTs | 4.5 - 5.5 | 4.0 |
+| Rule Category         | Typical Entropy | Threshold |
+| --------------------- | --------------- | --------- |
+| AWS access keys       | 3.5 - 4.0       | 3.0       |
+| Generic API keys      | 3.5 - 4.5       | 3.5       |
+| Private keys (Base64) | 5.0 - 6.0       | 4.5       |
+| JWTs                  | 4.5 - 5.5       | 4.0       |
 
 Entropy thresholds are inherited from gitleaks rules.

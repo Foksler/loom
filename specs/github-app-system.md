@@ -1,7 +1,12 @@
+<!--
+ Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+ SPDX-License-Identifier: Proprietary
+-->
+
 # GitHub App System Specification
 
-**Status:** Draft  
-**Version:** 1.1  
+**Status:** Draft\
+**Version:** 1.1\
 **Last Updated:** 2024-12-18
 
 ---
@@ -10,7 +15,9 @@
 
 ### Purpose
 
-The GitHub App System enables Loom users to install a GitHub App on their repositories, providing the Loom client with authenticated access to GitHub APIs for code search, private repository introspection, and other GitHub operations.
+The GitHub App System enables Loom users to install a GitHub App on their repositories, providing
+the Loom client with authenticated access to GitHub APIs for code search, private repository
+introspection, and other GitHub operations.
 
 ### Primary Use Cases
 
@@ -24,7 +31,8 @@ The GitHub App System enables Loom users to install a GitHub App on their reposi
 - **Secure Authentication**: Use GitHub App authentication (JWT + installation tokens)
 - **Automatic Token Refresh**: Cache and refresh installation tokens transparently
 - **Webhook-Driven State**: Keep installation state synchronized via webhooks
-- **Pattern Consistency**: Follow existing patterns (like `loom-google-cse`) for HTTP client structure
+- **Pattern Consistency**: Follow existing patterns (like `loom-google-cse`) for HTTP client
+  structure
 - **Minimal Footprint**: Focus on essential operations initially
 
 ### Non-Goals
@@ -56,21 +64,21 @@ crates/loom-github-app/
 ### Dependency Graph
 
 ```
-                    ┌─────────────────┐
-                    │   loom-server   │
-                    └────────┬────────┘
-                             │
-              ┌──────────────┴──────────────┐
-              │                             │
-              ▼                             ▼
-    ┌─────────────────┐           ┌─────────────────┐
-    │ loom-github-app │           │ loom-google-cse │
-    └────────┬────────┘           └─────────────────┘
-             │
-             ▼
-    ┌─────────────────┐
-    │ loom-http-retry │
-    └─────────────────┘
+                ┌─────────────────┐
+                │   loom-server   │
+                └────────┬────────┘
+                         │
+          ┌──────────────┴──────────────┐
+          │                             │
+          ▼                             ▼
+┌─────────────────┐           ┌─────────────────┐
+│ loom-github-app │           │ loom-google-cse │
+└────────┬────────┘           └─────────────────┘
+         │
+         ▼
+┌─────────────────┐
+│ loom-http-retry │
+└─────────────────┘
 ```
 
 ### Component Interaction
@@ -94,53 +102,53 @@ crates/loom-github-app/
 
 ### Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `LOOM_GITHUB_APP_ID` | Yes | GitHub App numeric ID |
-| `LOOM_GITHUB_APP_PRIVATE_KEY` | Yes | PEM-encoded RSA private key |
-| `LOOM_GITHUB_APP_WEBHOOK_SECRET` | **Yes** | Secret for webhook signature verification (enforced) |
-| `LOOM_GITHUB_APP_SLUG` | No | App slug (defaults to "loom") |
-| `LOOM_GITHUB_APP_BASE_URL` | No | API base URL (defaults to https://api.github.com, must be HTTPS) |
+| Variable                         | Required | Description                                                      |
+| -------------------------------- | -------- | ---------------------------------------------------------------- |
+| `LOOM_GITHUB_APP_ID`             | Yes      | GitHub App numeric ID                                            |
+| `LOOM_GITHUB_APP_PRIVATE_KEY`    | Yes      | PEM-encoded RSA private key                                      |
+| `LOOM_GITHUB_APP_WEBHOOK_SECRET` | **Yes**  | Secret for webhook signature verification (enforced)             |
+| `LOOM_GITHUB_APP_SLUG`           | No       | App slug (defaults to "loom")                                    |
+| `LOOM_GITHUB_APP_BASE_URL`       | No       | API base URL (defaults to https://api.github.com, must be HTTPS) |
 
 ### Configuration Type
 
 ```rust
 #[derive(Clone)]
 pub struct GithubAppConfig {
-    /// GitHub App numeric ID (private, use accessor)
-    app_id: u64,
-    
-    /// PEM-encoded RSA private key for JWT signing (private, never exposed)
-    private_key_pem: String,
-    
-    /// Secret for webhook signature verification (required for webhooks)
-    webhook_secret: Option<String>,
-    
-    /// App slug for installation URL generation
-    app_slug: String,
-    
-    /// Base URL for GitHub API (validated HTTPS, normalized)
-    base_url: Url,
-    
-    /// HTTP retry configuration
-    pub retry_config: RetryConfig,
+	/// GitHub App numeric ID (private, use accessor)
+	app_id: u64,
+
+	/// PEM-encoded RSA private key for JWT signing (private, never exposed)
+	private_key_pem: String,
+
+	/// Secret for webhook signature verification (required for webhooks)
+	webhook_secret: Option<String>,
+
+	/// App slug for installation URL generation
+	app_slug: String,
+
+	/// Base URL for GitHub API (validated HTTPS, normalized)
+	base_url: Url,
+
+	/// HTTP retry configuration
+	pub retry_config: RetryConfig,
 }
 
 impl GithubAppConfig {
-    /// Create configuration from environment variables
-    /// Validates base_url is HTTPS and has a host
-    pub fn from_env() -> Result<Self, GithubAppError>;
-    
-    /// Builder method for custom base URL (validates HTTPS)
-    pub fn with_base_url(self, url: impl Into<String>) -> Self;
-    
-    /// Builder method for custom retry config
-    pub fn with_retry_config(self, config: RetryConfig) -> Self;
-    
-    /// Accessors for private fields
-    pub fn app_id(&self) -> u64;
-    pub fn base_url(&self) -> &Url;
-    pub fn webhook_secret(&self) -> Option<&str>;
+	/// Create configuration from environment variables
+	/// Validates base_url is HTTPS and has a host
+	fn from_env() -> Result<Self, GithubAppError>;
+
+	/// Builder method for custom base URL (validates HTTPS)
+	fn with_base_url(self, url: impl Into<String>) -> Self;
+
+	/// Builder method for custom retry config
+	fn with_retry_config(self, config: RetryConfig) -> Self;
+
+	/// Accessors for private fields
+	fn app_id(&self) -> u64;
+	fn base_url(&self) -> &Url;
+	fn webhook_secret(&self) -> Option<&str>;
 }
 ```
 
@@ -155,17 +163,19 @@ The `base_url` is validated and normalized at construction time:
 
 ```rust
 fn validate_and_normalize_base_url(raw: &str) -> Result<Url, GithubAppError> {
-    let url = Url::parse(raw)?;
-    
-    if url.scheme() != "https" {
-        return Err(GithubAppError::Config("GitHub base URL must use https"));
-    }
-    
-    if url.host_str().is_none() {
-        return Err(GithubAppError::Config("GitHub base URL must include a host"));
-    }
-    
-    Ok(url)
+	let url = Url::parse(raw)?;
+
+	if url.scheme() != "https" {
+		return Err(GithubAppError::Config("GitHub base URL must use https"));
+	}
+
+	if url.host_str().is_none() {
+		return Err(GithubAppError::Config(
+			"GitHub base URL must include a host",
+		));
+	}
+
+	Ok(url)
 }
 ```
 
@@ -239,21 +249,22 @@ GitHub Apps use a two-tier authentication system:
 
 ```rust
 struct CachedToken {
-    token: String,
-    expires_at: Instant,
+	token: String,
+	expires_at: Instant,
 }
 
 /// In-memory token cache
 pub struct TokenCache {
-    /// App JWT (single, short-lived)
-    app_jwt: Arc<Mutex<Option<CachedToken>>>,
-    
-    /// Installation tokens keyed by installation_id
-    installation_tokens: Arc<Mutex<HashMap<i64, CachedToken>>>,
+	/// App JWT (single, short-lived)
+	app_jwt: Arc<Mutex<Option<CachedToken>>>,
+
+	/// Installation tokens keyed by installation_id
+	installation_tokens: Arc<Mutex<HashMap<i64, CachedToken>>>,
 }
 ```
 
 **Refresh margins:**
+
 - App JWT: Refresh if `expires_at <= now + 30 seconds`
 - Installation Token: Refresh if `expires_at <= now + 2 minutes`
 
@@ -269,22 +280,22 @@ This is handled at the client layer, separate from the generic retry logic:
 
 ```rust
 async fn search_code_with_refresh(
-    &self,
-    installation_id: i64,
-    query: &str,
+	&self,
+	installation_id: i64,
+	query: &str,
 ) -> Result<CodeSearchResponse, GithubAppError> {
-    let token = self.get_installation_token(installation_id).await?;
-    
-    match self.search_code_inner(&token, query).await {
-        Ok(resp) => Ok(resp),
-        Err(GithubAppError::Unauthorized) => {
-            // Stale token: invalidate and retry once
-            self.invalidate_installation_token(installation_id).await;
-            let fresh = self.get_installation_token(installation_id).await?;
-            self.search_code_inner(&fresh, query).await
-        }
-        Err(e) => Err(e),
-    }
+	let token = self.get_installation_token(installation_id).await?;
+
+	match self.search_code_inner(&token, query).await {
+		Ok(resp) => Ok(resp),
+		Err(GithubAppError::Unauthorized) => {
+			// Stale token: invalidate and retry once
+			self.invalidate_installation_token(installation_id).await;
+			let fresh = self.get_installation_token(installation_id).await?;
+			self.search_code_inner(&fresh, query).await
+		}
+		Err(e) => Err(e),
+	}
 }
 ```
 
@@ -294,17 +305,18 @@ To prevent thundering-herd when multiple concurrent requests need tokens:
 
 ```rust
 pub struct GithubAppClient {
-    // Token caches
-    app_jwt_cache: Arc<Mutex<Option<CachedToken>>>,
-    installation_token_cache: Arc<Mutex<HashMap<i64, CachedToken>>>,
-    
-    // Deduplication locks
-    app_jwt_lock: Arc<Mutex<()>>,
-    installation_locks: Arc<Mutex<HashMap<i64, Arc<Mutex<()>>>>>,
+	// Token caches
+	app_jwt_cache: Arc<Mutex<Option<CachedToken>>>,
+	installation_token_cache: Arc<Mutex<HashMap<i64, CachedToken>>>,
+
+	// Deduplication locks
+	app_jwt_lock: Arc<Mutex<()>>,
+	installation_locks: Arc<Mutex<HashMap<i64, Arc<Mutex<()>>>>>,
 }
 ```
 
 Pattern:
+
 1. Check cache (fast path)
 2. If miss, acquire per-installation lock
 3. Double-check cache under lock
@@ -321,49 +333,49 @@ This ensures only one token fetch per installation is in-flight at a time.
 ```rust
 #[derive(Debug, thiserror::Error)]
 pub enum GithubAppError {
-    /// Network-level error during HTTP communication
-    #[error("Network error: {0}")]
-    Network(#[from] reqwest::Error),
+	/// Network-level error during HTTP communication
+	#[error("Network error: {0}")]
+	Network(#[from] reqwest::Error),
 
-    /// Request timed out
-    #[error("Request timed out")]
-    Timeout,
+	/// Request timed out
+	#[error("Request timed out")]
+	Timeout,
 
-    /// Invalid API key or app configuration
-    #[error("Unauthorized or invalid app configuration")]
-    Unauthorized,
+	/// Invalid API key or app configuration
+	#[error("Unauthorized or invalid app configuration")]
+	Unauthorized,
 
-    /// Forbidden - insufficient permissions
-    #[error("Forbidden or insufficient permissions")]
-    Forbidden,
+	/// Forbidden - insufficient permissions
+	#[error("Forbidden or insufficient permissions")]
+	Forbidden,
 
-    /// Rate limit exceeded
-    #[error("Rate limit exceeded")]
-    RateLimited,
+	/// Rate limit exceeded
+	#[error("Rate limit exceeded")]
+	RateLimited,
 
-    /// GitHub API returned an error
-    #[error("GitHub API error: {status} - {message}")]
-    ApiError { status: u16, message: String },
+	/// GitHub API returned an error
+	#[error("GitHub API error: {status} - {message}")]
+	ApiError { status: u16, message: String },
 
-    /// Invalid or unparseable response
-    #[error("Invalid response from GitHub: {0}")]
-    InvalidResponse(String),
+	/// Invalid or unparseable response
+	#[error("Invalid response from GitHub: {0}")]
+	InvalidResponse(String),
 
-    /// Configuration error
-    #[error("Configuration error: {0}")]
-    Config(String),
+	/// Configuration error
+	#[error("Configuration error: {0}")]
+	Config(String),
 
-    /// JWT signing/encoding error
-    #[error("JWT error: {0}")]
-    Jwt(String),
+	/// JWT signing/encoding error
+	#[error("JWT error: {0}")]
+	Jwt(String),
 
-    /// Installation not found for repository
-    #[error("GitHub App not installed for {owner}/{repo}")]
-    InstallationNotFound { owner: String, repo: String },
+	/// Installation not found for repository
+	#[error("GitHub App not installed for {owner}/{repo}")]
+	InstallationNotFound { owner: String, repo: String },
 
-    /// Webhook signature verification failed
-    #[error("Invalid webhook signature")]
-    InvalidWebhookSignature,
+	/// Webhook signature verification failed
+	#[error("Invalid webhook signature")]
+	InvalidWebhookSignature,
 }
 ```
 
@@ -371,15 +383,15 @@ pub enum GithubAppError {
 
 ```rust
 impl RetryableError for GithubAppError {
-    fn is_retryable(&self) -> bool {
-        match self {
-            GithubAppError::Network(e) => e.is_retryable(),
-            GithubAppError::Timeout => true,
-            GithubAppError::RateLimited => true,
-            GithubAppError::ApiError { status, .. } => *status >= 500,
-            _ => false,
-        }
-    }
+	fn is_retryable(&self) -> bool {
+		match self {
+			GithubAppError::Network(e) => e.is_retryable(),
+			GithubAppError::Timeout => true,
+			GithubAppError::RateLimited => true,
+			GithubAppError::ApiError { status, .. } => *status >= 500,
+			_ => false,
+		}
+	}
 }
 ```
 
@@ -392,49 +404,49 @@ impl RetryableError for GithubAppError {
 ```rust
 #[derive(Clone)]
 pub struct GithubAppClient {
-    http_client: Client,
-    config: GithubAppConfig,
-    token_cache: TokenCache,
+	http_client: Client,
+	config: GithubAppConfig,
+	token_cache: TokenCache,
 }
 
 impl GithubAppClient {
-    /// Create a new GitHub App client
-    pub fn new(config: GithubAppConfig) -> Result<Self, GithubAppError>;
+	/// Create a new GitHub App client
+	fn new(config: GithubAppConfig) -> Result<Self, GithubAppError>;
 
-    /// Search code within a repository
-    pub async fn search_code(
-        &self,
-        installation_id: i64,
-        request: CodeSearchRequest,
-    ) -> Result<CodeSearchResponse, GithubAppError>;
+	/// Search code within a repository
+	async fn search_code(
+		&self,
+		installation_id: i64,
+		request: CodeSearchRequest,
+	) -> Result<CodeSearchResponse, GithubAppError>;
 
-    /// Get repository metadata
-    pub async fn get_repository(
-        &self,
-        installation_id: i64,
-        owner: &str,
-        repo: &str,
-    ) -> Result<Repository, GithubAppError>;
+	/// Get repository metadata
+	async fn get_repository(
+		&self,
+		installation_id: i64,
+		owner: &str,
+		repo: &str,
+	) -> Result<Repository, GithubAppError>;
 
-    /// Get file contents
-    pub async fn get_file_contents(
-        &self,
-        installation_id: i64,
-        owner: &str,
-        repo: &str,
-        path: &str,
-        git_ref: Option<&str>,
-    ) -> Result<FileContents, GithubAppError>;
+	/// Get file contents
+	async fn get_file_contents(
+		&self,
+		installation_id: i64,
+		owner: &str,
+		repo: &str,
+		path: &str,
+		git_ref: Option<&str>,
+	) -> Result<FileContents, GithubAppError>;
 
-    /// List installations for the app (uses app JWT, not installation token)
-    pub async fn list_installations(&self) -> Result<Vec<Installation>, GithubAppError>;
+	/// List installations for the app (uses app JWT, not installation token)
+	async fn list_installations(&self) -> Result<Vec<Installation>, GithubAppError>;
 
-    /// Get installation for a specific repository
-    pub async fn get_repo_installation(
-        &self,
-        owner: &str,
-        repo: &str,
-    ) -> Result<Installation, GithubAppError>;
+	/// Get installation for a specific repository
+	async fn get_repo_installation(
+		&self,
+		owner: &str,
+		repo: &str,
+	) -> Result<Installation, GithubAppError>;
 }
 ```
 
@@ -449,22 +461,24 @@ impl GithubAppClient {
 Receives webhook events from GitHub.
 
 **Headers:**
+
 - `X-Hub-Signature-256`: HMAC-SHA256 signature of request body
 - `X-GitHub-Event`: Event type (e.g., `installation`, `installation_repositories`)
 - `X-GitHub-Delivery`: Unique delivery ID
 
 **Supported Events:**
 
-| Event | Action | Description |
-|-------|--------|-------------|
-| `installation` | `created` | App installed on account |
-| `installation` | `deleted` | App uninstalled |
-| `installation` | `suspended` | App suspended |
-| `installation` | `unsuspended` | App unsuspended |
-| `installation_repositories` | `added` | Repositories added to installation |
-| `installation_repositories` | `removed` | Repositories removed from installation |
+| Event                       | Action        | Description                            |
+| --------------------------- | ------------- | -------------------------------------- |
+| `installation`              | `created`     | App installed on account               |
+| `installation`              | `deleted`     | App uninstalled                        |
+| `installation`              | `suspended`   | App suspended                          |
+| `installation`              | `unsuspended` | App unsuspended                        |
+| `installation_repositories` | `added`       | Repositories added to installation     |
+| `installation_repositories` | `removed`     | Repositories removed from installation |
 
 **Response:**
+
 - `200 OK`: Event processed
 - `401 Unauthorized`: Invalid signature
 - `400 Bad Request`: Invalid payload
@@ -476,20 +490,22 @@ Receives webhook events from GitHub.
 Returns information about the configured GitHub App.
 
 **Response:**
+
 ```json
 {
-  "configured": true,
-  "app_slug": "loom",
-  "installation_url": "https://github.com/apps/loom/installations/new"
+	"configured": true,
+	"app_slug": "loom",
+	"installation_url": "https://github.com/apps/loom/installations/new"
 }
 ```
 
 **Response (not configured):**
+
 ```json
 {
-  "configured": false,
-  "app_slug": null,
-  "installation_url": null
+	"configured": false,
+	"app_slug": null,
+	"installation_url": null
 }
 ```
 
@@ -500,28 +516,31 @@ Returns information about the configured GitHub App.
 Check if the GitHub App is installed for a specific repository.
 
 **Query Parameters:**
+
 - `owner` (required): Repository owner
 - `repo` (required): Repository name
 
 **Response (installed):**
+
 ```json
 {
-  "installed": true,
-  "installation_id": 12345678,
-  "account_login": "my-org",
-  "account_type": "Organization",
-  "repositories_selection": "selected"
+	"installed": true,
+	"installation_id": 12345678,
+	"account_login": "my-org",
+	"account_type": "Organization",
+	"repositories_selection": "selected"
 }
 ```
 
 **Response (not installed):**
+
 ```json
 {
-  "installed": false,
-  "installation_id": null,
-  "account_login": null,
-  "account_type": null,
-  "repositories_selection": null
+	"installed": false,
+	"installation_id": null,
+	"account_login": null,
+	"account_type": null,
+	"repositories_selection": null
 }
 ```
 
@@ -532,43 +551,45 @@ Check if the GitHub App is installed for a specific repository.
 Proxy code search requests to GitHub API.
 
 **Request:**
+
 ```json
 {
-  "owner": "my-org",
-  "repo": "my-repo",
-  "query": "struct Config language:rust",
-  "per_page": 20,
-  "page": 1
+	"owner": "my-org",
+	"repo": "my-repo",
+	"query": "struct Config language:rust",
+	"per_page": 20,
+	"page": 1
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "total_count": 42,
-  "incomplete_results": false,
-  "items": [
-    {
-      "name": "config.rs",
-      "path": "src/config.rs",
-      "sha": "abc123...",
-      "html_url": "https://github.com/my-org/my-repo/blob/main/src/config.rs",
-      "repository_full_name": "my-org/my-repo",
-      "score": 12.345
-    }
-  ]
+	"total_count": 42,
+	"incomplete_results": false,
+	"items": [
+		{
+			"name": "config.rs",
+			"path": "src/config.rs",
+			"sha": "abc123...",
+			"html_url": "https://github.com/my-org/my-repo/blob/main/src/config.rs",
+			"repository_full_name": "my-org/my-repo",
+			"score": 12.345
+		}
+	]
 }
 ```
 
 **Error Responses:**
 
-| Status | Condition |
-|--------|-----------|
-| `400` | Missing or invalid parameters |
-| `404` | GitHub App not installed for repository |
-| `429` | GitHub rate limit exceeded |
-| `500` | Internal server error |
-| `502` | GitHub API error |
+| Status | Condition                               |
+| ------ | --------------------------------------- |
+| `400`  | Missing or invalid parameters           |
+| `404`  | GitHub App not installed for repository |
+| `429`  | GitHub rate limit exceeded              |
+| `500`  | Internal server error                   |
+| `502`  | GitHub API error                        |
 
 ### Repository Info Proxy Endpoint
 
@@ -577,24 +598,26 @@ Proxy code search requests to GitHub API.
 Get repository metadata.
 
 **Request:**
+
 ```json
 {
-  "owner": "my-org",
-  "repo": "my-repo"
+	"owner": "my-org",
+	"repo": "my-repo"
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "id": 123456789,
-  "full_name": "my-org/my-repo",
-  "description": "My awesome repository",
-  "private": true,
-  "default_branch": "main",
-  "language": "Rust",
-  "stargazers_count": 42,
-  "html_url": "https://github.com/my-org/my-repo"
+	"id": 123456789,
+	"full_name": "my-org/my-repo",
+	"description": "My awesome repository",
+	"private": true,
+	"default_branch": "main",
+	"language": "Rust",
+	"stargazers_count": 42,
+	"html_url": "https://github.com/my-org/my-repo"
 }
 ```
 
@@ -605,24 +628,26 @@ Get repository metadata.
 Get file contents from a repository.
 
 **Request:**
+
 ```json
 {
-  "owner": "my-org",
-  "repo": "my-repo",
-  "path": "src/main.rs",
-  "ref": "main"
+	"owner": "my-org",
+	"repo": "my-repo",
+	"path": "src/main.rs",
+	"ref": "main"
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "name": "main.rs",
-  "path": "src/main.rs",
-  "sha": "abc123...",
-  "size": 1234,
-  "encoding": "base64",
-  "content": "Zm4gbWFpbigpIHsKICAgIHByaW50bG4hKCJIZWxsbyIpOwp9Cg=="
+	"name": "main.rs",
+	"path": "src/main.rs",
+	"sha": "abc123...",
+	"size": 1234,
+	"encoding": "base64",
+	"content": "Zm4gbWFpbigpIHsKICAgIHByaW50bG4hKCJIZWxsbyIpOwp9Cg=="
 }
 ```
 
@@ -674,49 +699,44 @@ CREATE INDEX IF NOT EXISTS idx_github_installation_repos_installation
 
 ```rust
 impl ThreadRepository {
-    /// Upsert a GitHub installation from webhook data
-    pub async fn upsert_github_installation(
-        &self,
-        installation: &GithubInstallation,
-    ) -> Result<(), ServerError>;
+	/// Upsert a GitHub installation from webhook data
+	async fn upsert_github_installation(
+		&self,
+		installation: &GithubInstallation,
+	) -> Result<(), ServerError>;
 
-    /// Delete a GitHub installation (cascades to repos)
-    pub async fn delete_github_installation(
-        &self,
-        installation_id: i64,
-    ) -> Result<bool, ServerError>;
+	/// Delete a GitHub installation (cascades to repos)
+	async fn delete_github_installation(&self, installation_id: i64) -> Result<bool, ServerError>;
 
-    /// Suspend/unsuspend an installation
-    pub async fn update_github_installation_suspension(
-        &self,
-        installation_id: i64,
-        suspended_at: Option<&str>,
-    ) -> Result<bool, ServerError>;
+	/// Suspend/unsuspend an installation
+	async fn update_github_installation_suspension(
+		&self,
+		installation_id: i64,
+		suspended_at: Option<&str>,
+	) -> Result<bool, ServerError>;
 
-    /// Add repositories to an installation
-    pub async fn add_github_installation_repos(
-        &self,
-        installation_id: i64,
-        repos: &[GithubRepo],
-    ) -> Result<(), ServerError>;
+	/// Add repositories to an installation
+	async fn add_github_installation_repos(
+		&self,
+		installation_id: i64,
+		repos: &[GithubRepo],
+	) -> Result<(), ServerError>;
 
-    /// Remove repositories from an installation
-    pub async fn remove_github_installation_repos(
-        &self,
-        repository_ids: &[i64],
-    ) -> Result<(), ServerError>;
+	/// Remove repositories from an installation
+	async fn remove_github_installation_repos(
+		&self,
+		repository_ids: &[i64],
+	) -> Result<(), ServerError>;
 
-    /// Get installation ID for a repository by owner/name
-    pub async fn get_github_installation_for_repo(
-        &self,
-        owner: &str,
-        name: &str,
-    ) -> Result<Option<GithubInstallationInfo>, ServerError>;
+	/// Get installation ID for a repository by owner/name
+	async fn get_github_installation_for_repo(
+		&self,
+		owner: &str,
+		name: &str,
+	) -> Result<Option<GithubInstallationInfo>, ServerError>;
 
-    /// List all installations
-    pub async fn list_github_installations(
-        &self,
-    ) -> Result<Vec<GithubInstallation>, ServerError>;
+	/// List all installations
+	async fn list_github_installations(&self) -> Result<Vec<GithubInstallation>, ServerError>;
 }
 ```
 
@@ -730,30 +750,30 @@ impl ThreadRepository {
 /// Code search request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CodeSearchRequest {
-    pub query: String,
-    pub owner: String,
-    pub repo: String,
-    #[serde(default = "default_per_page")]
-    pub per_page: u32,
-    #[serde(default = "default_page")]
-    pub page: u32,
+	pub query: String,
+	pub owner: String,
+	pub repo: String,
+	#[serde(default = "default_per_page")]
+	pub per_page: u32,
+	#[serde(default = "default_page")]
+	pub page: u32,
 }
 
 /// File contents request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileContentsRequest {
-    pub owner: String,
-    pub repo: String,
-    pub path: String,
-    #[serde(rename = "ref")]
-    pub git_ref: Option<String>,
+	pub owner: String,
+	pub repo: String,
+	pub path: String,
+	#[serde(rename = "ref")]
+	pub git_ref: Option<String>,
 }
 
 /// Repository info request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RepoInfoRequest {
-    pub owner: String,
-    pub repo: String,
+	pub owner: String,
+	pub repo: String,
 }
 ```
 
@@ -763,60 +783,60 @@ pub struct RepoInfoRequest {
 /// Code search response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CodeSearchResponse {
-    pub total_count: u32,
-    pub incomplete_results: bool,
-    pub items: Vec<CodeSearchItem>,
+	pub total_count: u32,
+	pub incomplete_results: bool,
+	pub items: Vec<CodeSearchItem>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CodeSearchItem {
-    pub name: String,
-    pub path: String,
-    pub sha: String,
-    pub html_url: String,
-    pub repository_full_name: String,
-    pub score: f64,
+	pub name: String,
+	pub path: String,
+	pub sha: String,
+	pub html_url: String,
+	pub repository_full_name: String,
+	pub score: f64,
 }
 
 /// Repository info response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Repository {
-    pub id: i64,
-    pub full_name: String,
-    pub description: Option<String>,
-    pub private: bool,
-    pub default_branch: String,
-    pub language: Option<String>,
-    pub stargazers_count: u32,
-    pub html_url: String,
+	pub id: i64,
+	pub full_name: String,
+	pub description: Option<String>,
+	pub private: bool,
+	pub default_branch: String,
+	pub language: Option<String>,
+	pub stargazers_count: u32,
+	pub html_url: String,
 }
 
 /// File contents response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileContents {
-    pub name: String,
-    pub path: String,
-    pub sha: String,
-    pub size: u64,
-    pub encoding: String,
-    pub content: String,
+	pub name: String,
+	pub path: String,
+	pub sha: String,
+	pub size: u64,
+	pub encoding: String,
+	pub content: String,
 }
 
 /// Installation info
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Installation {
-    pub id: i64,
-    pub account: InstallationAccount,
-    pub repository_selection: String,
-    pub suspended_at: Option<String>,
+	pub id: i64,
+	pub account: InstallationAccount,
+	pub repository_selection: String,
+	pub suspended_at: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallationAccount {
-    pub id: i64,
-    pub login: String,
-    #[serde(rename = "type")]
-    pub account_type: String,
+	pub id: i64,
+	pub login: String,
+	#[serde(rename = "type")]
+	pub account_type: String,
 }
 ```
 
@@ -829,26 +849,27 @@ pub struct InstallationAccount {
 ```rust
 /// Verify GitHub webhook signature
 pub fn verify_webhook_signature(
-    secret: &str,
-    signature_header: &str,
-    body: &[u8],
+	secret: &str,
+	signature_header: &str,
+	body: &[u8],
 ) -> Result<(), GithubAppError> {
-    // signature_header format: "sha256=<hex>"
-    let expected_prefix = "sha256=";
-    if !signature_header.starts_with(expected_prefix) {
-        return Err(GithubAppError::InvalidWebhookSignature);
-    }
+	// signature_header format: "sha256=<hex>"
+	let expected_prefix = "sha256=";
+	if !signature_header.starts_with(expected_prefix) {
+		return Err(GithubAppError::InvalidWebhookSignature);
+	}
 
-    let expected_signature = &signature_header[expected_prefix.len()..];
-    let expected_bytes = hex::decode(expected_signature)
-        .map_err(|_| GithubAppError::InvalidWebhookSignature)?;
+	let expected_signature = &signature_header[expected_prefix.len()..];
+	let expected_bytes =
+		hex::decode(expected_signature).map_err(|_| GithubAppError::InvalidWebhookSignature)?;
 
-    let mut mac = Hmac::<Sha256>::new_from_slice(secret.as_bytes())
-        .map_err(|_| GithubAppError::InvalidWebhookSignature)?;
-    mac.update(body);
+	let mut mac = Hmac::<Sha256>::new_from_slice(secret.as_bytes())
+		.map_err(|_| GithubAppError::InvalidWebhookSignature)?;
+	mac.update(body);
 
-    mac.verify_slice(&expected_bytes)
-        .map_err(|_| GithubAppError::InvalidWebhookSignature)
+	mac
+		.verify_slice(&expected_bytes)
+		.map_err(|_| GithubAppError::InvalidWebhookSignature)
 }
 ```
 
@@ -857,18 +878,18 @@ pub fn verify_webhook_signature(
 ```rust
 /// Process webhook events
 pub async fn handle_webhook_event(
-    event_type: &str,
-    payload: &WebhookPayload,
-    repo: &ThreadRepository,
+	event_type: &str,
+	payload: &WebhookPayload,
+	repo: &ThreadRepository,
 ) -> Result<(), ServerError> {
-    match event_type {
-        "installation" => handle_installation_event(payload, repo).await,
-        "installation_repositories" => handle_installation_repos_event(payload, repo).await,
-        _ => {
-            tracing::debug!(event_type = %event_type, "Ignoring unhandled webhook event");
-            Ok(())
-        }
-    }
+	match event_type {
+		"installation" => handle_installation_event(payload, repo).await,
+		"installation_repositories" => handle_installation_repos_event(payload, repo).await,
+		_ => {
+			tracing::debug!(event_type = %event_type, "Ignoring unhandled webhook event");
+			Ok(())
+		}
+	}
 }
 ```
 
@@ -880,71 +901,71 @@ pub async fn handle_webhook_event(
 
 ```rust
 proptest! {
-    /// **Property: JWT tokens are valid for expected duration**
-    ///
-    /// Why: Ensures JWT generation creates tokens with correct expiry
-    /// and follows GitHub's maximum 10-minute lifetime constraint
-    #[test]
-    fn prop_jwt_claims_are_valid(app_id in 1u64..=u64::MAX) {
-        let token = generate_app_jwt(app_id, TEST_RSA_PRIVATE_KEY).unwrap();
-        let claims = decode_claims(&token);
-        
-        // Issuer matches app_id
-        prop_assert_eq!(claims.iss, app_id.to_string());
-        
-        // exp > iat
-        prop_assert!(claims.exp > claims.iat);
-        
-        // Lifetime <= 10 minutes (GitHub max)
-        let lifetime = claims.exp - claims.iat;
-        prop_assert!(lifetime <= 10 * 60);
-        
-        // Token is not already expired
-        let now = current_unix_timestamp();
-        prop_assert!(claims.exp > now);
-    }
+		/// **Property: JWT tokens are valid for expected duration**
+		///
+		/// Why: Ensures JWT generation creates tokens with correct expiry
+		/// and follows GitHub's maximum 10-minute lifetime constraint
+		#[test]
+		fn prop_jwt_claims_are_valid(app_id in 1u64..=u64::MAX) {
+				let token = generate_app_jwt(app_id, TEST_RSA_PRIVATE_KEY).unwrap();
+				let claims = decode_claims(&token);
 
-    /// **Property: Token cache returns same token within validity window**
-    ///
-    /// Why: Ensures caching works correctly and avoids unnecessary token refresh
-    #[test]
-    fn cached_token_reuse(installation_id in 1i64..1000000i64) {
-        // Get token twice within validity window, assert same token returned
-    }
+				// Issuer matches app_id
+				prop_assert_eq!(claims.iss, app_id.to_string());
 
-    /// **Property: Webhook signature verification rejects tampered payloads**
-    ///
-    /// Why: Security critical - ensures webhook verification is correct
-    #[test]
-    fn prop_tampered_body_fails_verification(
-        secret in "[a-zA-Z0-9]{8,64}",
-        body in proptest::collection::vec(any::<u8>(), 2..500),
-        tamper_index in 0usize..500usize
-    ) {
-        let signature = compute_webhook_signature(&secret, &body);
-        
-        let mut tampered = body.clone();
-        let idx = tamper_index % tampered.len();
-        tampered[idx] = tampered[idx].wrapping_add(1);
-        
-        if tampered != body {
-            let result = verify_webhook_signature(&secret, &signature, &tampered);
-            prop_assert!(result.is_err());
-        }
-    }
+				// exp > iat
+				prop_assert!(claims.exp > claims.iat);
 
-    /// **Property: Signature format is always sha256= followed by 64 hex chars**
-    ///
-    /// Why: Ensures signature output format matches GitHub's expected format
-    #[test]
-    fn prop_signature_format_is_correct(
-        secret in "[a-zA-Z0-9]{1,100}",
-        body in proptest::collection::vec(any::<u8>(), 0..1000)
-    ) {
-        let signature = compute_webhook_signature(&secret, &body);
-        prop_assert!(signature.starts_with("sha256="));
-        prop_assert_eq!(signature.len(), "sha256=".len() + 64);
-    }
+				// Lifetime <= 10 minutes (GitHub max)
+				let lifetime = claims.exp - claims.iat;
+				prop_assert!(lifetime <= 10 * 60);
+
+				// Token is not already expired
+				let now = current_unix_timestamp();
+				prop_assert!(claims.exp > now);
+		}
+
+		/// **Property: Token cache returns same token within validity window**
+		///
+		/// Why: Ensures caching works correctly and avoids unnecessary token refresh
+		#[test]
+		fn cached_token_reuse(installation_id in 1i64..1000000i64) {
+				// Get token twice within validity window, assert same token returned
+		}
+
+		/// **Property: Webhook signature verification rejects tampered payloads**
+		///
+		/// Why: Security critical - ensures webhook verification is correct
+		#[test]
+		fn prop_tampered_body_fails_verification(
+				secret in "[a-zA-Z0-9]{8,64}",
+				body in proptest::collection::vec(any::<u8>(), 2..500),
+				tamper_index in 0usize..500usize
+		) {
+				let signature = compute_webhook_signature(&secret, &body);
+
+				let mut tampered = body.clone();
+				let idx = tamper_index % tampered.len();
+				tampered[idx] = tampered[idx].wrapping_add(1);
+
+				if tampered != body {
+						let result = verify_webhook_signature(&secret, &signature, &tampered);
+						prop_assert!(result.is_err());
+				}
+		}
+
+		/// **Property: Signature format is always sha256= followed by 64 hex chars**
+		///
+		/// Why: Ensures signature output format matches GitHub's expected format
+		#[test]
+		fn prop_signature_format_is_correct(
+				secret in "[a-zA-Z0-9]{1,100}",
+				body in proptest::collection::vec(any::<u8>(), 0..1000)
+		) {
+				let signature = compute_webhook_signature(&secret, &body);
+				prop_assert!(signature.starts_with("sha256="));
+				prop_assert_eq!(signature.len(), "sha256=".len() + 64);
+		}
 }
 ```
 
@@ -953,23 +974,29 @@ proptest! {
 ```rust
 #[tokio::test]
 async fn test_deleting_installation_cascades_repos() {
-    let repo = ThreadRepository::for_tests().await?;
-    
-    // Insert installation + repos
-    let installation_id = 123_i64;
-    repo.upsert_github_installation(&installation).await?;
-    repo.add_github_installation_repos(installation_id, &repos).await?;
-    
-    // Verify mapping exists
-    let found = repo.get_github_installation_for_repo("owner", "repo").await?;
-    assert!(found.is_some());
-    
-    // Delete installation
-    repo.delete_github_installation(installation_id).await?;
-    
-    // Mapping should be gone (cascade delete)
-    let found_after = repo.get_github_installation_for_repo("owner", "repo").await?;
-    assert!(found_after.is_none());
+	let repo = ThreadRepository::for_tests().await?;
+
+	// Insert installation + repos
+	let installation_id = 123_i64;
+	repo.upsert_github_installation(&installation).await?;
+	repo
+		.add_github_installation_repos(installation_id, &repos)
+		.await?;
+
+	// Verify mapping exists
+	let found = repo
+		.get_github_installation_for_repo("owner", "repo")
+		.await?;
+	assert!(found.is_some());
+
+	// Delete installation
+	repo.delete_github_installation(installation_id).await?;
+
+	// Mapping should be gone (cascade delete)
+	let found_after = repo
+		.get_github_installation_for_repo("owner", "repo")
+		.await?;
+	assert!(found_after.is_none());
 }
 ```
 
@@ -978,23 +1005,23 @@ async fn test_deleting_installation_cascades_repos() {
 ```rust
 #[tokio::test]
 async fn test_webhook_rejects_missing_secret_config() {
-    // Server with no webhook secret configured
-    // Send valid webhook → 500 Internal
+	// Server with no webhook secret configured
+	// Send valid webhook → 500 Internal
 }
 
 #[tokio::test]
 async fn test_webhook_rejects_missing_signature() {
-    // Send webhook without X-Hub-Signature-256 header → 400 BadRequest
+	// Send webhook without X-Hub-Signature-256 header → 400 BadRequest
 }
 
 #[tokio::test]
 async fn test_webhook_rejects_invalid_signature() {
-    // Send webhook with wrong signature → 401 Unauthorized
+	// Send webhook with wrong signature → 401 Unauthorized
 }
 
 #[tokio::test]
 async fn test_webhook_accepts_valid_signature() {
-    // Send webhook with correct signature → 200 OK
+	// Send webhook with correct signature → 200 OK
 }
 ```
 
@@ -1003,35 +1030,35 @@ async fn test_webhook_accepts_valid_signature() {
 ```rust
 #[tokio::test]
 async fn test_installation_webhook_creates_record() {
-    // Send installation.created webhook with valid signature
-    // Verify database record created
+	// Send installation.created webhook with valid signature
+	// Verify database record created
 }
 
 #[tokio::test]
 async fn test_installation_deleted_removes_records() {
-    // Create installation and repos
-    // Send installation.deleted webhook
-    // Verify all records removed
+	// Create installation and repos
+	// Send installation.deleted webhook
+	// Verify all records removed
 }
 
 #[tokio::test]
 async fn test_proxy_search_code_returns_results() {
-    // Mock GitHub API
-    // Call /proxy/github/search-code
-    // Verify response structure
+	// Mock GitHub API
+	// Call /proxy/github/search-code
+	// Verify response structure
 }
 
 #[tokio::test]
 async fn test_proxy_returns_404_for_uninstalled_repo() {
-    // Call proxy endpoint for repo without installation
-    // Verify 404 response with helpful message
+	// Call proxy endpoint for repo without installation
+	// Verify 404 response with helpful message
 }
 
 #[tokio::test]
 async fn test_401_triggers_token_refresh() {
-    // Mock GitHub to return 401 on first call, 200 on second
-    // Call proxy endpoint
-    // Verify request succeeds after token refresh
+	// Mock GitHub to return 401 on first call, 200 on second
+	// Call proxy endpoint
+	// Verify request succeeds after token refresh
 }
 ```
 
@@ -1047,20 +1074,20 @@ Add GitHub App status to health check response (per `health-check.md` spec):
 /// GitHub App component health.
 #[derive(Debug, Serialize)]
 pub struct GithubAppHealth {
-    pub status: HealthStatus,
-    pub latency_ms: u64,
-    pub configured: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub error: Option<String>,
+	pub status: HealthStatus,
+	pub latency_ms: u64,
+	pub configured: bool,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub error: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct HealthComponents {
-    pub database: DatabaseHealth,
-    pub bin_dir: BinDirHealth,
-    pub llm_providers: LlmProvidersHealth,
-    pub google_cse: GoogleCseHealth,
-    pub github_app: GithubAppHealth,  // New
+	pub database: DatabaseHealth,
+	pub bin_dir: BinDirHealth,
+	pub llm_providers: LlmProvidersHealth,
+	pub google_cse: GoogleCseHealth,
+	pub github_app: GithubAppHealth, // New
 }
 ```
 
@@ -1070,55 +1097,55 @@ pub struct HealthComponents {
 const GITHUB_CHECK_TIMEOUT: Duration = Duration::from_secs(3);
 
 pub async fn check_github_app(client: Option<Arc<GithubAppClient>>) -> GithubAppHealth {
-    let start = Instant::now();
+	let start = Instant::now();
 
-    let (configured, status, error) = match client {
-        None => (
-            false,
-            HealthStatus::Degraded,
-            Some("GitHub App not configured".to_string()),
-        ),
-        Some(client) => {
-            // Lightweight check: list installations (validates JWT + API connectivity)
-            match timeout(GITHUB_CHECK_TIMEOUT, client.list_installations()).await {
-                Ok(Ok(_)) => (true, HealthStatus::Healthy, None),
-                Ok(Err(e)) => {
-                    let status = match e {
-                        GithubAppError::Unauthorized
-                        | GithubAppError::Config(_)
-                        | GithubAppError::Jwt(_) => HealthStatus::Unhealthy,
-                        _ => HealthStatus::Degraded,
-                    };
-                    (true, status, Some(e.to_string()))
-                }
-                Err(_) => (
-                    true,
-                    HealthStatus::Degraded,
-                    Some("GitHub health check timed out".to_string()),
-                ),
-            }
-        }
-    };
+	let (configured, status, error) = match client {
+		None => (
+			false,
+			HealthStatus::Degraded,
+			Some("GitHub App not configured".to_string()),
+		),
+		Some(client) => {
+			// Lightweight check: list installations (validates JWT + API connectivity)
+			match timeout(GITHUB_CHECK_TIMEOUT, client.list_installations()).await {
+				Ok(Ok(_)) => (true, HealthStatus::Healthy, None),
+				Ok(Err(e)) => {
+					let status = match e {
+						GithubAppError::Unauthorized | GithubAppError::Config(_) | GithubAppError::Jwt(_) => {
+							HealthStatus::Unhealthy
+						}
+						_ => HealthStatus::Degraded,
+					};
+					(true, status, Some(e.to_string()))
+				}
+				Err(_) => (
+					true,
+					HealthStatus::Degraded,
+					Some("GitHub health check timed out".to_string()),
+				),
+			}
+		}
+	};
 
-    GithubAppHealth {
-        status,
-        latency_ms: start.elapsed().as_millis() as u64,
-        configured,
-        error,
-    }
+	GithubAppHealth {
+		status,
+		latency_ms: start.elapsed().as_millis() as u64,
+		configured,
+		error,
+	}
 }
 ```
 
 ### Status Mapping
 
-| Condition | Status |
-|-----------|--------|
-| Not configured | `degraded` (optional component) |
-| Configured and responsive | `healthy` |
-| Auth/config error | `unhealthy` |
-| Timeout/network error | `degraded` |
-| Rate limited | `degraded` |
-| 5xx from GitHub | `degraded` |
+| Condition                 | Status                          |
+| ------------------------- | ------------------------------- |
+| Not configured            | `degraded` (optional component) |
+| Configured and responsive | `healthy`                       |
+| Auth/config error         | `unhealthy`                     |
+| Timeout/network error     | `degraded`                      |
+| Rate limited              | `degraded`                      |
+| 5xx from GitHub           | `degraded`                      |
 
 ---
 
@@ -1170,10 +1197,10 @@ verify_webhook_signature(secret, sig_header, &body)?;
 ```rust
 // DO: Log operation metadata
 tracing::info!(
-    installation_id = %installation_id,
-    owner = %owner,
-    repo = %repo,
-    "Performing code search"
+		installation_id = %installation_id,
+		owner = %owner,
+		repo = %repo,
+		"Performing code search"
 );
 
 // DON'T: Log tokens or secrets
@@ -1250,24 +1277,24 @@ export LOOM_GITHUB_APP_SLUG="loom"
 
 ```json
 {
-  "error": {
-    "code": "INSTALLATION_NOT_FOUND",
-    "message": "GitHub App not installed for my-org/my-repo",
-    "details": {
-      "owner": "my-org",
-      "repo": "my-repo",
-      "installation_url": "https://github.com/apps/loom/installations/new"
-    }
-  }
+	"error": {
+		"code": "INSTALLATION_NOT_FOUND",
+		"message": "GitHub App not installed for my-org/my-repo",
+		"details": {
+			"owner": "my-org",
+			"repo": "my-repo",
+			"installation_url": "https://github.com/apps/loom/installations/new"
+		}
+	}
 }
 ```
 
 ### Error Codes
 
-| Code | HTTP Status | Description |
-|------|-------------|-------------|
-| `INSTALLATION_NOT_FOUND` | 404 | App not installed for repo |
-| `RATE_LIMITED` | 429 | GitHub rate limit exceeded |
-| `GITHUB_ERROR` | 502 | GitHub API returned error |
-| `NOT_CONFIGURED` | 503 | GitHub App not configured on server |
-| `INVALID_SIGNATURE` | 401 | Webhook signature invalid |
+| Code                     | HTTP Status | Description                         |
+| ------------------------ | ----------- | ----------------------------------- |
+| `INSTALLATION_NOT_FOUND` | 404         | App not installed for repo          |
+| `RATE_LIMITED`           | 429         | GitHub rate limit exceeded          |
+| `GITHUB_ERROR`           | 502         | GitHub API returned error           |
+| `NOT_CONFIGURED`         | 503         | GitHub App not configured on server |
+| `INVALID_SIGNATURE`      | 401         | Webhook signature invalid           |

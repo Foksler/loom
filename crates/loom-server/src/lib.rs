@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights
+// reserved. SPDX-License-Identifier: Proprietary
+
 //! Loom thread persistence server.
 //!
 //! This crate provides an HTTP server for persisting and syncing Loom threads
@@ -28,7 +31,7 @@ pub use llm_query_handler::{LlmQueryHandler, SimpleRegexDetector};
 pub use llm_query_processor::LlmQueryProcessor;
 pub use query_metrics::QueryMetrics;
 pub use query_security::{
-    PathSanitizer, QueryValidator, RateLimiter, ResultValidator, SecurityError,
+	PathSanitizer, QueryValidator, RateLimiter, ResultValidator, SecurityError,
 };
 pub use query_tracing::{QueryTraceStore, QueryTracer, TraceEvent, TraceId, TraceTimeline};
 pub use server_query::ServerQueryManager;

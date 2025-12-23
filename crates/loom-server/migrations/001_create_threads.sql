@@ -1,3 +1,6 @@
+-- Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+-- SPDX-License-Identifier: Proprietary
+
 -- Thread persistence schema
 -- Uses SQLite WAL mode for multi-reader, single-writer
 

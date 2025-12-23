@@ -1,11 +1,14 @@
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+# SPDX-License-Identifier: Proprietary
+
 [package]
 name = "loom-llm-service"
-description = "Server-side LLM provider abstraction for Loom"
 version.workspace = true
-edition.workspace = true
 authors.workspace = true
+edition.workspace = true
 license.workspace = true
 repository.workspace = true
+description = "Server-side LLM provider abstraction for Loom"
 
 [dependencies]
 loom-config-common.workspace = true
@@ -16,10 +19,10 @@ loom-llm-openai = { path = "../loom-llm-openai" }
 loom-llm-vertex = { path = "../loom-llm-vertex" }
 
 async-trait.workspace = true
-thiserror.workspace = true
-tracing.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true

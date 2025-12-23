@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+// SPDX-License-Identifier: Proprietary
+
 //! Configuration management for Loom AI agent.
 //!
 //! This crate provides:
@@ -24,33 +27,33 @@ pub use sources::{ConfigSource, Precedence};
 
 /// Load configuration from all sources with default precedence.
 pub fn load_config() -> Result<LoomConfig, ConfigError> {
-    let paths = paths::resolve_xdg_paths()?;
-    let mut registry = ConfigRegistry::new();
+	let paths = paths::resolve_xdg_paths()?;
+	let mut registry = ConfigRegistry::new();
 
-    registry.register(Box::new(sources::DefaultsSource));
-    registry.register(Box::new(sources::FileSource::system()));
-    registry.register(Box::new(sources::FileSource::user(&paths)));
-    if let Ok(ws) = sources::FileSource::workspace() {
-        registry.register(Box::new(ws));
-    }
-    registry.register(Box::new(sources::EnvSource));
+	registry.register(Box::new(sources::DefaultsSource));
+	registry.register(Box::new(sources::FileSource::system()));
+	registry.register(Box::new(sources::FileSource::user(&paths)));
+	if let Ok(ws) = sources::FileSource::workspace() {
+		registry.register(Box::new(ws));
+	}
+	registry.register(Box::new(sources::EnvSource));
 
-    registry.load(paths)
+	registry.load(paths)
 }
 
 /// Load configuration with CLI overrides.
 pub fn load_config_with_cli(cli: sources::CliOverrides) -> Result<LoomConfig, ConfigError> {
-    let paths = paths::resolve_xdg_paths()?;
-    let mut registry = ConfigRegistry::new();
+	let paths = paths::resolve_xdg_paths()?;
+	let mut registry = ConfigRegistry::new();
 
-    registry.register(Box::new(sources::DefaultsSource));
-    registry.register(Box::new(sources::FileSource::system()));
-    registry.register(Box::new(sources::FileSource::user(&paths)));
-    if let Ok(ws) = sources::FileSource::workspace() {
-        registry.register(Box::new(ws));
-    }
-    registry.register(Box::new(sources::EnvSource));
-    registry.register(Box::new(sources::CliSource::new(cli)));
+	registry.register(Box::new(sources::DefaultsSource));
+	registry.register(Box::new(sources::FileSource::system()));
+	registry.register(Box::new(sources::FileSource::user(&paths)));
+	if let Ok(ws) = sources::FileSource::workspace() {
+		registry.register(Box::new(ws));
+	}
+	registry.register(Box::new(sources::EnvSource));
+	registry.register(Box::new(sources::CliSource::new(cli)));
 
-    registry.load(paths)
+	registry.load(paths)
 }

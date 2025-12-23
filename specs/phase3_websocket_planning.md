@@ -1,12 +1,19 @@
+<!--
+ Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+ SPDX-License-Identifier: Proprietary
+-->
+
 # Phase 3: WebSocket Architecture & Migration Plan
 
 ## Executive Summary
 
-**Objective**: Replace SSE + HTTP polling with a single WebSocket connection for all server-client communication, reducing query latency by 10-30x.
+**Objective**: Replace SSE + HTTP polling with a single WebSocket connection for all server-client
+communication, reducing query latency by 10-30x.
 
-**Current System**: SSE for LLM streaming + HTTP POST for query responses + HTTP polling for query delivery = 100-500ms latency  
-**Phase 3 Target**: Single WebSocket connection = <50ms latency  
-**Timeline**: 4-6 weeks for full implementation and load testing  
+**Current System**: SSE for LLM streaming + HTTP POST for query responses + HTTP polling for query
+delivery = 100-500ms latency\
+**Phase 3 Target**: Single WebSocket connection = <50ms latency\
+**Timeline**: 4-6 weeks for full implementation and load testing\
 **Resource**: 1-2 engineers, staggered rollout with feature flags
 
 ---
@@ -14,6 +21,7 @@
 ## 1. Current Architecture (Phases 1-2)
 
 ### Transport Stack
+
 ```
 ┌─────────────────┐
 │   LLM Client    │
@@ -32,13 +40,14 @@
 ```
 
 ### Latency Breakdown (Current)
-| Component | Latency | Notes |
-|-----------|---------|-------|
-| Query generation | 10-50ms | Server side |
-| HTTP round-trip | 5-20ms | Network + TCP |
-| Polling interval | 100-500ms | Worst case |
-| Response sending | 5-20ms | Network + TCP |
-| **Total** | **120-590ms** | Mostly polling wait |
+
+| Component        | Latency       | Notes               |
+| ---------------- | ------------- | ------------------- |
+| Query generation | 10-50ms       | Server side         |
+| HTTP round-trip  | 5-20ms        | Network + TCP       |
+| Polling interval | 100-500ms     | Worst case          |
+| Response sending | 5-20ms        | Network + TCP       |
+| **Total**        | **120-590ms** | Mostly polling wait |
 
 ---
 
@@ -112,82 +121,87 @@
 ### Message Types
 
 #### 1. ServerQuery (server → client)
+
 ```json
 {
-  "type": "server_query",
-  "id": "Q-0123456789abcdef0123456789abcdef",
-  "data": {
-    "kind": {"type": "read_file", "path": "/src/main.rs"},
-    "sent_at": "2025-01-15T10:30:00Z",
-    "timeout_secs": 30,
-    "metadata": {}
-  },
-  "timestamp": "2025-01-15T10:30:00Z"
+	"type": "server_query",
+	"id": "Q-0123456789abcdef0123456789abcdef",
+	"data": {
+		"kind": { "type": "read_file", "path": "/src/main.rs" },
+		"sent_at": "2025-01-15T10:30:00Z",
+		"timeout_secs": 30,
+		"metadata": {}
+	},
+	"timestamp": "2025-01-15T10:30:00Z"
 }
 ```
 
 #### 2. QueryResponse (client → server)
+
 ```json
 {
-  "type": "query_response",
-  "id": "Q-0123456789abcdef0123456789abcdef",
-  "data": {
-    "result": {"type": "file_content", "content": "..."},
-    "error": null,
-    "responded_at": "2025-01-15T10:30:00.050Z"
-  },
-  "timestamp": "2025-01-15T10:30:00Z"
+	"type": "query_response",
+	"id": "Q-0123456789abcdef0123456789abcdef",
+	"data": {
+		"result": { "type": "file_content", "content": "..." },
+		"error": null,
+		"responded_at": "2025-01-15T10:30:00.050Z"
+	},
+	"timestamp": "2025-01-15T10:30:00Z"
 }
 ```
 
 #### 3. LlmEvent (server → client)
+
 ```json
 {
-  "type": "llm_event",
-  "id": "E-llm-stream-001",
-  "data": {
-    "event_type": "text_delta|tool_call_delta|completed|error",
-    "content": "..." // Event-specific data
-  },
-  "timestamp": "2025-01-15T10:30:00Z"
+	"type": "llm_event",
+	"id": "E-llm-stream-001",
+	"data": {
+		"event_type": "text_delta|tool_call_delta|completed|error",
+		"content": "..." // Event-specific data
+	},
+	"timestamp": "2025-01-15T10:30:00Z"
 }
 ```
 
 #### 4. Control (bidirectional)
+
 ```json
 {
-  "type": "control",
-  "id": "C-keepalive-001",
-  "data": {
-    "command": "ping|pong|close|resume",
-    "reason": "optional explanation",
-    "payload": null
-  },
-  "timestamp": "2025-01-15T10:30:00Z"
+	"type": "control",
+	"id": "C-keepalive-001",
+	"data": {
+		"command": "ping|pong|close|resume",
+		"reason": "optional explanation",
+		"payload": null
+	},
+	"timestamp": "2025-01-15T10:30:00Z"
 }
 ```
 
 #### 5. ACK (bidirectional)
+
 ```json
 {
-  "type": "ack",
-  "id": "Q-0123456789abcdef0123456789abcdef",
-  "data": {
-    "acked_at": "2025-01-15T10:30:00.001Z",
-    "sequence": 42
-  },
-  "timestamp": "2025-01-15T10:30:00Z"
+	"type": "ack",
+	"id": "Q-0123456789abcdef0123456789abcdef",
+	"data": {
+		"acked_at": "2025-01-15T10:30:00.001Z",
+		"sequence": 42
+	},
+	"timestamp": "2025-01-15T10:30:00Z"
 }
 ```
 
 ### Message Delivery Semantics
 
-| Scenario | Semantics | Implementation |
-|----------|-----------|-----------------|
-| ServerQuery delivery | At-least-once | Resend on timeout + ACK |
-| QueryResponse | At-most-once | No ACK needed (idempotent queries) |
-| LlmEvent | At-most-once | Stream is ephemeral |
-| Control | Best-effort | No ACK, fire-and-forget |
+| Scenario             | Semantics     | Implementation                     |
+| -------------------- | ------------- | ---------------------------------- |
+| ServerQuery delivery | At-least-once | Resend on timeout + ACK            |
+| QueryResponse        | At-most-once  | No ACK needed (idempotent queries) |
+| LlmEvent             | At-most-once  | Stream is ephemeral                |
+| Control              | Best-effort   | No ACK, fire-and-forget            |
 
 ---
 
@@ -215,11 +229,11 @@ Response:
 
 ### Query Parameters
 
-| Param | Type | Default | Purpose |
-|-------|------|---------|---------|
-| `protocol_version` | string | "3.0" | Backward compat negotiation |
-| `features` | string | "" | CSV feature list (compression, ack, etc.) |
-| `reconnect_token` | string | "" | Resume previous session |
+| Param              | Type   | Default | Purpose                                   |
+| ------------------ | ------ | ------- | ----------------------------------------- |
+| `protocol_version` | string | "3.0"   | Backward compat negotiation               |
+| `features`         | string | ""      | CSV feature list (compression, ack, etc.) |
+| `reconnect_token`  | string | ""      | Resume previous session                   |
 
 ### Authentication
 
@@ -235,25 +249,27 @@ Response:
 ### Phase 3a: Foundation (Weeks 1-2)
 
 **Goals**:
+
 - WebSocket server implementation
 - Message serialization/deserialization
 - Basic connection lifecycle
 
 **Tasks**:
+
 1. Implement `websocket.rs` module
    - `WebSocketConnection` struct
    - Message enum with all types
    - Connection state machine
-   
+
 2. Add WebSocket dependencies
    - `tokio-tungstenite` or `axum-websockets`
    - JSON serialization (existing `serde_json`)
-   
+
 3. Implement WebSocket endpoint
    - `GET /v1/ws/sessions/{session_id}`
    - Upgrade negotiation
    - Initial handshake
-   
+
 4. Unit tests
    - Message serialization
    - State transitions
@@ -266,27 +282,29 @@ Response:
 ### Phase 3b: Core Message Flow (Weeks 2-3)
 
 **Goals**:
+
 - Message routing
 - ServerQuery delivery
 - QueryResponse handling
 - LLM event forwarding
 
 **Tasks**:
+
 1. Integrate with `ServerQueryManager`
    - Use existing send/receive logic
    - Replace HTTP transport with WebSocket
    - Preserve backward compat (HTTP fallback)
-   
+
 2. LLM event forwarding
    - Route SSE events → WebSocket messages
    - Preserve event ordering
    - Handle backpressure
-   
+
 3. Connection lifecycle
    - Graceful close
    - Error recovery
    - Reconnection logic
-   
+
 4. Integration tests
    - Query/response roundtrip
    - LLM event streaming
@@ -299,26 +317,28 @@ Response:
 ### Phase 3c: Production Hardening (Weeks 3-4)
 
 **Goals**:
+
 - Backpressure handling
 - Error recovery
 - Monitoring/observability
 
 **Tasks**:
+
 1. Backpressure implementation
    - Message queue limiting (1000 messages/connection)
    - Exponential backoff
    - Metrics for queue depth
-   
+
 2. Keepalive / heartbeat
    - Ping/pong frames every 30 seconds
    - Timeout detection
    - Automatic reconnection
-   
+
 3. Metrics & logging
    - Per-connection: bytes sent/recv, messages, latency
    - Global: connections, message rates, errors
    - Structured logging
-   
+
 4. Error handling
    - Malformed messages
    - Network disconnects
@@ -332,6 +352,7 @@ Response:
 ### Phase 3d: Load Testing & Optimization (Weeks 4-5)
 
 **Goals**:
+
 - Validate performance targets
 - Identify bottlenecks
 - Optimize resource usage
@@ -366,6 +387,7 @@ Response:
    - Memory/CPU saturation point
 
 **Success Criteria**:
+
 - ✅ p99 latency <100ms (target: <50ms)
 - ✅ Error rate <0.1%
 - ✅ Memory per connection <100KB
@@ -377,6 +399,7 @@ Response:
 ### Phase 3e: Gradual Rollout (Weeks 5-6)
 
 **Goals**:
+
 - Deploy to production
 - Monitor real-world performance
 - Migrate clients
@@ -386,7 +409,7 @@ Response:
 1. **Canary (1% traffic)**
    - Monitor error rates, latency
    - 1 day minimum
-   
+
 2. **Gradual ramp (10% → 50% → 100%)**
    - 1% per day
    - Kill switch: feature flag to disable WebSocket
@@ -414,12 +437,12 @@ Response:
    - WebSocket endpoint operational in parallel with SSE
    - Client chooses transport (WebSocket preferred)
    - Server routes messages appropriately
-   
+
 2. **Gradual Deprecation**
    - Phase 3 release: Both transports fully functional
    - Phase 4 release: HTTP endpoint marked deprecated (docs)
    - Phase 5 (6+ months): HTTP endpoint sunset
-   
+
 3. **Fallback Logic** (Client-side)
    ```javascript
    try {
@@ -462,17 +485,17 @@ async fn handle_ws_message(...) {
    - WebSocket preserves message order (single stream)
    - LLM events must not be reordered
    - Queries must be delivered in order
-   
+
 2. **Resource Limits**
    - Max connections per IP: tune based on load testing
    - Max message queue per connection: 1000 messages
    - Max message size: 10MB (configurable)
-   
+
 3. **Error Handling**
    - Malformed JSON → close connection + log
    - Timeout → send control frame before closing
    - Server overload → backpressure signal
-   
+
 4. **Keepalive**
    - Ping every 30 seconds
    - Pong timeout: 10 seconds
@@ -521,25 +544,28 @@ Chaos Tests:
 ## 8. Cost/Benefit Analysis
 
 ### Benefits
-| Aspect | Improvement | Impact |
-|--------|-------------|--------|
-| Query latency | 10-100x faster (500ms → 5-50ms) | Much better UX |
-| Connection overhead | 1 TCP connection vs 2-3 | ~30% resource savings |
-| Polling overhead | Eliminated | ~20% CPU reduction |
-| Server scalability | Higher connections/server | Can handle 10x+ more users |
-| Real-time interaction | Much faster feedback | Enable interactive features |
+
+| Aspect                | Improvement                     | Impact                      |
+| --------------------- | ------------------------------- | --------------------------- |
+| Query latency         | 10-100x faster (500ms → 5-50ms) | Much better UX              |
+| Connection overhead   | 1 TCP connection vs 2-3         | ~30% resource savings       |
+| Polling overhead      | Eliminated                      | ~20% CPU reduction          |
+| Server scalability    | Higher connections/server       | Can handle 10x+ more users  |
+| Real-time interaction | Much faster feedback            | Enable interactive features |
 
 ### Costs
-| Aspect | Effort | Notes |
-|--------|--------|-------|
-| WebSocket implementation | 2-3 weeks | Core logic |
-| Load testing | 1-2 weeks | Validation |
-| Monitoring/metrics | 1 week | Observability |
-| Client migration | 2-4 weeks | Staggered rollout |
-| HTTP fallback support | 1-2 weeks | Backward compat |
-| **Total** | **~6 weeks** | 1-2 engineers |
+
+| Aspect                   | Effort       | Notes             |
+| ------------------------ | ------------ | ----------------- |
+| WebSocket implementation | 2-3 weeks    | Core logic        |
+| Load testing             | 1-2 weeks    | Validation        |
+| Monitoring/metrics       | 1 week       | Observability     |
+| Client migration         | 2-4 weeks    | Staggered rollout |
+| HTTP fallback support    | 1-2 weeks    | Backward compat   |
+| **Total**                | **~6 weeks** | 1-2 engineers     |
 
 ### ROI
+
 - **Time to implement**: 4-6 weeks
 - **Latency improvement**: 10-100x
 - **Resource savings**: ~30%
@@ -551,6 +577,7 @@ Chaos Tests:
 ## 9. Success Criteria
 
 ### Performance Metrics
+
 - [ ] Query latency: p99 <100ms (target <50ms)
 - [ ] Error rate: <0.1% on all operations
 - [ ] Memory per connection: <100KB
@@ -558,12 +585,14 @@ Chaos Tests:
 - [ ] Reconnection latency: <5 seconds
 
 ### Reliability Metrics
+
 - [ ] Message delivery: 100% (no lost messages)
 - [ ] Connection establishment: >99.9% success
 - [ ] Query timeout rate: <0.01%
 - [ ] No data corruption observed
 
 ### Operational Metrics
+
 - [ ] Canary deployment: 0 incidents
 - [ ] Client adoption: 95%+ within 1 month
 - [ ] Support tickets: No WebSocket-specific issues
@@ -573,14 +602,14 @@ Chaos Tests:
 
 ## 10. Risks & Mitigation
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|-----------|
-| WebSocket spec issues | Low | High | Load test early, use established libraries |
-| Network instability | Medium | Medium | Robust error handling, keepalive, reconnection |
-| Client compatibility | Low | Medium | Gradual rollout, feature flag, fallback |
-| Resource exhaustion | Low | High | Backpressure, queue limits, metrics |
-| Data loss | Very low | Critical | At-least-once delivery for queries, ACKs |
-| Deployment issues | Medium | Medium | Canary rollout, monitoring, kill switch |
+| Risk                  | Likelihood | Impact   | Mitigation                                     |
+| --------------------- | ---------- | -------- | ---------------------------------------------- |
+| WebSocket spec issues | Low        | High     | Load test early, use established libraries     |
+| Network instability   | Medium     | Medium   | Robust error handling, keepalive, reconnection |
+| Client compatibility  | Low        | Medium   | Gradual rollout, feature flag, fallback        |
+| Resource exhaustion   | Low        | High     | Backpressure, queue limits, metrics            |
+| Data loss             | Very low   | Critical | At-least-once delivery for queries, ACKs       |
+| Deployment issues     | Medium     | Medium   | Canary rollout, monitoring, kill switch        |
 
 ---
 
@@ -589,19 +618,19 @@ Chaos Tests:
 1. **Message Compression**
    - WebSocket permessage-deflate
    - Reduces bandwidth by ~40% for text
-   
+
 2. **Selective Message Subscription**
    - Client filters: "subscribe to queries only"
    - Reduces message volume, CPU
-   
+
 3. **Message Batching**
    - Multiple messages in single frame
    - Reduce frame overhead
-   
+
 4. **Connection Pooling**
    - Multiple WebSocket connections per session
    - Better throughput for large operations
-   
+
 5. **Binary Protocol**
    - Replace JSON with binary encoding
    - Faster parsing, smaller payloads

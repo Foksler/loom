@@ -1,3 +1,6 @@
+-- Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+-- SPDX-License-Identifier: Proprietary
+
 -- CSE cache table for caching Google Custom Search Engine responses
 -- Responses are cached for 24 hours to reduce API calls and improve latency
 

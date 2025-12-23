@@ -1,8 +1,11 @@
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+# SPDX-License-Identifier: Proprietary
+
 [package]
 name = "loom-server"
 version.workspace = true
-edition.workspace = true
 authors.workspace = true
+edition.workspace = true
 license.workspace = true
 description = "HTTP server for Loom thread persistence"
 
@@ -15,20 +18,20 @@ name = "loom_server"
 path = "src/lib.rs"
 
 [dependencies]
-loom-thread = { path = "../loom-thread" }
-loom-google-cse = { path = "../loom-google-cse" }
-loom-github-app = { path = "../loom-github-app" }
-loom-llm-service = { path = "../loom-llm-service" }
+futures = { workspace = true }
 loom-core = { path = "../loom-core" }
+loom-github-app = { path = "../loom-github-app" }
+loom-google-cse = { path = "../loom-google-cse" }
+loom-llm-service = { path = "../loom-llm-service" }
+loom-thread = { path = "../loom-thread" }
 loom-version = { path = "../loom-version", features = ["serde"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
-futures = { workspace = true }
 tokio-stream = "0.1"
 
 # HMAC for webhook verification
+hex = "0.4"
 hmac = "0.12"
 sha2 = "0.10"
-hex = "0.4"
 
 # Web framework
 axum = { version = "0.8", features = ["macros"] }
@@ -42,10 +45,10 @@ sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
 chrono = { version = "0.4", features = ["serde"] }
 
 # From workspace
-tokio.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+tokio.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
 
@@ -65,10 +68,10 @@ uuid = { version = "1", features = ["v4", "serde"] }
 prometheus = "0.13"
 
 [dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest.workspace = true
 tempfile.workspace = true
 tokio-test.workspace = true
-proptest.workspace = true
-criterion = { version = "0.5", features = ["html_reports"] }
 
 [[bench]]
 name = "query_bridge_benchmarks"

@@ -1,6 +1,12 @@
+<!--
+ Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+ SPDX-License-Identifier: Proprietary
+-->
+
 # Server-to-Client Query Bridge - Comprehensive Examples
 
-This example suite demonstrates the complete Server-to-Client Query Bridge implementation with 5 working scenarios.
+This example suite demonstrates the complete Server-to-Client Query Bridge implementation with 5
+working scenarios.
 
 ## Quick Start
 
@@ -20,20 +26,23 @@ cargo run -p query_bridge_examples
 ## Examples Included
 
 ### Example 1: Basic File Read During Coding
-**File:** `src/main.rs` - Lines 110-183  
+
+**File:** `src/main.rs` - Lines 110-183\
 **Purpose:** Demonstrates the most common query type - reading files from the client's workspace
 
 **Scenario:**
+
 - LLM: "I'll add logging to your main.rs"
 - System detects "main.rs" reference
 - Sends `ReadFile("src/main.rs")` query
 - Client returns file contents
 - LLM resumes with full context
 
-**Why Important:**
-File context is essential for any code modification task. The LLM needs to read the current state before making changes.
+**Why Important:** File context is essential for any code modification task. The LLM needs to read
+the current state before making changes.
 
 **Key Assertions:**
+
 - Query ID is properly formatted (`Q-{32 hex digits}`)
 - Response contains file content
 - No errors occur for existing files
@@ -41,16 +50,18 @@ File context is essential for any code modification task. The LLM needs to read 
 ---
 
 ### Example 2: Environment + Workspace Context
-**File:** `src/main.rs` - Lines 192-250  
+
+**File:** `src/main.rs` - Lines 192-250\
 **Purpose:** Shows how to query environment variables and workspace state
 
 **Scenario:**
+
 - Query 1: `GetEnvironment(["DEPLOY_HOST", "API_KEY"])`
 - Query 2: `GetWorkspaceContext`
 - LLM uses both for deployment decisions
 
-**Why Important:**
-Production code changes require knowledge of:
+**Why Important:** Production code changes require knowledge of:
+
 - Deployment targets and secrets
 - Git branch and workspace state
 - Build configuration
@@ -58,6 +69,7 @@ Production code changes require knowledge of:
 This enables the LLM to make context-aware decisions without hardcoding env vars.
 
 **Key Assertions:**
+
 - Environment variables are retrieved correctly
 - Workspace context includes git information
 - Multiple sequential queries work
@@ -65,19 +77,22 @@ This enables the LLM to make context-aware decisions without hardcoding env vars
 ---
 
 ### Example 3: Human-in-the-Loop Approval
-**File:** `src/main.rs` - Lines 259-308  
+
+**File:** `src/main.rs` - Lines 259-308\
 **Purpose:** Demonstrates pausing for user confirmation on destructive operations
 
 **Scenario:**
+
 - LLM: "Should I delete this old migration?"
 - System sends: `RequestUserInput(prompt="Delete?", type="yes_no")`
 - User responds: "yes"
 - LLM proceeds with deletion
 
-**Why Important:**
-Prevents accidental data loss. For destructive operations (deletes, database changes), the system can pause and request explicit human approval.
+**Why Important:** Prevents accidental data loss. For destructive operations (deletes, database
+changes), the system can pause and request explicit human approval.
 
 **Key Assertions:**
+
 - User input query works
 - Response correctly matches user choice
 - LLM decision logic can use the response
@@ -85,23 +100,27 @@ Prevents accidental data loss. For destructive operations (deletes, database cha
 ---
 
 ### Example 4: Error Recovery and Timeout Handling
-**File:** `src/main.rs` - Lines 317-390  
+
+**File:** `src/main.rs` - Lines 317-390\
 **Purpose:** Shows graceful error handling and recovery patterns
 
 **Scenario:**
+
 - Query attempts to read nonexistent file
 - System detects error
 - Offers recovery strategies (retry, log, prompt)
 - Retries with correct path
 - Succeeds on retry
 
-**Why Important:**
-Network timeouts, permission errors, and missing files will happen. The system must:
+**Why Important:** Network timeouts, permission errors, and missing files will happen. The system
+must:
+
 1. Report errors clearly
 2. Offer recovery options
 3. Allow LLM to retry or continue with degraded context
 
 **Key Assertions:**
+
 - Errors are handled without panicking
 - Recovery strategies are available
 - Retry succeeds after path correction
@@ -109,24 +128,27 @@ Network timeouts, permission errors, and missing files will happen. The system m
 ---
 
 ### Example 5: Concurrent Queries from Multiple Sessions
-**File:** `src/main.rs` - Lines 399-540  
+
+**File:** `src/main.rs` - Lines 399-540\
 **Purpose:** Verifies that multiple sessions can query concurrently without interference
 
 **Scenario:**
+
 - Session A: `ReadFile("src/module_a.rs")`
 - Session B: `GetEnvironment(["SESSION_B_KEY"])`
 - Session C: `GetWorkspaceContext`
 - All process concurrently
 - Responses routed to correct sessions
 
-**Why Important:**
-The server handles many concurrent user sessions. This test verifies:
+**Why Important:** The server handles many concurrent user sessions. This test verifies:
+
 - Query isolation between sessions
 - Concurrent processing works
 - Responses route to correct clients
 - No cross-session data leakage
 
 **Key Assertions:**
+
 - All 3 sessions complete successfully
 - No interference between sessions
 - All assertions pass independently
@@ -165,15 +187,18 @@ The `MockServerQueryHandler` simulates client behavior without requiring actual 
 
 ```rust
 impl ServerQueryHandler for MockServerQueryHandler {
-    async fn handle_query(&self, query: ServerQuery) -> Result<ServerQueryResponse, ServerQueryError> {
-        match &query.kind {
-            ServerQueryKind::ReadFile { path } => { /* return mock content */ }
-            ServerQueryKind::GetEnvironment { keys } => { /* return env vars */ }
-            ServerQueryKind::GetWorkspaceContext => { /* return mock context */ }
-            ServerQueryKind::RequestUserInput { .. } => { /* simulate user input */ }
-            _ => { /* error for unsupported types */ }
-        }
-    }
+	async fn handle_query(
+		&self,
+		query: ServerQuery,
+	) -> Result<ServerQueryResponse, ServerQueryError> {
+		match &query.kind {
+			ServerQueryKind::ReadFile { path } => { /* return mock content */ }
+			ServerQueryKind::GetEnvironment { keys } => { /* return env vars */ }
+			ServerQueryKind::GetWorkspaceContext => { /* return mock context */ }
+			ServerQueryKind::RequestUserInput { .. } => { /* simulate user input */ }
+			_ => { /* error for unsupported types */ }
+		}
+	}
 }
 ```
 
@@ -184,15 +209,15 @@ To run only one example, modify `main.rs` and comment out the others:
 ```rust
 #[tokio::main]
 async fn main() {
-    tracing_subscriber::fmt().init();
-    
-    // Run only Example 1:
-    example_1_basic_file_read().await;
-    
-    // Comment out:
-    // example_2_environment_context().await;
-    // example_3_human_approval().await;
-    // etc.
+	tracing_subscriber::fmt().init();
+
+	// Run only Example 1:
+	example_1_basic_file_read().await;
+
+	// Comment out:
+	// example_2_environment_context().await;
+	// example_3_human_approval().await;
+	// etc.
 }
 ```
 
@@ -201,14 +226,16 @@ async fn main() {
 To add a new example:
 
 1. Create a new async function:
+
 ```rust
 async fn example_6_my_new_scenario() {
-    println!("\n=== Example 6: My Scenario ===\n");
-    // Your test code
+	println!("\n=== Example 6: My Scenario ===\n");
+	// Your test code
 }
 ```
 
 2. Add to `main()`:
+
 ```rust
 example_6_my_new_scenario().await;
 ```
@@ -222,16 +249,19 @@ example_6_my_new_scenario().await;
 ## Testing
 
 Run tests:
+
 ```bash
 cargo test -p query_bridge_examples
 ```
 
 Build without running:
+
 ```bash
 cargo build -p query_bridge_examples
 ```
 
 Check for warnings:
+
 ```bash
 cargo clippy -p query_bridge_examples
 ```
@@ -260,12 +290,12 @@ Step 1: LLM needs to read src/main.rs
 
 ## Key Features Demonstrated
 
-✅ **Type Safety**: Strongly-typed query kinds and results  
-✅ **Error Handling**: Graceful error recovery patterns  
-✅ **Async/Await**: Tokio-based concurrent processing  
-✅ **Session Isolation**: Multiple concurrent sessions work independently  
-✅ **Structured Logging**: Tracing spans for debugging  
-✅ **Assertions**: Property-based verification of results  
+✅ **Type Safety**: Strongly-typed query kinds and results\
+✅ **Error Handling**: Graceful error recovery patterns\
+✅ **Async/Await**: Tokio-based concurrent processing\
+✅ **Session Isolation**: Multiple concurrent sessions work independently\
+✅ **Structured Logging**: Tracing spans for debugging\
+✅ **Assertions**: Property-based verification of results
 
 ## Dependencies
 
@@ -278,6 +308,7 @@ Step 1: LLM needs to read src/main.rs
 ## Integration with Loom
 
 These examples form the foundation for:
+
 1. **LLM Processing Integration**: Embedding query handling in the inference loop
 2. **Editor Handlers**: Custom implementations for VSCode, Zed, etc.
 3. **Persistent Storage**: Adding query result caching
@@ -306,7 +337,8 @@ After understanding these examples:
 
 - [README_QUERY_BRIDGE.md](../../README_QUERY_BRIDGE.md) - Architecture overview
 - [QUICK_START_QUERY_BRIDGE.md](../../QUICK_START_QUERY_BRIDGE.md) - Quick reference
-- [IMPLEMENTATION_SERVER_CLIENT_QUERY_BRIDGE.md](../../IMPLEMENTATION_SERVER_CLIENT_QUERY_BRIDGE.md) - Detailed implementation
+- [IMPLEMENTATION_SERVER_CLIENT_QUERY_BRIDGE.md](../../IMPLEMENTATION_SERVER_CLIENT_QUERY_BRIDGE.md) -
+  Detailed implementation
 
 ## License
 

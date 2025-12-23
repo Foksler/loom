@@ -1,3 +1,6 @@
+-- Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+-- SPDX-License-Identifier: Proprietary
+
 -- GitHub App installations table
 -- Stores information about each GitHub App installation (org or user)
 CREATE TABLE IF NOT EXISTS github_installations (

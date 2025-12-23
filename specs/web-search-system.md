@@ -1,7 +1,12 @@
+<!--
+ Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+ SPDX-License-Identifier: Proprietary
+-->
+
 # Web Search System Specification
 
-**Status:** Draft  
-**Version:** 1.1  
+**Status:** Draft\
+**Version:** 1.1\
 **Last Updated:** 2025-01-18
 
 ---
@@ -10,7 +15,9 @@
 
 ### Purpose
 
-The Web Search System enables the Loom agent to perform web searches using Google Custom Search Engine (CSE). The client sends queries to the Loom server's `/proxy/cse` endpoint, and the server handles all Google CSE authentication—clients require no API secrets.
+The Web Search System enables the Loom agent to perform web searches using Google Custom Search
+Engine (CSE). The client sends queries to the Loom server's `/proxy/cse` endpoint, and the server
+handles all Google CSE authentication—clients require no API secrets.
 
 ### Primary Use Cases
 
@@ -75,12 +82,12 @@ loom/
 
 ### Component Responsibilities
 
-| Component | Responsibility |
-|-----------|---------------|
-| `WebSearchTool` | Validates args, sends request to server, maps errors to `ToolError` |
-| `/proxy/cse` endpoint | Business logic: validation, rate limit handling, calls CSE client |
-| `loom-google-cse` | HTTP client for Google CSE API, request/response types, error handling |
-| Google CSE API | Performs actual web search, returns results |
+| Component             | Responsibility                                                         |
+| --------------------- | ---------------------------------------------------------------------- |
+| `WebSearchTool`       | Validates args, sends request to server, maps errors to `ToolError`    |
+| `/proxy/cse` endpoint | Business logic: validation, rate limit handling, calls CSE client      |
+| `loom-google-cse`     | HTTP client for Google CSE API, request/response types, error handling |
+| Google CSE API        | Performs actual web search, returns results                            |
 
 ---
 
@@ -96,20 +103,20 @@ The tool owns its own `reqwest::Client` and server base URL. This avoids modifyi
 
 ```json
 {
-  "type": "object",
-  "properties": {
-    "query": {
-      "type": "string",
-      "description": "Search query string in natural language."
-    },
-    "max_results": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 10,
-      "description": "Maximum number of search results to return (default: 5, max: 10)."
-    }
-  },
-  "required": ["query"]
+	"type": "object",
+	"properties": {
+		"query": {
+			"type": "string",
+			"description": "Search query string in natural language."
+		},
+		"max_results": {
+			"type": "integer",
+			"minimum": 1,
+			"maximum": 10,
+			"description": "Maximum number of search results to return (default: 5, max: 10)."
+		}
+	},
+	"required": ["query"]
 }
 ```
 
@@ -117,34 +124,34 @@ The tool owns its own `reqwest::Client` and server base URL. This avoids modifyi
 
 ```json
 {
-  "query": "rust async trait",
-  "results": [
-    {
-      "title": "Async in Traits - Rust Blog",
-      "url": "https://blog.rust-lang.org/2023/12/21/async-fn-rpit-in-traits.html",
-      "snippet": "We are excited to announce that async functions in traits...",
-      "display_link": "blog.rust-lang.org",
-      "rank": 1
-    }
-  ]
+	"query": "rust async trait",
+	"results": [
+		{
+			"title": "Async in Traits - Rust Blog",
+			"url": "https://blog.rust-lang.org/2023/12/21/async-fn-rpit-in-traits.html",
+			"snippet": "We are excited to announce that async functions in traits...",
+			"display_link": "blog.rust-lang.org",
+			"rank": 1
+		}
+	]
 }
 ```
 
 ### Configuration
 
-| Environment Variable | Description | Required |
-|---------------------|-------------|----------|
-| `LOOM_SERVER_URL` | Base URL for Loom server (default: `http://127.0.0.1:8080`) | No |
+| Environment Variable | Description                                                 | Required |
+| -------------------- | ----------------------------------------------------------- | -------- |
+| `LOOM_SERVER_URL`    | Base URL for Loom server (default: `http://127.0.0.1:8080`) | No       |
 
 ### Error Mapping
 
-| Condition | ToolError Variant |
-|-----------|-------------------|
-| Empty query | `InvalidArguments("query must not be empty")` |
-| Network timeout | `Timeout` |
-| Network/connection error | `Io(message)` |
-| Non-2xx from server | `Internal("web_search proxy error: HTTP {status}")` |
-| Malformed response JSON | `Serialization(message)` |
+| Condition                | ToolError Variant                                   |
+| ------------------------ | --------------------------------------------------- |
+| Empty query              | `InvalidArguments("query must not be empty")`       |
+| Network timeout          | `Timeout`                                           |
+| Network/connection error | `Io(message)`                                       |
+| Non-2xx from server      | `Internal("web_search proxy error: HTTP {status}")` |
+| Malformed response JSON  | `Serialization(message)`                            |
 
 ---
 
@@ -160,49 +167,49 @@ POST /proxy/cse
 
 ```json
 {
-  "query": "rust async trait",
-  "max_results": 5
+	"query": "rust async trait",
+	"max_results": 5
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `query` | string | Yes | Search query (non-empty) |
-| `max_results` | u32 | No | Max results (default: 5, capped at 10) |
+| Field         | Type   | Required | Description                            |
+| ------------- | ------ | -------- | -------------------------------------- |
+| `query`       | string | Yes      | Search query (non-empty)               |
+| `max_results` | u32    | No       | Max results (default: 5, capped at 10) |
 
 ### Response
 
 ```json
 {
-  "query": "rust async trait",
-  "results": [
-    {
-      "title": "Result title",
-      "url": "https://example.com/page",
-      "snippet": "Short text snippet from the page",
-      "display_link": "example.com",
-      "rank": 1
-    }
-  ]
+	"query": "rust async trait",
+	"results": [
+		{
+			"title": "Result title",
+			"url": "https://example.com/page",
+			"snippet": "Short text snippet from the page",
+			"display_link": "example.com",
+			"rank": 1
+		}
+	]
 }
 ```
 
 ### Error Responses
 
-| Status | Condition | Body |
-|--------|-----------|------|
-| 400 | Empty query | `{"error": "query must not be empty"}` |
-| 500 | CSE not configured (missing env vars) | `{"error": "Google CSE is not configured on the server"}` |
-| 502 | Google CSE network error or invalid response | `{"error": "Failed to contact Google CSE"}` |
-| 503 | Google CSE rate limit (429/403) | `{"error": "Google CSE rate limit exceeded; try again later"}` |
-| 504 | Google CSE timeout | `{"error": "Google CSE request timed out"}` |
+| Status | Condition                                    | Body                                                           |
+| ------ | -------------------------------------------- | -------------------------------------------------------------- |
+| 400    | Empty query                                  | `{"error": "query must not be empty"}`                         |
+| 500    | CSE not configured (missing env vars)        | `{"error": "Google CSE is not configured on the server"}`      |
+| 502    | Google CSE network error or invalid response | `{"error": "Failed to contact Google CSE"}`                    |
+| 503    | Google CSE rate limit (429/403)              | `{"error": "Google CSE rate limit exceeded; try again later"}` |
+| 504    | Google CSE timeout                           | `{"error": "Google CSE request timed out"}`                    |
 
 ### Server Configuration
 
-| Environment Variable | Description | Required |
-|---------------------|-------------|----------|
-| `LOOM_SERVER_GOOGLE_CSE_API_KEY` | Google API key with CSE enabled | Yes (for CSE to work) |
-| `LOOM_SERVER_GOOGLE_CSE_CX` | Custom Search Engine ID (cx parameter) | Yes (for CSE to work) |
+| Environment Variable             | Description                            | Required              |
+| -------------------------------- | -------------------------------------- | --------------------- |
+| `LOOM_SERVER_GOOGLE_CSE_API_KEY` | Google API key with CSE enabled        | Yes (for CSE to work) |
+| `LOOM_SERVER_GOOGLE_CSE_CX`      | Custom Search Engine ID (cx parameter) | Yes (for CSE to work) |
 
 ---
 
@@ -210,7 +217,8 @@ POST /proxy/cse
 
 ### Purpose
 
-The `loom-google-cse` crate provides a typed Rust client for Google Custom Search Engine API. It encapsulates all Google-specific HTTP communication and response parsing.
+The `loom-google-cse` crate provides a typed Rust client for Google Custom Search Engine API. It
+encapsulates all Google-specific HTTP communication and response parsing.
 
 ### CseClient
 
@@ -218,17 +226,17 @@ The `loom-google-cse` crate provides a typed Rust client for Google Custom Searc
 // crates/loom-google-cse/src/client.rs
 
 pub struct CseClient {
-    http_client: reqwest::Client,
-    api_key: String,
-    cx: String,
-    base_url: String,  // Default: https://www.googleapis.com/customsearch/v1
+	http_client: reqwest::Client,
+	api_key: String,
+	cx: String,
+	base_url: String, // Default: https://www.googleapis.com/customsearch/v1
 }
 
 impl CseClient {
-    pub fn new(api_key: impl Into<String>, cx: impl Into<String>) -> Self;
-    pub fn with_base_url(self, base_url: impl Into<String>) -> Self;
-    
-    pub async fn search(&self, request: CseRequest) -> Result<CseResponse, CseError>;
+	fn new(api_key: impl Into<String>, cx: impl Into<String>) -> Self;
+	fn with_base_url(self, base_url: impl Into<String>) -> Self;
+
+	async fn search(&self, request: CseRequest) -> Result<CseResponse, CseError>;
 }
 ```
 
@@ -239,23 +247,23 @@ impl CseClient {
 
 #[derive(Debug, Clone)]
 pub struct CseRequest {
-    pub query: String,
-    pub num: u32,  // 1-10
+	pub query: String,
+	pub num: u32, // 1-10
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub struct CseResponse {
-    pub query: String,
-    pub results: Vec<CseResultItem>,
+	pub query: String,
+	pub results: Vec<CseResultItem>,
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub struct CseResultItem {
-    pub title: String,
-    pub url: String,
-    pub snippet: String,
-    pub display_link: Option<String>,
-    pub rank: u32,
+	pub title: String,
+	pub url: String,
+	pub snippet: String,
+	pub display_link: Option<String>,
+	pub rank: u32,
 }
 ```
 
@@ -266,23 +274,23 @@ pub struct CseResultItem {
 
 #[derive(Debug, thiserror::Error)]
 pub enum CseError {
-    #[error("Network error: {0}")]
-    Network(#[from] reqwest::Error),
-    
-    #[error("Request timed out")]
-    Timeout,
-    
-    #[error("Rate limit exceeded")]
-    RateLimited,
-    
-    #[error("Invalid API key or CSE ID")]
-    Unauthorized,
-    
-    #[error("Invalid response from Google: {0}")]
-    InvalidResponse(String),
-    
-    #[error("Google API error: {status} - {message}")]
-    ApiError { status: u16, message: String },
+	#[error("Network error: {0}")]
+	Network(#[from] reqwest::Error),
+
+	#[error("Request timed out")]
+	Timeout,
+
+	#[error("Rate limit exceeded")]
+	RateLimited,
+
+	#[error("Invalid API key or CSE ID")]
+	Unauthorized,
+
+	#[error("Invalid response from Google: {0}")]
+	InvalidResponse(String),
+
+	#[error("Google API error: {status} - {message}")]
+	ApiError { status: u16, message: String },
 }
 ```
 
@@ -292,12 +300,12 @@ pub enum CseError {
 
 **Query Parameters:**
 
-| Parameter | Value |
-|-----------|-------|
-| `key` | API key from `CseClient` |
-| `cx` | CSE ID from `CseClient` |
-| `q` | User's search query |
-| `num` | Number of results (1-10) |
+| Parameter | Value                    |
+| --------- | ------------------------ |
+| `key`     | API key from `CseClient` |
+| `cx`      | CSE ID from `CseClient`  |
+| `q`       | User's search query      |
+| `num`     | Number of results (1-10) |
 
 **Response Mapping:**
 
@@ -317,7 +325,8 @@ items[n].displayLink             →  results[n].display_link
 
 ### Overview
 
-CSE responses are cached in SQLite for 24 hours to reduce API calls and improve latency. The cache uses an exact match on `(query, max_results)`.
+CSE responses are cached in SQLite for 24 hours to reduce API calls and improve latency. The cache
+uses an exact match on `(query, max_results)`.
 
 ### Cache Table Schema
 
@@ -337,10 +346,10 @@ CREATE INDEX IF NOT EXISTS idx_cse_cache_created_at
 
 ### Cache Key Semantics
 
-| Component | Normalization |
-|-----------|---------------|
-| `query` | Lowercase, whitespace collapsed to single spaces |
-| `max_results` | Clamped to 1-10 |
+| Component     | Normalization                                    |
+| ------------- | ------------------------------------------------ |
+| `query`       | Lowercase, whitespace collapsed to single spaces |
+| `max_results` | Clamped to 1-10                                  |
 
 ### Cache Behavior
 
@@ -392,19 +401,19 @@ CREATE INDEX IF NOT EXISTS idx_cse_cache_created_at
 
 ```rust
 impl ThreadRepository {
-    /// Get cached CSE response if exists and not expired.
-    pub async fn get_cse_cache(
-        &self,
-        query: &str,
-        max_results: u32,
-    ) -> Result<Option<CseResponse>, ServerError>;
+	/// Get cached CSE response if exists and not expired.
+	async fn get_cse_cache(
+		&self,
+		query: &str,
+		max_results: u32,
+	) -> Result<Option<CseResponse>, ServerError>;
 
-    /// Store CSE response in cache, cleaning up expired entries.
-    pub async fn put_cse_cache(
-        &self,
-        response: &CseResponse,
-        max_results: u32,
-    ) -> Result<(), ServerError>;
+	/// Store CSE response in cache, cleaning up expired entries.
+	async fn put_cse_cache(
+		&self,
+		response: &CseResponse,
+		max_results: u32,
+	) -> Result<(), ServerError>;
 }
 ```
 
@@ -455,11 +464,12 @@ pub use types::{CseRequest, CseResponse, CseResultItem};
 ```
 
 Add to workspace `Cargo.toml`:
+
 ```toml
 [workspace]
 members = [
-    # ... existing ...
-    "crates/loom-google-cse",
+	# ... existing ...
+	"crates/loom-google-cse",
 ]
 ```
 
@@ -468,18 +478,23 @@ members = [
 ```rust
 // crates/loom-tools/src/web_search.rs
 pub struct WebSearchTool {
-    client: reqwest::Client,
-    base_url: String,
+	client: reqwest::Client,
+	base_url: String,
 }
 
 #[async_trait]
 impl Tool for WebSearchTool {
-    fn name(&self) -> &str { "web_search" }
-    fn description(&self) -> &str { 
-        "Perform a web search via the Loom server using Google Custom Search Engine (CSE)." 
-    }
-    fn input_schema(&self) -> serde_json::Value { /* see above */ }
-    async fn invoke(&self, args: Value, _ctx: &ToolContext) -> Result<Value, ToolError> { /* ... */ }
+	fn name(&self) -> &str {
+		"web_search"
+	}
+	fn description(&self) -> &str {
+		"Perform a web search via the Loom server using Google Custom Search Engine (CSE)."
+	}
+	fn input_schema(&self) -> serde_json::Value { // see above
+	}
+	async fn invoke(&self, args: Value, _ctx: &ToolContext) -> Result<Value, ToolError> {
+		// ...
+	}
 }
 ```
 
@@ -498,12 +513,12 @@ pub use web_search::WebSearchTool;
 use loom_tools::WebSearchTool;
 
 fn create_tool_registry() -> ToolRegistry {
-    let mut registry = ToolRegistry::new();
-    registry.register(Box::new(ReadFileTool::new()));
-    registry.register(Box::new(ListFilesTool::new()));
-    registry.register(Box::new(EditFileTool::new()));
-    registry.register(Box::new(WebSearchTool::default())); // NEW
-    registry
+	let mut registry = ToolRegistry::new();
+	registry.register(Box::new(ReadFileTool::new()));
+	registry.register(Box::new(ListFilesTool::new()));
+	registry.register(Box::new(EditFileTool::new()));
+	registry.register(Box::new(WebSearchTool::default())); // NEW
+	registry
 }
 ```
 
@@ -514,18 +529,20 @@ fn create_tool_registry() -> ToolRegistry {
 use loom_google_cse::{CseClient, CseRequest};
 
 pub fn create_router(repo: Arc<ThreadRepository>) -> Router {
-    Router::new()
+	Router::new()
         // ... existing routes ...
         .route("/proxy/cse", post(proxy_cse))  // NEW
         .with_state(repo)
 }
 
-async fn proxy_cse(Json(body): Json<CseProxyRequest>) -> Result<Json<CseProxyResponse>, ServerError> {
-    // 1. Validate request
-    // 2. Create CseClient with env secrets
-    // 3. Call client.search()
-    // 4. Map CseError -> ServerError
-    // 5. Return CseResponse
+async fn proxy_cse(
+	Json(body): Json<CseProxyRequest>,
+) -> Result<Json<CseProxyResponse>, ServerError> {
+	// 1. Validate request
+	// 2. Create CseClient with env secrets
+	// 3. Call client.search()
+	// 4. Map CseError -> ServerError
+	// 5. Return CseResponse
 }
 ```
 
@@ -537,32 +554,32 @@ async fn proxy_cse(Json(body): Json<CseProxyRequest>) -> Result<Json<CseProxyRes
 
 ```rust
 proptest! {
-    /// **Property: max_results is always capped at 10**
-    ///
-    /// Why: Prevents excessive API usage and ensures bounded response sizes.
-    #[test]
-    fn max_results_capped_at_10(max_results in 1u32..100u32) {
-        let capped = max_results.min(10);
-        prop_assert!(capped <= 10);
-    }
+		/// **Property: max_results is always capped at 10**
+		///
+		/// Why: Prevents excessive API usage and ensures bounded response sizes.
+		#[test]
+		fn max_results_capped_at_10(max_results in 1u32..100u32) {
+				let capped = max_results.min(10);
+				prop_assert!(capped <= 10);
+		}
 
-    /// **Property: Empty queries are rejected**
-    ///
-    /// Why: Empty queries waste API quota and return no useful results.
-    #[test]
-    fn empty_query_rejected(query in "\\s*") {
-        let trimmed = query.trim();
-        prop_assert!(trimmed.is_empty());
-        // Tool should return ToolError::InvalidArguments
-    }
+		/// **Property: Empty queries are rejected**
+		///
+		/// Why: Empty queries waste API quota and return no useful results.
+		#[test]
+		fn empty_query_rejected(query in "\\s*") {
+				let trimmed = query.trim();
+				prop_assert!(trimmed.is_empty());
+				// Tool should return ToolError::InvalidArguments
+		}
 
-    /// **Property: Query string round-trips unchanged**
-    ///
-    /// Why: User's intent must be preserved through the proxy.
-    #[test]
-    fn query_preserved(query in ".{1,200}") {
-        // Response should contain same query as input
-    }
+		/// **Property: Query string round-trips unchanged**
+		///
+		/// Why: User's intent must be preserved through the proxy.
+		#[test]
+		fn query_preserved(query in ".{1,200}") {
+				// Response should contain same query as input
+		}
 }
 ```
 
@@ -571,27 +588,29 @@ proptest! {
 ```rust
 #[tokio::test]
 async fn test_proxy_cse_empty_query_returns_400() {
-    let (app, _dir) = create_test_app().await;
-    let response = app
-        .oneshot(
-            Request::builder()
-                .method("POST")
-                .uri("/proxy/cse")
-                .header("Content-Type", "application/json")
-                .body(Body::from(r#"{"query":""}"#))
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+	let (app, _dir) = create_test_app().await;
+	let response = app
+		.oneshot(
+			Request::builder()
+				.method("POST")
+				.uri("/proxy/cse")
+				.header("Content-Type", "application/json")
+				.body(Body::from(r#"{"query":""}"#))
+				.unwrap(),
+		)
+		.await
+		.unwrap();
+	assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 }
 
 #[tokio::test]
 async fn test_web_search_tool_invalid_args() {
-    let tool = WebSearchTool::default();
-    let ctx = ToolContext { workspace_root: PathBuf::from("/tmp") };
-    let result = tool.invoke(json!({"query": ""}), &ctx).await;
-    assert!(matches!(result, Err(ToolError::InvalidArguments(_))));
+	let tool = WebSearchTool::default();
+	let ctx = ToolContext {
+		workspace_root: PathBuf::from("/tmp"),
+	};
+	let result = tool.invoke(json!({"query": ""}), &ctx).await;
+	assert!(matches!(result, Err(ToolError::InvalidArguments(_))));
 }
 ```
 
@@ -602,24 +621,28 @@ async fn test_web_search_tool_invalid_args() {
 ### 9.1 Caching
 
 Add server-side LRU cache keyed by `(query, max_results)` with short TTL (5-15 min) if:
+
 - Quota usage becomes a concern
 - Same queries are repeated frequently
 
 ### 9.2 Rate Limiting
 
 Add `tower`-based rate limiting on `/proxy/cse` if:
+
 - Abuse patterns emerge
 - Need to protect API quota
 
 ### 9.3 Multi-Provider Support
 
 Abstract search provider behind trait if:
+
 - Want to support Bing, Brave, or other search APIs
 - Need fallback when one provider is unavailable
 
 ### 9.4 Rich Search Options
 
 Extend input schema to support:
+
 - Site-specific search (`site:docs.rs`)
 - Date filtering
 - Safe search settings
@@ -633,8 +656,8 @@ Extend input schema to support:
 ```rust
 #[derive(Debug, Deserialize)]
 struct WebSearchArgs {
-    query: String,
-    max_results: Option<u32>,
+	query: String,
+	max_results: Option<u32>,
 }
 ```
 
@@ -643,17 +666,17 @@ struct WebSearchArgs {
 ```rust
 #[derive(Debug, Serialize)]
 pub struct WebSearchResultItem {
-    pub title: String,
-    pub url: String,
-    pub snippet: String,
-    pub display_link: Option<String>,
-    pub rank: u32,
+	pub title: String,
+	pub url: String,
+	pub snippet: String,
+	pub display_link: Option<String>,
+	pub rank: u32,
 }
 
 #[derive(Debug, Serialize)]
 pub struct WebSearchResult {
-    pub query: String,
-    pub results: Vec<WebSearchResultItem>,
+	pub query: String,
+	pub results: Vec<WebSearchResultItem>,
 }
 ```
 
@@ -662,14 +685,14 @@ pub struct WebSearchResult {
 ```rust
 #[derive(Debug, Deserialize)]
 struct CseProxyRequest {
-    query: String,
-    max_results: Option<u32>,
+	query: String,
+	max_results: Option<u32>,
 }
 
 #[derive(Debug, Serialize)]
 struct CseProxyResponse {
-    query: String,
-    results: Vec<CseProxyResultItem>,
+	query: String,
+	results: Vec<CseProxyResultItem>,
 }
 ```
 
@@ -679,9 +702,9 @@ struct CseProxyResponse {
 
 ```rust
 pub enum ServerError {
-    // ... existing variants ...
-    UpstreamTimeout(String),    // HTTP 504
-    UpstreamError(String),      // HTTP 502
-    ServiceUnavailable(String), // HTTP 503
+	// ... existing variants ...
+	UpstreamTimeout(String),    // HTTP 504
+	UpstreamError(String),      // HTTP 502
+	ServiceUnavailable(String), // HTTP 503
 }
 ```

@@ -1,7 +1,12 @@
+<!--
+ Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+ SPDX-License-Identifier: Proprietary
+-->
+
 # Thread Persistence System Specification
 
-**Status:** Draft  
-**Version:** 1.0  
+**Status:** Draft\
+**Version:** 1.0\
 **Last Updated:** 2024-12-17
 
 ---
@@ -10,12 +15,15 @@
 
 ### Purpose
 
-The Thread Persistence System enables Loom to save, sync, and restore conversation sessions (threads) across CLI invocations. A thread is a JSON document representing a complete conversation with the LLM, including messages, agent state, and metadata.
+The Thread Persistence System enables Loom to save, sync, and restore conversation sessions
+(threads) across CLI invocations. A thread is a JSON document representing a complete conversation
+with the LLM, including messages, agent state, and metadata.
 
 ### Goals
 
 - **Persistence**: Save conversation state locally so sessions can be resumed
-- **Synchronization**: Sync threads to a central server for backup, multi-device access, and analytics
+- **Synchronization**: Sync threads to a central server for backup, multi-device access, and
+  analytics
 - **Offline-First**: Always write locally first; sync is best-effort and non-blocking
 - **XDG Compliance**: Follow XDG Base Directory Specification for local storage
 - **Type Safety**: Shared Rust types between client and server
@@ -40,6 +48,7 @@ T-019b2b97-fddf-7602-a3e4-1c4a295110c0
 ```
 
 Properties:
+
 - **Time-sorted**: UUID7 embeds timestamp, enabling chronological ordering
 - **Globally unique**: No coordination required between clients
 - **Human-readable prefix**: `T-` distinguishes threads from other IDs
@@ -48,54 +57,54 @@ Properties:
 
 ```json
 {
-  "id": "T-019b2b97-fddf-7602-a3e4-1c4a295110c0",
-  "version": 5,
-  "created_at": "2025-01-01T12:00:00Z",
-  "updated_at": "2025-01-01T12:05:00Z",
-  "last_activity_at": "2025-01-01T12:05:00Z",
-  
-  "workspace_root": "/home/alice/projects/my_app",
-  "cwd": "/home/alice/projects/my_app",
-  "loom_version": "0.4.0",
-  
-  "provider": "anthropic",
-  "model": "claude-sonnet-4-20250514",
-  
-  "conversation": {
-    "messages": [
-      {
-        "id": "m-019b2b97-fddf-7602-a3e4-000000000001",
-        "role": "user",
-        "content": "How do I add logging?",
-        "created_at": "2025-01-01T12:00:01Z"
-      },
-      {
-        "id": "m-019b2b97-fddf-7602-a3e4-000000000002",
-        "role": "assistant",
-        "content": "You can use the tracing crate...",
-        "tool_calls": [],
-        "created_at": "2025-01-01T12:00:05Z"
-      }
-    ]
-  },
-  
-  "agent_state": {
-    "kind": "waiting_for_user_input",
-    "retries": 0,
-    "last_error": null,
-    "pending_tool_calls": []
-  },
-  
-  "visibility": "organization",
-  "is_private": false,
-  "is_shared_with_support": false,
+	"id": "T-019b2b97-fddf-7602-a3e4-1c4a295110c0",
+	"version": 5,
+	"created_at": "2025-01-01T12:00:00Z",
+	"updated_at": "2025-01-01T12:05:00Z",
+	"last_activity_at": "2025-01-01T12:05:00Z",
 
-  "metadata": {
-    "title": "Add logging to my app",
-    "tags": ["logging", "tracing"],
-    "is_pinned": false,
-    "extra": {}
-  }
+	"workspace_root": "/home/alice/projects/my_app",
+	"cwd": "/home/alice/projects/my_app",
+	"loom_version": "0.4.0",
+
+	"provider": "anthropic",
+	"model": "claude-sonnet-4-20250514",
+
+	"conversation": {
+		"messages": [
+			{
+				"id": "m-019b2b97-fddf-7602-a3e4-000000000001",
+				"role": "user",
+				"content": "How do I add logging?",
+				"created_at": "2025-01-01T12:00:01Z"
+			},
+			{
+				"id": "m-019b2b97-fddf-7602-a3e4-000000000002",
+				"role": "assistant",
+				"content": "You can use the tracing crate...",
+				"tool_calls": [],
+				"created_at": "2025-01-01T12:00:05Z"
+			}
+		]
+	},
+
+	"agent_state": {
+		"kind": "waiting_for_user_input",
+		"retries": 0,
+		"last_error": null,
+		"pending_tool_calls": []
+	},
+
+	"visibility": "organization",
+	"is_private": false,
+	"is_shared_with_support": false,
+
+	"metadata": {
+		"title": "Add logging to my app",
+		"tags": ["logging", "tracing"],
+		"is_pinned": false,
+		"extra": {}
+	}
 }
 ```
 
@@ -107,23 +116,22 @@ Properties:
 pub struct ThreadId(pub String);
 
 impl ThreadId {
-    /// Create a new thread ID with UUID7
-    pub fn new() -> Self {
-        let uuid = uuid7::uuid7();
-        Self(format!("T-{}", uuid))
-    }
-    
-    /// Parse an existing thread ID string
-    pub fn parse(s: &str) -> Result<Self, ThreadIdError> {
-        if !s.starts_with("T-") {
-            return Err(ThreadIdError::InvalidPrefix);
-        }
-        // Validate UUID7 portion
-        let uuid_part = &s[2..];
-        uuid7::Uuid::parse_str(uuid_part)
-            .map_err(|_| ThreadIdError::InvalidUuid)?;
-        Ok(Self(s.to_string()))
-    }
+	/// Create a new thread ID with UUID7
+	pub fn new() -> Self {
+		let uuid = uuid7::uuid7();
+		Self(format!("T-{}", uuid))
+	}
+
+	/// Parse an existing thread ID string
+	pub fn parse(s: &str) -> Result<Self, ThreadIdError> {
+		if !s.starts_with("T-") {
+			return Err(ThreadIdError::InvalidPrefix);
+		}
+		// Validate UUID7 portion
+		let uuid_part = &s[2..];
+		uuid7::Uuid::parse_str(uuid_part).map_err(|_| ThreadIdError::InvalidUuid)?;
+		Ok(Self(s.to_string()))
+	}
 }
 
 /// Thread visibility controls how synced threads are exposed on the server.
@@ -133,103 +141,103 @@ impl ThreadId {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ThreadVisibility {
-    Organization,
-    Private,
-    Public,
+	Organization,
+	Private,
+	Public,
 }
 
 impl Default for ThreadVisibility {
-    fn default() -> Self {
-        ThreadVisibility::Organization
-    }
+	fn default() -> Self {
+		ThreadVisibility::Organization
+	}
 }
 
 /// Complete thread document
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Thread {
-    pub id: ThreadId,
-    pub version: u64,
-    pub created_at: String,       // RFC3339
-    pub updated_at: String,       // RFC3339
-    pub last_activity_at: String, // RFC3339
+	pub id: ThreadId,
+	pub version: u64,
+	pub created_at: String,       // RFC3339
+	pub updated_at: String,       // RFC3339
+	pub last_activity_at: String, // RFC3339
 
-    pub workspace_root: Option<String>,
-    pub cwd: Option<String>,
-    pub loom_version: Option<String>,
+	pub workspace_root: Option<String>,
+	pub cwd: Option<String>,
+	pub loom_version: Option<String>,
 
-    pub provider: Option<String>,
-    pub model: Option<String>,
+	pub provider: Option<String>,
+	pub model: Option<String>,
 
-    pub visibility: ThreadVisibility,
-    pub is_private: bool,  // If true, thread is local-only and NEVER syncs
-    pub is_shared_with_support: bool,  // If true, thread has been shared with support team
+	pub visibility: ThreadVisibility,
+	pub is_private: bool, // If true, thread is local-only and NEVER syncs
+	pub is_shared_with_support: bool, // If true, thread has been shared with support team
 
-    pub conversation: ConversationSnapshot,
-    pub agent_state: AgentStateSnapshot,
-    pub metadata: ThreadMetadata,
+	pub conversation: ConversationSnapshot,
+	pub agent_state: AgentStateSnapshot,
+	pub metadata: ThreadMetadata,
 }
 
 /// Snapshot of the conversation
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ConversationSnapshot {
-    pub messages: Vec<MessageSnapshot>,
+	pub messages: Vec<MessageSnapshot>,
 }
 
 /// Individual message in a conversation
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MessageSnapshot {
-    pub id: Option<String>,
-    pub role: String,             // "user", "assistant", "tool", "system"
-    pub content: String,
-    pub tool_name: Option<String>,
-    pub tool_call_id: Option<String>,
-    pub tool_input: Option<serde_json::Value>,
-    pub tool_output: Option<serde_json::Value>,
-    pub created_at: Option<String>,
+	pub id: Option<String>,
+	pub role: String, // "user", "assistant", "tool", "system"
+	pub content: String,
+	pub tool_name: Option<String>,
+	pub tool_call_id: Option<String>,
+	pub tool_input: Option<serde_json::Value>,
+	pub tool_output: Option<serde_json::Value>,
+	pub created_at: Option<String>,
 }
 
 /// Snapshot of agent state
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AgentStateSnapshot {
-    pub kind: AgentStateKind,
-    pub retries: u32,
-    pub last_error: Option<String>,
-    pub pending_tool_calls: Vec<String>,
+	pub kind: AgentStateKind,
+	pub retries: u32,
+	pub last_error: Option<String>,
+	pub pending_tool_calls: Vec<String>,
 }
 
 /// Enumeration of agent states (mirrors loom-core::AgentState variants)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AgentStateKind {
-    WaitingForUserInput,
-    CallingLlm,
-    ProcessingLlmResponse,
-    ExecutingTools,
-    Error,
-    ShuttingDown,
+	WaitingForUserInput,
+	CallingLlm,
+	ProcessingLlmResponse,
+	ExecutingTools,
+	Error,
+	ShuttingDown,
 }
 
 /// Thread metadata
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct ThreadMetadata {
-    pub title: Option<String>,
-    pub tags: Vec<String>,
-    pub is_pinned: bool,
-    pub extra: serde_json::Value,
+	pub title: Option<String>,
+	pub tags: Vec<String>,
+	pub is_pinned: bool,
+	pub extra: serde_json::Value,
 }
 
 /// Summary for list endpoints
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ThreadSummary {
-    pub id: ThreadId,
-    pub title: Option<String>,
-    pub workspace_root: Option<String>,
-    pub last_activity_at: String,
-    pub provider: Option<String>,
-    pub model: Option<String>,
-    pub tags: Vec<String>,
-    pub version: u64,
-    pub message_count: u32,
+	pub id: ThreadId,
+	pub title: Option<String>,
+	pub workspace_root: Option<String>,
+	pub last_activity_at: String,
+	pub provider: Option<String>,
+	pub model: Option<String>,
+	pub tags: Vec<String>,
+	pub version: u64,
+	pub message_count: u32,
 }
 ```
 
@@ -241,16 +249,19 @@ Threads are persisted at two key points:
 
 ### 3.1 After Inferencing Turn Completes
 
-**Definition**: An inferencing turn completes when the agent returns to `WaitingForUserInput` after processing user input, LLM response, and any tool executions.
+**Definition**: An inferencing turn completes when the agent returns to `WaitingForUserInput` after
+processing user input, LLM response, and any tool executions.
 
 **State Machine Integration**:
+
 ```
 UserInput → CallingLlm → ProcessingLlmResponse → ExecutingTools → CallingLlm → ... → WaitingForUserInput
                                                                                               ↑
                                                                                        SYNC HERE
 ```
 
-In the REPL driver (`loom-cli`), after `handle_event()` returns `AgentAction::WaitForInput` and state is `WaitingForUserInput`:
+In the REPL driver (`loom-cli`), after `handle_event()` returns `AgentAction::WaitForInput` and
+state is `WaitingForUserInput`:
 
 ```rust
 loop {
@@ -274,6 +285,7 @@ loop {
 ### 3.2 On Graceful Shutdown
 
 **Definition**: When Loom CLI exits via:
+
 - `ShutdownRequested` event (SIGINT, Ctrl+C)
 - End of input (EOF)
 - Explicit `/exit` command
@@ -292,7 +304,8 @@ AgentAction::Shutdown => {
 
 ## 4. CLI Thread Commands
 
-The Loom CLI provides commands for managing and resuming threads using the `ThreadStore` abstraction.
+The Loom CLI provides commands for managing and resuming threads using the `ThreadStore`
+abstraction.
 
 ### 4.1 Commands
 
@@ -319,6 +332,7 @@ The Loom CLI provides commands for managing and resuming threads using the `Thre
 ### 4.3 Version Headers
 
 All HTTP requests from the CLI to the loom-server include version headers:
+
 - `X-Loom-Version` - Package version (e.g., `0.1.0`)
 - `X-Loom-Git-Sha` - Git commit SHA
 - `X-Loom-Build-Timestamp` - Build time (RFC3339)
@@ -330,12 +344,14 @@ All HTTP requests from the CLI to the loom-server include version headers:
 - `loom logout` - Stub, not implemented yet
 
 Server stub endpoints:
+
 - POST /v1/auth/login - returns 501 Not Implemented
 - POST /v1/auth/logout - returns 501 Not Implemented
 
 ### 4.5 Binary Distribution
 
 The server serves pre-built CLI binaries at `/bin/{platform}`:
+
 - `GET /bin/linux-x86_64` - Linux x86_64 binary
 - `GET /bin/linux-aarch64` - Linux ARM64 binary
 - `GET /bin/macos-x86_64` - macOS Intel binary
@@ -374,17 +390,21 @@ loom logout
 
 ### 4.7 Private and Share Commands
 
-- `loom private` - Starts a new private (local-only) session that NEVER syncs to the server. Sets `is_private = true` on the thread.
+- `loom private` - Starts a new private (local-only) session that NEVER syncs to the server. Sets
+  `is_private = true` on the thread.
 
-- `loom share [threadId] --visibility [organization|private|public]` - Changes the server-side visibility of a synced thread.
+- `loom share [threadId] --visibility [organization|private|public]` - Changes the server-side
+  visibility of a synced thread.
   - Cannot be used on private (local-only) threads
   - If no threadId provided, uses most recent thread
 
-- `loom share [threadId] --support` - Shares the thread with the support team by setting `is_shared_with_support = true`.
+- `loom share [threadId] --support` - Shares the thread with the support team by setting
+  `is_shared_with_support = true`.
   - Does NOT change the thread's visibility setting
   - Cannot be used on private (local-only) threads
 
 Example usage:
+
 ```bash
 # Start a private session that never syncs
 loom private
@@ -404,6 +424,7 @@ loom share T-019b2b97-fddf-7602-a3e4-1c4a295110c0 --visibility private
 **Invariant**: If `thread.is_private == true`, the thread MUST NEVER be sent to the server.
 
 This is enforced at the `SyncingThreadStore` layer:
+
 - `save()` checks `is_private` and skips server sync if true
 - `delete()` checks `is_private` and skips server delete notification if true
 - No HTTP requests are made for private threads
@@ -418,68 +439,71 @@ This ensures that even if sync is configured, private sessions remain completely
 
 Following XDG Base Directory Specification:
 
-| Purpose | Path |
-|---------|------|
-| Thread files | `$XDG_DATA_HOME/loom/threads/<thread_id>.json` |
-| Pending sync queue | `$XDG_STATE_HOME/loom/sync/pending.json` |
+| Purpose            | Path                                           |
+| ------------------ | ---------------------------------------------- |
+| Thread files       | `$XDG_DATA_HOME/loom/threads/<thread_id>.json` |
+| Pending sync queue | `$XDG_STATE_HOME/loom/sync/pending.json`       |
 
 ### 5.2 LocalThreadStore
 
 ```rust
 pub struct LocalThreadStore {
-    threads_dir: PathBuf,
-    state_dir: PathBuf,
+	threads_dir: PathBuf,
+	state_dir: PathBuf,
 }
 
 impl LocalThreadStore {
-    pub fn from_xdg() -> Result<Self, ThreadStoreError> {
-        let paths = PathsConfig::from_environment()?;
-        let threads_dir = paths.data_dir.join("threads");
-        let state_dir = paths.state_dir.join("sync");
-        std::fs::create_dir_all(&threads_dir)?;
-        std::fs::create_dir_all(&state_dir)?;
-        Ok(Self { threads_dir, state_dir })
-    }
-    
-    fn thread_path(&self, id: &ThreadId) -> PathBuf {
-        self.threads_dir.join(format!("{}.json", id.0))
-    }
+	pub fn from_xdg() -> Result<Self, ThreadStoreError> {
+		let paths = PathsConfig::from_environment()?;
+		let threads_dir = paths.data_dir.join("threads");
+		let state_dir = paths.state_dir.join("sync");
+		std::fs::create_dir_all(&threads_dir)?;
+		std::fs::create_dir_all(&state_dir)?;
+		Ok(Self {
+			threads_dir,
+			state_dir,
+		})
+	}
+
+	fn thread_path(&self, id: &ThreadId) -> PathBuf {
+		self.threads_dir.join(format!("{}.json", id.0))
+	}
 }
 
 #[async_trait]
 impl ThreadStore for LocalThreadStore {
-    async fn load(&self, id: &ThreadId) -> Result<Option<Thread>, ThreadStoreError> {
-        let path = self.thread_path(id);
-        if !path.exists() {
-            return Ok(None);
-        }
-        let contents = tokio::fs::read_to_string(&path).await?;
-        let thread: Thread = serde_json::from_str(&contents)?;
-        Ok(Some(thread))
-    }
+	async fn load(&self, id: &ThreadId) -> Result<Option<Thread>, ThreadStoreError> {
+		let path = self.thread_path(id);
+		if !path.exists() {
+			return Ok(None);
+		}
+		let contents = tokio::fs::read_to_string(&path).await?;
+		let thread: Thread = serde_json::from_str(&contents)?;
+		Ok(Some(thread))
+	}
 
-    async fn save(&self, thread: &Thread) -> Result<(), ThreadStoreError> {
-        let path = self.thread_path(&thread.id);
-        let contents = serde_json::to_string_pretty(thread)?;
-        // Atomic write: write to temp file, then rename
-        let temp_path = path.with_extension("json.tmp");
-        tokio::fs::write(&temp_path, &contents).await?;
-        tokio::fs::rename(&temp_path, &path).await?;
-        tracing::debug!(thread_id = %thread.id.0, version = thread.version, "thread saved locally");
-        Ok(())
-    }
+	async fn save(&self, thread: &Thread) -> Result<(), ThreadStoreError> {
+		let path = self.thread_path(&thread.id);
+		let contents = serde_json::to_string_pretty(thread)?;
+		// Atomic write: write to temp file, then rename
+		let temp_path = path.with_extension("json.tmp");
+		tokio::fs::write(&temp_path, &contents).await?;
+		tokio::fs::rename(&temp_path, &path).await?;
+		tracing::debug!(thread_id = %thread.id.0, version = thread.version, "thread saved locally");
+		Ok(())
+	}
 
-    async fn list(&self, limit: u32) -> Result<Vec<ThreadSummary>, ThreadStoreError> {
-        // Read all thread files, parse, sort by last_activity_at desc, take limit
-    }
+	async fn list(&self, limit: u32) -> Result<Vec<ThreadSummary>, ThreadStoreError> {
+		// Read all thread files, parse, sort by last_activity_at desc, take limit
+	}
 
-    async fn delete(&self, id: &ThreadId) -> Result<(), ThreadStoreError> {
-        let path = self.thread_path(id);
-        if path.exists() {
-            tokio::fs::remove_file(&path).await?;
-        }
-        Ok(())
-    }
+	async fn delete(&self, id: &ThreadId) -> Result<(), ThreadStoreError> {
+		let path = self.thread_path(id);
+		if path.exists() {
+			tokio::fs::remove_file(&path).await?;
+		}
+		Ok(())
+	}
 }
 ```
 
@@ -491,16 +515,17 @@ impl ThreadStore for LocalThreadStore {
 
 Base URL: `https://api.loom.example.com/v1`
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `PUT` | `/threads/{id}` | Create or update thread |
-| `GET` | `/threads/{id}` | Get thread by ID |
-| `GET` | `/threads` | List threads |
-| `DELETE` | `/threads/{id}` | Soft-delete thread |
+| Method   | Endpoint        | Description             |
+| -------- | --------------- | ----------------------- |
+| `PUT`    | `/threads/{id}` | Create or update thread |
+| `GET`    | `/threads/{id}` | Get thread by ID        |
+| `GET`    | `/threads`      | List threads            |
+| `DELETE` | `/threads/{id}` | Soft-delete thread      |
 
 ### 6.2 PUT /threads/{id}
 
 **Request**:
+
 ```http
 PUT /v1/threads/T-019b2b97-fddf-7602-a3e4-1c4a295110c0
 Content-Type: application/json
@@ -515,13 +540,14 @@ If-Match: 4
 
 **Responses**:
 
-| Status | Description | Body |
-|--------|-------------|------|
-| `200 OK` | Thread upserted | `Thread` (server's version) |
-| `409 Conflict` | Version mismatch | `{"error": "conflict", "server_version": 6, "client_version": 5}` |
-| `400 Bad Request` | Invalid payload | `{"error": "invalid_request", "message": "..."}` |
+| Status            | Description      | Body                                                              |
+| ----------------- | ---------------- | ----------------------------------------------------------------- |
+| `200 OK`          | Thread upserted  | `Thread` (server's version)                                       |
+| `409 Conflict`    | Version mismatch | `{"error": "conflict", "server_version": 6, "client_version": 5}` |
+| `400 Bad Request` | Invalid payload  | `{"error": "invalid_request", "message": "..."}`                  |
 
 **Behavior**:
+
 1. If thread doesn't exist → Insert with `version` from payload
 2. If exists and `If-Match` header matches → Update
 3. If exists and `If-Match` doesn't match → 409 Conflict
@@ -529,66 +555,71 @@ If-Match: 4
 ### 6.3 GET /threads/{id}
 
 **Request**:
+
 ```http
 GET /v1/threads/T-019b2b97-fddf-7602-a3e4-1c4a295110c0
 ```
 
 **Responses**:
 
-| Status | Description | Body |
-|--------|-------------|------|
-| `200 OK` | Thread found | `Thread` JSON |
+| Status          | Description      | Body                     |
+| --------------- | ---------------- | ------------------------ |
+| `200 OK`        | Thread found     | `Thread` JSON            |
 | `404 Not Found` | Thread not found | `{"error": "not_found"}` |
 
 ### 6.4 GET /threads
 
 **Request**:
+
 ```http
 GET /v1/threads?workspace=/home/alice/projects&limit=50
 ```
 
 **Query Parameters**:
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `workspace` | string | - | Filter by workspace root |
-| `limit` | u32 | 50 | Max results |
-| `offset` | u32 | 0 | Pagination offset |
+
+| Parameter   | Type   | Default | Description              |
+| ----------- | ------ | ------- | ------------------------ |
+| `workspace` | string | -       | Filter by workspace root |
+| `limit`     | u32    | 50      | Max results              |
+| `offset`    | u32    | 0       | Pagination offset        |
 
 **Response**:
+
 ```json
 {
-  "threads": [
-    {
-      "id": "T-019b2b97-...",
-      "title": "Add logging",
-      "workspace_root": "/home/alice/projects",
-      "last_activity_at": "2025-01-01T12:05:00Z",
-      "provider": "anthropic",
-      "model": "claude-sonnet-4-20250514",
-      "tags": ["logging"],
-      "version": 5,
-      "message_count": 10
-    }
-  ],
-  "total": 100,
-  "limit": 50,
-  "offset": 0
+	"threads": [
+		{
+			"id": "T-019b2b97-...",
+			"title": "Add logging",
+			"workspace_root": "/home/alice/projects",
+			"last_activity_at": "2025-01-01T12:05:00Z",
+			"provider": "anthropic",
+			"model": "claude-sonnet-4-20250514",
+			"tags": ["logging"],
+			"version": 5,
+			"message_count": 10
+		}
+	],
+	"total": 100,
+	"limit": 50,
+	"offset": 0
 }
 ```
 
 ### 6.5 DELETE /threads/{id}
 
 **Request**:
+
 ```http
 DELETE /v1/threads/T-019b2b97-fddf-7602-a3e4-1c4a295110c0
 ```
 
 **Responses**:
 
-| Status | Description |
-|--------|-------------|
-| `204 No Content` | Thread deleted |
-| `404 Not Found` | Thread not found |
+| Status           | Description      |
+| ---------------- | ---------------- |
+| `204 No Content` | Thread deleted   |
+| `404 Not Found`  | Thread not found |
 
 **Behavior**: Soft-delete by setting `deleted_at` timestamp.
 
@@ -599,25 +630,26 @@ DELETE /v1/threads/T-019b2b97-fddf-7602-a3e4-1c4a295110c0
 ### 7.1 Database Configuration
 
 ```rust
-use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqliteSynchronous};
 use sqlx::SqlitePool;
+use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqliteSynchronous};
 
 pub async fn create_pool(database_url: &str) -> Result<SqlitePool, DbError> {
-    let options = SqliteConnectOptions::from_str(database_url)?
-        .journal_mode(SqliteJournalMode::Wal)
-        .synchronous(SqliteSynchronous::Normal)
-        .create_if_missing(true);
+	let options = SqliteConnectOptions::from_str(database_url)?
+		.journal_mode(SqliteJournalMode::Wal)
+		.synchronous(SqliteSynchronous::Normal)
+		.create_if_missing(true);
 
-    let pool = SqlitePool::connect_with(options).await?;
-    
-    // Run migrations
-    sqlx::migrate!("./migrations").run(&pool).await?;
-    
-    Ok(pool)
+	let pool = SqlitePool::connect_with(options).await?;
+
+	// Run migrations
+	sqlx::migrate!("./migrations").run(&pool).await?;
+
+	Ok(pool)
 }
 ```
 
 **WAL Mode Benefits**:
+
 - Multiple concurrent readers
 - Single writer (with row-level locking)
 - Better crash recovery
@@ -682,61 +714,65 @@ CREATE INDEX IF NOT EXISTS idx_threads_pinned
 
 ```rust
 pub struct ThreadSyncClient {
-    base_url: url::Url,
-    http: reqwest::Client,
-    retry_config: RetryConfig,
+	base_url: url::Url,
+	http: reqwest::Client,
+	retry_config: RetryConfig,
 }
 
 impl ThreadSyncClient {
-    pub fn new(base_url: &str, retry_config: RetryConfig) -> Result<Self, ThreadSyncError> {
-        Ok(Self {
-            base_url: url::Url::parse(base_url)?,
-            http: reqwest::Client::builder()
-                .timeout(Duration::from_secs(30))
-                .build()?,
-            retry_config,
-        })
-    }
+	pub fn new(base_url: &str, retry_config: RetryConfig) -> Result<Self, ThreadSyncError> {
+		Ok(Self {
+			base_url: url::Url::parse(base_url)?,
+			http: reqwest::Client::builder()
+				.timeout(Duration::from_secs(30))
+				.build()?,
+			retry_config,
+		})
+	}
 
-    pub async fn upsert_thread(&self, thread: &Thread) -> Result<Thread, ThreadSyncError> {
-        let url = self.base_url.join(&format!("v1/threads/{}", thread.id.0))?;
-        
-        let response = retry(&self.retry_config, || {
-            let req = self.http
-                .put(url.clone())
-                .header("Content-Type", "application/json")
-                .header("If-Match", thread.version.to_string())
-                .json(thread);
-            async move { req.send().await }
-        }).await?;
+	pub async fn upsert_thread(&self, thread: &Thread) -> Result<Thread, ThreadSyncError> {
+		let url = self.base_url.join(&format!("v1/threads/{}", thread.id.0))?;
 
-        match response.status() {
-            StatusCode::OK => {
-                let server_thread: Thread = response.json().await?;
-                Ok(server_thread)
-            }
-            StatusCode::CONFLICT => {
-                let conflict: ConflictResponse = response.json().await?;
-                Err(ThreadSyncError::Conflict {
-                    local: thread.version,
-                    remote: conflict.server_version,
-                })
-            }
-            status => Err(ThreadSyncError::UnexpectedStatus { status: status.as_u16() }),
-        }
-    }
+		let response = retry(&self.retry_config, || {
+			let req = self
+				.http
+				.put(url.clone())
+				.header("Content-Type", "application/json")
+				.header("If-Match", thread.version.to_string())
+				.json(thread);
+			async move { req.send().await }
+		})
+		.await?;
 
-    pub async fn get_thread(&self, id: &ThreadId) -> Result<Option<Thread>, ThreadSyncError> {
-        // ...
-    }
+		match response.status() {
+			StatusCode::OK => {
+				let server_thread: Thread = response.json().await?;
+				Ok(server_thread)
+			}
+			StatusCode::CONFLICT => {
+				let conflict: ConflictResponse = response.json().await?;
+				Err(ThreadSyncError::Conflict {
+					local: thread.version,
+					remote: conflict.server_version,
+				})
+			}
+			status => Err(ThreadSyncError::UnexpectedStatus {
+				status: status.as_u16(),
+			}),
+		}
+	}
 
-    pub async fn list_threads(&self, params: ListParams) -> Result<ListResponse, ThreadSyncError> {
-        // ...
-    }
+	pub async fn get_thread(&self, id: &ThreadId) -> Result<Option<Thread>, ThreadSyncError> {
+		// ...
+	}
 
-    pub async fn delete_thread(&self, id: &ThreadId) -> Result<(), ThreadSyncError> {
-        // ...
-    }
+	pub async fn list_threads(&self, params: ListParams) -> Result<ListResponse, ThreadSyncError> {
+		// ...
+	}
+
+	pub async fn delete_thread(&self, id: &ThreadId) -> Result<(), ThreadSyncError> {
+		// ...
+	}
 }
 ```
 
@@ -746,45 +782,45 @@ Wraps `LocalThreadStore` and adds server sync:
 
 ```rust
 pub struct SyncingThreadStore {
-    local: LocalThreadStore,
-    sync_client: Option<ThreadSyncClient>,
+	local: LocalThreadStore,
+	sync_client: Option<ThreadSyncClient>,
 }
 
 #[async_trait]
 impl ThreadStore for SyncingThreadStore {
-    async fn save(&self, thread: &Thread) -> Result<(), ThreadStoreError> {
-        // Always save locally first
-        self.local.save(thread).await?;
+	async fn save(&self, thread: &Thread) -> Result<(), ThreadStoreError> {
+		// Always save locally first
+		self.local.save(thread).await?;
 
-        // Sync to server in background (fire-and-forget)
-        if let Some(ref client) = self.sync_client {
-            let thread_clone = thread.clone();
-            let client_clone = client.clone();
-            
-            tokio::spawn(async move {
-                match client_clone.upsert_thread(&thread_clone).await {
-                    Ok(_) => {
-                        tracing::debug!(
-                            thread_id = %thread_clone.id.0,
-                            "thread synced to server"
-                        );
-                    }
-                    Err(e) => {
-                        tracing::warn!(
-                            thread_id = %thread_clone.id.0,
-                            error = %e,
-                            "thread sync failed (local save succeeded)"
-                        );
-                        // Could mark as pending for retry
-                    }
-                }
-            });
-        }
+		// Sync to server in background (fire-and-forget)
+		if let Some(ref client) = self.sync_client {
+			let thread_clone = thread.clone();
+			let client_clone = client.clone();
 
-        Ok(())
-    }
-    
-    // ... other methods delegate to local
+			tokio::spawn(async move {
+				match client_clone.upsert_thread(&thread_clone).await {
+					Ok(_) => {
+						tracing::debug!(
+								thread_id = %thread_clone.id.0,
+								"thread synced to server"
+						);
+					}
+					Err(e) => {
+						tracing::warn!(
+								thread_id = %thread_clone.id.0,
+								error = %e,
+								"thread sync failed (local save succeeded)"
+						);
+						// Could mark as pending for retry
+					}
+				}
+			});
+		}
+
+		Ok(())
+	}
+
+	// ... other methods delegate to local
 }
 ```
 
@@ -797,17 +833,17 @@ impl ThreadStore for SyncingThreadStore {
 ```rust
 #[derive(Debug, thiserror::Error)]
 pub enum ThreadStoreError {
-    #[error("I/O error: {0}")]
-    Io(#[from] std::io::Error),
+	#[error("I/O error: {0}")]
+	Io(#[from] std::io::Error),
 
-    #[error("Serialization error: {0}")]
-    Serialization(#[from] serde_json::Error),
+	#[error("Serialization error: {0}")]
+	Serialization(#[from] serde_json::Error),
 
-    #[error("Thread not found: {0}")]
-    NotFound(String),
+	#[error("Thread not found: {0}")]
+	NotFound(String),
 
-    #[error("Sync error: {0}")]
-    Sync(#[from] ThreadSyncError),
+	#[error("Sync error: {0}")]
+	Sync(#[from] ThreadSyncError),
 }
 ```
 
@@ -816,33 +852,33 @@ pub enum ThreadStoreError {
 ```rust
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum ThreadSyncError {
-    #[error("Network error: {0}")]
-    Network(String),
+	#[error("Network error: {0}")]
+	Network(String),
 
-    #[error("Server error: {status} - {message}")]
-    Server { status: u16, message: String },
+	#[error("Server error: {status} - {message}")]
+	Server { status: u16, message: String },
 
-    #[error("Conflict: local version {local}, server version {remote}")]
-    Conflict { local: u64, remote: u64 },
+	#[error("Conflict: local version {local}, server version {remote}")]
+	Conflict { local: u64, remote: u64 },
 
-    #[error("Invalid URL: {0}")]
-    InvalidUrl(String),
+	#[error("Invalid URL: {0}")]
+	InvalidUrl(String),
 
-    #[error("Timeout")]
-    Timeout,
+	#[error("Timeout")]
+	Timeout,
 
-    #[error("Unexpected status: {status}")]
-    UnexpectedStatus { status: u16 },
+	#[error("Unexpected status: {status}")]
+	UnexpectedStatus { status: u16 },
 }
 
 impl loom_http_retry::RetryableError for ThreadSyncError {
-    fn is_retryable(&self) -> bool {
-        matches!(self,
-            ThreadSyncError::Network(_)
-            | ThreadSyncError::Timeout
-            | ThreadSyncError::Server { status, .. } if *status >= 500
-        )
-    }
+	fn is_retryable(&self) -> bool {
+		matches!(self,
+				ThreadSyncError::Network(_)
+				| ThreadSyncError::Timeout
+				| ThreadSyncError::Server { status, .. } if *status >= 500
+		)
+	}
 }
 ```
 
@@ -851,20 +887,20 @@ impl loom_http_retry::RetryableError for ThreadSyncError {
 ```rust
 #[derive(Debug, thiserror::Error)]
 pub enum ServerError {
-    #[error("Database error: {0}")]
-    Db(#[from] sqlx::Error),
+	#[error("Database error: {0}")]
+	Db(#[from] sqlx::Error),
 
-    #[error("Thread not found: {0}")]
-    NotFound(String),
+	#[error("Thread not found: {0}")]
+	NotFound(String),
 
-    #[error("Version conflict: expected {expected}, got {actual}")]
-    Conflict { expected: u64, actual: u64 },
+	#[error("Version conflict: expected {expected}, got {actual}")]
+	Conflict { expected: u64, actual: u64 },
 
-    #[error("Invalid request: {0}")]
-    BadRequest(String),
+	#[error("Invalid request: {0}")]
+	BadRequest(String),
 
-    #[error("Internal error: {0}")]
-    Internal(String),
+	#[error("Internal error: {0}")]
+	Internal(String),
 }
 ```
 
@@ -958,12 +994,12 @@ max_backoff_ms = 5000
 
 Via environment variables:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LOOM_SERVER_HOST` | `127.0.0.1` | Bind address |
-| `LOOM_SERVER_PORT` | `8080` | Bind port |
+| Variable                   | Default            | Description          |
+| -------------------------- | ------------------ | -------------------- |
+| `LOOM_SERVER_HOST`         | `127.0.0.1`        | Bind address         |
+| `LOOM_SERVER_PORT`         | `8080`             | Bind port            |
 | `LOOM_SERVER_DATABASE_URL` | `sqlite:./loom.db` | SQLite database path |
-| `LOOM_SERVER_LOG_LEVEL` | `info` | Log level |
+| `LOOM_SERVER_LOG_LEVEL`    | `info`             | Log level            |
 
 ---
 
@@ -975,41 +1011,41 @@ Via environment variables:
 
 ```rust
 proptest! {
-    /// **Property: Thread JSON roundtrip preserves all data**
-    ///
-    /// Ensures serialization/deserialization is lossless for any valid thread.
-    #[test]
-    fn thread_json_roundtrip(thread in arb_thread()) {
-        let json = serde_json::to_string(&thread).unwrap();
-        let decoded: Thread = serde_json::from_str(&json).unwrap();
-        prop_assert_eq!(thread, decoded);
-    }
+		/// **Property: Thread JSON roundtrip preserves all data**
+		///
+		/// Ensures serialization/deserialization is lossless for any valid thread.
+		#[test]
+		fn thread_json_roundtrip(thread in arb_thread()) {
+				let json = serde_json::to_string(&thread).unwrap();
+				let decoded: Thread = serde_json::from_str(&json).unwrap();
+				prop_assert_eq!(thread, decoded);
+		}
 
-    /// **Property: ThreadId format is always valid**
-    ///
-    /// All generated ThreadIds must start with "T-" and contain valid UUID7.
-    #[test]
-    fn thread_id_format(id in arb_thread_id()) {
-        prop_assert!(id.0.starts_with("T-"));
-        let uuid_part = &id.0[2..];
-        prop_assert!(uuid7::Uuid::parse_str(uuid_part).is_ok());
-    }
+		/// **Property: ThreadId format is always valid**
+		///
+		/// All generated ThreadIds must start with "T-" and contain valid UUID7.
+		#[test]
+		fn thread_id_format(id in arb_thread_id()) {
+				prop_assert!(id.0.starts_with("T-"));
+				let uuid_part = &id.0[2..];
+				prop_assert!(uuid7::Uuid::parse_str(uuid_part).is_ok());
+		}
 
-    /// **Property: Version is monotonically increasing**
-    ///
-    /// After N mutations, version equals initial + N.
-    #[test]
-    fn version_monotonicity(
-        initial_version in 0u64..1000,
-        mutations in 1usize..100
-    ) {
-        let mut thread = Thread::new();
-        thread.version = initial_version;
-        for _ in 0..mutations {
-            thread.version += 1;
-        }
-        prop_assert_eq!(thread.version, initial_version + mutations as u64);
-    }
+		/// **Property: Version is monotonically increasing**
+		///
+		/// After N mutations, version equals initial + N.
+		#[test]
+		fn version_monotonicity(
+				initial_version in 0u64..1000,
+				mutations in 1usize..100
+		) {
+				let mut thread = Thread::new();
+				thread.version = initial_version;
+				for _ in 0..mutations {
+						thread.version += 1;
+				}
+				prop_assert_eq!(thread.version, initial_version + mutations as u64);
+		}
 }
 ```
 
@@ -1017,42 +1053,42 @@ proptest! {
 
 ```rust
 proptest! {
-    /// **Property: Private threads never trigger sync**
-    ///
-    /// Why this is important: Private sessions are a trust boundary. Users
-    /// expect local-only threads to never leave their machine.
-    ///
-    /// Invariant: SyncingThreadStore.save() never calls sync_client when is_private == true
-    #[test]
-    fn private_threads_never_sync(thread in arb_thread()) {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            let mut private_thread = thread.clone();
-            private_thread.is_private = true;
-            
-            let store = SyncingThreadStore::with_mock_sync(...);
-            store.save(&private_thread).await.unwrap();
-            
-            prop_assert!(store.sync_calls() == 0);
-            Ok(())
-        }).unwrap();
-    }
+		/// **Property: Private threads never trigger sync**
+		///
+		/// Why this is important: Private sessions are a trust boundary. Users
+		/// expect local-only threads to never leave their machine.
+		///
+		/// Invariant: SyncingThreadStore.save() never calls sync_client when is_private == true
+		#[test]
+		fn private_threads_never_sync(thread in arb_thread()) {
+				let rt = tokio::runtime::Runtime::new().unwrap();
+				rt.block_on(async {
+						let mut private_thread = thread.clone();
+						private_thread.is_private = true;
 
-    /// **Property: ThreadVisibility serializes to lowercase**
-    ///
-    /// Why this is important: API contracts expect lowercase visibility values.
-    #[test]
-    fn visibility_serde_format(_dummy in 0u8..1u8) {
-        let variants = [
-            (ThreadVisibility::Private, "\"private\""),
-            (ThreadVisibility::Unlisted, "\"unlisted\""),
-            (ThreadVisibility::Public, "\"public\""),
-        ];
-        for (vis, expected) in variants {
-            let json = serde_json::to_string(&vis).unwrap();
-            prop_assert_eq!(json, expected);
-        }
-    }
+						let store = SyncingThreadStore::with_mock_sync(...);
+						store.save(&private_thread).await.unwrap();
+
+						prop_assert!(store.sync_calls() == 0);
+						Ok(())
+				}).unwrap();
+		}
+
+		/// **Property: ThreadVisibility serializes to lowercase**
+		///
+		/// Why this is important: API contracts expect lowercase visibility values.
+		#[test]
+		fn visibility_serde_format(_dummy in 0u8..1u8) {
+				let variants = [
+						(ThreadVisibility::Private, "\"private\""),
+						(ThreadVisibility::Unlisted, "\"unlisted\""),
+						(ThreadVisibility::Public, "\"public\""),
+				];
+				for (vis, expected) in variants {
+						let json = serde_json::to_string(&vis).unwrap();
+						prop_assert_eq!(json, expected);
+				}
+		}
 }
 ```
 
@@ -1060,23 +1096,23 @@ proptest! {
 
 ```rust
 proptest! {
-    /// **Property: LocalThreadStore save/load roundtrip**
-    ///
-    /// Any thread saved to LocalThreadStore can be loaded back identically.
-    #[test]
-    fn local_store_roundtrip(thread in arb_thread()) {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            let temp_dir = tempfile::tempdir().unwrap();
-            let store = LocalThreadStore::new(temp_dir.path().to_path_buf());
-            
-            store.save(&thread).await.unwrap();
-            let loaded = store.load(&thread.id).await.unwrap().unwrap();
-            
-            prop_assert_eq!(thread, loaded);
-            Ok(())
-        }).unwrap();
-    }
+		/// **Property: LocalThreadStore save/load roundtrip**
+		///
+		/// Any thread saved to LocalThreadStore can be loaded back identically.
+		#[test]
+		fn local_store_roundtrip(thread in arb_thread()) {
+				let rt = tokio::runtime::Runtime::new().unwrap();
+				rt.block_on(async {
+						let temp_dir = tempfile::tempdir().unwrap();
+						let store = LocalThreadStore::new(temp_dir.path().to_path_buf());
+
+						store.save(&thread).await.unwrap();
+						let loaded = store.load(&thread.id).await.unwrap().unwrap();
+
+						prop_assert_eq!(thread, loaded);
+						Ok(())
+				}).unwrap();
+		}
 }
 ```
 
@@ -1084,45 +1120,45 @@ proptest! {
 
 ```rust
 proptest! {
-    /// **Property: Upsert idempotency**
-    ///
-    /// Upserting the same thread twice with same version succeeds.
-    #[test]
-    fn upsert_idempotent(thread in arb_thread()) {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            let app = create_test_app().await;
-            
-            let response1 = upsert_thread(&app, &thread).await;
-            prop_assert!(response1.status().is_success());
-            
-            let response2 = upsert_thread(&app, &thread).await;
-            prop_assert!(response2.status().is_success());
-            
-            Ok(())
-        }).unwrap();
-    }
+		/// **Property: Upsert idempotency**
+		///
+		/// Upserting the same thread twice with same version succeeds.
+		#[test]
+		fn upsert_idempotent(thread in arb_thread()) {
+				let rt = tokio::runtime::Runtime::new().unwrap();
+				rt.block_on(async {
+						let app = create_test_app().await;
 
-    /// **Property: Version conflict detection**
-    ///
-    /// Upserting with stale version returns 409.
-    #[test]
-    fn version_conflict(thread in arb_thread()) {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            let app = create_test_app().await;
-            
-            // Insert thread
-            upsert_thread(&app, &thread).await;
-            
-            // Try to update with old version
-            let stale_thread = Thread { version: thread.version.saturating_sub(1), ..thread };
-            let response = upsert_thread(&app, &stale_thread).await;
-            
-            prop_assert_eq!(response.status(), StatusCode::CONFLICT);
-            Ok(())
-        }).unwrap();
-    }
+						let response1 = upsert_thread(&app, &thread).await;
+						prop_assert!(response1.status().is_success());
+
+						let response2 = upsert_thread(&app, &thread).await;
+						prop_assert!(response2.status().is_success());
+
+						Ok(())
+				}).unwrap();
+		}
+
+		/// **Property: Version conflict detection**
+		///
+		/// Upserting with stale version returns 409.
+		#[test]
+		fn version_conflict(thread in arb_thread()) {
+				let rt = tokio::runtime::Runtime::new().unwrap();
+				rt.block_on(async {
+						let app = create_test_app().await;
+
+						// Insert thread
+						upsert_thread(&app, &thread).await;
+
+						// Try to update with old version
+						let stale_thread = Thread { version: thread.version.saturating_sub(1), ..thread };
+						let response = upsert_thread(&app, &stale_thread).await;
+
+						prop_assert_eq!(response.status(), StatusCode::CONFLICT);
+						Ok(())
+				}).unwrap();
+		}
 }
 ```
 

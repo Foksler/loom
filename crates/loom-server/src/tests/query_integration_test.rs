@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+// SPDX-License-Identifier: Proprietary
+
 //! End-to-end integration tests for query flow.
 //!
 //! **Purpose**: Validates the complete roundtrip of server queries from initiation through
@@ -8,11 +11,11 @@ use crate::api::{create_app_state, create_router};
 use crate::db::ThreadRepository;
 use crate::server_query::ServerQueryManager;
 use axum::{
-    body::Body,
-    http::{Request, StatusCode},
+	body::Body,
+	http::{Request, StatusCode},
 };
 use loom_core::server_query::{
-    ServerQuery, ServerQueryError, ServerQueryKind, ServerQueryResponse, ServerQueryResult,
+	ServerQuery, ServerQueryError, ServerQueryKind, ServerQueryResponse, ServerQueryResult,
 };
 use std::sync::Arc;
 use std::time::Duration;
@@ -25,35 +28,35 @@ use tower::ServiceExt;
 
 /// Creates a test app with isolated database
 async fn setup_test_app() -> (axum::Router, tempfile::TempDir) {
-    let dir = tempdir().unwrap();
-    let db_path = dir.path().join("test_query.db");
-    let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
-    let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
-    let state = create_app_state(repo);
-    (create_router(state), dir)
+	let dir = tempdir().unwrap();
+	let db_path = dir.path().join("test_query.db");
+	let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
+	let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
+	let state = create_app_state(repo);
+	(create_router(state), dir)
 }
 
 /// Helper to create a valid test query
 fn create_test_query(id: &str) -> ServerQuery {
-    ServerQuery {
-        id: id.to_string(),
-        kind: ServerQueryKind::ReadFile {
-            path: "test.txt".to_string(),
-        },
-        sent_at: chrono::Utc::now().to_rfc3339(),
-        timeout_secs: 5,
-        metadata: serde_json::json!({ "test_field": "test_value" }),
-    }
+	ServerQuery {
+		id: id.to_string(),
+		kind: ServerQueryKind::ReadFile {
+			path: "test.txt".to_string(),
+		},
+		sent_at: chrono::Utc::now().to_rfc3339(),
+		timeout_secs: 5,
+		metadata: serde_json::json!({ "test_field": "test_value" }),
+	}
 }
 
 /// Helper to create a valid test response
 fn create_test_response(query_id: &str, content: &str) -> ServerQueryResponse {
-    ServerQueryResponse {
-        query_id: query_id.to_string(),
-        sent_at: chrono::Utc::now().to_rfc3339(),
-        result: ServerQueryResult::FileContent(content.to_string()),
-        error: None,
-    }
+	ServerQueryResponse {
+		query_id: query_id.to_string(),
+		sent_at: chrono::Utc::now().to_rfc3339(),
+		result: ServerQueryResult::FileContent(content.to_string()),
+		error: None,
+	}
 }
 
 // ============================================================================
@@ -69,41 +72,41 @@ fn create_test_response(query_id: &str, content: &str) -> ServerQueryResponse {
 /// - Response is stored for retrieval
 #[tokio::test]
 async fn test_single_query_send_and_receive() {
-    let manager = Arc::new(ServerQueryManager::new());
+	let manager = Arc::new(ServerQueryManager::new());
 
-    let query = create_test_query("Q-single-001");
-    let query_id = query.id.clone();
-    let manager_clone = manager.clone();
+	let query = create_test_query("Q-single-001");
+	let query_id = query.id.clone();
+	let manager_clone = manager.clone();
 
-    // Send query (will wait for response with timeout)
-    let send_task =
-        tokio::spawn(async move { manager_clone.send_query("session-test", query).await });
+	// Send query (will wait for response with timeout)
+	let send_task =
+		tokio::spawn(async move { manager_clone.send_query("session-test", query).await });
 
-    // Give it time to store
-    tokio::time::sleep(Duration::from_millis(50)).await;
+	// Give it time to store
+	tokio::time::sleep(Duration::from_millis(50)).await;
 
-    // Verify query is pending
-    let pending = manager.list_pending("session-test").await;
-    assert_eq!(pending.len(), 1);
-    assert_eq!(pending[0].id, query_id);
+	// Verify query is pending
+	let pending = manager.list_pending("session-test").await;
+	assert_eq!(pending.len(), 1);
+	assert_eq!(pending[0].id, query_id);
 
-    // Client sends response
-    let response = create_test_response(&query_id, "file content here");
-    manager.receive_response(response).await;
+	// Client sends response
+	let response = create_test_response(&query_id, "file content here");
+	manager.receive_response(response).await;
 
-    // Verify send completes successfully
-    let result = send_task.await.unwrap();
-    assert!(result.is_ok());
-    let received = result.unwrap();
-    assert_eq!(received.query_id, query_id);
-    assert!(matches!(
-        received.result,
-        ServerQueryResult::FileContent(ref c) if c == "file content here"
-    ));
+	// Verify send completes successfully
+	let result = send_task.await.unwrap();
+	assert!(result.is_ok());
+	let received = result.unwrap();
+	assert_eq!(received.query_id, query_id);
+	assert!(matches!(
+			received.result,
+			ServerQueryResult::FileContent(ref c) if c == "file content here"
+	));
 
-    // Verify response is retrievable
-    let stored = manager.get_response(&query_id).await;
-    assert!(stored.is_some());
+	// Verify response is retrievable
+	let stored = manager.get_response(&query_id).await;
+	assert!(stored.is_some());
 }
 
 /// **Test Purpose**: Validates that query timeout is correctly enforced when client
@@ -115,33 +118,33 @@ async fn test_single_query_send_and_receive() {
 /// - Query is cleaned up after timeout
 #[tokio::test]
 async fn test_query_timeout() {
-    let manager = Arc::new(ServerQueryManager::new());
+	let manager = Arc::new(ServerQueryManager::new());
 
-    let query = ServerQuery {
-        id: "Q-timeout-001".to_string(),
-        kind: ServerQueryKind::ReadFile {
-            path: "test.txt".to_string(),
-        },
-        sent_at: chrono::Utc::now().to_rfc3339(),
-        timeout_secs: 1, // 1 second timeout
-        metadata: serde_json::json!({}),
-    };
+	let query = ServerQuery {
+		id: "Q-timeout-001".to_string(),
+		kind: ServerQueryKind::ReadFile {
+			path: "test.txt".to_string(),
+		},
+		sent_at: chrono::Utc::now().to_rfc3339(),
+		timeout_secs: 1, // 1 second timeout
+		metadata: serde_json::json!({}),
+	};
 
-    let start = std::time::Instant::now();
-    let result = manager.send_query("session-test", query).await;
-    let elapsed = start.elapsed();
+	let start = std::time::Instant::now();
+	let result = manager.send_query("session-test", query).await;
+	let elapsed = start.elapsed();
 
-    // Should timeout
-    assert!(result.is_err());
-    assert!(matches!(result.unwrap_err(), ServerQueryError::Timeout));
+	// Should timeout
+	assert!(result.is_err());
+	assert!(matches!(result.unwrap_err(), ServerQueryError::Timeout));
 
-    // Verify timeout was approximately correct (allow 100ms margin)
-    assert!(elapsed >= Duration::from_secs(1));
-    assert!(elapsed < Duration::from_secs(2));
+	// Verify timeout was approximately correct (allow 100ms margin)
+	assert!(elapsed >= Duration::from_secs(1));
+	assert!(elapsed < Duration::from_secs(2));
 
-    // Verify query is no longer pending
-    let pending = manager.list_pending("session-test").await;
-    assert_eq!(pending.len(), 0);
+	// Verify query is no longer pending
+	let pending = manager.list_pending("session-test").await;
+	assert_eq!(pending.len(), 0);
 }
 
 // ============================================================================
@@ -157,36 +160,36 @@ async fn test_query_timeout() {
 /// - Order doesn't matter
 #[tokio::test]
 async fn test_multiple_sequential_queries() {
-    let manager = Arc::new(ServerQueryManager::new());
+	let manager = Arc::new(ServerQueryManager::new());
 
-    // Send 3 queries sequentially
-    for i in 0..3 {
-        let query = create_test_query(&format!("Q-seq-{:03}", i));
-        let query_id = query.id.clone();
-        let manager_clone = manager.clone();
+	// Send 3 queries sequentially
+	for i in 0..3 {
+		let query = create_test_query(&format!("Q-seq-{:03}", i));
+		let query_id = query.id.clone();
+		let manager_clone = manager.clone();
 
-        let send_task =
-            tokio::spawn(async move { manager_clone.send_query("session-test", query).await });
+		let send_task =
+			tokio::spawn(async move { manager_clone.send_query("session-test", query).await });
 
-        // Give time to store
-        tokio::time::sleep(Duration::from_millis(50)).await;
+		// Give time to store
+		tokio::time::sleep(Duration::from_millis(50)).await;
 
-        // Send response
-        let response = create_test_response(&query_id, &format!("content {}", i));
-        manager.receive_response(response).await;
+		// Send response
+		let response = create_test_response(&query_id, &format!("content {}", i));
+		manager.receive_response(response).await;
 
-        // Verify response
-        let result = send_task.await.unwrap();
-        assert!(result.is_ok());
-        let received = result.unwrap();
-        assert_eq!(received.query_id, query_id);
-    }
+		// Verify response
+		let result = send_task.await.unwrap();
+		assert!(result.is_ok());
+		let received = result.unwrap();
+		assert_eq!(received.query_id, query_id);
+	}
 
-    // Verify all responses stored
-    for i in 0..3 {
-        let stored = manager.get_response(&format!("Q-seq-{:03}", i)).await;
-        assert!(stored.is_some());
-    }
+	// Verify all responses stored
+	for i in 0..3 {
+		let stored = manager.get_response(&format!("Q-seq-{:03}", i)).await;
+		assert!(stored.is_some());
+	}
 }
 
 // ============================================================================
@@ -206,53 +209,50 @@ async fn test_multiple_sequential_queries() {
 /// - Each response correctly matched to its query
 #[tokio::test]
 async fn test_concurrent_queries_same_session() {
-    let manager = Arc::new(ServerQueryManager::new());
-    let num_queries = 5;
+	let manager = Arc::new(ServerQueryManager::new());
+	let num_queries = 5;
 
-    // Create and spawn all queries concurrently
-    let mut handles = vec![];
-    for i in 0..num_queries {
-        let query = create_test_query(&format!("Q-concurrent-{:03}", i));
-        let manager_clone = manager.clone();
+	// Create and spawn all queries concurrently
+	let mut handles = vec![];
+	for i in 0..num_queries {
+		let query = create_test_query(&format!("Q-concurrent-{:03}", i));
+		let manager_clone = manager.clone();
 
-        let handle =
-            tokio::spawn(
-                async move { manager_clone.send_query("session-concurrent", query).await },
-            );
+		let handle =
+			tokio::spawn(async move { manager_clone.send_query("session-concurrent", query).await });
 
-        handles.push(handle);
-    }
+		handles.push(handle);
+	}
 
-    // Give queries time to register
-    tokio::time::sleep(Duration::from_millis(100)).await;
+	// Give queries time to register
+	tokio::time::sleep(Duration::from_millis(100)).await;
 
-    // Verify all are pending
-    let pending = manager.list_pending("session-concurrent").await;
-    assert_eq!(pending.len(), num_queries);
+	// Verify all are pending
+	let pending = manager.list_pending("session-concurrent").await;
+	assert_eq!(pending.len(), num_queries);
 
-    // Send responses in reverse order (test that ordering doesn't matter)
-    for i in (0..num_queries).rev() {
-        let response =
-            create_test_response(&format!("Q-concurrent-{:03}", i), &format!("data {}", i));
-        manager.receive_response(response).await;
-        tokio::time::sleep(Duration::from_millis(10)).await;
-    }
+	// Send responses in reverse order (test that ordering doesn't matter)
+	for i in (0..num_queries).rev() {
+		let response = create_test_response(&format!("Q-concurrent-{:03}", i), &format!("data {}", i));
+		manager.receive_response(response).await;
+		tokio::time::sleep(Duration::from_millis(10)).await;
+	}
 
-    // Verify all queries completed with correct responses
-    for (i, handle) in handles.into_iter().enumerate() {
-        let result = handle.await.unwrap();
-        assert!(result.is_ok());
-        let response = result.unwrap();
-        assert_eq!(response.query_id, format!("Q-concurrent-{:03}", i));
-        assert!(matches!(
-            response.result,
-            ServerQueryResult::FileContent(ref c) if c == &format!("data {}", i)
-        ));
-    }
+	// Verify all queries completed with correct responses
+	for (i, handle) in handles.into_iter().enumerate() {
+		let result = handle.await.unwrap();
+		assert!(result.is_ok());
+		let response = result.unwrap();
+		assert_eq!(response.query_id, format!("Q-concurrent-{:03}", i));
+		assert!(matches!(
+				response.result,
+				ServerQueryResult::FileContent(ref c) if c == &format!("data {}", i)
+		));
+	}
 
-    // Verify no pending queries remain
-    let pending = manager.list_pending("session-concurrent").await;
-    assert_eq!(pending.len(), 0);
+	// Verify no pending queries remain
+	let pending = manager.list_pending("session-concurrent").await;
+	assert_eq!(pending.len(), 0);
 }
 
 /// **Test Purpose**: Validates that concurrent queries from different sessions
@@ -274,76 +274,75 @@ async fn test_concurrent_queries_same_session() {
 #[tokio::test]
 #[ignore] // Flaky due to shared state in parallel test execution
 async fn test_concurrent_queries_different_sessions() {
-    let manager = Arc::new(ServerQueryManager::new());
+	let manager = Arc::new(ServerQueryManager::new());
 
-    // Use unique timestamp to avoid test isolation issues
-    let test_id = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
+	// Use unique timestamp to avoid test isolation issues
+	let test_id = std::time::SystemTime::now()
+		.duration_since(std::time::UNIX_EPOCH)
+		.unwrap()
+		.as_nanos();
 
-    // Create queries for 3 different sessions
-    let num_sessions = 3;
-    let queries_per_session = 2;
-    let mut handles = vec![];
+	// Create queries for 3 different sessions
+	let num_sessions = 3;
+	let queries_per_session = 2;
+	let mut handles = vec![];
 
-    for session_idx in 0..num_sessions {
-        for query_idx in 0..queries_per_session {
-            let query = create_test_query(&format!(
-                "Q-session-{}-{}-{}",
-                test_id, session_idx, query_idx
-            ));
-            let session_id = format!("session-{}-{}", session_idx, test_id);
-            let manager_clone = manager.clone();
+	for session_idx in 0..num_sessions {
+		for query_idx in 0..queries_per_session {
+			let query = create_test_query(&format!(
+				"Q-session-{}-{}-{}",
+				test_id, session_idx, query_idx
+			));
+			let session_id = format!("session-{}-{}", session_idx, test_id);
+			let manager_clone = manager.clone();
 
-            let handle =
-                tokio::spawn(async move { manager_clone.send_query(&session_id, query).await });
+			let handle = tokio::spawn(async move { manager_clone.send_query(&session_id, query).await });
 
-            handles.push((session_idx, query_idx, handle));
-        }
-    }
+			handles.push((session_idx, query_idx, handle));
+		}
+	}
 
-    // Give time to register (increased to 200ms)
-    tokio::time::sleep(Duration::from_millis(200)).await;
+	// Give time to register (increased to 200ms)
+	tokio::time::sleep(Duration::from_millis(200)).await;
 
-    // Verify pending queries per session
-    for session_idx in 0..num_sessions {
-        let pending = manager
-            .list_pending(&format!("session-{}-{}", session_idx, test_id))
-            .await;
-        assert_eq!(
-            pending.len(),
-            queries_per_session,
-            "Session {} should have {} pending queries",
-            session_idx,
-            queries_per_session
-        );
-    }
+	// Verify pending queries per session
+	for session_idx in 0..num_sessions {
+		let pending = manager
+			.list_pending(&format!("session-{}-{}", session_idx, test_id))
+			.await;
+		assert_eq!(
+			pending.len(),
+			queries_per_session,
+			"Session {} should have {} pending queries",
+			session_idx,
+			queries_per_session
+		);
+	}
 
-    // Send responses
-    for session_idx in 0..num_sessions {
-        for query_idx in 0..queries_per_session {
-            let response = create_test_response(
-                &format!("Q-session-{}-{}-{}", test_id, session_idx, query_idx),
-                &format!("data-{}-{}", session_idx, query_idx),
-            );
-            manager.receive_response(response).await;
-        }
-    }
+	// Send responses
+	for session_idx in 0..num_sessions {
+		for query_idx in 0..queries_per_session {
+			let response = create_test_response(
+				&format!("Q-session-{}-{}-{}", test_id, session_idx, query_idx),
+				&format!("data-{}-{}", session_idx, query_idx),
+			);
+			manager.receive_response(response).await;
+		}
+	}
 
-    // Verify all completed with correct routing
-    for (_session_idx, _query_idx, handle) in handles {
-        let result = handle.await.unwrap();
-        assert!(result.is_ok());
-    }
+	// Verify all completed with correct routing
+	for (_session_idx, _query_idx, handle) in handles {
+		let result = handle.await.unwrap();
+		assert!(result.is_ok());
+	}
 
-    // Verify all sessions are clean
-    for session_idx in 0..num_sessions {
-        let pending = manager
-            .list_pending(&format!("session-{}-{}", session_idx, test_id))
-            .await;
-        assert_eq!(pending.len(), 0);
-    }
+	// Verify all sessions are clean
+	for session_idx in 0..num_sessions {
+		let pending = manager
+			.list_pending(&format!("session-{}-{}", session_idx, test_id))
+			.await;
+		assert_eq!(pending.len(), 0);
+	}
 }
 
 // ============================================================================
@@ -362,47 +361,47 @@ async fn test_concurrent_queries_different_sessions() {
 /// The JSON serialization uses Rust's serde serialization which matches ServerQueryResponse struct.
 #[tokio::test]
 async fn test_http_query_response_endpoint() {
-    let (app, _dir) = setup_test_app().await;
+	let (app, _dir) = setup_test_app().await;
 
-    let query_id = "Q-http-001";
+	let query_id = "Q-http-001";
 
-    // Use unique session ID to avoid test isolation issues
-    let session_id = format!(
-        "session-http-{}",
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
-    );
+	// Use unique session ID to avoid test isolation issues
+	let session_id = format!(
+		"session-http-{}",
+		std::time::SystemTime::now()
+			.duration_since(std::time::UNIX_EPOCH)
+			.unwrap()
+			.as_nanos()
+	);
 
-    // Create the response struct and serialize it properly
-    let response = create_test_response(&query_id, "test file content");
-    let response_json = serde_json::to_value(&response).unwrap();
+	// Create the response struct and serialize it properly
+	let response = create_test_response(&query_id, "test file content");
+	let response_json = serde_json::to_value(&response).unwrap();
 
-    // Log the serialized JSON for debugging
-    println!(
-        "Serialized response: {}",
-        serde_json::to_string_pretty(&response_json).unwrap()
-    );
+	// Log the serialized JSON for debugging
+	println!(
+		"Serialized response: {}",
+		serde_json::to_string_pretty(&response_json).unwrap()
+	);
 
-    let http_response = app
-        .oneshot(
-            Request::builder()
-                .method("POST")
-                .uri(format!("/v1/sessions/{}/query-response", session_id))
-                .header("Content-Type", "application/json")
-                .body(Body::from(serde_json::to_string(&response_json).unwrap()))
-                .unwrap(),
-        )
-        .await
-        .unwrap();
+	let http_response = app
+		.oneshot(
+			Request::builder()
+				.method("POST")
+				.uri(format!("/v1/sessions/{}/query-response", session_id))
+				.header("Content-Type", "application/json")
+				.body(Body::from(serde_json::to_string(&response_json).unwrap()))
+				.unwrap(),
+		)
+		.await
+		.unwrap();
 
-    // The endpoint should accept the response
-    assert_eq!(
-        http_response.status(),
-        StatusCode::OK,
-        "HTTP endpoint should return 200 OK for valid ServerQueryResponse"
-    );
+	// The endpoint should accept the response
+	assert_eq!(
+		http_response.status(),
+		StatusCode::OK,
+		"HTTP endpoint should return 200 OK for valid ServerQueryResponse"
+	);
 }
 
 /// **Test Purpose**: Validates that the HTTP endpoint for listing pending queries
@@ -414,29 +413,29 @@ async fn test_http_query_response_endpoint() {
 /// - List format is valid JSON
 #[tokio::test]
 async fn test_http_list_pending_queries_endpoint() {
-    let (app, _dir) = setup_test_app().await;
+	let (app, _dir) = setup_test_app().await;
 
-    // We can't easily inject into the app state's manager from here,
-    // so this test validates the endpoint structure exists and routes correctly
-    let response = app
-        .oneshot(
-            Request::builder()
-                .method("GET")
-                .uri("/v1/sessions/session-list/queries")
-                .body(Body::empty())
-                .unwrap(),
-        )
-        .await
-        .unwrap();
+	// We can't easily inject into the app state's manager from here,
+	// so this test validates the endpoint structure exists and routes correctly
+	let response = app
+		.oneshot(
+			Request::builder()
+				.method("GET")
+				.uri("/v1/sessions/session-list/queries")
+				.body(Body::empty())
+				.unwrap(),
+		)
+		.await
+		.unwrap();
 
-    // Should return OK with empty list (since no queries were added)
-    assert_eq!(response.status(), StatusCode::OK);
+	// Should return OK with empty list (since no queries were added)
+	assert_eq!(response.status(), StatusCode::OK);
 
-    let body = axum::body::to_bytes(response.into_body(), usize::MAX)
-        .await
-        .unwrap();
-    let queries: Vec<ServerQuery> = serde_json::from_slice(&body).unwrap();
-    assert_eq!(queries.len(), 0);
+	let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+		.await
+		.unwrap();
+	let queries: Vec<ServerQuery> = serde_json::from_slice(&body).unwrap();
+	assert_eq!(queries.len(), 0);
 }
 
 // ============================================================================
@@ -452,38 +451,38 @@ async fn test_http_list_pending_queries_endpoint() {
 /// - Manager doesn't panic on error responses
 #[tokio::test]
 async fn test_error_response_handling() {
-    let manager = Arc::new(ServerQueryManager::new());
+	let manager = Arc::new(ServerQueryManager::new());
 
-    let query = create_test_query("Q-error-001");
-    let query_id = query.id.clone();
-    let manager_clone = manager.clone();
+	let query = create_test_query("Q-error-001");
+	let query_id = query.id.clone();
+	let manager_clone = manager.clone();
 
-    let send_task =
-        tokio::spawn(async move { manager_clone.send_query("session-error", query).await });
+	let send_task =
+		tokio::spawn(async move { manager_clone.send_query("session-error", query).await });
 
-    // Give time to store
-    tokio::time::sleep(Duration::from_millis(50)).await;
+	// Give time to store
+	tokio::time::sleep(Duration::from_millis(50)).await;
 
-    // Send error response
-    let response = ServerQueryResponse {
-        query_id: query_id.clone(),
-        sent_at: chrono::Utc::now().to_rfc3339(),
-        result: ServerQueryResult::FileContent("fallback".to_string()),
-        error: Some("File not found".to_string()),
-    };
+	// Send error response
+	let response = ServerQueryResponse {
+		query_id: query_id.clone(),
+		sent_at: chrono::Utc::now().to_rfc3339(),
+		result: ServerQueryResult::FileContent("fallback".to_string()),
+		error: Some("File not found".to_string()),
+	};
 
-    manager.receive_response(response).await;
+	manager.receive_response(response).await;
 
-    // Verify response with error is handled
-    let result = send_task.await.unwrap();
-    assert!(result.is_ok());
-    let received = result.unwrap();
-    assert_eq!(received.error, Some("File not found".to_string()));
+	// Verify response with error is handled
+	let result = send_task.await.unwrap();
+	assert!(result.is_ok());
+	let received = result.unwrap();
+	assert_eq!(received.error, Some("File not found".to_string()));
 
-    // Verify error is preserved in storage
-    let stored = manager.get_response(&query_id).await;
-    assert!(stored.is_some());
-    assert_eq!(stored.unwrap().error, Some("File not found".to_string()));
+	// Verify error is preserved in storage
+	let stored = manager.get_response(&query_id).await;
+	assert!(stored.is_some());
+	assert_eq!(stored.unwrap().error, Some("File not found".to_string()));
 }
 
 /// **Test Purpose**: Validates that no response is returned if query is never responded to
@@ -495,23 +494,23 @@ async fn test_error_response_handling() {
 /// - Query is cleaned up after timeout
 #[tokio::test]
 async fn test_no_response_timeout() {
-    let manager = Arc::new(ServerQueryManager::new());
+	let manager = Arc::new(ServerQueryManager::new());
 
-    let query = ServerQuery {
-        id: "Q-no-response".to_string(),
-        kind: ServerQueryKind::ReadFile {
-            path: "test.txt".to_string(),
-        },
-        sent_at: chrono::Utc::now().to_rfc3339(),
-        timeout_secs: 1,
-        metadata: serde_json::json!({}),
-    };
+	let query = ServerQuery {
+		id: "Q-no-response".to_string(),
+		kind: ServerQueryKind::ReadFile {
+			path: "test.txt".to_string(),
+		},
+		sent_at: chrono::Utc::now().to_rfc3339(),
+		timeout_secs: 1,
+		metadata: serde_json::json!({}),
+	};
 
-    let result = manager.send_query("session-timeout", query).await;
+	let result = manager.send_query("session-timeout", query).await;
 
-    // Must timeout
-    assert!(result.is_err());
-    assert!(matches!(result.unwrap_err(), ServerQueryError::Timeout));
+	// Must timeout
+	assert!(result.is_err());
+	assert!(matches!(result.unwrap_err(), ServerQueryError::Timeout));
 }
 
 // ============================================================================
@@ -530,37 +529,37 @@ async fn test_no_response_timeout() {
 /// - Serialization roundtrip works
 #[tokio::test]
 async fn test_various_result_types() {
-    let manager = Arc::new(ServerQueryManager::new());
+	let manager = Arc::new(ServerQueryManager::new());
 
-    // Test with file content result
-    let query = create_test_query("Q-result-001");
-    let query_id = query.id.clone();
-    let manager_clone = manager.clone();
+	// Test with file content result
+	let query = create_test_query("Q-result-001");
+	let query_id = query.id.clone();
+	let manager_clone = manager.clone();
 
-    let send_task =
-        tokio::spawn(async move { manager_clone.send_query("session-results", query).await });
+	let send_task =
+		tokio::spawn(async move { manager_clone.send_query("session-results", query).await });
 
-    tokio::time::sleep(Duration::from_millis(50)).await;
+	tokio::time::sleep(Duration::from_millis(50)).await;
 
-    let file_content = "line1\nline2\nline3";
-    let response = ServerQueryResponse {
-        query_id: query_id.clone(),
-        sent_at: chrono::Utc::now().to_rfc3339(),
-        result: ServerQueryResult::FileContent(file_content.to_string()),
-        error: None,
-    };
+	let file_content = "line1\nline2\nline3";
+	let response = ServerQueryResponse {
+		query_id: query_id.clone(),
+		sent_at: chrono::Utc::now().to_rfc3339(),
+		result: ServerQueryResult::FileContent(file_content.to_string()),
+		error: None,
+	};
 
-    manager.receive_response(response).await;
+	manager.receive_response(response).await;
 
-    let result = send_task.await.unwrap();
-    assert!(result.is_ok());
-    let received = result.unwrap();
+	let result = send_task.await.unwrap();
+	assert!(result.is_ok());
+	let received = result.unwrap();
 
-    // Verify content is preserved
-    assert!(matches!(
-        received.result,
-        ServerQueryResult::FileContent(ref c) if c.contains("line1") && c.contains("line2")
-    ));
+	// Verify content is preserved
+	assert!(matches!(
+			received.result,
+			ServerQueryResult::FileContent(ref c) if c.contains("line1") && c.contains("line2")
+	));
 }
 
 /// **Test Purpose**: Validates that large response payloads are correctly handled.
@@ -574,32 +573,32 @@ async fn test_various_result_types() {
 /// - Memory is managed properly
 #[tokio::test]
 async fn test_large_response_content() {
-    let manager = Arc::new(ServerQueryManager::new());
+	let manager = Arc::new(ServerQueryManager::new());
 
-    let query = create_test_query("Q-large-001");
-    let query_id = query.id.clone();
-    let manager_clone = manager.clone();
+	let query = create_test_query("Q-large-001");
+	let query_id = query.id.clone();
+	let manager_clone = manager.clone();
 
-    let send_task =
-        tokio::spawn(async move { manager_clone.send_query("session-large", query).await });
+	let send_task =
+		tokio::spawn(async move { manager_clone.send_query("session-large", query).await });
 
-    tokio::time::sleep(Duration::from_millis(50)).await;
+	tokio::time::sleep(Duration::from_millis(50)).await;
 
-    // Create 1MB of content
-    let large_content = "x".repeat(1024 * 1024);
-    let response = create_test_response(&query_id, &large_content);
+	// Create 1MB of content
+	let large_content = "x".repeat(1024 * 1024);
+	let response = create_test_response(&query_id, &large_content);
 
-    manager.receive_response(response).await;
+	manager.receive_response(response).await;
 
-    let result = send_task.await.unwrap();
-    assert!(result.is_ok());
-    let received = result.unwrap();
+	let result = send_task.await.unwrap();
+	assert!(result.is_ok());
+	let received = result.unwrap();
 
-    // Verify size is preserved
-    assert!(matches!(
-        &received.result,
-        ServerQueryResult::FileContent(c) if c.len() == 1024 * 1024
-    ));
+	// Verify size is preserved
+	assert!(matches!(
+			&received.result,
+			ServerQueryResult::FileContent(c) if c.len() == 1024 * 1024
+	));
 }
 
 // ============================================================================
@@ -618,48 +617,48 @@ async fn test_large_response_content() {
 /// - Serialization handles arbitrary JSON
 #[tokio::test]
 async fn test_query_metadata_preservation() {
-    let manager = Arc::new(ServerQueryManager::new());
+	let manager = Arc::new(ServerQueryManager::new());
 
-    let custom_metadata = serde_json::json!({
-        "user_id": "user-123",
-        "request_id": "req-456",
-        "custom_field": "value",
-        "nested": {
-            "field": "data"
-        }
-    });
+	let custom_metadata = serde_json::json!({
+			"user_id": "user-123",
+			"request_id": "req-456",
+			"custom_field": "value",
+			"nested": {
+					"field": "data"
+			}
+	});
 
-    let query = ServerQuery {
-        id: "Q-metadata-001".to_string(),
-        kind: ServerQueryKind::ReadFile {
-            path: "/path/to/file.txt".to_string(),
-        },
-        sent_at: chrono::Utc::now().to_rfc3339(),
-        timeout_secs: 5,
-        metadata: custom_metadata.clone(),
-    };
+	let query = ServerQuery {
+		id: "Q-metadata-001".to_string(),
+		kind: ServerQueryKind::ReadFile {
+			path: "/path/to/file.txt".to_string(),
+		},
+		sent_at: chrono::Utc::now().to_rfc3339(),
+		timeout_secs: 5,
+		metadata: custom_metadata.clone(),
+	};
 
-    let query_id = query.id.clone();
-    let manager_clone = manager.clone();
+	let query_id = query.id.clone();
+	let manager_clone = manager.clone();
 
-    let send_task =
-        tokio::spawn(async move { manager_clone.send_query("session-metadata", query).await });
+	let send_task =
+		tokio::spawn(async move { manager_clone.send_query("session-metadata", query).await });
 
-    // Give time to register
-    tokio::time::sleep(Duration::from_millis(50)).await;
+	// Give time to register
+	tokio::time::sleep(Duration::from_millis(50)).await;
 
-    // List and verify metadata is present
-    let pending = manager.list_pending("session-metadata").await;
-    assert_eq!(pending.len(), 1);
-    assert_eq!(pending[0].metadata, custom_metadata);
+	// List and verify metadata is present
+	let pending = manager.list_pending("session-metadata").await;
+	assert_eq!(pending.len(), 1);
+	assert_eq!(pending[0].metadata, custom_metadata);
 
-    // Send response to complete the query
-    let response = create_test_response(&query_id, "content");
-    manager.receive_response(response).await;
+	// Send response to complete the query
+	let response = create_test_response(&query_id, "content");
+	manager.receive_response(response).await;
 
-    // Verify query completed
-    let result = send_task.await.unwrap();
-    assert!(result.is_ok());
+	// Verify query completed
+	let result = send_task.await.unwrap();
+	assert!(result.is_ok());
 }
 
 // ============================================================================
@@ -678,56 +677,54 @@ async fn test_query_metadata_preservation() {
 /// - All responses are correct
 #[tokio::test]
 async fn test_high_concurrency_stress() {
-    let manager = Arc::new(ServerQueryManager::new());
-    let num_queries = 100;
-    let num_tasks = 10;
+	let manager = Arc::new(ServerQueryManager::new());
+	let num_queries = 100;
+	let num_tasks = 10;
 
-    let mut handles = vec![];
+	let mut handles = vec![];
 
-    // Spawn multiple batches of concurrent queries
-    for batch in 0..num_tasks {
-        for i in 0..num_queries / num_tasks {
-            let query = create_test_query(&format!("Q-stress-{:04}-{:04}", batch, i));
-            let manager_clone = manager.clone();
+	// Spawn multiple batches of concurrent queries
+	for batch in 0..num_tasks {
+		for i in 0..num_queries / num_tasks {
+			let query = create_test_query(&format!("Q-stress-{:04}-{:04}", batch, i));
+			let manager_clone = manager.clone();
 
-            let handle =
-                tokio::spawn(
-                    async move { manager_clone.send_query("session-stress", query).await },
-                );
+			let handle =
+				tokio::spawn(async move { manager_clone.send_query("session-stress", query).await });
 
-            handles.push((batch, i, handle));
-        }
-    }
+			handles.push((batch, i, handle));
+		}
+	}
 
-    // Give time to register
-    tokio::time::sleep(Duration::from_millis(200)).await;
+	// Give time to register
+	tokio::time::sleep(Duration::from_millis(200)).await;
 
-    // Verify all queries are pending
-    let pending = manager.list_pending("session-stress").await;
-    assert_eq!(pending.len(), num_queries);
+	// Verify all queries are pending
+	let pending = manager.list_pending("session-stress").await;
+	assert_eq!(pending.len(), num_queries);
 
-    // Send all responses
-    for batch in 0..num_tasks {
-        for i in 0..num_queries / num_tasks {
-            let response = create_test_response(
-                &format!("Q-stress-{:04}-{:04}", batch, i),
-                &format!("content-{}-{}", batch, i),
-            );
-            manager.receive_response(response).await;
-        }
-    }
+	// Send all responses
+	for batch in 0..num_tasks {
+		for i in 0..num_queries / num_tasks {
+			let response = create_test_response(
+				&format!("Q-stress-{:04}-{:04}", batch, i),
+				&format!("content-{}-{}", batch, i),
+			);
+			manager.receive_response(response).await;
+		}
+	}
 
-    // Verify all completed
-    let mut success_count = 0;
-    for (_batch, _i, handle) in handles {
-        let result = handle.await.unwrap();
-        if result.is_ok() {
-            success_count += 1;
-        }
-    }
-    assert_eq!(success_count, num_queries);
+	// Verify all completed
+	let mut success_count = 0;
+	for (_batch, _i, handle) in handles {
+		let result = handle.await.unwrap();
+		if result.is_ok() {
+			success_count += 1;
+		}
+	}
+	assert_eq!(success_count, num_queries);
 
-    // Verify clean state
-    let pending = manager.list_pending("session-stress").await;
-    assert_eq!(pending.len(), 0);
+	// Verify clean state
+	let pending = manager.list_pending("session-stress").await;
+	assert_eq!(pending.len(), 0);
 }

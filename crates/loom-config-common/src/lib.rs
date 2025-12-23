@@ -1,11 +1,15 @@
+// Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights
+// reserved. SPDX-License-Identifier: Proprietary
+
 //! Common configuration primitives for Loom.
 //!
 //! This crate provides shared types and helpers for configuration across
 //! all Loom crates, including:
 //!
-//! - [`Secret<T>`]: A wrapper type that prevents accidental logging of sensitive values
-//!   (re-exported from [`loom_secret`])
-//! - [`load_secret_env`]: Helper for loading secrets from environment variables with `*_FILE` support
+//! - [`Secret<T>`]: A wrapper type that prevents accidental logging of
+//!   sensitive values (re-exported from [`loom_secret`])
+//! - [`load_secret_env`]: Helper for loading secrets from environment variables
+//!   with `*_FILE` support
 
 pub mod env;
 

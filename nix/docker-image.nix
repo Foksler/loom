@@ -1,3 +1,6 @@
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+# SPDX-License-Identifier: Proprietary
+
 # Nix expression for building loom-server Docker image with loom-web
 # Uses nixpkgs.dockerTools for reproducible image builds
 { pkgs }:

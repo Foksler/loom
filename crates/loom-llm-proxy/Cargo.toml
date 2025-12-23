@@ -1,23 +1,26 @@
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+# SPDX-License-Identifier: Proprietary
+
 [package]
 name = "loom-llm-proxy"
 version.workspace = true
-edition.workspace = true
 authors.workspace = true
+edition.workspace = true
 license.workspace = true
 
 [dependencies]
-loom-core = { path = "../loom-core" }
 async-trait = { workspace = true }
-thiserror = { workspace = true }
-tracing = { workspace = true }
+bytes = { workspace = true }
+futures = { workspace = true }
+loom-core = { path = "../loom-core" }
+pin-project-lite = { workspace = true }
+reqwest = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-reqwest = { workspace = true }
-futures = { workspace = true }
-pin-project-lite = { workspace = true }
-bytes = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
 
 [dev-dependencies]
+proptest = { workspace = true }
 tokio = { workspace = true }
 tokio-test = { workspace = true }
-proptest = { workspace = true }

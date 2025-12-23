@@ -1,3 +1,6 @@
+-- Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+-- SPDX-License-Identifier: Proprietary
+
 -- Full-text search virtual table for threads
 CREATE VIRTUAL TABLE IF NOT EXISTS thread_fts USING fts5(
     thread_id UNINDEXED,

@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+// SPDX-License-Identifier: Proprietary
+
 //! Agent Client Protocol (ACP) integration for Loom.
 //!
 //! This crate provides an ACP `Agent` implementation that bridges ACP clients

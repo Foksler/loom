@@ -1,3 +1,6 @@
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+# SPDX-License-Identifier: Proprietary
+
 # Multi-stage Dockerfile for Loom
 # Builds loom-server (Rust) and loom-web (Svelte) into a single image
 

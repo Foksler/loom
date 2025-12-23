@@ -1,7 +1,12 @@
+<!--
+ Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+ SPDX-License-Identifier: Proprietary
+-->
+
 # Secret System Specification
 
-**Status:** Implemented  
-**Version:** 1.0  
+**Status:** Implemented\
+**Version:** 1.0\
 **Last Updated:** 2024-12-18
 
 ---
@@ -10,7 +15,9 @@
 
 ### Purpose
 
-The Loom secret system provides a type-safe wrapper for sensitive values that prevents accidental exposure through logging, serialization, or debugging. It ensures that API keys, passwords, tokens, and other secrets are never leaked in logs, error messages, or configuration dumps.
+The Loom secret system provides a type-safe wrapper for sensitive values that prevents accidental
+exposure through logging, serialization, or debugging. It ensures that API keys, passwords, tokens,
+and other secrets are never leaked in logs, error messages, or configuration dumps.
 
 ### Goals
 
@@ -75,9 +82,9 @@ use zeroize::Zeroize;
 #[zeroize(drop)]
 pub struct Secret<T>
 where
-    T: Zeroize,
+	T: Zeroize,
 {
-    inner: T,
+	inner: T,
 }
 
 pub type SecretString = Secret<String>;
@@ -87,32 +94,34 @@ pub const REDACTED: &str = "[REDACTED]";
 
 ### Key Properties
 
-| Property | Implementation |
-|----------|----------------|
-| **No Deref** | Must call `.expose()` to access inner value |
-| **Zeroize on drop** | Memory is zeroed when secret is dropped |
-| **Redacted Debug** | `format!("{:?}", secret)` → `Secret("[REDACTED]")` |
-| **Redacted Display** | `format!("{}", secret)` → `[REDACTED]` |
-| **Redacted Serialize** | JSON/TOML output: `"[REDACTED]"` |
-| **Normal Deserialize** | Loads value normally from config files |
-| **Clone** | Clones the inner value (requires `T: Clone`) |
-| **PartialEq/Eq** | Compares inner values (requires `T: PartialEq/Eq`) |
+| Property               | Implementation                                     |
+| ---------------------- | -------------------------------------------------- |
+| **No Deref**           | Must call `.expose()` to access inner value        |
+| **Zeroize on drop**    | Memory is zeroed when secret is dropped            |
+| **Redacted Debug**     | `format!("{:?}", secret)` → `Secret("[REDACTED]")` |
+| **Redacted Display**   | `format!("{}", secret)` → `[REDACTED]`             |
+| **Redacted Serialize** | JSON/TOML output: `"[REDACTED]"`                   |
+| **Normal Deserialize** | Loads value normally from config files             |
+| **Clone**              | Clones the inner value (requires `T: Clone`)       |
+| **PartialEq/Eq**       | Compares inner values (requires `T: PartialEq/Eq`) |
 
 ### API
 
 ```rust
 impl<T: Zeroize> Secret<T> {
-    /// Create a new secret wrapper
-    pub fn new(inner: T) -> Self;
+	/// Create a new secret wrapper
+	fn new(inner: T) -> Self;
 
-    /// Explicitly access the inner value (makes access visible in code review)
-    pub fn expose(&self) -> &T;
+	/// Explicitly access the inner value (makes access visible in code review)
+	fn expose(&self) -> &T;
 
-    /// Mutable access to the inner value
-    pub fn expose_mut(&mut self) -> &mut T;
+	/// Mutable access to the inner value
+	fn expose_mut(&mut self) -> &mut T;
 
-    /// Consume and return the inner value (clones to maintain zeroization)
-    pub fn into_inner(self) -> T where T: Clone;
+	/// Consume and return the inner value (clones to maintain zeroization)
+	fn into_inner(self) -> T
+	where
+		T: Clone;
 }
 ```
 
@@ -145,10 +154,10 @@ When using JSON log output (e.g., `tracing-subscriber` with JSON formatter), sec
 
 ```json
 {
-  "timestamp": "2024-12-18T10:00:00Z",
-  "level": "INFO",
-  "message": "Configured API",
-  "api_key": "[REDACTED]"
+	"timestamp": "2024-12-18T10:00:00Z",
+	"level": "INFO",
+	"message": "Configured API",
+	"api_key": "[REDACTED]"
 }
 ```
 
@@ -157,9 +166,9 @@ When using JSON log output (e.g., `tracing-subscriber` with JSON formatter), sec
 ```rust
 // ✅ GOOD: Log presence, not value
 info!(
-    anthropic_configured = api_key.is_some(),
-    openai_configured = openai_key.is_some(),
-    "Loaded LLM configuration"
+	anthropic_configured = api_key.is_some(),
+	openai_configured = openai_key.is_some(),
+	"Loaded LLM configuration"
 );
 
 // ✅ GOOD: Use Display format
@@ -223,11 +232,14 @@ if let Some(key) = api_key {
 ```rust
 #[derive(Debug, Error)]
 pub enum SecretEnvError {
-    #[error("failed to read secret file at {path}: {source}")]
-    Io { path: PathBuf, source: std::io::Error },
+	#[error("failed to read secret file at {path}: {source}")]
+	Io {
+		path: PathBuf,
+		source: std::io::Error,
+	},
 
-    #[error("secret file path in {var} is empty")]
-    EmptyPath { var: String },
+	#[error("secret file path in {var} is empty")]
+	EmptyPath { var: String },
 }
 ```
 
@@ -239,18 +251,18 @@ pub enum SecretEnvError {
 
 ```rust
 pub struct LlmServiceConfig {
-    pub provider: LlmProvider,
-    pub anthropic_api_key: Option<SecretString>,
-    pub openai_api_key: Option<SecretString>,
-    // ...
+	pub provider: LlmProvider,
+	pub anthropic_api_key: Option<SecretString>,
+	pub openai_api_key: Option<SecretString>,
+	// ...
 }
 
 impl LlmServiceConfig {
-    pub fn from_env() -> Result<Self, ConfigError> {
-        let anthropic_api_key = load_secret_env("LOOM_SERVER_ANTHROPIC_API_KEY")?;
-        let openai_api_key = load_secret_env("LOOM_SERVER_OPENAI_API_KEY")?;
-        // ...
-    }
+	pub fn from_env() -> Result<Self, ConfigError> {
+		let anthropic_api_key = load_secret_env("LOOM_SERVER_ANTHROPIC_API_KEY")?;
+		let openai_api_key = load_secret_env("LOOM_SERVER_OPENAI_API_KEY")?;
+		// ...
+	}
 }
 ```
 
@@ -258,10 +270,10 @@ impl LlmServiceConfig {
 
 ```rust
 pub struct GithubAppConfig {
-    app_id: u64,
-    private_key_pem: SecretString,      // Always required, always secret
-    webhook_secret: Option<SecretString>, // Optional, but secret if present
-    // ...
+	app_id: u64,
+	private_key_pem: SecretString, // Always required, always secret
+	webhook_secret: Option<SecretString>, /* Optional, but secret if present
+	                                * ... */
 }
 ```
 
@@ -286,19 +298,19 @@ The secret system includes property-based tests to verify that secrets never lea
 
 ```rust
 proptest! {
-    #[test]
-    fn debug_never_contains_secret(inner in "[a-zA-Z0-9]{3,50}") {
-        let secret = Secret::new(inner.clone());
-        let debug_output = format!("{:?}", secret);
-        prop_assert!(!debug_output.contains(&inner));
-    }
+		#[test]
+		fn debug_never_contains_secret(inner in "[a-zA-Z0-9]{3,50}") {
+				let secret = Secret::new(inner.clone());
+				let debug_output = format!("{:?}", secret);
+				prop_assert!(!debug_output.contains(&inner));
+		}
 
-    #[test]
-    fn serialize_never_contains_secret(inner in "[a-zA-Z0-9]{3,50}") {
-        let secret = Secret::new(inner.clone());
-        let json = serde_json::to_string(&secret).unwrap();
-        prop_assert!(!json.contains(&inner));
-    }
+		#[test]
+		fn serialize_never_contains_secret(inner in "[a-zA-Z0-9]{3,50}") {
+				let secret = Secret::new(inner.clone());
+				let json = serde_json::to_string(&secret).unwrap();
+				prop_assert!(!json.contains(&inner));
+		}
 }
 ```
 
@@ -307,13 +319,12 @@ proptest! {
 ```rust
 #[test]
 fn test_debug_redacts_api_keys() {
-    let config = LlmServiceConfig::new(LlmProvider::OpenAi)
-        .with_openai_api_key("sk-super-secret");
+	let config = LlmServiceConfig::new(LlmProvider::OpenAi).with_openai_api_key("sk-super-secret");
 
-    let debug_output = format!("{:?}", config);
+	let debug_output = format!("{:?}", config);
 
-    assert!(!debug_output.contains("sk-super-secret"));
-    assert!(debug_output.contains("[REDACTED]"));
+	assert!(!debug_output.contains("sk-super-secret"));
+	assert!(debug_output.contains("[REDACTED]"));
 }
 ```
 
@@ -323,22 +334,22 @@ fn test_debug_redacts_api_keys() {
 
 ### What This Protects Against
 
-| Threat | Protection |
-|--------|------------|
-| Secrets in application logs | Debug/Display always redacted |
-| Secrets in error messages | Debug impl is redacted |
-| Secrets in config dumps | Serialize always redacted |
-| Secrets in core dumps | Zeroize on drop clears memory |
+| Threat                          | Protection                      |
+| ------------------------------- | ------------------------------- |
+| Secrets in application logs     | Debug/Display always redacted   |
+| Secrets in error messages       | Debug impl is redacted          |
+| Secrets in config dumps         | Serialize always redacted       |
+| Secrets in core dumps           | Zeroize on drop clears memory   |
 | Accidental string interpolation | No Deref, must call `.expose()` |
 
 ### What This Does NOT Protect Against
 
-| Threat | Mitigation |
-|--------|------------|
-| Deliberate `.expose()` in logs | Code review, linting |
-| Memory inspection before drop | Use shorter-lived secrets |
-| Side-channel attacks | Out of scope for this system |
-| Secrets in version control | Use `.gitignore`, secret scanning |
+| Threat                         | Mitigation                        |
+| ------------------------------ | --------------------------------- |
+| Deliberate `.expose()` in logs | Code review, linting              |
+| Memory inspection before drop  | Use shorter-lived secrets         |
+| Side-channel attacks           | Out of scope for this system      |
+| Secrets in version control     | Use `.gitignore`, secret scanning |
 
 ### Best Practices
 
@@ -353,13 +364,13 @@ fn test_debug_redacts_api_keys() {
 
 ### Potential Enhancements
 
-| Feature | Description |
-|---------|-------------|
-| **Keyring integration** | Load secrets from system keyring |
-| **Vault integration** | Fetch secrets from HashiCorp Vault |
-| **AWS Secrets Manager** | Fetch secrets from AWS |
-| **Secret rotation** | Automatic secret refresh |
-| **Audit logging** | Log when secrets are accessed (not their values) |
+| Feature                 | Description                                      |
+| ----------------------- | ------------------------------------------------ |
+| **Keyring integration** | Load secrets from system keyring                 |
+| **Vault integration**   | Fetch secrets from HashiCorp Vault               |
+| **AWS Secrets Manager** | Fetch secrets from AWS                           |
+| **Secret rotation**     | Automatic secret refresh                         |
+| **Audit logging**       | Log when secrets are accessed (not their values) |
 
 ### Migration Path
 
@@ -378,16 +389,16 @@ This would be a non-breaking change for consumers.
 
 ### Supported Variables
 
-| Variable | File Variant | Used By |
-|----------|--------------|---------|
-| `LOOM_SERVER_ANTHROPIC_API_KEY` | `..._FILE` | loom-llm-service |
-| `LOOM_SERVER_OPENAI_API_KEY` | `..._FILE` | loom-llm-service |
-| `LOOM_GITHUB_APP_PRIVATE_KEY` | `..._FILE` | loom-github-app |
-| `LOOM_GITHUB_APP_WEBHOOK_SECRET` | `..._FILE` | loom-github-app |
-| `LOOM_ANTHROPIC_API_KEY` | `..._FILE` | loom-config |
-| `LOOM_OPENAI_API_KEY` | `..._FILE` | loom-config |
-| `ANTHROPIC_API_KEY` | `..._FILE` | loom-config (fallback) |
-| `OPENAI_API_KEY` | `..._FILE` | loom-config (fallback) |
+| Variable                         | File Variant | Used By                |
+| -------------------------------- | ------------ | ---------------------- |
+| `LOOM_SERVER_ANTHROPIC_API_KEY`  | `..._FILE`   | loom-llm-service       |
+| `LOOM_SERVER_OPENAI_API_KEY`     | `..._FILE`   | loom-llm-service       |
+| `LOOM_GITHUB_APP_PRIVATE_KEY`    | `..._FILE`   | loom-github-app        |
+| `LOOM_GITHUB_APP_WEBHOOK_SECRET` | `..._FILE`   | loom-github-app        |
+| `LOOM_ANTHROPIC_API_KEY`         | `..._FILE`   | loom-config            |
+| `LOOM_OPENAI_API_KEY`            | `..._FILE`   | loom-config            |
+| `ANTHROPIC_API_KEY`              | `..._FILE`   | loom-config (fallback) |
+| `OPENAI_API_KEY`                 | `..._FILE`   | loom-config (fallback) |
 
 ---
 

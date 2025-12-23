@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+// SPDX-License-Identifier: Proprietary
+
 //! LLM proxy client for communicating with server-side LLM proxies.
 //!
 //! This crate provides a client implementation that talks to server proxy

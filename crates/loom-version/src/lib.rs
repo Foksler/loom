@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+// SPDX-License-Identifier: Proprietary
+
 //! Shared build and version information for Loom (CLI + server).
 //!
 //! This crate provides a single source of truth for version, git SHA,
@@ -16,27 +19,27 @@ pub const PLATFORM: &str = env!("LOOM_PLATFORM");
 /// Core build information used across CLI, server, and headers.
 #[derive(Debug, Clone, Copy)]
 pub struct BuildInfo {
-    pub version: &'static str,
-    pub git_sha: &'static str,
-    pub build_timestamp: &'static str,
-    pub platform: &'static str,
+	pub version: &'static str,
+	pub git_sha: &'static str,
+	pub build_timestamp: &'static str,
+	pub platform: &'static str,
 }
 
 impl BuildInfo {
-    /// Get the current build information (compile-time constants).
-    #[allow(clippy::const_is_empty)]
-    pub const fn current() -> Self {
-        Self {
-            version: build::PKG_VERSION,
-            git_sha: if build::SHORT_COMMIT.is_empty() {
-                "unknown"
-            } else {
-                build::SHORT_COMMIT
-            },
-            build_timestamp: build::BUILD_TIME,
-            platform: PLATFORM,
-        }
-    }
+	/// Get the current build information (compile-time constants).
+	#[allow(clippy::const_is_empty)]
+	pub const fn current() -> Self {
+		Self {
+			version: build::PKG_VERSION,
+			git_sha: if build::SHORT_COMMIT.is_empty() {
+				"unknown"
+			} else {
+				build::SHORT_COMMIT
+			},
+			build_timestamp: build::BUILD_TIME,
+			platform: PLATFORM,
+		}
+	}
 }
 
 /// Version info shape used for health checks (matches health-check spec).
@@ -45,75 +48,75 @@ impl BuildInfo {
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[derive(Debug, Clone, Copy)]
 pub struct HealthVersionInfo {
-    pub version: &'static str,
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
-    pub git_sha: Option<&'static str>,
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
-    pub build_timestamp: Option<&'static str>,
+	pub version: &'static str,
+	#[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
+	pub git_sha: Option<&'static str>,
+	#[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
+	pub build_timestamp: Option<&'static str>,
 }
 
 impl HealthVersionInfo {
-    /// Get version info for health check responses.
-    pub const fn current() -> Self {
-        let info = BuildInfo::current();
-        Self {
-            version: info.version,
-            git_sha: if info.git_sha.is_empty()
-                || info.git_sha.as_bytes()[0] == b'u'
-                    && info.git_sha.len() == 7
-                    && info.git_sha.as_bytes()[1] == b'n'
-            {
-                None
-            } else {
-                Some(info.git_sha)
-            },
-            build_timestamp: if info.build_timestamp.is_empty() {
-                None
-            } else {
-                Some(info.build_timestamp)
-            },
-        }
-    }
+	/// Get version info for health check responses.
+	pub const fn current() -> Self {
+		let info = BuildInfo::current();
+		Self {
+			version: info.version,
+			git_sha: if info.git_sha.is_empty()
+				|| info.git_sha.as_bytes()[0] == b'u'
+					&& info.git_sha.len() == 7
+					&& info.git_sha.as_bytes()[1] == b'n'
+			{
+				None
+			} else {
+				Some(info.git_sha)
+			},
+			build_timestamp: if info.build_timestamp.is_empty() {
+				None
+			} else {
+				Some(info.build_timestamp)
+			},
+		}
+	}
 }
 
 /// HTTP header names for version information.
 pub mod headers {
-    pub const VERSION: &str = "X-Loom-Version";
-    pub const GIT_SHA: &str = "X-Loom-Git-Sha";
-    pub const BUILD_TIMESTAMP: &str = "X-Loom-Build-Timestamp";
-    pub const PLATFORM: &str = "X-Loom-Platform";
+	pub const VERSION: &str = "X-Loom-Version";
+	pub const GIT_SHA: &str = "X-Loom-Git-Sha";
+	pub const BUILD_TIMESTAMP: &str = "X-Loom-Build-Timestamp";
+	pub const PLATFORM: &str = "X-Loom-Platform";
 }
 
 /// Get the Loom version string for thread metadata.
 pub const fn loom_version() -> &'static str {
-    build::PKG_VERSION
+	build::PKG_VERSION
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+	use super::*;
 
-    #[test]
-    fn build_info_has_version() {
-        let info = BuildInfo::current();
-        assert!(!info.version.is_empty());
-    }
+	#[test]
+	fn build_info_has_version() {
+		let info = BuildInfo::current();
+		assert!(!info.version.is_empty());
+	}
 
-    #[test]
-    fn platform_format_is_valid() {
-        assert!(PLATFORM.contains('-'));
-        let parts: Vec<&str> = PLATFORM.split('-').collect();
-        assert_eq!(parts.len(), 2);
-    }
+	#[test]
+	fn platform_format_is_valid() {
+		assert!(PLATFORM.contains('-'));
+		let parts: Vec<&str> = PLATFORM.split('-').collect();
+		assert_eq!(parts.len(), 2);
+	}
 
-    #[test]
-    fn health_version_info_has_version() {
-        let info = HealthVersionInfo::current();
-        assert!(!info.version.is_empty());
-    }
+	#[test]
+	fn health_version_info_has_version() {
+		let info = HealthVersionInfo::current();
+		assert!(!info.version.is_empty());
+	}
 
-    #[test]
-    fn loom_version_matches_build_info() {
-        assert_eq!(loom_version(), BuildInfo::current().version);
-    }
+	#[test]
+	fn loom_version_matches_build_info() {
+		assert_eq!(loom_version(), BuildInfo::current().version);
+	}
 }

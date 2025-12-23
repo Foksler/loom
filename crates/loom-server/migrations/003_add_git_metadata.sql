@@ -1,3 +1,6 @@
+-- Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+-- SPDX-License-Identifier: Proprietary
+
 -- Add git metadata columns to threads table
 ALTER TABLE threads ADD COLUMN git_branch TEXT;
 ALTER TABLE threads ADD COLUMN git_remote_url TEXT;
