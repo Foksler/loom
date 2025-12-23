@@ -29,7 +29,6 @@ in
     pkgs.jq
     pkgs.kubectl
     tools.license    # License header management tool
-    pkgs.opentofu    # Infrastructure as Code (open-source Terraform alternative)
     pkgs.lld         # Backup fast linker
     pkgs.nixos-rebuild
     pkgs.nodejs_22   # Node.js for web tooling compatibility
@@ -39,9 +38,6 @@ in
     pkgs.skopeo
     pkgs.sops
     pkgs.ssh-to-age
-    (pkgs.opentofu.withPlugins (p: [
-      p.cloudflare
-    ]))
   ];
 
   # https://devenv.sh/languages/
