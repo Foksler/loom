@@ -10,7 +10,8 @@
 
   let { executions, expanded = false }: Props = $props();
 
-  let isExpanded = $state(expanded);
+  let isExpanded = $state<boolean | undefined>(undefined);
+  const effectiveExpanded = $derived(isExpanded ?? expanded);
 </script>
 
 {#if executions.length > 0}
@@ -18,17 +19,17 @@
     <button
       type="button"
       class="w-full p-3 flex items-center justify-between hover:bg-bg-muted transition-colors"
-      onclick={() => isExpanded = !isExpanded}
+      onclick={() => isExpanded = !effectiveExpanded}
     >
       <span class="font-medium text-fg">
         Tools ({executions.length})
       </span>
-      <span class="text-fg-muted transform transition-transform {isExpanded ? 'rotate-180' : ''}">
+      <span class="text-fg-muted transform transition-transform {effectiveExpanded ? 'rotate-180' : ''}">
         ▼
       </span>
     </button>
     
-    {#if isExpanded}
+    {#if effectiveExpanded}
       <div class="border-t border-border divide-y divide-border">
         {#each executions as execution (execution.call_id)}
           <ToolExecutionRow {execution} />

@@ -23,7 +23,8 @@
     onkeydown,
   }: Props = $props();
 
-  const inputId = id || `input-${Math.random().toString(36).slice(2)}`;
+  const fallbackId = `input-${Math.random().toString(36).slice(2)}`;
+  const inputId = $derived(id || fallbackId);
 </script>
 
 <div class="w-full">

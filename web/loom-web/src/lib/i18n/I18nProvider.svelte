@@ -1,7 +1,12 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, type Snippet } from 'svelte';
   import { loadCatalog, getPreferredLocale, type Locale } from './i18n';
 
+  interface Props {
+    children: Snippet;
+  }
+
+  let { children }: Props = $props();
   let loaded = $state(false);
 
   onMount(async () => {
@@ -12,7 +17,7 @@
 </script>
 
 {#if loaded}
-  <slot />
+  {@render children()}
 {:else}
   <div class="flex items-center justify-center h-screen">
     <div class="animate-spin h-8 w-8 border-4 border-accent border-t-transparent rounded-full"></div>
