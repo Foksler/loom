@@ -273,12 +273,5 @@ in
         StandardError = "journal";
       };
     };
-
-    networking.firewall = mkIf cfg.openFirewall {
-      allowedTCPPorts = [ cfg.port ];
-    };
-
-    # Allow access via Tailscale
-    networking.firewall.interfaces."tailscale0".allowedTCPPorts = [ cfg.port ];
   };
 }

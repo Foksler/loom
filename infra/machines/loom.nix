@@ -160,6 +160,6 @@
     acmeEmail = "ghuntley@ghuntley.com";
   };
 
-  networking.firewall.interfaces."ens18".allowedTCPPorts = [ 80 443 ];
+  networking.firewall.allowedTCPPorts = [ 80 443 ];
 
 }
