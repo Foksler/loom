@@ -153,10 +153,13 @@
   # Loom Web - Web frontend
   services.loom-web = {
     enable = true;
-    port = 3000;
+    port = 443;
     serverUrl = "http://127.0.0.1:8080";
     domain = "loom.ghuntley.com";
     enableSSL = true;
     acmeEmail = "ghuntley@ghuntley.com";
   };
+
+  networking.firewall.interfaces."ens18".allowedTCPPorts = [ 80 443 ];
+
 }
