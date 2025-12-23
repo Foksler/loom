@@ -77,31 +77,30 @@
     mode = "0400";
   };
 
-  # Optional: Uncomment if using OpenAI
-  # sops.secrets.loom-openai-api-key = {
-  #   owner = "loom-server";
-  #   mode = "0400";
-  # };
+  sops.secrets.loom-openai-api-key = {
+    owner = "loom-server";
+    mode = "0400";
+  };
 
-  # Optional: Uncomment if using GitHub App
-  # sops.secrets.loom-github-app-id = {
-  #   owner = "loom-server";
-  #   mode = "0400";
-  # };
-  # sops.secrets.loom-github-app-private-key = {
-  #   owner = "loom-server";
-  #   mode = "0400";
-  # };
-  # sops.secrets.loom-github-webhook-secret = {
-  #   owner = "loom-server";
-  #   mode = "0400";
-  # };
+  sops.secrets.loom-github-app-id = {
+    owner = "loom-server";
+    mode = "0400";
+  };
 
-  # Optional: Uncomment if using Google Custom Search
-  # sops.secrets.loom-google-cse-api-key = {
-  #   owner = "loom-server";
-  #   mode = "0400";
-  # };
+  sops.secrets.loom-github-app-private-key = {
+    owner = "loom-server";
+    mode = "0400";
+  };
+
+  sops.secrets.loom-github-webhook-secret = {
+    owner = "loom-server";
+    mode = "0400";
+  };
+
+  sops.secrets.loom-google-cse-api-key = {
+    owner = "loom-server";
+    mode = "0400";
+  };
   
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
@@ -131,27 +130,24 @@
       model = "claude-sonnet-4-20250514";
     };
 
-    # Optional: Enable OpenAI
-    # openai = {
-    #   enable = true;
-    #   apiKeyFile = config.sops.secrets.loom-openai-api-key.path;
-    #   model = "gpt-4o";
-    # };
+    openai = {
+      enable = true;
+      apiKeyFile = config.sops.secrets.loom-openai-api-key.path;
+      model = "gpt-4o";
+    };
 
-    # Optional: Enable GitHub App
-    # githubApp = {
-    #   enable = true;
-    #   appIdFile = config.sops.secrets.loom-github-app-id.path;
-    #   privateKeyFile = config.sops.secrets.loom-github-app-private-key.path;
-    #   webhookSecretFile = config.sops.secrets.loom-github-webhook-secret.path;
-    # };
+    githubApp = {
+      enable = true;
+      appIdFile = config.sops.secrets.loom-github-app-id.path;
+      privateKeyFile = config.sops.secrets.loom-github-app-private-key.path;
+      webhookSecretFile = config.sops.secrets.loom-github-webhook-secret.path;
+    };
 
-    # Optional: Enable Google Custom Search
-    # googleCse = {
-    #   enable = true;
-    #   apiKeyFile = config.sops.secrets.loom-google-cse-api-key.path;
-    #   searchEngineId = "your-search-engine-id";
-    # };
+    googleCse = {
+      enable = true;
+      apiKeyFile = config.sops.secrets.loom-google-cse-api-key.path;
+      searchEngineId = "017576662512468239146:omuauf_lfve";
+    };
   };
 
   # Loom Web - Web frontend
@@ -159,12 +155,8 @@
     enable = true;
     port = 3000;
     serverUrl = "http://127.0.0.1:8080";
-    
-    # For production with a domain:
     domain = "loom.ghuntley.com";
     enableSSL = true;
     acmeEmail = "ghuntley@ghuntley.com";
-    
-    enableSSL = true;
   };
 }
