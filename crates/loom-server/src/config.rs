@@ -40,7 +40,8 @@ impl ServerConfig {
 		let database_url =
 			env::var("LOOM_SERVER_DATABASE_URL").unwrap_or_else(|_| "sqlite:./loom.db".to_string());
 
-		let log_level = env::var("LOOM_SERVER_LOG_LEVEL").unwrap_or_else(|_| "info".to_string());
+		let log_level = env::var("LOOM_SERVER_LOG_LEVEL")
+			.unwrap_or_else(|_| "info,tower_http::trace=debug".to_string());
 
 		let bin_dir = env::var("LOOM_SERVER_BIN_DIR").unwrap_or_else(|_| "./bin".to_string());
 
@@ -65,7 +66,7 @@ impl Default for ServerConfig {
 			host: "127.0.0.1".to_string(),
 			port: 8080,
 			database_url: "sqlite:./loom.db".to_string(),
-			log_level: "info".to_string(),
+			log_level: "info,tower_http::trace=debug".to_string(),
 			bin_dir: "./bin".to_string(),
 		}
 	}
