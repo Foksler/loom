@@ -79,11 +79,12 @@ in
       recommendedTlsSettings = mkIf cfg.enableSSL true;
 
       virtualHosts.${if cfg.domain != null then cfg.domain else "_"} = {
-        listen = [
-          { addr = "0.0.0.0"; port = cfg.port; ssl = false; }
-        ] ++ (optionals (cfg.enableSSL && cfg.domain != null) [
+        listen = if cfg.enableSSL && cfg.domain != null then [
+          { addr = "0.0.0.0"; port = 80; ssl = false; }
           { addr = "0.0.0.0"; port = 443; ssl = true; }
-        ]);
+        ] else [
+          { addr = "0.0.0.0"; port = cfg.port; ssl = false; }
+        ];
 
         forceSSL = cfg.enableSSL && cfg.domain != null;
         enableACME = cfg.enableSSL && cfg.domain != null;
