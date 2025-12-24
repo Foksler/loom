@@ -35,14 +35,18 @@
     address = "51.161.140.159";
     prefixLength = 32; # 255.255.255.255
   }];
-  networking.defaultGateway = "51.161.216.158";
+  networking.defaultGateway = {
+    address = "51.161.216.158";
+    interface = "eth0";
+  };
+ 
   networking.nameservers = [ 
     "8.8.8.8"
     "8.8.4.4"
   ];
 
 
-  networking.firewall.enable = true;
+  networking.firewall.enable = false;
 
   # Hardware configuration
   boot.initrd.availableKernelModules = [ "ata_piix" "uhci_hcd" "virtio_pci" "virtio_scsi" "sd_mod" "sr_mod" ];
