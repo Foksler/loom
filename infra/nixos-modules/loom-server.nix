@@ -43,6 +43,16 @@ in
       description = "Log level for the server.";
     };
 
+    binDir = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = ''
+        Directory containing CLI binaries for distribution.
+        Binaries are served at /bin/{platform} for self-update functionality.
+        Expected structure: bin/linux-x86_64, bin/macos-aarch64, etc.
+      '';
+    };
+
     openFirewall = mkOption {
       type = types.bool;
       default = false;
@@ -219,6 +229,9 @@ in
         })
         (mkIf (cfg.googleCse.enable && cfg.googleCse.searchEngineId != null) {
           LOOM_GOOGLE_CSE_ID = cfg.googleCse.searchEngineId;
+        })
+        (mkIf (cfg.binDir != null) {
+          LOOM_SERVER_BIN_DIR = toString cfg.binDir;
         })
         cfg.extraEnvironment
       ];

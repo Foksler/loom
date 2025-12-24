@@ -127,6 +127,7 @@
     port = 8080;
     databasePath = "/var/lib/loom-server/loom.db";
     logLevel = "trace";
+    binDir = pkgs.loom-cli-binaries;
 
     anthropic = {
       enable = true;
