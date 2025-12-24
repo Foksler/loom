@@ -296,8 +296,8 @@ pub fn create_router(state: AppState) -> Router {
 
     // Add OpenAPI documentation
     router = router.merge(
-        SwaggerUi::new("/docs")
-            .url("/docs/openapi.json", ApiDoc::openapi())
+        SwaggerUi::new("/api")
+            .url("/api/openapi.json", ApiDoc::openapi())
     );
 
     // ... existing fallback service logic ...
@@ -356,8 +356,8 @@ async fn proxy_anthropic_stream(...) -> impl IntoResponse {
 
 | Endpoint            | Method | Description                          |
 | ------------------- | ------ | ------------------------------------ |
-| `/docs`             | GET    | Swagger UI interactive documentation |
-| `/docs/openapi.json`| GET    | Raw OpenAPI 3.0 JSON specification   |
+| `/api`              | GET    | Swagger UI interactive documentation |
+| `/api/openapi.json` | GET    | Raw OpenAPI 3.0 JSON specification   |
 
 ---
 

@@ -7,6 +7,7 @@
 //! to a SQLite database.
 
 pub mod api;
+pub mod api_docs;
 pub mod config;
 pub mod db;
 pub mod error;
@@ -17,9 +18,9 @@ pub mod llm_query_processor;
 pub mod query_metrics;
 pub mod query_security;
 pub mod query_tracing;
+pub mod routes;
 pub mod server_query;
 pub mod websocket;
-pub mod api_docs;
 
 #[cfg(test)]
 mod tests;

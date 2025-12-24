@@ -11,8 +11,8 @@ use utoipa::OpenApi;
 /// Main OpenAPI documentation struct.
 ///
 /// This generates the complete OpenAPI specification for the Loom Server API.
-/// Access the interactive documentation at `/docs` and the raw JSON spec at
-/// `/docs/openapi.json`.
+/// Access the interactive documentation at `/api` and the raw JSON spec at
+/// `/api/openapi.json`.
 #[derive(OpenApi)]
 #[openapi(
     info(
@@ -41,47 +41,47 @@ use utoipa::OpenApi;
     ),
     paths(
         // Thread endpoints
-        crate::api::search_threads,
-        crate::api::upsert_thread,
-        crate::api::get_thread,
-        crate::api::list_threads,
-        crate::api::delete_thread,
-        crate::api::update_thread_visibility,
+        crate::routes::threads::search_threads,
+        crate::routes::threads::upsert_thread,
+        crate::routes::threads::get_thread,
+        crate::routes::threads::list_threads,
+        crate::routes::threads::delete_thread,
+        crate::routes::threads::update_thread_visibility,
         // Health endpoints
-        crate::api::health_check,
-        crate::api::prometheus_metrics,
+        crate::routes::health::health_check,
+        crate::routes::health::prometheus_metrics,
         // Auth endpoints
-        crate::api::login_stub,
-        crate::api::logout_stub,
+        crate::routes::auth::login_stub,
+        crate::routes::auth::logout_stub,
         // Google CSE endpoints
-        crate::api::proxy_cse,
+        crate::routes::cse::proxy_cse,
         // GitHub endpoints
-        crate::api::get_github_app_info,
-        crate::api::get_github_installation_by_repo,
-        crate::api::proxy_github_search_code,
-        crate::api::proxy_github_repo_info,
-        crate::api::proxy_github_file_contents,
+        crate::routes::github::get_github_app_info,
+        crate::routes::github::get_github_installation_by_repo,
+        crate::routes::github::proxy_github_search_code,
+        crate::routes::github::proxy_github_repo_info,
+        crate::routes::github::proxy_github_file_contents,
         // Debug endpoints
-        crate::api::get_query_trace,
-        crate::api::list_query_traces,
-        crate::api::get_trace_stats,
+        crate::routes::debug::get_query_trace,
+        crate::routes::debug::list_query_traces,
+        crate::routes::debug::get_trace_stats,
     ),
     components(
         schemas(
             // API request/response types
-            crate::api::SearchResponse,
-            crate::api::SearchResponseHit,
-            crate::api::UpdateVisibilityRequest,
-            crate::api::ListResponse,
-            crate::api::AuthStubResponse,
-            crate::api::CseProxyRequest,
-            crate::api::CseProxyResponse,
-            crate::api::CseProxyResultItem,
-            crate::api::GithubSearchCodeRequest,
-            crate::api::GithubRepoInfoRequest,
-            crate::api::GithubFileContentsRequest,
-            crate::api::GithubRepoInfoResponse,
-            crate::api::GithubFileContentsResponse,
+            crate::routes::threads::SearchResponse,
+            crate::routes::threads::SearchResponseHit,
+            crate::routes::threads::UpdateVisibilityRequest,
+            crate::routes::threads::ListResponse,
+            crate::routes::auth::AuthStubResponse,
+            crate::routes::cse::CseProxyRequest,
+            crate::routes::cse::CseProxyResponse,
+            crate::routes::cse::CseProxyResultItem,
+            crate::routes::github::GithubSearchCodeRequest,
+            crate::routes::github::GithubRepoInfoRequest,
+            crate::routes::github::GithubFileContentsRequest,
+            crate::routes::github::GithubRepoInfoResponse,
+            crate::routes::github::GithubFileContentsResponse,
             // Health types
             crate::health::HealthResponse,
             crate::health::HealthStatus,
@@ -122,49 +122,58 @@ pub struct ApiDoc;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+	use super::*;
 
-    /// Verify the OpenAPI spec generates valid JSON.
-    #[test]
-    fn test_openapi_spec_generates_valid_json() {
-        let spec = ApiDoc::openapi();
-        let json = serde_json::to_string_pretty(&spec).expect("should serialize to JSON");
-        
-        assert!(!json.is_empty());
-        assert!(json.contains("\"openapi\""));
-        assert!(json.contains("\"3.1"));
-        assert!(json.contains("Loom Server API"));
-    }
+	/// Verify the OpenAPI spec generates valid JSON.
+	#[test]
+	fn test_openapi_spec_generates_valid_json() {
+		let spec = ApiDoc::openapi();
+		let json = serde_json::to_string_pretty(&spec).expect("should serialize to JSON");
 
-    /// Verify all expected tags are present.
-    #[test]
-    fn test_openapi_spec_has_all_tags() {
-        let spec = ApiDoc::openapi();
-        let json = serde_json::to_string(&spec).expect("should serialize");
-        
-        let expected_tags = ["threads", "health", "llm-proxy", "github", "google-cse", "server-query", "debug", "auth"];
-        for tag in expected_tags {
-            assert!(json.contains(tag), "Missing tag: {}", tag);
-        }
-    }
+		assert!(!json.is_empty());
+		assert!(json.contains("\"openapi\""));
+		assert!(json.contains("\"3.1"));
+		assert!(json.contains("Loom Server API"));
+	}
 
-    /// Verify all documented endpoints are present in paths.
-    #[test]
-    fn test_openapi_spec_has_documented_paths() {
-        let spec = ApiDoc::openapi();
-        let json = serde_json::to_string(&spec).expect("should serialize");
-        
-        let expected_paths = [
-            "/v1/threads",
-            "/v1/threads/{id}",
-            "/v1/threads/search",
-            "/health",
-            "/metrics",
-            "/proxy/cse",
-            "/v1/github/app",
-        ];
-        for path in expected_paths {
-            assert!(json.contains(path), "Missing path: {}", path);
-        }
-    }
+	/// Verify all expected tags are present.
+	#[test]
+	fn test_openapi_spec_has_all_tags() {
+		let spec = ApiDoc::openapi();
+		let json = serde_json::to_string(&spec).expect("should serialize");
+
+		let expected_tags = [
+			"threads",
+			"health",
+			"llm-proxy",
+			"github",
+			"google-cse",
+			"server-query",
+			"debug",
+			"auth",
+		];
+		for tag in expected_tags {
+			assert!(json.contains(tag), "Missing tag: {}", tag);
+		}
+	}
+
+	/// Verify all documented endpoints are present in paths.
+	#[test]
+	fn test_openapi_spec_has_documented_paths() {
+		let spec = ApiDoc::openapi();
+		let json = serde_json::to_string(&spec).expect("should serialize");
+
+		let expected_paths = [
+			"/v1/threads",
+			"/v1/threads/{id}",
+			"/v1/threads/search",
+			"/health",
+			"/metrics",
+			"/proxy/cse",
+			"/v1/github/app",
+		];
+		for path in expected_paths {
+			assert!(json.contains(path), "Missing path: {}", path);
+		}
+	}
 }
