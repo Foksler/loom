@@ -34,6 +34,7 @@ AI-powered coding agent written in Rust.
 | [server-query-phase-2.md](./server-query-phase-2.md)           | Phase 2: Server-to-Client Query Bridge LLM Integration                              |
 | [phase3_websocket_planning.md](./phase3_websocket_planning.md) | Phase 3: WebSocket upgrade for persistent connections                               |
 | [api-documentation.md](./api-documentation.md)                 | OpenAPI documentation system using utoipa and Swagger UI                            |
+| [vscode-extension.md](./vscode-extension.md)                   | VS Code extension (loom-vscode) using ACP for editor integration                    |
 
 ## Quick Reference
 
@@ -55,6 +56,8 @@ loom/
 │   ├── loom-http-retry/     # HTTP retry/backoff utilities
 │   ├── loom-acp/            # Agent Client Protocol (ACP) integration
 │   └── loom-cli/            # CLI binary using clap
+├── ide/
+│   └── vscode/              # VS Code extension (ACP client)
 └── specs/                   # This directory
 ```
 
@@ -108,3 +111,4 @@ and conventions.
 | **Phase 2**  | ✅ Complete | LLM integration, extraction, context restoration | [Phase 2 Guide](../PHASE_2_IMPLEMENTATION_GUIDE.md)                     |
 | **Phase 3**  | 📋 Planned  | WebSocket upgrade, persistent connections        | [WebSocket Planning](./phase3_websocket_planning.md)                    |
 | **Phase 4+** | 📋 Future   | Editor integration, advanced query types         | TBD                                                                     |
+| **VS Code**  | 🚧 WIP      | VS Code extension using ACP                      | [VS Code Extension](./vscode-extension.md)                              |
