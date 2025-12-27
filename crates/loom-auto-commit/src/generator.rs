@@ -7,9 +7,10 @@ use loom_core::llm::{LlmClient, LlmRequest};
 use loom_core::message::Message;
 use tracing::{debug, info, warn};
 
+use loom_git::GitDiff;
+
 use crate::config::AutoCommitConfig;
 use crate::error::AutoCommitError;
-use crate::git::GitDiff;
 
 const SYSTEM_PROMPT: &str = r#"You are an expert software engineer generating git commit messages.
 

@@ -58,7 +58,53 @@ impl GitClient for CommandGitClient {
 				files_count = files_changed.len(),
 				insertions,
 				deletions,
-				"computed diff"
+				"computed diff (all)"
+		);
+
+		Ok(GitDiff {
+			content,
+			files_changed,
+			insertions,
+			deletions,
+		})
+	}
+
+	async fn diff_staged(&self, path: &Path) -> Result<GitDiff, GitError> {
+		let content = run_git(path, &["diff", "--cached"]).await.unwrap_or_default();
+		let stat_output = run_git(path, &["diff", "--stat", "--cached"]).await.ok();
+
+		let (files_changed, insertions, deletions) =
+			parse_diff_stat(stat_output.as_deref().unwrap_or(""));
+
+		debug!(
+				path = %path.display(),
+				files_count = files_changed.len(),
+				insertions,
+				deletions,
+				"computed diff (staged)"
+		);
+
+		Ok(GitDiff {
+			content,
+			files_changed,
+			insertions,
+			deletions,
+		})
+	}
+
+	async fn diff_unstaged(&self, path: &Path) -> Result<GitDiff, GitError> {
+		let content = run_git(path, &["diff"]).await.unwrap_or_default();
+		let stat_output = run_git(path, &["diff", "--stat"]).await.ok();
+
+		let (files_changed, insertions, deletions) =
+			parse_diff_stat(stat_output.as_deref().unwrap_or(""));
+
+		debug!(
+				path = %path.display(),
+				files_count = files_changed.len(),
+				insertions,
+				deletions,
+				"computed diff (unstaged)"
 		);
 
 		Ok(GitDiff {
@@ -82,6 +128,32 @@ impl GitClient for CommandGitClient {
 
 		debug!(path = %path.display(), sha = %sha, "created commit");
 		Ok(sha)
+	}
+
+	async fn changed_files(&self, path: &Path) -> Result<Vec<String>, GitError> {
+		// Get list of changed files (staged + unstaged + untracked)
+		let output = run_git(path, &["status", "--porcelain"]).await.unwrap_or_default();
+
+		let files: Vec<String> = output
+			.lines()
+			.filter_map(|line| {
+				// Porcelain format: XY filename
+				// First two chars are status, then space, then filename
+				if line.len() > 3 {
+					Some(line[3..].to_string())
+				} else {
+					None
+				}
+			})
+			.collect();
+
+		debug!(
+				path = %path.display(),
+				files_count = files.len(),
+				"listed changed files"
+		);
+
+		Ok(files)
 	}
 }
 

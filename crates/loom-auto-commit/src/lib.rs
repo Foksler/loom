@@ -4,11 +4,11 @@
 mod config;
 mod error;
 mod generator;
-mod git;
 mod service;
 
 pub use config::AutoCommitConfig;
 pub use error::AutoCommitError;
 pub use generator::CommitMessageGenerator;
-pub use git::{GitClient, GitDiff};
+// Re-export loom-git types for convenience
+pub use loom_git::{CommandGitClient, GitClient, GitDiff, GitError, MockGitClient};
 pub use service::{AutoCommitResult, AutoCommitService, CompletedToolInfo};

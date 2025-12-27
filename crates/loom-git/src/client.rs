@@ -36,11 +36,20 @@ pub trait GitClient: Send + Sync {
 	/// Get the diff of all changes (staged + unstaged).
 	async fn diff_all(&self, path: &Path) -> Result<GitDiff, GitError>;
 
+	/// Get the diff of staged changes only.
+	async fn diff_staged(&self, path: &Path) -> Result<GitDiff, GitError>;
+
+	/// Get the diff of unstaged changes only (working tree vs index).
+	async fn diff_unstaged(&self, path: &Path) -> Result<GitDiff, GitError>;
+
 	/// Stage all changes in the repository.
 	async fn stage_all(&self, path: &Path) -> Result<(), GitError>;
 
 	/// Create a commit with the given message.
 	async fn commit(&self, path: &Path, message: &str) -> Result<String, GitError>;
+
+	/// Get list of changed files (staged + unstaged).
+	async fn changed_files(&self, path: &Path) -> Result<Vec<String>, GitError>;
 }
 
 #[cfg(test)]

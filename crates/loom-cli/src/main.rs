@@ -59,41 +59,7 @@ use url::Url;
 
 mod version;
 
-struct AutoCommitGitClient(CommandGitClient);
-
-#[async_trait::async_trait]
-impl loom_auto_commit::GitClient for AutoCommitGitClient {
-	async fn is_repository(&self, path: &std::path::Path) -> bool {
-		loom_git::GitClient::is_repository(&self.0, path).await
-	}
-
-	async fn diff_all(
-		&self,
-		path: &std::path::Path,
-	) -> Result<loom_auto_commit::GitDiff, loom_auto_commit::AutoCommitError> {
-		let diff = loom_git::GitClient::diff_all(&self.0, path).await?;
-		Ok(loom_auto_commit::GitDiff {
-			content: diff.content,
-			files_changed: diff.files_changed,
-		})
-	}
-
-	async fn stage_all(
-		&self,
-		path: &std::path::Path,
-	) -> Result<(), loom_auto_commit::AutoCommitError> {
-		loom_git::GitClient::stage_all(&self.0, path).await?;
-		Ok(())
-	}
-
-	async fn commit(
-		&self,
-		path: &std::path::Path,
-		message: &str,
-	) -> Result<String, loom_auto_commit::AutoCommitError> {
-		Ok(loom_git::GitClient::commit(&self.0, path, message).await?)
-	}
-}
+// loom-auto-commit now re-exports loom-git types directly, so we can use CommandGitClient
 
 /// Loom - AI-powered coding assistant
 #[derive(Parser, Debug)]
@@ -258,7 +224,7 @@ fn build_auto_commit_config() -> AutoCommitConfig {
 }
 
 async fn run_auto_commit(
-	service: &AutoCommitService<AutoCommitGitClient, ProxyLlmClient>,
+	service: &AutoCommitService<CommandGitClient, ProxyLlmClient>,
 	workspace: &std::path::Path,
 	completed_tools: &[CompletedToolInfo],
 ) -> AutoCommitResult {
@@ -374,7 +340,7 @@ async fn run_repl(
 	thread_store: &dyn ThreadStore,
 	mut shutdown_rx: watch::Receiver<bool>,
 	workspace: &std::path::Path,
-	auto_commit_service: Option<&AutoCommitService<AutoCommitGitClient, ProxyLlmClient>>,
+	auto_commit_service: Option<&AutoCommitService<CommandGitClient, ProxyLlmClient>>,
 ) -> Result<()> {
 	let stdin = tokio::io::stdin();
 	let mut reader = BufReader::new(stdin);
@@ -623,7 +589,7 @@ async fn start_repl_session(
 	let auto_commit_config = build_auto_commit_config();
 	let auto_commit_enabled = auto_commit_config.enabled;
 	let auto_commit_service = if auto_commit_enabled {
-		let git_client = Arc::new(AutoCommitGitClient(CommandGitClient::new()));
+		let git_client = Arc::new(CommandGitClient::new());
 		let haiku_client = Arc::new(ProxyLlmClient::new(
 			&args.server_url,
 			LlmProvider::Anthropic,

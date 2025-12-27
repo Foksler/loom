@@ -14,8 +14,11 @@ use crate::error::GitError;
 pub enum MockCall {
 	IsRepository,
 	DiffAll,
+	DiffStaged,
+	DiffUnstaged,
 	StageAll,
 	Commit(String),
+	ChangedFiles,
 }
 
 /// Mock git client for testing.
@@ -25,12 +28,18 @@ pub struct MockGitClient {
 	pub is_repo: bool,
 	/// Diff to return from diff_all.
 	pub diff: GitDiff,
+	/// Diff to return from diff_staged.
+	pub staged_diff: GitDiff,
+	/// Diff to return from diff_unstaged.
+	pub unstaged_diff: GitDiff,
 	/// If set, stage_all returns this error.
 	pub stage_error: Option<String>,
 	/// If set, commit returns this error.
 	pub commit_error: Option<String>,
 	/// SHA to return from commit.
 	pub commit_sha: String,
+	/// Files to return from changed_files.
+	pub changed_files_list: Vec<String>,
 	/// Track calls for verification.
 	pub calls: Arc<Mutex<Vec<MockCall>>>,
 }
@@ -40,15 +49,33 @@ impl MockGitClient {
 		Self {
 			is_repo: true,
 			diff: GitDiff::default(),
+			staged_diff: GitDiff::default(),
+			unstaged_diff: GitDiff::default(),
 			stage_error: None,
 			commit_error: None,
 			commit_sha: "abc123def456789012345678901234567890abcd".to_string(),
+			changed_files_list: Vec::new(),
 			calls: Arc::new(Mutex::new(Vec::new())),
 		}
 	}
 
 	pub fn with_diff(mut self, diff: GitDiff) -> Self {
 		self.diff = diff;
+		self
+	}
+
+	pub fn with_staged_diff(mut self, diff: GitDiff) -> Self {
+		self.staged_diff = diff;
+		self
+	}
+
+	pub fn with_unstaged_diff(mut self, diff: GitDiff) -> Self {
+		self.unstaged_diff = diff;
+		self
+	}
+
+	pub fn with_changed_files(mut self, files: Vec<String>) -> Self {
+		self.changed_files_list = files;
 		self
 	}
 
@@ -99,6 +126,16 @@ impl GitClient for MockGitClient {
 		Ok(self.diff.clone())
 	}
 
+	async fn diff_staged(&self, _path: &Path) -> Result<GitDiff, GitError> {
+		self.record(MockCall::DiffStaged);
+		Ok(self.staged_diff.clone())
+	}
+
+	async fn diff_unstaged(&self, _path: &Path) -> Result<GitDiff, GitError> {
+		self.record(MockCall::DiffUnstaged);
+		Ok(self.unstaged_diff.clone())
+	}
+
 	async fn stage_all(&self, _path: &Path) -> Result<(), GitError> {
 		self.record(MockCall::StageAll);
 		if let Some(ref error) = self.stage_error {
@@ -121,6 +158,11 @@ impl GitClient for MockGitClient {
 			});
 		}
 		Ok(self.commit_sha.clone())
+	}
+
+	async fn changed_files(&self, _path: &Path) -> Result<Vec<String>, GitError> {
+		self.record(MockCall::ChangedFiles);
+		Ok(self.changed_files_list.clone())
 	}
 }
 

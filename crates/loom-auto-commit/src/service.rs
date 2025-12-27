@@ -5,11 +5,11 @@ use std::path::Path;
 use std::sync::Arc;
 
 use loom_core::llm::LlmClient;
+use loom_git::GitClient;
 use tracing::{debug, error, info, warn};
 
 use crate::config::AutoCommitConfig;
 use crate::generator::CommitMessageGenerator;
-use crate::git::GitClient;
 
 /// Information about a completed tool execution.
 #[derive(Clone, Debug)]
@@ -144,6 +144,7 @@ impl<G: GitClient, L: LlmClient> AutoCommitService<G, L> {
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use loom_git::{GitDiff, GitError};
 	use proptest::prelude::*;
 
 	proptest! {
@@ -167,12 +168,21 @@ mod tests {
 					#[async_trait::async_trait]
 					impl GitClient for DummyGit {
 							async fn is_repository(&self, _: &Path) -> bool { true }
-							async fn diff_all(&self, _: &Path) -> Result<crate::git::GitDiff, crate::error::AutoCommitError> {
-									Ok(crate::git::GitDiff::default())
+							async fn diff_all(&self, _: &Path) -> Result<GitDiff, GitError> {
+									Ok(GitDiff::default())
 							}
-							async fn stage_all(&self, _: &Path) -> Result<(), crate::error::AutoCommitError> { Ok(()) }
-							async fn commit(&self, _: &Path, _: &str) -> Result<String, crate::error::AutoCommitError> {
+							async fn diff_staged(&self, _: &Path) -> Result<GitDiff, GitError> {
+									Ok(GitDiff::default())
+							}
+							async fn diff_unstaged(&self, _: &Path) -> Result<GitDiff, GitError> {
+									Ok(GitDiff::default())
+							}
+							async fn stage_all(&self, _: &Path) -> Result<(), GitError> { Ok(()) }
+							async fn commit(&self, _: &Path, _: &str) -> Result<String, GitError> {
 									Ok("abc123".to_string())
+							}
+							async fn changed_files(&self, _: &Path) -> Result<Vec<String>, GitError> {
+									Ok(Vec::new())
 							}
 					}
 
@@ -210,12 +220,21 @@ mod tests {
 					#[async_trait::async_trait]
 					impl GitClient for DummyGit {
 							async fn is_repository(&self, _: &Path) -> bool { true }
-							async fn diff_all(&self, _: &Path) -> Result<crate::git::GitDiff, crate::error::AutoCommitError> {
-									Ok(crate::git::GitDiff::default())
+							async fn diff_all(&self, _: &Path) -> Result<GitDiff, GitError> {
+									Ok(GitDiff::default())
 							}
-							async fn stage_all(&self, _: &Path) -> Result<(), crate::error::AutoCommitError> { Ok(()) }
-							async fn commit(&self, _: &Path, _: &str) -> Result<String, crate::error::AutoCommitError> {
+							async fn diff_staged(&self, _: &Path) -> Result<GitDiff, GitError> {
+									Ok(GitDiff::default())
+							}
+							async fn diff_unstaged(&self, _: &Path) -> Result<GitDiff, GitError> {
+									Ok(GitDiff::default())
+							}
+							async fn stage_all(&self, _: &Path) -> Result<(), GitError> { Ok(()) }
+							async fn commit(&self, _: &Path, _: &str) -> Result<String, GitError> {
 									Ok("abc123".to_string())
+							}
+							async fn changed_files(&self, _: &Path) -> Result<Vec<String>, GitError> {
+									Ok(Vec::new())
 							}
 					}
 
@@ -251,12 +270,21 @@ mod tests {
 					#[async_trait::async_trait]
 					impl GitClient for DummyGit {
 							async fn is_repository(&self, _: &Path) -> bool { true }
-							async fn diff_all(&self, _: &Path) -> Result<crate::git::GitDiff, crate::error::AutoCommitError> {
-									Ok(crate::git::GitDiff::default())
+							async fn diff_all(&self, _: &Path) -> Result<GitDiff, GitError> {
+									Ok(GitDiff::default())
 							}
-							async fn stage_all(&self, _: &Path) -> Result<(), crate::error::AutoCommitError> { Ok(()) }
-							async fn commit(&self, _: &Path, _: &str) -> Result<String, crate::error::AutoCommitError> {
+							async fn diff_staged(&self, _: &Path) -> Result<GitDiff, GitError> {
+									Ok(GitDiff::default())
+							}
+							async fn diff_unstaged(&self, _: &Path) -> Result<GitDiff, GitError> {
+									Ok(GitDiff::default())
+							}
+							async fn stage_all(&self, _: &Path) -> Result<(), GitError> { Ok(()) }
+							async fn commit(&self, _: &Path, _: &str) -> Result<String, GitError> {
 									Ok("abc123".to_string())
+							}
+							async fn changed_files(&self, _: &Path) -> Result<Vec<String>, GitError> {
+									Ok(Vec::new())
 							}
 					}
 
