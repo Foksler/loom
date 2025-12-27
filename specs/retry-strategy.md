@@ -91,6 +91,7 @@ impl RetryableError for reqwest::Error {
 			let retryable_statuses = [
 				StatusCode::TOO_MANY_REQUESTS,   // 429
 				StatusCode::REQUEST_TIMEOUT,     // 408
+				StatusCode::INTERNAL_SERVER_ERROR, // 500
 				StatusCode::BAD_GATEWAY,         // 502
 				StatusCode::SERVICE_UNAVAILABLE, // 503
 				StatusCode::GATEWAY_TIMEOUT,     // 504

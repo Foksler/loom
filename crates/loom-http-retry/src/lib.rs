@@ -26,6 +26,7 @@ impl Default for RetryConfig {
 			retryable_statuses: vec![
 				StatusCode::TOO_MANY_REQUESTS,
 				StatusCode::REQUEST_TIMEOUT,
+				StatusCode::INTERNAL_SERVER_ERROR,
 				StatusCode::BAD_GATEWAY,
 				StatusCode::SERVICE_UNAVAILABLE,
 				StatusCode::GATEWAY_TIMEOUT,
@@ -48,6 +49,7 @@ impl RetryableError for reqwest::Error {
 			let retryable_statuses = [
 				StatusCode::TOO_MANY_REQUESTS,
 				StatusCode::REQUEST_TIMEOUT,
+				StatusCode::INTERNAL_SERVER_ERROR,
 				StatusCode::BAD_GATEWAY,
 				StatusCode::SERVICE_UNAVAILABLE,
 				StatusCode::GATEWAY_TIMEOUT,

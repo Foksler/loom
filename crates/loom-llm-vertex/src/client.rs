@@ -89,6 +89,7 @@ impl VertexClient {
 			retryable_statuses: vec![
 				reqwest::StatusCode::TOO_MANY_REQUESTS,
 				reqwest::StatusCode::REQUEST_TIMEOUT,
+				reqwest::StatusCode::INTERNAL_SERVER_ERROR,
 				reqwest::StatusCode::BAD_GATEWAY,
 				reqwest::StatusCode::SERVICE_UNAVAILABLE,
 				reqwest::StatusCode::GATEWAY_TIMEOUT,
