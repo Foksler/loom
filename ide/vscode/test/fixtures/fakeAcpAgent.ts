@@ -31,7 +31,7 @@ export interface InitializeResponse {
     capabilities: AgentCapabilities;
 }
 
-export class MockAcpAgent extends EventEmitter {
+export class FakeAcpAgent extends EventEmitter {
     private sessions: Map<string, { id: string; messages: ContentBlock[] }> = new Map();
     private sessionCounter = 0;
     private _isInitialized = false;

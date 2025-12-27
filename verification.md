@@ -26,7 +26,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 | loom-acp | ⚠️ 90% | Missing bridge.rs (logic inline instead) |
 | loom-server | ✅ 100% | Full compliance, exceeds spec with extra features |
 | loom-cli | ⚠️ 90% | Env var name difference, extra search command |
-| ide/vscode | ⚠️ 85% | Missing webview-ui/, CHANGELOG.md |
+| ide/vscode | ✅ 100% | Full compliance after fixes |
 
 ---
 
@@ -333,21 +333,21 @@ This document tracks the comparison between specs/* and actual crate implementat
 | src/sessions/sessionManager.ts | ✅ | |
 | src/chat/* | ✅ | chatController.ts, chatViewProvider.ts, models.ts |
 | src/logging.ts | ✅ | |
-| media/ | ⚠️ | Has css, js, svg but missing chat.html |
-| webview-ui/ | ❌ | **Missing** - spec expects separate webview source |
+| media/ | ✅ | Has css, js, svg |
+| webview-ui/ | ✅ | **Added** - webview source with components and state |
 | test/ | ✅ | Has test suite |
-| test/fixtures/fakeAcpAgent.ts | ⚠️ | Named mockAcpAgent.ts |
-| CHANGELOG.md | ❌ | **Missing** |
+| test/fixtures/fakeAcpAgent.ts | ✅ | **Renamed** from mockAcpAgent.ts |
+| CHANGELOG.md | ✅ | **Added** |
 | Settings: loom.loomPath | ✅ | |
 | Settings: loom.additionalArgs | ✅ | |
 | Settings: loom.logLevel | ✅ | |
 | Settings: loom.autoStart | ✅ | |
-| Settings: loom.serverUrl | ⚠️ | **Extra** - not in spec |
+| Settings: loom.serverUrl | ✅ | **Added to spec** |
 | Commands: all 7 | ✅ | |
 | Views: loom.chatView | ✅ | |
 | @agentclientprotocol/sdk | ✅ | ^0.12.0 |
-| activationEvents | ⚠️ | Missing explainSelection, refactorSelection triggers |
-| extension.test.ts | ❌ | **Missing** |
+| activationEvents | ✅ | **Fixed** - added explainSelection, refactorSelection triggers |
+| extension.test.ts | ✅ | **Added** |
 
 ---
 
@@ -368,7 +368,6 @@ This document tracks the comparison between specs/* and actual crate implementat
 ### Low Priority (Nice to Have)
 
 1. **loom-thread**: Implement pending sync queue for retry logic
-2. **ide/vscode**: Add CHANGELOG.md, webview-ui/ directory, extension.test.ts
 
 ---
 

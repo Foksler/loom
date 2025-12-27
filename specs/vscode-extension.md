@@ -311,6 +311,11 @@ class LoomChatViewProvider implements WebviewViewProvider {
           "type": "boolean",
           "default": true,
           "description": "Automatically start Loom agent when opening chat"
+        },
+        "loom.serverUrl": {
+          "type": "string",
+          "default": "",
+          "description": "URL of the Loom server. If empty, starts a local agent process."
         }
       }
     }

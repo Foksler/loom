@@ -26,7 +26,9 @@
   "main": "./dist/extension.js",
   "activationEvents": [
     "onCommand:loom.openChat",
-    "onView:loom.chatView"
+    "onView:loom.chatView",
+    "onCommand:loom.explainSelection",
+    "onCommand:loom.refactorSelection"
   ],
   "contributes": {
     "configuration": {
