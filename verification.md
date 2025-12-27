@@ -24,7 +24,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 | loom-git | ✅ 100% | All methods now implemented |
 | loom-auto-commit | ✅ 100% | Now uses loom-git exports directly |
 | loom-acp | ⚠️ 90% | Missing bridge.rs (logic inline instead) |
-| loom-server | ✅ 95% | Minor config differences, exceeds spec |
+| loom-server | ✅ 98% | DATABASE_URL naming difference only, exceeds spec |
 | loom-cli | ⚠️ 90% | Env var name difference, extra search command |
 | ide/vscode | ⚠️ 85% | Missing webview-ui/, CHANGELOG.md |
 
@@ -272,7 +272,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 | POST /v1/auth/login, logout (501) | ✅ | |
 | GET /bin/{platform} | ✅ | |
 | LlmService | ✅ | |
-| LOOM_SERVER_HOST default | ⚠️ | `127.0.0.1` vs spec's `0.0.0.0` |
+| LOOM_SERVER_HOST default | ✅ | `0.0.0.0` matches spec |
 | LOOM_SERVER_PORT default | ✅ | 8080 |
 | LOOM_SERVER_ANTHROPIC_API_KEY | ✅ | |
 | LOOM_SERVER_OPENAI_API_KEY | ✅ | |
@@ -369,7 +369,6 @@ This document tracks the comparison between specs/* and actual crate implementat
 
 1. **loom-thread**: Implement pending sync queue for retry logic
 2. **ide/vscode**: Add CHANGELOG.md, webview-ui/ directory, extension.test.ts
-3. **loom-server**: Consider changing default host to 0.0.0.0 for spec compliance
 
 ---
 

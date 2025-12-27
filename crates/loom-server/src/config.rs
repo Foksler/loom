@@ -24,13 +24,13 @@ impl ServerConfig {
 	/// Load configuration from environment variables.
 	///
 	/// Supported variables:
-	/// - `LOOM_SERVER_HOST`: Host address (default: 127.0.0.1)
+	/// - `LOOM_SERVER_HOST`: Host address (default: 0.0.0.0)
 	/// - `LOOM_SERVER_PORT`: Port number (default: 8080)
 	/// - `LOOM_SERVER_DATABASE_URL`: SQLite database URL (default:
 	///   sqlite:./loom.db)
 	/// - `LOOM_SERVER_LOG_LEVEL`: Log level (default: info)
 	pub fn from_env() -> Result<Self, ConfigError> {
-		let host = env::var("LOOM_SERVER_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+		let host = env::var("LOOM_SERVER_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
 
 		let port = env::var("LOOM_SERVER_PORT")
 			.unwrap_or_else(|_| "8080".to_string())
@@ -63,7 +63,7 @@ impl ServerConfig {
 impl Default for ServerConfig {
 	fn default() -> Self {
 		Self {
-			host: "127.0.0.1".to_string(),
+			host: "0.0.0.0".to_string(),
 			port: 8080,
 			database_url: "sqlite:./loom.db".to_string(),
 			log_level: "info,tower_http::trace=debug".to_string(),
