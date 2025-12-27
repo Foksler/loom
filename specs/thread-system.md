@@ -186,14 +186,22 @@ pub struct ConversationSnapshot {
 /// Individual message in a conversation
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MessageSnapshot {
-	pub id: Option<String>,
-	pub role: String, // "user", "assistant", "tool", "system"
+	pub role: MessageRole,
 	pub content: String,
-	pub tool_name: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
 	pub tool_call_id: Option<String>,
-	pub tool_input: Option<serde_json::Value>,
-	pub tool_output: Option<serde_json::Value>,
-	pub created_at: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub tool_name: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub tool_calls: Option<Vec<ToolCallSnapshot>>,
+}
+
+/// Snapshot of an individual tool call
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ToolCallSnapshot {
+	pub id: String,
+	pub tool_name: String,
+	pub arguments_json: serde_json::Value,
 }
 
 /// Snapshot of agent state
@@ -213,6 +221,7 @@ pub enum AgentStateKind {
 	CallingLlm,
 	ProcessingLlmResponse,
 	ExecutingTools,
+	PostToolsHook,
 	Error,
 	ShuttingDown,
 }
@@ -313,6 +322,7 @@ abstraction.
 - `loom list` - Lists local threads using ThreadStore::list, sorted by last_activity_at descending
 - `loom resume` - Resumes most recent thread
 - `loom resume <thread_id>` - Resumes specific thread by ID
+- `loom search <query>` - Searches threads by content, git metadata, or commit SHA
 
 ### 4.2 Version and Update Commands
 
@@ -376,6 +386,10 @@ loom resume
 
 # Resume specific thread
 loom resume T-019b2b97-fddf-7602-a3e4-1c4a295110c0
+
+# Search threads
+loom search "authentication fix"
+loom search --limit 10 "refactor"
 
 # Show version info
 loom version

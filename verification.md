@@ -13,9 +13,9 @@ This document tracks the comparison between specs/* and actual crate implementat
 
 | Crate | Match Rate | Major Issues |
 |-------|------------|--------------|
-| loom-core | ✅ 95% | Extra PostToolsHook state (spec needs update) |
+| loom-core | ✅ 100% | PostToolsHook now documented in spec |
 | loom-tools | ✅ 100% | Full compliance |
-| loom-thread | ⚠️ 85% | MessageSnapshot field differences, pending sync queue missing |
+| loom-thread | ✅ 95% | Spec updated, pending sync queue is low priority |
 | loom-llm-anthropic | ✅ 100% | Full compliance + Vertex AI bonus |
 | loom-llm-openai | ✅ 100% | Full compliance |
 | loom-llm-service | ✅ 100% | Full compliance + Vertex AI bonus |
@@ -25,7 +25,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 | loom-auto-commit | ✅ 100% | Now uses loom-git exports directly |
 | loom-acp | ⚠️ 90% | Missing bridge.rs (logic inline instead) |
 | loom-server | ✅ 100% | Full compliance, exceeds spec with extra features |
-| loom-cli | ✅ 95% | Extra search command (document in spec) |
+| loom-cli | ✅ 100% | Search command now documented in spec |
 | ide/vscode | ✅ 100% | Full compliance after fixes |
 
 ---
@@ -40,11 +40,11 @@ This document tracks the comparison between specs/* and actual crate implementat
 | AgentState::CallingLlm | ✅ | |
 | AgentState::ProcessingLlmResponse | ✅ | |
 | AgentState::ExecutingTools | ✅ | |
-| AgentState::PostToolsHook | ⚠️ | **Extra** - not in spec, added for auto-commit |
+| AgentState::PostToolsHook | ✅ | **Now in spec** - added for auto-commit |
 | AgentState::Error | ✅ | |
 | AgentState::ShuttingDown | ✅ | |
-| AgentEvent::PostToolsHookCompleted | ⚠️ | **Extra** - not in spec |
-| AgentAction::RunPostToolsHook | ⚠️ | **Extra** - not in spec |
+| AgentEvent::PostToolsHookCompleted | ✅ | **Now in spec** |
+| AgentAction::RunPostToolsHook | ✅ | **Now in spec** |
 | All other AgentEvent variants | ✅ | |
 | All other AgentAction variants | ✅ | |
 
@@ -108,7 +108,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 | ThreadVisibility enum | ✅ | Organization, Private, Public |
 | is_private, is_shared_with_support | ✅ | |
 | ConversationSnapshot | ✅ | |
-| AgentStateSnapshot | ⚠️ | Has PostToolsHook not in spec |
+| AgentStateSnapshot | ✅ | PostToolsHook now in spec |
 | ThreadMetadata | ⚠️ | extra uses HashMap vs spec's serde_json::Value |
 | ThreadStore trait | ✅ | load(), save(), list(), delete() |
 | LocalThreadStore | ✅ | XDG paths, atomic writes |
@@ -119,7 +119,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 
 | Item | Status | Notes |
 |------|--------|-------|
-| MessageSnapshot.id/created_at | ⚠️ | Missing per spec |
+| MessageSnapshot fields | ✅ | Spec updated to match implementation |
 | ThreadSummary.message_count | ⚠️ | usize vs spec's u32 |
 | Pending sync queue | ❌ | `$XDG_STATE_HOME/loom/sync/pending.json` not implemented |
 
@@ -310,7 +310,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 | loom private | ✅ | |
 | loom share | ✅ | |
 | loom acp-agent | ✅ | |
-| loom search | ⚠️ | **Extra** - not in spec |
+| loom search | ✅ | **Now in spec** |
 | X-Loom-Version header | ✅ | |
 | X-Loom-Git-Sha header | ✅ | |
 | X-Loom-Build-Timestamp header | ✅ | |
@@ -355,9 +355,9 @@ This document tracks the comparison between specs/* and actual crate implementat
 
 ### High Priority (Spec Updates Needed)
 
-1. **state-machine.md**: Add PostToolsHook state, PostToolsHookCompleted event, RunPostToolsHook action
+1. ~~**state-machine.md**: Add PostToolsHook state, PostToolsHookCompleted event, RunPostToolsHook action~~ ✅ **FIXED**
 2. ~~**configuration.md**: Fix LOOM_PROVIDER → LOOM_LLM_PROVIDER env var name~~ ✅ **FIXED**
-3. **thread-system.md**: Document search command, update MessageSnapshot fields
+3. ~~**thread-system.md**: Document search command, update MessageSnapshot fields~~ ✅ **FIXED**
 
 ### Medium Priority (Implementation Fixes)
 

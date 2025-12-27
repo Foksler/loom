@@ -37,6 +37,7 @@ while the state machine remains synchronous and pure.
 | `CallingLlm`            | Making a request to the LLM provider       | `conversation: ConversationContext`, `retries: u32`                                             |
 | `ProcessingLlmResponse` | Handling a completed LLM response          | `conversation: ConversationContext`, `response: LlmResponse`                                    |
 | `ExecutingTools`        | Running one or more tool calls in parallel | `conversation: ConversationContext`, `executions: Vec<ToolExecutionStatus>`                     |
+| `PostToolsHook`         | Running post-tool hooks (e.g., auto-commit)| `conversation: ConversationContext`, `pending_llm_request: LlmRequest`, `completed_tools: Vec<CompletedToolInfo>` |
 | `Error`                 | Recoverable error with retry capability    | `conversation: ConversationContext`, `error: AgentError`, `retries: u32`, `origin: ErrorOrigin` |
 | `ShuttingDown`          | Graceful shutdown in progress              | (none)                                                                                          |
 
@@ -62,6 +63,13 @@ Transient state for examining an LLM response. Immediately transitions to either
 Tracks multiple concurrent tool executions via `Vec<ToolExecutionStatus>`. Each execution progresses
 through `Pending` → `Running` → `Completed`.
 
+#### PostToolsHook
+
+Runs post-tool hooks after tool execution completes. This state enables features like auto-commit
+that need to run after file-modifying tools (e.g., `edit_file`, `bash`). The state carries:
+- `pending_llm_request`: The next LLM request to send after hooks complete
+- `completed_tools`: Information about which tools completed, used to decide which hooks to run
+
 #### Error
 
 Holds the failed state with retry information. The `origin` field (`Llm`, `Tool`, or `Io`)
@@ -77,14 +85,15 @@ Terminal state. No transitions out; the agent should be dropped after reaching t
 
 ### `AgentEvent` Enum
 
-| Event               | Description                         | Payload                                            |
-| ------------------- | ----------------------------------- | -------------------------------------------------- |
-| `UserInput`         | User submitted a message            | `Message`                                          |
-| `LlmEvent`          | Event from the LLM provider         | `LlmEvent` (see sub-variants)                      |
-| `ToolProgress`      | Progress update from a running tool | `ToolProgressEvent`                                |
-| `ToolCompleted`     | A tool execution finished           | `call_id: String`, `outcome: ToolExecutionOutcome` |
-| `RetryTimeoutFired` | Retry backoff timer expired         | (none)                                             |
-| `ShutdownRequested` | Graceful shutdown requested         | (none)                                             |
+| Event                   | Description                         | Payload                                            |
+| ----------------------- | ----------------------------------- | -------------------------------------------------- |
+| `UserInput`             | User submitted a message            | `Message`                                          |
+| `LlmEvent`              | Event from the LLM provider         | `LlmEvent` (see sub-variants)                      |
+| `ToolProgress`          | Progress update from a running tool | `ToolProgressEvent`                                |
+| `ToolCompleted`         | A tool execution finished           | `call_id: String`, `outcome: ToolExecutionOutcome` |
+| `PostToolsHookCompleted`| Post-tool hooks have finished       | `action_taken: bool`                               |
+| `RetryTimeoutFired`     | Retry backoff timer expired         | (none)                                             |
+| `ShutdownRequested`     | Graceful shutdown requested         | (none)                                             |
 
 ### LlmEvent Sub-variants
 
@@ -119,7 +128,9 @@ Terminal state. No transitions out; the agent should be dropped after reaching t
 | `ProcessingLlmResponse` | (has tool calls)                   | `ExecutingTools`        | `ExecuteTools`        |
 | `ProcessingLlmResponse` | (no tool calls)                    | `WaitingForUserInput`   | `WaitForInput`        |
 | `ExecutingTools`        | `ToolCompleted` (some pending)     | `ExecutingTools`        | `WaitForInput`        |
-| `ExecutingTools`        | `ToolCompleted` (all done)         | `CallingLlm`            | `SendLlmRequest`      |
+| `ExecutingTools`        | `ToolCompleted` (all done, mutating)| `PostToolsHook`        | `RunPostToolsHook`    |
+| `ExecutingTools`        | `ToolCompleted` (all done, no mutation)| `CallingLlm`        | `SendLlmRequest`      |
+| `PostToolsHook`         | `PostToolsHookCompleted`           | `CallingLlm`            | `SendLlmRequest`      |
 | `Error` (origin=Llm)    | `RetryTimeoutFired`                | `CallingLlm`            | `SendLlmRequest`      |
 | _any state_             | `ShutdownRequested`                | `ShuttingDown`          | `Shutdown`            |
 | _invalid transition_    | _any_                              | (unchanged)             | `WaitForInput`        |
@@ -132,14 +143,15 @@ Terminal state. No transitions out; the agent should be dropped after reaching t
 
 Actions are returned to the caller indicating what I/O operation to perform:
 
-| Action           | Description                        | Payload         |
-| ---------------- | ---------------------------------- | --------------- |
-| `SendLlmRequest` | Send a request to the LLM provider | `LlmRequest`    |
-| `ExecuteTools`   | Execute the specified tool calls   | `Vec<ToolCall>` |
-| `WaitForInput`   | Wait for the next event (idle)     | (none)          |
-| `DisplayMessage` | Show a message to the user         | `String`        |
-| `DisplayError`   | Show an error to the user          | `String`        |
-| `Shutdown`       | Terminate the agent                | (none)          |
+| Action            | Description                             | Payload                          |
+| ----------------- | --------------------------------------- | -------------------------------- |
+| `SendLlmRequest`  | Send a request to the LLM provider      | `LlmRequest`                     |
+| `ExecuteTools`    | Execute the specified tool calls        | `Vec<ToolCall>`                  |
+| `RunPostToolsHook`| Run post-tool hooks (e.g., auto-commit) | `completed_tools: Vec<CompletedToolInfo>` |
+| `WaitForInput`    | Wait for the next event (idle)          | (none)                           |
+| `DisplayMessage`  | Show a message to the user              | `String`                         |
+| `DisplayError`    | Show an error to the user               | `String`                         |
+| `Shutdown`        | Terminate the agent                     | (none)                           |
 
 ---
 
@@ -225,7 +237,10 @@ stateDiagram-v2
     ProcessingLlmResponse --> WaitingForUserInput : no tool calls
     
     ExecutingTools --> ExecutingTools : ToolCompleted (some pending)
-    ExecutingTools --> CallingLlm : ToolCompleted (all done)
+    ExecutingTools --> PostToolsHook : ToolCompleted (all done, mutating)
+    ExecutingTools --> CallingLlm : ToolCompleted (all done, no mutation)
+    
+    PostToolsHook --> CallingLlm : PostToolsHookCompleted
     
     Error --> CallingLlm : RetryTimeoutFired
     
@@ -233,6 +248,7 @@ stateDiagram-v2
     CallingLlm --> ShuttingDown : ShutdownRequested
     ProcessingLlmResponse --> ShuttingDown : ShutdownRequested
     ExecutingTools --> ShuttingDown : ShutdownRequested
+    PostToolsHook --> ShuttingDown : ShutdownRequested
     Error --> ShuttingDown : ShutdownRequested
     
     ShuttingDown --> [*]
