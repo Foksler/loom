@@ -21,6 +21,7 @@
 //! - Persists conversations to the thread store
 
 pub mod agent;
+pub mod bridge;
 pub mod error;
 pub mod session;
 

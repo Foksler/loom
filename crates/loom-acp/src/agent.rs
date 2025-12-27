@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 use agent_client_protocol::{
 	self as acp, AgentCapabilities, AuthenticateRequest, AuthenticateResponse, CancelNotification,
-	ContentChunk, ExtNotification, ExtRequest, ExtResponse, Implementation, InitializeRequest,
+	ExtNotification, ExtRequest, ExtResponse, Implementation, InitializeRequest,
 	InitializeResponse, LoadSessionRequest, LoadSessionResponse, NewSessionRequest,
 	NewSessionResponse, PromptRequest, PromptResponse, ProtocolVersion, SessionId,
 	SessionNotification, SessionUpdate, SetSessionModeRequest, SetSessionModeResponse, StopReason,
@@ -19,10 +19,7 @@ use loom_core::{
 	LlmClient, LlmEvent, LlmRequest, Message, ServerQuery, ServerQueryError, ServerQueryHandler,
 	ServerQueryKind, ServerQueryResponse, ServerQueryResult, ToolCall, ToolContext, ToolDefinition,
 };
-use loom_thread::{
-	AgentStateKind, AgentStateSnapshot, MessageRole, MessageSnapshot, Thread, ThreadId, ThreadStore,
-	ToolCallSnapshot,
-};
+use loom_thread::{AgentStateKind, AgentStateSnapshot, Thread, ThreadStore};
 use loom_tools::ToolRegistry;
 use serde_json::value::RawValue;
 use tokio::sync::{mpsc, oneshot};
@@ -322,9 +319,10 @@ impl LoomAcpAgent {
 
 	/// Send a text chunk notification to the client.
 	async fn send_message_chunk(&self, session_id: &SessionId, text: String) -> Result<(), AcpError> {
+		let chunk = crate::bridge::text_to_content_chunk(text);
 		let notification = SessionNotification::new(
 			session_id.clone(),
-			SessionUpdate::AgentMessageChunk(ContentChunk::new(text.into())),
+			SessionUpdate::AgentMessageChunk(chunk),
 		);
 
 		let (tx, rx) = oneshot::channel();
@@ -447,31 +445,22 @@ impl LoomAcpAgent {
 			}
 
 			// Add assistant message to conversation
-			session
-				.messages
-				.push(Message::assistant(&assistant_content));
-
-			// Persist assistant message to thread
-			session.thread.conversation.messages.push(MessageSnapshot {
-				role: MessageRole::Assistant,
+			let assistant_message = Message {
+				role: loom_core::Role::Assistant,
 				content: assistant_content.clone(),
 				tool_call_id: None,
-				tool_name: None,
-				tool_calls: if tool_calls.is_empty() {
-					None
-				} else {
-					Some(
-						tool_calls
-							.iter()
-							.map(|tc| ToolCallSnapshot {
-								id: tc.id.clone(),
-								tool_name: tc.tool_name.clone(),
-								arguments_json: tc.arguments_json.clone(),
-							})
-							.collect(),
-					)
-				},
-			});
+				name: None,
+				tool_calls: tool_calls.clone(),
+			};
+			session.messages.push(assistant_message.clone());
+
+			// Persist assistant message to thread using bridge
+			let assistant_snapshot = crate::bridge::message_to_snapshot(&assistant_message);
+			session
+				.thread
+				.conversation
+				.messages
+				.push(assistant_snapshot);
 
 			// If no tool calls, turn is complete
 			if tool_calls.is_empty() {
@@ -497,14 +486,9 @@ impl LoomAcpAgent {
 				// Add tool result to conversation
 				session.messages.push(tool_result.clone());
 
-				// Persist tool result to thread
-				session.thread.conversation.messages.push(MessageSnapshot {
-					role: MessageRole::Tool,
-					content: tool_result.content,
-					tool_call_id: Some(call.id.clone()),
-					tool_name: Some(call.tool_name.clone()),
-					tool_calls: None,
-				});
+				// Persist tool result to thread using bridge
+				let tool_snapshot = crate::bridge::message_to_snapshot(&tool_result);
+				session.thread.conversation.messages.push(tool_snapshot);
 			}
 
 			// Loop continues - LLM will process tool results
@@ -577,7 +561,7 @@ impl acp::Agent for LoomAcpAgent {
 			.map_err(AcpError::ThreadStore)?;
 
 		// Create session ID from thread ID
-		let session_id = SessionId::new(thread.id.to_string());
+		let session_id = crate::bridge::thread_id_to_session_id(&thread.id);
 
 		// Create session state
 		let session = SessionState::new(session_id.clone(), thread, workspace_root);
@@ -598,7 +582,7 @@ impl acp::Agent for LoomAcpAgent {
 		info!(session_id = %req.session_id, "ACP load_session request");
 
 		// Parse session ID as thread ID
-		let thread_id = ThreadId::from_string(req.session_id.to_string());
+		let thread_id = crate::bridge::session_id_to_thread_id(&req.session_id);
 
 		// Load thread from store
 		let thread = self
@@ -646,31 +630,13 @@ impl acp::Agent for LoomAcpAgent {
 			.get_session(&req.session_id)
 			.ok_or_else(|| AcpError::SessionNotFound(req.session_id.to_string()))?;
 
-		// Convert ACP ContentBlocks to Loom Message
-		let user_text: String = req
-			.prompt
-			.iter()
-			.filter_map(|block| {
-				if let acp::ContentBlock::Text(t) = block {
-					Some(t.text.as_str())
-				} else {
-					None
-				}
-			})
-			.collect::<Vec<_>>()
-			.join("\n");
-
-		let user_message = Message::user(&user_text);
+		// Convert ACP ContentBlocks to Loom Message using bridge
+		let user_message = crate::bridge::content_blocks_to_user_message(&req.prompt);
 		session.messages.push(user_message.clone());
 
-		// Persist user message to thread
-		session.thread.conversation.messages.push(MessageSnapshot {
-			role: MessageRole::User,
-			content: user_text,
-			tool_call_id: None,
-			tool_name: None,
-			tool_calls: None,
-		});
+		// Persist user message to thread using bridge
+		let user_snapshot = crate::bridge::message_to_snapshot(&user_message);
+		session.thread.conversation.messages.push(user_snapshot);
 
 		// Run prompt loop
 		let stop_reason = match self.run_prompt_loop(&mut session).await {
@@ -825,23 +791,7 @@ mod tests {
 		}
 	}
 
-	/// **Property: SessionId and ThreadId are interchangeable**
-	///
-	/// Why this is important: ACP sessions are backed by Loom threads.
-	/// The IDs must round-trip cleanly for session persistence to work.
-	#[test]
-	fn test_session_thread_id_mapping() {
-		let thread = Thread::new();
-		let thread_id_str = thread.id.to_string();
-
-		// SessionId from ThreadId
-		let session_id = SessionId::new(thread_id_str.clone());
-
-		// Back to ThreadId
-		let back = ThreadId::from_string(session_id.to_string());
-
-		assert_eq!(thread.id.as_str(), back.as_str());
-	}
+	// Note: SessionId ↔ ThreadId roundtrip test moved to bridge.rs
 
 	/// **Property: ReadFile queries return file content correctly**
 	///

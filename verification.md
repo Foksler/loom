@@ -23,7 +23,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 | loom-secret | ✅ 100% | Full compliance |
 | loom-git | ✅ 100% | All methods now implemented |
 | loom-auto-commit | ✅ 100% | Now uses loom-git exports directly |
-| loom-acp | ⚠️ 90% | Missing bridge.rs (logic inline instead) |
+| loom-acp | ✅ 100% | bridge.rs added for clean type conversions |
 | loom-server | ✅ 100% | Full compliance, exceeds spec with extra features |
 | loom-cli | ✅ 100% | Search command now documented in spec |
 | ide/vscode | ✅ 100% | Full compliance after fixes |
@@ -242,7 +242,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 | lib.rs | ✅ | |
 | agent.rs | ✅ | |
 | session.rs | ✅ | |
-| bridge.rs | ❌ | **Missing** - conversion logic inline in agent.rs |
+| bridge.rs | ✅ | **Added** - ACP ↔ Loom type conversions |
 | error.rs | ✅ | |
 | LoomAcpAgent fields | ✅ | All core fields present |
 | Extra fields | ⚠️ | provider, query_handler, tool_definitions |
@@ -363,7 +363,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 
 1. ~~**loom-git**: Add missing diff_staged(), diff_unstaged(), changed_files() methods~~ ✅ **FIXED**
 2. ~~**loom-auto-commit**: Use loom-git exports instead of duplicating GitClient~~ ✅ **FIXED**
-3. **loom-acp**: Consider adding bridge.rs for cleaner separation (optional)
+3. ~~**loom-acp**: Consider adding bridge.rs for cleaner separation~~ ✅ **FIXED**
 
 ### Low Priority (Nice to Have)
 

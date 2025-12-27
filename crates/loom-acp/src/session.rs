@@ -44,36 +44,8 @@ impl SessionState {
 	pub fn new(session_id: SessionId, thread: Thread, workspace_root: PathBuf) -> Self {
 		let thread_id = thread.id.clone();
 
-		// Rebuild messages from thread conversation
-		let messages = thread
-			.conversation
-			.messages
-			.iter()
-			.map(|snap| Message {
-				role: match snap.role {
-					loom_thread::MessageRole::System => loom_core::Role::System,
-					loom_thread::MessageRole::User => loom_core::Role::User,
-					loom_thread::MessageRole::Assistant => loom_core::Role::Assistant,
-					loom_thread::MessageRole::Tool => loom_core::Role::Tool,
-				},
-				content: snap.content.clone(),
-				tool_call_id: snap.tool_call_id.clone(),
-				name: snap.tool_name.clone(),
-				tool_calls: snap
-					.tool_calls
-					.as_ref()
-					.map(|tcs| {
-						tcs.iter()
-							.map(|tc| loom_core::ToolCall {
-								id: tc.id.clone(),
-								tool_name: tc.tool_name.clone(),
-								arguments_json: tc.arguments_json.clone(),
-							})
-							.collect()
-					})
-					.unwrap_or_default(),
-			})
-			.collect();
+		// Rebuild messages from thread conversation using bridge
+		let messages = crate::bridge::thread_to_messages(&thread);
 
 		Self {
 			session_id,
