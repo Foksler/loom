@@ -25,7 +25,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 | loom-auto-commit | ✅ 100% | Now uses loom-git exports directly |
 | loom-acp | ⚠️ 90% | Missing bridge.rs (logic inline instead) |
 | loom-server | ✅ 100% | Full compliance, exceeds spec with extra features |
-| loom-cli | ⚠️ 90% | Env var name difference, extra search command |
+| loom-cli | ✅ 95% | Extra search command (document in spec) |
 | ide/vscode | ✅ 100% | Full compliance after fixes |
 
 ---
@@ -297,7 +297,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 | Item | Status | Notes |
 |------|--------|-------|
 | --server-url | ✅ | default http://localhost:8080, env LOOM_SERVER_URL |
-| --provider | ⚠️ | Env var is `LOOM_LLM_PROVIDER` not `LOOM_PROVIDER` |
+| --provider | ✅ | Env var `LOOM_LLM_PROVIDER` - spec updated |
 | --workspace / -w | ⚠️ | No default in CLI, handled by config layer |
 | --log-level / -l | ⚠️ | No default in CLI, delegated to config |
 | --json-logs | ✅ | |
@@ -356,7 +356,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 ### High Priority (Spec Updates Needed)
 
 1. **state-machine.md**: Add PostToolsHook state, PostToolsHookCompleted event, RunPostToolsHook action
-2. **configuration.md**: Fix LOOM_PROVIDER → LOOM_LLM_PROVIDER env var name
+2. ~~**configuration.md**: Fix LOOM_PROVIDER → LOOM_LLM_PROVIDER env var name~~ ✅ **FIXED**
 3. **thread-system.md**: Document search command, update MessageSnapshot fields
 
 ### Medium Priority (Implementation Fixes)

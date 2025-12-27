@@ -62,7 +62,7 @@ struct Args {
 	server_url: String,
 
 	/// LLM provider to use (anthropic or openai)
-	#[arg(long, default_value = "anthropic", env = "LOOM_PROVIDER")]
+	#[arg(long, default_value = "anthropic", env = "LOOM_LLM_PROVIDER")]
 	provider: LlmProvider,
 
 	/// Workspace directory for file operations
@@ -91,7 +91,7 @@ enum LlmProvider {
 | Argument       | Short | Type                                      | Default                 | Env Var           | Description                |
 | -------------- | ----- | ----------------------------------------- | ----------------------- | ----------------- | -------------------------- |
 | `--server-url` | -     | `String`                                  | `http://localhost:8080` | `LOOM_SERVER_URL` | URL of the Loom server     |
-| `--provider`   | -     | `anthropic \| openai`                     | `anthropic`             | `LOOM_PROVIDER`   | LLM provider to use        |
+| `--provider`   | -     | `anthropic \| openai`                     | `anthropic`             | `LOOM_LLM_PROVIDER`   | LLM provider to use        |
 | `--workspace`  | `-w`  | `PathBuf`                                 | `.`                     | -                 | Workspace directory        |
 | `--log-level`  | `-l`  | `trace \| debug \| info \| warn \| error` | `info`                  | -                 | Logging verbosity          |
 | `--json-logs`  | -     | `bool`                                    | `false`                 | -                 | Structured JSON log output |
@@ -115,7 +115,7 @@ enum LogLevel {
 | Variable          | Description                                                               |
 | ----------------- | ------------------------------------------------------------------------- |
 | `LOOM_SERVER_URL` | URL of the Loom server (overridden by `--server-url`)                     |
-| `LOOM_PROVIDER`   | LLM provider to use: `anthropic` or `openai` (overridden by `--provider`) |
+| `LOOM_LLM_PROVIDER`   | LLM provider to use: `anthropic` or `openai` (overridden by `--provider`) |
 | `RUST_LOG`        | tracing filter directive (overrides `--log-level`)                        |
 
 ---
