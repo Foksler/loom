@@ -45,8 +45,8 @@ enum OracleError {
 impl fmt::Display for OracleError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
-			OracleError::Request(e) => write!(f, "request error: {}", e),
-			OracleError::Http { status, body } => write!(f, "HTTP {}: {}", status, body),
+			OracleError::Request(e) => write!(f, "request error: {e}"),
+			OracleError::Http { status, body } => write!(f, "HTTP {status}: {body}"),
 		}
 	}
 }
@@ -262,8 +262,7 @@ impl Tool for OracleTool {
 						"oracle: server returned non-success"
 				);
 				Err(ToolError::Internal(format!(
-					"oracle proxy error: HTTP {}",
-					status
+					"oracle proxy error: HTTP {status}"
 				)))
 			}
 		}
@@ -336,7 +335,7 @@ mod tests {
 					// max_tokens is clamped to 16-4096
 					let actual_max_tokens = request.max_tokens.unwrap();
 					prop_assert!(
-							actual_max_tokens >= MIN_MAX_TOKENS && actual_max_tokens <= MAX_MAX_TOKENS,
+							(MIN_MAX_TOKENS..=MAX_MAX_TOKENS).contains(&actual_max_tokens),
 							"max_tokens {} not in range [{}, {}]",
 							actual_max_tokens,
 							MIN_MAX_TOKENS,
@@ -346,7 +345,7 @@ mod tests {
 					// temperature is clamped to 0.0-2.0
 					let actual_temperature = request.temperature.unwrap();
 					prop_assert!(
-							actual_temperature >= MIN_TEMPERATURE && actual_temperature <= MAX_TEMPERATURE,
+							(MIN_TEMPERATURE..=MAX_TEMPERATURE).contains(&actual_temperature),
 							"temperature {} not in range [{}, {}]",
 							actual_temperature,
 							MIN_TEMPERATURE,

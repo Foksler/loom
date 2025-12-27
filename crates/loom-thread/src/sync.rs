@@ -1,13 +1,17 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights
 // reserved. SPDX-License-Identifier: Proprietary
 
+use std::sync::Arc;
+
 use async_trait::async_trait;
 use reqwest::StatusCode;
+use tokio::sync::Mutex;
 use tracing::{debug, error, info, warn};
 use url::Url;
 
 use crate::error::{ThreadStoreError, ThreadSyncError};
 use crate::model::{Thread, ThreadId, ThreadSummary};
+use crate::pending_sync::{PendingSyncStore, SyncOperation};
 use crate::store::{LocalThreadStore, ThreadStore};
 
 /// Version information sent as HTTP headers with each request.
@@ -67,7 +71,7 @@ impl ThreadSyncClient {
 	fn thread_url(&self, id: &ThreadId) -> Result<Url, ThreadSyncError> {
 		self
 			.base_url
-			.join(&format!("threads/{}", id))
+			.join(&format!("threads/{id}"))
 			.map_err(|e| ThreadSyncError::InvalidUrl(e.to_string()))
 	}
 
@@ -218,11 +222,16 @@ impl ThreadSyncClient {
 pub struct SyncingThreadStore {
 	local: LocalThreadStore,
 	sync_client: Option<ThreadSyncClient>,
+	pending_store: Option<Arc<Mutex<PendingSyncStore>>>,
 }
 
 impl SyncingThreadStore {
 	pub fn new(local: LocalThreadStore, sync_client: Option<ThreadSyncClient>) -> Self {
-		Self { local, sync_client }
+		Self {
+			local,
+			sync_client,
+			pending_store: None,
+		}
 	}
 
 	pub fn local_only(local: LocalThreadStore) -> Self {
@@ -231,6 +240,87 @@ impl SyncingThreadStore {
 
 	pub fn with_sync(local: LocalThreadStore, sync_client: ThreadSyncClient) -> Self {
 		Self::new(local, Some(sync_client))
+	}
+
+	pub fn with_pending_store(mut self, pending_store: PendingSyncStore) -> Self {
+		self.pending_store = Some(Arc::new(Mutex::new(pending_store)));
+		self
+	}
+
+	pub async fn retry_pending(&self) -> Result<usize, ThreadStoreError> {
+		let Some(sync_client) = &self.sync_client else {
+			return Ok(0);
+		};
+
+		let Some(pending_store) = &self.pending_store else {
+			return Ok(0);
+		};
+
+		let store = pending_store.lock().await;
+		let queue = store.load().await?;
+		drop(store);
+
+		let mut success_count = 0;
+
+		for entry in &queue.entries {
+			match entry.operation {
+				SyncOperation::Upsert => {
+					if let Some(thread) = self.local.load(&entry.thread_id).await? {
+						match sync_client.upsert_thread(&thread).await {
+							Ok(()) => {
+								let store = pending_store.lock().await;
+								let _ = store
+									.remove_pending(&entry.thread_id, &SyncOperation::Upsert)
+									.await;
+								success_count += 1;
+								info!(
+									thread_id = %entry.thread_id,
+									"successfully retried pending upsert"
+								);
+							}
+							Err(e) => {
+								warn!(
+									thread_id = %entry.thread_id,
+									error = %e,
+									"pending upsert retry failed"
+								);
+							}
+						}
+					}
+				}
+				SyncOperation::Delete => match sync_client.delete_thread(&entry.thread_id).await {
+					Ok(()) => {
+						let store = pending_store.lock().await;
+						let _ = store
+							.remove_pending(&entry.thread_id, &SyncOperation::Delete)
+							.await;
+						success_count += 1;
+						info!(
+							thread_id = %entry.thread_id,
+							"successfully retried pending delete"
+						);
+					}
+					Err(e) => {
+						warn!(
+							thread_id = %entry.thread_id,
+							error = %e,
+							"pending delete retry failed"
+						);
+					}
+				},
+			}
+		}
+
+		Ok(success_count)
+	}
+
+	pub async fn pending_count(&self) -> usize {
+		let Some(pending_store) = &self.pending_store else {
+			return 0;
+		};
+
+		let store = pending_store.lock().await;
+		store.load().await.map(|q| q.len()).unwrap_or(0)
 	}
 }
 
@@ -257,6 +347,7 @@ impl ThreadStore for SyncingThreadStore {
 			let http_clone = sync_client.http.clone();
 			let retry_config = sync_client.retry_config.clone();
 			let version_headers = sync_client.version_headers.clone();
+			let pending_store = self.pending_store.clone();
 
 			tokio::spawn(async move {
 				let client = ThreadSyncClient {
@@ -272,6 +363,12 @@ impl ThreadStore for SyncingThreadStore {
 								thread_id = %thread_clone.id,
 								"background sync completed"
 						);
+						if let Some(store) = pending_store {
+							let store = store.lock().await;
+							let _ = store
+								.remove_pending(&thread_clone.id, &SyncOperation::Upsert)
+								.await;
+						}
 					}
 					Err(e) => {
 						error!(
@@ -279,6 +376,16 @@ impl ThreadStore for SyncingThreadStore {
 								error = %e,
 								"background sync failed"
 						);
+						if let Some(store) = pending_store {
+							let store = store.lock().await;
+							let _ = store
+								.add_pending(
+									thread_clone.id.clone(),
+									SyncOperation::Upsert,
+									Some(e.to_string()),
+								)
+								.await;
+						}
 					}
 				}
 			});
@@ -355,6 +462,7 @@ impl ThreadStore for SyncingThreadStore {
 			let http_clone = sync_client.http.clone();
 			let retry_config = sync_client.retry_config.clone();
 			let version_headers = sync_client.version_headers.clone();
+			let pending_store = self.pending_store.clone();
 
 			tokio::spawn(async move {
 				let client = ThreadSyncClient {
@@ -370,6 +478,12 @@ impl ThreadStore for SyncingThreadStore {
 								thread_id = %id_clone,
 								"background delete sync completed"
 						);
+						if let Some(store) = pending_store {
+							let store = store.lock().await;
+							let _ = store
+								.remove_pending(&id_clone, &SyncOperation::Delete)
+								.await;
+						}
 					}
 					Err(e) => {
 						error!(
@@ -377,6 +491,12 @@ impl ThreadStore for SyncingThreadStore {
 								error = %e,
 								"background delete sync failed"
 						);
+						if let Some(store) = pending_store {
+							let store = store.lock().await;
+							let _ = store
+								.add_pending(id_clone.clone(), SyncOperation::Delete, Some(e.to_string()))
+								.await;
+						}
 					}
 				}
 			});

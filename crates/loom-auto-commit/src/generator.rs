@@ -55,8 +55,7 @@ impl<L: LlmClient> CommitMessageGenerator<L> {
 		};
 
 		let user_content = format!(
-			"Generate a commit message for these changes:\n\n<diff>\n{}\n</diff>{}",
-			truncated_diff, truncation_notice
+			"Generate a commit message for these changes:\n\n<diff>\n{truncated_diff}\n</diff>{truncation_notice}"
 		);
 
 		debug!(

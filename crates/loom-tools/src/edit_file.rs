@@ -359,7 +359,7 @@ mod tests {
 			) {
 					let target = "UNIQUE_TARGET_MARKER";
 					let replacement = "UNIQUE_REPLACEMENT_MARKER";
-					let original = format!("{}{}{}", prefix, target, suffix);
+					let original = format!("{prefix}{target}{suffix}");
 
 					let rt = tokio::runtime::Runtime::new().unwrap();
 					rt.block_on(async {
@@ -449,7 +449,7 @@ mod tests {
 					new_str in "[0-9]{5,10}",
 					suffix in "[a-z]{5,20}"
 			) {
-					let original = format!("{}{}{}", prefix, old_str, suffix);
+					let original = format!("{prefix}{old_str}{suffix}");
 
 					let rt = tokio::runtime::Runtime::new().unwrap();
 					rt.block_on(async {
@@ -509,7 +509,7 @@ mod tests {
 					suffix in "[a-z]{3,10}"
 			) {
 					prop_assume!(target != replacement);
-					let original = format!("{}{}{}{}{}", prefix, target, middle, target, suffix);
+					let original = format!("{prefix}{target}{middle}{target}{suffix}");
 					let occurrences_before = original.matches(&target).count();
 					prop_assume!(occurrences_before >= 2);
 
@@ -540,7 +540,7 @@ mod tests {
 
 							prop_assert_eq!(occurrences_after, occurrences_before - 1);
 							prop_assert_eq!(replacement_count, 1);
-							let expected_prefix = format!("{}{}", prefix, replacement);
+							let expected_prefix = format!("{prefix}{replacement}");
 							prop_assert!(content.starts_with(&expected_prefix));
 							Ok(())
 					}).unwrap();
@@ -568,7 +568,7 @@ mod tests {
 					prop_assume!(!target.contains(&replacement));
 
 					let original: String = (0..repeat_count)
-							.map(|_| format!("{}{}", base, target))
+							.map(|_| format!("{base}{target}"))
 							.collect::<Vec<_>>()
 							.join("");
 
@@ -618,7 +618,7 @@ mod tests {
 					target in "[A-Z]{5,15}",
 					suffix in "[a-z]{5,20}"
 			) {
-					let original = format!("{}{}{}", prefix, target, suffix);
+					let original = format!("{prefix}{target}{suffix}");
 
 					let rt = tokio::runtime::Runtime::new().unwrap();
 					rt.block_on(async {
@@ -666,7 +666,7 @@ mod tests {
 			) {
 					prop_assume!(!prefix.contains(&target));
 					prop_assume!(!suffix.contains(&target));
-					let original = format!("{}{}{}", prefix, target, suffix);
+					let original = format!("{prefix}{target}{suffix}");
 
 					let rt = tokio::runtime::Runtime::new().unwrap();
 					rt.block_on(async {
@@ -688,7 +688,7 @@ mod tests {
 							.unwrap();
 
 							let content = std::fs::read_to_string(&file_path).unwrap();
-							let expected = format!("{}{}{}", prefix, replacement, suffix);
+							let expected = format!("{prefix}{replacement}{suffix}");
 							prop_assert_eq!(&content, &expected);
 							prop_assert!(content.starts_with(&prefix));
 							prop_assert!(content.ends_with(&suffix));
@@ -757,7 +757,7 @@ mod tests {
 			) {
 					prop_assume!(!prefix.contains(&target));
 					prop_assume!(!suffix.contains(&target));
-					let original = format!("{}{}{}", prefix, target, suffix);
+					let original = format!("{prefix}{target}{suffix}");
 
 					let rt = tokio::runtime::Runtime::new().unwrap();
 					rt.block_on(async {
@@ -779,7 +779,7 @@ mod tests {
 							.unwrap();
 
 							let content = std::fs::read_to_string(&file_path).unwrap();
-							let expected = format!("{}{}", prefix, suffix);
+							let expected = format!("{prefix}{suffix}");
 							prop_assert_eq!(&content, &expected);
 							prop_assert!(!content.contains(&target));
 							Ok(())
@@ -819,7 +819,7 @@ mod tests {
 							for (target, replacement) in unicode_targets {
 									let workspace = setup_workspace();
 									let file_path = workspace.path().join("test.txt");
-									let original = format!("{}{}{}", ascii_prefix, target, ascii_suffix);
+									let original = format!("{ascii_prefix}{target}{ascii_suffix}");
 									std::fs::write(&file_path, &original).unwrap();
 
 									let tool = EditFileTool::new();
@@ -836,7 +836,7 @@ mod tests {
 									.unwrap();
 
 									let content = std::fs::read_to_string(&file_path).unwrap();
-									let expected = format!("{}{}{}", ascii_prefix, replacement, ascii_suffix);
+									let expected = format!("{ascii_prefix}{replacement}{ascii_suffix}");
 									prop_assert_eq!(&content, &expected);
 									prop_assert!(std::str::from_utf8(content.as_bytes()).is_ok());
 							}
@@ -861,7 +861,7 @@ mod tests {
 					let target = "世界";
 					let replacement = "World";
 
-					let original = format!("{}{}{}", prefix, unicode_content, suffix);
+					let original = format!("{prefix}{unicode_content}{suffix}");
 
 					let rt = tokio::runtime::Runtime::new().unwrap();
 					rt.block_on(async {

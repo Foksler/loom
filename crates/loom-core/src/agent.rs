@@ -317,7 +317,7 @@ impl Agent {
 								ToolExecutionOutcome::Success { output, .. } => {
 									serde_json::to_string(output).unwrap_or_else(|_| "{}".to_string())
 								}
-								ToolExecutionOutcome::Error { error, .. } => format!("Error: {}", error),
+								ToolExecutionOutcome::Error { error, .. } => format!("Error: {error}"),
 							};
 							tool_messages.push(Message {
 								role: Role::Tool,
@@ -585,7 +585,7 @@ mod tests {
 				assert_eq!(request.messages.len(), 1);
 				assert_eq!(request.messages[0].content, "Hello, agent!");
 			}
-			other => panic!("expected SendLlmRequest, got {:?}", other),
+			other => panic!("expected SendLlmRequest, got {other:?}"),
 		}
 	}
 
@@ -621,7 +621,7 @@ mod tests {
 			AgentAction::DisplayMessage(content) => {
 				assert_eq!(content, "Hello");
 			}
-			other => panic!("expected DisplayMessage, got {:?}", other),
+			other => panic!("expected DisplayMessage, got {other:?}"),
 		}
 	}
 
@@ -705,7 +705,7 @@ mod tests {
 				assert_eq!(calls.len(), 1);
 				assert_eq!(calls[0].tool_name, "read_file");
 			}
-			other => panic!("expected ExecuteTools, got {:?}", other),
+			other => panic!("expected ExecuteTools, got {other:?}"),
 		}
 	}
 
@@ -793,7 +793,7 @@ mod tests {
 					"error message should describe the failure"
 				);
 			}
-			other => panic!("expected DisplayError, got {:?}", other),
+			other => panic!("expected DisplayError, got {other:?}"),
 		}
 	}
 
@@ -1126,7 +1126,7 @@ mod tests {
 
 					for i in 0..num_user_inputs {
 							agent.handle_event(AgentEvent::UserInput(
-									Message::user(format!("message {}", i))
+									Message::user(format!("message {i}"))
 							)).unwrap();
 
 							let response = create_simple_response("response");
@@ -1251,7 +1251,7 @@ mod tests {
 				assert_eq!(completed_tools.len(), 1);
 				assert_eq!(completed_tools[0].tool_name, "edit_file");
 			}
-			other => panic!("expected RunPostToolsHook, got {:?}", other),
+			other => panic!("expected RunPostToolsHook, got {other:?}"),
 		}
 	}
 
@@ -1299,8 +1299,7 @@ mod tests {
 
 		assert!(
 			matches!(action, AgentAction::SendLlmRequest(_)),
-			"expected SendLlmRequest, got {:?}",
-			action
+			"expected SendLlmRequest, got {action:?}"
 		);
 	}
 
@@ -1366,7 +1365,7 @@ mod tests {
 			AgentAction::SendLlmRequest(request) => {
 				assert_eq!(request.messages.len(), pending_request.messages.len());
 			}
-			other => panic!("expected SendLlmRequest, got {:?}", other),
+			other => panic!("expected SendLlmRequest, got {other:?}"),
 		}
 	}
 

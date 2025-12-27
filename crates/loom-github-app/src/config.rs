@@ -64,7 +64,7 @@ impl GithubAppConfig {
 	/// - Trailing slashes are normalized
 	fn validate_and_normalize_base_url(raw: &str) -> Result<Url, GithubAppError> {
 		let url = Url::parse(raw)
-			.map_err(|e| GithubAppError::Config(format!("Invalid GitHub base URL '{}': {}", raw, e)))?;
+			.map_err(|e| GithubAppError::Config(format!("Invalid GitHub base URL '{raw}': {e}")))?;
 
 		if url.scheme() != "https" {
 			return Err(GithubAppError::Config(format!(
@@ -119,7 +119,7 @@ impl GithubAppConfig {
 
 		let app_id: u64 = app_id_str
 			.parse()
-			.map_err(|_| GithubAppError::Config(format!("Invalid LOOM_GITHUB_APP_ID: {}", app_id_str)))?;
+			.map_err(|_| GithubAppError::Config(format!("Invalid LOOM_GITHUB_APP_ID: {app_id_str}")))?;
 
 		let private_key_pem = load_secret_env("LOOM_GITHUB_APP_PRIVATE_KEY")
 			.map_err(|e| GithubAppError::Config(e.to_string()))?
@@ -318,7 +318,7 @@ mod tests {
 	fn test_debug_redacts_secrets() {
 		let config =
 			GithubAppConfig::new(12345, "super-secret-key").with_webhook_secret("webhook-secret");
-		let debug_str = format!("{:?}", config);
+		let debug_str = format!("{config:?}");
 
 		assert!(!debug_str.contains("super-secret-key"));
 		assert!(!debug_str.contains("webhook-secret"));

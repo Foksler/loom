@@ -27,7 +27,7 @@ impl VertexConfig {
 	/// Uses default model "gemini-1.5-pro" and constructs the base URL from location.
 	pub fn new(project_id: impl Into<String>, location: impl Into<String>) -> Self {
 		let location = location.into();
-		let base_url = format!("https://{}-aiplatform.googleapis.com", location);
+		let base_url = format!("https://{location}-aiplatform.googleapis.com");
 		Self {
 			project_id: project_id.into(),
 			location,

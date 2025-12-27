@@ -25,10 +25,7 @@ use uuid::Uuid;
 
 /// Generate a unique query ID
 fn generate_query_id() -> String {
-	format!(
-		"Q-{}",
-		Uuid::new_v4().to_string().replace("-", "")[0..32].to_string()
-	)
+	format!("Q-{}", &Uuid::new_v4().to_string().replace("-", "")[0..32])
 }
 
 /// Generate a test query
@@ -145,7 +142,7 @@ fn bench_concurrent_queries(c: &mut Criterion) {
 				for i in 0..10 {
 					let manager_clone = manager.clone();
 					let query = generate_query(ServerQueryKind::ReadFile {
-						path: format!("/file{}.txt", i),
+						path: format!("/file{i}.txt"),
 					});
 					let query_id = query.id.clone();
 
@@ -154,7 +151,7 @@ fn bench_concurrent_queries(c: &mut Criterion) {
 						manager_clone
 							.receive_response(generate_response(
 								query_id,
-								ServerQueryResult::FileContent(format!("content{}", i)),
+								ServerQueryResult::FileContent(format!("content{i}")),
 							))
 							.await;
 					});
@@ -163,7 +160,7 @@ fn bench_concurrent_queries(c: &mut Criterion) {
 						let manager_clone = manager.clone();
 						async move {
 							manager_clone
-								.send_query(&format!("session-{}", i), query)
+								.send_query(&format!("session-{i}"), query)
 								.await
 						}
 					});
@@ -250,7 +247,7 @@ fn bench_throughput_sustained_load(c: &mut Criterion) {
 					for i in 0..10 {
 						let manager_clone = manager.clone();
 						let query = generate_query(ServerQueryKind::ReadFile {
-							path: format!("/file{}.txt", i),
+							path: format!("/file{i}.txt"),
 						});
 						let query_id = query.id.clone();
 
@@ -266,7 +263,7 @@ fn bench_throughput_sustained_load(c: &mut Criterion) {
 
 						let query_handle = tokio::spawn({
 							let manager_clone = manager.clone();
-							let session_id = format!("session-{}", session);
+							let session_id = format!("session-{session}");
 							async move { manager_clone.send_query(&session_id, query).await }
 						});
 
@@ -382,11 +379,11 @@ fn bench_serialization(c: &mut Criterion) {
 	let large_json = serde_json::to_string(&large_query).unwrap();
 
 	group.bench_function("small_query_deserialize", |b| {
-		b.iter(|| serde_json::from_str::<ServerQuery>(&black_box(&small_json)).unwrap())
+		b.iter(|| serde_json::from_str::<ServerQuery>(black_box(&small_json)).unwrap())
 	});
 
 	group.bench_function("large_query_deserialize", |b| {
-		b.iter(|| serde_json::from_str::<ServerQuery>(&black_box(&large_json)).unwrap())
+		b.iter(|| serde_json::from_str::<ServerQuery>(black_box(&large_json)).unwrap())
 	});
 
 	// Response serialization/deserialization
@@ -412,11 +409,11 @@ fn bench_serialization(c: &mut Criterion) {
 	let large_resp_json = serde_json::to_string(&large_response).unwrap();
 
 	group.bench_function("small_response_deserialize", |b| {
-		b.iter(|| serde_json::from_str::<ServerQueryResponse>(&black_box(&small_resp_json)).unwrap())
+		b.iter(|| serde_json::from_str::<ServerQueryResponse>(black_box(&small_resp_json)).unwrap())
 	});
 
 	group.bench_function("large_response_deserialize", |b| {
-		b.iter(|| serde_json::from_str::<ServerQueryResponse>(&black_box(&large_resp_json)).unwrap())
+		b.iter(|| serde_json::from_str::<ServerQueryResponse>(black_box(&large_resp_json)).unwrap())
 	});
 
 	group.finish();

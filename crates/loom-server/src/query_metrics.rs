@@ -299,7 +299,7 @@ impl QueryMetrics {
 		let mut buf = Vec::new();
 		encoder.encode(&metrics, &mut buf).map_err(|e| {
 			error!(error = %e, "failed to encode metrics");
-			prometheus::Error::Msg(format!("Failed to encode metrics: {}", e))
+			prometheus::Error::Msg(format!("Failed to encode metrics: {e}"))
 		})?;
 		Ok(String::from_utf8_lossy(&buf).to_string())
 	}
@@ -480,8 +480,8 @@ mod tests {
 			let metrics_clone = Arc::clone(&metrics);
 			let handle = std::thread::spawn(move || {
 				let query_type = if i % 2 == 0 { "read_file" } else { "env" };
-				metrics_clone.record_sent(query_type, &format!("session-{}", i));
-				metrics_clone.record_success(query_type, &format!("session-{}", i), 0.1 * (i as f64));
+				metrics_clone.record_sent(query_type, &format!("session-{i}"));
+				metrics_clone.record_success(query_type, &format!("session-{i}"), 0.1 * (i as f64));
 			});
 			handles.push(handle);
 		}

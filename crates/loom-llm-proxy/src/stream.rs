@@ -65,8 +65,7 @@ impl ProxyLlmStream {
 			Err(e) => {
 				warn!(error = %e, data = %data, "failed to parse SSE data as LlmStreamEvent");
 				Some(LlmEvent::Error(LlmError::InvalidResponse(format!(
-					"failed to parse SSE event: {}",
-					e
+					"failed to parse SSE event: {e}"
 				))))
 			}
 		}
@@ -251,10 +250,7 @@ data: {"type":"server_query","id":"Q-0123456789abcdef0123456789abcdef","kind":{"
 
 		fn sse_event_for_text(content: &str) -> String {
 			let escaped = content.replace('\\', "\\\\").replace('"', "\\\"");
-			format!(
-				"event: llm\ndata: {{\"type\":\"text_delta\",\"content\":\"{}\"}}\n\n",
-				escaped
-			)
+			format!("event: llm\ndata: {{\"type\":\"text_delta\",\"content\":\"{escaped}\"}}\n\n")
 		}
 
 		proptest! {
@@ -274,7 +270,7 @@ data: {"type":"server_query","id":"Q-0123456789abcdef0123456789abcdef","kind":{"
 										Some(LlmEvent::TextDelta { content: received }) => {
 												assert_eq!(content, received);
 										}
-										other => panic!("expected TextDelta, got {:?}", other),
+										other => panic!("expected TextDelta, got {other:?}"),
 								}
 						});
 				}
@@ -296,7 +292,7 @@ data: {"type":"server_query","id":"Q-0123456789abcdef0123456789abcdef","kind":{"
 												Some(LlmEvent::TextDelta { content: received }) => {
 														assert_eq!(expected_content, &received);
 												}
-												other => panic!("expected TextDelta with '{}', got {:?}", expected_content, other),
+												other => panic!("expected TextDelta with '{expected_content}', got {other:?}"),
 										}
 								}
 
@@ -328,7 +324,7 @@ data: {"type":"server_query","id":"Q-0123456789abcdef0123456789abcdef","kind":{"
 										Some(LlmEvent::TextDelta { content: received }) => {
 												assert_eq!(content, received);
 										}
-										other => panic!("expected TextDelta, got {:?}", other),
+										other => panic!("expected TextDelta, got {other:?}"),
 								}
 						});
 				}

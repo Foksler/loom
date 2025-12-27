@@ -145,10 +145,8 @@ impl Tool for BashTool {
 
 		let (exit_code, stdout, stderr, timed_out, truncated) = match result {
 			Ok(Ok(output)) => {
-				let (stdout, stdout_truncated) =
-					Self::truncate_output(&output.stdout, MAX_OUTPUT_BYTES);
-				let (stderr, stderr_truncated) =
-					Self::truncate_output(&output.stderr, MAX_OUTPUT_BYTES);
+				let (stdout, stdout_truncated) = Self::truncate_output(&output.stdout, MAX_OUTPUT_BYTES);
+				let (stderr, stderr_truncated) = Self::truncate_output(&output.stderr, MAX_OUTPUT_BYTES);
 				let truncated = stdout_truncated || stderr_truncated;
 
 				tracing::debug!(
@@ -252,16 +250,16 @@ mod tests {
 		let ctx = ToolContext::new(workspace.path().to_path_buf());
 
 		let result = tool
-			.invoke(
-				serde_json::json!({"command": "pwd", "cwd": "subdir"}),
-				&ctx,
-			)
+			.invoke(serde_json::json!({"command": "pwd", "cwd": "subdir"}), &ctx)
 			.await
 			.unwrap();
 
 		assert_eq!(result["exit_code"], 0);
 		let stdout = result["stdout"].as_str().unwrap().trim();
-		assert!(stdout.ends_with("subdir"), "Expected path ending with 'subdir', got: {}", stdout);
+		assert!(
+			stdout.ends_with("subdir"),
+			"Expected path ending with 'subdir', got: {stdout}"
+		);
 	}
 
 	#[tokio::test]
@@ -271,10 +269,7 @@ mod tests {
 		let ctx = ToolContext::new(workspace.path().to_path_buf());
 
 		let result = tool
-			.invoke(
-				serde_json::json!({"command": "pwd", "cwd": "/tmp"}),
-				&ctx,
-			)
+			.invoke(serde_json::json!({"command": "pwd", "cwd": "/tmp"}), &ctx)
 			.await;
 
 		assert!(matches!(
@@ -328,10 +323,7 @@ mod tests {
 
 		// Generate output larger than MAX_OUTPUT_BYTES
 		let result = tool
-			.invoke(
-				serde_json::json!({"command": "yes | head -c 300000"}),
-				&ctx,
-			)
+			.invoke(serde_json::json!({"command": "yes | head -c 300000"}), &ctx)
 			.await
 			.unwrap();
 

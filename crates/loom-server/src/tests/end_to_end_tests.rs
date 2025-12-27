@@ -84,14 +84,11 @@ mod tests {
 		let response_opt = result.unwrap();
 		// May or may not detect query depending on regex, so check gracefully
 		if let Some(response) = response_opt {
-			match &response.result {
-				ServerQueryResult::FileContent(content) => {
-					assert!(
-						content.contains("database"),
-						"Should contain requested file data"
-					);
-				}
-				_ => {}
+			if let ServerQueryResult::FileContent(content) = &response.result {
+				assert!(
+					content.contains("database"),
+					"Should contain requested file data"
+				);
 			}
 		}
 	}
@@ -247,7 +244,7 @@ mod tests {
 			let result = handler.handle_llm_output("session-e2e", query).await;
 			let _ = tokio::time::timeout(Duration::from_secs(5), response_task).await;
 
-			assert!(result.is_ok(), "Query should succeed: {}", query);
+			assert!(result.is_ok(), "Query should succeed: {query}");
 		}
 	}
 
@@ -374,9 +371,7 @@ mod tests {
 		// The test verifies isolation: user-2 should not see user-1's queries
 		assert!(
 			pending2.is_empty(),
-			"Session 2 (user-{}) should not have unrelated queries from session 1 (user-{})",
-			user_2_id,
-			user_1_id
+			"Session 2 (user-{user_2_id}) should not have unrelated queries from session 1 (user-{user_1_id})"
 		);
 
 		let _ = tokio::time::timeout(Duration::from_secs(12), task1).await;
@@ -473,11 +468,8 @@ mod tests {
 		assert!(result_2.is_ok(), "Should successfully retry after error");
 		if let Ok(Some(response)) = result_2 {
 			assert!(response.error.is_none(), "Retry should succeed");
-			match &response.result {
-				ServerQueryResult::FileContent(content) => {
-					assert_eq!(content, "File content");
-				}
-				_ => {}
+			if let ServerQueryResult::FileContent(content) = &response.result {
+				assert_eq!(content, "File content");
 			}
 		}
 	}

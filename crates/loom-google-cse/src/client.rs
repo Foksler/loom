@@ -87,7 +87,7 @@ impl CseClient {
 
 	async fn search_inner(&self, query: &str, num: u32) -> Result<CseResponse, CseError> {
 		let mut url = Url::parse(&self.base_url)
-			.map_err(|e| CseError::InvalidResponse(format!("Invalid base URL: {}", e)))?;
+			.map_err(|e| CseError::InvalidResponse(format!("Invalid base URL: {e}")))?;
 
 		url
 			.query_pairs_mut()
@@ -143,7 +143,7 @@ impl CseClient {
 
 		let google_response: GoogleCseResponse = serde_json::from_str(&body).map_err(|e| {
 			error!(error = %e, "Failed to parse Google CSE response");
-			CseError::InvalidResponse(format!("JSON parse error: {}", e))
+			CseError::InvalidResponse(format!("JSON parse error: {e}"))
 		})?;
 
 		if let Some(error) = google_response.error {

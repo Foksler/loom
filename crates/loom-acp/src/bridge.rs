@@ -222,10 +222,7 @@ mod tests {
 	#[test]
 	fn test_stop_reason_precedence() {
 		// Error maps to Cancelled (no Error variant in StopReason)
-		assert!(matches!(
-			map_stop_reason(true, true),
-			StopReason::Cancelled
-		));
+		assert!(matches!(map_stop_reason(true, true), StopReason::Cancelled));
 		assert!(matches!(
 			map_stop_reason(true, false),
 			StopReason::Cancelled

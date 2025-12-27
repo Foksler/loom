@@ -26,6 +26,7 @@ pub mod websocket;
 mod tests;
 
 pub use api::{create_app_state, create_router, AppState};
+pub use api_docs::ApiDoc;
 pub use config::ServerConfig;
 pub use db::{GithubInstallation, GithubInstallationInfo, GithubRepo, ThreadRepository};
 pub use error::ServerError;
@@ -37,4 +38,3 @@ pub use query_security::{
 };
 pub use query_tracing::{QueryTraceStore, QueryTracer, TraceEvent, TraceId, TraceTimeline};
 pub use server_query::ServerQueryManager;
-pub use api_docs::ApiDoc;

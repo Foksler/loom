@@ -15,7 +15,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 |-------|------------|--------------|
 | loom-core | ✅ 100% | PostToolsHook now documented in spec |
 | loom-tools | ✅ 100% | Full compliance |
-| loom-thread | ✅ 95% | Spec updated, pending sync queue is low priority |
+| loom-thread | ✅ 100% | Full compliance, pending sync queue implemented |
 | loom-llm-anthropic | ✅ 100% | Full compliance + Vertex AI bonus |
 | loom-llm-openai | ✅ 100% | Full compliance |
 | loom-llm-service | ✅ 100% | Full compliance + Vertex AI bonus |
@@ -109,7 +109,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 | is_private, is_shared_with_support | ✅ | |
 | ConversationSnapshot | ✅ | |
 | AgentStateSnapshot | ✅ | PostToolsHook now in spec |
-| ThreadMetadata | ⚠️ | extra uses HashMap vs spec's serde_json::Value |
+| ThreadMetadata | ✅ | extra now uses serde_json::Value |
 | ThreadStore trait | ✅ | load(), save(), list(), delete() |
 | LocalThreadStore | ✅ | XDG paths, atomic writes |
 | SyncingThreadStore | ✅ | Wraps LocalThreadStore, is_private check |
@@ -120,8 +120,8 @@ This document tracks the comparison between specs/* and actual crate implementat
 | Item | Status | Notes |
 |------|--------|-------|
 | MessageSnapshot fields | ✅ | Spec updated to match implementation |
-| ThreadSummary.message_count | ⚠️ | usize vs spec's u32 |
-| Pending sync queue | ❌ | `$XDG_STATE_HOME/loom/sync/pending.json` not implemented |
+| ThreadSummary.message_count | ✅ | **Now u32** (was usize) |
+| Pending sync queue | ✅ | **Now implemented** at `$XDG_STATE_HOME/loom/sync/pending.json` |
 
 ---
 
@@ -367,7 +367,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 
 ### Low Priority (Nice to Have)
 
-1. **loom-thread**: Implement pending sync queue for retry logic
+_All items completed._
 
 ---
 

@@ -1,7 +1,6 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights
 // reserved. SPDX-License-Identifier: Proprietary
 
-use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
 
@@ -18,7 +17,7 @@ pub struct ThreadId(String);
 impl ThreadId {
 	pub fn new() -> Self {
 		let uuid = uuid7::uuid7();
-		Self(format!("T-{}", uuid))
+		Self(format!("T-{uuid}"))
 	}
 
 	/// Create a ThreadId from an existing string without validation.
@@ -119,7 +118,7 @@ impl std::str::FromStr for ThreadVisibility {
 			"organization" | "organisation" => Ok(ThreadVisibility::Organization),
 			"private" => Ok(ThreadVisibility::Private),
 			"public" => Ok(ThreadVisibility::Public),
-			_ => Err(format!("invalid visibility: {}", s)),
+			_ => Err(format!("invalid visibility: {s}")),
 		}
 	}
 }
@@ -143,7 +142,8 @@ impl From<&loom_core::Message> for MessageSnapshot {
 			None
 		} else {
 			Some(
-				msg.tool_calls
+				msg
+					.tool_calls
 					.iter()
 					.map(|tc| ToolCallSnapshot {
 						id: tc.id.clone(),
@@ -273,8 +273,12 @@ pub struct ThreadMetadata {
 	pub tags: Vec<String>,
 	#[serde(default)]
 	pub is_pinned: bool,
-	#[serde(default, skip_serializing_if = "HashMap::is_empty")]
-	pub extra: HashMap<String, serde_json::Value>,
+	#[serde(default, skip_serializing_if = "is_null_or_empty_object")]
+	pub extra: serde_json::Value,
+}
+
+fn is_null_or_empty_object(v: &serde_json::Value) -> bool {
+	v.is_null() || (v.is_object() && v.as_object().is_none_or(|o| o.is_empty()))
 }
 
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
@@ -425,7 +429,7 @@ pub struct ThreadSummary {
 	pub model: Option<String>,
 	#[serde(default, skip_serializing_if = "Vec::is_empty")]
 	pub tags: Vec<String>,
-	pub message_count: usize,
+	pub message_count: u32,
 	pub is_pinned: bool,
 	pub visibility: ThreadVisibility,
 }
@@ -447,7 +451,7 @@ impl From<&Thread> for ThreadSummary {
 			provider: thread.provider.clone(),
 			model: thread.model.clone(),
 			tags: thread.metadata.tags.clone(),
-			message_count: thread.conversation.messages.len(),
+			message_count: thread.conversation.messages.len() as u32,
 			is_pinned: thread.metadata.is_pinned,
 			visibility: thread.visibility.clone(),
 		}

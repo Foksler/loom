@@ -86,8 +86,7 @@ where
 					Err(e) => {
 						warn!(error = %e, "Invalid UTF-8 in stream");
 						return Poll::Ready(Some(LlmEvent::Error(LlmError::InvalidResponse(format!(
-							"Invalid UTF-8: {}",
-							e
+							"Invalid UTF-8: {e}"
 						)))));
 					}
 				},

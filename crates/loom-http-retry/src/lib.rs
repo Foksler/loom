@@ -300,9 +300,7 @@ mod tests {
 			let delay = calculate_delay(&cfg, attempt);
 			assert!(
 				delay <= Duration::from_secs_f64(5.0 * 1.5),
-				"delay {:?} at attempt {} exceeds max_delay with jitter headroom",
-				delay,
-				attempt
+				"delay {delay:?} at attempt {attempt} exceeds max_delay with jitter headroom"
 			);
 		}
 	}

@@ -590,7 +590,7 @@ mod tests {
 					suffix in r"[a-zA-Z0-9_]*"
 			) {
 					let validator = QueryValidator::new();
-					let path = format!("..{}", suffix);
+					let path = format!("..{suffix}");
 					prop_assert!(validator.validate_path(&path).is_err());
 			}
 	}

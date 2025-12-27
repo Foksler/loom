@@ -311,7 +311,7 @@ mod tests {
 		let config =
 			LlmServiceConfig::new(LlmProvider::Anthropic).with_anthropic_api_key("super-secret-key");
 		let service = LlmService::new(config).unwrap();
-		let debug_output = format!("{:?}", service);
+		let debug_output = format!("{service:?}");
 		assert!(!debug_output.contains("super-secret-key"));
 	}
 }

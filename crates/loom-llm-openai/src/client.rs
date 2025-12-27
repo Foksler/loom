@@ -141,7 +141,7 @@ impl OpenAIClient {
 						parse_error = %e,
 						"Failed to parse OpenAI error response"
 				);
-				LlmError::Api(format!("HTTP {}", status))
+				LlmError::Api(format!("HTTP {status}"))
 			}
 		}
 	}

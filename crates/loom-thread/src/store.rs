@@ -138,7 +138,7 @@ impl LocalThreadStore {
 	}
 
 	fn thread_path(&self, id: &ThreadId) -> PathBuf {
-		self.threads_dir.join(format!("{}.json", id))
+		self.threads_dir.join(format!("{id}.json"))
 	}
 }
 

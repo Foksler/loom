@@ -226,7 +226,7 @@ mod tests {
 		#[test]
 		fn debug_is_redacted() {
 			let secret = Secret::new("super-secret-api-key".to_string());
-			let debug_output = format!("{:?}", secret);
+			let debug_output = format!("{secret:?}");
 
 			assert!(!debug_output.contains("super-secret-api-key"));
 			assert!(debug_output.contains(REDACTED));
@@ -237,7 +237,7 @@ mod tests {
 		#[test]
 		fn display_is_redacted() {
 			let secret = Secret::new("super-secret-api-key".to_string());
-			let display_output = format!("{}", secret);
+			let display_output = format!("{secret}");
 
 			assert!(!display_output.contains("super-secret-api-key"));
 			assert_eq!(display_output, REDACTED);
@@ -316,7 +316,7 @@ mod tests {
 		#[test]
 		fn tracing_display_format_is_redacted() {
 			let secret = Secret::new("super-secret-value".to_string());
-			let display = format!("{}", secret);
+			let display = format!("{secret}");
 			assert_eq!(display, REDACTED);
 			assert!(!display.contains("super-secret-value"));
 		}
@@ -327,7 +327,7 @@ mod tests {
 		#[test]
 		fn tracing_debug_format_is_redacted() {
 			let secret = Secret::new("super-secret-value".to_string());
-			let debug = format!("{:?}", secret);
+			let debug = format!("{secret:?}");
 			assert!(debug.contains(REDACTED));
 			assert!(!debug.contains("super-secret-value"));
 		}
@@ -337,7 +337,7 @@ mod tests {
 		#[test]
 		fn option_secret_debug_is_redacted() {
 			let secret: Option<Secret<String>> = Some(Secret::new("super-secret-value".to_string()));
-			let debug = format!("{:?}", secret);
+			let debug = format!("{secret:?}");
 			assert!(debug.contains(REDACTED));
 			assert!(!debug.contains("super-secret-value"));
 		}
@@ -346,7 +346,7 @@ mod tests {
 		#[test]
 		fn option_none_secret_debug_works() {
 			let secret: Option<Secret<String>> = None;
-			let debug = format!("{:?}", secret);
+			let debug = format!("{secret:?}");
 			assert_eq!(debug, "None");
 		}
 	}
@@ -366,7 +366,7 @@ mod tests {
 						prop_assume!(!inner.contains("Secret"));
 
 						let secret = Secret::new(inner.clone());
-						let debug_output = format!("{:?}", secret);
+						let debug_output = format!("{secret:?}");
 						prop_assert!(
 								!debug_output.contains(&inner),
 								"Debug output contained the secret value"
@@ -381,7 +381,7 @@ mod tests {
 						prop_assume!(!inner.contains("REDACTED"));
 
 						let secret = Secret::new(inner.clone());
-						let display_output = format!("{}", secret);
+						let display_output = format!("{secret}");
 						prop_assert!(
 								!display_output.contains(&inner),
 								"Display output contained the secret value"

@@ -187,7 +187,7 @@ mod tests {
 			.as_nanos();
 
 		let query1 = loom_core::server_query::ServerQuery {
-			id: format!("Q-short-{}", test_id).to_string(),
+			id: format!("Q-short-{test_id}").to_string(),
 			kind: ServerQueryKind::ReadFile {
 				path: "file1.txt".to_string(),
 			},
@@ -197,7 +197,7 @@ mod tests {
 		};
 
 		let query2 = loom_core::server_query::ServerQuery {
-			id: format!("Q-long-{}", test_id).to_string(),
+			id: format!("Q-long-{test_id}").to_string(),
 			kind: ServerQueryKind::ReadFile {
 				path: "file2.txt".to_string(),
 			},
@@ -230,8 +230,7 @@ mod tests {
 		);
 		assert!(
 			elapsed1 < Duration::from_millis(1300),
-			"1s timeout should trigger within 1.3s, got: {:?}",
-			elapsed1
+			"1s timeout should trigger within 1.3s, got: {elapsed1:?}"
 		);
 
 		// Long timeout should take ~3s (allow 3.3s margin for system load)
@@ -241,8 +240,7 @@ mod tests {
 		);
 		assert!(
 			elapsed2 > Duration::from_millis(2700),
-			"3s timeout should wait at least 2.7s, got: {:?}",
-			elapsed2
+			"3s timeout should wait at least 2.7s, got: {elapsed2:?}"
 		);
 	}
 
@@ -271,9 +269,9 @@ mod tests {
 			.unwrap()
 			.as_nanos();
 
-		let query1 = create_test_query(&format!("Q-session1-1-{}", test_id), "file1.txt");
-		let query2 = create_test_query(&format!("Q-session2-1-{}", test_id), "file2.txt");
-		let query3 = create_test_query(&format!("Q-session3-1-{}", test_id), "file3.txt");
+		let query1 = create_test_query(&format!("Q-session1-1-{test_id}"), "file1.txt");
+		let query2 = create_test_query(&format!("Q-session2-1-{test_id}"), "file2.txt");
+		let query3 = create_test_query(&format!("Q-session3-1-{test_id}"), "file3.txt");
 
 		let manager1 = manager.clone();
 		let manager2 = manager.clone();
@@ -283,9 +281,9 @@ mod tests {
 		let q2_id = query2.id.clone();
 		let q3_id = query3.id.clone();
 
-		let session_1 = format!("session-1-{}", test_id);
-		let session_2 = format!("session-2-{}", test_id);
-		let session_3 = format!("session-3-{}", test_id);
+		let session_1 = format!("session-1-{test_id}");
+		let session_2 = format!("session-2-{test_id}");
+		let session_3 = format!("session-3-{test_id}");
 
 		// Start queries on three sessions
 		let s1_clone = session_1.clone();
@@ -493,9 +491,9 @@ mod tests {
 			let manager = manager.clone();
 			let handle = tokio::spawn(async move {
 				let response = ServerQueryResponse {
-					query_id: format!("Q-concurrent-{}", i),
+					query_id: format!("Q-concurrent-{i}"),
 					sent_at: chrono::Utc::now().to_rfc3339(),
-					result: ServerQueryResult::FileContent(format!("content{}", i)),
+					result: ServerQueryResult::FileContent(format!("content{i}")),
 					error: None,
 				};
 				manager.receive_response(response).await;
@@ -515,9 +513,9 @@ mod tests {
 
 		// Verify all responses were stored
 		for i in 0..10 {
-			let query_id = format!("Q-concurrent-{}", i);
+			let query_id = format!("Q-concurrent-{i}");
 			let response = manager.get_response(&query_id).await;
-			assert!(response.is_some(), "Response {} should be stored", i);
+			assert!(response.is_some(), "Response {i} should be stored");
 		}
 	}
 

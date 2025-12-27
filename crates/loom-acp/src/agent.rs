@@ -10,10 +10,10 @@ use std::sync::Arc;
 
 use agent_client_protocol::{
 	self as acp, AgentCapabilities, AuthenticateRequest, AuthenticateResponse, CancelNotification,
-	ExtNotification, ExtRequest, ExtResponse, Implementation, InitializeRequest,
-	InitializeResponse, LoadSessionRequest, LoadSessionResponse, NewSessionRequest,
-	NewSessionResponse, PromptRequest, PromptResponse, ProtocolVersion, SessionId,
-	SessionNotification, SessionUpdate, SetSessionModeRequest, SetSessionModeResponse, StopReason,
+	ExtNotification, ExtRequest, ExtResponse, Implementation, InitializeRequest, InitializeResponse,
+	LoadSessionRequest, LoadSessionResponse, NewSessionRequest, NewSessionResponse, PromptRequest,
+	PromptResponse, ProtocolVersion, SessionId, SessionNotification, SessionUpdate,
+	SetSessionModeRequest, SetSessionModeResponse, StopReason,
 };
 use loom_core::{
 	LlmClient, LlmEvent, LlmRequest, Message, ServerQuery, ServerQueryError, ServerQueryHandler,
@@ -89,8 +89,7 @@ impl ServerQueryHandler for AcpServerQueryHandler {
 			ServerQueryKind::Custom { name, .. } => {
 				debug!(name = %name, "unknown custom query type");
 				Err(ServerQueryError::ProcessingFailed(format!(
-					"Unknown custom query type: {}",
-					name
+					"Unknown custom query type: {name}"
 				)))
 			}
 		};
@@ -133,11 +132,10 @@ impl AcpServerQueryHandler {
 				Ok(ServerQueryResult::FileContent(content))
 			}
 			Err(e) if e.kind() == std::io::ErrorKind::NotFound => Err(ServerQueryError::InvalidQuery(
-				format!("File not found: {}", path),
+				format!("File not found: {path}"),
 			)),
 			Err(e) => Err(ServerQueryError::ProcessingFailed(format!(
-				"Failed to read file: {}",
-				e
+				"Failed to read file: {e}"
 			))),
 		}
 	}
@@ -314,16 +312,14 @@ impl LoomAcpAgent {
 			.query_handler
 			.handle_query(query)
 			.await
-			.map_err(|e| AcpError::Internal(format!("Query handler error: {}", e)))
+			.map_err(|e| AcpError::Internal(format!("Query handler error: {e}")))
 	}
 
 	/// Send a text chunk notification to the client.
 	async fn send_message_chunk(&self, session_id: &SessionId, text: String) -> Result<(), AcpError> {
 		let chunk = crate::bridge::text_to_content_chunk(text);
-		let notification = SessionNotification::new(
-			session_id.clone(),
-			SessionUpdate::AgentMessageChunk(chunk),
-		);
+		let notification =
+			SessionNotification::new(session_id.clone(), SessionUpdate::AgentMessageChunk(chunk));
 
 		let (tx, rx) = oneshot::channel();
 		self
@@ -356,7 +352,7 @@ impl LoomAcpAgent {
 				}
 				Err(e) => {
 					warn!(tool_id = %call.id, error = %e, "tool failed");
-					format!("Error: {}", e)
+					format!("Error: {e}")
 				}
 			},
 			None => {
@@ -748,7 +744,7 @@ mod tests {
 							query_id: query.id,
 							sent_at: chrono::Utc::now().to_rfc3339(),
 							result: ServerQueryResult::FileContent(String::new()),
-							error: Some(format!("mock error: cannot read {}", path)),
+							error: Some(format!("mock error: cannot read {path}")),
 						})
 					} else {
 						Ok(ServerQueryResponse {
@@ -762,7 +758,7 @@ mod tests {
 				ServerQueryKind::GetEnvironment { keys } => {
 					let mut env_vars = HashMap::new();
 					for key in keys {
-						env_vars.insert(key.clone(), format!("mock-value-{}", key));
+						env_vars.insert(key.clone(), format!("mock-value-{key}"));
 					}
 					Ok(ServerQueryResponse {
 						query_id: query.id,

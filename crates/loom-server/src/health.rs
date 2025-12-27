@@ -5,10 +5,10 @@
 
 use serde::Serialize;
 use std::path::Path;
-use utoipa::ToSchema;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::{timeout, Instant};
+use utoipa::ToSchema;
 
 use loom_github_app::{GithubAppClient, GithubAppError};
 

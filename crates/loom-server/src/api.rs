@@ -177,9 +177,8 @@ pub fn create_router(state: AppState) -> Router {
         );
 
 	// Add OpenAPI documentation
-	router = router.merge(
-		SwaggerUi::new("/api").url("/api/openapi.json", crate::api_docs::ApiDoc::openapi()),
-	);
+	router = router
+		.merge(SwaggerUi::new("/api").url("/api/openapi.json", crate::api_docs::ApiDoc::openapi()));
 
 	// Serve static web assets if LOOM_SERVER_WEB_DIR is set
 	// This serves the built loom-web SPA
@@ -187,7 +186,7 @@ pub fn create_router(state: AppState) -> Router {
 		tracing::info!(web_dir = %web_path, "serving static web assets");
 		// Serve static files and fall back to index.html for SPA routing
 		router = router.fallback_service(
-			ServeDir::new(&web_path).fallback(ServeFile::new(format!("{}/index.html", web_path))),
+			ServeDir::new(&web_path).fallback(ServeFile::new(format!("{web_path}/index.html"))),
 		);
 	}
 
@@ -197,7 +196,7 @@ pub fn create_router(state: AppState) -> Router {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::routes;
+
 	use axum::{
 		body::Body,
 		http::{Request, StatusCode},
@@ -208,7 +207,6 @@ mod tests {
 	};
 	use tempfile::tempdir;
 	use tower::ServiceExt;
-	use utoipa::OpenApi;
 
 	async fn create_test_app() -> (Router, tempfile::TempDir) {
 		let dir = tempdir().unwrap();
@@ -269,8 +267,7 @@ mod tests {
 
 		// Should be OK (healthy or degraded, depending on bin dir)
 		assert!(
-			response.status() == StatusCode::OK
-				|| response.status() == StatusCode::SERVICE_UNAVAILABLE
+			response.status() == StatusCode::OK || response.status() == StatusCode::SERVICE_UNAVAILABLE
 		);
 	}
 
@@ -590,7 +587,7 @@ mod tests {
 		let response = app
 			.oneshot(
 				Request::builder()
-					.uri(format!("/v1/debug/query-traces/nonexistent-trace"))
+					.uri("/v1/debug/query-traces/nonexistent-trace".to_string())
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -724,7 +721,7 @@ mod tests {
 			.clone()
 			.oneshot(
 				Request::builder()
-					.uri(format!("/v1/debug/query-traces/{}", trace_id))
+					.uri(format!("/v1/debug/query-traces/{trace_id}"))
 					.body(Body::empty())
 					.unwrap(),
 			)

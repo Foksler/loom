@@ -41,10 +41,7 @@ impl std::str::FromStr for LlmProvider {
 			"vertex" => Ok(LlmProvider::Vertex),
 			_ => Err(ConfigError::InvalidValue {
 				key: "provider".to_string(),
-				message: format!(
-					"unknown provider '{}', expected 'anthropic', 'openai', or 'vertex'",
-					s
-				),
+				message: format!("unknown provider '{s}', expected 'anthropic', 'openai', or 'vertex'"),
 			}),
 		}
 	}
@@ -325,7 +322,7 @@ mod tests {
 				.with_anthropic_api_key("sk-ant-super-secret")
 				.with_openai_api_key("sk-openai-super-secret");
 
-			let debug_output = format!("{:?}", config);
+			let debug_output = format!("{config:?}");
 
 			assert!(!debug_output.contains("sk-ant-super-secret"));
 			assert!(!debug_output.contains("sk-openai-super-secret"));

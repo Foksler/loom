@@ -142,8 +142,7 @@ impl Tool for WebSearchTool {
 					"web_search: server returned non-success"
 			);
 			return Err(ToolError::Internal(format!(
-				"web_search proxy error: HTTP {}",
-				status
+				"web_search proxy error: HTTP {status}"
 			)));
 		}
 

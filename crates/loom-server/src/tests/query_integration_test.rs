@@ -164,7 +164,7 @@ async fn test_multiple_sequential_queries() {
 
 	// Send 3 queries sequentially
 	for i in 0..3 {
-		let query = create_test_query(&format!("Q-seq-{:03}", i));
+		let query = create_test_query(&format!("Q-seq-{i:03}"));
 		let query_id = query.id.clone();
 		let manager_clone = manager.clone();
 
@@ -175,7 +175,7 @@ async fn test_multiple_sequential_queries() {
 		tokio::time::sleep(Duration::from_millis(50)).await;
 
 		// Send response
-		let response = create_test_response(&query_id, &format!("content {}", i));
+		let response = create_test_response(&query_id, &format!("content {i}"));
 		manager.receive_response(response).await;
 
 		// Verify response
@@ -187,7 +187,7 @@ async fn test_multiple_sequential_queries() {
 
 	// Verify all responses stored
 	for i in 0..3 {
-		let stored = manager.get_response(&format!("Q-seq-{:03}", i)).await;
+		let stored = manager.get_response(&format!("Q-seq-{i:03}")).await;
 		assert!(stored.is_some());
 	}
 }
@@ -215,7 +215,7 @@ async fn test_concurrent_queries_same_session() {
 	// Create and spawn all queries concurrently
 	let mut handles = vec![];
 	for i in 0..num_queries {
-		let query = create_test_query(&format!("Q-concurrent-{:03}", i));
+		let query = create_test_query(&format!("Q-concurrent-{i:03}"));
 		let manager_clone = manager.clone();
 
 		let handle =
@@ -233,7 +233,7 @@ async fn test_concurrent_queries_same_session() {
 
 	// Send responses in reverse order (test that ordering doesn't matter)
 	for i in (0..num_queries).rev() {
-		let response = create_test_response(&format!("Q-concurrent-{:03}", i), &format!("data {}", i));
+		let response = create_test_response(&format!("Q-concurrent-{i:03}"), &format!("data {i}"));
 		manager.receive_response(response).await;
 		tokio::time::sleep(Duration::from_millis(10)).await;
 	}
@@ -243,10 +243,10 @@ async fn test_concurrent_queries_same_session() {
 		let result = handle.await.unwrap();
 		assert!(result.is_ok());
 		let response = result.unwrap();
-		assert_eq!(response.query_id, format!("Q-concurrent-{:03}", i));
+		assert_eq!(response.query_id, format!("Q-concurrent-{i:03}"));
 		assert!(matches!(
 				response.result,
-				ServerQueryResult::FileContent(ref c) if c == &format!("data {}", i)
+				ServerQueryResult::FileContent(ref c) if c == &format!("data {i}")
 		));
 	}
 
@@ -289,11 +289,8 @@ async fn test_concurrent_queries_different_sessions() {
 
 	for session_idx in 0..num_sessions {
 		for query_idx in 0..queries_per_session {
-			let query = create_test_query(&format!(
-				"Q-session-{}-{}-{}",
-				test_id, session_idx, query_idx
-			));
-			let session_id = format!("session-{}-{}", session_idx, test_id);
+			let query = create_test_query(&format!("Q-session-{test_id}-{session_idx}-{query_idx}"));
+			let session_id = format!("session-{session_idx}-{test_id}");
 			let manager_clone = manager.clone();
 
 			let handle = tokio::spawn(async move { manager_clone.send_query(&session_id, query).await });
@@ -308,14 +305,12 @@ async fn test_concurrent_queries_different_sessions() {
 	// Verify pending queries per session
 	for session_idx in 0..num_sessions {
 		let pending = manager
-			.list_pending(&format!("session-{}-{}", session_idx, test_id))
+			.list_pending(&format!("session-{session_idx}-{test_id}"))
 			.await;
 		assert_eq!(
 			pending.len(),
 			queries_per_session,
-			"Session {} should have {} pending queries",
-			session_idx,
-			queries_per_session
+			"Session {session_idx} should have {queries_per_session} pending queries"
 		);
 	}
 
@@ -323,8 +318,8 @@ async fn test_concurrent_queries_different_sessions() {
 	for session_idx in 0..num_sessions {
 		for query_idx in 0..queries_per_session {
 			let response = create_test_response(
-				&format!("Q-session-{}-{}-{}", test_id, session_idx, query_idx),
-				&format!("data-{}-{}", session_idx, query_idx),
+				&format!("Q-session-{test_id}-{session_idx}-{query_idx}"),
+				&format!("data-{session_idx}-{query_idx}"),
 			);
 			manager.receive_response(response).await;
 		}
@@ -339,7 +334,7 @@ async fn test_concurrent_queries_different_sessions() {
 	// Verify all sessions are clean
 	for session_idx in 0..num_sessions {
 		let pending = manager
-			.list_pending(&format!("session-{}-{}", session_idx, test_id))
+			.list_pending(&format!("session-{session_idx}-{test_id}"))
 			.await;
 		assert_eq!(pending.len(), 0);
 	}
@@ -375,7 +370,7 @@ async fn test_http_query_response_endpoint() {
 	);
 
 	// Create the response struct and serialize it properly
-	let response = create_test_response(&query_id, "test file content");
+	let response = create_test_response(query_id, "test file content");
 	let response_json = serde_json::to_value(&response).unwrap();
 
 	// Log the serialized JSON for debugging
@@ -388,7 +383,7 @@ async fn test_http_query_response_endpoint() {
 		.oneshot(
 			Request::builder()
 				.method("POST")
-				.uri(format!("/v1/sessions/{}/query-response", session_id))
+				.uri(format!("/v1/sessions/{session_id}/query-response"))
 				.header("Content-Type", "application/json")
 				.body(Body::from(serde_json::to_string(&response_json).unwrap()))
 				.unwrap(),
@@ -686,7 +681,7 @@ async fn test_high_concurrency_stress() {
 	// Spawn multiple batches of concurrent queries
 	for batch in 0..num_tasks {
 		for i in 0..num_queries / num_tasks {
-			let query = create_test_query(&format!("Q-stress-{:04}-{:04}", batch, i));
+			let query = create_test_query(&format!("Q-stress-{batch:04}-{i:04}"));
 			let manager_clone = manager.clone();
 
 			let handle =
@@ -707,8 +702,8 @@ async fn test_high_concurrency_stress() {
 	for batch in 0..num_tasks {
 		for i in 0..num_queries / num_tasks {
 			let response = create_test_response(
-				&format!("Q-stress-{:04}-{:04}", batch, i),
-				&format!("content-{}-{}", batch, i),
+				&format!("Q-stress-{batch:04}-{i:04}"),
+				&format!("content-{batch}-{i}"),
 			);
 			manager.receive_response(response).await;
 		}

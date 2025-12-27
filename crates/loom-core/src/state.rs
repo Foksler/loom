@@ -309,7 +309,7 @@ mod tests {
 							units_processed: None,
 					};
 					let f = progress.fraction.unwrap();
-					prop_assert!(f >= 0.0 && f <= 1.0);
+					prop_assert!((0.0..=1.0).contains(&f));
 			}
 	}
 }

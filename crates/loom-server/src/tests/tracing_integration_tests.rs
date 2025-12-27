@@ -122,7 +122,7 @@ mod tests {
 
 		// Add 10 traces, but capacity is 5
 		for i in 0..10 {
-			let tracer = QueryTracer::new(format!("Q-cap-{}", i), None);
+			let tracer = QueryTracer::new(format!("Q-cap-{i}"), None);
 			store.store(tracer).await;
 		}
 
@@ -246,7 +246,7 @@ mod tests {
 
 		// Add several traces
 		for i in 0..5 {
-			let tracer = QueryTracer::new(format!("Q-clear-{}", i), None);
+			let tracer = QueryTracer::new(format!("Q-clear-{i}"), None);
 			store.store(tracer).await;
 		}
 
@@ -346,10 +346,8 @@ mod tests {
 		for i in 0..10 {
 			let store_clone = store.clone();
 			let handle = tokio::spawn(async move {
-				let mut tracer = QueryTracer::new(
-					format!("Q-concurrent-{}", i),
-					Some(format!("session-{}", i)),
-				);
+				let mut tracer =
+					QueryTracer::new(format!("Q-concurrent-{i}"), Some(format!("session-{i}")));
 				tracer.record_sent(5);
 				tokio::time::sleep(Duration::from_millis(5)).await;
 				tracer.record_response_received("ok");
@@ -377,7 +375,7 @@ mod tests {
 		for _ in 0..100 {
 			let tracer = QueryTracer::new("Q-unique", None);
 			let id = tracer.trace_id.as_str().to_string();
-			assert!(!trace_ids.contains(&id), "Duplicate trace ID found: {}", id);
+			assert!(!trace_ids.contains(&id), "Duplicate trace ID found: {id}");
 			trace_ids.insert(id);
 		}
 
@@ -406,7 +404,7 @@ mod tests {
 		assert_eq!(info.query_id, "Q-slow-info");
 		assert_eq!(info.session_id, Some("session-perf".to_string()));
 		assert!(info.total_duration_ms >= 100);
-		assert_eq!(info.has_error, false);
+		assert!(!info.has_error);
 		assert!(info.event_count > 0);
 	}
 }

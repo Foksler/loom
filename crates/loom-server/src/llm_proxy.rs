@@ -309,10 +309,9 @@ pub async fn proxy_vertex_stream(
 /// ServerQueryManager and interleave them with LLM events. Server queries will
 /// be:
 ///
-/// 1. Checked after each LLM event using
-/// `query_manager.list_pending(session_id)` 2. Sent as
-/// `LlmStreamEvent::ServerQuery` over SSE with `event: llm` 3. Awaited for
-/// client responses via the `/v1/sessions/{session_id}/query-response` endpoint
+/// 1. Checked after each LLM event using `query_manager.list_pending(session_id)`
+/// 2. Sent as `LlmStreamEvent::ServerQuery` over SSE with `event: llm`
+/// 3. Awaited for client responses via the `/v1/sessions/{session_id}/query-response` endpoint
 ///
 /// Current infrastructure supports this:
 /// - `LlmStreamEvent::ServerQuery` variant defined
@@ -402,11 +401,11 @@ pub fn map_llm_error(err: LlmError) -> ServerError {
 	match err {
 		LlmError::Http(msg) => {
 			tracing::error!(error = %msg, "LLM HTTP error");
-			ServerError::UpstreamError(format!("LLM HTTP error: {}", msg))
+			ServerError::UpstreamError(format!("LLM HTTP error: {msg}"))
 		}
 		LlmError::Api(msg) => {
 			tracing::warn!(error = %msg, "LLM API error");
-			ServerError::UpstreamError(format!("LLM API error: {}", msg))
+			ServerError::UpstreamError(format!("LLM API error: {msg}"))
 		}
 		LlmError::Timeout => {
 			tracing::warn!("LLM request timed out");
@@ -414,12 +413,12 @@ pub fn map_llm_error(err: LlmError) -> ServerError {
 		}
 		LlmError::InvalidResponse(msg) => {
 			tracing::error!(error = %msg, "Invalid LLM response");
-			ServerError::UpstreamError(format!("Invalid LLM response: {}", msg))
+			ServerError::UpstreamError(format!("Invalid LLM response: {msg}"))
 		}
 		LlmError::RateLimited { retry_after_secs } => {
 			tracing::warn!(retry_after = ?retry_after_secs, "LLM rate limited");
 			let msg = match retry_after_secs {
-				Some(secs) => format!("LLM rate limited; retry after {} seconds", secs),
+				Some(secs) => format!("LLM rate limited; retry after {secs} seconds"),
 				None => "LLM rate limited; try again later".to_string(),
 			};
 			ServerError::ServiceUnavailable(msg)

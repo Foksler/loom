@@ -127,8 +127,7 @@ mod tests {
 		let error = result.unwrap_err();
 		assert!(
 			matches!(error, loom_core::server_query::ServerQueryError::Timeout),
-			"Should be timeout error, got: {:?}",
-			error
+			"Should be timeout error, got: {error:?}"
 		);
 	}
 
@@ -174,8 +173,7 @@ mod tests {
 		// ReadFile has 10s timeout
 		assert!(
 			elapsed < Duration::from_secs(15),
-			"Should timeout within ~10s, took: {:?}",
-			elapsed
+			"Should timeout within ~10s, took: {elapsed:?}"
 		);
 	}
 
@@ -198,7 +196,7 @@ mod tests {
 		// Error should be usable by caller
 		let error = result.unwrap_err();
 		assert!(
-			!format!("{:?}", error).is_empty(),
+			!format!("{error:?}").is_empty(),
 			"Error should be describable"
 		);
 	}
@@ -251,7 +249,7 @@ mod tests {
 			let response = ServerQueryResponse {
 				query_id: query.id.clone(),
 				sent_at: chrono::Utc::now().to_rfc3339(),
-				result: ServerQueryResult::FileContent(format!("Content")),
+				result: ServerQueryResult::FileContent("Content".to_string()),
 				error: None,
 			};
 			manager_clone.receive_response(response).await;
@@ -425,7 +423,7 @@ mod tests {
 		let detector = SimpleRegexDetector::new();
 		let queries = detector.detect_queries(output).unwrap();
 
-		if queries.len() >= 1 {
+		if !queries.is_empty() {
 			// Batch handler should handle multiple
 			let manager_clone = manager.clone();
 
@@ -451,7 +449,7 @@ mod tests {
 			assert!(result.is_ok());
 			let responses = result.unwrap();
 			assert!(
-				responses.len() >= 1,
+				!responses.is_empty(),
 				"Should have at least 1 response in batch"
 			);
 		}
@@ -471,7 +469,7 @@ mod tests {
 
 		// Should be able to use the handler
 		assert!(
-			handler.detector.read_file_pattern.as_str().len() > 0,
+			!handler.detector.read_file_pattern.as_str().is_empty(),
 			"Handler should have valid detector patterns"
 		);
 	}

@@ -172,7 +172,7 @@ mod tests {
 	async fn list_files_respects_max_results() {
 		let workspace = setup_workspace();
 		for i in 0..10 {
-			std::fs::write(workspace.path().join(format!("file{}.txt", i)), "").unwrap();
+			std::fs::write(workspace.path().join(format!("file{i}.txt")), "").unwrap();
 		}
 
 		let tool = ListFilesTool::new();
@@ -225,7 +225,7 @@ mod tests {
 					rt.block_on(async {
 							let workspace = setup_workspace();
 							for i in 0..file_count {
-									std::fs::write(workspace.path().join(format!("file{}.txt", i)), "").unwrap();
+									std::fs::write(workspace.path().join(format!("file{i}.txt")), "").unwrap();
 							}
 
 							let tool = ListFilesTool::new();

@@ -78,7 +78,7 @@ impl VertexClient {
 		let http_client = Client::builder()
 			.timeout(Duration::from_secs(300))
 			.build()
-			.map_err(|e| LlmError::Http(format!("Failed to create HTTP client: {}", e)))?;
+			.map_err(|e| LlmError::Http(format!("Failed to create HTTP client: {e}")))?;
 
 		let retry_config = RetryConfig {
 			max_attempts: 3,
@@ -147,7 +147,7 @@ impl VertexClient {
 			let provider = gcp_auth::provider().await.map_err(|e| {
 				error!(error = %e, "Failed to initialize GCP auth");
 				ClientError {
-					message: format!("GCP auth initialization failed: {}", e),
+					message: format!("GCP auth initialization failed: {e}"),
 					retryable: false,
 				}
 			})?;
@@ -160,7 +160,7 @@ impl VertexClient {
 		let token = provider.token(scopes).await.map_err(|e| {
 			error!(error = %e, "Failed to get GCP access token");
 			ClientError {
-				message: format!("GCP token acquisition failed: {}", e),
+				message: format!("GCP token acquisition failed: {e}"),
 				retryable: true,
 			}
 		})?;
@@ -255,7 +255,7 @@ impl LlmClient for VertexClient {
 
 		let vertex_response: VertexResponse = serde_json::from_str(&response_body).map_err(|e| {
 			error!(error = %e, body = %response_body, "Failed to parse response");
-			LlmError::InvalidResponse(format!("Failed to parse response: {}", e))
+			LlmError::InvalidResponse(format!("Failed to parse response: {e}"))
 		})?;
 
 		let llm_response = LlmResponse::try_from(vertex_response)?;

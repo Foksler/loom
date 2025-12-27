@@ -86,7 +86,7 @@ mod tests {
 					max_bytes in 1usize..1_000_000,
 					tool_count in 0usize..5,
 			) {
-					let tools: Vec<String> = (0..tool_count).map(|i| format!("tool_{}", i)).collect();
+					let tools: Vec<String> = (0..tool_count).map(|i| format!("tool_{i}")).collect();
 					let config = AutoCommitConfig::default()
 							.with_model(model.clone())
 							.with_max_diff_bytes(max_bytes)

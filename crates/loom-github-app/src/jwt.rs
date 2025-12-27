@@ -55,7 +55,7 @@ struct Claims {
 pub fn generate_app_jwt(app_id: u64, private_key_pem: &str) -> Result<String, GithubAppError> {
 	let now = SystemTime::now()
 		.duration_since(UNIX_EPOCH)
-		.map_err(|e| GithubAppError::Jwt(format!("System time error: {}", e)))?;
+		.map_err(|e| GithubAppError::Jwt(format!("System time error: {e}")))?;
 
 	let iat = now.as_secs().saturating_sub(60);
 	let exp = now.as_secs() + Duration::from_secs(9 * 60).as_secs();
@@ -67,12 +67,12 @@ pub fn generate_app_jwt(app_id: u64, private_key_pem: &str) -> Result<String, Gi
 	};
 
 	let encoding_key = EncodingKey::from_rsa_pem(private_key_pem.as_bytes())
-		.map_err(|e| GithubAppError::Jwt(format!("Invalid RSA private key: {}", e)))?;
+		.map_err(|e| GithubAppError::Jwt(format!("Invalid RSA private key: {e}")))?;
 
 	let header = Header::new(Algorithm::RS256);
 
 	let token = encode(&header, &claims, &encoding_key)
-		.map_err(|e| GithubAppError::Jwt(format!("Failed to encode JWT: {}", e)))?;
+		.map_err(|e| GithubAppError::Jwt(format!("Failed to encode JWT: {e}")))?;
 
 	debug!(app_id = app_id, exp = exp, "Generated GitHub App JWT");
 
@@ -206,8 +206,7 @@ mod tests {
 		let lifetime = claims.exp - claims.iat;
 		assert!(
 			lifetime <= 10 * 60,
-			"JWT lifetime ({} seconds) exceeds GitHub maximum of 10 minutes",
-			lifetime
+			"JWT lifetime ({lifetime} seconds) exceeds GitHub maximum of 10 minutes"
 		);
 
 		// Verify token is not already expired (with small grace for test execution)

@@ -473,9 +473,9 @@ mod tests {
 		// Create multiple queries
 		let queries: Vec<_> = (0..5)
 			.map(|i| ServerQuery {
-				id: format!("Q-concurrent-{}", i),
+				id: format!("Q-concurrent-{i}"),
 				kind: ServerQueryKind::ReadFile {
-					path: format!("file{}.txt", i),
+					path: format!("file{i}.txt"),
 				},
 				sent_at: chrono::Utc::now().to_rfc3339(),
 				timeout_secs: 5,
@@ -496,9 +496,9 @@ mod tests {
 		for i in (0..5).rev() {
 			tokio::time::sleep(Duration::from_millis(10)).await;
 			let response = ServerQueryResponse {
-				query_id: format!("Q-concurrent-{}", i),
+				query_id: format!("Q-concurrent-{i}"),
 				sent_at: chrono::Utc::now().to_rfc3339(),
-				result: ServerQueryResult::FileContent(format!("content{}", i)),
+				result: ServerQueryResult::FileContent(format!("content{i}")),
 				error: None,
 			};
 			manager.receive_response(response).await;

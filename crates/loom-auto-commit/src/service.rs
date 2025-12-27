@@ -99,7 +99,7 @@ impl<G: GitClient, L: LlmClient> AutoCommitService<G, L> {
 			Ok(d) => d,
 			Err(e) => {
 				error!(error = %e, "failed to get git diff");
-				return AutoCommitResult::skipped(format!("git diff failed: {}", e));
+				return AutoCommitResult::skipped(format!("git diff failed: {e}"));
 			}
 		};
 
@@ -120,7 +120,7 @@ impl<G: GitClient, L: LlmClient> AutoCommitService<G, L> {
 
 		if let Err(e) = self.git.stage_all(workspace_root).await {
 			error!(error = %e, "failed to stage changes");
-			return AutoCommitResult::skipped(format!("git add failed: {}", e));
+			return AutoCommitResult::skipped(format!("git add failed: {e}"));
 		}
 
 		match self.git.commit(workspace_root, &message).await {
@@ -135,7 +135,7 @@ impl<G: GitClient, L: LlmClient> AutoCommitService<G, L> {
 			}
 			Err(e) => {
 				error!(error = %e, "failed to create commit");
-				AutoCommitResult::skipped(format!("git commit failed: {}", e))
+				AutoCommitResult::skipped(format!("git commit failed: {e}"))
 			}
 		}
 	}
@@ -209,7 +209,7 @@ mod tests {
 			) {
 					let tools: Vec<CompletedToolInfo> = (0..tool_count)
 							.map(|i| CompletedToolInfo {
-									tool_name: format!("non_trigger_tool_{}", i),
+									tool_name: format!("non_trigger_tool_{i}"),
 									succeeded: true,
 							})
 							.collect();

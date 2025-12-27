@@ -70,7 +70,9 @@ impl GitClient for CommandGitClient {
 	}
 
 	async fn diff_staged(&self, path: &Path) -> Result<GitDiff, GitError> {
-		let content = run_git(path, &["diff", "--cached"]).await.unwrap_or_default();
+		let content = run_git(path, &["diff", "--cached"])
+			.await
+			.unwrap_or_default();
 		let stat_output = run_git(path, &["diff", "--stat", "--cached"]).await.ok();
 
 		let (files_changed, insertions, deletions) =
@@ -132,7 +134,9 @@ impl GitClient for CommandGitClient {
 
 	async fn changed_files(&self, path: &Path) -> Result<Vec<String>, GitError> {
 		// Get list of changed files (staged + unstaged + untracked)
-		let output = run_git(path, &["status", "--porcelain"]).await.unwrap_or_default();
+		let output = run_git(path, &["status", "--porcelain"])
+			.await
+			.unwrap_or_default();
 
 		let files: Vec<String> = output
 			.lines()

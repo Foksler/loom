@@ -97,7 +97,7 @@ impl SimpleRegexDetector {
 
 		// Ensure path starts with / for absolute paths
 		let normalized = if !path.starts_with('/') && !path.starts_with('.') {
-			format!("/{}", path)
+			format!("/{path}")
 		} else {
 			path.to_string()
 		};
@@ -448,14 +448,14 @@ mod tests {
 			let queries = detector.detect_queries(input).unwrap();
 
 			if expected_path.is_empty() {
-				assert!(queries.is_empty(), "Expected no query for input: {}", input);
+				assert!(queries.is_empty(), "Expected no query for input: {input}");
 			} else {
-				assert_eq!(queries.len(), 1, "Expected one query for: {}", input);
+				assert_eq!(queries.len(), 1, "Expected one query for: {input}");
 				match &queries[0].kind {
 					ServerQueryKind::ReadFile { path } => {
-						assert_eq!(path, expected_path, "Path mismatch for input: {}", input);
+						assert_eq!(path, expected_path, "Path mismatch for input: {input}");
 					}
-					_ => panic!("Expected ReadFile query for: {}", input),
+					_ => panic!("Expected ReadFile query for: {input}"),
 				}
 			}
 		}
@@ -545,7 +545,7 @@ mod tests {
 		let queries = detector.detect_queries(output).unwrap();
 
 		// Should detect both ReadFile and ExecuteCommand
-		assert!(queries.len() >= 1, "Expected at least 1 query");
+		assert!(!queries.is_empty(), "Expected at least 1 query");
 	}
 
 	/// Test that malformed input doesn't cause errors.
@@ -559,7 +559,7 @@ mod tests {
 
 		for input in test_cases {
 			let result = detector.detect_queries(input);
-			assert!(result.is_ok(), "Should not error on: {}", input);
+			assert!(result.is_ok(), "Should not error on: {input}");
 		}
 	}
 
@@ -584,8 +584,7 @@ mod tests {
 			assert_eq!(
 				result,
 				Some(expected.to_string()),
-				"Path extraction failed for: {}",
-				input
+				"Path extraction failed for: {input}"
 			);
 		}
 	}
@@ -671,7 +670,7 @@ mod tests {
 		let handler = LlmQueryHandler::with_default_detector(manager);
 
 		// Verify the handler was created
-		assert_eq!(handler.detector.read_file_pattern.as_str().len() > 0, true);
+		assert!(!handler.detector.read_file_pattern.as_str().is_empty());
 	}
 
 	/// Test that queries generated have correct metadata.

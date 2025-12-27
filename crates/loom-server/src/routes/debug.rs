@@ -37,7 +37,7 @@ pub async fn get_query_trace(
 		.trace_store
 		.get(&trace_id)
 		.await
-		.ok_or_else(|| ServerError::NotFound(format!("Trace not found: {}", trace_id)))?;
+		.ok_or_else(|| ServerError::NotFound(format!("Trace not found: {trace_id}")))?;
 
 	let timeline = TraceTimeline::from_tracer(&tracer);
 
@@ -117,7 +117,9 @@ pub async fn list_query_traces(
 ///
 /// Returns aggregated statistics about all traces in the store.
 #[axum::debug_handler]
-pub async fn get_trace_stats(State(state): State<AppState>) -> Result<impl IntoResponse, ServerError> {
+pub async fn get_trace_stats(
+	State(state): State<AppState>,
+) -> Result<impl IntoResponse, ServerError> {
 	use std::time::Duration;
 
 	tracing::debug!("fetching trace store statistics");

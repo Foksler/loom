@@ -41,21 +41,17 @@ mod tests {
 			let queries = detector.detect_queries(input).unwrap();
 
 			if should_match {
-				assert!(
-					!queries.is_empty(),
-					"Expected to detect query in: {}",
-					input
-				);
+				assert!(!queries.is_empty(), "Expected to detect query in: {input}");
 				if let Some(query) = queries.first() {
 					match &query.kind {
 						ServerQueryKind::ReadFile { path } => {
-							assert_eq!(path, expected_path, "Path mismatch for input: {}", input);
+							assert_eq!(path, expected_path, "Path mismatch for input: {input}");
 						}
-						_ => panic!("Expected ReadFile query for: {}", input),
+						_ => panic!("Expected ReadFile query for: {input}"),
 					}
 				}
 			} else {
-				assert!(queries.is_empty(), "Unexpected query in: {}", input);
+				assert!(queries.is_empty(), "Unexpected query in: {input}");
 			}
 		}
 	}
@@ -77,11 +73,11 @@ mod tests {
 
 		for (input, expected_path) in test_cases {
 			let queries = detector.detect_queries(input).unwrap();
-			assert!(!queries.is_empty(), "Expected query for: {}", input);
+			assert!(!queries.is_empty(), "Expected query for: {input}");
 
 			if let Some(query) = queries.first() {
 				if let ServerQueryKind::ReadFile { path } = &query.kind {
-					assert_eq!(path, expected_path, "Path mismatch for: {}", input);
+					assert_eq!(path, expected_path, "Path mismatch for: {input}");
 				}
 			}
 		}
@@ -106,7 +102,7 @@ mod tests {
 
 		for (input, expected_cmd) in test_cases {
 			let queries = detector.detect_queries(input).unwrap();
-			assert!(!queries.is_empty(), "Expected query for: {}", input);
+			assert!(!queries.is_empty(), "Expected query for: {input}");
 
 			if let Some(query) = queries.first() {
 				if let ServerQueryKind::ExecuteCommand {
@@ -115,7 +111,7 @@ mod tests {
 					timeout_secs: _,
 				} = &query.kind
 				{
-					assert_eq!(command, expected_cmd, "Command mismatch for: {}", input);
+					assert_eq!(command, expected_cmd, "Command mismatch for: {input}");
 				}
 			}
 		}
@@ -141,7 +137,7 @@ mod tests {
 			} = &query.kind
 			{
 				assert_eq!(command, "cargo");
-				assert!(args.len() >= 2, "Expected at least 2 args, got: {:?}", args);
+				assert!(args.len() >= 2, "Expected at least 2 args, got: {args:?}");
 			}
 		}
 	}
@@ -167,18 +163,15 @@ mod tests {
 			if let ServerQueryKind::GetEnvironment { keys } = &query.kind {
 				assert!(
 					keys.contains(&"PATH".to_string()),
-					"PATH not found in keys: {:?}",
-					keys
+					"PATH not found in keys: {keys:?}"
 				);
 				assert!(
 					keys.contains(&"USER".to_string()),
-					"USER not found in keys: {:?}",
-					keys
+					"USER not found in keys: {keys:?}"
 				);
 				assert!(
 					keys.contains(&"HOME".to_string()),
-					"HOME not found in keys: {:?}",
-					keys
+					"HOME not found in keys: {keys:?}"
 				);
 			}
 		}
@@ -204,8 +197,7 @@ mod tests {
 				// Should include common defaults
 				assert!(
 					keys.iter().any(|k| k == "PATH"),
-					"PATH should be in defaults: {:?}",
-					keys
+					"PATH should be in defaults: {keys:?}"
 				);
 			}
 		}
@@ -232,8 +224,7 @@ mod tests {
 			let queries = detector.detect_queries(input).unwrap();
 			assert!(
 				!queries.is_empty(),
-				"Expected user input query for: {}",
-				input
+				"Expected user input query for: {input}"
 			);
 
 			if let Some(query) = queries.first() {
@@ -245,8 +236,7 @@ mod tests {
 				{
 					assert!(
 						!prompt.is_empty(),
-						"Prompt should not be empty for: {}",
-						input
+						"Prompt should not be empty for: {input}"
 					);
 					assert_eq!(input_type, "text", "Expected text input type");
 				}
@@ -270,7 +260,7 @@ mod tests {
 		let queries = detector.detect_queries(output).unwrap();
 
 		assert!(
-			queries.len() >= 1,
+			!queries.is_empty(),
 			"Expected at least one query, got: {}",
 			queries.len()
 		);
@@ -314,7 +304,7 @@ mod tests {
 
 		for input in test_cases {
 			let queries = detector.detect_queries(input).unwrap();
-			assert!(queries.is_empty(), "Unexpected query match for: {}", input);
+			assert!(queries.is_empty(), "Unexpected query match for: {input}");
 		}
 	}
 
@@ -329,11 +319,7 @@ mod tests {
 
 		for input in test_cases {
 			let result = detector.detect_queries(input);
-			assert!(
-				result.is_ok(),
-				"Should handle input gracefully: {:?}",
-				input
-			);
+			assert!(result.is_ok(), "Should handle input gracefully: {input:?}");
 		}
 	}
 
@@ -360,8 +346,8 @@ mod tests {
 		for (input, expected) in test_cases {
 			let result = detector.extract_path(input);
 			match expected {
-				Some(exp) => assert_eq!(result, Some(exp.to_string()), "Failed for: {}", input),
-				None => assert!(result.is_none(), "Expected None for: {}", input),
+				Some(exp) => assert_eq!(result, Some(exp.to_string()), "Failed for: {input}"),
+				None => assert!(result.is_none(), "Expected None for: {input}"),
 			}
 		}
 	}
@@ -375,7 +361,7 @@ mod tests {
 
 		let (cmd, args) = detector.extract_command("cargo build --release --target x86_64");
 		assert_eq!(cmd, "cargo");
-		assert_eq!(args.len(), 4, "Expected 4 args, got: {:?}", args);
+		assert_eq!(args.len(), 4, "Expected 4 args, got: {args:?}");
 		assert!(args.contains(&"build".to_string()));
 		assert!(args.contains(&"--release".to_string()));
 		assert!(args.contains(&"--target".to_string()));
@@ -427,8 +413,7 @@ mod tests {
 			assert_eq!(
 				metadata.get("detector").and_then(|v| v.as_str()),
 				Some("simple_regex"),
-				"Metadata should identify detector: {:?}",
-				metadata
+				"Metadata should identify detector: {metadata:?}"
 			);
 
 			// Verify query ID is properly formatted

@@ -153,7 +153,7 @@ mod tests {
 			"auth",
 		];
 		for tag in expected_tags {
-			assert!(json.contains(tag), "Missing tag: {}", tag);
+			assert!(json.contains(tag), "Missing tag: {tag}");
 		}
 	}
 
@@ -173,7 +173,7 @@ mod tests {
 			"/v1/github/app",
 		];
 		for path in expected_paths {
-			assert!(json.contains(path), "Missing path: {}", path);
+			assert!(json.contains(path), "Missing path: {path}");
 		}
 	}
 }

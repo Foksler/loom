@@ -47,7 +47,7 @@ fn validate_providers(config: &LoomConfig) -> Result<(), ConfigError> {
 				}
 				if cfg.base_url.is_empty() {
 					return Err(ConfigError::invalid_value(
-						format!("providers.{}.base_url", name),
+						format!("providers.{name}.base_url"),
 						"base_url cannot be empty",
 					));
 				}
@@ -58,7 +58,7 @@ fn validate_providers(config: &LoomConfig) -> Result<(), ConfigError> {
 				}
 				if cfg.base_url.is_empty() {
 					return Err(ConfigError::invalid_value(
-						format!("providers.{}.base_url", name),
+						format!("providers.{name}.base_url"),
 						"base_url cannot be empty",
 					));
 				}
@@ -66,7 +66,7 @@ fn validate_providers(config: &LoomConfig) -> Result<(), ConfigError> {
 			ProviderConfig::Ollama(cfg) => {
 				if cfg.host.is_empty() {
 					return Err(ConfigError::invalid_value(
-						format!("providers.{}.host", name),
+						format!("providers.{name}.host"),
 						"host cannot be empty",
 					));
 				}
@@ -74,7 +74,7 @@ fn validate_providers(config: &LoomConfig) -> Result<(), ConfigError> {
 			ProviderConfig::Custom(cfg) => {
 				if cfg.base_url.is_empty() {
 					return Err(ConfigError::invalid_value(
-						format!("providers.{}.base_url", name),
+						format!("providers.{name}.base_url"),
 						"base_url cannot be empty for custom provider",
 					));
 				}

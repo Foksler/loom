@@ -66,7 +66,7 @@ a:hover { text-decoration: underline; }
 
 	for (name, is_dir, size, modified) in entries {
 		let display_name = if is_dir {
-			format!("{}/", name)
+			format!("{name}/")
 		} else {
 			name.clone()
 		};

@@ -52,7 +52,7 @@ impl AnthropicClient {
 	pub fn new(config: AnthropicConfig) -> Result<Self, LlmError> {
 		let http_client = Client::builder()
 			.build()
-			.map_err(|e| LlmError::Http(format!("Failed to create HTTP client: {}", e)))?;
+			.map_err(|e| LlmError::Http(format!("Failed to create HTTP client: {e}")))?;
 
 		Ok(Self {
 			config,
@@ -148,7 +148,7 @@ impl LlmClient for AnthropicClient {
 		let anthropic_response: AnthropicResponse =
 			serde_json::from_str(&response_body).map_err(|e| {
 				error!(error = %e, body = %response_body, "Failed to parse response");
-				LlmError::InvalidResponse(format!("Failed to parse response: {}", e))
+				LlmError::InvalidResponse(format!("Failed to parse response: {e}"))
 			})?;
 
 		let llm_response = LlmResponse::try_from(anthropic_response)?;

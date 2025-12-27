@@ -194,7 +194,7 @@ mod tests {
 
 	/// Helper to generate valid file paths
 	fn arb_path() -> impl Strategy<Value = String> {
-		r"[a-zA-Z0-9_\-/\.]{1,50}".prop_map(|s| format!("/{}", s))
+		r"[a-zA-Z0-9_\-/\.]{1,50}".prop_map(|s| format!("/{s}"))
 	}
 
 	/// Helper to generate valid timeout values (1-300 seconds)
@@ -211,7 +211,7 @@ mod tests {
 			arb_timeout_secs(),
 		)
 			.prop_map(|(id_num, path, sent_at, timeout_secs)| ServerQuery {
-				id: format!("Q-{:032x}", id_num),
+				id: format!("Q-{id_num:032x}"),
 				kind: ServerQueryKind::ReadFile { path },
 				sent_at: sent_at.to_string(),
 				timeout_secs,
@@ -223,7 +223,7 @@ mod tests {
 	fn arb_server_query_response() -> impl Strategy<Value = ServerQueryResponse> {
 		(0u128.., r"[a-zA-Z0-9]{1,100}", "2025-01-01T00:00:00Z").prop_map(
 			|(id_num, content, sent_at)| ServerQueryResponse {
-				query_id: format!("Q-{:032x}", id_num),
+				query_id: format!("Q-{id_num:032x}"),
 				sent_at: sent_at.to_string(),
 				result: ServerQueryResult::FileContent(content),
 				error: None,
@@ -237,9 +237,9 @@ mod tests {
 			Just(ServerQueryError::Timeout),
 			Just(ServerQueryError::NoResponse),
 			Just(ServerQueryError::Cancelled),
-			r"[a-zA-Z0-9 ]{1,50}".prop_map(|s| ServerQueryError::InvalidQuery(s)),
-			r"[a-zA-Z0-9 ]{1,50}".prop_map(|s| ServerQueryError::ProcessingFailed(s)),
-			r"[a-zA-Z0-9 ]{1,50}".prop_map(|s| ServerQueryError::Other(s)),
+			r"[a-zA-Z0-9 ]{1,50}".prop_map(ServerQueryError::InvalidQuery),
+			r"[a-zA-Z0-9 ]{1,50}".prop_map(ServerQueryError::ProcessingFailed),
+			r"[a-zA-Z0-9 ]{1,50}".prop_map(ServerQueryError::Other),
 		]
 	}
 
@@ -251,7 +251,7 @@ mod tests {
 			#[test]
 			fn server_query_id_always_valid(id_num in 0u128..) {
 					let query = ServerQuery {
-							id: format!("Q-{:032x}", id_num),
+							id: format!("Q-{id_num:032x}"),
 							kind: ServerQueryKind::ReadFile { path: "/test".to_string() },
 							sent_at: "2025-01-01T00:00:00Z".to_string(),
 							timeout_secs: 30,
@@ -289,8 +289,8 @@ mod tests {
 			/// Panics in display impl would break error handling.
 			#[test]
 			fn error_display_never_panics(error in arb_server_query_error()) {
-					let _ = format!("{}", error);
-					let _ = format!("{:?}", error);
+					let _ = format!("{error}");
+					let _ = format!("{error:?}");
 			}
 	}
 

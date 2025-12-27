@@ -97,8 +97,7 @@ pub async fn prometheus_metrics(
 		Err(e) => {
 			tracing::error!(error = %e, "prometheus_metrics: failed to gather metrics");
 			Err(ServerError::Internal(format!(
-				"Failed to gather metrics: {}",
-				e
+				"Failed to gather metrics: {e}"
 			)))
 		}
 	}

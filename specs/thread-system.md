@@ -463,25 +463,36 @@ Following XDG Base Directory Specification:
 ```rust
 pub struct LocalThreadStore {
 	threads_dir: PathBuf,
-	state_dir: PathBuf,
 }
 
 impl LocalThreadStore {
+	pub fn new(threads_dir: PathBuf) -> Self {
+		Self { threads_dir }
+	}
+
 	pub fn from_xdg() -> Result<Self, ThreadStoreError> {
-		let paths = PathsConfig::from_environment()?;
-		let threads_dir = paths.data_dir.join("threads");
-		let state_dir = paths.state_dir.join("sync");
+		let data_dir = dirs::data_dir().ok_or_else(|| {
+			ThreadStoreError::Io(std::io::Error::new(
+				std::io::ErrorKind::NotFound,
+				"could not determine XDG data directory",
+			))
+		})?;
+		let threads_dir = data_dir.join("loom").join("threads");
 		std::fs::create_dir_all(&threads_dir)?;
-		std::fs::create_dir_all(&state_dir)?;
-		Ok(Self {
-			threads_dir,
-			state_dir,
-		})
+		Ok(Self::new(threads_dir))
 	}
 
 	fn thread_path(&self, id: &ThreadId) -> PathBuf {
-		self.threads_dir.join(format!("{}.json", id.0))
+		self.threads_dir.join(format!("{}.json", id))
 	}
+
+	/// Search threads locally using substring matching.
+	/// Used as fallback when server is unavailable.
+	pub async fn search(
+		&self,
+		query: &str,
+		limit: usize,
+	) -> Result<Vec<ThreadSummary>, ThreadStoreError>;
 }
 
 #[async_trait]
@@ -520,6 +531,75 @@ impl ThreadStore for LocalThreadStore {
 	}
 }
 ```
+
+### 5.3 Pending Sync Queue
+
+When background sync fails (e.g., network unavailable), failed operations are persisted to
+`$XDG_STATE_HOME/loom/sync/pending.json` for later retry.
+
+#### Data Model
+
+```rust
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct PendingSyncEntry {
+	pub thread_id: ThreadId,
+	pub operation: SyncOperation,
+	pub failed_at: String, // RFC3339
+	pub retry_count: u32,
+	pub last_error: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum SyncOperation {
+	Upsert,
+	Delete,
+}
+
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct PendingSyncQueue {
+	pub entries: Vec<PendingSyncEntry>,
+}
+```
+
+#### PendingSyncStore
+
+```rust
+pub struct PendingSyncStore {
+	path: PathBuf, // $XDG_STATE_HOME/loom/sync/pending.json
+}
+
+impl PendingSyncStore {
+	pub fn from_xdg() -> Result<Self, ThreadStoreError>;
+	pub async fn load(&self) -> Result<PendingSyncQueue, ThreadStoreError>;
+	pub async fn save(&self, queue: &PendingSyncQueue) -> Result<(), ThreadStoreError>;
+	pub async fn add_pending(
+		&self,
+		thread_id: ThreadId,
+		operation: SyncOperation,
+		error: Option<String>,
+	) -> Result<(), ThreadStoreError>;
+	pub async fn remove_pending(
+		&self,
+		thread_id: &ThreadId,
+		operation: &SyncOperation,
+	) -> Result<(), ThreadStoreError>;
+	pub async fn clear(&self) -> Result<(), ThreadStoreError>;
+}
+```
+
+#### Behavior
+
+1. **On sync failure**: `SyncingThreadStore.save()` spawns a background task that, on failure, adds
+   an entry to the pending queue via `PendingSyncStore.add_pending()`.
+
+2. **On sync success**: The entry is removed from the pending queue (if it existed).
+
+3. **Retry mechanism**: `SyncingThreadStore.retry_pending()` iterates through pending entries and
+   attempts to sync each one. Successful syncs are removed from the queue.
+
+4. **Deduplication**: If the same thread ID and operation already exists in the queue, the
+   `retry_count` is incremented and `failed_at` is updated rather than adding a duplicate.
 
 ---
 
@@ -792,12 +872,26 @@ impl ThreadSyncClient {
 
 ### 8.2 SyncingThreadStore
 
-Wraps `LocalThreadStore` and adds server sync:
+Wraps `LocalThreadStore` and adds server sync with pending queue support:
 
 ```rust
 pub struct SyncingThreadStore {
 	local: LocalThreadStore,
 	sync_client: Option<ThreadSyncClient>,
+	pending_store: Option<Arc<Mutex<PendingSyncStore>>>,
+}
+
+impl SyncingThreadStore {
+	pub fn new(local: LocalThreadStore, sync_client: Option<ThreadSyncClient>) -> Self;
+	pub fn local_only(local: LocalThreadStore) -> Self;
+	pub fn with_sync(local: LocalThreadStore, sync_client: ThreadSyncClient) -> Self;
+	pub fn with_pending_store(self, pending_store: PendingSyncStore) -> Self;
+
+	/// Retry all pending sync operations. Returns count of successful retries.
+	pub async fn retry_pending(&self) -> Result<usize, ThreadStoreError>;
+
+	/// Get the number of pending sync operations.
+	pub async fn pending_count(&self) -> usize;
 }
 
 #[async_trait]
@@ -806,18 +900,26 @@ impl ThreadStore for SyncingThreadStore {
 		// Always save locally first
 		self.local.save(thread).await?;
 
+		// Skip sync for private threads
+		if thread.is_private {
+			return Ok(());
+		}
+
 		// Sync to server in background (fire-and-forget)
 		if let Some(ref client) = self.sync_client {
 			let thread_clone = thread.clone();
-			let client_clone = client.clone();
+			let pending_store = self.pending_store.clone();
 
 			tokio::spawn(async move {
-				match client_clone.upsert_thread(&thread_clone).await {
+				match client.upsert_thread(&thread_clone).await {
 					Ok(_) => {
-						tracing::debug!(
-								thread_id = %thread_clone.id.0,
-								"thread synced to server"
-						);
+						// Remove from pending queue if it was there
+						if let Some(store) = pending_store {
+							let store = store.lock().await;
+							let _ = store
+								.remove_pending(&thread_clone.id, &SyncOperation::Upsert)
+								.await;
+						}
 					}
 					Err(e) => {
 						tracing::warn!(
@@ -825,7 +927,17 @@ impl ThreadStore for SyncingThreadStore {
 								error = %e,
 								"thread sync failed (local save succeeded)"
 						);
-						// Could mark as pending for retry
+						// Add to pending queue for retry
+						if let Some(store) = pending_store {
+							let store = store.lock().await;
+							let _ = store
+								.add_pending(
+									thread_clone.id.clone(),
+									SyncOperation::Upsert,
+									Some(e.to_string()),
+								)
+								.await;
+						}
 					}
 				}
 			});
@@ -833,6 +945,9 @@ impl ThreadStore for SyncingThreadStore {
 
 		Ok(())
 	}
+
+	/// Save locally and wait for sync to complete (blocking).
+	async fn save_and_sync(&self, thread: &Thread) -> Result<(), ThreadStoreError>;
 
 	// ... other methods delegate to local
 }

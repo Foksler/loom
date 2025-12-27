@@ -210,7 +210,7 @@ async fn handle_installation_webhook(state: &AppState, body: &[u8]) -> Result<()
 	use loom_github_app::types::InstallationWebhookPayload;
 
 	let payload: InstallationWebhookPayload = serde_json::from_slice(body)
-		.map_err(|e| ServerError::BadRequest(format!("Invalid webhook payload: {}", e)))?;
+		.map_err(|e| ServerError::BadRequest(format!("Invalid webhook payload: {e}")))?;
 
 	tracing::info!(
 			action = %payload.action,
@@ -293,7 +293,7 @@ async fn handle_installation_repos_webhook(
 	use loom_github_app::types::InstallationWebhookPayload;
 
 	let payload: InstallationWebhookPayload = serde_json::from_slice(body)
-		.map_err(|e| ServerError::BadRequest(format!("Invalid webhook payload: {}", e)))?;
+		.map_err(|e| ServerError::BadRequest(format!("Invalid webhook payload: {e}")))?;
 
 	tracing::info!(
 			action = %payload.action,
@@ -554,27 +554,27 @@ fn map_github_error(err: GithubAppError) -> ServerError {
 			ServerError::Forbidden("Insufficient permissions for this GitHub operation".into())
 		}
 		GithubAppError::InstallationNotFound { owner, repo } => {
-			ServerError::NotFound(format!("GitHub App not installed for {}/{}", owner, repo))
+			ServerError::NotFound(format!("GitHub App not installed for {owner}/{repo}"))
 		}
 		GithubAppError::Network(e) => {
 			tracing::error!(error = %e, "GitHub network error");
-			ServerError::UpstreamError(format!("Failed to contact GitHub: {}", e))
+			ServerError::UpstreamError(format!("Failed to contact GitHub: {e}"))
 		}
 		GithubAppError::InvalidResponse(msg) => {
 			tracing::error!(error = %msg, "Invalid GitHub response");
-			ServerError::UpstreamError(format!("Invalid GitHub response: {}", msg))
+			ServerError::UpstreamError(format!("Invalid GitHub response: {msg}"))
 		}
 		GithubAppError::ApiError { status, message } => {
 			tracing::warn!(status = status, message = %message, "GitHub API error");
-			ServerError::UpstreamError(format!("GitHub error: {} - {}", status, message))
+			ServerError::UpstreamError(format!("GitHub error: {status} - {message}"))
 		}
 		GithubAppError::Config(msg) => {
 			tracing::error!(error = %msg, "GitHub config error");
-			ServerError::Internal(format!("GitHub App configuration error: {}", msg))
+			ServerError::Internal(format!("GitHub App configuration error: {msg}"))
 		}
 		GithubAppError::Jwt(msg) => {
 			tracing::error!(error = %msg, "GitHub JWT error");
-			ServerError::Internal(format!("GitHub App JWT error: {}", msg))
+			ServerError::Internal(format!("GitHub App JWT error: {msg}"))
 		}
 		GithubAppError::InvalidWebhookSignature => {
 			ServerError::Unauthorized("Invalid webhook signature".into())

@@ -89,7 +89,7 @@ impl IntoResponse for ServerError {
 				StatusCode::NOT_FOUND,
 				ErrorResponse {
 					error: "not_found".to_string(),
-					message: format!("Thread not found: {}", id),
+					message: format!("Thread not found: {id}"),
 					server_version: None,
 					client_version: None,
 				},
@@ -98,7 +98,7 @@ impl IntoResponse for ServerError {
 				StatusCode::CONFLICT,
 				ErrorResponse {
 					error: "conflict".to_string(),
-					message: format!("Version conflict: expected {}, got {}", expected, actual),
+					message: format!("Version conflict: expected {expected}, got {actual}"),
 					server_version: Some(*expected),
 					client_version: Some(*actual),
 				},
@@ -128,7 +128,7 @@ impl IntoResponse for ServerError {
 				StatusCode::BAD_REQUEST,
 				ErrorResponse {
 					error: "serialization_error".to_string(),
-					message: format!("Invalid JSON: {}", e),
+					message: format!("Invalid JSON: {e}"),
 					server_version: None,
 					client_version: None,
 				},

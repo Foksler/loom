@@ -97,8 +97,7 @@ where
 						warn!(error = %e, "Invalid UTF-8 in Vertex stream");
 						*this.finished = true;
 						return Poll::Ready(Some(LlmEvent::Error(LlmError::InvalidResponse(format!(
-							"Invalid UTF-8: {}",
-							e
+							"Invalid UTF-8: {e}"
 						)))));
 					}
 				},
@@ -291,7 +290,7 @@ mod tests {
 	#[tokio::test]
 	async fn text_delta_parsing() {
 		let chunk = r#"{"candidates":[{"content":{"role":"model","parts":[{"text":"Hello"}]}}]}"#;
-		let chunks: Vec<Result<Bytes, std::io::Error>> = vec![Ok(Bytes::from(format!("{}\n", chunk)))];
+		let chunks: Vec<Result<Bytes, std::io::Error>> = vec![Ok(Bytes::from(format!("{chunk}\n")))];
 
 		let inner = futures::stream::iter(chunks);
 		let mut stream = VertexStream::new(inner);
@@ -308,7 +307,7 @@ mod tests {
 	#[tokio::test]
 	async fn completion_on_finish_reason() {
 		let chunk = r#"{"candidates":[{"content":{"role":"model","parts":[{"text":"Done"}]},"finishReason":"STOP"}]}"#;
-		let chunks: Vec<Result<Bytes, std::io::Error>> = vec![Ok(Bytes::from(format!("{}\n", chunk)))];
+		let chunks: Vec<Result<Bytes, std::io::Error>> = vec![Ok(Bytes::from(format!("{chunk}\n")))];
 
 		let inner = futures::stream::iter(chunks);
 		let mut stream = VertexStream::new(inner);
@@ -333,7 +332,7 @@ mod tests {
 	#[tokio::test]
 	async fn function_call_parsing() {
 		let chunk = r#"{"candidates":[{"content":{"role":"model","parts":[{"functionCall":{"name":"get_weather","args":{"location":"NYC"}}}]}}]}"#;
-		let chunks: Vec<Result<Bytes, std::io::Error>> = vec![Ok(Bytes::from(format!("{}\n", chunk)))];
+		let chunks: Vec<Result<Bytes, std::io::Error>> = vec![Ok(Bytes::from(format!("{chunk}\n")))];
 
 		let inner = futures::stream::iter(chunks);
 		let mut stream = VertexStream::new(inner);
@@ -357,7 +356,7 @@ mod tests {
 	#[tokio::test]
 	async fn usage_metadata_parsing() {
 		let chunk = r#"{"candidates":[{"content":{"role":"model","parts":[{"text":"Hi"}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":5,"totalTokenCount":15}}"#;
-		let chunks: Vec<Result<Bytes, std::io::Error>> = vec![Ok(Bytes::from(format!("{}\n", chunk)))];
+		let chunks: Vec<Result<Bytes, std::io::Error>> = vec![Ok(Bytes::from(format!("{chunk}\n")))];
 
 		let inner = futures::stream::iter(chunks);
 		let mut stream = VertexStream::new(inner);
@@ -418,7 +417,7 @@ mod tests {
 	#[tokio::test]
 	async fn tool_call_ids_consistent_between_delta_and_final() {
 		let chunk = r#"{"candidates":[{"content":{"role":"model","parts":[{"functionCall":{"name":"get_weather","args":{"location":"NYC"}}}]},"finishReason":"STOP"}]}"#;
-		let chunks: Vec<Result<Bytes, std::io::Error>> = vec![Ok(Bytes::from(format!("{}\n", chunk)))];
+		let chunks: Vec<Result<Bytes, std::io::Error>> = vec![Ok(Bytes::from(format!("{chunk}\n")))];
 
 		let inner = futures::stream::iter(chunks);
 		let mut stream = VertexStream::new(inner);
@@ -451,8 +450,8 @@ mod tests {
 		let chunk1 = r#"{"candidates":[{"content":{"role":"model","parts":[{"functionCall":{"name":"get_weather","args":{"location":"NYC"}}}]}}]}"#;
 		let chunk2 = r#"{"candidates":[{"content":{"role":"model","parts":[{"functionCall":{"name":"get_weather","args":{"location":"LA"}}}]},"finishReason":"STOP"}]}"#;
 		let chunks: Vec<Result<Bytes, std::io::Error>> = vec![
-			Ok(Bytes::from(format!("{}\n", chunk1))),
-			Ok(Bytes::from(format!("{}\n", chunk2))),
+			Ok(Bytes::from(format!("{chunk1}\n"))),
+			Ok(Bytes::from(format!("{chunk2}\n"))),
 		];
 
 		let inner = futures::stream::iter(chunks);

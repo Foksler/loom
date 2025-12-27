@@ -277,8 +277,8 @@ fn process_stream_event(
 						name = %builder.name,
 						"Tool call completed"
 				);
-				let mut arguments: serde_json::Value =
-					serde_json::from_str(&builder.arguments_json).unwrap_or_else(|e| {
+				let mut arguments: serde_json::Value = serde_json::from_str(&builder.arguments_json)
+					.unwrap_or_else(|e| {
 						if !builder.arguments_json.is_empty() {
 							warn!(
 								index,

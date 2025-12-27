@@ -195,10 +195,7 @@ fn create_llm_client(server_url: &str, provider: &str) -> Result<Arc<dyn LlmClie
 	let llm_provider = match provider.to_lowercase().as_str() {
 		"anthropic" => LlmProvider::Anthropic,
 		"openai" => LlmProvider::OpenAi,
-		other => anyhow::bail!(
-			"Unknown LLM provider: {}. Use 'anthropic' or 'openai'",
-			other
-		),
+		other => anyhow::bail!("Unknown LLM provider: {other}. Use 'anthropic' or 'openai'"),
 	};
 
 	info!(server_url = %server_url, provider = %provider, "creating proxy LLM client");
@@ -413,7 +410,7 @@ async fn run_repl(
 								while let Some(event) = stream.next().await {
 									match event {
 										LlmEvent::TextDelta { content } => {
-											print!("{}", content);
+											print!("{content}");
 											let _ = io::stdout().flush();
 											assistant_content.push_str(&content);
 										}
@@ -491,7 +488,7 @@ async fn run_repl(
 											(output.to_string(), false)
 										}
 										ToolExecutionOutcome::Error { error, .. } => {
-											(format!("Error: {}", error), true)
+											(format!("Error: {error}"), true)
 										}
 									};
 
@@ -549,7 +546,7 @@ async fn run_repl(
 							}
 							Err(e) => {
 								error!(error = %e, "failed to start LLM request");
-								eprintln!("Error: {}", e);
+								eprintln!("Error: {e}");
 							}
 						}
 					}
@@ -649,7 +646,7 @@ async fn run_update() -> Result<()> {
 
 	println!("Current version: {}", build_info.version);
 	println!("Platform:        {}", build_info.platform);
-	println!("Checking for updates from {}...", bin_url);
+	println!("Checking for updates from {bin_url}...");
 
 	let current_exe = std::env::current_exe().context("failed to get current executable path")?;
 
@@ -829,7 +826,7 @@ async fn search_server(
 
 fn print_search_results(results: &[serde_json::Value], query: &str) {
 	if results.is_empty() {
-		println!("No results found for \"{}\"", query);
+		println!("No results found for \"{query}\"");
 		return;
 	}
 
@@ -854,12 +851,12 @@ fn print_search_results(results: &[serde_json::Value], query: &str) {
 
 		println!("{}) {}", i + 1, id);
 		if remote != "-" {
-			println!("   [{}] {}", remote, branch);
+			println!("   [{remote}] {branch}");
 		}
-		println!("   \"{}\"", title);
+		println!("   \"{title}\"");
 		if let Some(s) = score {
 			if s != 0.0 {
-				println!("   score: {:.3}", s);
+				println!("   score: {s:.3}");
 			}
 		}
 		println!();
@@ -868,7 +865,7 @@ fn print_search_results(results: &[serde_json::Value], query: &str) {
 
 fn print_local_search_results(results: &[loom_thread::ThreadSummary], query: &str) {
 	if results.is_empty() {
-		println!("No results found for \"{}\" (local search)", query);
+		println!("No results found for \"{query}\" (local search)");
 		return;
 	}
 
@@ -885,9 +882,9 @@ fn print_local_search_results(results: &[loom_thread::ThreadSummary], query: &st
 
 		println!("{}) {}", i + 1, summary.id);
 		if remote != "-" {
-			println!("   [{}] {}", remote, branch);
+			println!("   [{remote}] {branch}");
 		}
-		println!("   \"{}\"", title);
+		println!("   \"{title}\"");
 		println!();
 	}
 }
@@ -1016,7 +1013,7 @@ async fn main() -> Result<()> {
 						.load(&tid)
 						.await
 						.context("failed to load thread")?
-						.with_context(|| format!("thread '{}' not found", id))?
+						.with_context(|| format!("thread '{id}' not found"))?
 				}
 				None => {
 					let threads = thread_store
@@ -1061,7 +1058,7 @@ async fn main() -> Result<()> {
 						.load(&tid)
 						.await
 						.context("failed to load thread")?
-						.with_context(|| format!("thread '{}' not found", id))?
+						.with_context(|| format!("thread '{id}' not found"))?
 				}
 				None => {
 					let threads = thread_store

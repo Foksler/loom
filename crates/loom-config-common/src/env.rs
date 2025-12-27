@@ -66,9 +66,9 @@ pub enum SecretEnvError {
 /// let api_key = load_secret_env("OPENAI_API_KEY")?;
 ///
 /// if let Some(key) = api_key {
-/// 	println!("API key configured: {}", key); // prints "[REDACTED]"
-/// 	                                     // Use key.expose() when you actually need the value
-/// 	}
+///     println!("API key configured: {}", key); // prints "[REDACTED]"
+///     // Use key.expose() when you actually need the value
+/// }
 /// # Ok::<(), loom_config_common::SecretEnvError>(())
 /// ```
 pub fn load_secret_env(var: &str) -> Result<Option<Secret<String>>, SecretEnvError> {
@@ -214,7 +214,7 @@ mod tests {
 		fn strips_single_trailing_newline() {
 			let unique_var = "LOOM_TEST_NEWLINE_VAR_12345";
 			let mut temp_file = NamedTempFile::new().unwrap();
-			write!(temp_file, "secret-with-newline\n").unwrap();
+			writeln!(temp_file, "secret-with-newline").unwrap();
 
 			env::set_var(
 				format!("{unique_var}_FILE"),

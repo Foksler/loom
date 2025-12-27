@@ -115,15 +115,15 @@ pub async fn proxy_cse(
 		}
 		CseError::Network(e) => {
 			tracing::error!(error = %e, "proxy_cse: network error");
-			ServerError::UpstreamError(format!("Failed to contact Google CSE: {}", e))
+			ServerError::UpstreamError(format!("Failed to contact Google CSE: {e}"))
 		}
 		CseError::InvalidResponse(msg) => {
 			tracing::error!(error = %msg, "proxy_cse: invalid response");
-			ServerError::UpstreamError(format!("Invalid Google CSE response: {}", msg))
+			ServerError::UpstreamError(format!("Invalid Google CSE response: {msg}"))
 		}
 		CseError::ApiError { status, message } => {
 			tracing::warn!(status = status, message = %message, "proxy_cse: API error");
-			ServerError::UpstreamError(format!("Google CSE error: {} - {}", status, message))
+			ServerError::UpstreamError(format!("Google CSE error: {status} - {message}"))
 		}
 	})?;
 

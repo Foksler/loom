@@ -12,12 +12,12 @@
 //! to a single WebSocket connection that handles all communication types.
 //!
 //! ## Benefits
-//! 1. **Lower Latency**: No HTTP round-trip overhead per query (~50ms vs
-//! current 100-500ms) 2. **Bidirectional**: Server can push to client without
-//! polling 3. **Persistent**: Eliminates connection overhead for each message
+//!
+//! 1. **Lower Latency**: No HTTP round-trip overhead per query (~50ms vs current 100-500ms)
+//! 2. **Bidirectional**: Server can push to client without polling
+//! 3. **Persistent**: Eliminates connection overhead for each message
 //! 4. **Backpressure**: Built-in flow control via WebSocket frame buffering
-//! 5. **Unified Protocol**: Single connection replaces SSE + HTTP query
-//! endpoints
+//! 5. **Unified Protocol**: Single connection replaces SSE + HTTP query endpoints
 
 use std::sync::Arc;
 use tokio::sync::RwLock;

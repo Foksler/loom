@@ -137,14 +137,13 @@ impl LlmClient for ProxyLlmClient {
 			}
 
 			return Err(LlmError::Api(format!(
-				"proxy returned status {}: {}",
-				status, error_body
+				"proxy returned status {status}: {error_body}"
 			)));
 		}
 
 		let proxy_response: LlmProxyResponse = response.json().await.map_err(|e| {
 			debug!(error = %e, "failed to parse proxy response");
-			LlmError::InvalidResponse(format!("failed to parse response: {}", e))
+			LlmError::InvalidResponse(format!("failed to parse response: {e}"))
 		})?;
 
 		debug!("successfully parsed proxy response");
@@ -182,8 +181,7 @@ impl LlmClient for ProxyLlmClient {
 			}
 
 			return Err(LlmError::Api(format!(
-				"proxy returned status {}: {}",
-				status, error_body
+				"proxy returned status {status}: {error_body}"
 			)));
 		}
 

@@ -116,7 +116,7 @@ mod tests {
 
 		// Add 5 traces, but capacity is 3
 		for i in 0..5 {
-			let tracer = QueryTracer::new(format!("Q-{}", i), None);
+			let tracer = QueryTracer::new(format!("Q-{i}"), None);
 			store.store(tracer).await;
 		}
 
@@ -206,7 +206,7 @@ mod tests {
 	fn test_multi_event_trace() {
 		let mut tracer = QueryTracer::new("Q-123", None);
 		for i in 0..5 {
-			tracer.record_event(format!("event-{}", i), serde_json::json!({ "index": i }));
+			tracer.record_event(format!("event-{i}"), serde_json::json!({ "index": i }));
 		}
 
 		assert_eq!(tracer.events.len(), 6); // 1 creation + 5 custom
@@ -266,7 +266,7 @@ mod tests {
 		let start = std::time::Instant::now();
 
 		for i in 0..1000 {
-			let mut tracer = QueryTracer::new(format!("Q-perf-{}", i), Some("perf-test".to_string()));
+			let mut tracer = QueryTracer::new(format!("Q-perf-{i}"), Some("perf-test".to_string()));
 			tracer.record_sent(5);
 			tracer.record_response_received("ok");
 			store.store(tracer).await;
@@ -285,7 +285,7 @@ mod tests {
 		let store = QueryTraceStore::new(100);
 
 		for i in 0..5 {
-			let tracer = QueryTracer::new(format!("Q-clear-{}", i), None);
+			let tracer = QueryTracer::new(format!("Q-clear-{i}"), None);
 			store.store(tracer).await;
 		}
 

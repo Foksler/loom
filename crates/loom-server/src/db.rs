@@ -117,7 +117,7 @@ impl ThreadRepository {
 	/// Configures SQLite with WAL mode for multi-reader, single-writer.
 	pub async fn new(database_url: &str) -> Result<Self, ServerError> {
 		let options = SqliteConnectOptions::from_str(database_url)
-			.map_err(|e| ServerError::Internal(format!("Invalid database URL: {}", e)))?
+			.map_err(|e| ServerError::Internal(format!("Invalid database URL: {e}")))?
 			.journal_mode(SqliteJournalMode::Wal)
 			.synchronous(SqliteSynchronous::Normal)
 			.create_if_missing(true);
@@ -194,7 +194,7 @@ impl ThreadRepository {
 				if trigger.is_empty() || !trigger.contains("CREATE TRIGGER") {
 					continue;
 				}
-				let full_trigger = format!("{} END;", trigger);
+				let full_trigger = format!("{trigger} END;");
 				if let Err(e) = sqlx::query(&full_trigger).execute(pool).await {
 					let msg = e.to_string();
 					if !msg.contains("already exists") && !msg.contains("trigger") {
@@ -548,7 +548,7 @@ impl ThreadRepository {
 					provider,
 					model,
 					tags,
-					message_count: message_count as usize,
+					message_count: message_count as u32,
 					is_pinned: is_pinned != 0,
 					visibility,
 				}
@@ -659,7 +659,7 @@ impl ThreadRepository {
 		limit: u32,
 		offset: u32,
 	) -> Result<Vec<ThreadSearchHit>, ServerError> {
-		let like_pattern = format!("{}%", prefix);
+		let like_pattern = format!("{prefix}%");
 
 		let sql = if workspace.is_some() {
 			r#"
@@ -836,7 +836,7 @@ impl ThreadRepository {
 			provider,
 			model,
 			tags,
-			message_count: message_count as usize,
+			message_count: message_count as u32,
 			is_pinned: is_pinned != 0,
 			visibility,
 		})
@@ -1473,6 +1473,9 @@ mod tests {
 			.search("unique-test-branch", None, 10, 0)
 			.await
 			.unwrap();
-		assert!(hits.len() >= 1, "Expected at least 1 hit for branch search");
+		assert!(
+			!hits.is_empty(),
+			"Expected at least 1 hit for branch search"
+		);
 	}
 }

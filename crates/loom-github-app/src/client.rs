@@ -70,7 +70,7 @@ impl GithubAppClient {
 		let http_client = Client::builder()
 			.timeout(REQUEST_TIMEOUT)
 			.build()
-			.map_err(|e| GithubAppError::Config(format!("Failed to create HTTP client: {}", e)))?;
+			.map_err(|e| GithubAppError::Config(format!("Failed to create HTTP client: {e}")))?;
 
 		info!(
 				app_id = config.app_id(),
@@ -223,15 +223,14 @@ impl GithubAppClient {
 			.config
 			.base_url()
 			.join(&format!(
-				"app/installations/{}/access_tokens",
-				installation_id
+				"app/installations/{installation_id}/access_tokens"
 			))
-			.map_err(|e| GithubAppError::Config(format!("Invalid URL: {}", e)))?;
+			.map_err(|e| GithubAppError::Config(format!("Invalid URL: {e}")))?;
 
 		let response = self
 			.http_client
 			.post(url)
-			.header("Authorization", format!("Bearer {}", jwt))
+			.header("Authorization", format!("Bearer {jwt}"))
 			.header("Accept", "application/vnd.github+json")
 			.header("X-GitHub-Api-Version", "2022-11-28")
 			.header("User-Agent", "loom-github-app")
@@ -261,7 +260,7 @@ impl GithubAppClient {
 
 		let token_response: AccessTokenResponse = response.json().await.map_err(|e| {
 			error!(error = %e, "Failed to parse access token response");
-			GithubAppError::InvalidResponse(format!("JSON parse error: {}", e))
+			GithubAppError::InvalidResponse(format!("JSON parse error: {e}"))
 		})?;
 
 		let valid_for = parse_expiry_duration(&token_response.expires_at)?;
@@ -324,7 +323,7 @@ impl GithubAppClient {
 			.config
 			.base_url()
 			.join("search/code")
-			.map_err(|e| GithubAppError::Config(format!("Invalid URL: {}", e)))?;
+			.map_err(|e| GithubAppError::Config(format!("Invalid URL: {e}")))?;
 
 		url
 			.query_pairs_mut()
@@ -337,7 +336,7 @@ impl GithubAppClient {
 		let response = self
 			.http_client
 			.get(url)
-			.header("Authorization", format!("Bearer {}", token))
+			.header("Authorization", format!("Bearer {token}"))
 			.header("Accept", "application/vnd.github+json")
 			.header("X-GitHub-Api-Version", "2022-11-28")
 			.header("User-Agent", "loom-github-app")
@@ -358,7 +357,7 @@ impl GithubAppClient {
 
 		let github_response: GitHubCodeSearchResponse = response.json().await.map_err(|e| {
 			error!(error = %e, "Failed to parse code search response");
-			GithubAppError::InvalidResponse(format!("JSON parse error: {}", e))
+			GithubAppError::InvalidResponse(format!("JSON parse error: {e}"))
 		})?;
 
 		debug!(
@@ -428,15 +427,15 @@ impl GithubAppClient {
 		let url = self
 			.config
 			.base_url()
-			.join(&format!("repos/{}/{}", owner, repo))
-			.map_err(|e| GithubAppError::Config(format!("Invalid URL: {}", e)))?;
+			.join(&format!("repos/{owner}/{repo}"))
+			.map_err(|e| GithubAppError::Config(format!("Invalid URL: {e}")))?;
 
 		debug!(url = %url, "Fetching repository info");
 
 		let response = self
 			.http_client
 			.get(url)
-			.header("Authorization", format!("Bearer {}", token))
+			.header("Authorization", format!("Bearer {token}"))
 			.header("Accept", "application/vnd.github+json")
 			.header("X-GitHub-Api-Version", "2022-11-28")
 			.header("User-Agent", "loom-github-app")
@@ -457,7 +456,7 @@ impl GithubAppClient {
 
 		let repo_response: GitHubRepoResponse = response.json().await.map_err(|e| {
 			error!(error = %e, "Failed to parse repository response");
-			GithubAppError::InvalidResponse(format!("JSON parse error: {}", e))
+			GithubAppError::InvalidResponse(format!("JSON parse error: {e}"))
 		})?;
 
 		debug!(full_name = %repo_response.full_name, "Repository info fetched");
@@ -529,11 +528,8 @@ impl GithubAppClient {
 		let mut url = self
 			.config
 			.base_url()
-			.join(&format!(
-				"repos/{}/{}/contents/{}",
-				owner, repo, path_encoded
-			))
-			.map_err(|e| GithubAppError::Config(format!("Invalid URL: {}", e)))?;
+			.join(&format!("repos/{owner}/{repo}/contents/{path_encoded}"))
+			.map_err(|e| GithubAppError::Config(format!("Invalid URL: {e}")))?;
 
 		if let Some(r) = git_ref {
 			url.query_pairs_mut().append_pair("ref", r);
@@ -544,7 +540,7 @@ impl GithubAppClient {
 		let response = self
 			.http_client
 			.get(url)
-			.header("Authorization", format!("Bearer {}", token))
+			.header("Authorization", format!("Bearer {token}"))
 			.header("Accept", "application/vnd.github+json")
 			.header("X-GitHub-Api-Version", "2022-11-28")
 			.header("User-Agent", "loom-github-app")
@@ -565,7 +561,7 @@ impl GithubAppClient {
 
 		let content_response: GitHubContentResponse = response.json().await.map_err(|e| {
 			error!(error = %e, "Failed to parse content response");
-			GithubAppError::InvalidResponse(format!("JSON parse error: {}", e))
+			GithubAppError::InvalidResponse(format!("JSON parse error: {e}"))
 		})?;
 
 		debug!(path = %content_response.path, size = content_response.size, "File contents fetched");
@@ -598,14 +594,14 @@ impl GithubAppClient {
 			.config
 			.base_url()
 			.join("app/installations")
-			.map_err(|e| GithubAppError::Config(format!("Invalid URL: {}", e)))?;
+			.map_err(|e| GithubAppError::Config(format!("Invalid URL: {e}")))?;
 
 		debug!(url = %url, "Listing app installations");
 
 		let response = self
 			.http_client
 			.get(url)
-			.header("Authorization", format!("Bearer {}", jwt))
+			.header("Authorization", format!("Bearer {jwt}"))
 			.header("Accept", "application/vnd.github+json")
 			.header("X-GitHub-Api-Version", "2022-11-28")
 			.header("User-Agent", "loom-github-app")
@@ -626,7 +622,7 @@ impl GithubAppClient {
 
 		let installations: Vec<Installation> = response.json().await.map_err(|e| {
 			error!(error = %e, "Failed to parse installations response");
-			GithubAppError::InvalidResponse(format!("JSON parse error: {}", e))
+			GithubAppError::InvalidResponse(format!("JSON parse error: {e}"))
 		})?;
 
 		debug!(count = installations.len(), "Installations listed");
@@ -658,15 +654,15 @@ impl GithubAppClient {
 		let url = self
 			.config
 			.base_url()
-			.join(&format!("repos/{}/{}/installation", owner, repo))
-			.map_err(|e| GithubAppError::Config(format!("Invalid URL: {}", e)))?;
+			.join(&format!("repos/{owner}/{repo}/installation"))
+			.map_err(|e| GithubAppError::Config(format!("Invalid URL: {e}")))?;
 
 		debug!(url = %url, "Getting repository installation");
 
 		let response = self
 			.http_client
 			.get(url)
-			.header("Authorization", format!("Bearer {}", jwt))
+			.header("Authorization", format!("Bearer {jwt}"))
 			.header("Accept", "application/vnd.github+json")
 			.header("X-GitHub-Api-Version", "2022-11-28")
 			.header("User-Agent", "loom-github-app")
@@ -690,7 +686,7 @@ impl GithubAppClient {
 
 		let installation: Installation = response.json().await.map_err(|e| {
 			error!(error = %e, "Failed to parse installation response");
-			GithubAppError::InvalidResponse(format!("JSON parse error: {}", e))
+			GithubAppError::InvalidResponse(format!("JSON parse error: {e}"))
 		})?;
 
 		debug!(
@@ -748,7 +744,7 @@ pub(crate) fn map_github_error(status: StatusCode, body: &str) -> GithubAppError
 /// Parse the expires_at timestamp from GitHub into a Duration.
 pub(crate) fn parse_expiry_duration(expires_at: &str) -> Result<Duration, GithubAppError> {
 	let expires_at_dt: DateTime<Utc> = expires_at.parse().map_err(|e| {
-		GithubAppError::InvalidResponse(format!("Invalid expires_at: {} - {}", expires_at, e))
+		GithubAppError::InvalidResponse(format!("Invalid expires_at: {expires_at} - {e}"))
 	})?;
 
 	let now = Utc::now();
