@@ -24,7 +24,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 | loom-git | ✅ 100% | All methods now implemented |
 | loom-auto-commit | ✅ 100% | Now uses loom-git exports directly |
 | loom-acp | ⚠️ 90% | Missing bridge.rs (logic inline instead) |
-| loom-server | ✅ 98% | DATABASE_URL naming difference only, exceeds spec |
+| loom-server | ✅ 100% | Full compliance, exceeds spec with extra features |
 | loom-cli | ⚠️ 90% | Env var name difference, extra search command |
 | ide/vscode | ⚠️ 85% | Missing webview-ui/, CHANGELOG.md |
 
@@ -276,7 +276,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 | LOOM_SERVER_PORT default | ✅ | 8080 |
 | LOOM_SERVER_ANTHROPIC_API_KEY | ✅ | |
 | LOOM_SERVER_OPENAI_API_KEY | ✅ | |
-| DATABASE_URL | ⚠️ | Named `LOOM_SERVER_DATABASE_URL` (prefixed) |
+| LOOM_SERVER_DATABASE_URL | ✅ | Matches spec (thread-system.md, container-system.md) |
 
 ### Extra Features (beyond spec)
 
