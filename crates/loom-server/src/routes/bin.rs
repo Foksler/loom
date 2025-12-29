@@ -12,12 +12,18 @@ use axum::{
 /// Handler to list files in the /bin directory
 /// Only shows the index for requests to `/bin/` (trailing slash).
 /// Returns 404 for specific file paths that don't exist.
+///
+/// Note: When used as a fallback for ServeDir nested at `/bin`, the request
+/// path is relative to the nest point. So `/bin` becomes `/` and `/bin/foo`
+/// becomes `/foo`.
 pub async fn list_bin_directory(request: Request) -> impl IntoResponse {
 	let request_path = request.uri().path();
 
-	// Only show directory listing for exact /bin or /bin/ paths
-	// Any other path (e.g., /bin/does-not-exist) should return 404
-	if request_path != "/bin" && request_path != "/bin/" {
+	// When nested under /bin via nest_service, paths are relative:
+	// - /bin or /bin/ becomes / or empty
+	// - /bin/does-not-exist becomes /does-not-exist
+	// Only show directory listing for the root path (the /bin directory itself)
+	if request_path != "/" && request_path != "" {
 		return (
 			StatusCode::NOT_FOUND,
 			[("Content-Type", "text/plain; charset=utf-8")],
