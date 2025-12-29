@@ -24,7 +24,7 @@ Loom is organized as a Cargo workspace with 11 crates:
 loom/
 ├── crates/
 │   ├── loom-core/           # Core abstractions and types
-│   ├── loom-http-retry/     # HTTP retry utilities
+│   ├── loom-http/     # HTTP retry utilities
 │   ├── loom-git/            # Git operations (detection, staging, committing)
 │   ├── loom-auto-commit/    # Auto-commit orchestration
 │   ├── loom-llm-anthropic/  # Anthropic Claude provider (server-only)
@@ -78,7 +78,7 @@ loom/
       └──────┬───────┘                │
              ▼                        │
      ┌───────────────┐                │
-     │loom-http-retry│                │
+     │loom-http│                │
      └───────┬───────┘                │
              │                        │
              └────────────────────────┘
@@ -181,7 +181,7 @@ async fn complete(&self, request: LlmRequest) -> Result<LlmResponse, LlmError> {
 ```
 loom-core (bottom layer)
     ↑
-loom-http-retry (utility layer)
+loom-http (utility layer)
     ↑
 loom-llm-anthropic, loom-llm-openai (provider layer, server-only)
     ↑
@@ -219,10 +219,12 @@ The foundation layer providing:
 | `config.rs`  | `AgentConfig` with timeouts, retries, model settings                    |
 | `error.rs`   | Error types: `LlmError`, `ToolError`, `AgentError`                      |
 
-### loom-http-retry
+### loom-http
 
-Resilient HTTP request handling:
+Shared HTTP utilities for consistent client behavior:
 
+- `new_client()` - Creates HTTP client with standard User-Agent (`loom/{platform}/{git_sha}`)
+- `builder()` - Returns ClientBuilder with User-Agent for custom configuration
 - `RetryConfig` - Configurable retry parameters (max attempts, delays, jitter)
 - `RetryableError` trait - Determines if an error should trigger retry
 - `retry()` function - Generic retry wrapper with exponential backoff

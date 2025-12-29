@@ -61,7 +61,7 @@ Async tests using `#[tokio::test]` that exercise complete workflows including I/
   File editing workflows
 - [`crates/loom-tools/src/read_file.rs`](file:///home/ghuntley/loom/crates/loom-tools/src/read_file.rs) -
   File reading workflows
-- [`crates/loom-http-retry/src/lib.rs`](file:///home/ghuntley/loom/crates/loom-http-retry/src/lib.rs) -
+- [`crates/loom-http/src/retry.rs`](file:///home/ghuntley/loom/crates/loom-http/src/retry.rs) -
   Retry behavior
 
 ## Property-Based Testing with proptest
@@ -388,7 +388,7 @@ cargo test --all
 ```bash
 cargo test -p loom-core
 cargo test -p loom-tools
-cargo test -p loom-http-retry
+cargo test -p loom-http
 cargo test -p loom-llm-anthropic
 cargo test -p loom-llm-openai
 ```

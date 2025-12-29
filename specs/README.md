@@ -53,7 +53,7 @@ loom/
 │   ├── loom-tools/          # Tool definitions (read_file, list_files, edit_file)
 │   ├── loom-llm-anthropic/  # Anthropic Claude API client
 │   ├── loom-llm-openai/     # OpenAI GPT API client
-│   ├── loom-http-retry/     # HTTP retry/backoff utilities
+│   ├── loom-http/           # Shared HTTP client and retry utilities
 │   ├── loom-acp/            # Agent Client Protocol (ACP) integration
 │   └── loom-cli/            # CLI binary using clap
 ├── ide/

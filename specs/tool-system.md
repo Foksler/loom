@@ -387,7 +387,7 @@ or specialized knowledge.
 
 **Behavior:**
 
-- Uses `loom-http-retry` for resilience against transient failures (429, 503, timeouts)
+- Uses `loom-http` for resilience against transient failures (429, 503, timeouts)
 - Sends requests to `/proxy/openai/complete` endpoint on the Loom server
 - Default system prompt instructs OpenAI to act as a sub-agent providing concise, technically
   accurate advice
@@ -503,7 +503,7 @@ Performs web searches via the Loom server using Google Custom Search Engine (CSE
 
 **Behavior:**
 
-- Uses `loom-http-retry` for resilience against transient failures
+- Uses `loom-http` for resilience against transient failures
 - Sends requests to `/proxy/cse` endpoint on the Loom server
 - Requires Google CSE to be configured on the server
 

@@ -12,7 +12,7 @@ providers. Network conditions, rate limits, and transient server errors can caus
 that succeed on subsequent attempts. Without proper retry handling, applications would fail on
 recoverable errors, leading to poor user experience and wasted compute.
 
-The `loom-http-retry` crate provides a generic, configurable retry mechanism with exponential
+The `loom-http` crate provides a generic, configurable retry mechanism with exponential
 backoff and jitter, designed specifically for HTTP API clients.
 
 ## RetryConfig Structure
@@ -37,7 +37,7 @@ pub struct RetryConfig {
 | `jitter`             | `bool`            | `true`                      | Whether to add randomness to delays         |
 | `retryable_statuses` | `Vec<StatusCode>` | `[429, 408, 502, 503, 504]` | HTTP status codes to retry                  |
 
-Reference: [crates/loom-http-retry/src/lib.rs#L6-L32](../crates/loom-http-retry/src/lib.rs#L6-L32)
+Reference: [crates/loom-http/src/retry.rs#L6-L32](../crates/loom-http/src/retry.rs#L6-L32)
 
 ## Exponential Backoff Algorithm
 
@@ -66,7 +66,7 @@ This produces delays in the range `[capped_delay × 0.5, capped_delay × 1.5]`.
 | 4       | 200ms × 2^4 | 3200ms          |
 | 5       | 200ms × 2^5 | 5000ms (capped) |
 
-Reference: [crates/loom-http-retry/src/lib.rs#L59-L71](../crates/loom-http-retry/src/lib.rs#L59-L71)
+Reference: [crates/loom-http/src/retry.rs#L59-L71](../crates/loom-http/src/retry.rs#L59-L71)
 
 ## RetryableError Trait
 
@@ -122,7 +122,7 @@ impl RetryableError for ClientError {
 }
 ```
 
-Reference: [crates/loom-http-retry/src/lib.rs#L34-L57](../crates/loom-http-retry/src/lib.rs#L34-L57)
+Reference: [crates/loom-http/src/retry.rs#L34-L57](../crates/loom-http/src/retry.rs#L34-L57)
 
 ## Retryable Conditions
 
@@ -186,7 +186,7 @@ warn!(
 ```
 
 Reference:
-[crates/loom-http-retry/src/lib.rs#L73-L119](../crates/loom-http-retry/src/lib.rs#L73-L119)
+[crates/loom-http/src/retry.rs#L73-L119](../crates/loom-http/src/retry.rs#L73-L119)
 
 ## Design Decisions
 

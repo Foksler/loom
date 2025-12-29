@@ -298,7 +298,7 @@ pub struct OpenAIConfig {
 
 ### RetryConfig
 
-HTTP retry behavior in [`crates/loom-http-retry/src/lib.rs`](../crates/loom-http-retry/src/lib.rs):
+HTTP retry behavior in [`crates/loom-http/src/retry.rs`](../crates/loom-http/src/retry.rs):
 
 ```rust
 #[derive(Debug, Clone)]

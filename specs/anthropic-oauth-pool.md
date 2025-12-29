@@ -139,7 +139,7 @@ Errors from Anthropic API are classified to determine failover behavior:
 ```rust
 #[derive(Debug, Clone, Copy)]
 pub enum ClientErrorKind {
-    /// Transient error, retry on same account (via loom_http_retry)
+    /// Transient error, retry on same account (via loom_http)
     Transient,
     /// Quota exhausted, failover to next account
     QuotaExceeded,

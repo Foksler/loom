@@ -493,7 +493,7 @@ Ok(LlmStream::new(boxed))
 
    [dependencies]
    loom-core = { path = "../loom-core" }
-   loom-http-retry = { path = "../loom-http-retry" }
+   loom-http = { path = "../loom-http" }
    async-trait = "0.1"
    bytes = "1"
    futures = "0.3"

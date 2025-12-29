@@ -191,18 +191,17 @@ loom update
 
 ---
 
-## 7. Version Headers
+## 7. User-Agent Header
 
-All HTTP requests from CLI to server include:
+All HTTP requests from CLI to server include a User-Agent header:
 
-| Header                   | Example                |
-| ------------------------ | ---------------------- |
-| `X-Loom-Version`         | `0.1.0`                |
-| `X-Loom-Git-Sha`         | `abc1234`              |
-| `X-Loom-Build-Timestamp` | `2024-12-17T10:30:00Z` |
-| `X-Loom-Platform`        | `linux-x86_64`         |
+```
+User-Agent: loom/{platform}/{git_sha}
+```
 
-These enable:
+Example: `loom/linux-x86_64/abc1234`
+
+This is set automatically by `loom_http::new_client()` or `loom_http::builder()` and enables:
 
 - Server-side version analytics
 - Compatibility checks (future)

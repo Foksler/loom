@@ -77,7 +77,7 @@ crates/loom-github-app/
          │
          ▼
 ┌─────────────────┐
-│ loom-http-retry │
+│ loom-http │
 └─────────────────┘
 ```
 

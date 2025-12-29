@@ -1000,7 +1000,7 @@ pub enum ThreadSyncError {
 	UnexpectedStatus { status: u16 },
 }
 
-impl loom_http_retry::RetryableError for ThreadSyncError {
+impl loom_http::RetryableError for ThreadSyncError {
 	fn is_retryable(&self) -> bool {
 		matches!(self,
 				ThreadSyncError::Network(_)
@@ -1082,7 +1082,7 @@ loom/
         │                  │                 │
         ▼                  ▼                 │
 ┌───────────────┐  ┌───────────────┐         │
-│loom-http-retry│  │  loom-core    │◄────────┘
+│loom-http│  │  loom-core    │◄────────┘
 └───────────────┘  └───────────────┘
 
                     ┌─────────────┐
