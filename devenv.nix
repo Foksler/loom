@@ -93,25 +93,32 @@ in
       types = [ "text" ];
     };
     
-    # Ensure loom-server flake package compiles
-    loom-server-build = {
+    # Fast Rust workspace check using cargo (incremental builds)
+    # This replaces the slow nix build hooks for local development.
+    # Full nix builds are still run in CI for reproducibility.
+    rust-workspace-check = {
       enable = true;
-      name = "Build loom-server";
-      entry = "${pkgs.writeShellScript "loom-server-build" ''
-        echo "🔨 Building loom-server..."
-        export NIXPKGS_ALLOW_UNFREE=1
-        if ! nix build .#loom-server --no-link --impure 2>&1; then
-          echo "❌ BLOCKED: loom-server failed to compile!"
+      name = "Rust workspace check (cargo)";
+      entry = "${pkgs.writeShellScript "rust-workspace-check" ''
+        echo "🔨 Checking Rust workspace with cargo (incremental)..."
+        
+        # Use cargo check for fast type-checking without full compilation
+        # This leverages the existing target/ directory for incremental builds
+        if ! cargo check --workspace --bins 2>&1; then
+          echo "❌ BLOCKED: Rust workspace failed to compile!"
           echo "Fix the build errors before committing."
           exit 1
         fi
-        echo "✅ loom-server builds successfully"
+        
+        echo "✅ Rust workspace compiles successfully"
       ''}";
       pass_filenames = false;
-      always_run = true;
+      # Only run when Rust-related files change (not docs, nix, etc.)
+      always_run = false;
+      types = [ "rust" ];
     };
     
-    # Ensure loom-web flake package compiles
+    # Ensure loom-web flake package compiles (fast - Node.js cached build)
     loom-web-build = {
       enable = true;
       name = "Build loom-web";
@@ -126,7 +133,9 @@ in
         echo "✅ loom-web builds successfully"
       ''}";
       pass_filenames = false;
-      always_run = true;
+      # Only run when web-related files change
+      always_run = false;
+      files = "^web/";
     };
   };
 
