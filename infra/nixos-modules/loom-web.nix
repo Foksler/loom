@@ -125,6 +125,11 @@ in
             '';
           };
 
+          # CLI binary distribution
+          "/bin/" = {
+            proxyPass = cfg.serverUrl;
+          };
+
           # Static assets with caching
           "~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$" = {
             root = "${cfg.package}/share/loom-web";
