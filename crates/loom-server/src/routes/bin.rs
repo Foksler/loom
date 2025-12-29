@@ -19,18 +19,8 @@ pub async fn list_bin_directory() -> impl IntoResponse {
 				let metadata = entry.metadata().ok();
 				let is_dir = metadata.as_ref().is_some_and(|m| m.is_dir());
 				let size = metadata.as_ref().map(|m| m.len()).unwrap_or(0);
-				let modified = metadata
-					.as_ref()
-					.and_then(|m| m.modified().ok())
-					.and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-					.map(|d| {
-						let secs = d.as_secs();
-						let dt = chrono::DateTime::from_timestamp(secs as i64, 0).unwrap_or_default();
-						dt.format("%Y-%m-%d %H:%M").to_string()
-					})
-					.unwrap_or_else(|| "-".to_string());
 
-				entries.push((name, is_dir, size, modified));
+				entries.push((name, is_dir, size));
 			}
 		}
 	}
@@ -60,11 +50,11 @@ a:hover { text-decoration: underline; }
 <body>
 <h1>Index of /bin/</h1>
 <table>
-<tr><th>Name</th><th>Size</th><th>Modified</th></tr>
+<tr><th>Name</th><th>Size</th></tr>
 "#,
 	);
 
-	for (name, is_dir, size, modified) in entries {
+	for (name, is_dir, size) in entries {
 		let display_name = if is_dir {
 			format!("{name}/")
 		} else {
@@ -77,7 +67,7 @@ a:hover { text-decoration: underline; }
 		};
 		let class = if is_dir { " class=\"dir\"" } else { "" };
 		html.push_str(&format!(
-			r#"<tr><td{class}><a href="/bin/{name}">{display_name}</a></td><td class="size">{size_str}</td><td>{modified}</td></tr>
+			r#"<tr><td{class}><a href="/bin/{name}">{display_name}</a></td><td class="size">{size_str}</td></tr>
 "#
 		));
 	}
