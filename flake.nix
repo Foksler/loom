@@ -55,15 +55,18 @@
           loom-cli-windows = pkgs.callPackage ./infra/pkgs/loom-cli-windows.nix {
             fenix = fenixPkgs;
           };
+          loom-cli-macos = pkgs.callPackage ./infra/pkgs/loom-cli-macos.nix {
+            fenix = fenixPkgs;
+          };
         in
         {
           inherit (pkgs) smtprelay loom-server loom-cli loom-cli-linux loom-web;
           inherit (pkgsWithTools) license;
-          inherit loom-cli-windows;
+          inherit loom-cli-windows loom-cli-macos;
           
           # Combined binaries for server distribution
           loom-cli-binaries = pkgs.callPackage ./infra/pkgs/loom-cli-binaries.nix {
-            inherit loom-cli-linux loom-cli-windows;
+            inherit loom-cli-linux loom-cli-windows loom-cli-macos;
           };
         };
     };
