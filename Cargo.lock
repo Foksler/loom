@@ -2088,27 +2088,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "loom-agent-provisioner"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "chrono",
- "hex",
- "hmac",
- "k8s-openapi",
- "loom-k8s",
- "loom-secret",
- "reqwest",
- "serde",
- "serde_json",
- "sha2",
- "thiserror 1.0.69",
- "tokio",
- "tracing",
- "uuid7",
-]
-
-[[package]]
 name = "loom-auto-commit"
 version = "0.1.0"
 dependencies = [
@@ -2430,7 +2409,6 @@ dependencies = [
  "hex",
  "hmac",
  "humantime",
- "loom-agent-provisioner",
  "loom-core",
  "loom-github-app",
  "loom-google-cse",
@@ -2439,6 +2417,7 @@ dependencies = [
  "loom-secret",
  "loom-thread",
  "loom-version",
+ "loom-weaver",
  "prometheus",
  "proptest",
  "regex",
@@ -2510,6 +2489,27 @@ dependencies = [
  "serde",
  "shadow-rs",
  "utoipa",
+]
+
+[[package]]
+name = "loom-weaver"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "hex",
+ "hmac",
+ "k8s-openapi",
+ "loom-k8s",
+ "loom-secret",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "uuid7",
 ]
 
 [[package]]

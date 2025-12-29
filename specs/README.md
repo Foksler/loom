@@ -35,7 +35,7 @@ AI-powered coding agent written in Rust.
 | [phase3_websocket_planning.md](./phase3_websocket_planning.md) | Phase 3: WebSocket upgrade for persistent connections                               |
 | [api-documentation.md](./api-documentation.md)                 | OpenAPI documentation system using utoipa and Swagger UI                            |
 | [vscode-extension.md](./vscode-extension.md)                   | VS Code extension (loom-vscode) using ACP for editor integration                    |
-| [agent-provisioner.md](./agent-provisioner.md)                 | K8s agent provisioner for ephemeral execution environments                          |
+| [weaver-provisioner.md](./weaver-provisioner.md)               | K8s weaver provisioner for ephemeral execution environments                         |
 
 ## Quick Reference
 
@@ -57,7 +57,7 @@ loom/
 │   ├── loom-http/           # Shared HTTP client and retry utilities
 │   ├── loom-acp/            # Agent Client Protocol (ACP) integration
 │   ├── loom-k8s/            # Kubernetes client abstraction
-│   ├── loom-agent-provisioner/  # K8s agent provisioning and lifecycle
+│   ├── loom-weaver/         # K8s weaver provisioning and lifecycle
 │   └── loom-cli/            # CLI binary using clap
 ├── ide/
 │   └── vscode/              # VS Code extension (ACP client)

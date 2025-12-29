@@ -10,7 +10,7 @@ use std::time::Duration;
 use tokio::time::{timeout, Instant};
 use utoipa::ToSchema;
 
-use loom_agent_provisioner::Provisioner;
+use loom_weaver::Provisioner;
 use loom_github_app::{GithubAppClient, GithubAppError};
 use loom_llm_service::LlmService;
 
@@ -467,7 +467,7 @@ pub async fn check_kubernetes(provisioner: Option<&Arc<Provisioner>>) -> Option<
 	let start = Instant::now();
 	let namespace = provisioner.namespace().to_string();
 
-	let result = timeout(K8S_CHECK_TIMEOUT, provisioner.count_active_agents()).await;
+	let result = timeout(K8S_CHECK_TIMEOUT, provisioner.count_active_weavers()).await;
 	let latency_ms = start.elapsed().as_millis() as u64;
 
 	let (status, reachable, error) = match result {

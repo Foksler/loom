@@ -57,6 +57,10 @@ pub enum ServerError {
 	/// Forbidden (insufficient permissions).
 	#[error("Forbidden: {0}")]
 	Forbidden(String),
+
+	/// Weaver provisioner error.
+	#[error("Provisioner error: {0}")]
+	Provisioner(#[from] loom_weaver::ProvisionerError),
 }
 
 /// Error response body.
@@ -192,6 +196,50 @@ impl IntoResponse for ServerError {
 						client_version: None,
 					},
 				)
+			}
+			ServerError::Provisioner(e) => {
+				use loom_weaver::ProvisionerError;
+				match e {
+					ProvisionerError::WeaverNotFound { id } => (
+						StatusCode::NOT_FOUND,
+						ErrorResponse {
+							error: "weaver_not_found".to_string(),
+							message: format!("Weaver not found: {id}"),
+							server_version: None,
+							client_version: None,
+						},
+					),
+					ProvisionerError::TooManyWeavers { current, max } => (
+						StatusCode::TOO_MANY_REQUESTS,
+						ErrorResponse {
+							error: "too_many_weavers".to_string(),
+							message: format!("{current} weavers running (max: {max})"),
+							server_version: None,
+							client_version: None,
+						},
+					),
+					ProvisionerError::InvalidLifetime { requested, max } => (
+						StatusCode::BAD_REQUEST,
+						ErrorResponse {
+							error: "invalid_lifetime".to_string(),
+							message: format!("{requested} hours exceeds max {max} hours"),
+							server_version: None,
+							client_version: None,
+						},
+					),
+					_ => {
+						tracing::error!(error = %e, "provisioner error");
+						(
+							StatusCode::INTERNAL_SERVER_ERROR,
+							ErrorResponse {
+								error: "provisioner_error".to_string(),
+								message: e.to_string(),
+								server_version: None,
+								client_version: None,
+							},
+						)
+					}
+				}
 			}
 		};
 

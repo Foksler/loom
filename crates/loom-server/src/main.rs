@@ -73,18 +73,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	// Create application state and router with middleware
 	let state = create_app_state(repo, &config).await;
 
-	// Agent provisioner startup lifecycle
+	// Weaver provisioner startup lifecycle
 	let cleanup_task: Option<JoinHandle<()>> = if let Some(ref provisioner) = state.provisioner {
 		// Validate namespace exists (fail if not)
 		if let Err(e) = provisioner.validate_namespace().await {
-			tracing::error!(error = %e, "Agent provisioner namespace validation failed");
-			tracing::warn!("Continuing without agent provisioning support");
+			tracing::error!(error = %e, "Weaver provisioner namespace validation failed");
+			tracing::warn!("Continuing without weaver provisioning support");
 			None
 		} else {
 			// Spawn cleanup background task
 			let provisioner = Arc::clone(provisioner);
 			Some(tokio::spawn(async move {
-				loom_agent_provisioner::start_cleanup_task(provisioner).await;
+				loom_weaver::start_cleanup_task(provisioner).await;
 			}))
 		}
 	} else {

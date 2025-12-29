@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: Proprietary
 
 [package]
-name = "loom-agent-provisioner"
+name = "loom-weaver"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Agent provisioning business logic for Loom"
+description = "Weaver provisioning business logic for Loom"
 
 [dependencies]
 async-trait.workspace = true

@@ -38,7 +38,7 @@ use utoipa::OpenApi;
         (name = "server-query", description = "Server query orchestration for client-server communication"),
         (name = "debug", description = "Debug and tracing endpoints for development"),
         (name = "auth", description = "Authentication endpoints (currently stubbed)"),
-        (name = "agents", description = "Agent provisioning and management")
+        (name = "weavers", description = "Weaver provisioning and management")
     ),
     paths(
         // Thread endpoints
@@ -66,13 +66,13 @@ use utoipa::OpenApi;
         crate::routes::debug::get_query_trace,
         crate::routes::debug::list_query_traces,
         crate::routes::debug::get_trace_stats,
-        // Agent endpoints
-        crate::routes::agent::create_agent,
-        crate::routes::agent::list_agents,
-        crate::routes::agent::get_agent,
-        crate::routes::agent::delete_agent,
-        crate::routes::agent::stream_logs,
-        crate::routes::agent::trigger_cleanup,
+        // Weaver endpoints
+        crate::routes::weaver::create_weaver,
+        crate::routes::weaver::list_weavers,
+        crate::routes::weaver::get_weaver,
+        crate::routes::weaver::delete_weaver,
+        crate::routes::weaver::stream_logs,
+        crate::routes::weaver::trigger_cleanup,
     ),
     components(
         schemas(
@@ -126,13 +126,13 @@ use utoipa::OpenApi;
             loom_google_cse::CseRequest,
             loom_google_cse::CseResponse,
             loom_google_cse::CseResultItem,
-            // Agent types
-            crate::routes::agent::CreateAgentApiRequest,
-            crate::routes::agent::AgentApiResponse,
-            crate::routes::agent::AgentStatusApi,
-            crate::routes::agent::ListAgentsApiResponse,
-            crate::routes::agent::CleanupApiResponse,
-            crate::routes::agent::ResourceSpecApi,
+            // Weaver types
+            crate::routes::weaver::CreateWeaverApiRequest,
+            crate::routes::weaver::WeaverApiResponse,
+            crate::routes::weaver::WeaverStatusApi,
+            crate::routes::weaver::ListWeaversApiResponse,
+            crate::routes::weaver::CleanupApiResponse,
+            crate::routes::weaver::ResourceSpecApi,
         )
     )
 )]
@@ -169,7 +169,7 @@ mod tests {
 			"server-query",
 			"debug",
 			"auth",
-			"agents",
+			"weavers",
 		];
 		for tag in expected_tags {
 			assert!(json.contains(tag), "Missing tag: {tag}");

@@ -1,42 +1,42 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
-//! Agent provisioning types.
+//! Weaver provisioning types.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Unique identifier for an agent, using UUID7 (time-ordered).
+/// Unique identifier for a weaver, using UUID7 (time-ordered).
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct AgentId(uuid7::Uuid);
+pub struct WeaverId(uuid7::Uuid);
 
-impl AgentId {
-    /// Create a new agent ID with UUID7.
+impl WeaverId {
+    /// Create a new weaver ID with UUID7.
     pub fn new() -> Self {
         Self(uuid7::uuid7())
     }
 
-    /// Get the Kubernetes-compatible name for this agent.
+    /// Get the Kubernetes-compatible name for this weaver.
     pub fn as_k8s_name(&self) -> String {
-        format!("agent-{}", self.0)
+        format!("weaver-{}", self.0)
     }
 }
 
-impl Default for AgentId {
+impl Default for WeaverId {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl std::fmt::Display for AgentId {
+impl std::fmt::Display for WeaverId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl std::str::FromStr for AgentId {
+impl std::str::FromStr for WeaverId {
     type Err = uuid7::ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -45,10 +45,10 @@ impl std::str::FromStr for AgentId {
     }
 }
 
-/// Status of an agent, mapped from Kubernetes Pod phase.
+/// Status of a weaver, mapped from Kubernetes Pod phase.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum AgentStatus {
+pub enum WeaverStatus {
     /// Pod created, containers starting
     Pending,
     /// Containers running
@@ -59,20 +59,20 @@ pub enum AgentStatus {
     Failed,
 }
 
-/// An agent instance with its current state.
+/// A weaver instance with its current state.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Agent {
-    /// Unique agent identifier
-    pub id: AgentId,
+pub struct Weaver {
+    /// Unique weaver identifier
+    pub id: WeaverId,
     /// Kubernetes Pod name
     pub pod_name: String,
-    /// Current agent status
-    pub status: AgentStatus,
+    /// Current weaver status
+    pub status: WeaverStatus,
     /// Container image
     pub image: String,
     /// User-defined metadata tags
     pub tags: HashMap<String, String>,
-    /// When the agent was created
+    /// When the weaver was created
     pub created_at: DateTime<Utc>,
     /// Configured lifetime in hours
     pub lifetime_hours: u32,
@@ -80,7 +80,7 @@ pub struct Agent {
     pub age_hours: f64,
 }
 
-/// Resource limits for an agent.
+/// Resource limits for a weaver.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ResourceSpec {
     /// Memory limit (e.g., "8Gi")
@@ -89,9 +89,9 @@ pub struct ResourceSpec {
     pub cpu_limit: Option<String>,
 }
 
-/// Request to create a new agent.
+/// Request to create a new weaver.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CreateAgentRequest {
+pub struct CreateWeaverRequest {
     /// Container image to run
     pub image: String,
     /// Environment variables
@@ -113,7 +113,7 @@ pub struct CreateAgentRequest {
     pub workdir: Option<String>,
 }
 
-/// Options for streaming agent logs.
+/// Options for streaming weaver logs.
 #[derive(Debug, Clone)]
 pub struct LogStreamOptions {
     /// Number of lines to tail from the end of the log (default: 256)
@@ -134,8 +134,8 @@ impl Default for LogStreamOptions {
 /// Result of a cleanup operation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CleanupResult {
-    /// IDs of agents that were deleted
-    pub deleted: Vec<AgentId>,
-    /// Number of agents deleted
+    /// IDs of weavers that were deleted
+    pub deleted: Vec<WeaverId>,
+    /// Number of weavers deleted
     pub count: u32,
 }

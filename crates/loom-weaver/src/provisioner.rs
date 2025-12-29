@@ -1,7 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
-//! Core provisioner implementation for agent lifecycle management.
+//! Core provisioner implementation for weaver lifecycle management.
 
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
@@ -16,27 +16,27 @@ use loom_k8s::{
     SecurityContext,
 };
 
-use crate::config::AgentConfig;
+use crate::config::WeaverConfig;
 use crate::error::ProvisionerError;
-use crate::types::{Agent, AgentId, AgentStatus, CleanupResult, CreateAgentRequest, LogStreamOptions};
+use crate::types::{Weaver, WeaverId, WeaverStatus, CleanupResult, CreateWeaverRequest, LogStreamOptions};
 
 const MANAGED_LABEL: &str = "loom.dev/managed";
-const AGENT_ID_LABEL: &str = "loom.dev/agent-id";
+const WEAVER_ID_LABEL: &str = "loom.dev/weaver-id";
 const TAGS_ANNOTATION: &str = "loom.dev/tags";
 const LIFETIME_ANNOTATION: &str = "loom.dev/lifetime-hours";
-const CONTAINER_NAME: &str = "agent";
+const CONTAINER_NAME: &str = "weaver";
 const DEFAULT_MEMORY_LIMIT: &str = "16Gi";
 const POLL_INTERVAL_MS: u64 = 500;
 
-/// The main provisioner for managing agent lifecycle.
+/// The main provisioner for managing weaver lifecycle.
 pub struct Provisioner {
     client: Arc<dyn K8sClient>,
-    config: AgentConfig,
+    config: WeaverConfig,
 }
 
 impl Provisioner {
     /// Create a new provisioner with the given K8s client and configuration.
-    pub fn new(client: Arc<dyn K8sClient>, config: AgentConfig) -> Self {
+    pub fn new(client: Arc<dyn K8sClient>, config: WeaverConfig) -> Self {
         Self { client, config }
     }
 
@@ -64,23 +64,23 @@ impl Provisioner {
         }
     }
 
-    /// Create a new agent based on the provided request.
-    pub async fn create_agent(&self, req: CreateAgentRequest) -> Result<Agent, ProvisionerError> {
+    /// Create a new weaver based on the provided request.
+    pub async fn create_weaver(&self, req: CreateWeaverRequest) -> Result<Weaver, ProvisionerError> {
         let lifetime_hours = self.validate_lifetime(req.lifetime_hours)?;
 
-        let active_count = self.count_active_agents().await?;
+        let active_count = self.count_active_weavers().await?;
         if active_count >= self.config.max_concurrent {
-            return Err(ProvisionerError::TooManyAgents {
+            return Err(ProvisionerError::TooManyWeavers {
                 current: active_count,
                 max: self.config.max_concurrent,
             });
         }
 
-        let id = AgentId::new();
+        let id = WeaverId::new();
         let pod = build_pod_spec(&id, &req, &self.config, lifetime_hours);
         let pod_name = id.as_k8s_name();
 
-        tracing::info!(agent_id = %id, pod_name = %pod_name, image = %req.image, "Creating agent pod");
+        tracing::info!(weaver_id = %id, pod_name = %pod_name, image = %req.image, "Creating weaver pod");
 
         self.client.create_pod(&self.config.namespace, pod).await?;
 
@@ -89,7 +89,7 @@ impl Provisioner {
             .await?;
 
         let created_at = Utc::now();
-        Ok(Agent {
+        Ok(Weaver {
             id,
             pod_name,
             status,
@@ -101,8 +101,8 @@ impl Provisioner {
         })
     }
 
-    /// Count the number of active (Pending or Running) agents.
-    pub async fn count_active_agents(&self) -> Result<u32, ProvisionerError> {
+    /// Count the number of active (Pending or Running) weavers.
+    pub async fn count_active_weavers(&self) -> Result<u32, ProvisionerError> {
         let pods = self
             .client
             .list_pods(&self.config.namespace, &format!("{}=true", MANAGED_LABEL))
@@ -140,13 +140,13 @@ impl Provisioner {
         &self,
         pod_name: &str,
         timeout: Duration,
-    ) -> Result<AgentStatus, ProvisionerError> {
+    ) -> Result<WeaverStatus, ProvisionerError> {
         let start = std::time::Instant::now();
         let poll_interval = Duration::from_millis(POLL_INTERVAL_MS);
 
         loop {
             if start.elapsed() > timeout {
-                return Err(ProvisionerError::AgentTimeout {
+                return Err(ProvisionerError::WeaverTimeout {
                     id: pod_name.to_string(),
                 });
             }
@@ -160,15 +160,15 @@ impl Provisioner {
                 .unwrap_or("Unknown");
 
             match phase {
-                "Running" => return Ok(AgentStatus::Running),
-                "Succeeded" => return Ok(AgentStatus::Succeeded),
+                "Running" => return Ok(WeaverStatus::Running),
+                "Succeeded" => return Ok(WeaverStatus::Succeeded),
                 "Failed" => {
                     let reason = pod
                         .status
                         .as_ref()
                         .and_then(|s| s.message.clone())
                         .unwrap_or_else(|| "Unknown failure".to_string());
-                    return Err(ProvisionerError::AgentFailed {
+                    return Err(ProvisionerError::WeaverFailed {
                         id: pod_name.to_string(),
                         reason,
                     });
@@ -183,53 +183,53 @@ impl Provisioner {
         }
     }
 
-    /// List all agents, optionally filtered by tags.
+    /// List all weavers, optionally filtered by tags.
     ///
-    /// If `tag_filter` is provided, only agents matching all specified tags are returned.
-    pub async fn list_agents(
+    /// If `tag_filter` is provided, only weavers matching all specified tags are returned.
+    pub async fn list_weavers(
         &self,
         tag_filter: Option<HashMap<String, String>>,
-    ) -> Result<Vec<Agent>, ProvisionerError> {
+    ) -> Result<Vec<Weaver>, ProvisionerError> {
         let pods = self
             .client
             .list_pods(&self.config.namespace, &format!("{}=true", MANAGED_LABEL))
             .await?;
 
-        let mut agents = Vec::new();
+        let mut weavers = Vec::new();
         for pod in &pods {
-            match pod_to_agent(pod) {
-                Ok(agent) => agents.push(agent),
+            match pod_to_weaver(pod) {
+                Ok(weaver) => weavers.push(weaver),
                 Err(e) => {
-                    tracing::warn!("Failed to parse pod as agent: {}", e);
+                    tracing::warn!("Failed to parse pod as weaver: {}", e);
                 }
             }
         }
 
         if let Some(filter) = tag_filter {
-            agents.retain(|agent| {
+            weavers.retain(|weaver| {
                 filter
                     .iter()
-                    .all(|(k, v)| agent.tags.get(k).map(|av| av == v).unwrap_or(false))
+                    .all(|(k, v)| weaver.tags.get(k).map(|av| av == v).unwrap_or(false))
             });
         }
 
-        Ok(agents)
+        Ok(weavers)
     }
 
-    /// Get a specific agent by ID.
-    pub async fn get_agent(&self, id: &AgentId) -> Result<Agent, ProvisionerError> {
+    /// Get a specific weaver by ID.
+    pub async fn get_weaver(&self, id: &WeaverId) -> Result<Weaver, ProvisionerError> {
         let pod_name = id.as_k8s_name();
         match self.client.get_pod(&pod_name, &self.config.namespace).await {
-            Ok(pod) => pod_to_agent(&pod),
-            Err(loom_k8s::K8sError::PodNotFound { .. }) => Err(ProvisionerError::AgentNotFound {
+            Ok(pod) => pod_to_weaver(&pod),
+            Err(loom_k8s::K8sError::PodNotFound { .. }) => Err(ProvisionerError::WeaverNotFound {
                 id: id.to_string(),
             }),
             Err(e) => Err(e.into()),
         }
     }
 
-    /// Delete an agent by ID with a 5-second grace period.
-    pub async fn delete_agent(&self, id: &AgentId) -> Result<(), ProvisionerError> {
+    /// Delete a weaver by ID with a 5-second grace period.
+    pub async fn delete_weaver(&self, id: &WeaverId) -> Result<(), ProvisionerError> {
         let pod_name = id.as_k8s_name();
         match self
             .client
@@ -237,20 +237,20 @@ impl Provisioner {
             .await
         {
             Ok(()) => Ok(()),
-            Err(loom_k8s::K8sError::PodNotFound { .. }) => Err(ProvisionerError::AgentNotFound {
+            Err(loom_k8s::K8sError::PodNotFound { .. }) => Err(ProvisionerError::WeaverNotFound {
                 id: id.to_string(),
             }),
             Err(e) => Err(e.into()),
         }
     }
 
-    /// Stream logs from an agent's container.
+    /// Stream logs from a weaver's container.
     pub async fn stream_logs(
         &self,
-        id: &AgentId,
+        id: &WeaverId,
         opts: LogStreamOptions,
     ) -> Result<LogStream, ProvisionerError> {
-        self.get_agent(id).await?;
+        self.get_weaver(id).await?;
 
         let pod_name = id.as_k8s_name();
         let log_opts = LogOptions {
@@ -264,32 +264,32 @@ impl Provisioner {
             .map_err(Into::into)
     }
 
-    /// Find all agents that have exceeded their lifetime.
-    pub async fn find_expired_agents(&self) -> Result<Vec<Agent>, ProvisionerError> {
-        let agents = self.list_agents(None).await?;
-        let expired = agents
+    /// Find all weavers that have exceeded their lifetime.
+    pub async fn find_expired_weavers(&self) -> Result<Vec<Weaver>, ProvisionerError> {
+        let weavers = self.list_weavers(None).await?;
+        let expired = weavers
             .into_iter()
-            .filter(|agent| agent.age_hours >= agent.lifetime_hours as f64)
+            .filter(|weaver| weaver.age_hours >= weaver.lifetime_hours as f64)
             .collect();
         Ok(expired)
     }
 
-    /// Clean up all expired agents.
-    pub async fn cleanup_expired_agents(&self) -> Result<CleanupResult, ProvisionerError> {
-        let expired = self.find_expired_agents().await?;
+    /// Clean up all expired weavers.
+    pub async fn cleanup_expired_weavers(&self) -> Result<CleanupResult, ProvisionerError> {
+        let expired = self.find_expired_weavers().await?;
         let mut deleted = Vec::new();
 
-        for agent in expired {
-            match self.delete_agent(&agent.id).await {
+        for weaver in expired {
+            match self.delete_weaver(&weaver.id).await {
                 Ok(()) => {
-                    tracing::info!(agent_id = %agent.id, age_hours = agent.age_hours, "Deleted expired agent");
-                    deleted.push(agent.id);
+                    tracing::info!(weaver_id = %weaver.id, age_hours = weaver.age_hours, "Deleted expired weaver");
+                    deleted.push(weaver.id);
                 }
-                Err(ProvisionerError::AgentNotFound { .. }) => {
-                    tracing::debug!(agent_id = %agent.id, "Agent already deleted");
+                Err(ProvisionerError::WeaverNotFound { .. }) => {
+                    tracing::debug!(weaver_id = %weaver.id, "Weaver already deleted");
                 }
                 Err(e) => {
-                    tracing::error!(agent_id = %agent.id, error = %e, "Failed to delete expired agent");
+                    tracing::error!(weaver_id = %weaver.id, error = %e, "Failed to delete expired weaver");
                 }
             }
         }
@@ -304,18 +304,18 @@ impl Provisioner {
     }
 }
 
-/// Build a Kubernetes Pod spec for an agent.
+/// Build a Kubernetes Pod spec for a weaver.
 fn build_pod_spec(
-    id: &AgentId,
-    req: &CreateAgentRequest,
-    config: &AgentConfig,
+    id: &WeaverId,
+    req: &CreateWeaverRequest,
+    config: &WeaverConfig,
     lifetime_hours: u32,
 ) -> Pod {
     let pod_name = id.as_k8s_name();
 
     let mut labels = BTreeMap::new();
     labels.insert(MANAGED_LABEL.to_string(), "true".to_string());
-    labels.insert(AGENT_ID_LABEL.to_string(), id.to_string());
+    labels.insert(WEAVER_ID_LABEL.to_string(), id.to_string());
 
     let mut annotations = BTreeMap::new();
     if !req.tags.is_empty() {
@@ -401,8 +401,8 @@ fn build_pod_spec(
     }
 }
 
-/// Convert a Kubernetes Pod to an Agent.
-fn pod_to_agent(pod: &Pod) -> Result<Agent, ProvisionerError> {
+/// Convert a Kubernetes Pod to a Weaver.
+fn pod_to_weaver(pod: &Pod) -> Result<Weaver, ProvisionerError> {
     let metadata = pod.metadata.clone();
     let pod_name = metadata.name.clone().unwrap_or_default();
 
@@ -410,15 +410,15 @@ fn pod_to_agent(pod: &Pod) -> Result<Agent, ProvisionerError> {
     let annotations = metadata.annotations.unwrap_or_default();
 
     let id_str = labels
-        .get(AGENT_ID_LABEL)
-        .ok_or_else(|| ProvisionerError::AgentFailed {
+        .get(WEAVER_ID_LABEL)
+        .ok_or_else(|| ProvisionerError::WeaverFailed {
             id: pod_name.clone(),
-            reason: format!("Missing {} label", AGENT_ID_LABEL),
+            reason: format!("Missing {} label", WEAVER_ID_LABEL),
         })?;
 
-    let id = id_str.parse::<AgentId>().map_err(|_| ProvisionerError::AgentFailed {
+    let id = id_str.parse::<WeaverId>().map_err(|_| ProvisionerError::WeaverFailed {
         id: pod_name.clone(),
-        reason: format!("Invalid agent ID: {}", id_str),
+        reason: format!("Invalid weaver ID: {}", id_str),
     })?;
 
     let tags: HashMap<String, String> = annotations
@@ -447,7 +447,7 @@ fn pod_to_agent(pod: &Pod) -> Result<Agent, ProvisionerError> {
         .map(|c| c.image.clone().unwrap_or_default())
         .unwrap_or_default();
 
-    Ok(Agent {
+    Ok(Weaver {
         id,
         pod_name,
         status,
@@ -459,8 +459,8 @@ fn pod_to_agent(pod: &Pod) -> Result<Agent, ProvisionerError> {
     })
 }
 
-/// Map Kubernetes Pod phase to AgentStatus.
-fn map_pod_phase(pod: &Pod) -> AgentStatus {
+/// Map Kubernetes Pod phase to WeaverStatus.
+fn map_pod_phase(pod: &Pod) -> WeaverStatus {
     let phase = pod
         .status
         .as_ref()
@@ -468,15 +468,15 @@ fn map_pod_phase(pod: &Pod) -> AgentStatus {
         .unwrap_or("Unknown");
 
     match phase {
-        "Pending" => AgentStatus::Pending,
-        "Running" => AgentStatus::Running,
-        "Succeeded" => AgentStatus::Succeeded,
-        "Failed" => AgentStatus::Failed,
-        _ => AgentStatus::Pending,
+        "Pending" => WeaverStatus::Pending,
+        "Running" => WeaverStatus::Running,
+        "Succeeded" => WeaverStatus::Succeeded,
+        "Failed" => WeaverStatus::Failed,
+        _ => WeaverStatus::Pending,
     }
 }
 
-/// Calculate the age of an agent in hours from its creation timestamp.
+/// Calculate the age of a weaver in hours from its creation timestamp.
 fn calculate_age_hours(created_at: DateTime<Utc>) -> f64 {
     let now = Utc::now();
     let duration = now.signed_duration_since(created_at);
@@ -490,8 +490,8 @@ mod tests {
 
     #[test]
     fn test_build_pod_spec_basic() {
-        let id = AgentId::new();
-        let req = CreateAgentRequest {
+        let id = WeaverId::new();
+        let req = CreateWeaverRequest {
             image: "python:3.12".to_string(),
             env: HashMap::new(),
             resources: Default::default(),
@@ -501,16 +501,16 @@ mod tests {
             args: None,
             workdir: None,
         };
-        let config = AgentConfig::default();
+        let config = WeaverConfig::default();
 
         let pod = build_pod_spec(&id, &req, &config, 4);
 
         assert_eq!(pod.metadata.name, Some(id.as_k8s_name()));
-        assert_eq!(pod.metadata.namespace, Some("loom-agents".to_string()));
+        assert_eq!(pod.metadata.namespace, Some("loom-weavers".to_string()));
 
         let labels = pod.metadata.labels.unwrap();
         assert_eq!(labels.get(MANAGED_LABEL), Some(&"true".to_string()));
-        assert_eq!(labels.get(AGENT_ID_LABEL), Some(&id.to_string()));
+        assert_eq!(labels.get(WEAVER_ID_LABEL), Some(&id.to_string()));
 
         let annotations = pod.metadata.annotations.unwrap();
         assert_eq!(annotations.get(LIFETIME_ANNOTATION), Some(&"4".to_string()));
@@ -536,12 +536,12 @@ mod tests {
 
     #[test]
     fn test_build_pod_spec_with_env_and_resources() {
-        let id = AgentId::new();
+        let id = WeaverId::new();
         let mut env = HashMap::new();
         env.insert("TASK_ID".to_string(), "abc123".to_string());
         env.insert("API_URL".to_string(), "https://api.example.com".to_string());
 
-        let req = CreateAgentRequest {
+        let req = CreateWeaverRequest {
             image: "worker:latest".to_string(),
             env,
             resources: crate::types::ResourceSpec {
@@ -554,7 +554,7 @@ mod tests {
             args: Some(vec!["python worker.py".to_string()]),
             workdir: Some("/app".to_string()),
         };
-        let config = AgentConfig::default();
+        let config = WeaverConfig::default();
 
         let pod = build_pod_spec(&id, &req, &config, 8);
         let spec = pod.spec.unwrap();
@@ -581,12 +581,12 @@ mod tests {
 
     #[test]
     fn test_build_pod_spec_with_tags() {
-        let id = AgentId::new();
+        let id = WeaverId::new();
         let mut tags = HashMap::new();
         tags.insert("project".to_string(), "ai-worker".to_string());
         tags.insert("env".to_string(), "prod".to_string());
 
-        let req = CreateAgentRequest {
+        let req = CreateWeaverRequest {
             image: "test:latest".to_string(),
             env: HashMap::new(),
             resources: Default::default(),
@@ -596,7 +596,7 @@ mod tests {
             args: None,
             workdir: None,
         };
-        let config = AgentConfig::default();
+        let config = WeaverConfig::default();
 
         let pod = build_pod_spec(&id, &req, &config, 4);
         let annotations = pod.metadata.annotations.unwrap();

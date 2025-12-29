@@ -3,28 +3,28 @@
 
 //! Provisioner error types.
 
-/// Errors that can occur during agent provisioning operations.
+/// Errors that can occur during weaver provisioning operations.
 #[derive(Debug, thiserror::Error)]
 pub enum ProvisionerError {
-    /// Agent not found
-    #[error("Agent not found: {id}")]
-    AgentNotFound { id: String },
+    /// Weaver not found
+    #[error("Weaver not found: {id}")]
+    WeaverNotFound { id: String },
 
-    /// Too many concurrent agents
-    #[error("Too many agents: {current} running (max: {max})")]
-    TooManyAgents { current: u32, max: u32 },
+    /// Too many concurrent weavers
+    #[error("Too many weavers: {current} running (max: {max})")]
+    TooManyWeavers { current: u32, max: u32 },
 
     /// Requested lifetime exceeds maximum
     #[error("Invalid lifetime: {requested} hours (max: {max} hours)")]
     InvalidLifetime { requested: u32, max: u32 },
 
-    /// Agent failed to start
-    #[error("Agent failed: {id} - {reason}")]
-    AgentFailed { id: String, reason: String },
+    /// Weaver failed to start
+    #[error("Weaver failed: {id} - {reason}")]
+    WeaverFailed { id: String, reason: String },
 
-    /// Agent timed out waiting for ready state
-    #[error("Agent timed out waiting for ready state: {id}")]
-    AgentTimeout { id: String },
+    /// Weaver timed out waiting for ready state
+    #[error("Weaver timed out waiting for ready state: {id}")]
+    WeaverTimeout { id: String },
 
     /// Kubernetes error
     #[error(transparent)]

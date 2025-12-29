@@ -6,7 +6,7 @@
 //! This crate provides an HTTP server for persisting and syncing Loom threads
 //! to a SQLite database.
 
-pub mod agent_metrics;
+pub mod weaver_metrics;
 pub mod api;
 pub mod api_docs;
 pub mod config;

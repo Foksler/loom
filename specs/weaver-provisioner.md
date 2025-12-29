@@ -3,7 +3,7 @@
  SPDX-License-Identifier: Proprietary
 -->
 
-# Agent Provisioner Specification
+# Weaver Provisioner Specification
 
 **Status:** Draft\
 **Version:** 1.0\
@@ -15,21 +15,21 @@
 
 ### Purpose
 
-The Agent Provisioner is a Rust-based infrastructure component for creating, managing, and monitoring
+The Weaver Provisioner is a Rust-based infrastructure component for creating, managing, and monitoring
 ephemeral, isolated execution environments using Kubernetes Pods. It provides a REST API for
-provisioning agents with automatic TTL-based cleanup.
+provisioning weavers with automatic TTL-based cleanup.
 
 ### Goals
 
 - **Ephemerality**: All workloads are short-lived (default TTL: 4 hours, max: 48 hours)
 - **Isolation**: Pods run with security-hardened contexts (non-root, dropped capabilities)
 - **Observability**: Real-time SSE log streaming, Prometheus metrics
-- **Simplicity**: K8s is source of truth, no database for agent state
+- **Simplicity**: K8s is source of truth, no database for weaver state
 - **Testability**: Separate crates for K8s abstraction and business logic
 
 ### Non-Goals
 
-- Persistent storage for agents
+- Persistent storage for weavers
 - Multi-cluster support
 - Custom network policies (use cluster defaults)
 - Image registry authentication (handled by cluster)
@@ -43,8 +43,8 @@ provisioning agents with automatic TTL-based cleanup.
 ```
 crates/
 ├── loom-k8s/                # K8s client trait + kube implementation
-├── loom-agent-provisioner/  # Business logic, cleanup, webhooks
-└── loom-server/             # HTTP endpoints (/api/agent*)
+├── loom-weaver/             # Business logic, cleanup, webhooks
+└── loom-server/             # HTTP endpoints (/api/weaver*)
 ```
 
 ### 2.2 Dependency Graph
@@ -57,7 +57,7 @@ crates/
          │
          ▼
 ┌─────────────────────────┐
-│  loom-agent-provisioner │
+│      loom-weaver        │
 │   (business logic)      │
 └────────┬────────────────┘
          │
@@ -88,18 +88,18 @@ Real implementation uses the `kube` crate. Tests use mock implementations.
 
 ---
 
-## 3. Agent Identification
+## 3. Weaver Identification
 
 ### 3.1 UUID7
 
-Agents are identified using UUID7 (time-ordered, globally unique):
+Weavers are identified using UUID7 (time-ordered, globally unique):
 
 ```rust
 use uuid7::uuid7;
 
-pub struct AgentId(uuid7::Uuid);
+pub struct WeaverId(uuid7::Uuid);
 
-impl AgentId {
+impl WeaverId {
     pub fn new() -> Self {
         Self(uuid7())
     }
@@ -110,18 +110,18 @@ Add `uuid7` as a workspace dependency.
 
 ### 3.2 Pod Naming
 
-Pod name format: `agent-{uuid7}`
+Pod name format: `weaver-{uuid7}`
 
-Example: `agent-018f6b2a-3b4c-7d8e-9f0a-1b2c3d4e5f6g`
+Example: `weaver-018f6b2a-3b4c-7d8e-9f0a-1b2c3d4e5f6g`
 
 ### 3.3 K8s Labels and Annotations
 
 ```yaml
 metadata:
-  name: agent-018f6b2a-...
+  name: weaver-018f6b2a-...
   labels:
     loom.dev/managed: "true"
-    loom.dev/agent-id: "018f6b2a-..."
+    loom.dev/weaver-id: "018f6b2a-..."
   annotations:
     loom.dev/tags: '{"project":"ai-worker","env":"prod"}'
     loom.dev/lifetime-hours: "4"
@@ -133,19 +133,19 @@ metadata:
 
 ### 4.1 K8s as Source of Truth
 
-- **No database** for agent state
+- **No database** for weaver state
 - All operations query K8s directly
 - Labels enable filtering (`loom.dev/managed=true`)
 - Annotations store metadata (tags, lifetime)
 
-### 4.2 Agent Status
+### 4.2 Weaver Status
 
 Mapped from K8s Pod phase:
 
 ```rust
 #[derive(Serialize, ToSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum AgentStatus {
+pub enum WeaverStatus {
     Pending,    // Pod created, containers starting
     Running,    // Containers running
     Succeeded,  // Completed successfully (exit 0)
@@ -161,26 +161,26 @@ pub enum AgentStatus {
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/agent` | Provision new agent |
-| GET | `/api/agents` | List managed agents |
-| GET | `/api/agent/{id}` | Get agent details |
-| DELETE | `/api/agent/{id}` | Delete agent |
-| GET | `/api/agent/{id}/logs` | SSE log stream |
-| POST | `/api/agents/cleanup` | Manual cleanup trigger |
+| POST | `/api/weaver` | Provision new weaver |
+| GET | `/api/weavers` | List managed weavers |
+| GET | `/api/weaver/{id}` | Get weaver details |
+| DELETE | `/api/weaver/{id}` | Delete weaver |
+| GET | `/api/weaver/{id}/logs` | SSE log stream |
+| POST | `/api/weavers/cleanup` | Manual cleanup trigger |
 
 ### 5.2 Authentication
 
-All `/api/agent*` endpoints require API key authentication:
+All `/api/weaver*` endpoints require API key authentication:
 
 ```
-X-API-Key: sk-xxxxx
+X-API-Key: [REDACTED:api-key]
 ```
 
-Configured via `LOOM_SERVER_AGENT_API_KEY` environment variable.
+Configured via `LOOM_SERVER_WEAVER_API_KEY` environment variable.
 
-### 5.3 POST /api/agent
+### 5.3 POST /api/weaver
 
-Provision a new agent.
+Provision a new weaver.
 
 **Request:**
 
@@ -222,7 +222,7 @@ Provision a new agent.
 ```json
 {
   "id": "018f6b2a-3b4c-7d8e-9f0a-1b2c3d4e5f6g",
-  "pod_name": "agent-018f6b2a-3b4c-7d8e-9f0a-1b2c3d4e5f6g",
+  "pod_name": "weaver-018f6b2a-3b4c-7d8e-9f0a-1b2c3d4e5f6g",
   "status": "running",
   "created_at": "2025-01-15T12:34:56Z"
 }
@@ -233,9 +233,9 @@ Provision a new agent.
 - Returns `429 Too Many Requests` if max concurrent limit reached
 - Returns `400 Bad Request` if lifetime exceeds max
 
-### 5.4 GET /api/agents
+### 5.4 GET /api/weavers
 
-List all managed agents.
+List all managed weavers.
 
 **Query Parameters:**
 
@@ -247,100 +247,77 @@ List all managed agents.
 
 ```json
 {
-  "agents": [
+  "weavers": [
     {
       "id": "018f6b2a-...",
-      "pod_name": "agent-018f6b2a-...",
+      "pod_name": "weaver-018f6b2a-...",
       "status": "running",
       "image": "python:3.12",
       "tags": {"project": "ai-worker"},
       "created_at": "2025-01-15T12:34:56Z",
-      "lifetime_hours": 4
+      "expires_at": "2025-01-15T16:34:56Z"
     }
-  ],
-  "count": 1
+  ]
 }
 ```
 
-### 5.5 GET /api/agent/{id}
+### 5.5 GET /api/weaver/{id}
 
-Get agent details.
+Get weaver details.
 
 **Response:**
 
 ```json
 {
   "id": "018f6b2a-...",
-  "pod_name": "agent-018f6b2a-...",
+  "pod_name": "weaver-018f6b2a-...",
   "status": "running",
   "image": "python:3.12",
   "tags": {"project": "ai-worker"},
   "created_at": "2025-01-15T12:34:56Z",
-  "lifetime_hours": 4,
-  "age_hours": 2.5
+  "expires_at": "2025-01-15T16:34:56Z",
+  "resources": {
+    "memory_limit": "8Gi",
+    "cpu_limit": "4"
+  }
 }
 ```
 
-### 5.6 DELETE /api/agent/{id}
+### 5.6 DELETE /api/weaver/{id}
 
-Delete an agent.
+Delete a weaver.
 
 **Response (204 No Content)**
 
-Grace period: 5 seconds (hardcoded).
+### 5.7 GET /api/weaver/{id}/logs
 
-### 5.7 GET /api/agent/{id}/logs
-
-Stream logs via SSE.
+SSE stream of container logs.
 
 **Query Parameters:**
 
-| Param | Default | Description |
-|-------|---------|-------------|
-| `tail` | 256 | Last N lines on connect |
-| `timestamps` | true | Include RFC3339 timestamps |
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `tail` | u32 | 100 | Initial lines to return |
+| `timestamps` | bool | false | Include log timestamps |
 
-**SSE Response:**
+**Response (SSE):**
 
 ```
-event: log
-data: {"line": "2025-01-15T12:34:56Z Starting worker..."}
+data: {"line": "Starting worker...", "timestamp": "2025-01-15T12:35:00Z"}
 
-event: log
-data: {"line": "2025-01-15T12:34:57Z Processing request..."}
+data: {"line": "Processing task abc123", "timestamp": "2025-01-15T12:35:01Z"}
 ```
 
-### 5.8 POST /api/agents/cleanup
+### 5.8 POST /api/weavers/cleanup
 
-Trigger manual cleanup.
+Trigger manual cleanup of expired weavers.
 
-**Query Parameters:**
-
-| Param | Default | Description |
-|-------|---------|-------------|
-| `dry_run` | false | Preview without deleting |
-
-**Response (dry_run=true):**
+**Response:**
 
 ```json
 {
-  "dry_run": true,
-  "would_delete": [
-    {"id": "018f6b2a-...", "age_hours": 26, "lifetime_hours": 4}
-  ],
-  "count": 1
-}
-```
-
-**Response (dry_run=false):**
-
-```json
-{
-  "dry_run": false,
-  "deleted": [
-    {"id": "018f6b2a-..."}
-  ],
-  "count": 1
+  "deleted_count": 3,
+  "deleted_ids": ["018f6b2a-...", "018f6b2b-...", "018f6b2c-..."]
 }
 ```
 
@@ -348,24 +325,26 @@ Trigger manual cleanup.
 
 ## 6. Error Responses
 
-Follow loom-server's standard error format:
+### 6.1 Format
 
 ```json
 {
-  "code": "agent_not_found",
-  "message": "Agent with ID 018f6b2a-... not found"
+  "error": {
+    "code": "weaver_not_found",
+    "message": "Weaver with ID 018f6b2a-... not found"
+  }
 }
 ```
 
-### Error Codes
+### 6.2 Error Codes
 
-| Code | HTTP | Description |
-|------|------|-------------|
-| `agent_not_found` | 404 | Agent ID doesn't exist |
-| `too_many_agents` | 429 | Max concurrent limit reached |
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `weaver_not_found` | 404 | Weaver ID doesn't exist |
+| `too_many_weavers` | 429 | Max concurrent limit reached |
 | `invalid_lifetime` | 400 | TTL exceeds max (48h) |
-| `agent_failed` | 500 | Pod failed to start |
-| `agent_timeout` | 504 | Pod didn't reach running state in time |
+| `weaver_failed` | 500 | Pod failed to start |
+| `weaver_timeout` | 504 | Pod didn't reach running state in time |
 | `k8s_error` | 502 | K8s API failure |
 | `unauthorized` | 401 | Missing/invalid API key |
 
@@ -377,22 +356,22 @@ Follow loom-server's standard error format:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LOOM_SERVER_K8S_NAMESPACE` | `loom-agents` | Target namespace |
-| `LOOM_SERVER_AGENT_API_KEY` | (required) | API key for authentication |
-| `LOOM_SERVER_AGENT_CLEANUP_INTERVAL_SECS` | `1800` | Cleanup task interval (30 min) |
-| `LOOM_SERVER_AGENT_DEFAULT_TTL_HOURS` | `4` | Default agent lifetime |
-| `LOOM_SERVER_AGENT_MAX_TTL_HOURS` | `48` | Maximum lifetime override |
-| `LOOM_SERVER_AGENT_MAX_CONCURRENT` | `64` | Maximum running agents |
-| `LOOM_SERVER_AGENT_READY_TIMEOUT_SECS` | `60` | Timeout waiting for running state |
-| `LOOM_SERVER_AGENT_WEBHOOKS` | `[]` | JSON array of webhook configs |
+| `LOOM_SERVER_WEAVER_K8S_NAMESPACE` | `loom-weavers` | Target namespace |
+| `LOOM_SERVER_WEAVER_API_KEY` | (required) | API key for authentication |
+| `LOOM_SERVER_WEAVER_CLEANUP_INTERVAL_SECS` | `1800` | Cleanup task interval (30 min) |
+| `LOOM_SERVER_WEAVER_DEFAULT_TTL_HOURS` | `4` | Default weaver lifetime |
+| `LOOM_SERVER_WEAVER_MAX_TTL_HOURS` | `48` | Maximum lifetime override |
+| `LOOM_SERVER_WEAVER_MAX_CONCURRENT` | `64` | Maximum running weavers |
+| `LOOM_SERVER_WEAVER_READY_TIMEOUT_SECS` | `60` | Timeout waiting for running state |
+| `LOOM_SERVER_WEAVER_WEBHOOKS` | `[]` | JSON array of webhook configs |
 
 ### 7.2 Webhook Configuration
 
 ```bash
-LOOM_SERVER_AGENT_WEBHOOKS='[
+LOOM_SERVER_WEAVER_WEBHOOKS='[
   {
     "url": "https://billing.example.com/hooks",
-    "events": ["agent.created", "agent.deleted"],
+    "events": ["weaver.created", "weaver.deleted"],
     "secret": "whsec_xxxxx"
   }
 ]'
@@ -431,14 +410,14 @@ Override via request:
 |---------|-------|
 | Restart Policy | `Never` |
 | Grace Period | `5s` |
-| Container Name | `agent` |
+| Container Name | `weaver` |
 | Service Account | `default` (namespace default) |
 
 ---
 
 ## 9. Security Context
 
-All agent Pods run with hardened security:
+All weaver Pods run with hardened security:
 
 ```yaml
 securityContext:
@@ -478,12 +457,12 @@ Background task runs every `CLEANUP_INTERVAL_SECS`:
 
 On server start:
 1. Validate namespace exists (fail if not)
-2. Run cleanup immediately (reconcile orphaned agents)
+2. Run cleanup immediately (reconcile orphaned weavers)
 3. Start interval-based cleanup task
 
 ### 10.3 Shutdown Behavior
 
-Leave agents running. Cleanup resumes when server restarts.
+Leave weavers running. Cleanup resumes when server restarts.
 
 ---
 
@@ -493,18 +472,18 @@ Leave agents running. Cleanup resumes when server restarts.
 
 | Event | Trigger |
 |-------|---------|
-| `agent.created` | POST `/api/agent` success |
-| `agent.deleted` | DELETE or cleanup |
-| `agent.failed` | Pod enters failed state |
-| `agents.cleanup` | Cleanup task completes |
+| `weaver.created` | POST `/api/weaver` success |
+| `weaver.deleted` | DELETE or cleanup |
+| `weaver.failed` | Pod enters failed state |
+| `weavers.cleanup` | Cleanup task completes |
 
 ### 11.2 Payload Format
 
 ```json
 {
-  "event": "agent.created",
+  "event": "weaver.created",
   "timestamp": "2025-01-15T12:34:56Z",
-  "agent": {
+  "weaver": {
     "id": "018f6b2a-...",
     "image": "python:3.12",
     "tags": {"project": "ai-worker"}
@@ -525,12 +504,12 @@ Added to existing `/metrics` endpoint:
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `loom_agents_created_total` | Counter | Agents provisioned |
-| `loom_agents_deleted_total` | Counter | Agents deleted (manual + cleanup) |
-| `loom_agents_failed_total` | Counter | Agents that entered failed state |
-| `loom_agents_cleanup_total` | Counter | Cleanup runs completed |
-| `loom_agents_cleanup_deleted_total` | Counter | Agents deleted by cleanup |
-| `loom_agents_active` | Gauge | Currently running agents |
+| `loom_weavers_created_total` | Counter | Weavers provisioned |
+| `loom_weavers_deleted_total` | Counter | Weavers deleted (manual + cleanup) |
+| `loom_weavers_failed_total` | Counter | Weavers that entered failed state |
+| `loom_weavers_cleanup_total` | Counter | Cleanup runs completed |
+| `loom_weavers_cleanup_deleted_total` | Counter | Weavers deleted by cleanup |
+| `loom_weavers_active` | Gauge | Currently running weavers |
 
 ---
 
@@ -545,7 +524,7 @@ K8s connectivity added to `/health` response:
     "kubernetes": {
       "status": "healthy",
       "latency_ms": 45,
-      "namespace": "loom-agents",
+      "namespace": "loom-weavers",
       "reachable": true
     }
   }
@@ -558,7 +537,7 @@ K8s unreachable → overall status `unhealthy` (critical component).
 
 ## 14. Testing Strategy
 
-### 14.1 Unit Tests (loom-agent-provisioner)
+### 14.1 Unit Tests (loom-weaver)
 
 Mock `K8sClient` trait:
 
@@ -581,14 +560,14 @@ Use Minikube or kind for real K8s:
 ```rust
 #[tokio::test]
 #[ignore] // Requires K8s cluster
-async fn test_full_agent_lifecycle() {
+async fn test_full_weaver_lifecycle() {
     let client = KubeClient::new().await;
     let provisioner = Provisioner::new(client);
     
-    let agent = provisioner.create_agent(req).await.unwrap();
-    assert_eq!(agent.status, AgentStatus::Running);
+    let weaver = provisioner.create_weaver(req).await.unwrap();
+    assert_eq!(weaver.status, WeaverStatus::Running);
     
-    provisioner.delete_agent(&agent.id).await.unwrap();
+    provisioner.delete_weaver(&weaver.id).await.unwrap();
 }
 ```
 
@@ -599,11 +578,11 @@ async fn test_full_agent_lifecycle() {
 ### 15.1 Potential Extensions
 
 - Multi-namespace support
-- Agent exec (interactive shell)
-- Resource usage metrics per agent
-- Agent logs persistence
+- Weaver exec (interactive shell)
+- Resource usage metrics per weaver
+- Weaver logs persistence
 - Webhook retry with backoff
-- Agent templates/presets
+- Weaver templates/presets
 
 ### 15.2 Not Planned
 

@@ -1,7 +1,7 @@
-# Agent Provisioner Implementation Plan
+# Weaver Provisioner Implementation Plan
 
-This document tracks the implementation of the Agent Provisioner feature as specified in
-[specs/agent-provisioner.md](./specs/agent-provisioner.md).
+This document tracks the implementation of the Weaver Provisioner feature as specified in
+[specs/weaver-provisioner.md](./specs/weaver-provisioner.md).
 
 **Status: ✅ IMPLEMENTED**
 
@@ -34,16 +34,16 @@ This document tracks the implementation of the Agent Provisioner feature as spec
 - [x] Implement `K8sClient` trait for `KubeClient`
 - [x] Add to workspace members in root `Cargo.toml`
 
-### 1.3 Create loom-agent-provisioner Crate ✅
+### 1.3 Create loom-weaver Crate ✅
 
-- [x] Create `crates/loom-agent-provisioner/Cargo.toml`
-- [x] Create `crates/loom-agent-provisioner/src/lib.rs`
-- [x] Define `AgentId` type (wraps uuid7)
-- [x] Define `AgentStatus` enum (Pending, Running, Succeeded, Failed)
-- [x] Define `Agent` struct
-- [x] Define `CreateAgentRequest` struct
+- [x] Create `crates/loom-weaver/Cargo.toml`
+- [x] Create `crates/loom-weaver/src/lib.rs`
+- [x] Define `WeaverId` type (wraps uuid7)
+- [x] Define `WeaverStatus` enum (Pending, Running, Succeeded, Failed)
+- [x] Define `Weaver` struct
+- [x] Define `CreateWeaverRequest` struct
 - [x] Define `ResourceSpec` struct
-- [x] Define `AgentConfig` struct (from env vars)
+- [x] Define `WeaverConfig` struct (from env vars)
 - [x] Define `ProvisionerError` error type
 - [x] Add to workspace members in root `Cargo.toml`
 
@@ -55,22 +55,22 @@ This document tracks the implementation of the Agent Provisioner feature as spec
 
 - [x] Create `Provisioner` struct
 - [x] Implement `Provisioner::new(client, config)`
-- [x] Implement `create_agent()` with:
+- [x] Implement `create_weaver()` with:
   - [x] Lifetime validation
   - [x] Max concurrent limit check
-  - [x] UUID7 agent ID generation
+  - [x] UUID7 weaver ID generation
   - [x] Pod spec building with security context
   - [x] Poll until ready with timeout
-- [x] Implement `list_agents()` with tag filtering
-- [x] Implement `get_agent()`
-- [x] Implement `delete_agent()` with 5s grace period
-- [x] Implement `count_active_agents()`
+- [x] Implement `list_weavers()` with tag filtering
+- [x] Implement `get_weaver()`
+- [x] Implement `delete_weaver()` with 5s grace period
+- [x] Implement `count_active_weavers()`
 - [x] Implement `validate_namespace()`
 
 ### 2.2 Cleanup System ✅
 
-- [x] Implement `find_expired_agents()`
-- [x] Implement `cleanup_expired_agents()`
+- [x] Implement `find_expired_weavers()`
+- [x] Implement `cleanup_expired_weavers()`
 - [x] Implement `start_cleanup_task()` background task
 - [x] Define `CleanupResult` struct
 
@@ -84,7 +84,7 @@ This document tracks the implementation of the Agent Provisioner feature as spec
 ## Phase 3: Webhook System ✅
 
 - [x] Define `WebhookPayload` struct
-- [x] Define `WebhookAgentPayload` struct
+- [x] Define `WebhookWeaverPayload` struct
 - [x] Implement `WebhookDispatcher` struct
 - [x] Implement HMAC-SHA256 signature computation
 - [x] Implement fire-and-forget webhook dispatch
@@ -96,26 +96,26 @@ This document tracks the implementation of the Agent Provisioner feature as spec
 
 ### 4.1 Configuration ✅
 
-- [x] Add agent config fields to `ServerConfig`
+- [x] Add weaver config fields to `ServerConfig`
 - [x] Parse from environment variables
 
 ### 4.2 API Middleware ✅
 
-- [x] Implement `require_agent_api_key` middleware
+- [x] Implement `require_weaver_api_key` middleware
 
 ### 4.3 API Handlers ✅
 
-- [x] Create `routes/agent.rs`
-- [x] Implement `POST /api/agent` handler
-- [x] Implement `GET /api/agents` handler
-- [x] Implement `GET /api/agent/:id` handler
-- [x] Implement `DELETE /api/agent/:id` handler
-- [x] Implement `GET /api/agent/:id/logs` handler (SSE)
-- [x] Implement `POST /api/agents/cleanup` handler
+- [x] Create `routes/weaver.rs`
+- [x] Implement `POST /api/weaver` handler
+- [x] Implement `GET /api/weavers` handler
+- [x] Implement `GET /api/weaver/:id` handler
+- [x] Implement `DELETE /api/weaver/:id` handler
+- [x] Implement `GET /api/weaver/:id/logs` handler (SSE)
+- [x] Implement `POST /api/weavers/cleanup` handler
 
 ### 4.4 Router Integration ✅
 
-- [x] Create `agent_routes()` function
+- [x] Create `weaver_routes()` function
 - [x] Merge into main router
 - [x] Apply API key middleware
 
@@ -135,7 +135,7 @@ This document tracks the implementation of the Agent Provisioner feature as spec
 
 ### 5.2 Prometheus Metrics ✅
 
-- [x] Define `AgentMetrics` struct with counters/gauges
+- [x] Define `WeaverMetrics` struct with counters/gauges
 - [x] Implement metric methods
 - [x] Register with Prometheus registry
 
@@ -152,9 +152,9 @@ This document tracks the implementation of the Agent Provisioner feature as spec
 ## Phase 7: Documentation & OpenAPI ✅
 
 - [x] Add `#[utoipa::path]` to all handlers
-- [x] Add agent endpoints to `ApiDoc`
-- [x] Add agent schemas to components
-- [x] Add `agents` tag
+- [x] Add weaver endpoints to `ApiDoc`
+- [x] Add weaver schemas to components
+- [x] Add `weavers` tag
 
 ---
 
@@ -168,16 +168,16 @@ This document tracks the implementation of the Agent Provisioner feature as spec
 | loom-k8s | `src/types.rs` | `LogOptions`, `LogStream` |
 | loom-k8s | `src/client.rs` | `K8sClient` trait |
 | loom-k8s | `src/kube_client.rs` | `KubeClient` implementation |
-| loom-agent-provisioner | `Cargo.toml` | Crate manifest |
-| loom-agent-provisioner | `src/lib.rs` | Module exports |
-| loom-agent-provisioner | `src/error.rs` | `ProvisionerError` enum |
-| loom-agent-provisioner | `src/types.rs` | Core types |
-| loom-agent-provisioner | `src/config.rs` | `AgentConfig`, webhooks |
-| loom-agent-provisioner | `src/provisioner.rs` | Main provisioner logic |
-| loom-agent-provisioner | `src/cleanup.rs` | Background cleanup task |
-| loom-agent-provisioner | `src/webhook.rs` | Webhook dispatcher |
-| loom-server | `src/routes/agent.rs` | HTTP handlers |
-| loom-server | `src/agent_metrics.rs` | Prometheus metrics |
+| loom-weaver | `Cargo.toml` | Crate manifest |
+| loom-weaver | `src/lib.rs` | Module exports |
+| loom-weaver | `src/error.rs` | `ProvisionerError` enum |
+| loom-weaver | `src/types.rs` | Core types |
+| loom-weaver | `src/config.rs` | `WeaverConfig`, webhooks |
+| loom-weaver | `src/provisioner.rs` | Main provisioner logic |
+| loom-weaver | `src/cleanup.rs` | Background cleanup task |
+| loom-weaver | `src/webhook.rs` | Webhook dispatcher |
+| loom-server | `src/routes/weaver.rs` | HTTP handlers |
+| loom-server | `src/weaver_metrics.rs` | Prometheus metrics |
 
 ---
 
@@ -185,15 +185,15 @@ This document tracks the implementation of the Agent Provisioner feature as spec
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LOOM_SERVER_AGENT_ENABLED` | `false` | Enable agent provisioning |
-| `LOOM_SERVER_AGENT_API_KEY` | (required) | API key for authentication |
-| `LOOM_SERVER_K8S_NAMESPACE` | `loom-agents` | Target namespace |
-| `LOOM_SERVER_AGENT_CLEANUP_INTERVAL_SECS` | `1800` | Cleanup interval (30 min) |
-| `LOOM_SERVER_AGENT_DEFAULT_TTL_HOURS` | `4` | Default agent lifetime |
-| `LOOM_SERVER_AGENT_MAX_TTL_HOURS` | `48` | Maximum lifetime |
-| `LOOM_SERVER_AGENT_MAX_CONCURRENT` | `64` | Maximum running agents |
-| `LOOM_SERVER_AGENT_READY_TIMEOUT_SECS` | `60` | Timeout for pod ready |
-| `LOOM_SERVER_AGENT_WEBHOOKS` | `[]` | JSON array of webhooks |
+| `LOOM_SERVER_WEAVER_ENABLED` | `false` | Enable weaver provisioning |
+| `LOOM_SERVER_WEAVER_API_KEY` | (required) | API key for authentication |
+| `LOOM_SERVER_WEAVER_K8S_NAMESPACE` | `loom-weavers` | Target namespace |
+| `LOOM_SERVER_WEAVER_CLEANUP_INTERVAL_SECS` | `1800` | Cleanup interval (30 min) |
+| `LOOM_SERVER_WEAVER_DEFAULT_TTL_HOURS` | `4` | Default weaver lifetime |
+| `LOOM_SERVER_WEAVER_MAX_TTL_HOURS` | `48` | Maximum lifetime |
+| `LOOM_SERVER_WEAVER_MAX_CONCURRENT` | `64` | Maximum running weavers |
+| `LOOM_SERVER_WEAVER_READY_TIMEOUT_SECS` | `60` | Timeout for pod ready |
+| `LOOM_SERVER_WEAVER_WEBHOOKS` | `[]` | JSON array of webhooks |
 
 ---
 
@@ -201,9 +201,9 @@ This document tracks the implementation of the Agent Provisioner feature as spec
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/agent` | Provision new agent |
-| GET | `/api/agents` | List managed agents |
-| GET | `/api/agent/{id}` | Get agent details |
-| DELETE | `/api/agent/{id}` | Delete agent |
-| GET | `/api/agent/{id}/logs` | SSE log stream |
-| POST | `/api/agents/cleanup` | Manual cleanup |
+| POST | `/api/weaver` | Provision new weaver |
+| GET | `/api/weavers` | List managed weavers |
+| GET | `/api/weaver/{id}` | Get weaver details |
+| DELETE | `/api/weaver/{id}` | Delete weaver |
+| GET | `/api/weaver/{id}/logs` | SSE log stream |
+| POST | `/api/weavers/cleanup` | Manual cleanup |

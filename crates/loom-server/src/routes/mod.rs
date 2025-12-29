@@ -3,7 +3,6 @@
 
 //! HTTP route handlers organized by concern.
 
-pub mod agent;
 pub mod auth;
 pub mod bin;
 pub mod cse;
@@ -11,13 +10,9 @@ pub mod debug;
 pub mod github;
 pub mod health;
 pub mod threads;
+pub mod weaver;
 
 // Re-export commonly used types
-pub use agent::{
-	agent_routes, AgentApiResponse, AgentStatusApi, CleanupApiResponse, CleanupParams,
-	CreateAgentApiRequest, ListAgentsApiResponse, ListAgentsParams, LogStreamParams,
-	ResourceSpecApi,
-};
 pub use auth::AuthStubResponse;
 pub use cse::{CseProxyRequest, CseProxyResponse, CseProxyResultItem};
 pub use github::{
@@ -27,4 +22,9 @@ pub use github::{
 pub use threads::{
 	ListParams, ListResponse, SearchParams, SearchResponse, SearchResponseHit,
 	UpdateVisibilityRequest,
+};
+pub use weaver::{
+	weaver_routes, CleanupApiResponse, CleanupParams, CreateWeaverApiRequest,
+	ListWeaversApiResponse, ListWeaversParams, LogStreamParams, ResourceSpecApi,
+	WeaverApiResponse, WeaverStatusApi,
 };

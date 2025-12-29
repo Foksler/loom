@@ -1,36 +1,36 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
-//! Agent provisioner configuration.
+//! Weaver provisioner configuration.
 
 use loom_secret::Secret;
 use serde::{Deserialize, Serialize};
 
-/// Configuration for the agent provisioner.
+/// Configuration for the weaver provisioner.
 #[derive(Debug, Clone)]
-pub struct AgentConfig {
-    /// Kubernetes namespace for agent pods
+pub struct WeaverConfig {
+    /// Kubernetes namespace for weaver pods
     pub namespace: String,
-    /// API key for agent endpoint authentication
+    /// API key for weaver endpoint authentication
     pub api_key: Secret<String>,
     /// Cleanup task interval in seconds
     pub cleanup_interval_secs: u64,
-    /// Default agent TTL in hours
+    /// Default weaver TTL in hours
     pub default_ttl_hours: u32,
-    /// Maximum agent TTL in hours
+    /// Maximum weaver TTL in hours
     pub max_ttl_hours: u32,
-    /// Maximum concurrent running agents
+    /// Maximum concurrent running weavers
     pub max_concurrent: u32,
-    /// Timeout waiting for agent ready state in seconds
+    /// Timeout waiting for weaver ready state in seconds
     pub ready_timeout_secs: u64,
     /// Webhook configurations
     pub webhooks: Vec<WebhookConfig>,
 }
 
-impl Default for AgentConfig {
+impl Default for WeaverConfig {
     fn default() -> Self {
         Self {
-            namespace: "loom-agents".to_string(),
+            namespace: "loom-weavers".to_string(),
             api_key: Secret::new(String::new()),
             cleanup_interval_secs: 1800, // 30 minutes
             default_ttl_hours: 4,
@@ -57,16 +57,16 @@ pub struct WebhookConfig {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WebhookEvent {
-    /// Agent successfully created
-    #[serde(rename = "agent.created")]
-    AgentCreated,
-    /// Agent deleted (manual or cleanup)
-    #[serde(rename = "agent.deleted")]
-    AgentDeleted,
-    /// Agent entered failed state
-    #[serde(rename = "agent.failed")]
-    AgentFailed,
+    /// Weaver successfully created
+    #[serde(rename = "weaver.created")]
+    WeaverCreated,
+    /// Weaver deleted (manual or cleanup)
+    #[serde(rename = "weaver.deleted")]
+    WeaverDeleted,
+    /// Weaver entered failed state
+    #[serde(rename = "weaver.failed")]
+    WeaverFailed,
     /// Cleanup task completed
-    #[serde(rename = "agents.cleanup")]
-    AgentsCleanup,
+    #[serde(rename = "weavers.cleanup")]
+    WeaversCleanup,
 }

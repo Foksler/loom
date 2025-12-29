@@ -7,7 +7,7 @@ use axum::{
 	routing::{delete, get, post, put},
 	Router,
 };
-use loom_agent_provisioner::{AgentConfig, Provisioner, WebhookConfig, WebhookDispatcher};
+use loom_weaver::{WeaverConfig, Provisioner, WebhookConfig, WebhookDispatcher};
 use loom_github_app::{GithubAppClient, GithubAppConfig};
 use loom_google_cse::CseClient;
 use loom_k8s::KubeClient;
@@ -39,7 +39,7 @@ pub struct AppState {
 	pub query_metrics: Arc<QueryMetrics>,
 	pub trace_store: QueryTraceStore,
 	pub provisioner: Option<Arc<Provisioner>>,
-	pub agent_api_key: Option<Secret<String>>,
+	pub weaver_api_key: Option<Secret<String>>,
 	pub webhook_dispatcher: Option<Arc<WebhookDispatcher>>,
 }
 
@@ -94,9 +94,9 @@ pub async fn create_app_state(repo: Arc<ThreadRepository>, config: &ServerConfig
 	let query_metrics = Arc::new(QueryMetrics::default());
 	let query_manager = Arc::new(ServerQueryManager::with_metrics(query_metrics.clone()));
 
-	// Initialize agent provisioner if enabled and API key is configured
-	let (provisioner, agent_api_key, webhook_dispatcher) =
-		initialize_agent_provisioner(config).await;
+	// Initialize weaver provisioner if enabled and API key is configured
+	let (provisioner, weaver_api_key, webhook_dispatcher) =
+		initialize_weaver_provisioner(config).await;
 
 	AppState {
 		repo,
@@ -107,29 +107,29 @@ pub async fn create_app_state(repo: Arc<ThreadRepository>, config: &ServerConfig
 		query_metrics,
 		trace_store: QueryTraceStore::default(),
 		provisioner,
-		agent_api_key,
+		weaver_api_key,
 		webhook_dispatcher,
 	}
 }
 
-/// Initialize the agent provisioner and webhook dispatcher if enabled.
-async fn initialize_agent_provisioner(
+/// Initialize the weaver provisioner and webhook dispatcher if enabled.
+async fn initialize_weaver_provisioner(
 	config: &ServerConfig,
 ) -> (
 	Option<Arc<Provisioner>>,
 	Option<Secret<String>>,
 	Option<Arc<WebhookDispatcher>>,
 ) {
-	// Check if agent provisioning is enabled and API key is set
-	let api_key = match &config.agent_api_key {
-		Some(key) if !key.is_empty() && config.agent_enabled => key.clone(),
+	// Check if weaver provisioning is enabled and API key is set
+	let api_key = match &config.weaver_api_key {
+		Some(key) if !key.is_empty() && config.weaver_enabled => key.clone(),
 		_ => {
-			if config.agent_enabled {
+			if config.weaver_enabled {
 				tracing::warn!(
-					"Agent provisioning enabled but LOOM_SERVER_AGENT_API_KEY not set, disabling"
+					"Weaver provisioning enabled but LOOM_SERVER_WEAVER_API_KEY not set, disabling"
 				);
 			} else {
-				tracing::info!("Agent provisioning disabled");
+				tracing::info!("Weaver provisioning disabled");
 			}
 			return (None, None, None);
 		}
@@ -141,47 +141,47 @@ async fn initialize_agent_provisioner(
 		Err(e) => {
 			tracing::warn!(
 				error = %e,
-				"Failed to initialize K8s client, agent provisioning disabled"
+				"Failed to initialize K8s client, weaver provisioning disabled"
 			);
 			return (None, None, None);
 		}
 	};
 
 	// Parse webhooks from JSON
-	let webhooks: Vec<WebhookConfig> = match serde_json::from_str(&config.agent_webhooks) {
+	let webhooks: Vec<WebhookConfig> = match serde_json::from_str(&config.weaver_webhooks) {
 		Ok(webhooks) => webhooks,
 		Err(e) => {
 			tracing::warn!(
 				error = %e,
-				webhooks_json = %config.agent_webhooks,
-				"Failed to parse agent webhooks JSON, using empty list"
+				webhooks_json = %config.weaver_webhooks,
+				"Failed to parse weaver webhooks JSON, using empty list"
 			);
 			Vec::new()
 		}
 	};
 
-	// Create agent config from server config
-	let agent_config = AgentConfig {
-		namespace: config.agent_namespace.clone(),
+	// Create weaver config from server config
+	let weaver_config = WeaverConfig {
+		namespace: config.weaver_namespace.clone(),
 		api_key: Secret::new(api_key.clone()),
-		cleanup_interval_secs: config.agent_cleanup_interval_secs,
-		default_ttl_hours: config.agent_default_ttl_hours,
-		max_ttl_hours: config.agent_max_ttl_hours,
-		max_concurrent: config.agent_max_concurrent,
-		ready_timeout_secs: config.agent_ready_timeout_secs,
+		cleanup_interval_secs: config.weaver_cleanup_interval_secs,
+		default_ttl_hours: config.weaver_default_ttl_hours,
+		max_ttl_hours: config.weaver_max_ttl_hours,
+		max_concurrent: config.weaver_max_concurrent,
+		ready_timeout_secs: config.weaver_ready_timeout_secs,
 		webhooks: webhooks.clone(),
 	};
 
 	// Create provisioner and webhook dispatcher
-	let provisioner = Arc::new(Provisioner::new(k8s_client, agent_config));
+	let provisioner = Arc::new(Provisioner::new(k8s_client, weaver_config));
 	let webhook_dispatcher = Arc::new(WebhookDispatcher::new(webhooks));
 	let api_key_secret = Secret::new(api_key);
 
 	tracing::info!(
-		namespace = %config.agent_namespace,
-		max_concurrent = config.agent_max_concurrent,
-		default_ttl_hours = config.agent_default_ttl_hours,
-		"Agent provisioning enabled"
+		namespace = %config.weaver_namespace,
+		max_concurrent = config.weaver_max_concurrent,
+		default_ttl_hours = config.weaver_default_ttl_hours,
+		"Weaver provisioning enabled"
 	);
 
 	(Some(provisioner), Some(api_key_secret), Some(webhook_dispatcher))
@@ -266,9 +266,9 @@ pub fn create_router(state: AppState) -> Router {
                 .fallback(axum::routing::get(routes::bin::list_bin_directory)),
         );
 
-	// Add agent routes if provisioner is configured
+	// Add weaver routes if provisioner is configured
 	if has_provisioner {
-		router = router.merge(routes::agent::agent_routes(state));
+		router = router.merge(routes::weaver::weaver_routes(state));
 	}
 
 	// Add OpenAPI documentation

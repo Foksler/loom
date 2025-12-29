@@ -1,10 +1,10 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
-//! Webhook dispatch system for agent lifecycle events.
+//! Webhook dispatch system for weaver lifecycle events.
 
 use crate::config::{WebhookConfig, WebhookEvent};
-use crate::types::Agent;
+use crate::types::Weaver;
 use chrono::{DateTime, Utc};
 use hmac::{Hmac, Mac};
 use serde::Serialize;
@@ -17,17 +17,17 @@ type HmacSha256 = Hmac<Sha256>;
 /// Payload sent to webhook endpoints.
 #[derive(Debug, Clone, Serialize)]
 pub struct WebhookPayload {
-    /// Event type (e.g., "agent.created")
+    /// Event type (e.g., "weaver.created")
     pub event: String,
     /// When the event occurred
     pub timestamp: DateTime<Utc>,
-    /// Agent data for single-agent events
+    /// Weaver data for single-weaver events
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub agent: Option<WebhookAgentPayload>,
-    /// Agent data for multi-agent events (cleanup)
+    pub weaver: Option<WebhookWeaverPayload>,
+    /// Weaver data for multi-weaver events (cleanup)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub agents: Option<Vec<WebhookAgentPayload>>,
-    /// Count of affected agents
+    pub weavers: Option<Vec<WebhookWeaverPayload>>,
+    /// Count of affected weavers
     #[serde(skip_serializing_if = "Option::is_none")]
     pub count: Option<u32>,
     /// Error reason for failed events
@@ -35,10 +35,10 @@ pub struct WebhookPayload {
     pub reason: Option<String>,
 }
 
-/// Agent data included in webhook payloads.
+/// Weaver data included in webhook payloads.
 #[derive(Debug, Clone, Serialize)]
-pub struct WebhookAgentPayload {
-    /// Agent ID
+pub struct WebhookWeaverPayload {
+    /// Weaver ID
     pub id: String,
     /// Container image
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -47,61 +47,61 @@ pub struct WebhookAgentPayload {
     pub tags: HashMap<String, String>,
 }
 
-impl WebhookAgentPayload {
-    fn from_agent(agent: &Agent) -> Self {
+impl WebhookWeaverPayload {
+    fn from_weaver(weaver: &Weaver) -> Self {
         Self {
-            id: agent.id.to_string(),
-            image: Some(agent.image.clone()),
-            tags: agent.tags.clone(),
+            id: weaver.id.to_string(),
+            image: Some(weaver.image.clone()),
+            tags: weaver.tags.clone(),
         }
     }
 }
 
 impl WebhookPayload {
-    /// Create payload for agent.created event.
-    pub fn agent_created(agent: &Agent) -> Self {
+    /// Create payload for weaver.created event.
+    pub fn weaver_created(weaver: &Weaver) -> Self {
         Self {
-            event: "agent.created".to_string(),
+            event: "weaver.created".to_string(),
             timestamp: Utc::now(),
-            agent: Some(WebhookAgentPayload::from_agent(agent)),
-            agents: None,
+            weaver: Some(WebhookWeaverPayload::from_weaver(weaver)),
+            weavers: None,
             count: None,
             reason: None,
         }
     }
 
-    /// Create payload for agent.deleted event.
-    pub fn agent_deleted(agent: &Agent) -> Self {
+    /// Create payload for weaver.deleted event.
+    pub fn weaver_deleted(weaver: &Weaver) -> Self {
         Self {
-            event: "agent.deleted".to_string(),
+            event: "weaver.deleted".to_string(),
             timestamp: Utc::now(),
-            agent: Some(WebhookAgentPayload::from_agent(agent)),
-            agents: None,
+            weaver: Some(WebhookWeaverPayload::from_weaver(weaver)),
+            weavers: None,
             count: None,
             reason: None,
         }
     }
 
-    /// Create payload for agent.failed event.
-    pub fn agent_failed(agent: &Agent, reason: &str) -> Self {
+    /// Create payload for weaver.failed event.
+    pub fn weaver_failed(weaver: &Weaver, reason: &str) -> Self {
         Self {
-            event: "agent.failed".to_string(),
+            event: "weaver.failed".to_string(),
             timestamp: Utc::now(),
-            agent: Some(WebhookAgentPayload::from_agent(agent)),
-            agents: None,
+            weaver: Some(WebhookWeaverPayload::from_weaver(weaver)),
+            weavers: None,
             count: None,
             reason: Some(reason.to_string()),
         }
     }
 
-    /// Create payload for agents.cleanup event.
-    pub fn agents_cleanup(agents: &[Agent]) -> Self {
+    /// Create payload for weavers.cleanup event.
+    pub fn weavers_cleanup(weavers: &[Weaver]) -> Self {
         Self {
-            event: "agents.cleanup".to_string(),
+            event: "weavers.cleanup".to_string(),
             timestamp: Utc::now(),
-            agent: None,
-            agents: Some(agents.iter().map(WebhookAgentPayload::from_agent).collect()),
-            count: Some(agents.len() as u32),
+            weaver: None,
+            weavers: Some(weavers.iter().map(WebhookWeaverPayload::from_weaver).collect()),
+            count: Some(weavers.len() as u32),
             reason: None,
         }
     }
@@ -116,7 +116,7 @@ fn compute_signature(secret: &str, body: &str) -> String {
     hex::encode(result.into_bytes())
 }
 
-/// Dispatches webhook notifications for agent lifecycle events.
+/// Dispatches webhook notifications for weaver lifecycle events.
 #[derive(Clone)]
 pub struct WebhookDispatcher {
     webhooks: Vec<WebhookConfig>,
@@ -204,7 +204,7 @@ mod tests {
     #[test]
     fn test_compute_signature() {
         let secret = "test-secret";
-        let body = r#"{"event":"agent.created"}"#;
+        let body = r#"{"event":"weaver.created"}"#;
         let sig = compute_signature(secret, body);
         assert!(!sig.is_empty());
         assert_eq!(sig.len(), 64); // SHA256 hex = 64 chars
@@ -213,21 +213,21 @@ mod tests {
     #[test]
     fn test_payload_serialization() {
         let payload = WebhookPayload {
-            event: "agent.created".to_string(),
+            event: "weaver.created".to_string(),
             timestamp: Utc::now(),
-            agent: Some(WebhookAgentPayload {
+            weaver: Some(WebhookWeaverPayload {
                 id: "test-id".to_string(),
                 image: Some("python:3.12".to_string()),
                 tags: HashMap::new(),
             }),
-            agents: None,
+            weavers: None,
             count: None,
             reason: None,
         };
 
         let json = serde_json::to_string(&payload).unwrap();
-        assert!(json.contains("agent.created"));
+        assert!(json.contains("weaver.created"));
         assert!(json.contains("test-id"));
-        assert!(!json.contains("agents")); // None fields should be skipped
+        assert!(!json.contains("weavers")); // None fields should be skipped
     }
 }

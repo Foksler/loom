@@ -26,7 +26,7 @@ members = [
 	"crates/loom-tools",
 	"crates/loom-version",
 	"crates/loom-k8s",
-	"crates/loom-agent-provisioner",
+	"crates/loom-weaver",
 ]
 
 [workspace.package]
