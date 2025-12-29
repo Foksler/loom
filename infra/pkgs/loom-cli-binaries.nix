@@ -58,6 +58,14 @@ stdenv.mkDerivation {
       cp ${loom-cli-macos}/bin/loom-macos-x86_64 $out/macos-x86_64
       cp ${loom-cli-macos}/bin/loom-macos-aarch64 $out/macos-aarch64
     ''}
+    
+    # Generate SHA256 checksums for all binaries
+    cd $out
+    for binary in *; do
+      if [ -f "$binary" ] && [ ! "$binary" = "*.sha256" ]; then
+        sha256sum "$binary" | awk '{print $1}' > "$binary.sha256"
+      fi
+    done
   '';
 
   meta = with lib; {
