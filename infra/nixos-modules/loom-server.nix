@@ -186,8 +186,8 @@ in
         message = "services.loom-server.githubApp.appIdFile and privateKeyFile must be set when GitHub App is enabled.";
       }
       {
-        assertion = cfg.googleCse.enable -> (cfg.googleCse.apiKeyFile != null && cfg.googleCse.searchEngineId != null);
-        message = "services.loom-server.googleCse.apiKeyFile and searchEngineId must be set when Google CSE is enabled.";
+        assertion = cfg.googleCse.enable -> (cfg.googleCse.apiKeyFile != null && cfg.googleCse.searchEngineIdFile != null);
+        message = "services.loom-server.googleCse.apiKeyFile and searchEngineIdFile must be set when Google CSE is enabled.";
       }
     ];
 
