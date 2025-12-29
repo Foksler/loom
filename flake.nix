@@ -49,14 +49,21 @@
           pkgs = nixpkgs.legacyPackages.${system}.extend overlay;
           pkgsWithTools = pkgs.extend toolsOverlay;
           fenixPkgs = fenix.packages.${system};
-        in
-        {
-          inherit (pkgs) smtprelay loom-server loom-cli loom-cli-binaries loom-web;
-          inherit (pkgsWithTools) license;
           
-          # Windows cross-compilation uses fenix for Rust with Windows target
+          # Platform-specific CLI builds
+          loom-cli-linux = pkgs.loom-cli-linux;
           loom-cli-windows = pkgs.callPackage ./infra/pkgs/loom-cli-windows.nix {
             fenix = fenixPkgs;
+          };
+        in
+        {
+          inherit (pkgs) smtprelay loom-server loom-cli loom-cli-linux loom-web;
+          inherit (pkgsWithTools) license;
+          inherit loom-cli-windows;
+          
+          # Combined binaries for server distribution
+          loom-cli-binaries = pkgs.callPackage ./infra/pkgs/loom-cli-binaries.nix {
+            inherit loom-cli-linux loom-cli-windows;
           };
         };
     };
