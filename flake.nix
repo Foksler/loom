@@ -22,10 +22,12 @@
 
   outputs = { self, nixpkgs, fenix, nixos-vscode-server, sops-nix }:
     let
-      overlay = import ./infra/pkgs;
+      system = "x86_64-linux";
+      fenixPkgs = fenix.packages.${system};
+      overlay = import ./infra/pkgs { fenix = fenixPkgs; };
       toolsOverlay = import ./tools/pkgs;
       mkSystem = modules: nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
+        inherit system;
         modules = modules ++ [
           ({ config, pkgs, ... }: {
             nixpkgs.overlays = [ overlay toolsOverlay ];
@@ -40,40 +42,18 @@
           nixos-vscode-server.nixosModules.default
           sops-nix.nixosModules.sops
         ];
-        
       };
 
       packages.x86_64-linux = 
         let
-          system = "x86_64-linux";
           pkgs = nixpkgs.legacyPackages.${system}.extend overlay;
           pkgsWithTools = pkgs.extend toolsOverlay;
-          fenixPkgs = fenix.packages.${system};
-          
-          # Platform-specific CLI builds
-          loom-cli-linux = pkgs.loom-cli-linux;
-          loom-cli-windows = pkgs.callPackage ./infra/pkgs/loom-cli-windows.nix {
-            fenix = fenixPkgs;
-          };
-          loom-cli-macos = pkgs.callPackage ./infra/pkgs/loom-cli-macos.nix {
-            fenix = fenixPkgs;
-          };
-          loom-cli-linux-aarch64 = pkgs.callPackage ./infra/pkgs/loom-cli-linux-aarch64.nix {
-            fenix = fenixPkgs;
-          };
-          loom-cli-windows-aarch64 = pkgs.callPackage ./infra/pkgs/loom-cli-windows-aarch64.nix {
-            fenix = fenixPkgs;
-          };
         in
         {
           inherit (pkgs) smtprelay loom-server loom-cli loom-cli-linux loom-web;
+          inherit (pkgs) loom-cli-windows loom-cli-macos loom-cli-linux-aarch64 loom-cli-windows-aarch64;
+          inherit (pkgs) loom-cli-binaries;
           inherit (pkgsWithTools) license;
-          inherit loom-cli-windows loom-cli-macos loom-cli-linux-aarch64 loom-cli-windows-aarch64;
-          
-          # Combined binaries for server distribution
-          loom-cli-binaries = pkgs.callPackage ./infra/pkgs/loom-cli-binaries.nix {
-            inherit loom-cli-linux loom-cli-windows loom-cli-macos loom-cli-linux-aarch64 loom-cli-windows-aarch64;
-          };
         };
     };
 }
