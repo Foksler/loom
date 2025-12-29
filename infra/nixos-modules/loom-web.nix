@@ -125,8 +125,13 @@ in
             '';
           };
 
-          # CLI binary distribution
-          "/bin/" = {
+          # CLI binary distribution - exact match takes priority
+          "= /bin" = {
+            return = "301 /bin/";
+          };
+
+          # CLI binary distribution - prefix match with priority modifier
+          "^~ /bin/" = {
             proxyPass = cfg.serverUrl;
           };
 
