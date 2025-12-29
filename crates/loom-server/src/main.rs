@@ -70,7 +70,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let repo = Arc::new(ThreadRepository::new(&config.database_url).await?);
 
 	// Create application state and router with middleware
-	let state = create_app_state(repo);
+	let state = create_app_state(repo).await;
 	let app = create_router(state)
 		.layer(TraceLayer::new_for_http())
 		.layer(

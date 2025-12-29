@@ -6,13 +6,46 @@
 use std::sync::Arc;
 
 use loom_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
-use loom_llm_anthropic::AnthropicClient;
+use loom_llm_anthropic::{
+	AnthropicClient, AnthropicConfig, CredentialStore, CredentialValue, FileCredentialStore,
+};
 use loom_llm_openai::OpenAIClient;
 use loom_llm_vertex::VertexClient;
-use tracing::{debug, info, instrument};
+use tracing::{debug, error, info, instrument, warn};
 
-use crate::config::LlmServiceConfig;
+use crate::config::{AnthropicAuthConfig, LlmServiceConfig};
 use crate::error::LlmServiceError;
+
+/// Wrapper for Anthropic client that can use either memory or file credential store.
+enum AnthropicClientWrapper {
+	Memory(Arc<AnthropicClient<loom_llm_anthropic::MemoryCredentialStore>>),
+	File(Arc<AnthropicClient<FileCredentialStore>>),
+}
+
+impl Clone for AnthropicClientWrapper {
+	fn clone(&self) -> Self {
+		match self {
+			AnthropicClientWrapper::Memory(c) => AnthropicClientWrapper::Memory(Arc::clone(c)),
+			AnthropicClientWrapper::File(c) => AnthropicClientWrapper::File(Arc::clone(c)),
+		}
+	}
+}
+
+impl AnthropicClientWrapper {
+	async fn complete(&self, request: LlmRequest) -> Result<LlmResponse, LlmError> {
+		match self {
+			AnthropicClientWrapper::Memory(c) => c.complete(request).await,
+			AnthropicClientWrapper::File(c) => c.complete(request).await,
+		}
+	}
+
+	async fn complete_streaming(&self, request: LlmRequest) -> Result<LlmStream, LlmError> {
+		match self {
+			AnthropicClientWrapper::Memory(c) => c.complete_streaming(request).await,
+			AnthropicClientWrapper::File(c) => c.complete_streaming(request).await,
+		}
+	}
+}
 
 /// Service for managing LLM provider interactions.
 ///
@@ -21,7 +54,7 @@ use crate::error::LlmServiceError;
 /// requests.
 #[derive(Clone)]
 pub struct LlmService {
-	anthropic_client: Option<Arc<AnthropicClient>>,
+	anthropic_client: Option<AnthropicClientWrapper>,
 	openai_client: Option<Arc<OpenAIClient>>,
 	vertex_client: Option<Arc<VertexClient>>,
 }
@@ -30,23 +63,84 @@ impl LlmService {
 	/// Creates a new LLM service with the given configuration.
 	///
 	/// Initializes clients for all providers that have API keys configured.
-	pub fn new(config: LlmServiceConfig) -> Result<Self, LlmServiceError> {
+	/// This is async because OAuth credential loading requires file I/O.
+	pub async fn new(config: LlmServiceConfig) -> Result<Self, LlmServiceError> {
 		info!("Initializing LLM service");
 
-		let anthropic_client = if let Some(ref api_key) = config.anthropic_api_key {
-			let mut anthropic_config = loom_llm_anthropic::AnthropicConfig::new(api_key.expose().clone());
-			if let Some(model) = config.anthropic_model {
-				debug!(model = %model, "Using custom Anthropic model");
-				anthropic_config = anthropic_config.with_model(model);
-			}
+		let anthropic_client = match &config.anthropic_auth {
+			Some(AnthropicAuthConfig::ApiKey(api_key)) => {
+				let mut anthropic_config = AnthropicConfig::new(api_key.expose().clone());
+				if let Some(ref model) = config.anthropic_model {
+					debug!(model = %model, "Using custom Anthropic model");
+					anthropic_config = anthropic_config.with_model(model.clone());
+				}
 
-			let client = AnthropicClient::new(anthropic_config)
-				.map_err(|e| LlmServiceError::Config(e.to_string()))?;
-			info!("Anthropic client initialized");
-			Some(Arc::new(client))
-		} else {
-			debug!("Anthropic API key not configured");
-			None
+				let client = AnthropicClient::new(anthropic_config)
+					.map_err(|e| LlmServiceError::Config(e.to_string()))?;
+				info!("Anthropic client initialized with API key");
+				Some(AnthropicClientWrapper::Memory(Arc::new(client)))
+			}
+			Some(AnthropicAuthConfig::OAuth {
+				credential_file,
+				provider_id,
+			}) => {
+				let store = Arc::new(FileCredentialStore::new(credential_file));
+
+				match store.load(provider_id).await {
+					Ok(Some(CredentialValue::OAuth {
+						refresh,
+						access,
+						expires,
+					})) => {
+						let anthropic_config = AnthropicConfig::new_with_oauth(
+							provider_id.clone(),
+							refresh.expose().clone(),
+							access.expose().clone(),
+							expires,
+							store,
+						);
+
+						let mut anthropic_config = anthropic_config;
+						if let Some(ref model) = config.anthropic_model {
+							debug!(model = %model, "Using custom Anthropic model");
+							anthropic_config = anthropic_config.with_model(model.clone());
+						}
+
+						let client = AnthropicClient::new_with_store(anthropic_config)
+							.map_err(|e| LlmServiceError::Config(e.to_string()))?;
+						info!("Anthropic client initialized with OAuth");
+						Some(AnthropicClientWrapper::File(Arc::new(client)))
+					}
+					Ok(Some(CredentialValue::ApiKey { key })) => {
+						warn!("Credential file contains API key instead of OAuth, using API key");
+						let mut anthropic_config = AnthropicConfig::new(key.expose().clone());
+						if let Some(ref model) = config.anthropic_model {
+							anthropic_config = anthropic_config.with_model(model.clone());
+						}
+						let client = AnthropicClient::new(anthropic_config)
+							.map_err(|e| LlmServiceError::Config(e.to_string()))?;
+						Some(AnthropicClientWrapper::Memory(Arc::new(client)))
+					}
+					Ok(None) => {
+						error!(path = ?credential_file, provider = %provider_id, "No credentials found in credential file");
+						return Err(LlmServiceError::Config(format!(
+							"No credentials found for provider '{}' in {:?}",
+							provider_id, credential_file
+						)));
+					}
+					Err(e) => {
+						error!(error = %e, "Failed to load credentials from file");
+						return Err(LlmServiceError::Config(format!(
+							"Failed to load credentials: {}",
+							e
+						)));
+					}
+				}
+			}
+			None => {
+				debug!("Anthropic auth not configured");
+				None
+			}
 		};
 
 		let openai_client = if let Some(ref api_key) = config.openai_api_key {
@@ -109,10 +203,10 @@ impl LlmService {
 	}
 
 	/// Creates a new LLM service from environment variables.
-	pub fn from_env() -> Result<Self, LlmServiceError> {
+	pub async fn from_env() -> Result<Self, LlmServiceError> {
 		let config =
 			LlmServiceConfig::from_env().map_err(|e| LlmServiceError::Config(e.to_string()))?;
-		Self::new(config)
+		Self::new(config).await
 	}
 
 	/// Returns whether the Anthropic provider is configured.
@@ -265,10 +359,10 @@ mod tests {
 
 	/// Verifies that service creation fails without any API keys.
 	/// This is important to fail fast with clear error messages.
-	#[test]
-	fn new_fails_without_any_api_key() {
+	#[tokio::test]
+	async fn new_fails_without_any_api_key() {
 		let config = LlmServiceConfig::new(LlmProvider::Anthropic);
-		let result = LlmService::new(config);
+		let result = LlmService::new(config).await;
 		assert!(matches!(
 			result,
 			Err(LlmServiceError::ProviderNotConfigured(_))
@@ -276,41 +370,41 @@ mod tests {
 	}
 
 	/// Verifies that has_anthropic() returns true when configured.
-	#[test]
-	fn has_anthropic_returns_true_when_configured() {
+	#[tokio::test]
+	async fn has_anthropic_returns_true_when_configured() {
 		let config = LlmServiceConfig::new(LlmProvider::Anthropic).with_anthropic_api_key("test-key");
-		let service = LlmService::new(config).unwrap();
+		let service = LlmService::new(config).await.unwrap();
 		assert!(service.has_anthropic());
 		assert!(!service.has_openai());
 	}
 
 	/// Verifies that has_openai() returns true when configured.
-	#[test]
-	fn has_openai_returns_true_when_configured() {
+	#[tokio::test]
+	async fn has_openai_returns_true_when_configured() {
 		let config = LlmServiceConfig::new(LlmProvider::OpenAi).with_openai_api_key("test-key");
-		let service = LlmService::new(config).unwrap();
+		let service = LlmService::new(config).await.unwrap();
 		assert!(!service.has_anthropic());
 		assert!(service.has_openai());
 	}
 
 	/// Verifies that both providers can be configured simultaneously.
-	#[test]
-	fn both_providers_can_be_configured() {
+	#[tokio::test]
+	async fn both_providers_can_be_configured() {
 		let config = LlmServiceConfig::new(LlmProvider::Anthropic)
 			.with_anthropic_api_key("anthropic-key")
 			.with_openai_api_key("openai-key");
-		let service = LlmService::new(config).unwrap();
+		let service = LlmService::new(config).await.unwrap();
 		assert!(service.has_anthropic());
 		assert!(service.has_openai());
 	}
 
 	/// Verifies that Debug implementation doesn't expose sensitive data.
 	/// This is important for security - API keys should never appear in logs.
-	#[test]
-	fn debug_does_not_expose_secrets() {
+	#[tokio::test]
+	async fn debug_does_not_expose_secrets() {
 		let config =
 			LlmServiceConfig::new(LlmProvider::Anthropic).with_anthropic_api_key("super-secret-key");
-		let service = LlmService::new(config).unwrap();
+		let service = LlmService::new(config).await.unwrap();
 		let debug_output = format!("{service:?}");
 		assert!(!debug_output.contains("super-secret-key"));
 	}

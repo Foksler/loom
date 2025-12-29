@@ -4,6 +4,7 @@
 //! LLM service configuration.
 
 use std::env;
+use std::path::PathBuf;
 
 use loom_config_common::{load_secret_env, Secret, SecretString};
 use serde::{Deserialize, Serialize};
@@ -47,6 +48,21 @@ impl std::str::FromStr for LlmProvider {
 	}
 }
 
+/// Anthropic authentication configuration.
+#[derive(Clone, Debug)]
+pub enum AnthropicAuthConfig {
+	/// Static API key from config/env.
+	ApiKey(SecretString),
+
+	/// OAuth credentials from a credential store file.
+	OAuth {
+		/// Path to the credential store file.
+		credential_file: PathBuf,
+		/// Provider ID in the store (default: "anthropic").
+		provider_id: String,
+	},
+}
+
 /// Configuration for the LLM service.
 ///
 /// API keys are stored as [`SecretString`] to prevent accidental logging.
@@ -54,7 +70,7 @@ impl std::str::FromStr for LlmProvider {
 #[derive(Clone, Default)]
 pub struct LlmServiceConfig {
 	pub provider: LlmProvider,
-	pub anthropic_api_key: Option<SecretString>,
+	pub anthropic_auth: Option<AnthropicAuthConfig>,
 	pub anthropic_model: Option<String>,
 	pub openai_api_key: Option<SecretString>,
 	pub openai_model: Option<String>,
@@ -68,7 +84,7 @@ impl std::fmt::Debug for LlmServiceConfig {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.debug_struct("LlmServiceConfig")
 			.field("provider", &self.provider)
-			.field("anthropic_api_key", &self.anthropic_api_key)
+			.field("anthropic_auth", &self.anthropic_auth)
 			.field("anthropic_model", &self.anthropic_model)
 			.field("openai_api_key", &self.openai_api_key)
 			.field("openai_model", &self.openai_model)
@@ -94,6 +110,7 @@ impl LlmServiceConfig {
 	/// Supports both direct environment variables and file-based secrets:
 	/// - `LOOM_SERVER_ANTHROPIC_API_KEY`: Anthropic API key (or `_FILE` suffix
 	///   for file path)
+	/// - `LOOM_SERVER_ANTHROPIC_OAUTH_CREDENTIAL_FILE`: Path to OAuth credential store
 	/// - `LOOM_SERVER_OPENAI_API_KEY`: OpenAI API key (or `_FILE` suffix for file
 	///   path)
 	///
@@ -122,7 +139,19 @@ impl LlmServiceConfig {
 			}
 		};
 
-		let anthropic_api_key = load_secret_env("LOOM_SERVER_ANTHROPIC_API_KEY")?;
+		let anthropic_auth = if let Ok(cred_file) = env::var("LOOM_SERVER_ANTHROPIC_OAUTH_CREDENTIAL_FILE") {
+			debug!(path = %cred_file, "Using Anthropic OAuth from credential file");
+			Some(AnthropicAuthConfig::OAuth {
+				credential_file: PathBuf::from(cred_file),
+				provider_id: "anthropic".to_string(),
+			})
+		} else if let Some(api_key) = load_secret_env("LOOM_SERVER_ANTHROPIC_API_KEY")? {
+			debug!("Using Anthropic API key");
+			Some(AnthropicAuthConfig::ApiKey(api_key))
+		} else {
+			None
+		};
+
 		let anthropic_model = env::var("LOOM_SERVER_ANTHROPIC_MODEL").ok();
 		let openai_api_key = load_secret_env("LOOM_SERVER_OPENAI_API_KEY")?;
 		let openai_model = env::var("LOOM_SERVER_OPENAI_MODEL").ok();
@@ -133,7 +162,7 @@ impl LlmServiceConfig {
 
 		info!(
 				provider = %provider,
-				anthropic_configured = anthropic_api_key.is_some(),
+				anthropic_configured = anthropic_auth.is_some(),
 				openai_configured = openai_api_key.is_some(),
 				vertex_configured = vertex_project.is_some() && vertex_location.is_some(),
 				"Loaded LLM service configuration"
@@ -141,7 +170,7 @@ impl LlmServiceConfig {
 
 		Ok(Self {
 			provider,
-			anthropic_api_key,
+			anthropic_auth,
 			anthropic_model,
 			openai_api_key,
 			openai_model,
@@ -154,7 +183,16 @@ impl LlmServiceConfig {
 
 	/// Sets the Anthropic API key.
 	pub fn with_anthropic_api_key(mut self, api_key: impl Into<String>) -> Self {
-		self.anthropic_api_key = Some(Secret::new(api_key.into()));
+		self.anthropic_auth = Some(AnthropicAuthConfig::ApiKey(Secret::new(api_key.into())));
+		self
+	}
+
+	/// Sets the Anthropic OAuth credential file.
+	pub fn with_anthropic_oauth(mut self, credential_file: impl Into<PathBuf>) -> Self {
+		self.anthropic_auth = Some(AnthropicAuthConfig::OAuth {
+			credential_file: credential_file.into(),
+			provider_id: "anthropic".to_string(),
+		});
 		self
 	}
 
@@ -298,13 +336,12 @@ mod tests {
 				.with_openai_organization("org-123");
 
 			assert_eq!(config.provider, LlmProvider::OpenAi);
-			assert_eq!(
-				config
-					.anthropic_api_key
-					.as_ref()
-					.map(|s| s.expose().as_str()),
-				Some("anthropic-key")
-			);
+			match &config.anthropic_auth {
+				Some(AnthropicAuthConfig::ApiKey(key)) => {
+					assert_eq!(key.expose(), "anthropic-key");
+				}
+				_ => panic!("Expected ApiKey auth config"),
+			}
 			assert_eq!(config.anthropic_model, Some("claude-3".to_string()));
 			assert_eq!(
 				config.openai_api_key.as_ref().map(|s| s.expose().as_str()),

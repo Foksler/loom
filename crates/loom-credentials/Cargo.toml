@@ -2,31 +2,22 @@
 # SPDX-License-Identifier: Proprietary
 
 [package]
-name = "loom-llm-anthropic"
+name = "loom-credentials"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "Provider-agnostic credential storage for Loom"
 
 [dependencies]
 async-trait = { workspace = true }
-base64 = "0.22"
-bytes = "1"
-futures = { workspace = true }
-getrandom = "0.2"
-loom-core = { path = "../loom-core" }
-loom-credentials = { path = "../loom-credentials" }
-loom-http-retry = { path = "../loom-http-retry" }
 loom-secret = { path = "../loom-secret" }
-pin-project-lite = { workspace = true }
-reqwest = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-sha2 = "0.10"
 thiserror = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
-url = "2.5"
 
 [dev-dependencies]
+tempfile = { workspace = true }
 tokio-test = { workspace = true }

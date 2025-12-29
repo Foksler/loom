@@ -37,7 +37,7 @@ pub struct AppState {
 }
 
 /// Creates the application state, initializing optional components.
-pub fn create_app_state(repo: Arc<ThreadRepository>) -> AppState {
+pub async fn create_app_state(repo: Arc<ThreadRepository>) -> AppState {
 	let cse_client = match (
 		std::env::var("LOOM_SERVER_GOOGLE_CSE_API_KEY"),
 		std::env::var("LOOM_SERVER_GOOGLE_CSE_CX"),
@@ -69,7 +69,7 @@ pub fn create_app_state(repo: Arc<ThreadRepository>) -> AppState {
 		}
 	};
 
-	let llm_service = match LlmService::from_env() {
+	let llm_service = match LlmService::from_env().await {
 		Ok(service) => {
 			tracing::info!(
 				anthropic = service.has_anthropic(),
@@ -213,7 +213,7 @@ mod tests {
 		let db_path = dir.path().join("test.db");
 		let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 		let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
-		let state = create_app_state(repo);
+		let state = create_app_state(repo).await;
 		(create_router(state), dir)
 	}
 
@@ -699,7 +699,7 @@ mod tests {
 		let db_path = dir.path().join("test.db");
 		let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 		let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
-		let state = create_app_state(repo);
+		let state = create_app_state(repo).await;
 
 		// Create and store a trace directly
 		let mut tracer = QueryTracer::new(

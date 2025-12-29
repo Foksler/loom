@@ -1838,6 +1838,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-credentials"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "loom-secret",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+]
+
+[[package]]
 name = "loom-git"
 version = "0.1.0"
 dependencies = [
@@ -1907,18 +1922,24 @@ name = "loom-llm-anthropic"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "base64",
  "bytes",
  "futures",
+ "getrandom 0.2.16",
  "loom-core",
+ "loom-credentials",
  "loom-http-retry",
+ "loom-secret",
  "pin-project-lite",
  "reqwest",
  "serde",
  "serde_json",
+ "sha2",
  "thiserror 1.0.69",
  "tokio",
  "tokio-test",
  "tracing",
+ "url",
 ]
 
 [[package]]

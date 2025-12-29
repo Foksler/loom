@@ -32,7 +32,7 @@ async fn setup_test_app() -> (axum::Router, tempfile::TempDir) {
 	let db_path = dir.path().join("test_query.db");
 	let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 	let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
-	let state = create_app_state(repo);
+	let state = create_app_state(repo).await;
 	(create_router(state), dir)
 }
 

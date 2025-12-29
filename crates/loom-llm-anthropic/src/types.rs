@@ -4,20 +4,75 @@
 //! Anthropic-specific API types and conversions.
 
 use loom_core::{LlmError, LlmRequest, LlmResponse, Message, Role, ToolCall, Usage};
+use loom_credentials::{CredentialStore, MemoryCredentialStore};
+use loom_secret::SecretString;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+
+use crate::auth::{AnthropicAuth, OAuthClient, OAuthCredentials};
 
 /// Configuration for the Anthropic client.
-#[derive(Debug, Clone)]
-pub struct AnthropicConfig {
-	pub api_key: String,
+#[derive(Debug)]
+pub struct AnthropicConfig<S: CredentialStore = MemoryCredentialStore> {
+	pub auth: AnthropicAuth<S>,
 	pub base_url: String,
 	pub model: String,
 }
 
-impl AnthropicConfig {
-	pub fn new(api_key: impl Into<String>) -> Self {
+impl<S: CredentialStore> Clone for AnthropicConfig<S> {
+	fn clone(&self) -> Self {
 		Self {
-			api_key: api_key.into(),
+			auth: self.auth.clone(),
+			base_url: self.base_url.clone(),
+			model: self.model.clone(),
+		}
+	}
+}
+
+impl AnthropicConfig<MemoryCredentialStore> {
+	/// Create a new config with an API key (legacy interface).
+	pub fn new(api_key: impl Into<String>) -> Self {
+		Self::new_with_api_key(api_key)
+	}
+
+	/// Create a new config with an API key.
+	pub fn new_with_api_key(api_key: impl Into<String>) -> Self {
+		Self {
+			auth: AnthropicAuth::api_key(api_key),
+			base_url: "https://api.anthropic.com".to_string(),
+			model: "claude-sonnet-4-20250514".to_string(),
+		}
+	}
+}
+
+impl<S: CredentialStore> AnthropicConfig<S> {
+	/// Create a new config with OAuth authentication.
+	pub fn new_with_oauth(
+		provider_id: impl Into<String>,
+		refresh: impl Into<String>,
+		access: impl Into<String>,
+		expires: u64,
+		store: Arc<S>,
+	) -> Self {
+		let creds = OAuthCredentials::new(
+			SecretString::new(refresh.into()),
+			SecretString::new(access.into()),
+			expires,
+		);
+
+		Self {
+			auth: AnthropicAuth::OAuth {
+				client: OAuthClient::new(provider_id, creds, store),
+			},
+			base_url: "https://api.anthropic.com".to_string(),
+			model: "claude-sonnet-4-20250514".to_string(),
+		}
+	}
+
+	/// Create a new config with a pre-built auth.
+	pub fn new_with_auth(auth: AnthropicAuth<S>) -> Self {
+		Self {
+			auth,
 			base_url: "https://api.anthropic.com".to_string(),
 			model: "claude-sonnet-4-20250514".to_string(),
 		}
@@ -281,6 +336,7 @@ mod tests {
 		let config = AnthropicConfig::new("test-key");
 		assert_eq!(config.base_url, "https://api.anthropic.com");
 		assert_eq!(config.model, "claude-sonnet-4-20250514");
+		assert!(config.auth.is_api_key());
 	}
 
 	#[test]
@@ -290,5 +346,26 @@ mod tests {
 			.with_model("claude-3-opus");
 		assert_eq!(config.base_url, "http://localhost:8080");
 		assert_eq!(config.model, "claude-3-opus");
+	}
+
+	#[test]
+	fn test_config_with_api_key() {
+		let config = AnthropicConfig::new_with_api_key("sk-test");
+		assert!(config.auth.is_api_key());
+		assert!(!config.auth.is_oauth());
+	}
+
+	#[test]
+	fn test_config_with_oauth() {
+		let store = Arc::new(MemoryCredentialStore::new());
+		let config = AnthropicConfig::new_with_oauth(
+			"anthropic",
+			"rt_refresh",
+			"at_access",
+			1735500000000,
+			store,
+		);
+		assert!(config.auth.is_oauth());
+		assert!(!config.auth.is_api_key());
 	}
 }

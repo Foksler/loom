@@ -5,6 +5,7 @@
 
 use async_trait::async_trait;
 use loom_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
+use loom_credentials::{CredentialStore, MemoryCredentialStore};
 use loom_http_retry::{retry, RetryConfig, RetryableError};
 use reqwest::Client;
 use tracing::{debug, error, info, instrument, trace};
@@ -41,15 +42,33 @@ impl From<ClientError> for LlmError {
 }
 
 /// Client for interacting with Anthropic's Claude API.
-#[derive(Debug, Clone)]
-pub struct AnthropicClient {
-	config: AnthropicConfig,
+#[derive(Debug)]
+pub struct AnthropicClient<S: CredentialStore = MemoryCredentialStore> {
+	config: AnthropicConfig<S>,
 	http_client: Client,
 	retry_config: RetryConfig,
 }
 
-impl AnthropicClient {
-	pub fn new(config: AnthropicConfig) -> Result<Self, LlmError> {
+impl<S: CredentialStore> Clone for AnthropicClient<S> {
+	fn clone(&self) -> Self {
+		Self {
+			config: self.config.clone(),
+			http_client: self.http_client.clone(),
+			retry_config: self.retry_config.clone(),
+		}
+	}
+}
+
+impl AnthropicClient<MemoryCredentialStore> {
+	/// Create a new client with default memory credential store.
+	pub fn new(config: AnthropicConfig<MemoryCredentialStore>) -> Result<Self, LlmError> {
+		Self::new_with_store(config)
+	}
+}
+
+impl<S: CredentialStore + 'static> AnthropicClient<S> {
+	/// Create a new client with a specific credential store.
+	pub fn new_with_store(config: AnthropicConfig<S>) -> Result<Self, LlmError> {
 		let http_client = Client::builder()
 			.build()
 			.map_err(|e| LlmError::Http(format!("Failed to create HTTP client: {e}")))?;
@@ -79,23 +98,31 @@ impl AnthropicClient {
 		debug!(url = %url, "Sending request to Anthropic API");
 		trace!(request = ?request, "Request payload");
 
-		let response = self
+		let builder = self
 			.http_client
 			.post(&url)
-			.header("x-api-key", &self.config.api_key)
 			.header("anthropic-version", ANTHROPIC_VERSION)
 			.header("content-type", "application/json")
-			.json(request)
-			.send()
+			.json(request);
+
+		let builder = self
+			.config
+			.auth
+			.apply_to_request(builder)
 			.await
-			.map_err(|e| {
-				let retryable = e.is_timeout() || e.is_connect();
-				error!(error = %e, retryable = retryable, "HTTP request failed");
-				ClientError {
-					message: e.to_string(),
-					retryable,
-				}
+			.map_err(|e| ClientError {
+				message: format!("Auth error: {e}"),
+				retryable: false,
 			})?;
+
+		let response = builder.send().await.map_err(|e| {
+			let retryable = e.is_timeout() || e.is_connect();
+			error!(error = %e, retryable = retryable, "HTTP request failed");
+			ClientError {
+				message: e.to_string(),
+				retryable,
+			}
+		})?;
 
 		let status = response.status();
 		debug!(status = %status, "Received response");
@@ -119,7 +146,7 @@ impl AnthropicClient {
 }
 
 #[async_trait]
-impl LlmClient for AnthropicClient {
+impl<S: CredentialStore + 'static> LlmClient for AnthropicClient<S> {
 	#[instrument(skip(self, request), fields(model = %self.config.model))]
 	async fn complete(&self, request: LlmRequest) -> Result<LlmResponse, LlmError> {
 		info!("Starting non-streaming completion request");
