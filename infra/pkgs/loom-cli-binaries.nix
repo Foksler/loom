@@ -18,6 +18,7 @@
 , loom-cli-linux
 , loom-cli-windows ? null
 , loom-cli-macos ? null
+, loom-cli-linux-aarch64 ? null
 }:
 
 stdenv.mkDerivation {
@@ -33,6 +34,11 @@ stdenv.mkDerivation {
     
     # Linux x86_64
     cp ${loom-cli-linux}/bin/loom-linux-x86_64 $out/linux-x86_64
+    
+    # Linux aarch64 (cross-compiled via cargo-zigbuild)
+    ${lib.optionalString (loom-cli-linux-aarch64 != null) ''
+      cp ${loom-cli-linux-aarch64}/bin/loom-linux-aarch64 $out/linux-aarch64
+    ''}
     
     # Windows x86_64 (cross-compiled via fenix + mingw-w64)
     ${lib.optionalString (loom-cli-windows != null) ''
