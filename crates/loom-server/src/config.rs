@@ -20,8 +20,6 @@ pub struct ServerConfig {
 	pub bin_dir: String,
 	/// Whether weaver provisioning is enabled.
 	pub weaver_enabled: bool,
-	/// API key for weaver endpoints.
-	pub weaver_api_key: Option<String>,
 	/// K8s namespace for weavers.
 	pub weaver_namespace: String,
 	/// Cleanup interval in seconds.
@@ -48,7 +46,6 @@ impl ServerConfig {
 	///   sqlite:./loom.db)
 	/// - `LOOM_SERVER_LOG_LEVEL`: Log level (default: info)
 	/// - `LOOM_SERVER_WEAVER_ENABLED`: Enable weaver provisioning (default: false)
-	/// - `LOOM_SERVER_WEAVER_API_KEY`: API key for weaver endpoints
 	/// - `LOOM_SERVER_WEAVER_K8S_NAMESPACE`: K8s namespace (default: loom-weavers)
 	/// - `LOOM_SERVER_WEAVER_CLEANUP_INTERVAL_SECS`: Cleanup interval (default: 1800)
 	/// - `LOOM_SERVER_WEAVER_DEFAULT_TTL_HOURS`: Default TTL (default: 4)
@@ -75,8 +72,6 @@ impl ServerConfig {
 		let weaver_enabled = env::var("LOOM_SERVER_WEAVER_ENABLED")
 			.map(|v| v.eq_ignore_ascii_case("true") || v == "1")
 			.unwrap_or(false);
-
-		let weaver_api_key = env::var("LOOM_SERVER_WEAVER_API_KEY").ok();
 
 		let weaver_namespace =
 			env::var("LOOM_SERVER_WEAVER_K8S_NAMESPACE").unwrap_or_else(|_| "loom-weavers".to_string());
@@ -116,7 +111,6 @@ impl ServerConfig {
 			log_level,
 			bin_dir,
 			weaver_enabled,
-			weaver_api_key,
 			weaver_namespace,
 			weaver_cleanup_interval_secs,
 			weaver_default_ttl_hours,
@@ -142,7 +136,6 @@ impl Default for ServerConfig {
 			log_level: "info,tower_http::trace=debug".to_string(),
 			bin_dir: "./bin".to_string(),
 			weaver_enabled: false,
-			weaver_api_key: None,
 			weaver_namespace: "loom-weavers".to_string(),
 			weaver_cleanup_interval_secs: 1800,
 			weaver_default_ttl_hours: 4,

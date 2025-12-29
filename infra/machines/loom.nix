@@ -112,10 +112,6 @@
     mode = "0400";
   };
 
-  sops.secrets.loom-weaver-api-key = {
-    owner = "loom-server";
-    mode = "0400";
-  };
   
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
@@ -175,7 +171,6 @@
 
     weaver = {
       enable = true;
-      apiKeyFile = config.sops.secrets.loom-weaver-api-key.path;
       namespace = "loom-weavers";
     };
   };

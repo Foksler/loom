@@ -12,7 +12,6 @@ use loom_github_app::{GithubAppClient, GithubAppConfig};
 use loom_google_cse::CseClient;
 use loom_k8s::KubeClient;
 use loom_llm_service::LlmService;
-use loom_secret::Secret;
 use std::sync::Arc;
 use tower_http::services::{ServeDir, ServeFile};
 use utoipa::OpenApi;
@@ -39,7 +38,6 @@ pub struct AppState {
 	pub query_metrics: Arc<QueryMetrics>,
 	pub trace_store: QueryTraceStore,
 	pub provisioner: Option<Arc<Provisioner>>,
-	pub weaver_api_key: Option<Secret<String>>,
 	pub webhook_dispatcher: Option<Arc<WebhookDispatcher>>,
 }
 
@@ -94,9 +92,8 @@ pub async fn create_app_state(repo: Arc<ThreadRepository>, config: &ServerConfig
 	let query_metrics = Arc::new(QueryMetrics::default());
 	let query_manager = Arc::new(ServerQueryManager::with_metrics(query_metrics.clone()));
 
-	// Initialize weaver provisioner if enabled and API key is configured
-	let (provisioner, weaver_api_key, webhook_dispatcher) =
-		initialize_weaver_provisioner(config).await;
+	// Initialize weaver provisioner if enabled
+	let (provisioner, webhook_dispatcher) = initialize_weaver_provisioner(config).await;
 
 	AppState {
 		repo,
@@ -107,7 +104,6 @@ pub async fn create_app_state(repo: Arc<ThreadRepository>, config: &ServerConfig
 		query_metrics,
 		trace_store: QueryTraceStore::default(),
 		provisioner,
-		weaver_api_key,
 		webhook_dispatcher,
 	}
 }
@@ -115,25 +111,12 @@ pub async fn create_app_state(repo: Arc<ThreadRepository>, config: &ServerConfig
 /// Initialize the weaver provisioner and webhook dispatcher if enabled.
 async fn initialize_weaver_provisioner(
 	config: &ServerConfig,
-) -> (
-	Option<Arc<Provisioner>>,
-	Option<Secret<String>>,
-	Option<Arc<WebhookDispatcher>>,
-) {
-	// Check if weaver provisioning is enabled and API key is set
-	let api_key = match &config.weaver_api_key {
-		Some(key) if !key.is_empty() && config.weaver_enabled => key.clone(),
-		_ => {
-			if config.weaver_enabled {
-				tracing::warn!(
-					"Weaver provisioning enabled but LOOM_SERVER_WEAVER_API_KEY not set, disabling"
-				);
-			} else {
-				tracing::info!("Weaver provisioning disabled");
-			}
-			return (None, None, None);
-		}
-	};
+) -> (Option<Arc<Provisioner>>, Option<Arc<WebhookDispatcher>>) {
+	// Check if weaver provisioning is enabled
+	if !config.weaver_enabled {
+		tracing::info!("Weaver provisioning disabled");
+		return (None, None);
+	}
 
 	// Try to create K8s client
 	let k8s_client = match KubeClient::new().await {
@@ -143,7 +126,7 @@ async fn initialize_weaver_provisioner(
 				error = %e,
 				"Failed to initialize K8s client, weaver provisioning disabled"
 			);
-			return (None, None, None);
+			return (None, None);
 		}
 	};
 
@@ -163,7 +146,6 @@ async fn initialize_weaver_provisioner(
 	// Create weaver config from server config
 	let weaver_config = WeaverConfig {
 		namespace: config.weaver_namespace.clone(),
-		api_key: Secret::new(api_key.clone()),
 		cleanup_interval_secs: config.weaver_cleanup_interval_secs,
 		default_ttl_hours: config.weaver_default_ttl_hours,
 		max_ttl_hours: config.weaver_max_ttl_hours,
@@ -175,7 +157,6 @@ async fn initialize_weaver_provisioner(
 	// Create provisioner and webhook dispatcher
 	let provisioner = Arc::new(Provisioner::new(k8s_client, weaver_config));
 	let webhook_dispatcher = Arc::new(WebhookDispatcher::new(webhooks));
-	let api_key_secret = Secret::new(api_key);
 
 	tracing::info!(
 		namespace = %config.weaver_namespace,
@@ -184,7 +165,7 @@ async fn initialize_weaver_provisioner(
 		"Weaver provisioning enabled"
 	);
 
-	(Some(provisioner), Some(api_key_secret), Some(webhook_dispatcher))
+	(Some(provisioner), Some(webhook_dispatcher))
 }
 
 /// Create the API router with all routes.

@@ -164,12 +164,6 @@ in
     weaver = {
       enable = mkEnableOption "Weaver provisioner for Kubernetes-based code execution environments";
 
-      apiKeyFile = mkOption {
-        type = types.nullOr types.path;
-        default = null;
-        description = "Path to file containing API key for weaver endpoints.";
-      };
-
       namespace = mkOption {
         type = types.str;
         default = "loom-weavers";
@@ -252,10 +246,7 @@ in
         assertion = cfg.googleCse.enable -> (cfg.googleCse.apiKeyFile != null && cfg.googleCse.searchEngineIdFile != null);
         message = "services.loom-server.googleCse.apiKeyFile and searchEngineIdFile must be set when Google CSE is enabled.";
       }
-      {
-        assertion = cfg.weaver.enable -> cfg.weaver.apiKeyFile != null;
-        message = "services.loom-server.weaver.apiKeyFile must be set when Weaver is enabled.";
-      }
+
     ];
 
     users.users.loom-server = {
@@ -326,7 +317,6 @@ in
         ${loadSecret cfg.githubApp.webhookSecretFile "LOOM_GITHUB_WEBHOOK_SECRET"}
         ${loadSecret cfg.googleCse.apiKeyFile "LOOM_SERVER_GOOGLE_CSE_API_KEY"}
         ${loadSecret cfg.googleCse.searchEngineIdFile "LOOM_SERVER_GOOGLE_CSE_SEARCH_ENGINE_ID"}
-        ${loadSecret cfg.weaver.apiKeyFile "LOOM_SERVER_WEAVER_API_KEY"}
 
         exec ${cfg.package}/bin/loom-server
       '';

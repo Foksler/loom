@@ -167,17 +167,7 @@ pub enum WeaverStatus {
 | GET | `/api/weaver/{id}/logs` | SSE log stream |
 | POST | `/api/weavers/cleanup` | Manual cleanup trigger |
 
-### 5.2 Authentication
-
-All `/api/weaver*` endpoints require API key authentication:
-
-```
-X-API-Key: [REDACTED:api-key]
-```
-
-Configured via `LOOM_SERVER_WEAVER_API_KEY` environment variable.
-
-### 5.3 POST /api/weaver
+### 5.2 POST /api/weaver
 
 Provision a new weaver.
 
@@ -232,7 +222,7 @@ Provision a new weaver.
 - Returns `429 Too Many Requests` if max concurrent limit reached
 - Returns `400 Bad Request` if lifetime exceeds max
 
-### 5.4 GET /api/weavers
+### 5.3 GET /api/weavers
 
 List all managed weavers.
 
@@ -260,7 +250,7 @@ List all managed weavers.
 }
 ```
 
-### 5.5 GET /api/weaver/{id}
+### 5.4 GET /api/weaver/{id}
 
 Get weaver details.
 
@@ -282,13 +272,13 @@ Get weaver details.
 }
 ```
 
-### 5.6 DELETE /api/weaver/{id}
+### 5.5 DELETE /api/weaver/{id}
 
 Delete a weaver.
 
 **Response (204 No Content)**
 
-### 5.7 GET /api/weaver/{id}/logs
+### 5.6 GET /api/weaver/{id}/logs
 
 SSE stream of container logs.
 
@@ -307,7 +297,7 @@ data: {"line": "Starting worker...", "timestamp": "2025-01-15T12:35:00Z"}
 data: {"line": "Processing task abc123", "timestamp": "2025-01-15T12:35:01Z"}
 ```
 
-### 5.8 POST /api/weavers/cleanup
+### 5.7 POST /api/weavers/cleanup
 
 Trigger manual cleanup of expired weavers.
 
@@ -594,7 +584,6 @@ The `loom-server.nix` module includes weaver provisioner configuration:
 ```nix
 services.loom-server.weaver = {
   enable = true;
-  apiKeyFile = "/path/to/secret";
   namespace = "loom-weavers";
   cleanupIntervalSecs = 1800;
   defaultTtlHours = 4;
@@ -604,35 +593,12 @@ services.loom-server.weaver = {
 };
 ```
 
-### 15.3 Required Secrets (sops)
-
-| Secret | Description |
-|--------|-------------|
-| `loom-weaver-api-key` | API key for weaver endpoint authentication |
-
-**Secret Configuration:**
-
-The secret is already configured and encrypted in the repository:
-
-- **Location:** `infra/secrets/loom.yaml` (sops-encrypted)
-- **Key format:** `sk-weaver-{base64-random}`
-- **To update:** Use `./update-secret loom.yaml` script in the `infra/secrets/` directory
-
-**NixOS sops configuration in `loom.nix`:**
-
-```nix
-sops.secrets.loom-weaver-api-key = {
-  owner = "loom-server";
-  mode = "0400";
-};
-```
-
-### 15.4 Service Dependencies
+### 15.3 Service Dependencies
 
 - K3s must be running before loom-server starts
 - The `loom-weavers` namespace is created automatically by the module
 
-### 15.5 Files Created/Updated
+### 15.4 Files Created/Updated
 
 | File | Description |
 |------|-------------|

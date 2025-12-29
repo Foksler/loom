@@ -3,7 +3,6 @@
 
 //! Weaver provisioner configuration.
 
-use loom_secret::Secret;
 use serde::{Deserialize, Serialize};
 
 /// Configuration for the weaver provisioner.
@@ -11,8 +10,6 @@ use serde::{Deserialize, Serialize};
 pub struct WeaverConfig {
     /// Kubernetes namespace for weaver pods
     pub namespace: String,
-    /// API key for weaver endpoint authentication
-    pub api_key: Secret<String>,
     /// Cleanup task interval in seconds
     pub cleanup_interval_secs: u64,
     /// Default weaver TTL in hours
@@ -31,7 +28,6 @@ impl Default for WeaverConfig {
     fn default() -> Self {
         Self {
             namespace: "loom-weavers".to_string(),
-            api_key: Secret::new(String::new()),
             cleanup_interval_secs: 1800, // 30 minutes
             default_ttl_hours: 4,
             max_ttl_hours: 48,

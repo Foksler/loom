@@ -8,9 +8,8 @@ use std::convert::Infallible;
 
 use axum::{
 	extract::{Path, Query, State},
-	http::{HeaderMap, StatusCode},
-	middleware::{self, Next},
-	response::{sse::Event, IntoResponse, Response, Sse},
+	http::StatusCode,
+	response::{sse::Event, IntoResponse, Sse},
 	routing::{delete, get, post},
 	Json, Router,
 };
@@ -180,73 +179,6 @@ pub struct CleanupApiResponse {
 	pub would_delete: Option<Vec<String>>,
 	/// Number of weavers affected
 	pub count: u32,
-}
-
-// ============================================================================
-// API Key middleware
-// ============================================================================
-
-/// Extension type for storing the validated API key
-#[derive(Clone)]
-pub struct ValidatedApiKey;
-
-/// Middleware to require a valid API key in the X-API-Key header.
-pub async fn require_weaver_api_key(
-	State(state): State<AppState>,
-	headers: HeaderMap,
-	request: axum::http::Request<axum::body::Body>,
-	next: Next,
-) -> Response {
-	let expected_key = match &state.weaver_api_key {
-		Some(key) if !key.expose().is_empty() => key,
-		_ => {
-			tracing::error!("Weaver API key not configured");
-			return (
-				StatusCode::INTERNAL_SERVER_ERROR,
-				Json(crate::error::ErrorResponse {
-					error: "configuration_error".to_string(),
-					message: "Weaver API key not configured".to_string(),
-					server_version: None,
-					client_version: None,
-				}),
-			)
-				.into_response();
-		}
-	};
-
-	let provided_key = headers
-		.get("X-API-Key")
-		.and_then(|v| v.to_str().ok())
-		.unwrap_or("");
-
-	if provided_key.is_empty() {
-		return (
-			StatusCode::UNAUTHORIZED,
-			Json(crate::error::ErrorResponse {
-				error: "unauthorized".to_string(),
-				message: "Missing X-API-Key header".to_string(),
-				server_version: None,
-				client_version: None,
-			}),
-		)
-			.into_response();
-	}
-
-	if provided_key != expected_key.expose() {
-		tracing::warn!("Invalid API key provided for weaver endpoint");
-		return (
-			StatusCode::UNAUTHORIZED,
-			Json(crate::error::ErrorResponse {
-				error: "unauthorized".to_string(),
-				message: "Invalid API key".to_string(),
-				server_version: None,
-				client_version: None,
-			}),
-		)
-			.into_response();
-	}
-
-	next.run(request).await
 }
 
 // ============================================================================
@@ -528,7 +460,7 @@ pub async fn trigger_cleanup(
 // Router
 // ============================================================================
 
-/// Create the weaver routes router with API key authentication.
+/// Create the weaver routes router.
 pub fn weaver_routes(state: AppState) -> Router {
 	Router::new()
 		.route("/api/weaver", post(create_weaver))
@@ -537,10 +469,6 @@ pub fn weaver_routes(state: AppState) -> Router {
 		.route("/api/weaver/{id}", delete(delete_weaver))
 		.route("/api/weaver/{id}/logs", get(stream_logs))
 		.route("/api/weavers/cleanup", post(trigger_cleanup))
-		.layer(middleware::from_fn_with_state(
-			state.clone(),
-			require_weaver_api_key,
-		))
 		.with_state(state)
 }
 
