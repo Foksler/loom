@@ -60,6 +60,12 @@ in
       description = "Disable local storage provisioner.";
     };
 
+    bindAddress = mkOption {
+      type = types.str;
+      default = "127.0.0.1";
+      description = "Address to bind the API server to.";
+    };
+
     extraFlags = mkOption {
       type = types.listOf types.str;
       default = [ ];
@@ -96,9 +102,12 @@ in
       enable = true;
       role = cfg.role;
       clusterInit = cfg.clusterInit && cfg.role == "server";
-      token = cfg.token;
       tokenFile = cfg.tokenFile;
+    } // optionalAttrs (cfg.token != null) {
+      token = cfg.token;
+    } // optionalAttrs (cfg.serverAddr != null) {
       serverAddr = cfg.serverAddr;
+    } // {
 
       extraFlags = let
         disableFlags = concatLists [
@@ -106,7 +115,11 @@ in
           (optional cfg.disableTraefik "--disable=traefik")
           (optional cfg.disableLocalStorage "--disable=local-storage")
         ];
-      in toString (disableFlags ++ cfg.extraFlags);
+        bindFlags = [
+          "--bind-address=${cfg.bindAddress}"
+          "--advertise-address=${cfg.bindAddress}"
+        ];
+      in toString (bindFlags ++ disableFlags ++ cfg.extraFlags);
     };
 
     # Create loom-weavers namespace after k3s starts
