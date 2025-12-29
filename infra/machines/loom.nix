@@ -23,6 +23,7 @@
     ../nixos-modules/nixos-auto-update.nix
     ../nixos-modules/loom-server.nix
     ../nixos-modules/loom-web.nix
+    ../nixos-modules/k3s.nix
   ];
 
   # Machine-specific configuration
@@ -110,10 +111,23 @@
     owner = "loom-server";
     mode = "0400";
   };
+
+  sops.secrets.loom-weaver-api-key = {
+    owner = "loom-server";
+    mode = "0400";
+  };
   
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
   system.stateVersion = "25.11";
+
+  # K3s Kubernetes cluster
+  services.loom-k3s = {
+    enable = true;
+    role = "server";
+    clusterInit = true;
+    disableTraefik = true;  # We use nginx via loom-web
+  };
 
   # Auto-update NixOS from git repository
   services.nixos-auto-update = {
@@ -157,6 +171,12 @@
       enable = true;
       apiKeyFile = config.sops.secrets.loom-google-cse-api-key.path;
       searchEngineIdFile = config.sops.secrets.loom-google-cse-search-engine-id.path;
+    };
+
+    weaver = {
+      enable = true;
+      apiKeyFile = config.sops.secrets.loom-weaver-api-key.path;
+      namespace = "loom-weavers";
     };
   };
 

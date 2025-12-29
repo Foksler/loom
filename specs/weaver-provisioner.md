@@ -573,9 +573,62 @@ async fn test_full_weaver_lifecycle() {
 
 ---
 
-## 15. Future Considerations
+## 15. NixOS Deployment
 
-### 15.1 Potential Extensions
+### 15.1 K3s Module Options
+
+The `k3s.nix` module configures K3s for weaver workloads:
+
+```nix
+services.loom-k3s = {
+  enable = true;
+  role = "server";
+  clusterInit = true;
+  disableTraefik = true;
+};
+```
+
+### 15.2 Loom-Server Weaver Options
+
+The `loom-server.nix` module includes weaver provisioner configuration:
+
+```nix
+services.loom-server.weaver = {
+  enable = true;
+  apiKeyFile = "/path/to/secret";
+  namespace = "loom-weavers";
+  cleanupIntervalSecs = 1800;
+  defaultTtlHours = 4;
+  maxTtlHours = 48;
+  maxConcurrent = 64;
+  readyTimeoutSecs = 60;
+};
+```
+
+### 15.3 Required Secrets (sops)
+
+| Secret | Description |
+|--------|-------------|
+| `loom-weaver-api-key` | API key for weaver endpoint authentication |
+
+### 15.4 Service Dependencies
+
+- K3s must be running before loom-server starts
+- The `loom-weavers` namespace is created automatically by the module
+
+### 15.5 Files Created/Updated
+
+| File | Description |
+|------|-------------|
+| `infra/nixos-modules/k3s.nix` | New module for K3s configuration |
+| `infra/nixos-modules/loom-server.nix` | Updated with weaver options |
+| `infra/machines/loom.nix` | Updated to enable both modules |
+
+---
+
+## 16. Future Considerations
+
+### 16.1 Potential Extensions
 
 - Multi-namespace support
 - Weaver exec (interactive shell)
@@ -584,7 +637,7 @@ async fn test_full_weaver_lifecycle() {
 - Webhook retry with backoff
 - Weaver templates/presets
 
-### 15.2 Not Planned
+### 16.2 Not Planned
 
 - Multi-cluster support
 - Persistent volumes

@@ -160,6 +160,69 @@ in
       };
     };
 
+    # Weaver Provisioner Configuration
+    weaver = {
+      enable = mkEnableOption "Weaver provisioner for Kubernetes-based code execution environments";
+
+      apiKeyFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = "Path to file containing API key for weaver endpoints.";
+      };
+
+      namespace = mkOption {
+        type = types.str;
+        default = "loom-weavers";
+        description = "Kubernetes namespace for weavers.";
+      };
+
+      kubeconfigPath = mkOption {
+        type = types.path;
+        default = "/etc/rancher/k3s/k3s.yaml";
+        description = ''
+          Path to kubeconfig file.
+          Note: This file must exist and be readable by the loom-server user.
+          When using k3s, ensure the loom-server user is in the loom-k3s group.
+        '';
+      };
+
+      cleanupIntervalSecs = mkOption {
+        type = types.int;
+        default = 1800;
+        description = "Cleanup interval in seconds for expired weavers.";
+      };
+
+      defaultTtlHours = mkOption {
+        type = types.int;
+        default = 4;
+        description = "Default TTL in hours for weavers.";
+      };
+
+      maxTtlHours = mkOption {
+        type = types.int;
+        default = 48;
+        description = "Maximum TTL in hours for weavers.";
+      };
+
+      maxConcurrent = mkOption {
+        type = types.int;
+        default = 64;
+        description = "Maximum number of concurrent weavers.";
+      };
+
+      readyTimeoutSecs = mkOption {
+        type = types.int;
+        default = 60;
+        description = "Timeout in seconds waiting for weaver to become ready.";
+      };
+
+      webhooks = mkOption {
+        type = types.str;
+        default = "[]";
+        description = "JSON string of webhook configurations.";
+      };
+    };
+
     extraEnvironment = mkOption {
       type = types.attrsOf types.str;
       default = { };
@@ -189,6 +252,10 @@ in
         assertion = cfg.googleCse.enable -> (cfg.googleCse.apiKeyFile != null && cfg.googleCse.searchEngineIdFile != null);
         message = "services.loom-server.googleCse.apiKeyFile and searchEngineIdFile must be set when Google CSE is enabled.";
       }
+      {
+        assertion = cfg.weaver.enable -> cfg.weaver.apiKeyFile != null;
+        message = "services.loom-server.weaver.apiKeyFile must be set when Weaver is enabled.";
+      }
     ];
 
     users.users.loom-server = {
@@ -197,6 +264,7 @@ in
       home = "/var/lib/loom-server";
       createHome = true;
       description = "Loom server service user";
+      extraGroups = mkIf cfg.weaver.enable [ "loom-k3s" ];
     };
 
     users.groups.loom-server = { };
@@ -231,6 +299,17 @@ in
         (mkIf (cfg.binDir != null) {
           LOOM_SERVER_BIN_DIR = toString cfg.binDir;
         })
+        (mkIf cfg.weaver.enable {
+          LOOM_SERVER_WEAVER_ENABLED = "true";
+          LOOM_SERVER_WEAVER_K8S_NAMESPACE = cfg.weaver.namespace;
+          LOOM_SERVER_WEAVER_CLEANUP_INTERVAL_SECS = toString cfg.weaver.cleanupIntervalSecs;
+          LOOM_SERVER_WEAVER_DEFAULT_TTL_HOURS = toString cfg.weaver.defaultTtlHours;
+          LOOM_SERVER_WEAVER_MAX_TTL_HOURS = toString cfg.weaver.maxTtlHours;
+          LOOM_SERVER_WEAVER_MAX_CONCURRENT = toString cfg.weaver.maxConcurrent;
+          LOOM_SERVER_WEAVER_READY_TIMEOUT_SECS = toString cfg.weaver.readyTimeoutSecs;
+          LOOM_SERVER_WEAVER_WEBHOOKS = cfg.weaver.webhooks;
+          KUBECONFIG = toString cfg.weaver.kubeconfigPath;
+        })
         cfg.extraEnvironment
       ];
 
@@ -247,6 +326,7 @@ in
         ${loadSecret cfg.githubApp.webhookSecretFile "LOOM_GITHUB_WEBHOOK_SECRET"}
         ${loadSecret cfg.googleCse.apiKeyFile "LOOM_SERVER_GOOGLE_CSE_API_KEY"}
         ${loadSecret cfg.googleCse.searchEngineIdFile "LOOM_SERVER_GOOGLE_CSE_SEARCH_ENGINE_ID"}
+        ${loadSecret cfg.weaver.apiKeyFile "LOOM_SERVER_WEAVER_API_KEY"}
 
         exec ${cfg.package}/bin/loom-server
       '';
