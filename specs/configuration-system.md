@@ -83,6 +83,26 @@ fn resolve_xdg_path(xdg_var: &str, default_suffix: &str) -> PathBuf {
 }
 ```
 
+### Auto-Creation of Default Configuration
+
+When Loom starts and no user configuration file exists at `$XDG_CONFIG_HOME/loom/config.toml`, a
+default configuration file is automatically created with sensible defaults. This ensures:
+
+- **Zero-configuration startup:** Users can run Loom immediately without manual setup
+- **Discoverability:** The generated file serves as documentation of available options
+- **Customization starting point:** Users can modify the generated file rather than creating from
+  scratch
+
+The auto-creation process:
+
+1. Check if user config file exists
+2. If not, create parent directories (`~/.config/loom/`) if needed
+3. Write the default configuration template
+4. Log the creation at INFO level
+
+**Note:** Existing configuration files are never overwritten. The auto-creation only occurs when no
+user config file exists.
+
 ---
 
 ## 3. Configuration Sources and Precedence
