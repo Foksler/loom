@@ -40,7 +40,7 @@ pub struct AppState {
 pub async fn create_app_state(repo: Arc<ThreadRepository>) -> AppState {
 	let cse_client = match (
 		std::env::var("LOOM_SERVER_GOOGLE_CSE_API_KEY"),
-		std::env::var("LOOM_SERVER_GOOGLE_CSE_CX"),
+		std::env::var("LOOM_SERVER_GOOGLE_CSE_SEARCH_ENGINE_ID"),
 	) {
 		(Ok(api_key), Ok(cx)) if !api_key.is_empty() && !cx.is_empty() => {
 			tracing::info!("Google CSE configured, creating client");
@@ -548,7 +548,7 @@ mod tests {
 
 		// Clear env vars to ensure CSE is not configured
 		std::env::remove_var("LOOM_SERVER_GOOGLE_CSE_API_KEY");
-		std::env::remove_var("LOOM_SERVER_GOOGLE_CSE_CX");
+		std::env::remove_var("LOOM_SERVER_GOOGLE_CSE_SEARCH_ENGINE_ID");
 
 		let response = app
 			.oneshot(

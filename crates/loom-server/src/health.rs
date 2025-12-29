@@ -343,7 +343,7 @@ pub async fn check_google_cse() -> GoogleCseHealth {
 
 	// Check if CSE is configured
 	let api_key = std::env::var("LOOM_SERVER_GOOGLE_CSE_API_KEY");
-	let cx = std::env::var("LOOM_SERVER_GOOGLE_CSE_CX");
+	let cx = std::env::var("LOOM_SERVER_GOOGLE_CSE_SEARCH_ENGINE_ID");
 
 	let (configured, status, error) = match (api_key, cx) {
 		(Ok(key), Ok(cx_val)) if !key.is_empty() && !cx_val.is_empty() => {

@@ -105,6 +105,11 @@
     owner = "loom-server";
     mode = "0400";
   };
+
+  sops.secrets.loom-google-cse-search-engine-id = {
+    owner = "loom-server";
+    mode = "0400";
+  };
   
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
@@ -151,7 +156,7 @@
     googleCse = {
       enable = true;
       apiKeyFile = config.sops.secrets.loom-google-cse-api-key.path;
-      searchEngineId = "017576662512468239146:omuauf_lfve";
+      searchEngineIdFile = config.sops.secrets.loom-google-cse-search-engine-id.path;
     };
   };
 

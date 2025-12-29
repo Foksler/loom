@@ -153,10 +153,10 @@ in
         description = "Path to file containing Google API key.";
       };
 
-      searchEngineId = mkOption {
-        type = types.nullOr types.str;
+      searchEngineIdFile = mkOption {
+        type = types.nullOr types.path;
         default = null;
-        description = "Google Custom Search Engine ID.";
+        description = "Path to file containing Google Custom Search Engine ID.";
       };
     };
 
@@ -227,9 +227,7 @@ in
           LOOM_SERVER_VERTEX_PROJECT_ID = cfg.vertex.projectId;
           LOOM_SERVER_VERTEX_LOCATION = cfg.vertex.location;
         })
-        (mkIf (cfg.googleCse.enable && cfg.googleCse.searchEngineId != null) {
-          LOOM_GOOGLE_CSE_ID = cfg.googleCse.searchEngineId;
-        })
+
         (mkIf (cfg.binDir != null) {
           LOOM_SERVER_BIN_DIR = toString cfg.binDir;
         })
@@ -247,7 +245,8 @@ in
         ${loadSecret cfg.githubApp.appIdFile "LOOM_GITHUB_APP_ID"}
         ${loadSecret cfg.githubApp.privateKeyFile "LOOM_GITHUB_APP_PRIVATE_KEY_FILE"}
         ${loadSecret cfg.githubApp.webhookSecretFile "LOOM_GITHUB_WEBHOOK_SECRET"}
-        ${loadSecret cfg.googleCse.apiKeyFile "LOOM_GOOGLE_CSE_API_KEY"}
+        ${loadSecret cfg.googleCse.apiKeyFile "LOOM_SERVER_GOOGLE_CSE_API_KEY"}
+        ${loadSecret cfg.googleCse.searchEngineIdFile "LOOM_SERVER_GOOGLE_CSE_SEARCH_ENGINE_ID"}
 
         exec ${cfg.package}/bin/loom-server
       '';
