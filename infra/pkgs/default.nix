@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Proprietary
 
 # Custom packages overlay
+# Note: loom-cli-windows is defined in flake.nix using fenix for cross-compilation
 final: prev: {
   smtprelay = final.callPackage ./smtprelay.nix { };
   loom-server = final.callPackage ./loom-server.nix { };

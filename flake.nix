@@ -6,6 +6,10 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nixos-vscode-server = {
       url = "github:nix-community/nixos-vscode-server";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -16,7 +20,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixos-vscode-server, sops-nix }:
+  outputs = { self, nixpkgs, fenix, nixos-vscode-server, sops-nix }:
     let
       overlay = import ./infra/pkgs;
       toolsOverlay = import ./tools/pkgs;
@@ -41,12 +45,19 @@
 
       packages.x86_64-linux = 
         let
-          pkgs = nixpkgs.legacyPackages.x86_64-linux.extend overlay;
+          system = "x86_64-linux";
+          pkgs = nixpkgs.legacyPackages.${system}.extend overlay;
           pkgsWithTools = pkgs.extend toolsOverlay;
+          fenixPkgs = fenix.packages.${system};
         in
         {
           inherit (pkgs) smtprelay loom-server loom-cli loom-cli-binaries loom-web;
           inherit (pkgsWithTools) license;
+          
+          # Windows cross-compilation uses fenix for Rust with Windows target
+          loom-cli-windows = pkgs.callPackage ./infra/pkgs/loom-cli-windows.nix {
+            fenix = fenixPkgs;
+          };
         };
     };
 }
