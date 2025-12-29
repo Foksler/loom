@@ -8,6 +8,7 @@
 //! concurrent operations to ensure robustness of the query-response protocol.
 
 use crate::api::{create_app_state, create_router};
+use crate::config::ServerConfig;
 use crate::db::ThreadRepository;
 use crate::server_query::ServerQueryManager;
 use axum::{
@@ -32,7 +33,8 @@ async fn setup_test_app() -> (axum::Router, tempfile::TempDir) {
 	let db_path = dir.path().join("test_query.db");
 	let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 	let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
-	let state = create_app_state(repo).await;
+	let config = ServerConfig::default();
+	let state = create_app_state(repo, &config).await;
 	(create_router(state), dir)
 }
 

@@ -10,6 +10,7 @@ use std::time::Duration;
 use tokio::time::{timeout, Instant};
 use utoipa::ToSchema;
 
+use loom_agent_provisioner::Provisioner;
 use loom_github_app::{GithubAppClient, GithubAppError};
 use loom_llm_service::LlmService;
 
@@ -119,6 +120,17 @@ pub struct GithubAppHealth {
 	pub error: Option<String>,
 }
 
+/// Kubernetes component health.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct KubernetesHealth {
+	pub status: HealthStatus,
+	pub latency_ms: u64,
+	pub namespace: String,
+	pub reachable: bool,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub error: Option<String>,
+}
+
 /// All health check components.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct HealthComponents {
@@ -127,6 +139,8 @@ pub struct HealthComponents {
 	pub llm_providers: LlmProvidersHealth,
 	pub google_cse: GoogleCseHealth,
 	pub github_app: GithubAppHealth,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub kubernetes: Option<KubernetesHealth>,
 }
 
 /// Complete health check response.
@@ -444,14 +458,49 @@ pub async fn check_github_app(client: Option<Arc<GithubAppClient>>) -> GithubApp
 	}
 }
 
+const K8S_CHECK_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// Check Kubernetes connectivity by listing pods in the namespace.
+pub async fn check_kubernetes(provisioner: Option<&Arc<Provisioner>>) -> Option<KubernetesHealth> {
+	let provisioner = provisioner?;
+
+	let start = Instant::now();
+	let namespace = provisioner.namespace().to_string();
+
+	let result = timeout(K8S_CHECK_TIMEOUT, provisioner.count_active_agents()).await;
+	let latency_ms = start.elapsed().as_millis() as u64;
+
+	let (status, reachable, error) = match result {
+		Ok(Ok(_)) => (HealthStatus::Healthy, true, None),
+		Ok(Err(e)) => (HealthStatus::Unhealthy, false, Some(e.to_string())),
+		Err(_) => (
+			HealthStatus::Unhealthy,
+			false,
+			Some("Kubernetes health check timed out".to_string()),
+		),
+	};
+
+	Some(KubernetesHealth {
+		status,
+		latency_ms,
+		namespace,
+		reachable,
+		error,
+	})
+}
+
 /// Aggregate component statuses into overall status.
 pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
-	let statuses = [
+	let mut statuses = vec![
 		components.database.status,
 		components.bin_dir.status,
 		components.google_cse.status,
 		components.github_app.status,
 	];
+
+	if let Some(ref k8s) = components.kubernetes {
+		statuses.push(k8s.status);
+	}
 
 	if statuses
 		.iter()

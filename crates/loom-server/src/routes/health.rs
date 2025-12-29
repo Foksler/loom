@@ -27,11 +27,12 @@ pub async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
 	let overall_start = Instant::now();
 
 	// Run checks in parallel
-	let (database, bin_dir, google_cse, github_app) = tokio::join!(
+	let (database, bin_dir, google_cse, github_app, kubernetes) = tokio::join!(
 		health::check_database(&state.repo),
 		async { health::check_bin_dir() },
 		health::check_google_cse(),
-		health::check_github_app(state.github_client.clone())
+		health::check_github_app(state.github_client.clone()),
+		health::check_kubernetes(state.provisioner.as_ref())
 	);
 
 	let llm_providers = health::check_llm_providers(state.llm_service.as_deref()).await;
@@ -42,6 +43,7 @@ pub async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
 		llm_providers,
 		google_cse,
 		github_app,
+		kubernetes,
 	};
 
 	let status = health::aggregate_status(&components);

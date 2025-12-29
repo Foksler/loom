@@ -19,7 +19,10 @@ path = "src/lib.rs"
 
 [dependencies]
 futures = { workspace = true }
+loom-agent-provisioner = { path = "../loom-agent-provisioner" }
 loom-core = { path = "../loom-core" }
+loom-k8s = { path = "../loom-k8s" }
+loom-secret = { path = "../loom-secret" }
 loom-github-app = { path = "../loom-github-app", features = ["openapi"] }
 loom-google-cse = { path = "../loom-google-cse", features = ["openapi"] }
 loom-llm-service = { path = "../loom-llm-service" }

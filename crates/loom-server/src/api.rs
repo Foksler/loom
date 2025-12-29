@@ -7,15 +7,19 @@ use axum::{
 	routing::{delete, get, post, put},
 	Router,
 };
+use loom_agent_provisioner::{AgentConfig, Provisioner, WebhookConfig, WebhookDispatcher};
 use loom_github_app::{GithubAppClient, GithubAppConfig};
 use loom_google_cse::CseClient;
+use loom_k8s::KubeClient;
 use loom_llm_service::LlmService;
+use loom_secret::Secret;
 use std::sync::Arc;
 use tower_http::services::{ServeDir, ServeFile};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::{
+	config::ServerConfig,
 	db::ThreadRepository,
 	llm_proxy,
 	query_metrics::QueryMetrics,
@@ -34,10 +38,13 @@ pub struct AppState {
 	pub query_manager: Arc<ServerQueryManager>,
 	pub query_metrics: Arc<QueryMetrics>,
 	pub trace_store: QueryTraceStore,
+	pub provisioner: Option<Arc<Provisioner>>,
+	pub agent_api_key: Option<Secret<String>>,
+	pub webhook_dispatcher: Option<Arc<WebhookDispatcher>>,
 }
 
 /// Creates the application state, initializing optional components.
-pub async fn create_app_state(repo: Arc<ThreadRepository>) -> AppState {
+pub async fn create_app_state(repo: Arc<ThreadRepository>, config: &ServerConfig) -> AppState {
 	let cse_client = match (
 		std::env::var("LOOM_SERVER_GOOGLE_CSE_API_KEY"),
 		std::env::var("LOOM_SERVER_GOOGLE_CSE_SEARCH_ENGINE_ID"),
@@ -87,6 +94,10 @@ pub async fn create_app_state(repo: Arc<ThreadRepository>) -> AppState {
 	let query_metrics = Arc::new(QueryMetrics::default());
 	let query_manager = Arc::new(ServerQueryManager::with_metrics(query_metrics.clone()));
 
+	// Initialize agent provisioner if enabled and API key is configured
+	let (provisioner, agent_api_key, webhook_dispatcher) =
+		initialize_agent_provisioner(config).await;
+
 	AppState {
 		repo,
 		cse_client,
@@ -95,13 +106,92 @@ pub async fn create_app_state(repo: Arc<ThreadRepository>) -> AppState {
 		query_manager,
 		query_metrics,
 		trace_store: QueryTraceStore::default(),
+		provisioner,
+		agent_api_key,
+		webhook_dispatcher,
 	}
+}
+
+/// Initialize the agent provisioner and webhook dispatcher if enabled.
+async fn initialize_agent_provisioner(
+	config: &ServerConfig,
+) -> (
+	Option<Arc<Provisioner>>,
+	Option<Secret<String>>,
+	Option<Arc<WebhookDispatcher>>,
+) {
+	// Check if agent provisioning is enabled and API key is set
+	let api_key = match &config.agent_api_key {
+		Some(key) if !key.is_empty() && config.agent_enabled => key.clone(),
+		_ => {
+			if config.agent_enabled {
+				tracing::warn!(
+					"Agent provisioning enabled but LOOM_SERVER_AGENT_API_KEY not set, disabling"
+				);
+			} else {
+				tracing::info!("Agent provisioning disabled");
+			}
+			return (None, None, None);
+		}
+	};
+
+	// Try to create K8s client
+	let k8s_client = match KubeClient::new().await {
+		Ok(client) => Arc::new(client),
+		Err(e) => {
+			tracing::warn!(
+				error = %e,
+				"Failed to initialize K8s client, agent provisioning disabled"
+			);
+			return (None, None, None);
+		}
+	};
+
+	// Parse webhooks from JSON
+	let webhooks: Vec<WebhookConfig> = match serde_json::from_str(&config.agent_webhooks) {
+		Ok(webhooks) => webhooks,
+		Err(e) => {
+			tracing::warn!(
+				error = %e,
+				webhooks_json = %config.agent_webhooks,
+				"Failed to parse agent webhooks JSON, using empty list"
+			);
+			Vec::new()
+		}
+	};
+
+	// Create agent config from server config
+	let agent_config = AgentConfig {
+		namespace: config.agent_namespace.clone(),
+		api_key: Secret::new(api_key.clone()),
+		cleanup_interval_secs: config.agent_cleanup_interval_secs,
+		default_ttl_hours: config.agent_default_ttl_hours,
+		max_ttl_hours: config.agent_max_ttl_hours,
+		max_concurrent: config.agent_max_concurrent,
+		ready_timeout_secs: config.agent_ready_timeout_secs,
+		webhooks: webhooks.clone(),
+	};
+
+	// Create provisioner and webhook dispatcher
+	let provisioner = Arc::new(Provisioner::new(k8s_client, agent_config));
+	let webhook_dispatcher = Arc::new(WebhookDispatcher::new(webhooks));
+	let api_key_secret = Secret::new(api_key);
+
+	tracing::info!(
+		namespace = %config.agent_namespace,
+		max_concurrent = config.agent_max_concurrent,
+		default_ttl_hours = config.agent_default_ttl_hours,
+		"Agent provisioning enabled"
+	);
+
+	(Some(provisioner), Some(api_key_secret), Some(webhook_dispatcher))
 }
 
 /// Create the API router with all routes.
 pub fn create_router(state: AppState) -> Router {
 	let bin_dir = std::env::var("LOOM_SERVER_BIN_DIR").unwrap_or_else(|_| "./bin".to_string());
 	let web_dir = std::env::var("LOOM_SERVER_WEB_DIR").ok();
+	let has_provisioner = state.provisioner.is_some();
 
 	let mut router = Router::new()
         // Thread API routes
@@ -167,7 +257,7 @@ pub fn create_router(state: AppState) -> Router {
         .route("/api/debug/query-traces/{trace_id}", get(routes::debug::get_query_trace))
         .route("/api/debug/query-traces", get(routes::debug::list_query_traces))
         .route("/api/debug/query-traces/stats", get(routes::debug::get_trace_stats))
-        .with_state(state)
+        .with_state(state.clone())
         // Bin directory endpoints - use fallback to avoid route conflict
         .nest_service(
             "/bin",
@@ -175,6 +265,11 @@ pub fn create_router(state: AppState) -> Router {
                 .precompressed_gzip()
                 .fallback(axum::routing::get(routes::bin::list_bin_directory)),
         );
+
+	// Add agent routes if provisioner is configured
+	if has_provisioner {
+		router = router.merge(routes::agent::agent_routes(state));
+	}
 
 	// Add OpenAPI documentation
 	router = router
@@ -213,7 +308,8 @@ mod tests {
 		let db_path = dir.path().join("test.db");
 		let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 		let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
-		let state = create_app_state(repo).await;
+		let config = ServerConfig::default();
+		let state = create_app_state(repo, &config).await;
 		(create_router(state), dir)
 	}
 
@@ -699,7 +795,8 @@ mod tests {
 		let db_path = dir.path().join("test.db");
 		let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 		let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
-		let state = create_app_state(repo).await;
+		let config = ServerConfig::default();
+		let state = create_app_state(repo, &config).await;
 
 		// Create and store a trace directly
 		let mut tracer = QueryTracer::new(

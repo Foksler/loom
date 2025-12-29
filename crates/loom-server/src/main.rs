@@ -6,6 +6,7 @@
 use clap::{Parser, Subcommand};
 use loom_server::{create_app_state, create_router, ServerConfig, ThreadRepository};
 use std::sync::Arc;
+use tokio::task::JoinHandle;
 use tower_http::{
 	cors::{Any, CorsLayer},
 	trace::TraceLayer,
@@ -70,7 +71,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let repo = Arc::new(ThreadRepository::new(&config.database_url).await?);
 
 	// Create application state and router with middleware
-	let state = create_app_state(repo).await;
+	let state = create_app_state(repo, &config).await;
+
+	// Agent provisioner startup lifecycle
+	let cleanup_task: Option<JoinHandle<()>> = if let Some(ref provisioner) = state.provisioner {
+		// Validate namespace exists (fail if not)
+		if let Err(e) = provisioner.validate_namespace().await {
+			tracing::error!(error = %e, "Agent provisioner namespace validation failed");
+			tracing::warn!("Continuing without agent provisioning support");
+			None
+		} else {
+			// Spawn cleanup background task
+			let provisioner = Arc::clone(provisioner);
+			Some(tokio::spawn(async move {
+				loom_agent_provisioner::start_cleanup_task(provisioner).await;
+			}))
+		}
+	} else {
+		None
+	};
+
 	let app = create_router(state)
 		.layer(TraceLayer::new_for_http())
 		.layer(
@@ -85,7 +105,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	tracing::info!("listening on {}", addr);
 
 	let listener = tokio::net::TcpListener::bind(&addr).await?;
-	axum::serve(listener, app).await?;
 
+	// Run server with graceful shutdown
+	tokio::select! {
+		result = axum::serve(listener, app) => {
+			if let Err(e) = result {
+				tracing::error!(error = %e, "Server error");
+			}
+		}
+		_ = tokio::signal::ctrl_c() => {
+			tracing::info!("Received shutdown signal");
+		}
+	}
+
+	// Cancel cleanup task on shutdown
+	if let Some(task) = cleanup_task {
+		tracing::info!("Cancelling cleanup task");
+		task.abort();
+	}
+
+	tracing::info!("Server shutdown complete");
 	Ok(())
 }
