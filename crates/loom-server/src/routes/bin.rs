@@ -3,10 +3,28 @@
 
 //! Binary directory listing HTTP handler.
 
-use axum::{http::StatusCode, response::IntoResponse};
+use axum::{
+	extract::Request,
+	http::StatusCode,
+	response::IntoResponse,
+};
 
 /// Handler to list files in the /bin directory
-pub async fn list_bin_directory() -> impl IntoResponse {
+/// Only shows the index for requests to `/bin/` (trailing slash).
+/// Returns 404 for specific file paths that don't exist.
+pub async fn list_bin_directory(request: Request) -> impl IntoResponse {
+	let request_path = request.uri().path();
+
+	// Only show directory listing for exact /bin or /bin/ paths
+	// Any other path (e.g., /bin/does-not-exist) should return 404
+	if request_path != "/bin" && request_path != "/bin/" {
+		return (
+			StatusCode::NOT_FOUND,
+			[("Content-Type", "text/plain; charset=utf-8")],
+			"404 Not Found".to_string(),
+		);
+	}
+
 	let bin_dir = std::env::var("LOOM_SERVER_BIN_DIR").unwrap_or_else(|_| "./bin".to_string());
 	let path = std::path::Path::new(&bin_dir);
 
