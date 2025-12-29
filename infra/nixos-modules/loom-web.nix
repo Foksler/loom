@@ -97,6 +97,14 @@ in
           };
 
           # Proxy API requests to loom-server
+          "^~ /api/" = {
+            proxyPass = cfg.serverUrl;
+            proxyWebsockets = true;
+            extraConfig = ''
+              proxy_read_timeout 86400;
+            '';
+          };
+
           "/v1/" = {
             proxyPass = cfg.serverUrl;
             proxyWebsockets = true;
