@@ -31,9 +31,9 @@ use loom_core::{
 use loom_git::{detect_repo_status, CommandGitClient};
 use loom_llm_proxy::{LlmProvider, ProxyLlmClient};
 use loom_thread::{
-	AgentStateKind, AgentStateSnapshot, LocalThreadStore, LoomVersionHeaders, MessageRole,
-	MessageSnapshot, SyncingThreadStore, Thread, ThreadId, ThreadStore, ThreadSyncClient,
-	ThreadVisibility, ToolCallSnapshot,
+	AgentStateKind, AgentStateSnapshot, LocalThreadStore, MessageRole, MessageSnapshot,
+	SyncingThreadStore, Thread, ThreadId, ThreadStore, ThreadSyncClient, ThreadVisibility,
+	ToolCallSnapshot,
 };
 
 #[derive(clap::ValueEnum, Clone, Debug)]
@@ -650,12 +650,9 @@ async fn run_update() -> Result<()> {
 
 	let current_exe = std::env::current_exe().context("failed to get current executable path")?;
 
-	let http_client = reqwest::Client::new();
+	let http_client = loom_http::new_client();
 	let response = http_client
 		.get(bin_url.clone())
-		.header(loom_version::headers::VERSION, build_info.version)
-		.header(loom_version::headers::GIT_SHA, build_info.git_sha)
-		.header(loom_version::headers::PLATFORM, build_info.platform)
 		.send()
 		.await
 		.context("failed to download update")?;
@@ -800,7 +797,7 @@ async fn search_server(
 	query: &str,
 	limit: usize,
 ) -> Result<Vec<serde_json::Value>> {
-	let client = reqwest::Client::new();
+	let client = loom_http::new_client();
 	let url = format!("{}/api/threads/search", base_url.trim_end_matches('/'));
 
 	let response = client
@@ -944,18 +941,9 @@ async fn main() -> Result<()> {
 
 		if let Some(sync_url) = sync_url {
 			let base_url = Url::parse(&sync_url).context("invalid LOOM_THREAD_SYNC_URL")?;
-			let http_client = reqwest::Client::new();
+			let http_client = loom_http::new_client();
 
-			let build_info = version::build_info();
-			let version_headers = LoomVersionHeaders {
-				version: build_info.version.to_string(),
-				git_sha: build_info.git_sha.to_string(),
-				build_timestamp: build_info.build_timestamp.to_string(),
-				platform: build_info.platform.to_string(),
-			};
-
-			let sync_client =
-				ThreadSyncClient::new(base_url, http_client).with_version_headers(version_headers);
+			let sync_client = ThreadSyncClient::new(base_url, http_client);
 			Arc::new(SyncingThreadStore::with_sync(local_store, sync_client))
 		} else {
 			Arc::new(SyncingThreadStore::local_only(local_store))

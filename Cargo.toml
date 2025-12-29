@@ -14,7 +14,7 @@ members = [
 	"crates/loom-git",
 	"crates/loom-github-app",
 	"crates/loom-google-cse",
-	"crates/loom-http-retry",
+	"crates/loom-http",
 	"crates/loom-llm-anthropic",
 	"crates/loom-llm-openai",
 	"crates/loom-llm-proxy",

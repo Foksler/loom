@@ -5,7 +5,7 @@
 
 use std::time::Duration;
 
-use loom_http_retry::{retry, RetryConfig};
+use loom_http::{retry, RetryConfig};
 use reqwest::{Client, Url};
 use serde::Deserialize;
 use tracing::{debug, error, instrument, trace};
@@ -50,7 +50,7 @@ struct GoogleCseError {
 impl CseClient {
 	/// Creates a new CSE client with the given API key and search engine ID.
 	pub fn new(api_key: impl Into<String>, cx: impl Into<String>) -> Self {
-		let http_client = Client::builder()
+		let http_client = loom_http::builder()
 			.timeout(REQUEST_TIMEOUT)
 			.build()
 			.expect("Failed to create HTTP client");

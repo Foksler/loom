@@ -12,5 +12,5 @@ pub mod types;
 
 pub use client::CseClient;
 pub use error::CseError;
-pub use loom_http_retry::RetryConfig;
+pub use loom_http::RetryConfig;
 pub use types::{CseRequest, CseResponse, CseResultItem};

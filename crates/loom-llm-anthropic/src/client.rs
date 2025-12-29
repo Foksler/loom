@@ -6,7 +6,7 @@
 use async_trait::async_trait;
 use loom_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
 use loom_credentials::{CredentialStore, MemoryCredentialStore};
-use loom_http_retry::{retry, RetryConfig, RetryableError};
+use loom_http::{retry, RetryConfig, RetryableError};
 use reqwest::Client;
 use tracing::{debug, error, info, instrument, trace};
 
@@ -18,7 +18,7 @@ const ANTHROPIC_VERSION: &str = "2023-06-01";
 /// Classification of client errors for failover behavior
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ClientErrorKind {
-	/// Transient error, retry on same account (via loom_http_retry)
+	/// Transient error, retry on same account (via loom_http)
 	Transient,
 	/// Quota exhausted, failover to next account
 	QuotaExceeded,
@@ -134,7 +134,7 @@ impl AnthropicClient<MemoryCredentialStore> {
 impl<S: CredentialStore + 'static> AnthropicClient<S> {
 	/// Create a new client with a specific credential store.
 	pub fn new_with_store(config: AnthropicConfig<S>) -> Result<Self, LlmError> {
-		let http_client = Client::builder()
+		let http_client = loom_http::builder()
 			.build()
 			.map_err(|e| LlmError::Http(format!("Failed to create HTTP client: {e}")))?;
 

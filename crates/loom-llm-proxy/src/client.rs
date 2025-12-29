@@ -63,7 +63,7 @@ impl ProxyLlmClient {
 		Self {
 			base_url,
 			provider,
-			http_client: reqwest::Client::new(),
+			http_client: loom_http::new_client(),
 		}
 	}
 

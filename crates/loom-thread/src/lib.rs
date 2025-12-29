@@ -11,4 +11,4 @@ pub use error::*;
 pub use model::*;
 pub use pending_sync::{PendingSyncEntry, PendingSyncQueue, PendingSyncStore, SyncOperation};
 pub use store::*;
-pub use sync::{LoomVersionHeaders, SyncingThreadStore, ThreadSyncClient};
+pub use sync::{SyncingThreadStore, ThreadSyncClient};

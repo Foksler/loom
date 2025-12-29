@@ -6,7 +6,6 @@
 //! Supports both Claude Pro/Max subscription OAuth and Console OAuth for API key creation.
 
 use loom_credentials::CredentialError;
-use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, error, info};
 use url::Url;
@@ -128,7 +127,7 @@ pub enum ExchangeResult {
 
 /// Exchange an authorization code for tokens.
 pub async fn exchange_code(code: &str, verifier: &str) -> Result<ExchangeResult, CredentialError> {
-	let client = Client::new();
+	let client = loom_http::new_client();
 
 	let request = TokenExchangeRequest {
 		code: code.to_string(),
@@ -189,7 +188,7 @@ pub async fn exchange_code(code: &str, verifier: &str) -> Result<ExchangeResult,
 
 /// Refresh an access token using a refresh token.
 pub async fn refresh_token(refresh: &str) -> Result<ExchangeResult, CredentialError> {
-	let client = Client::new();
+	let client = loom_http::new_client();
 
 	let request = TokenRefreshRequest {
 		refresh_token: refresh.to_string(),
@@ -255,7 +254,7 @@ struct CreateApiKeyResponse {
 ///
 /// This is used when the user selects "Create API Key" option via Console OAuth.
 pub async fn create_api_key(access_token: &str) -> Result<String, CredentialError> {
-	let client = Client::new();
+	let client = loom_http::new_client();
 
 	let response = client
 		.post("https://api.anthropic.com/api/oauth/claude_cli/create_api_key")

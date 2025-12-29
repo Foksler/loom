@@ -14,7 +14,7 @@ async-trait = { workspace = true }
 bytes = { workspace = true }
 futures = { workspace = true }
 loom-core = { path = "../loom-core" }
-loom-http-retry = { path = "../loom-http-retry" }
+loom-http = { path = "../loom-http" }
 pin-project-lite = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }

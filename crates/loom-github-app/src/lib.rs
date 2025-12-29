@@ -17,7 +17,7 @@ pub mod webhook;
 pub use client::GithubAppClient;
 pub use config::GithubAppConfig;
 pub use error::GithubAppError;
-pub use loom_http_retry::RetryConfig;
+pub use loom_http::RetryConfig;
 pub use types::{
 	AppInfoResponse, CodeSearchItem, CodeSearchRequest, CodeSearchResponse, FileContents,
 	FileContentsRequest, Installation, InstallationAccount, InstallationStatusResponse,

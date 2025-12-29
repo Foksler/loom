@@ -1,6 +1,8 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights
 // reserved. SPDX-License-Identifier: Proprietary
 
+//! Retry logic with exponential backoff for HTTP requests.
+
 use reqwest::StatusCode;
 use std::time::Duration;
 use tracing::warn;

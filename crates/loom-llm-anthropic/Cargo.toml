@@ -16,7 +16,7 @@ futures = { workspace = true }
 getrandom = "0.2"
 loom-core = { path = "../loom-core" }
 loom-credentials = { path = "../loom-credentials" }
-loom-http-retry = { path = "../loom-http-retry" }
+loom-http = { path = "../loom-http" }
 loom-secret = { path = "../loom-secret" }
 pin-project-lite = { workspace = true }
 reqwest = { workspace = true }

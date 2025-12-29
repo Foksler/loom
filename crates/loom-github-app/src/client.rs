@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use chrono::{DateTime, Utc};
-use loom_http_retry::{retry, RetryConfig};
+use loom_http::{retry, RetryConfig};
 use reqwest::{Client, StatusCode};
 use serde::Deserialize;
 use tokio::sync::Mutex;
@@ -67,7 +67,7 @@ pub struct GithubAppClient {
 impl GithubAppClient {
 	/// Create a new GitHub App client.
 	pub fn new(config: GithubAppConfig) -> Result<Self, GithubAppError> {
-		let http_client = Client::builder()
+		let http_client = loom_http::builder()
 			.timeout(REQUEST_TIMEOUT)
 			.build()
 			.map_err(|e| GithubAppError::Config(format!("Failed to create HTTP client: {e}")))?;

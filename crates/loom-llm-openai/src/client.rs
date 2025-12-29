@@ -8,7 +8,7 @@ use crate::types::{OpenAIConfig, OpenAIError, OpenAIRequest, OpenAIResponse};
 use async_trait::async_trait;
 use futures::Stream;
 use loom_core::{LlmClient, LlmError, LlmEvent, LlmRequest, LlmResponse, LlmStream};
-use loom_http_retry::{retry, RetryConfig, RetryableError};
+use loom_http::{retry, RetryConfig, RetryableError};
 use reqwest::Client;
 use std::pin::Pin;
 use std::time::Duration;
@@ -38,7 +38,7 @@ pub struct OpenAIClient {
 
 impl OpenAIClient {
 	pub fn new(config: OpenAIConfig) -> Result<Self, LlmError> {
-		let http_client = Client::builder()
+		let http_client = loom_http::builder()
 			.timeout(Duration::from_secs(300))
 			.build()
 			.map_err(|e| LlmError::Http(e.to_string()))?;

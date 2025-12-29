@@ -3,7 +3,7 @@
 
 //! Error types for GitHub App client.
 
-use loom_http_retry::RetryableError;
+use loom_http::RetryableError;
 use thiserror::Error;
 
 /// Errors that can occur when interacting with the GitHub App API.

@@ -1776,7 +1776,7 @@ dependencies = [
  "loom-config",
  "loom-core",
  "loom-git",
- "loom-http-retry",
+ "loom-http",
  "loom-llm-proxy",
  "loom-thread",
  "loom-tools",
@@ -1874,7 +1874,7 @@ dependencies = [
  "hmac",
  "jsonwebtoken",
  "loom-config-common",
- "loom-http-retry",
+ "loom-http",
  "proptest",
  "rand 0.8.5",
  "reqwest",
@@ -1894,7 +1894,7 @@ dependencies = [
 name = "loom-google-cse"
 version = "0.1.0"
 dependencies = [
- "loom-http-retry",
+ "loom-http",
  "proptest",
  "reqwest",
  "serde",
@@ -1907,10 +1907,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "loom-http-retry"
+name = "loom-http"
 version = "0.1.0"
 dependencies = [
  "fastrand",
+ "loom-version",
  "reqwest",
  "tokio",
  "tokio-test",
@@ -1928,7 +1929,7 @@ dependencies = [
  "getrandom 0.2.16",
  "loom-core",
  "loom-credentials",
- "loom-http-retry",
+ "loom-http",
  "loom-secret",
  "pin-project-lite",
  "reqwest",
@@ -1950,7 +1951,7 @@ dependencies = [
  "bytes",
  "futures",
  "loom-core",
- "loom-http-retry",
+ "loom-http",
  "pin-project-lite",
  "reqwest",
  "serde",
@@ -1969,6 +1970,7 @@ dependencies = [
  "bytes",
  "futures",
  "loom-core",
+ "loom-http",
  "pin-project-lite",
  "proptest",
  "reqwest",
@@ -1987,7 +1989,7 @@ dependencies = [
  "async-trait",
  "loom-config-common",
  "loom-core",
- "loom-http-retry",
+ "loom-http",
  "loom-llm-anthropic",
  "loom-llm-openai",
  "loom-llm-vertex",
@@ -2008,7 +2010,7 @@ dependencies = [
  "futures",
  "gcp_auth",
  "loom-core",
- "loom-http-retry",
+ "loom-http",
  "pin-project-lite",
  "proptest",
  "reqwest",
@@ -2082,7 +2084,7 @@ dependencies = [
  "chrono",
  "dirs",
  "loom-core",
- "loom-http-retry",
+ "loom-http",
  "proptest",
  "reqwest",
  "serde",
@@ -2104,7 +2106,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "loom-core",
- "loom-http-retry",
+ "loom-http",
  "proptest",
  "reqwest",
  "serde",

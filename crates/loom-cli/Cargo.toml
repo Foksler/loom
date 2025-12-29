@@ -26,7 +26,7 @@ loom-auto-commit = { path = "../loom-auto-commit" }
 loom-config = { path = "../loom-config" }
 loom-core = { path = "../loom-core" }
 loom-git = { path = "../loom-git" }
-loom-http-retry = { path = "../loom-http-retry" }
+loom-http = { path = "../loom-http" }
 loom-llm-proxy = { path = "../loom-llm-proxy" }
 loom-thread = { path = "../loom-thread" }
 loom-tools = { path = "../loom-tools" }
