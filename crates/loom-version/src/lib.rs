@@ -46,37 +46,28 @@ impl BuildInfo {
 
 /// Version info shape used for health checks (matches health-check spec).
 ///
-/// Fields are optional to handle cases where git info is unavailable.
+/// Contains only the git SHA for build identification.
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[cfg_attr(feature = "utoipa", derive(ToSchema))]
 #[derive(Debug, Clone, Copy)]
 pub struct HealthVersionInfo {
-	pub version: &'static str,
-	#[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
-	pub git_sha: Option<&'static str>,
-	#[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
-	pub build_timestamp: Option<&'static str>,
+	pub git_sha: &'static str,
 }
 
 impl HealthVersionInfo {
 	/// Get version info for health check responses.
+	#[allow(clippy::const_is_empty)]
 	pub const fn current() -> Self {
 		let info = BuildInfo::current();
 		Self {
-			version: info.version,
 			git_sha: if info.git_sha.is_empty()
 				|| info.git_sha.as_bytes()[0] == b'u'
 					&& info.git_sha.len() == 7
 					&& info.git_sha.as_bytes()[1] == b'n'
 			{
-				None
+				"unknown"
 			} else {
-				Some(info.git_sha)
-			},
-			build_timestamp: if info.build_timestamp.is_empty() {
-				None
-			} else {
-				Some(info.build_timestamp)
+				info.git_sha
 			},
 		}
 	}
@@ -113,9 +104,9 @@ mod tests {
 	}
 
 	#[test]
-	fn health_version_info_has_version() {
+	fn health_version_info_has_git_sha() {
 		let info = HealthVersionInfo::current();
-		assert!(!info.version.is_empty());
+		assert!(!info.git_sha.is_empty());
 	}
 
 	#[test]

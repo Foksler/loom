@@ -71,9 +71,7 @@ Host: loom.example.com
 	"timestamp": "2025-01-01T12:34:56.789Z",
 	"duration_ms": 4,
 	"version": {
-		"version": "0.1.0",
-		"git_sha": "abc1234",
-		"build_timestamp": "2025-01-01T12:00:00Z"
+		"git_sha": "abc1234"
 	},
 	"components": {
 		"database": {
@@ -109,7 +107,7 @@ Host: loom.example.com
 	"timestamp": "2025-01-01T12:34:56.789Z",
 	"duration_ms": 5,
 	"version": {
-		"version": "0.1.0"
+		"git_sha": "abc1234"
 	},
 	"components": {
 		"database": {
@@ -146,7 +144,7 @@ Host: loom.example.com
 	"timestamp": "2025-01-01T12:34:56.789Z",
 	"duration_ms": 502,
 	"version": {
-		"version": "0.1.0"
+		"git_sha": "abc1234"
 	},
 	"components": {
 		"database": {
@@ -267,9 +265,7 @@ interface HealthResponse {
 
 ```typescript
 interface VersionInfo {
-	version: string; // Package version
-	git_sha?: string; // Git commit SHA
-	build_timestamp?: string; // Build time (RFC3339)
+	git_sha: string; // Git commit SHA
 }
 ```
 
