@@ -306,7 +306,7 @@ impl Default for ServerQueryManager {
 
 /// HTTP handler for query responses from client.
 ///
-/// POST /v1/sessions/{session_id}/query-response
+/// POST /api/sessions/{session_id}/query-response
 ///
 /// # Phase 3 Migration
 /// - Current: HTTP POST endpoint (backcompat after WebSocket migration)
@@ -327,7 +327,7 @@ pub async fn handle_query_response(
 
 /// HTTP handler to list pending queries for a session.
 ///
-/// GET /v1/sessions/{session_id}/queries
+/// GET /api/sessions/{session_id}/queries
 #[instrument(skip(state))]
 pub async fn list_pending_queries(
 	State(state): State<crate::api::AppState>,

@@ -801,7 +801,7 @@ async fn search_server(
 	limit: usize,
 ) -> Result<Vec<serde_json::Value>> {
 	let client = reqwest::Client::new();
-	let url = format!("{}/v1/threads/search", base_url.trim_end_matches('/'));
+	let url = format!("{}/api/threads/search", base_url.trim_end_matches('/'));
 
 	let response = client
 		.get(&url)
@@ -934,7 +934,7 @@ async fn main() -> Result<()> {
 		let sync_url = std::env::var("LOOM_THREAD_SYNC_URL").ok().or_else(|| {
 			#[cfg(debug_assertions)]
 			{
-				Some("http://localhost:8080/v1/".to_string())
+				Some("http://localhost:8080/api/".to_string())
 			}
 			#[cfg(not(debug_assertions))]
 			{

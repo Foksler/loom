@@ -13,7 +13,7 @@ use crate::{api::AppState, error::ServerError, query_tracing::TraceTimeline};
 
 #[utoipa::path(
     get,
-    path = "/v1/debug/query-traces/{trace_id}",
+    path = "/api/debug/query-traces/{trace_id}",
     params(
         ("trace_id" = String, Path, description = "Trace ID")
     ),
@@ -23,7 +23,7 @@ use crate::{api::AppState, error::ServerError, query_tracing::TraceTimeline};
     ),
     tag = "debug"
 )]
-/// GET /v1/debug/query-traces/{trace_id} - Get a query trace by ID.
+/// GET /api/debug/query-traces/{trace_id} - Get a query trace by ID.
 ///
 /// Returns the full trace timeline with all events and their durations.
 #[axum::debug_handler]
@@ -53,7 +53,7 @@ pub async fn get_query_trace(
 
 #[utoipa::path(
     get,
-    path = "/v1/debug/query-traces",
+    path = "/api/debug/query-traces",
     params(
         ("session_id" = Option<String>, Query, description = "Filter by session ID")
     ),
@@ -62,7 +62,7 @@ pub async fn get_query_trace(
     ),
     tag = "debug"
 )]
-/// GET /v1/debug/query-traces - List all trace IDs.
+/// GET /api/debug/query-traces - List all trace IDs.
 ///
 /// Optionally filter by session_id query parameter.
 #[axum::debug_handler]
@@ -107,13 +107,13 @@ pub async fn list_query_traces(
 
 #[utoipa::path(
     get,
-    path = "/v1/debug/query-traces/stats",
+    path = "/api/debug/query-traces/stats",
     responses(
         (status = 200, description = "Trace statistics")
     ),
     tag = "debug"
 )]
-/// GET /v1/debug/query-traces/stats - Get trace store statistics.
+/// GET /api/debug/query-traces/stats - Get trace store statistics.
 ///
 /// Returns aggregated statistics about all traces in the store.
 #[axum::debug_handler]

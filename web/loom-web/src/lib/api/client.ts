@@ -46,12 +46,12 @@ export class LoomApiClient {
 		if (params.offset) query.set('offset', String(params.offset));
 
 		const queryStr = query.toString();
-		const path = queryStr ? `/v1/threads?${queryStr}` : '/v1/threads';
+		const path = queryStr ? `/api/threads?${queryStr}` : '/api/threads';
 		return this.request<ListResponse>(path);
 	}
 
 	async getThread(id: string): Promise<Thread> {
-		return this.request<Thread>(`/v1/threads/${encodeURIComponent(id)}`);
+		return this.request<Thread>(`/api/threads/${encodeURIComponent(id)}`);
 	}
 
 	async createOrUpdateThread(thread: Thread, expectedVersion?: number): Promise<Thread> {
@@ -60,7 +60,7 @@ export class LoomApiClient {
 			headers['If-Match'] = String(expectedVersion);
 		}
 
-		return this.request<Thread>(`/v1/threads/${encodeURIComponent(thread.id)}`, {
+		return this.request<Thread>(`/api/threads/${encodeURIComponent(thread.id)}`, {
 			method: 'PUT',
 			headers,
 			body: JSON.stringify(thread),
@@ -68,7 +68,7 @@ export class LoomApiClient {
 	}
 
 	async deleteThread(id: string): Promise<void> {
-		await this.request<void>(`/v1/threads/${encodeURIComponent(id)}`, {
+		await this.request<void>(`/api/threads/${encodeURIComponent(id)}`, {
 			method: 'DELETE',
 		});
 	}
@@ -79,7 +79,7 @@ export class LoomApiClient {
 		if (params.offset) searchParams.set('offset', String(params.offset));
 		if (params.workspace) searchParams.set('workspace', params.workspace);
 
-		return this.request<SearchResponse>(`/v1/threads/search?${searchParams}`);
+		return this.request<SearchResponse>(`/api/threads/search?${searchParams}`);
 	}
 
 	async updateVisibility(
@@ -92,7 +92,7 @@ export class LoomApiClient {
 			headers['If-Match'] = String(expectedVersion);
 		}
 
-		return this.request<Thread>(`/v1/threads/${encodeURIComponent(id)}/visibility`, {
+		return this.request<Thread>(`/api/threads/${encodeURIComponent(id)}/visibility`, {
 			method: 'POST',
 			headers,
 			body: JSON.stringify({ visibility }),

@@ -105,14 +105,6 @@ in
             '';
           };
 
-          "/v1/" = {
-            proxyPass = cfg.serverUrl;
-            proxyWebsockets = true;
-            extraConfig = ''
-              proxy_read_timeout 86400;
-            '';
-          };
-
           "/proxy/" = {
             proxyPass = cfg.serverUrl;
             proxyWebsockets = true;

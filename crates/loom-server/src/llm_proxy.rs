@@ -56,7 +56,7 @@ pub enum LlmStreamEvent {
 	/// A query sent from server to client during streaming.
 	/// The query must be processed by the client and a response sent back via
 	/// the query response endpoint: `POST
-	/// /v1/sessions/{session_id}/query-response`
+	/// /api/sessions/{session_id}/query-response`
 	ServerQuery(ServerQuery),
 	Completed {
 		response: LlmProxyResponse,
@@ -311,7 +311,7 @@ pub async fn proxy_vertex_stream(
 ///
 /// 1. Checked after each LLM event using `query_manager.list_pending(session_id)`
 /// 2. Sent as `LlmStreamEvent::ServerQuery` over SSE with `event: llm`
-/// 3. Awaited for client responses via the `/v1/sessions/{session_id}/query-response` endpoint
+/// 3. Awaited for client responses via the `/api/sessions/{session_id}/query-response` endpoint
 ///
 /// Current infrastructure supports this:
 /// - `LlmStreamEvent::ServerQuery` variant defined

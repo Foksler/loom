@@ -105,28 +105,28 @@ pub fn create_router(state: AppState) -> Router {
 
 	let mut router = Router::new()
         // Thread API routes
-        .route("/v1/threads/search", get(routes::threads::search_threads))
-        .route("/v1/threads/{id}", put(routes::threads::upsert_thread))
-        .route("/v1/threads/{id}", get(routes::threads::get_thread))
-        .route("/v1/threads/{id}", delete(routes::threads::delete_thread))
+        .route("/api/threads/search", get(routes::threads::search_threads))
+        .route("/api/threads/{id}", put(routes::threads::upsert_thread))
+        .route("/api/threads/{id}", get(routes::threads::get_thread))
+        .route("/api/threads/{id}", delete(routes::threads::delete_thread))
         .route(
-            "/v1/threads/{id}/visibility",
+            "/api/threads/{id}/visibility",
             post(routes::threads::update_thread_visibility),
         )
-        .route("/v1/threads", get(routes::threads::list_threads))
+        .route("/api/threads", get(routes::threads::list_threads))
         // Auth stub routes
-        .route("/v1/auth/login", post(routes::auth::login_stub))
-        .route("/v1/auth/logout", post(routes::auth::logout_stub))
+        .route("/api/auth/login", post(routes::auth::login_stub))
+        .route("/api/auth/logout", post(routes::auth::logout_stub))
         // Health and metrics routes
         .route("/health", get(routes::health::health_check))
         .route("/metrics", get(routes::health::prometheus_metrics))
         // CSE proxy route
         .route("/proxy/cse", post(routes::cse::proxy_cse))
         // GitHub App endpoints
-        .route("/v1/github/app", get(routes::github::get_github_app_info))
-        .route("/v1/github/webhook", post(routes::github::github_webhook))
+        .route("/api/github/app", get(routes::github::get_github_app_info))
+        .route("/api/github/webhook", post(routes::github::github_webhook))
         .route(
-            "/v1/github/installations/by-repo",
+            "/api/github/installations/by-repo",
             get(routes::github::get_github_installation_by_repo),
         )
         .route("/proxy/github/search-code", post(routes::github::proxy_github_search_code))
@@ -156,17 +156,17 @@ pub fn create_router(state: AppState) -> Router {
         .route("/proxy/vertex/stream", post(llm_proxy::proxy_vertex_stream))
         // Server query endpoints
         .route(
-            "/v1/sessions/{session_id}/query-response",
+            "/api/sessions/{session_id}/query-response",
             post(server_query::handle_query_response),
         )
         .route(
-            "/v1/sessions/{session_id}/queries",
+            "/api/sessions/{session_id}/queries",
             get(server_query::list_pending_queries),
         )
         // Debug/tracing endpoints
-        .route("/v1/debug/query-traces/{trace_id}", get(routes::debug::get_query_trace))
-        .route("/v1/debug/query-traces", get(routes::debug::list_query_traces))
-        .route("/v1/debug/query-traces/stats", get(routes::debug::get_trace_stats))
+        .route("/api/debug/query-traces/{trace_id}", get(routes::debug::get_query_trace))
+        .route("/api/debug/query-traces", get(routes::debug::list_query_traces))
+        .route("/api/debug/query-traces/stats", get(routes::debug::get_trace_stats))
         .with_state(state)
         // Bin directory endpoints - use fallback to avoid route conflict
         .nest_service(
@@ -316,7 +316,7 @@ mod tests {
 			.oneshot(
 				Request::builder()
 					.method("PUT")
-					.uri(format!("/v1/threads/{}", thread.id))
+					.uri(format!("/api/threads/{}", thread.id))
 					.header("Content-Type", "application/json")
 					.body(Body::from(thread_json))
 					.unwrap(),
@@ -330,7 +330,7 @@ mod tests {
 		let response = app
 			.oneshot(
 				Request::builder()
-					.uri(format!("/v1/threads/{}", thread.id))
+					.uri(format!("/api/threads/{}", thread.id))
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -347,7 +347,7 @@ mod tests {
 		let response = app
 			.oneshot(
 				Request::builder()
-					.uri("/v1/threads/T-nonexistent")
+					.uri("/api/threads/T-nonexistent")
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -364,7 +364,7 @@ mod tests {
 		let response = app
 			.oneshot(
 				Request::builder()
-					.uri("/v1/threads")
+					.uri("/api/threads")
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -381,7 +381,7 @@ mod tests {
 			.oneshot(
 				Request::builder()
 					.method("POST")
-					.uri("/v1/auth/login")
+					.uri("/api/auth/login")
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -397,7 +397,7 @@ mod tests {
 			.oneshot(
 				Request::builder()
 					.method("POST")
-					.uri("/v1/auth/logout")
+					.uri("/api/auth/logout")
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -418,7 +418,7 @@ mod tests {
 			.oneshot(
 				Request::builder()
 					.method("PUT")
-					.uri(format!("/v1/threads/{}", thread.id))
+					.uri(format!("/api/threads/{}", thread.id))
 					.header("Content-Type", "application/json")
 					.body(Body::from(thread_json))
 					.unwrap(),
@@ -431,7 +431,7 @@ mod tests {
 			.oneshot(
 				Request::builder()
 					.method("POST")
-					.uri(format!("/v1/threads/{}/visibility", thread.id))
+					.uri(format!("/api/threads/{}/visibility", thread.id))
 					.header("Content-Type", "application/json")
 					.body(Body::from(r#"{"visibility":"public"}"#))
 					.unwrap(),
@@ -459,7 +459,7 @@ mod tests {
 			.oneshot(
 				Request::builder()
 					.method("PUT")
-					.uri(format!("/v1/threads/{}", thread.id.as_str()))
+					.uri(format!("/api/threads/{}", thread.id.as_str()))
 					.header("Content-Type", "application/json")
 					.header("If-Match", "0")
 					.body(Body::from(serde_json::to_string(&thread).unwrap()))
@@ -473,7 +473,7 @@ mod tests {
 		let response = app
 			.oneshot(
 				Request::builder()
-					.uri("/v1/threads/search?q=main")
+					.uri("/api/threads/search?q=main")
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -496,7 +496,7 @@ mod tests {
 		let response = app
 			.oneshot(
 				Request::builder()
-					.uri("/v1/threads/search?q=")
+					.uri("/api/threads/search?q=")
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -566,7 +566,7 @@ mod tests {
 		assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
 	}
 
-	/// Test debug endpoint: GET /v1/debug/query-traces/{trace_id}
+	/// Test debug endpoint: GET /api/debug/query-traces/{trace_id}
 	/// **Why Important**: Ensures the debug endpoint correctly retrieves stored
 	/// traces for performance analysis and debugging query lifecycle issues.
 	#[tokio::test]
@@ -587,7 +587,7 @@ mod tests {
 		let response = app
 			.oneshot(
 				Request::builder()
-					.uri("/v1/debug/query-traces/nonexistent-trace".to_string())
+					.uri("/api/debug/query-traces/nonexistent-trace".to_string())
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -597,7 +597,7 @@ mod tests {
 		assert_eq!(response.status(), StatusCode::NOT_FOUND);
 	}
 
-	/// Test debug endpoint: GET /v1/debug/query-traces
+	/// Test debug endpoint: GET /api/debug/query-traces
 	/// **Why Important**: Ensures the listing endpoint correctly returns all
 	/// stored traces for monitoring and debugging purposes.
 	#[tokio::test]
@@ -607,7 +607,7 @@ mod tests {
 		let response = app
 			.oneshot(
 				Request::builder()
-					.uri("/v1/debug/query-traces")
+					.uri("/api/debug/query-traces")
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -626,7 +626,7 @@ mod tests {
 		assert!(result.get("count").is_some());
 	}
 
-	/// Test debug endpoint: GET /v1/debug/query-traces?session_id=...
+	/// Test debug endpoint: GET /api/debug/query-traces?session_id=...
 	/// **Why Important**: Ensures filtering by session_id correctly isolates
 	/// traces for specific client sessions.
 	#[tokio::test]
@@ -636,7 +636,7 @@ mod tests {
 		let response = app
 			.oneshot(
 				Request::builder()
-					.uri("/v1/debug/query-traces?session_id=test-session")
+					.uri("/api/debug/query-traces?session_id=test-session")
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -656,7 +656,7 @@ mod tests {
 		assert_eq!(result["count"].as_u64(), Some(0));
 	}
 
-	/// Test debug endpoint: GET /v1/debug/query-traces/stats
+	/// Test debug endpoint: GET /api/debug/query-traces/stats
 	/// **Why Important**: Ensures statistics endpoint correctly aggregates trace
 	/// metrics for monitoring trace store health and performance bottlenecks.
 	#[tokio::test]
@@ -666,7 +666,7 @@ mod tests {
 		let response = app
 			.oneshot(
 				Request::builder()
-					.uri("/v1/debug/query-traces/stats")
+					.uri("/api/debug/query-traces/stats")
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -721,7 +721,7 @@ mod tests {
 			.clone()
 			.oneshot(
 				Request::builder()
-					.uri(format!("/v1/debug/query-traces/{trace_id}"))
+					.uri(format!("/api/debug/query-traces/{trace_id}"))
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -747,7 +747,7 @@ mod tests {
 			.clone()
 			.oneshot(
 				Request::builder()
-					.uri("/v1/debug/query-traces")
+					.uri("/api/debug/query-traces")
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -767,7 +767,7 @@ mod tests {
 			.clone()
 			.oneshot(
 				Request::builder()
-					.uri("/v1/debug/query-traces?session_id=integration-session")
+					.uri("/api/debug/query-traces?session_id=integration-session")
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -786,7 +786,7 @@ mod tests {
 		let response = app
 			.oneshot(
 				Request::builder()
-					.uri("/v1/debug/query-traces/stats")
+					.uri("/api/debug/query-traces/stats")
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -813,7 +813,7 @@ mod tests {
 		let response = app
 			.oneshot(
 				Request::builder()
-					.uri("/v1/debug/query-traces/TRACE-missing-trace-id")
+					.uri("/api/debug/query-traces/TRACE-missing-trace-id")
 					.body(Body::empty())
 					.unwrap(),
 			)

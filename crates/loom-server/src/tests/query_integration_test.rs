@@ -383,7 +383,7 @@ async fn test_http_query_response_endpoint() {
 		.oneshot(
 			Request::builder()
 				.method("POST")
-				.uri(format!("/v1/sessions/{session_id}/query-response"))
+				.uri(format!("/api/sessions/{session_id}/query-response"))
 				.header("Content-Type", "application/json")
 				.body(Body::from(serde_json::to_string(&response_json).unwrap()))
 				.unwrap(),
@@ -416,7 +416,7 @@ async fn test_http_list_pending_queries_endpoint() {
 		.oneshot(
 			Request::builder()
 				.method("GET")
-				.uri("/v1/sessions/session-list/queries")
+				.uri("/api/sessions/session-list/queries")
 				.body(Body::empty())
 				.unwrap(),
 		)

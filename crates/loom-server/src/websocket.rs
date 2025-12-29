@@ -126,10 +126,10 @@ pub enum WebSocketMessage {
 	 * - Batch for grouping related messages */
 }
 
-/// Phase 3 WebSocket endpoint: `GET /v1/ws/sessions/{session_id}`
+/// Phase 3 WebSocket endpoint: `GET /api/ws/sessions/{session_id}`
 ///
 /// # Protocol Overview
-/// 1. Client initiates WebSocket upgrade: `GET /v1/ws/sessions/{session_id}`
+/// 1. Client initiates WebSocket upgrade: `GET /api/ws/sessions/{session_id}`
 /// 2. Server validates session, establishes WebSocket
 /// 3. Single connection used for:
 ///    - Server queries (server → client)
@@ -168,7 +168,7 @@ pub mod phase3_roadmap {
 	/// ```
 	pub struct MessageFormat;
 
-	/// Endpoint: GET /v1/ws/sessions/{session_id}
+	/// Endpoint: GET /api/ws/sessions/{session_id}
 	///
 	/// Query parameters:
 	/// - `protocol_version`: default "3.0"

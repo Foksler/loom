@@ -82,12 +82,12 @@ pub struct ListResponse {
 	pub offset: u32,
 }
 
-/// PUT /v1/threads/{id} - Create or update a thread.
+/// PUT /api/threads/{id} - Create or update a thread.
 ///
 /// Supports optimistic concurrency via If-Match header.
 #[utoipa::path(
     put,
-    path = "/v1/threads/{id}",
+    path = "/api/threads/{id}",
     params(
         ("id" = String, Path, description = "Thread ID")
     ),
@@ -142,10 +142,10 @@ pub async fn upsert_thread(
 	Ok((StatusCode::OK, Json(stored)))
 }
 
-/// GET /v1/threads/{id} - Get a thread by ID.
+/// GET /api/threads/{id} - Get a thread by ID.
 #[utoipa::path(
     get,
-    path = "/v1/threads/{id}",
+    path = "/api/threads/{id}",
     params(
         ("id" = String, Path, description = "Thread ID")
     ),
@@ -174,10 +174,10 @@ pub async fn get_thread(
 	Ok(Json(thread))
 }
 
-/// GET /v1/threads - List threads.
+/// GET /api/threads - List threads.
 #[utoipa::path(
     get,
-    path = "/v1/threads",
+    path = "/api/threads",
     params(ListParams),
     responses(
         (status = 200, description = "List of threads", body = ListResponse),
@@ -214,10 +214,10 @@ pub async fn list_threads(
 	Ok(Json(response))
 }
 
-/// DELETE /v1/threads/{id} - Soft-delete a thread.
+/// DELETE /api/threads/{id} - Soft-delete a thread.
 #[utoipa::path(
     delete,
-    path = "/v1/threads/{id}",
+    path = "/api/threads/{id}",
     params(
         ("id" = String, Path, description = "Thread ID")
     ),
@@ -247,13 +247,13 @@ pub async fn delete_thread(
 	}
 }
 
-/// POST /v1/threads/{id}/visibility - Update thread visibility.
+/// POST /api/threads/{id}/visibility - Update thread visibility.
 ///
 /// Allows changing the visibility of a thread without syncing the full thread
 /// content. Supports optimistic concurrency via If-Match header.
 #[utoipa::path(
     post,
-    path = "/v1/threads/{id}/visibility",
+    path = "/api/threads/{id}/visibility",
     params(
         ("id" = String, Path, description = "Thread ID")
     ),
@@ -318,10 +318,10 @@ pub async fn update_thread_visibility(
 	Ok((StatusCode::OK, Json(stored)))
 }
 
-/// GET /v1/threads/search - Search threads.
+/// GET /api/threads/search - Search threads.
 #[utoipa::path(
     get,
-    path = "/v1/threads/search",
+    path = "/api/threads/search",
     params(SearchParams),
     responses(
         (status = 200, description = "Search results", body = SearchResponse),

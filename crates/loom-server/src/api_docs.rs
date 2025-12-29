@@ -167,13 +167,13 @@ mod tests {
 		let json = serde_json::to_string(&spec).expect("should serialize");
 
 		let expected_paths = [
-			"/v1/threads",
-			"/v1/threads/{id}",
-			"/v1/threads/search",
+			"/api/threads",
+			"/api/threads/{id}",
+			"/api/threads/search",
 			"/health",
 			"/metrics",
 			"/proxy/cse",
-			"/v1/github/app",
+			"/api/github/app",
 		];
 		for path in expected_paths {
 			assert!(json.contains(path), "Missing path: {path}");

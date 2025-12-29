@@ -32,7 +32,7 @@ export class LoomWebSocketClient {
 		this.setStatus('connecting');
 
 		const wsUrl = this.serverUrl.replace(/^http/, 'ws');
-		const url = `${wsUrl}/v1/ws/sessions/${encodeURIComponent(sessionId)}`;
+		const url = `${wsUrl}/api/ws/sessions/${encodeURIComponent(sessionId)}`;
 
 		try {
 			this.ws = new WebSocket(url);

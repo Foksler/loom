@@ -16,13 +16,13 @@ pub struct AuthStubResponse {
 
 #[utoipa::path(
     post,
-    path = "/v1/auth/login",
+    path = "/api/auth/login",
     responses(
         (status = 501, description = "Not implemented", body = AuthStubResponse)
     ),
     tag = "auth"
 )]
-/// POST /v1/auth/login - Stub login endpoint.
+/// POST /api/auth/login - Stub login endpoint.
 pub async fn login_stub() -> impl IntoResponse {
 	(
 		StatusCode::NOT_IMPLEMENTED,
@@ -35,13 +35,13 @@ pub async fn login_stub() -> impl IntoResponse {
 
 #[utoipa::path(
     post,
-    path = "/v1/auth/logout",
+    path = "/api/auth/logout",
     responses(
         (status = 501, description = "Not implemented", body = AuthStubResponse)
     ),
     tag = "auth"
 )]
-/// POST /v1/auth/logout - Stub logout endpoint.
+/// POST /api/auth/logout - Stub logout endpoint.
 pub async fn logout_stub() -> impl IntoResponse {
 	(
 		StatusCode::NOT_IMPLEMENTED,

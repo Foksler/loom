@@ -93,14 +93,14 @@ pub struct GithubFileContentsResponse {
 
 #[utoipa::path(
     get,
-    path = "/v1/github/app",
+    path = "/api/github/app",
     responses(
         (status = 200, description = "GitHub App info", body = AppInfoResponse),
         (status = 500, description = "GitHub App not configured", body = crate::error::ErrorResponse)
     ),
     tag = "github"
 )]
-/// GET /v1/github/app - Get GitHub App configuration info.
+/// GET /api/github/app - Get GitHub App configuration info.
 #[axum::debug_handler]
 pub async fn get_github_app_info(State(state): State<AppState>) -> impl IntoResponse {
 	match &state.github_client {
@@ -119,7 +119,7 @@ pub async fn get_github_app_info(State(state): State<AppState>) -> impl IntoResp
 
 #[utoipa::path(
     get,
-    path = "/v1/github/installations/by-repo",
+    path = "/api/github/installations/by-repo",
     params(GithubInstallationByRepoQuery),
     responses(
         (status = 200, description = "Installation status", body = InstallationStatusResponse),
@@ -127,7 +127,7 @@ pub async fn get_github_app_info(State(state): State<AppState>) -> impl IntoResp
     ),
     tag = "github"
 )]
-/// GET /v1/github/installations/by-repo - Check if app is installed for a repo.
+/// GET /api/github/installations/by-repo - Check if app is installed for a repo.
 #[axum::debug_handler]
 pub async fn get_github_installation_by_repo(
 	State(state): State<AppState>,
@@ -148,7 +148,7 @@ pub async fn get_github_installation_by_repo(
 	}
 }
 
-/// POST /v1/github/webhook - Handle GitHub App webhook events.
+/// POST /api/github/webhook - Handle GitHub App webhook events.
 ///
 /// Security: Requires webhook secret to be configured and valid signature.
 #[axum::debug_handler]
