@@ -9,6 +9,8 @@
 # - windows-x86_64: Cross-compiled Windows build (via loom-cli-windows)
 # - macos-x86_64: Cross-compiled macOS Intel build (via loom-cli-macos)
 # - macos-aarch64: Cross-compiled macOS Apple Silicon build (via loom-cli-macos)
+# - linux-aarch64: Cross-compiled Linux ARM64 build (via loom-cli-linux-aarch64)
+# - windows-aarch64: Cross-compiled Windows ARM64 build (via loom-cli-windows-aarch64)
 #
 # Note: Platform packages must be passed explicitly as they require
 # special build configurations (fenix for cross-compilation).
@@ -19,6 +21,7 @@
 , loom-cli-windows ? null
 , loom-cli-macos ? null
 , loom-cli-linux-aarch64 ? null
+, loom-cli-windows-aarch64 ? null
 }:
 
 stdenv.mkDerivation {
@@ -43,6 +46,11 @@ stdenv.mkDerivation {
     # Windows x86_64 (cross-compiled via fenix + mingw-w64)
     ${lib.optionalString (loom-cli-windows != null) ''
       cp ${loom-cli-windows}/bin/loom-windows-x86_64.exe $out/windows-x86_64.exe
+    ''}
+    
+    # Windows aarch64 (cross-compiled via cargo-zigbuild)
+    ${lib.optionalString (loom-cli-windows-aarch64 != null) ''
+      cp ${loom-cli-windows-aarch64}/bin/loom-windows-aarch64.exe $out/windows-aarch64.exe
     ''}
     
     # macOS x86_64 and aarch64 (cross-compiled via cargo-zigbuild)
