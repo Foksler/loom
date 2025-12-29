@@ -6,27 +6,40 @@
 use std::sync::Arc;
 
 use loom_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
+use std::time::Duration;
+
 use loom_llm_anthropic::{
-	AnthropicClient, AnthropicConfig, CredentialStore, CredentialValue, FileCredentialStore,
+	AnthropicClient, AnthropicConfig, AnthropicPool, AnthropicPoolConfig, MemoryCredentialStore,
 };
+
+pub use loom_llm_anthropic::{AccountHealthInfo, AccountHealthStatus, PoolStatus};
 use loom_llm_openai::OpenAIClient;
 use loom_llm_vertex::VertexClient;
-use tracing::{debug, error, info, instrument, warn};
+use tracing::{debug, info, instrument};
 
 use crate::config::{AnthropicAuthConfig, LlmServiceConfig};
 use crate::error::LlmServiceError;
 
-/// Wrapper for Anthropic client that can use either memory or file credential store.
+/// Health information for Anthropic client.
+#[derive(Debug, Clone)]
+pub enum AnthropicHealthInfo {
+	/// API key mode - just indicates if configured.
+	ApiKey { configured: bool },
+	/// OAuth pool mode - detailed pool status.
+	Pool(PoolStatus),
+}
+
+/// Wrapper for Anthropic client that can use either API key or OAuth pool.
 enum AnthropicClientWrapper {
-	Memory(Arc<AnthropicClient<loom_llm_anthropic::MemoryCredentialStore>>),
-	File(Arc<AnthropicClient<FileCredentialStore>>),
+	ApiKey(Arc<AnthropicClient<MemoryCredentialStore>>),
+	Pool(Arc<AnthropicPool>),
 }
 
 impl Clone for AnthropicClientWrapper {
 	fn clone(&self) -> Self {
 		match self {
-			AnthropicClientWrapper::Memory(c) => AnthropicClientWrapper::Memory(Arc::clone(c)),
-			AnthropicClientWrapper::File(c) => AnthropicClientWrapper::File(Arc::clone(c)),
+			AnthropicClientWrapper::ApiKey(c) => AnthropicClientWrapper::ApiKey(Arc::clone(c)),
+			AnthropicClientWrapper::Pool(p) => AnthropicClientWrapper::Pool(Arc::clone(p)),
 		}
 	}
 }
@@ -34,15 +47,15 @@ impl Clone for AnthropicClientWrapper {
 impl AnthropicClientWrapper {
 	async fn complete(&self, request: LlmRequest) -> Result<LlmResponse, LlmError> {
 		match self {
-			AnthropicClientWrapper::Memory(c) => c.complete(request).await,
-			AnthropicClientWrapper::File(c) => c.complete(request).await,
+			AnthropicClientWrapper::ApiKey(c) => c.complete(request).await,
+			AnthropicClientWrapper::Pool(p) => p.complete(request).await,
 		}
 	}
 
 	async fn complete_streaming(&self, request: LlmRequest) -> Result<LlmStream, LlmError> {
 		match self {
-			AnthropicClientWrapper::Memory(c) => c.complete_streaming(request).await,
-			AnthropicClientWrapper::File(c) => c.complete_streaming(request).await,
+			AnthropicClientWrapper::ApiKey(c) => c.complete_streaming(request).await,
+			AnthropicClientWrapper::Pool(p) => p.complete_streaming(request).await,
 		}
 	}
 }
@@ -78,64 +91,39 @@ impl LlmService {
 				let client = AnthropicClient::new(anthropic_config)
 					.map_err(|e| LlmServiceError::Config(e.to_string()))?;
 				info!("Anthropic client initialized with API key");
-				Some(AnthropicClientWrapper::Memory(Arc::new(client)))
+				Some(AnthropicClientWrapper::ApiKey(Arc::new(client)))
 			}
-			Some(AnthropicAuthConfig::OAuth {
+			Some(AnthropicAuthConfig::OAuthPool {
 				credential_file,
-				provider_id,
+				provider_ids,
+				cooldown_secs,
 			}) => {
-				let store = Arc::new(FileCredentialStore::new(credential_file));
+				let pool_config = AnthropicPoolConfig {
+					cooldown: Duration::from_secs(*cooldown_secs),
+					..Default::default()
+				};
 
-				match store.load(provider_id).await {
-					Ok(Some(CredentialValue::OAuth {
-						refresh,
-						access,
-						expires,
-					})) => {
-						let anthropic_config = AnthropicConfig::new_with_oauth(
-							provider_id.clone(),
-							refresh.expose().clone(),
-							access.expose().clone(),
-							expires,
-							store,
-						);
+				debug!(
+					providers = ?provider_ids,
+					credential_file = ?credential_file,
+					cooldown_secs = cooldown_secs,
+					"Creating Anthropic OAuth pool"
+				);
 
-						let mut anthropic_config = anthropic_config;
-						if let Some(ref model) = config.anthropic_model {
-							debug!(model = %model, "Using custom Anthropic model");
-							anthropic_config = anthropic_config.with_model(model.clone());
-						}
+				let pool = AnthropicPool::new(
+					credential_file,
+					provider_ids.clone(),
+					config.anthropic_model.clone(),
+					pool_config,
+				)
+				.await
+				.map_err(|e| LlmServiceError::Config(format!("Failed to create OAuth pool: {e}")))?;
 
-						let client = AnthropicClient::new_with_store(anthropic_config)
-							.map_err(|e| LlmServiceError::Config(e.to_string()))?;
-						info!("Anthropic client initialized with OAuth");
-						Some(AnthropicClientWrapper::File(Arc::new(client)))
-					}
-					Ok(Some(CredentialValue::ApiKey { key })) => {
-						warn!("Credential file contains API key instead of OAuth, using API key");
-						let mut anthropic_config = AnthropicConfig::new(key.expose().clone());
-						if let Some(ref model) = config.anthropic_model {
-							anthropic_config = anthropic_config.with_model(model.clone());
-						}
-						let client = AnthropicClient::new(anthropic_config)
-							.map_err(|e| LlmServiceError::Config(e.to_string()))?;
-						Some(AnthropicClientWrapper::Memory(Arc::new(client)))
-					}
-					Ok(None) => {
-						error!(path = ?credential_file, provider = %provider_id, "No credentials found in credential file");
-						return Err(LlmServiceError::Config(format!(
-							"No credentials found for provider '{}' in {:?}",
-							provider_id, credential_file
-						)));
-					}
-					Err(e) => {
-						error!(error = %e, "Failed to load credentials from file");
-						return Err(LlmServiceError::Config(format!(
-							"Failed to load credentials: {}",
-							e
-						)));
-					}
-				}
+				info!(
+					account_count = provider_ids.len(),
+					"Anthropic OAuth pool initialized"
+				);
+				Some(AnthropicClientWrapper::Pool(Arc::new(pool)))
 			}
 			None => {
 				debug!("Anthropic auth not configured");
@@ -222,6 +210,17 @@ impl LlmService {
 	/// Returns whether the Vertex AI provider is configured.
 	pub fn has_vertex(&self) -> bool {
 		self.vertex_client.is_some()
+	}
+
+	/// Get Anthropic health status.
+	pub async fn anthropic_health(&self) -> Option<AnthropicHealthInfo> {
+		match &self.anthropic_client {
+			Some(AnthropicClientWrapper::ApiKey(_)) => Some(AnthropicHealthInfo::ApiKey { configured: true }),
+			Some(AnthropicClientWrapper::Pool(pool)) => {
+				Some(AnthropicHealthInfo::Pool(pool.pool_status().await))
+			}
+			None => None,
+		}
 	}
 
 	/// Sends a completion request to Anthropic.

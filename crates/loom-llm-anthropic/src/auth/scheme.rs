@@ -96,11 +96,11 @@ pub fn build_oauth_headers(
 
 	headers.insert(
 		reqwest::header::AUTHORIZATION,
-		format!("Bearer {}", access_token).parse().unwrap(),
+		format!("Bearer {access_token}").parse().unwrap(),
 	);
 
 	let beta_value = if let Some(additional) = additional_beta {
-		format!("{},{}", OAUTH_BETA_HEADER, additional)
+		format!("{OAUTH_BETA_HEADER},{additional}")
 	} else {
 		OAUTH_BETA_HEADER.to_string()
 	};

@@ -15,10 +15,75 @@ use crate::types::{AnthropicConfig, AnthropicError, AnthropicRequest, AnthropicR
 
 const ANTHROPIC_VERSION: &str = "2023-06-01";
 
+/// Classification of client errors for failover behavior
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ClientErrorKind {
+	/// Transient error, retry on same account (via loom_http_retry)
+	Transient,
+	/// Quota exhausted, failover to next account
+	QuotaExceeded,
+	/// Permanent error (bad credentials), disable account
+	Permanent,
+}
+
 #[derive(Debug)]
 pub struct ClientError {
 	message: String,
 	retryable: bool,
+	kind: ClientErrorKind,
+}
+
+impl ClientError {
+	/// Returns the error classification kind
+	pub fn kind(&self) -> ClientErrorKind {
+		self.kind
+	}
+}
+
+/// Detects if an error message indicates 5-hour quota exhaustion
+/// Check if an error message indicates quota exhaustion (5-hour rolling limit).
+///
+/// This is used for pool failover decisions and is shared with the pool module.
+pub fn is_quota_message(msg: &str) -> bool {
+	let lower = msg.to_ascii_lowercase();
+	lower.contains("5-hour")
+		|| lower.contains("5 hour")
+		|| lower.contains("rolling window")
+		|| lower.contains("usage limit for your plan")
+		|| lower.contains("subscription usage limit")
+}
+
+/// Check if an error message indicates a permanent auth failure.
+///
+/// This is used for pool failover decisions and is shared with the pool module.
+pub fn is_permanent_auth_message(msg: &str) -> bool {
+	let lower = msg.to_ascii_lowercase();
+	lower.contains("401")
+		|| lower.contains("403")
+		|| lower.contains("unauthorized")
+		|| lower.contains("forbidden")
+		|| lower.contains("invalid api key")
+		|| lower.contains("invalid authentication")
+		|| lower.contains("authentication failed")
+		|| lower.contains("invalid token")
+		|| lower.contains("expired token")
+}
+
+/// Classifies an HTTP error based on status code and message
+fn classify_error(status: u16, message: &str) -> ClientErrorKind {
+	if status == 401 || status == 403 {
+		return ClientErrorKind::Permanent;
+	}
+
+	if status == 429 && is_quota_message(message) {
+		return ClientErrorKind::QuotaExceeded;
+	}
+
+	if matches!(status, 408 | 429 | 500 | 502 | 503 | 504) {
+		return ClientErrorKind::Transient;
+	}
+
+	ClientErrorKind::Permanent
 }
 
 impl std::fmt::Display for ClientError {
@@ -113,6 +178,7 @@ impl<S: CredentialStore + 'static> AnthropicClient<S> {
 			.map_err(|e| ClientError {
 				message: format!("Auth error: {e}"),
 				retryable: false,
+				kind: ClientErrorKind::Permanent,
 			})?;
 
 		let response = builder.send().await.map_err(|e| {
@@ -121,6 +187,11 @@ impl<S: CredentialStore + 'static> AnthropicClient<S> {
 			ClientError {
 				message: e.to_string(),
 				retryable,
+				kind: if retryable {
+					ClientErrorKind::Transient
+				} else {
+					ClientErrorKind::Permanent
+				},
 			}
 		})?;
 
@@ -128,9 +199,7 @@ impl<S: CredentialStore + 'static> AnthropicClient<S> {
 		debug!(status = %status, "Received response");
 
 		if !status.is_success() {
-			let retryable = matches!(status.as_u16(), 408 | 429 | 500 | 502 | 503 | 504);
 			let error_body = response.text().await.unwrap_or_default();
-			error!(status = %status, body = %error_body, retryable = retryable, "API error response");
 
 			let message = if let Ok(api_error) = serde_json::from_str::<AnthropicError>(&error_body) {
 				api_error.error.message
@@ -138,7 +207,15 @@ impl<S: CredentialStore + 'static> AnthropicClient<S> {
 				error_body
 			};
 
-			return Err(ClientError { message, retryable });
+			let kind = classify_error(status.as_u16(), &message);
+			let retryable = kind == ClientErrorKind::Transient;
+			error!(status = %status, body = %message, retryable = retryable, kind = ?kind, "API error response");
+
+			return Err(ClientError {
+				message,
+				retryable,
+				kind,
+			});
 		}
 
 		Ok(response)

@@ -51,15 +51,17 @@ impl std::str::FromStr for LlmProvider {
 /// Anthropic authentication configuration.
 #[derive(Clone, Debug)]
 pub enum AnthropicAuthConfig {
-	/// Static API key from config/env.
+	/// Static API key (pay-per-use).
 	ApiKey(SecretString),
 
-	/// OAuth credentials from a credential store file.
-	OAuth {
+	/// OAuth pool with 1+ Pro/Max subscriptions.
+	OAuthPool {
 		/// Path to the credential store file.
 		credential_file: PathBuf,
-		/// Provider ID in the store (default: "anthropic").
-		provider_id: String,
+		/// Provider IDs to load from credential file.
+		provider_ids: Vec<String>,
+		/// Cooldown duration in seconds when quota exhausted (default: 7200 = 2 hours).
+		cooldown_secs: u64,
 	},
 }
 
@@ -111,8 +113,12 @@ impl LlmServiceConfig {
 	/// - `LOOM_SERVER_ANTHROPIC_API_KEY`: Anthropic API key (or `_FILE` suffix
 	///   for file path)
 	/// - `LOOM_SERVER_ANTHROPIC_OAUTH_CREDENTIAL_FILE`: Path to OAuth credential store
+	/// - `LOOM_SERVER_ANTHROPIC_OAUTH_PROVIDERS`: Comma-separated provider IDs for OAuth pool
+	/// - `LOOM_SERVER_ANTHROPIC_POOL_COOLDOWN_SECS`: Cooldown duration (default: 7200 = 2 hours)
 	/// - `LOOM_SERVER_OPENAI_API_KEY`: OpenAI API key (or `_FILE` suffix for file
 	///   path)
+	///
+	/// Priority: OAUTH_PROVIDERS takes precedence over API_KEY
 	///
 	/// Other environment variables:
 	/// - `LOOM_SERVER_LLM_PROVIDER`: Provider to use ("anthropic", "openai", or
@@ -139,11 +145,46 @@ impl LlmServiceConfig {
 			}
 		};
 
-		let anthropic_auth = if let Ok(cred_file) = env::var("LOOM_SERVER_ANTHROPIC_OAUTH_CREDENTIAL_FILE") {
-			debug!(path = %cred_file, "Using Anthropic OAuth from credential file");
-			Some(AnthropicAuthConfig::OAuth {
-				credential_file: PathBuf::from(cred_file),
-				provider_id: "anthropic".to_string(),
+		let anthropic_auth = if let Ok(providers) = env::var("LOOM_SERVER_ANTHROPIC_OAUTH_PROVIDERS") {
+			let provider_ids: Vec<String> = providers
+				.split(',')
+				.map(|s| s.trim().to_string())
+				.filter(|s| !s.is_empty())
+				.collect();
+
+			if provider_ids.is_empty() {
+				return Err(ConfigError::InvalidValue {
+					key: "LOOM_SERVER_ANTHROPIC_OAUTH_PROVIDERS".to_string(),
+					message: "Provider IDs list cannot be empty".to_string(),
+				});
+			}
+
+			let credential_file = env::var("LOOM_SERVER_ANTHROPIC_OAUTH_CREDENTIAL_FILE")
+				.map(PathBuf::from)
+				.map_err(|_| {
+					ConfigError::MissingEnvVar(
+						"LOOM_SERVER_ANTHROPIC_OAUTH_CREDENTIAL_FILE".to_string(),
+					)
+				})?;
+
+			let cooldown_secs = match env::var("LOOM_SERVER_ANTHROPIC_POOL_COOLDOWN_SECS") {
+				Ok(s) => s.parse().map_err(|_| ConfigError::InvalidValue {
+					key: "LOOM_SERVER_ANTHROPIC_POOL_COOLDOWN_SECS".to_string(),
+					message: format!("invalid integer value '{s}'"),
+				})?,
+				Err(_) => 7200,
+			};
+
+			debug!(
+				providers = ?provider_ids,
+				credential_file = ?credential_file,
+				cooldown_secs = cooldown_secs,
+				"Using Anthropic OAuth pool"
+			);
+			Some(AnthropicAuthConfig::OAuthPool {
+				credential_file,
+				provider_ids,
+				cooldown_secs,
 			})
 		} else if let Some(api_key) = load_secret_env("LOOM_SERVER_ANTHROPIC_API_KEY")? {
 			debug!("Using Anthropic API key");
@@ -187,11 +228,17 @@ impl LlmServiceConfig {
 		self
 	}
 
-	/// Sets the Anthropic OAuth credential file.
-	pub fn with_anthropic_oauth(mut self, credential_file: impl Into<PathBuf>) -> Self {
-		self.anthropic_auth = Some(AnthropicAuthConfig::OAuth {
+	/// Sets the Anthropic OAuth pool configuration.
+	pub fn with_anthropic_oauth_pool(
+		mut self,
+		credential_file: impl Into<PathBuf>,
+		provider_ids: Vec<String>,
+		cooldown_secs: u64,
+	) -> Self {
+		self.anthropic_auth = Some(AnthropicAuthConfig::OAuthPool {
 			credential_file: credential_file.into(),
-			provider_id: "anthropic".to_string(),
+			provider_ids,
+			cooldown_secs,
 		});
 		self
 	}

@@ -34,7 +34,7 @@ pub async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
 		health::check_github_app(state.github_client.clone())
 	);
 
-	let llm_providers = health::check_llm_providers(state.llm_service.as_deref());
+	let llm_providers = health::check_llm_providers(state.llm_service.as_deref()).await;
 
 	let components = HealthComponents {
 		database,

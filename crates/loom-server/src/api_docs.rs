@@ -90,6 +90,9 @@ use utoipa::OpenApi;
             crate::health::BinDirHealth,
             crate::health::LlmProvidersHealth,
             crate::health::LlmProviderHealth,
+            crate::health::AnthropicAccountHealth,
+            crate::health::AnthropicAccountStatus,
+            crate::health::AnthropicPoolHealth,
             crate::health::GoogleCseHealth,
             crate::health::GithubAppHealth,
             // Error types

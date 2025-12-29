@@ -260,7 +260,7 @@ pub async fn create_api_key(access_token: &str) -> Result<String, CredentialErro
 	let response = client
 		.post("https://api.anthropic.com/api/oauth/claude_cli/create_api_key")
 		.header("Content-Type", "application/json")
-		.header("Authorization", format!("Bearer {}", access_token))
+		.header("Authorization", format!("Bearer {access_token}"))
 		.send()
 		.await
 		.map_err(|e| CredentialError::Other(format!("HTTP error: {e}")))?;
@@ -270,8 +270,7 @@ pub async fn create_api_key(access_token: &str) -> Result<String, CredentialErro
 		let body = response.text().await.unwrap_or_default();
 		error!(status = %status, body = %body, "Failed to create API key");
 		return Err(CredentialError::Other(format!(
-			"Failed to create API key: {} - {}",
-			status, body
+			"Failed to create API key: {status} - {body}"
 		)));
 	}
 

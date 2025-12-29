@@ -20,10 +20,15 @@
 
 pub mod auth;
 mod client;
+pub mod pool;
 mod stream;
 mod types;
 
-pub use client::AnthropicClient;
+pub use client::{is_permanent_auth_message, is_quota_message, AnthropicClient};
+pub use pool::{
+	AccountHealthInfo, AccountHealthStatus, AccountSelectionStrategy, AnthropicPool,
+	AnthropicPoolConfig, PoolStatus,
+};
 pub use types::*;
 
 // Re-export auth types for convenience
