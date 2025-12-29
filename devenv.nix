@@ -137,6 +137,29 @@ in
       always_run = false;
       files = "^web/";
     };
+    
+    # Ensure loom-cli flake package compiles
+    # Uses cargo build for speed (incremental), verifies the CLI binary builds
+    loom-cli-build = {
+      enable = true;
+      name = "Build loom-cli";
+      entry = "${pkgs.writeShellScript "loom-cli-build" ''
+        echo "🔨 Building loom-cli..."
+        
+        # Use cargo build for the CLI binary (incremental, fast)
+        if ! cargo build --package loom-cli --release 2>&1; then
+          echo "❌ BLOCKED: loom-cli failed to compile!"
+          echo "Fix the build errors before committing."
+          exit 1
+        fi
+        
+        echo "✅ loom-cli builds successfully"
+      ''}";
+      pass_filenames = false;
+      # Only run when CLI-related crates change
+      always_run = false;
+      types = [ "rust" ];
+    };
   };
 
   # See full reference at https://devenv.sh/reference/options/
