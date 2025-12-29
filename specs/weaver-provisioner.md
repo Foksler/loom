@@ -5,7 +5,6 @@
 
 # Weaver Provisioner Specification
 
-**Status:** Draft\
 **Version:** 1.0\
 **Last Updated:** 2025-01-29
 
@@ -610,6 +609,23 @@ services.loom-server.weaver = {
 | Secret | Description |
 |--------|-------------|
 | `loom-weaver-api-key` | API key for weaver endpoint authentication |
+
+**Secret Configuration:**
+
+The secret is already configured and encrypted in the repository:
+
+- **Location:** `infra/secrets/loom.yaml` (sops-encrypted)
+- **Key format:** `sk-weaver-{base64-random}`
+- **To update:** Use `./update-secret loom.yaml` script in the `infra/secrets/` directory
+
+**NixOS sops configuration in `loom.nix`:**
+
+```nix
+sops.secrets.loom-weaver-api-key = {
+  owner = "loom-server";
+  mode = "0400";
+};
+```
 
 ### 15.4 Service Dependencies
 

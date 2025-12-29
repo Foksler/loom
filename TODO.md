@@ -1,22 +1,20 @@
 # Weaver Provisioner Implementation Plan
 
-This document tracks the implementation of the Weaver Provisioner feature as specified in
-[specs/weaver-provisioner.md](./specs/weaver-provisioner.md).
-
-**Status: ✅ IMPLEMENTED**
+Implementation checklist for the Weaver Provisioner feature. See
+[specs/weaver-provisioner.md](./specs/weaver-provisioner.md) for specification.
 
 ---
 
-## Phase 1: Foundation ✅
+## Phase 1: Foundation
 
-### 1.1 Workspace Setup ✅
+### 1.1 Workspace Setup
 
 - [x] Add `uuid7 = "1"` to workspace dependencies in `Cargo.toml`
 - [x] Add `kube = { version = "0.98", features = ["runtime", "client", "derive"] }` to workspace dependencies
 - [x] Add `k8s-openapi = { version = "0.24", features = ["v1_32"] }` to workspace dependencies
 - [x] Add `hmac`, `sha2` for webhook signatures
 
-### 1.2 Create loom-k8s Crate ✅
+### 1.2 Create loom-k8s Crate
 
 - [x] Create `crates/loom-k8s/Cargo.toml`
 - [x] Create `crates/loom-k8s/src/lib.rs`
@@ -34,7 +32,7 @@ This document tracks the implementation of the Weaver Provisioner feature as spe
 - [x] Implement `K8sClient` trait for `KubeClient`
 - [x] Add to workspace members in root `Cargo.toml`
 
-### 1.3 Create loom-weaver Crate ✅
+### 1.3 Create loom-weaver Crate
 
 - [x] Create `crates/loom-weaver/Cargo.toml`
 - [x] Create `crates/loom-weaver/src/lib.rs`
@@ -49,9 +47,9 @@ This document tracks the implementation of the Weaver Provisioner feature as spe
 
 ---
 
-## Phase 2: Core Provisioner Logic ✅
+## Phase 2: Core Provisioner Logic
 
-### 2.1 Provisioner Implementation ✅
+### 2.1 Provisioner Implementation
 
 - [x] Create `Provisioner` struct
 - [x] Implement `Provisioner::new(client, config)`
@@ -67,21 +65,21 @@ This document tracks the implementation of the Weaver Provisioner feature as spe
 - [x] Implement `count_active_weavers()`
 - [x] Implement `validate_namespace()`
 
-### 2.2 Cleanup System ✅
+### 2.2 Cleanup System
 
 - [x] Implement `find_expired_weavers()`
 - [x] Implement `cleanup_expired_weavers()`
 - [x] Implement `start_cleanup_task()` background task
 - [x] Define `CleanupResult` struct
 
-### 2.3 Log Streaming ✅
+### 2.3 Log Streaming
 
 - [x] Implement `stream_logs()`
 - [x] Define `LogStreamOptions` struct
 
 ---
 
-## Phase 3: Webhook System ✅
+## Phase 3: Webhook System
 
 - [x] Define `WebhookPayload` struct
 - [x] Define `WebhookWeaverPayload` struct
@@ -92,18 +90,18 @@ This document tracks the implementation of the Weaver Provisioner feature as spe
 
 ---
 
-## Phase 4: HTTP API Integration ✅
+## Phase 4: HTTP API Integration
 
-### 4.1 Configuration ✅
+### 4.1 Configuration
 
 - [x] Add weaver config fields to `ServerConfig`
 - [x] Parse from environment variables
 
-### 4.2 API Middleware ✅
+### 4.2 API Middleware
 
 - [x] Implement `require_weaver_api_key` middleware
 
-### 4.3 API Handlers ✅
+### 4.3 API Handlers
 
 - [x] Create `routes/weaver.rs`
 - [x] Implement `POST /api/weaver` handler
@@ -113,27 +111,27 @@ This document tracks the implementation of the Weaver Provisioner feature as spe
 - [x] Implement `GET /api/weaver/:id/logs` handler (SSE)
 - [x] Implement `POST /api/weavers/cleanup` handler
 
-### 4.4 Router Integration ✅
+### 4.4 Router Integration
 
 - [x] Create `weaver_routes()` function
 - [x] Merge into main router
 - [x] Apply API key middleware
 
-### 4.5 Error Handling ✅
+### 4.5 Error Handling
 
 - [x] Map `ProvisionerError` to HTTP responses
 
 ---
 
-## Phase 5: Health Check & Metrics ✅
+## Phase 5: Health Check & Metrics
 
-### 5.1 Health Check ✅
+### 5.1 Health Check
 
 - [x] Add `KubernetesHealth` struct
 - [x] Implement K8s connectivity check
 - [x] Add to `/health` response
 
-### 5.2 Prometheus Metrics ✅
+### 5.2 Prometheus Metrics
 
 - [x] Define `WeaverMetrics` struct with counters/gauges
 - [x] Implement metric methods
@@ -141,7 +139,7 @@ This document tracks the implementation of the Weaver Provisioner feature as spe
 
 ---
 
-## Phase 6: Startup & Lifecycle ✅
+## Phase 6: Startup & Lifecycle
 
 - [x] Validate namespace on startup
 - [x] Spawn cleanup background task
@@ -149,7 +147,7 @@ This document tracks the implementation of the Weaver Provisioner feature as spe
 
 ---
 
-## Phase 7: Documentation & OpenAPI ✅
+## Phase 7: Documentation & OpenAPI
 
 - [x] Add `#[utoipa::path]` to all handlers
 - [x] Add weaver endpoints to `ApiDoc`
@@ -207,3 +205,14 @@ This document tracks the implementation of the Weaver Provisioner feature as spe
 | DELETE | `/api/weaver/{id}` | Delete weaver |
 | GET | `/api/weaver/{id}/logs` | SSE log stream |
 | POST | `/api/weavers/cleanup` | Manual cleanup |
+
+---
+
+## NixOS Infrastructure
+
+| Component | File |
+|-----------|------|
+| k3s module | `infra/nixos-modules/k3s.nix` |
+| loom-server weaver config | `infra/nixos-modules/loom-server.nix` |
+| Machine config | `infra/machines/loom.nix` |
+| Weaver API key secret | `infra/secrets/loom.yaml` |
