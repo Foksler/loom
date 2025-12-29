@@ -236,7 +236,7 @@ Verifies Google Custom Search Engine configuration and connectivity.
 
 **Checks performed:**
 
-1. Environment variables configured (`LOOM_SERVER_GOOGLE_CSE_API_KEY`, `LOOM_SERVER_GOOGLE_CSE_CX`)
+1. Environment variables configured (`LOOM_SERVER_GOOGLE_CSE_API_KEY`, `LOOM_SERVER_GOOGLE_CSE_SEARCH_ENGINE_ID`)
 2. API connectivity test (lightweight search query)
 
 **Status mapping:**
