@@ -102,6 +102,16 @@
     mode = "0400";
   };
 
+  sops.secrets.loom-github-app-client-id = {
+    owner = "loom-server";
+    mode = "0400";
+  };
+
+  sops.secrets.loom-github-app-client-secret = {
+    owner = "loom-server";
+    mode = "0400";
+  };
+
   sops.secrets.loom-google-cse-api-key = {
     owner = "loom-server";
     mode = "0400";
@@ -161,6 +171,8 @@
       appIdFile = config.sops.secrets.loom-github-app-id.path;
       privateKeyFile = config.sops.secrets.loom-github-app-private-key.path;
       webhookSecretFile = config.sops.secrets.loom-github-webhook-secret.path;
+      clientIdFile = config.sops.secrets.loom-github-app-client-id.path;
+      clientSecretFile = config.sops.secrets.loom-github-app-client-secret.path;
     };
 
     googleCse = {

@@ -141,6 +141,18 @@ in
         default = null;
         description = "Path to file containing GitHub webhook secret.";
       };
+
+      clientIdFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = "Path to file containing GitHub App OAuth client ID.";
+      };
+
+      clientSecretFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = "Path to file containing GitHub App OAuth client secret.";
+      };
     };
 
     # Google Custom Search Engine Configuration
@@ -315,6 +327,8 @@ in
         ${loadSecret cfg.githubApp.appIdFile "LOOM_GITHUB_APP_ID"}
         ${loadSecret cfg.githubApp.privateKeyFile "LOOM_GITHUB_APP_PRIVATE_KEY_FILE"}
         ${loadSecret cfg.githubApp.webhookSecretFile "LOOM_GITHUB_WEBHOOK_SECRET"}
+        ${loadSecret cfg.githubApp.clientIdFile "LOOM_GITHUB_APP_CLIENT_ID"}
+        ${loadSecret cfg.githubApp.clientSecretFile "LOOM_GITHUB_APP_CLIENT_SECRET"}
         ${loadSecret cfg.googleCse.apiKeyFile "LOOM_SERVER_GOOGLE_CSE_API_KEY"}
         ${loadSecret cfg.googleCse.searchEngineIdFile "LOOM_SERVER_GOOGLE_CSE_SEARCH_ENGINE_ID"}
 
