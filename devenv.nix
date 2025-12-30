@@ -185,6 +185,29 @@ in
       always_run = false;
       types = [ "rust" ];
     };
+    
+    # Ensure loom-server compiles
+    # Uses cargo build for speed (incremental), verifies the server binary builds
+    loom-server-build = {
+      enable = true;
+      name = "Build loom-server";
+      entry = "${pkgs.writeShellScript "loom-server-build" ''
+        echo "🔨 Building loom-server..."
+        
+        # Use cargo build for the server binary (incremental, fast)
+        if ! cargo build --package loom-server --release 2>&1; then
+          echo "❌ BLOCKED: loom-server failed to compile!"
+          echo "Fix the build errors before committing."
+          exit 1
+        fi
+        
+        echo "✅ loom-server builds successfully"
+      ''}";
+      pass_filenames = false;
+      # Only run when Rust files change
+      always_run = false;
+      types = [ "rust" ];
+    };
   };
 
   # See full reference at https://devenv.sh/reference/options/
