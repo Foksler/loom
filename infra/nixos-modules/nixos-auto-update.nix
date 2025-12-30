@@ -55,7 +55,7 @@ in
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
 
-      path = with pkgs; [ git nix nixos-rebuild openssh ];
+      path = with pkgs; [ git nix nixos-rebuild openssh util-linux ];
 
       environment = mkMerge [
         { HOME = "/root"; }
@@ -67,10 +67,18 @@ in
       script = ''
         set -euo pipefail
 
+        LOCK_FILE="/run/nixos-auto-update.lock"
         REPO_PATH="${cfg.localPath}"
         REPO_URL="${cfg.repository}"
         BRANCH="${cfg.branch}"
         FLAKE_ATTR="${cfg.flakeAttr}"
+
+        # Use flock to prevent concurrent updates - exit silently if already running
+        exec 200>"$LOCK_FILE"
+        if ! flock -n 200; then
+          echo "[$(date -Iseconds)] Another update is in progress, skipping"
+          exit 0
+        fi
 
         echo "[$(date -Iseconds)] Starting nixos-auto-update..."
 
