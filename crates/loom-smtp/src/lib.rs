@@ -142,13 +142,13 @@ impl SmtpConfig {
     ///
     /// # Environment Variables
     ///
-    /// - `LOOM_SMTP_HOST` (required): SMTP server hostname
-    /// - `LOOM_SMTP_PORT` (optional, default: 587): SMTP server port
-    /// - `LOOM_SMTP_USERNAME` (optional): Authentication username
-    /// - `LOOM_SMTP_PASSWORD` (optional): Authentication password
-    /// - `LOOM_SMTP_FROM_ADDRESS` (required): Sender email address
-    /// - `LOOM_SMTP_FROM_NAME` (optional, default: "Loom"): Sender display name
-    /// - `LOOM_SMTP_USE_TLS` (optional, default: true): Enable STARTTLS
+    /// - `LOOM_SERVER_SMTP_HOST` (required): SMTP server hostname
+    /// - `LOOM_SERVER_SMTP_PORT` (optional, default: 587): SMTP server port
+    /// - `LOOM_SERVER_SMTP_USERNAME` (optional): Authentication username
+    /// - `LOOM_SERVER_SMTP_PASSWORD` (optional): Authentication password
+    /// - `LOOM_SERVER_SMTP_FROM_ADDRESS` (required): Sender email address
+    /// - `LOOM_SERVER_SMTP_FROM_NAME` (optional, default: "Loom"): Sender display name
+    /// - `LOOM_SERVER_SMTP_USE_TLS` (optional, default: true): Enable STARTTLS
     ///
     /// # Errors
     ///
@@ -159,31 +159,31 @@ impl SmtpConfig {
     /// ```no_run
     /// use loom_smtp::SmtpConfig;
     ///
-    /// std::env::set_var("LOOM_SMTP_HOST", "smtp.example.com");
-    /// std::env::set_var("LOOM_SMTP_FROM_ADDRESS", "noreply@example.com");
+    /// std::env::set_var("LOOM_SERVER_SMTP_HOST", "smtp.example.com");
+    /// std::env::set_var("LOOM_SERVER_SMTP_FROM_ADDRESS", "noreply@example.com");
     ///
     /// let config = SmtpConfig::from_env().unwrap();
     /// ```
     pub fn from_env() -> Result<Self, SmtpError> {
-        let host = env::var("LOOM_SMTP_HOST")
-            .map_err(|_| SmtpError::Config("LOOM_SMTP_HOST is required".into()))?;
+        let host = env::var("LOOM_SERVER_SMTP_HOST")
+            .map_err(|_| SmtpError::Config("LOOM_SERVER_SMTP_HOST is required".into()))?;
 
-        let port = env::var("LOOM_SMTP_PORT")
+        let port = env::var("LOOM_SERVER_SMTP_PORT")
             .unwrap_or_else(|_| "587".into())
             .parse()
-            .map_err(|_| SmtpError::Config("LOOM_SMTP_PORT must be a valid port number".into()))?;
+            .map_err(|_| SmtpError::Config("LOOM_SERVER_SMTP_PORT must be a valid port number".into()))?;
 
-        let username = env::var("LOOM_SMTP_USERNAME").ok();
-        let password = env::var("LOOM_SMTP_PASSWORD")
+        let username = env::var("LOOM_SERVER_SMTP_USERNAME").ok();
+        let password = env::var("LOOM_SERVER_SMTP_PASSWORD")
             .ok()
             .map(SecretString::new);
 
-        let from_address = env::var("LOOM_SMTP_FROM_ADDRESS")
-            .map_err(|_| SmtpError::Config("LOOM_SMTP_FROM_ADDRESS is required".into()))?;
+        let from_address = env::var("LOOM_SERVER_SMTP_FROM_ADDRESS")
+            .map_err(|_| SmtpError::Config("LOOM_SERVER_SMTP_FROM_ADDRESS is required".into()))?;
 
-        let from_name = env::var("LOOM_SMTP_FROM_NAME").unwrap_or_else(|_| "Loom".into());
+        let from_name = env::var("LOOM_SERVER_SMTP_FROM_NAME").unwrap_or_else(|_| "Loom".into());
 
-        let use_tls = env::var("LOOM_SMTP_USE_TLS")
+        let use_tls = env::var("LOOM_SERVER_SMTP_USE_TLS")
             .map(|v| v.to_lowercase() != "false" && v != "0")
             .unwrap_or(true);
 

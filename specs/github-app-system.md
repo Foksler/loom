@@ -102,13 +102,13 @@ crates/loom-github-app/
 
 ### Environment Variables
 
-| Variable                         | Required | Description                                                      |
-| -------------------------------- | -------- | ---------------------------------------------------------------- |
-| `LOOM_GITHUB_APP_ID`             | Yes      | GitHub App numeric ID                                            |
-| `LOOM_GITHUB_APP_PRIVATE_KEY`    | Yes      | PEM-encoded RSA private key                                      |
-| `LOOM_GITHUB_APP_WEBHOOK_SECRET` | **Yes**  | Secret for webhook signature verification (enforced)             |
-| `LOOM_GITHUB_APP_SLUG`           | No       | App slug (defaults to "loom")                                    |
-| `LOOM_GITHUB_APP_BASE_URL`       | No       | API base URL (defaults to https://api.github.com, must be HTTPS) |
+| Variable                                | Required | Description                                                      |
+| --------------------------------------- | -------- | ---------------------------------------------------------------- |
+| `LOOM_SERVER_GITHUB_APP_ID`             | Yes      | GitHub App numeric ID                                            |
+| `LOOM_SERVER_GITHUB_APP_PRIVATE_KEY`    | Yes      | PEM-encoded RSA private key                                      |
+| `LOOM_SERVER_GITHUB_APP_WEBHOOK_SECRET` | **Yes**  | Secret for webhook signature verification (enforced)             |
+| `LOOM_SERVER_GITHUB_APP_SLUG`           | No       | App slug (defaults to "loom")                                    |
+| `LOOM_SERVER_GITHUB_APP_BASE_URL`       | No       | API base URL (defaults to https://api.github.com, must be HTTPS) |
 
 ### Configuration Type
 
@@ -1263,10 +1263,10 @@ tracing::info!(
 ### Environment Setup
 
 ```bash
-export LOOM_GITHUB_APP_ID="123456"
-export LOOM_GITHUB_APP_PRIVATE_KEY="$(cat path/to/private-key.pem)"
-export LOOM_GITHUB_APP_WEBHOOK_SECRET="your-webhook-secret"
-export LOOM_GITHUB_APP_SLUG="loom"
+export LOOM_SERVER_GITHUB_APP_ID="123456"
+export LOOM_SERVER_GITHUB_APP_PRIVATE_KEY="$(cat path/to/private-key.pem)"
+export LOOM_SERVER_GITHUB_APP_WEBHOOK_SECRET="your-webhook-secret"
+export LOOM_SERVER_GITHUB_APP_SLUG="loom"
 ```
 
 ---

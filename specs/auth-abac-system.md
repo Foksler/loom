@@ -67,9 +67,9 @@ OAuth providers require the following environment variables:
 
 | Provider | Variables |
 |----------|-----------|
-| GitHub | `LOOM_GITHUB_CLIENT_ID`, `LOOM_GITHUB_CLIENT_SECRET`, `LOOM_GITHUB_REDIRECT_URI` |
-| Google | `LOOM_GOOGLE_CLIENT_ID`, `LOOM_GOOGLE_CLIENT_SECRET`, `LOOM_GOOGLE_REDIRECT_URI` |
-| Okta | `LOOM_OKTA_DOMAIN`, `LOOM_OKTA_CLIENT_ID`, `LOOM_OKTA_CLIENT_SECRET`, `LOOM_OKTA_REDIRECT_URI` |
+| GitHub | `LOOM_SERVER_GITHUB_CLIENT_ID`, `LOOM_SERVER_GITHUB_CLIENT_SECRET`, `LOOM_SERVER_GITHUB_REDIRECT_URI` |
+| Google | `LOOM_SERVER_GOOGLE_CLIENT_ID`, `LOOM_SERVER_GOOGLE_CLIENT_SECRET`, `LOOM_SERVER_GOOGLE_REDIRECT_URI` |
+| Okta | `LOOM_SERVER_OKTA_DOMAIN`, `LOOM_SERVER_OKTA_CLIENT_ID`, `LOOM_SERVER_OKTA_CLIENT_SECRET`, `LOOM_SERVER_OKTA_REDIRECT_URI` |
 
 ### Component Diagram
 
@@ -697,7 +697,7 @@ owner_user_id: deleted-user-{original-uuid}
 ## 21. CORS Policy
 
 - Specific allowed origins via environment variable
-- `LOOM_CORS_ORIGINS=https://app.loom.example,http://localhost:5173`
+- `LOOM_SERVER_CORS_ORIGINS=https://app.loom.example,http://localhost:5173`
 
 ---
 
@@ -707,12 +707,12 @@ owner_user_id: deleted-user-{original-uuid}
 
 | Variable | Description |
 |----------|-------------|
-| `LOOM_SMTP_HOST` | SMTP server hostname |
-| `LOOM_SMTP_PORT` | SMTP port (typically 587) |
-| `LOOM_SMTP_USERNAME` | SMTP username |
-| `LOOM_SMTP_PASSWORD` | SMTP password (via loom-secret) |
-| `LOOM_SMTP_FROM` | From address (e.g., noreply@loom.example) |
-| `LOOM_SMTP_TLS` | `true`, `starttls`, or `false` |
+| `LOOM_SERVER_SMTP_HOST` | SMTP server hostname |
+| `LOOM_SERVER_SMTP_PORT` | SMTP port (typically 587) |
+| `LOOM_SERVER_SMTP_USERNAME` | SMTP username |
+| `LOOM_SERVER_SMTP_PASSWORD` | SMTP password (via loom-secret) |
+| `LOOM_SERVER_SMTP_FROM` | From address (e.g., noreply@loom.example) |
+| `LOOM_SERVER_SMTP_TLS` | `true`, `starttls`, or `false` |
 
 ---
 
@@ -995,17 +995,17 @@ CREATE INDEX idx_audit_logs_event_type ON audit_logs(event_type);
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `LOOM_GITHUB_CLIENT_ID` | For GitHub OAuth | GitHub OAuth app client ID |
-| `LOOM_GITHUB_CLIENT_SECRET` | For GitHub OAuth | GitHub OAuth app client secret |
-| `LOOM_GOOGLE_CLIENT_ID` | For Google OAuth | Google OAuth client ID |
-| `LOOM_GOOGLE_CLIENT_SECRET` | For Google OAuth | Google OAuth client secret |
+| `LOOM_SERVER_GITHUB_CLIENT_ID` | For GitHub OAuth | GitHub OAuth app client ID |
+| `LOOM_SERVER_GITHUB_CLIENT_SECRET` | For GitHub OAuth | GitHub OAuth app client secret |
+| `LOOM_SERVER_GOOGLE_CLIENT_ID` | For Google OAuth | Google OAuth client ID |
+| `LOOM_SERVER_GOOGLE_CLIENT_SECRET` | For Google OAuth | Google OAuth client secret |
 
 ### Email
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `LOOM_SMTP_HOST` | For magic link | SMTP server hostname |
-| `LOOM_SMTP_PORT` | For magic link | SMTP port |
+| `LOOM_SERVER_SMTP_HOST` | For magic link | SMTP server hostname |
+| `LOOM_SERVER_SMTP_PORT` | For magic link | SMTP port |
 | `LOOM_SMTP_USERNAME` | For magic link | SMTP username |
 | `LOOM_SMTP_PASSWORD` | For magic link | SMTP password |
 | `LOOM_SMTP_FROM` | For magic link | From email address |

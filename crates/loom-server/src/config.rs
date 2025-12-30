@@ -73,7 +73,7 @@ impl ServerConfig {
 	/// - `LOOM_SERVER_WEAVER_MAX_CONCURRENT`: Max concurrent weavers (default: 64)
 	/// - `LOOM_SERVER_WEAVER_READY_TIMEOUT_SECS`: Ready timeout (default: 60)
 	/// - `LOOM_SERVER_WEAVER_WEBHOOKS`: Webhooks JSON (default: [])
-	/// - `LOOM_DEFAULT_LOCALE`: Default locale for emails (default: en)
+	/// - `LOOM_SERVER_DEFAULT_LOCALE`: Default locale for emails (default: en)
 	pub fn from_env() -> Result<Self, ConfigError> {
 		let host = env::var("LOOM_SERVER_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
 
@@ -147,7 +147,7 @@ impl ServerConfig {
 			.unwrap_or(true);
 
 		let default_locale =
-			env::var("LOOM_DEFAULT_LOCALE").unwrap_or_else(|_| "en".to_string());
+			env::var("LOOM_SERVER_DEFAULT_LOCALE").unwrap_or_else(|_| "en".to_string());
 
 		Ok(Self {
 			host,

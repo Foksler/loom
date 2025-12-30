@@ -59,6 +59,22 @@ in
       description = "Whether to open the firewall port for loom-server.";
     };
 
+    baseUrl = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = ''
+        Base URL of the server (e.g., https://loom.example.com).
+        Used for OAuth redirect URIs and other external references.
+        If not set, defaults to http://localhost:{port}.
+      '';
+    };
+
+    defaultLocale = mkOption {
+      type = types.str;
+      default = "en";
+      description = "Default locale for emails and user-facing content.";
+    };
+
     # LLM Provider Configuration
     anthropic = {
       enable = mkEnableOption "Anthropic Claude provider";
@@ -120,7 +136,7 @@ in
       };
     };
 
-    # GitHub App Configuration
+    # GitHub App Configuration (for repository integrations)
     githubApp = {
       enable = mkEnableOption "GitHub App integration";
 
@@ -142,16 +158,100 @@ in
         description = "Path to file containing GitHub webhook secret.";
       };
 
+      slug = mkOption {
+        type = types.str;
+        default = "loom";
+        description = "GitHub App slug (appears in installation URLs).";
+      };
+
+      baseUrl = mkOption {
+        type = types.str;
+        default = "https://api.github.com";
+        description = "GitHub API base URL (for GitHub Enterprise Server).";
+      };
+    };
+
+    # GitHub OAuth Configuration (for user authentication)
+    githubOAuth = {
+      enable = mkEnableOption "GitHub OAuth for user authentication";
+
       clientIdFile = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = "Path to file containing GitHub App OAuth client ID.";
+        description = "Path to file containing GitHub OAuth client ID.";
       };
 
       clientSecretFile = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = "Path to file containing GitHub App OAuth client secret.";
+        description = "Path to file containing GitHub OAuth client secret.";
+      };
+
+      redirectUri = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = ''
+          Callback URL for GitHub OAuth (e.g., https://loom.example.com/auth/github/callback).
+          If not set, will be derived from baseUrl.
+        '';
+      };
+    };
+
+    # Google OAuth Configuration (for user authentication)
+    googleOAuth = {
+      enable = mkEnableOption "Google OAuth for user authentication";
+
+      clientIdFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = "Path to file containing Google OAuth client ID.";
+      };
+
+      clientSecretFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = "Path to file containing Google OAuth client secret.";
+      };
+
+      redirectUri = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = ''
+          Callback URL for Google OAuth (e.g., https://loom.example.com/auth/google/callback).
+          If not set, will be derived from baseUrl.
+        '';
+      };
+    };
+
+    # Okta OAuth Configuration (for enterprise SSO)
+    oktaOAuth = {
+      enable = mkEnableOption "Okta OAuth for enterprise SSO";
+
+      domain = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = "Okta domain (e.g., your-org.okta.com).";
+      };
+
+      clientIdFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = "Path to file containing Okta OAuth client ID.";
+      };
+
+      clientSecretFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = "Path to file containing Okta OAuth client secret.";
+      };
+
+      redirectUri = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = ''
+          Callback URL for Okta OAuth (e.g., https://loom.example.com/auth/okta/callback).
+          If not set, will be derived from baseUrl.
+        '';
       };
     };
 
@@ -255,10 +355,21 @@ in
         message = "services.loom-server.githubApp.appIdFile and privateKeyFile must be set when GitHub App is enabled.";
       }
       {
+        assertion = cfg.githubOAuth.enable -> (cfg.githubOAuth.clientIdFile != null && cfg.githubOAuth.clientSecretFile != null);
+        message = "services.loom-server.githubOAuth.clientIdFile and clientSecretFile must be set when GitHub OAuth is enabled.";
+      }
+      {
+        assertion = cfg.googleOAuth.enable -> (cfg.googleOAuth.clientIdFile != null && cfg.googleOAuth.clientSecretFile != null);
+        message = "services.loom-server.googleOAuth.clientIdFile and clientSecretFile must be set when Google OAuth is enabled.";
+      }
+      {
+        assertion = cfg.oktaOAuth.enable -> (cfg.oktaOAuth.domain != null && cfg.oktaOAuth.clientIdFile != null && cfg.oktaOAuth.clientSecretFile != null);
+        message = "services.loom-server.oktaOAuth.domain, clientIdFile and clientSecretFile must be set when Okta OAuth is enabled.";
+      }
+      {
         assertion = cfg.googleCse.enable -> (cfg.googleCse.apiKeyFile != null && cfg.googleCse.searchEngineIdFile != null);
         message = "services.loom-server.googleCse.apiKeyFile and searchEngineIdFile must be set when Google CSE is enabled.";
       }
-
     ];
 
     users.users.loom-server = {
@@ -283,8 +394,12 @@ in
           LOOM_SERVER_HOST = cfg.host;
           LOOM_SERVER_PORT = toString cfg.port;
           LOOM_SERVER_DATABASE_URL = "sqlite:${cfg.databasePath}";
+          LOOM_SERVER_DEFAULT_LOCALE = cfg.defaultLocale;
           RUST_LOG = cfg.logLevel;
         }
+        (mkIf (cfg.baseUrl != null) {
+          LOOM_SERVER_BASE_URL = cfg.baseUrl;
+        })
         (mkIf cfg.anthropic.enable {
           LOOM_SERVER_ANTHROPIC_MODEL = cfg.anthropic.model;
         })
@@ -298,7 +413,22 @@ in
           LOOM_SERVER_VERTEX_PROJECT_ID = cfg.vertex.projectId;
           LOOM_SERVER_VERTEX_LOCATION = cfg.vertex.location;
         })
-
+        (mkIf cfg.githubApp.enable {
+          LOOM_SERVER_GITHUB_APP_SLUG = cfg.githubApp.slug;
+          LOOM_SERVER_GITHUB_APP_BASE_URL = cfg.githubApp.baseUrl;
+        })
+        (mkIf (cfg.githubOAuth.enable && cfg.githubOAuth.redirectUri != null) {
+          LOOM_SERVER_GITHUB_REDIRECT_URI = cfg.githubOAuth.redirectUri;
+        })
+        (mkIf (cfg.googleOAuth.enable && cfg.googleOAuth.redirectUri != null) {
+          LOOM_SERVER_GOOGLE_REDIRECT_URI = cfg.googleOAuth.redirectUri;
+        })
+        (mkIf cfg.oktaOAuth.enable {
+          LOOM_SERVER_OKTA_DOMAIN = cfg.oktaOAuth.domain;
+        })
+        (mkIf (cfg.oktaOAuth.enable && cfg.oktaOAuth.redirectUri != null) {
+          LOOM_SERVER_OKTA_REDIRECT_URI = cfg.oktaOAuth.redirectUri;
+        })
         (mkIf (cfg.binDir != null) {
           LOOM_SERVER_BIN_DIR = toString cfg.binDir;
         })
@@ -321,14 +451,29 @@ in
           export ${envVar}="$(cat ${file})"
         '';
       in ''
+        # LLM Provider Secrets
         ${loadSecret cfg.anthropic.apiKeyFile "LOOM_SERVER_ANTHROPIC_API_KEY"}
         ${loadSecret cfg.openai.apiKeyFile "LOOM_SERVER_OPENAI_API_KEY"}
         ${loadSecret cfg.vertex.credentialsFile "GOOGLE_APPLICATION_CREDENTIALS"}
-        ${loadSecret cfg.githubApp.appIdFile "LOOM_GITHUB_APP_ID"}
-        ${loadSecret cfg.githubApp.privateKeyFile "LOOM_GITHUB_APP_PRIVATE_KEY_FILE"}
-        ${loadSecret cfg.githubApp.webhookSecretFile "LOOM_GITHUB_WEBHOOK_SECRET"}
-        ${loadSecret cfg.githubApp.clientIdFile "LOOM_GITHUB_APP_CLIENT_ID"}
-        ${loadSecret cfg.githubApp.clientSecretFile "LOOM_GITHUB_APP_CLIENT_SECRET"}
+
+        # GitHub App Secrets (repository integrations)
+        ${loadSecret cfg.githubApp.appIdFile "LOOM_SERVER_GITHUB_APP_ID"}
+        ${loadSecret cfg.githubApp.privateKeyFile "LOOM_SERVER_GITHUB_APP_PRIVATE_KEY"}
+        ${loadSecret cfg.githubApp.webhookSecretFile "LOOM_SERVER_GITHUB_APP_WEBHOOK_SECRET"}
+
+        # GitHub OAuth Secrets (user authentication)
+        ${loadSecret cfg.githubOAuth.clientIdFile "LOOM_SERVER_GITHUB_CLIENT_ID"}
+        ${loadSecret cfg.githubOAuth.clientSecretFile "LOOM_SERVER_GITHUB_CLIENT_SECRET"}
+
+        # Google OAuth Secrets (user authentication)
+        ${loadSecret cfg.googleOAuth.clientIdFile "LOOM_SERVER_GOOGLE_CLIENT_ID"}
+        ${loadSecret cfg.googleOAuth.clientSecretFile "LOOM_SERVER_GOOGLE_CLIENT_SECRET"}
+
+        # Okta OAuth Secrets (enterprise SSO)
+        ${loadSecret cfg.oktaOAuth.clientIdFile "LOOM_SERVER_OKTA_CLIENT_ID"}
+        ${loadSecret cfg.oktaOAuth.clientSecretFile "LOOM_SERVER_OKTA_CLIENT_SECRET"}
+
+        # Google CSE Secrets
         ${loadSecret cfg.googleCse.apiKeyFile "LOOM_SERVER_GOOGLE_CSE_API_KEY"}
         ${loadSecret cfg.googleCse.searchEngineIdFile "LOOM_SERVER_GOOGLE_CSE_SEARCH_ENGINE_ID"}
 

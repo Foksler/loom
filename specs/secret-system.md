@@ -391,10 +391,10 @@ This would be a non-breaking change for consumers.
 
 | Variable                         | File Variant | Used By                |
 | -------------------------------- | ------------ | ---------------------- |
-| `LOOM_SERVER_ANTHROPIC_API_KEY`  | `..._FILE`   | loom-llm-service       |
-| `LOOM_SERVER_OPENAI_API_KEY`     | `..._FILE`   | loom-llm-service       |
-| `LOOM_GITHUB_APP_PRIVATE_KEY`    | `..._FILE`   | loom-github-app        |
-| `LOOM_GITHUB_APP_WEBHOOK_SECRET` | `..._FILE`   | loom-github-app        |
+| `LOOM_SERVER_ANTHROPIC_API_KEY`        | `..._FILE`   | loom-llm-service       |
+| `LOOM_SERVER_OPENAI_API_KEY`           | `..._FILE`   | loom-llm-service       |
+| `LOOM_SERVER_GITHUB_APP_PRIVATE_KEY`   | `..._FILE`   | loom-github-app        |
+| `LOOM_SERVER_GITHUB_APP_WEBHOOK_SECRET`| `..._FILE`   | loom-github-app        |
 | `LOOM_ANTHROPIC_API_KEY`         | `..._FILE`   | loom-config            |
 | `LOOM_OPENAI_API_KEY`            | `..._FILE`   | loom-config            |
 | `ANTHROPIC_API_KEY`              | `..._FILE`   | loom-config (fallback) |

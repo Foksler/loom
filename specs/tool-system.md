@@ -345,7 +345,7 @@ or specialized knowledge.
 		},
 		"model": {
 			"type": "string",
-			"description": "Model override. Defaults to LOOM_ORACLE_MODEL env or 'gpt-4o'."
+			"description": "Model override. Defaults to LOOM_SERVER_ORACLE_MODEL env or 'gpt-4o'."
 		},
 		"max_tokens": {
 			"type": "integer",
@@ -396,7 +396,7 @@ or specialized knowledge.
 **Configuration:**
 
 - `LOOM_SERVER_URL`: Server URL for proxy requests (default: `http://127.0.0.1:8080`)
-- `LOOM_ORACLE_MODEL`: Default model when not specified in args (default: `gpt-4o`)
+- `LOOM_SERVER_ORACLE_MODEL`: Default model when not specified in args (default: `gpt-4o`)
 
 ### bash
 

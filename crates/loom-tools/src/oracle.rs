@@ -96,7 +96,7 @@ pub fn build_llm_request(
 ) -> LlmRequest {
 	let model = model
 		.map(|s| s.to_string())
-		.or_else(|| std::env::var("LOOM_ORACLE_MODEL").ok())
+		.or_else(|| std::env::var("LOOM_SERVER_ORACLE_MODEL").ok())
 		.unwrap_or_else(|| DEFAULT_MODEL.to_string());
 
 	let max_tokens = max_tokens

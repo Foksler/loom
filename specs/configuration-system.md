@@ -346,7 +346,7 @@ timeout_minutes = 0
 
 ### Convention
 
-Environment variables follow the pattern: `LOOM_<SECTION>__<FIELD>`
+Environment variables follow the pattern: `LOOM_SERVER_<SECTION>__<FIELD>`
 
 - Sections are separated by double underscores (`__`)
 - All uppercase
@@ -354,18 +354,18 @@ Environment variables follow the pattern: `LOOM_<SECTION>__<FIELD>`
 
 ### Mapping Table
 
-| Configuration Path             | Environment Variable                  |
-| ------------------------------ | ------------------------------------- |
-| `global.default_provider`      | `LOOM_GLOBAL__DEFAULT_PROVIDER`       |
-| `global.workspace_root`        | `LOOM_GLOBAL__WORKSPACE_ROOT`         |
-| `providers.openai.api_key`     | `LOOM_PROVIDERS__OPENAI__API_KEY`     |
-| `providers.anthropic.api_key`  | `LOOM_PROVIDERS__ANTHROPIC__API_KEY`  |
-| `providers.anthropic.base_url` | `LOOM_PROVIDERS__ANTHROPIC__BASE_URL` |
-| `tools.command_timeout_secs`   | `LOOM_TOOLS__COMMAND_TIMEOUT_SECS`    |
-| `tools.workspace.root`         | `LOOM_TOOLS__WORKSPACE__ROOT`         |
-| `logging.level`                | `LOOM_LOGGING__LEVEL`                 |
-| `logging.file`                 | `LOOM_LOGGING__FILE`                  |
-| `retry.max_retries`            | `LOOM_RETRY__MAX_RETRIES`             |
+| Configuration Path             | Environment Variable                         |
+| ------------------------------ | -------------------------------------------- |
+| `global.default_provider`      | `LOOM_SERVER_GLOBAL__DEFAULT_PROVIDER`       |
+| `global.workspace_root`        | `LOOM_SERVER_GLOBAL__WORKSPACE_ROOT`         |
+| `providers.openai.api_key`     | `LOOM_SERVER_PROVIDERS__OPENAI__API_KEY`     |
+| `providers.anthropic.api_key`  | `LOOM_SERVER_PROVIDERS__ANTHROPIC__API_KEY`  |
+| `providers.anthropic.base_url` | `LOOM_SERVER_PROVIDERS__ANTHROPIC__BASE_URL` |
+| `tools.command_timeout_secs`   | `LOOM_SERVER_TOOLS__COMMAND_TIMEOUT_SECS`    |
+| `tools.workspace.root`         | `LOOM_SERVER_TOOLS__WORKSPACE__ROOT`         |
+| `logging.level`                | `LOOM_SERVER_LOGGING__LEVEL`                 |
+| `logging.file`                 | `LOOM_SERVER_LOGGING__FILE`                  |
+| `retry.max_retries`            | `LOOM_SERVER_RETRY__MAX_RETRIES`             |
 
 ### Special Environment Variables
 

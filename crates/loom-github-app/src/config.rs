@@ -103,42 +103,42 @@ impl GithubAppConfig {
 	/// Create configuration from environment variables.
 	///
 	/// Required environment variables:
-	/// - `LOOM_GITHUB_APP_ID`: GitHub App numeric ID
-	/// - `LOOM_GITHUB_APP_PRIVATE_KEY`: PEM-encoded RSA private key (or `_FILE`
+	/// - `LOOM_SERVER_GITHUB_APP_ID`: GitHub App numeric ID
+	/// - `LOOM_SERVER_GITHUB_APP_PRIVATE_KEY`: PEM-encoded RSA private key (or `_FILE`
 	///   suffix for file path)
 	///
 	/// Optional environment variables:
-	/// - `LOOM_GITHUB_APP_WEBHOOK_SECRET`: Secret for webhook verification (or
+	/// - `LOOM_SERVER_GITHUB_APP_WEBHOOK_SECRET`: Secret for webhook verification (or
 	///   `_FILE` suffix)
-	/// - `LOOM_GITHUB_APP_SLUG`: App slug (defaults to "loom")
-	/// - `LOOM_GITHUB_APP_BASE_URL`: API base URL (defaults to api.github.com,
+	/// - `LOOM_SERVER_GITHUB_APP_SLUG`: App slug (defaults to "loom")
+	/// - `LOOM_SERVER_GITHUB_APP_BASE_URL`: API base URL (defaults to api.github.com,
 	///   must be HTTPS)
 	pub fn from_env() -> Result<Self, GithubAppError> {
-		let app_id_str = env::var("LOOM_GITHUB_APP_ID")
-			.map_err(|_| GithubAppError::Config("LOOM_GITHUB_APP_ID not set".to_string()))?;
+		let app_id_str = env::var("LOOM_SERVER_GITHUB_APP_ID")
+			.map_err(|_| GithubAppError::Config("LOOM_SERVER_GITHUB_APP_ID not set".to_string()))?;
 
 		let app_id: u64 = app_id_str
 			.parse()
-			.map_err(|_| GithubAppError::Config(format!("Invalid LOOM_GITHUB_APP_ID: {app_id_str}")))?;
+			.map_err(|_| GithubAppError::Config(format!("Invalid LOOM_SERVER_GITHUB_APP_ID: {app_id_str}")))?;
 
-		let private_key_pem = load_secret_env("LOOM_GITHUB_APP_PRIVATE_KEY")
+		let private_key_pem = load_secret_env("LOOM_SERVER_GITHUB_APP_PRIVATE_KEY")
 			.map_err(|e| GithubAppError::Config(e.to_string()))?
-			.ok_or_else(|| GithubAppError::Config("LOOM_GITHUB_APP_PRIVATE_KEY not set".to_string()))?;
+			.ok_or_else(|| GithubAppError::Config("LOOM_SERVER_GITHUB_APP_PRIVATE_KEY not set".to_string()))?;
 
 		if private_key_pem.expose().is_empty() {
 			return Err(GithubAppError::Config(
-				"LOOM_GITHUB_APP_PRIVATE_KEY is empty".to_string(),
+				"LOOM_SERVER_GITHUB_APP_PRIVATE_KEY is empty".to_string(),
 			));
 		}
 
-		let webhook_secret = load_secret_env("LOOM_GITHUB_APP_WEBHOOK_SECRET")
+		let webhook_secret = load_secret_env("LOOM_SERVER_GITHUB_APP_WEBHOOK_SECRET")
 			.map_err(|e| GithubAppError::Config(e.to_string()))?;
 
 		let app_slug =
-			env::var("LOOM_GITHUB_APP_SLUG").unwrap_or_else(|_| DEFAULT_APP_SLUG.to_string());
+			env::var("LOOM_SERVER_GITHUB_APP_SLUG").unwrap_or_else(|_| DEFAULT_APP_SLUG.to_string());
 
 		let base_url_raw =
-			env::var("LOOM_GITHUB_APP_BASE_URL").unwrap_or_else(|_| DEFAULT_BASE_URL.to_string());
+			env::var("LOOM_SERVER_GITHUB_APP_BASE_URL").unwrap_or_else(|_| DEFAULT_BASE_URL.to_string());
 		let base_url = Self::validate_and_normalize_base_url(&base_url_raw)?;
 
 		Ok(Self {

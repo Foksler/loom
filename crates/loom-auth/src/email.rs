@@ -36,7 +36,7 @@ impl TlsMode {
             "starttls" => Ok(TlsMode::StartTls),
             "false" | "none" => Ok(TlsMode::None),
             _ => Err(AuthError::Configuration(format!(
-                "Invalid LOOM_SMTP_TLS value: '{}'. Expected: true, tls, starttls, false, none",
+                "Invalid LOOM_SERVER_SMTP_TLS value: '{}'. Expected: true, tls, starttls, false, none",
                 value
             ))),
         }
@@ -63,68 +63,68 @@ pub struct SmtpConfig {
 impl SmtpConfig {
     /// Load SMTP configuration from environment variables.
     ///
-    /// Returns `Ok(None)` if SMTP is not configured (LOOM_SMTP_HOST not set).
+    /// Returns `Ok(None)` if SMTP is not configured (LOOM_SERVER_SMTP_HOST not set).
     /// Returns `Err` if configuration is incomplete or invalid.
     ///
     /// Environment variables:
-    /// - `LOOM_SMTP_HOST` - SMTP server hostname (required)
-    /// - `LOOM_SMTP_PORT` - SMTP server port (default: 587)
-    /// - `LOOM_SMTP_USERNAME` - Username for authentication (optional)
-    /// - `LOOM_SMTP_PASSWORD` - Password for authentication (optional)
-    /// - `LOOM_SMTP_FROM` - From address (required if host is set)
-    /// - `LOOM_SMTP_TLS` - TLS mode: true/tls, starttls, false/none (default: tls)
+    /// - `LOOM_SERVER_SMTP_HOST` - SMTP server hostname (required)
+    /// - `LOOM_SERVER_SMTP_PORT` - SMTP server port (default: 587)
+    /// - `LOOM_SERVER_SMTP_USERNAME` - Username for authentication (optional)
+    /// - `LOOM_SERVER_SMTP_PASSWORD` - Password for authentication (optional)
+    /// - `LOOM_SERVER_SMTP_FROM` - From address (required if host is set)
+    /// - `LOOM_SERVER_SMTP_TLS` - TLS mode: true/tls, starttls, false/none (default: tls)
     pub fn from_env() -> Result<Option<Self>, AuthError> {
-        let host = match std::env::var("LOOM_SMTP_HOST") {
+        let host = match std::env::var("LOOM_SERVER_SMTP_HOST") {
             Ok(h) if !h.is_empty() => h,
             Ok(_) => return Ok(None),
             Err(std::env::VarError::NotPresent) => return Ok(None),
             Err(e) => {
                 return Err(AuthError::Configuration(format!(
-                    "Failed to read LOOM_SMTP_HOST: {}",
+                    "Failed to read LOOM_SERVER_SMTP_HOST: {}",
                     e
                 )))
             }
         };
 
-        let port = match std::env::var("LOOM_SMTP_PORT") {
+        let port = match std::env::var("LOOM_SERVER_SMTP_PORT") {
             Ok(p) => p.parse::<u16>().map_err(|e| {
-                AuthError::Configuration(format!("Invalid LOOM_SMTP_PORT: {}", e))
+                AuthError::Configuration(format!("Invalid LOOM_SERVER_SMTP_PORT: {}", e))
             })?,
             Err(std::env::VarError::NotPresent) => 587,
             Err(e) => {
                 return Err(AuthError::Configuration(format!(
-                    "Failed to read LOOM_SMTP_PORT: {}",
+                    "Failed to read LOOM_SERVER_SMTP_PORT: {}",
                     e
                 )))
             }
         };
 
-        let from_address = std::env::var("LOOM_SMTP_FROM").map_err(|e| {
+        let from_address = std::env::var("LOOM_SERVER_SMTP_FROM").map_err(|e| {
             AuthError::Configuration(format!(
-                "LOOM_SMTP_FROM is required when LOOM_SMTP_HOST is set: {}",
+                "LOOM_SERVER_SMTP_FROM is required when LOOM_SERVER_SMTP_HOST is set: {}",
                 e
             ))
         })?;
 
         if from_address.is_empty() {
             return Err(AuthError::Configuration(
-                "LOOM_SMTP_FROM cannot be empty".to_string(),
+                "LOOM_SERVER_SMTP_FROM cannot be empty".to_string(),
             ));
         }
 
-        let username = std::env::var("LOOM_SMTP_USERNAME").ok().filter(|s| !s.is_empty());
+        let username = std::env::var("LOOM_SERVER_SMTP_USERNAME").ok().filter(|s| !s.is_empty());
 
-        let password = std::env::var("LOOM_SMTP_PASSWORD")
+        let password = std::env::var("LOOM_SERVER_SMTP_PASSWORD")
             .ok()
             .filter(|s| !s.is_empty())
             .map(SecretString::new);
 
-        let tls_mode = match std::env::var("LOOM_SMTP_TLS") {
+        let tls_mode = match std::env::var("LOOM_SERVER_SMTP_TLS") {
             Ok(v) => TlsMode::from_env_value(&v)?,
             Err(std::env::VarError::NotPresent) => TlsMode::Tls,
             Err(e) => {
                 return Err(AuthError::Configuration(format!(
-                    "Failed to read LOOM_SMTP_TLS: {}",
+                    "Failed to read LOOM_SERVER_SMTP_TLS: {}",
                     e
                 )))
             }
@@ -267,12 +267,12 @@ mod tests {
     static ENV_MUTEX: Mutex<()> = Mutex::new(());
 
     fn clear_smtp_env() {
-        env::remove_var("LOOM_SMTP_HOST");
-        env::remove_var("LOOM_SMTP_PORT");
-        env::remove_var("LOOM_SMTP_USERNAME");
-        env::remove_var("LOOM_SMTP_PASSWORD");
-        env::remove_var("LOOM_SMTP_FROM");
-        env::remove_var("LOOM_SMTP_TLS");
+        env::remove_var("LOOM_SERVER_SMTP_HOST");
+        env::remove_var("LOOM_SERVER_SMTP_PORT");
+        env::remove_var("LOOM_SERVER_SMTP_USERNAME");
+        env::remove_var("LOOM_SERVER_SMTP_PASSWORD");
+        env::remove_var("LOOM_SERVER_SMTP_FROM");
+        env::remove_var("LOOM_SERVER_SMTP_TLS");
     }
 
     mod tls_mode {
@@ -335,7 +335,7 @@ mod tests {
         fn returns_none_when_host_is_empty() {
             let _guard = ENV_MUTEX.lock().unwrap();
             clear_smtp_env();
-            env::set_var("LOOM_SMTP_HOST", "");
+            env::set_var("LOOM_SERVER_SMTP_HOST", "");
             let config = SmtpConfig::from_env().unwrap();
             assert!(config.is_none());
             clear_smtp_env();
@@ -345,7 +345,7 @@ mod tests {
         fn requires_from_address_when_host_set() {
             let _guard = ENV_MUTEX.lock().unwrap();
             clear_smtp_env();
-            env::set_var("LOOM_SMTP_HOST", "smtp.example.com");
+            env::set_var("LOOM_SERVER_SMTP_HOST", "smtp.example.com");
             let result = SmtpConfig::from_env();
             assert!(result.is_err());
             clear_smtp_env();
@@ -355,8 +355,8 @@ mod tests {
         fn rejects_empty_from_address() {
             let _guard = ENV_MUTEX.lock().unwrap();
             clear_smtp_env();
-            env::set_var("LOOM_SMTP_HOST", "smtp.example.com");
-            env::set_var("LOOM_SMTP_FROM", "");
+            env::set_var("LOOM_SERVER_SMTP_HOST", "smtp.example.com");
+            env::set_var("LOOM_SERVER_SMTP_FROM", "");
             let result = SmtpConfig::from_env();
             assert!(result.is_err());
             clear_smtp_env();
@@ -366,8 +366,8 @@ mod tests {
         fn parses_minimal_config() {
             let _guard = ENV_MUTEX.lock().unwrap();
             clear_smtp_env();
-            env::set_var("LOOM_SMTP_HOST", "smtp.example.com");
-            env::set_var("LOOM_SMTP_FROM", "noreply@example.com");
+            env::set_var("LOOM_SERVER_SMTP_HOST", "smtp.example.com");
+            env::set_var("LOOM_SERVER_SMTP_FROM", "noreply@example.com");
 
             let config = SmtpConfig::from_env().unwrap().unwrap();
             assert_eq!(config.host, "smtp.example.com");
@@ -385,12 +385,12 @@ mod tests {
         fn parses_full_config() {
             let _guard = ENV_MUTEX.lock().unwrap();
             clear_smtp_env();
-            env::set_var("LOOM_SMTP_HOST", "smtp.example.com");
-            env::set_var("LOOM_SMTP_PORT", "465");
-            env::set_var("LOOM_SMTP_USERNAME", "user@example.com");
-            env::set_var("LOOM_SMTP_PASSWORD", "secret123");
-            env::set_var("LOOM_SMTP_FROM", "noreply@example.com");
-            env::set_var("LOOM_SMTP_TLS", "starttls");
+            env::set_var("LOOM_SERVER_SMTP_HOST", "smtp.example.com");
+            env::set_var("LOOM_SERVER_SMTP_PORT", "465");
+            env::set_var("LOOM_SERVER_SMTP_USERNAME", "user@example.com");
+            env::set_var("LOOM_SERVER_SMTP_PASSWORD", "secret123");
+            env::set_var("LOOM_SERVER_SMTP_FROM", "noreply@example.com");
+            env::set_var("LOOM_SERVER_SMTP_TLS", "starttls");
 
             let config = SmtpConfig::from_env().unwrap().unwrap();
             assert_eq!(config.host, "smtp.example.com");
@@ -408,9 +408,9 @@ mod tests {
         fn rejects_invalid_port() {
             let _guard = ENV_MUTEX.lock().unwrap();
             clear_smtp_env();
-            env::set_var("LOOM_SMTP_HOST", "smtp.example.com");
-            env::set_var("LOOM_SMTP_PORT", "not_a_number");
-            env::set_var("LOOM_SMTP_FROM", "noreply@example.com");
+            env::set_var("LOOM_SERVER_SMTP_HOST", "smtp.example.com");
+            env::set_var("LOOM_SERVER_SMTP_PORT", "not_a_number");
+            env::set_var("LOOM_SERVER_SMTP_FROM", "noreply@example.com");
 
             let result = SmtpConfig::from_env();
             assert!(result.is_err());
@@ -422,9 +422,9 @@ mod tests {
         fn rejects_invalid_tls_mode() {
             let _guard = ENV_MUTEX.lock().unwrap();
             clear_smtp_env();
-            env::set_var("LOOM_SMTP_HOST", "smtp.example.com");
-            env::set_var("LOOM_SMTP_FROM", "noreply@example.com");
-            env::set_var("LOOM_SMTP_TLS", "invalid");
+            env::set_var("LOOM_SERVER_SMTP_HOST", "smtp.example.com");
+            env::set_var("LOOM_SERVER_SMTP_FROM", "noreply@example.com");
+            env::set_var("LOOM_SERVER_SMTP_TLS", "invalid");
 
             let result = SmtpConfig::from_env();
             assert!(result.is_err());
@@ -436,9 +436,9 @@ mod tests {
         fn ignores_empty_username() {
             let _guard = ENV_MUTEX.lock().unwrap();
             clear_smtp_env();
-            env::set_var("LOOM_SMTP_HOST", "smtp.example.com");
-            env::set_var("LOOM_SMTP_FROM", "noreply@example.com");
-            env::set_var("LOOM_SMTP_USERNAME", "");
+            env::set_var("LOOM_SERVER_SMTP_HOST", "smtp.example.com");
+            env::set_var("LOOM_SERVER_SMTP_FROM", "noreply@example.com");
+            env::set_var("LOOM_SERVER_SMTP_USERNAME", "");
 
             let config = SmtpConfig::from_env().unwrap().unwrap();
             assert!(config.username.is_none());
@@ -450,9 +450,9 @@ mod tests {
         fn ignores_empty_password() {
             let _guard = ENV_MUTEX.lock().unwrap();
             clear_smtp_env();
-            env::set_var("LOOM_SMTP_HOST", "smtp.example.com");
-            env::set_var("LOOM_SMTP_FROM", "noreply@example.com");
-            env::set_var("LOOM_SMTP_PASSWORD", "");
+            env::set_var("LOOM_SERVER_SMTP_HOST", "smtp.example.com");
+            env::set_var("LOOM_SERVER_SMTP_FROM", "noreply@example.com");
+            env::set_var("LOOM_SERVER_SMTP_PASSWORD", "");
 
             let config = SmtpConfig::from_env().unwrap().unwrap();
             assert!(config.password.is_none());

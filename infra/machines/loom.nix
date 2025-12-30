@@ -153,6 +153,7 @@
     databasePath = "/var/lib/loom-server/loom.db";
     logLevel = "trace";
     binDir = pkgs.loom-cli-binaries;
+    baseUrl = "https://loom.ghuntley.com";
 
     anthropic = {
       enable = true;
@@ -171,8 +172,13 @@
       appIdFile = config.sops.secrets.loom-github-app-id.path;
       privateKeyFile = config.sops.secrets.loom-github-app-private-key.path;
       webhookSecretFile = config.sops.secrets.loom-github-webhook-secret.path;
+    };
+
+    githubOAuth = {
+      enable = true;
       clientIdFile = config.sops.secrets.loom-github-app-client-id.path;
       clientSecretFile = config.sops.secrets.loom-github-app-client-secret.path;
+      redirectUri = "https://loom.ghuntley.com/auth/github/callback";
     };
 
     googleCse = {

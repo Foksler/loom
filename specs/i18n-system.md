@@ -35,7 +35,7 @@ workflows and supports both left-to-right (LTR) and right-to-left (RTL) language
 
 ### Related Specifications
 
-- [Configuration System](configuration-system.md) - `LOOM_DEFAULT_LOCALE` environment variable
+- [Configuration System](configuration-system.md) - `LOOM_SERVER_DEFAULT_LOCALE` environment variable
 - [loom-web Specification](loom-web.md) - Frontend i18n with LinguiJS
 
 ---
@@ -87,7 +87,7 @@ Locale is resolved using the following precedence (highest to lowest):
 | Priority | Source | Description |
 |----------|--------|-------------|
 | 1 | User preference | `users.locale` column in database |
-| 2 | Server default | `LOOM_DEFAULT_LOCALE` environment variable |
+| 2 | Server default | `LOOM_SERVER_DEFAULT_LOCALE` environment variable |
 | 3 | Fallback | `en` (English) |
 
 ### Resolution Algorithm
@@ -496,7 +496,7 @@ impl UserRepository {
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `LOOM_DEFAULT_LOCALE` | No | `en` | Default locale for users without preference |
+| `LOOM_SERVER_DEFAULT_LOCALE` | No | `en` | Default locale for users without preference |
 
 ### Integration with ServerConfig
 
@@ -514,7 +514,7 @@ impl ServerConfig {
     pub fn from_env() -> Result<Self, ConfigError> {
         // ... existing code ...
         
-        let default_locale = std::env::var("LOOM_DEFAULT_LOCALE")
+        let default_locale = std::env::var("LOOM_SERVER_DEFAULT_LOCALE")
             .unwrap_or_else(|_| "en".to_string());
         
         // Validate locale is supported

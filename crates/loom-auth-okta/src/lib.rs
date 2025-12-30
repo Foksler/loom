@@ -163,10 +163,10 @@ impl OktaOAuthConfig {
 	///
 	/// # Required Environment Variables
 	///
-	/// - `LOOM_OKTA_DOMAIN`: The Okta domain (e.g., `dev-123456.okta.com`).
-	/// - `LOOM_OKTA_CLIENT_ID`: The OAuth application's client ID.
-	/// - `LOOM_OKTA_CLIENT_SECRET`: The OAuth application's client secret.
-	/// - `LOOM_OKTA_REDIRECT_URI`: The callback URL for OAuth redirects.
+	/// - `LOOM_SERVER_OKTA_DOMAIN`: The Okta domain (e.g., `dev-123456.okta.com`).
+	/// - `LOOM_SERVER_OKTA_CLIENT_ID`: The OAuth application's client ID.
+	/// - `LOOM_SERVER_OKTA_CLIENT_SECRET`: The OAuth application's client secret.
+	/// - `LOOM_SERVER_OKTA_REDIRECT_URI`: The callback URL for OAuth redirects.
 	///
 	/// # Returns
 	///
@@ -176,17 +176,17 @@ impl OktaOAuthConfig {
 	///
 	/// Returns [`ConfigError::MissingEnvVar`] if any required variable is not set.
 	pub fn from_env() -> Result<Self, ConfigError> {
-		let domain = env::var("LOOM_OKTA_DOMAIN")
-			.map_err(|_| ConfigError::MissingEnvVar("LOOM_OKTA_DOMAIN".to_string()))?;
+		let domain = env::var("LOOM_SERVER_OKTA_DOMAIN")
+			.map_err(|_| ConfigError::MissingEnvVar("LOOM_SERVER_OKTA_DOMAIN".to_string()))?;
 
-		let client_id = env::var("LOOM_OKTA_CLIENT_ID")
-			.map_err(|_| ConfigError::MissingEnvVar("LOOM_OKTA_CLIENT_ID".to_string()))?;
+		let client_id = env::var("LOOM_SERVER_OKTA_CLIENT_ID")
+			.map_err(|_| ConfigError::MissingEnvVar("LOOM_SERVER_OKTA_CLIENT_ID".to_string()))?;
 
-		let client_secret = env::var("LOOM_OKTA_CLIENT_SECRET")
-			.map_err(|_| ConfigError::MissingEnvVar("LOOM_OKTA_CLIENT_SECRET".to_string()))?;
+		let client_secret = env::var("LOOM_SERVER_OKTA_CLIENT_SECRET")
+			.map_err(|_| ConfigError::MissingEnvVar("LOOM_SERVER_OKTA_CLIENT_SECRET".to_string()))?;
 
-		let redirect_uri = env::var("LOOM_OKTA_REDIRECT_URI")
-			.map_err(|_| ConfigError::MissingEnvVar("LOOM_OKTA_REDIRECT_URI".to_string()))?;
+		let redirect_uri = env::var("LOOM_SERVER_OKTA_REDIRECT_URI")
+			.map_err(|_| ConfigError::MissingEnvVar("LOOM_SERVER_OKTA_REDIRECT_URI".to_string()))?;
 
 		Ok(Self {
 			domain,

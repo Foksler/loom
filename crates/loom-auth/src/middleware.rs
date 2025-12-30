@@ -38,8 +38,8 @@ use uuid::Uuid;
 pub const SESSION_COOKIE_NAME: &str = "loom_session";
 
 /// Environment variable to enable dev mode (bypass authentication).
-pub const DEV_MODE_ENV_VAR: &str = "LOOM_AUTH_DEV_MODE";
-pub const LOOM_ENV_VAR: &str = "LOOM_ENV";
+pub const DEV_MODE_ENV_VAR: &str = "LOOM_SERVER_AUTH_DEV_MODE";
+pub const LOOM_ENV_VAR: &str = "LOOM_SERVER_ENV";
 
 /// The currently authenticated user, extracted from request context.
 ///
@@ -179,7 +179,7 @@ impl std::error::Error for AuthRequired {}
 /// Configuration for authentication middleware.
 #[derive(Debug, Clone)]
 pub struct AuthConfig {
-    /// Enable dev mode (bypass authentication when LOOM_AUTH_DEV_MODE=1).
+    /// Enable dev mode (bypass authentication when LOOM_SERVER_AUTH_DEV_MODE=1).
     pub dev_mode: bool,
     /// Name of the session cookie.
     pub session_cookie_name: String,
@@ -202,11 +202,11 @@ impl AuthConfig {
 
     /// Create AuthConfig from environment variables.
     ///
-    /// Reads `LOOM_AUTH_DEV_MODE` to determine if dev mode should be enabled.
+    /// Reads `LOOM_SERVER_AUTH_DEV_MODE` to determine if dev mode should be enabled.
     ///
     /// # Panics
     ///
-    /// Panics if both `LOOM_AUTH_DEV_MODE=1` and `LOOM_ENV=production` are set,
+    /// Panics if both `LOOM_SERVER_AUTH_DEV_MODE=1` and `LOOM_SERVER_ENV=production` are set,
     /// as dev mode must never be enabled in production environments.
     pub fn from_env() -> Self {
         let dev_mode = std::env::var(DEV_MODE_ENV_VAR)
@@ -217,9 +217,9 @@ impl AuthConfig {
 
         if dev_mode && loom_env.to_lowercase() == "production" {
             panic!(
-                "FATAL: LOOM_AUTH_DEV_MODE=1 is set while LOOM_ENV=production. \
+                "FATAL: LOOM_SERVER_AUTH_DEV_MODE=1 is set while LOOM_SERVER_ENV=production. \
                  Dev mode authentication bypass MUST NOT be enabled in production. \
-                 Remove LOOM_AUTH_DEV_MODE or set LOOM_ENV to a non-production value."
+                 Remove LOOM_SERVER_AUTH_DEV_MODE or set LOOM_SERVER_ENV to a non-production value."
             );
         }
 
@@ -591,7 +591,7 @@ mod tests {
                 std::env::remove_var(LOOM_ENV_VAR);
                 AuthConfig::from_env()
             });
-            let config = result.expect("Should not panic when LOOM_ENV unset");
+            let config = result.expect("Should not panic when LOOM_SERVER_ENV unset");
             assert!(config.dev_mode);
         }
 

@@ -12,7 +12,7 @@
 //!   raw tokens are never stored or logged.
 //! - **Session Expiry**: Sessions are validated against expiry timestamps on every request.
 //! - **API Key Revocation**: Revoked API keys are rejected immediately.
-//! - **Dev Mode Bypass**: In development mode (`LOOM_AUTH_DEV_MODE=1`), unauthenticated
+//! - **Dev Mode Bypass**: In development mode (`LOOM_SERVER_AUTH_DEV_MODE=1`), unauthenticated
 //!   requests are automatically authenticated as the dev user. This MUST NOT be enabled
 //!   in production.
 //!
@@ -91,7 +91,7 @@ fn hash_token(token: &str) -> String {
 ///
 /// # Dev Mode
 ///
-/// In dev mode (`LOOM_AUTH_DEV_MODE=1`), if no valid authentication is provided,
+/// In dev mode (`LOOM_SERVER_AUTH_DEV_MODE=1`), if no valid authentication is provided,
 /// automatically authenticates as the dev user with full admin privileges.
 /// **WARNING**: Never enable dev mode in production.
 ///
