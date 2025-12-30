@@ -13,6 +13,7 @@ use utoipa::ToSchema;
 use loom_weaver::Provisioner;
 use loom_github_app::{GithubAppClient, GithubAppError};
 use loom_llm_service::LlmService;
+use loom_smtp::SmtpClient;
 
 use crate::db::ThreadRepository;
 
@@ -131,6 +132,32 @@ pub struct KubernetesHealth {
 	pub error: Option<String>,
 }
 
+/// SMTP component health.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct SmtpHealth {
+	pub status: HealthStatus,
+	pub latency_ms: u64,
+	pub configured: bool,
+	pub healthy: bool,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub error: Option<String>,
+}
+
+/// GeoIP component health.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct GeoIpHealth {
+	pub status: HealthStatus,
+	pub latency_ms: u64,
+	pub configured: bool,
+	pub healthy: bool,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub database_path: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub database_type: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub error: Option<String>,
+}
+
 /// All health check components.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct HealthComponents {
@@ -141,6 +168,8 @@ pub struct HealthComponents {
 	pub github_app: GithubAppHealth,
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub kubernetes: Option<KubernetesHealth>,
+	pub smtp: SmtpHealth,
+	pub geoip: GeoIpHealth,
 }
 
 /// Complete health check response.
@@ -489,6 +518,95 @@ pub async fn check_kubernetes(provisioner: Option<&Arc<Provisioner>>) -> Option<
 	})
 }
 
+const SMTP_CHECK_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// Check SMTP server health by testing connectivity.
+pub async fn check_smtp(client: Option<&Arc<SmtpClient>>) -> SmtpHealth {
+	let start = Instant::now();
+
+	let (configured, healthy, status, error) = match client {
+		None => (
+			false,
+			false,
+			HealthStatus::Degraded,
+			Some("SMTP not configured".to_string()),
+		),
+		Some(client) => match timeout(SMTP_CHECK_TIMEOUT, client.check_health()).await {
+			Ok(Ok(())) => (true, true, HealthStatus::Healthy, None),
+			Ok(Err(e)) => (true, false, HealthStatus::Unhealthy, Some(e.to_string())),
+			Err(_) => (
+				true,
+				false,
+				HealthStatus::Unhealthy,
+				Some("SMTP health check timed out".to_string()),
+			),
+		},
+	};
+
+	let latency_ms = start.elapsed().as_millis() as u64;
+
+	SmtpHealth {
+		status,
+		latency_ms,
+		configured,
+		healthy,
+		error,
+	}
+}
+
+/// Check GeoIP service health by validating database accessibility.
+pub fn check_geoip(service: Option<&Arc<loom_geoip::GeoIpService>>) -> GeoIpHealth {
+	use tokio::time::Instant;
+
+	let start = Instant::now();
+
+	let (configured, healthy, status, database_path, database_type, error) = match service {
+		None => (
+			false,
+			false,
+			HealthStatus::Degraded,
+			None,
+			None,
+			Some("GeoIP not configured".to_string()),
+		),
+		Some(svc) => {
+			let path = svc.database_path().to_string();
+			if svc.is_healthy() {
+				let metadata = svc.database_metadata();
+				(
+					true,
+					true,
+					HealthStatus::Healthy,
+					Some(path),
+					Some(metadata.database_type),
+					None,
+				)
+			} else {
+				(
+					true,
+					false,
+					HealthStatus::Unhealthy,
+					Some(path),
+					None,
+					Some("GeoIP database lookup failed".to_string()),
+				)
+			}
+		}
+	};
+
+	let latency_ms = start.elapsed().as_millis() as u64;
+
+	GeoIpHealth {
+		status,
+		latency_ms,
+		configured,
+		healthy,
+		database_path,
+		database_type,
+		error,
+	}
+}
+
 /// Aggregate component statuses into overall status.
 pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
 	let mut statuses = vec![
@@ -496,6 +614,8 @@ pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
 		components.bin_dir.status,
 		components.google_cse.status,
 		components.github_app.status,
+		components.smtp.status,
+		components.geoip.status,
 	];
 
 	if let Some(ref k8s) = components.kubernetes {

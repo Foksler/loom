@@ -6,6 +6,10 @@
 //! This crate provides an HTTP server for persisting and syncing Loom threads
 //! to a SQLite database.
 
+pub mod abac_middleware;
+pub mod auth_middleware;
+pub mod client_info;
+pub mod i18n;
 pub mod weaver_metrics;
 pub mod api;
 pub mod api_docs;
@@ -16,6 +20,7 @@ pub mod health;
 pub mod llm_proxy;
 pub mod llm_query_handler;
 pub mod llm_query_processor;
+pub mod oauth_state;
 pub mod query_metrics;
 pub mod query_security;
 pub mod query_tracing;

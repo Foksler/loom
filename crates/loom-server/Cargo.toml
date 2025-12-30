@@ -23,6 +23,15 @@ loom-weaver = { path = "../loom-weaver" }
 loom-core = { path = "../loom-core" }
 loom-k8s = { path = "../loom-k8s" }
 loom-secret = { path = "../loom-secret" }
+loom-auth = { path = "../loom-auth" }
+loom-auth-devicecode = { path = "../loom-auth-devicecode" }
+loom-auth-github = { path = "../loom-auth-github" }
+loom-auth-google = { path = "../loom-auth-google" }
+loom-auth-magiclink = { path = "../loom-auth-magiclink" }
+loom-auth-okta = { path = "../loom-auth-okta" }
+loom-smtp = { path = "../loom-smtp" }
+loom-i18n = { path = "../loom-i18n" }
+loom-geoip = { path = "../loom-geoip" }
 loom-github-app = { path = "../loom-github-app", features = ["openapi"] }
 loom-google-cse = { path = "../loom-google-cse", features = ["openapi"] }
 loom-llm-service = { path = "../loom-llm-service" }
@@ -37,8 +46,9 @@ hmac = "0.12"
 sha2 = "0.10"
 
 # Web framework
-axum = { version = "0.8", features = ["macros"] }
+axum = { version = "0.8", features = ["macros", "ws"] }
 tower = "0.5"
+pin-project-lite.workspace = true
 tower-http = { version = "0.6", features = ["cors", "trace", "fs"] }
 
 # Database

@@ -14,6 +14,8 @@ pub struct ServerConfig {
 	pub port: u16,
 	/// SQLite database URL.
 	pub database_url: String,
+	/// Public base URL for links (e.g., magic link verification).
+	pub base_url: String,
 	/// Log level filter.
 	pub log_level: String,
 	/// Directory containing platform binaries.
@@ -34,6 +36,23 @@ pub struct ServerConfig {
 	pub weaver_ready_timeout_secs: u64,
 	/// Webhooks JSON configuration.
 	pub weaver_webhooks: String,
+	/// SMTP server hostname.
+	pub smtp_host: Option<String>,
+	/// SMTP server port.
+	pub smtp_port: u16,
+	/// SMTP username for authentication.
+	pub smtp_username: Option<String>,
+	/// SMTP password for authentication.
+	pub smtp_password: Option<String>,
+	/// Email address to send from.
+	pub smtp_from_address: Option<String>,
+	/// Display name for sent emails.
+	pub smtp_from_name: String,
+	/// Whether to use TLS for SMTP connection.
+	pub smtp_use_tls: bool,
+	/// Default locale for emails and API responses.
+	/// Used when user has no preference set.
+	pub default_locale: String,
 }
 
 impl ServerConfig {
@@ -44,6 +63,7 @@ impl ServerConfig {
 	/// - `LOOM_SERVER_PORT`: Port number (default: 8080)
 	/// - `LOOM_SERVER_DATABASE_URL`: SQLite database URL (default:
 	///   sqlite:./loom.db)
+	/// - `LOOM_SERVER_BASE_URL`: Public base URL (default: http://localhost:8080)
 	/// - `LOOM_SERVER_LOG_LEVEL`: Log level (default: info)
 	/// - `LOOM_SERVER_WEAVER_ENABLED`: Enable weaver provisioning (default: false)
 	/// - `LOOM_SERVER_WEAVER_K8S_NAMESPACE`: K8s namespace (default: loom-weavers)
@@ -53,6 +73,7 @@ impl ServerConfig {
 	/// - `LOOM_SERVER_WEAVER_MAX_CONCURRENT`: Max concurrent weavers (default: 64)
 	/// - `LOOM_SERVER_WEAVER_READY_TIMEOUT_SECS`: Ready timeout (default: 60)
 	/// - `LOOM_SERVER_WEAVER_WEBHOOKS`: Webhooks JSON (default: [])
+	/// - `LOOM_DEFAULT_LOCALE`: Default locale for emails (default: en)
 	pub fn from_env() -> Result<Self, ConfigError> {
 		let host = env::var("LOOM_SERVER_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
 
@@ -63,6 +84,9 @@ impl ServerConfig {
 
 		let database_url =
 			env::var("LOOM_SERVER_DATABASE_URL").unwrap_or_else(|_| "sqlite:./loom.db".to_string());
+
+		let base_url = env::var("LOOM_SERVER_BASE_URL")
+			.unwrap_or_else(|_| format!("http://localhost:{}", port));
 
 		let log_level = env::var("LOOM_SERVER_LOG_LEVEL")
 			.unwrap_or_else(|_| "info,tower_http::trace=debug".to_string());
@@ -104,10 +128,32 @@ impl ServerConfig {
 		let weaver_webhooks =
 			env::var("LOOM_SERVER_WEAVER_WEBHOOKS").unwrap_or_else(|_| "[]".to_string());
 
+		let smtp_host = env::var("LOOM_SERVER_SMTP_HOST").ok();
+
+		let smtp_port = env::var("LOOM_SERVER_SMTP_PORT")
+			.unwrap_or_else(|_| "587".to_string())
+			.parse::<u16>()
+			.map_err(|e| ConfigError::InvalidValue("smtp_port".into(), e.to_string()))?;
+
+		let smtp_username = env::var("LOOM_SERVER_SMTP_USERNAME").ok();
+		let smtp_password = env::var("LOOM_SERVER_SMTP_PASSWORD").ok();
+		let smtp_from_address = env::var("LOOM_SERVER_SMTP_FROM_ADDRESS").ok();
+
+		let smtp_from_name =
+			env::var("LOOM_SERVER_SMTP_FROM_NAME").unwrap_or_else(|_| "Loom".to_string());
+
+		let smtp_use_tls = env::var("LOOM_SERVER_SMTP_USE_TLS")
+			.map(|v| v.eq_ignore_ascii_case("true") || v == "1")
+			.unwrap_or(true);
+
+		let default_locale =
+			env::var("LOOM_DEFAULT_LOCALE").unwrap_or_else(|_| "en".to_string());
+
 		Ok(Self {
 			host,
 			port,
 			database_url,
+			base_url,
 			log_level,
 			bin_dir,
 			weaver_enabled,
@@ -118,6 +164,14 @@ impl ServerConfig {
 			weaver_max_concurrent,
 			weaver_ready_timeout_secs,
 			weaver_webhooks,
+			smtp_host,
+			smtp_port,
+			smtp_username,
+			smtp_password,
+			smtp_from_address,
+			smtp_from_name,
+			smtp_use_tls,
+			default_locale,
 		})
 	}
 
@@ -133,6 +187,7 @@ impl Default for ServerConfig {
 			host: "0.0.0.0".to_string(),
 			port: 8080,
 			database_url: "sqlite:./loom.db".to_string(),
+			base_url: "http://localhost:8080".to_string(),
 			log_level: "info,tower_http::trace=debug".to_string(),
 			bin_dir: "./bin".to_string(),
 			weaver_enabled: false,
@@ -143,6 +198,14 @@ impl Default for ServerConfig {
 			weaver_max_concurrent: 64,
 			weaver_ready_timeout_secs: 60,
 			weaver_webhooks: "[]".to_string(),
+			smtp_host: None,
+			smtp_port: 587,
+			smtp_username: None,
+			smtp_password: None,
+			smtp_from_address: None,
+			smtp_from_name: "Loom".to_string(),
+			smtp_use_tls: true,
+			default_locale: "en".to_string(),
 		}
 	}
 }

@@ -4,33 +4,57 @@
 //! HTTP API routes and handlers for thread operations.
 
 use axum::{
-	routing::{delete, get, post, put},
+	middleware::from_fn_with_state,
+	routing::{delete, get, patch, post, put},
 	Router,
 };
-use loom_weaver::{WeaverConfig, Provisioner, WebhookConfig, WebhookDispatcher};
+
+use crate::abac_middleware::RequireRole;
+use loom_auth_github::{GitHubOAuthClient, GitHubOAuthConfig};
+use loom_auth_google::{GoogleOAuthClient, GoogleOAuthConfig};
+use loom_auth_okta::{OktaOAuthClient, OktaOAuthConfig};
+use loom_geoip::GeoIpService;
 use loom_github_app::{GithubAppClient, GithubAppConfig};
 use loom_google_cse::CseClient;
 use loom_k8s::KubeClient;
 use loom_llm_service::LlmService;
+use loom_smtp::SmtpClient;
+use loom_weaver::{Provisioner, WeaverConfig, WebhookConfig, WebhookDispatcher};
 use std::sync::Arc;
 use tower_http::services::{ServeDir, ServeFile};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::{
+	auth_middleware::auth_layer,
 	config::ServerConfig,
-	db::ThreadRepository,
+	db::{
+		ApiKeyRepository, AuditRepository, OrgRepository, SessionRepository, ShareRepository,
+		TeamRepository, ThreadRepository, UserRepository,
+	},
 	llm_proxy,
+	oauth_state::OAuthStateStore,
 	query_metrics::QueryMetrics,
 	query_tracing::QueryTraceStore,
 	routes,
 	server_query::{self, ServerQueryManager},
 };
+use sqlx::SqlitePool;
 
 /// Application state shared across handlers.
 #[derive(Clone)]
 pub struct AppState {
 	pub repo: Arc<ThreadRepository>,
+	pub user_repo: Arc<UserRepository>,
+	pub session_repo: Arc<SessionRepository>,
+	pub org_repo: Arc<OrgRepository>,
+	pub team_repo: Arc<TeamRepository>,
+	pub api_key_repo: Arc<ApiKeyRepository>,
+	pub audit_repo: Arc<AuditRepository>,
+	pub share_repo: Arc<ShareRepository>,
+	pub auth_config: loom_auth::middleware::AuthConfig,
+	pub dev_user: Option<loom_auth::User>,
+	pub base_url: String,
 	pub cse_client: Option<Arc<CseClient>>,
 	pub github_client: Option<Arc<GithubAppClient>>,
 	pub llm_service: Option<Arc<LlmService>>,
@@ -39,10 +63,30 @@ pub struct AppState {
 	pub trace_store: QueryTraceStore,
 	pub provisioner: Option<Arc<Provisioner>>,
 	pub webhook_dispatcher: Option<Arc<WebhookDispatcher>>,
+	pub smtp_client: Option<Arc<SmtpClient>>,
+	pub github_oauth: Option<Arc<GitHubOAuthClient>>,
+	pub google_oauth: Option<Arc<GoogleOAuthClient>>,
+	pub okta_oauth: Option<Arc<OktaOAuthClient>>,
+	pub oauth_state_store: OAuthStateStore,
+	pub default_locale: String,
+	pub geoip_service: Option<Arc<GeoIpService>>,
 }
 
 /// Creates the application state, initializing optional components.
-pub async fn create_app_state(repo: Arc<ThreadRepository>, config: &ServerConfig) -> AppState {
+pub async fn create_app_state(
+	pool: SqlitePool,
+	repo: Arc<ThreadRepository>,
+	config: &ServerConfig,
+) -> AppState {
+	// Create auth repositories
+	let user_repo = Arc::new(UserRepository::new(pool.clone()));
+	let session_repo = Arc::new(SessionRepository::new(pool.clone()));
+	let org_repo = Arc::new(OrgRepository::new(pool.clone()));
+	let team_repo = Arc::new(TeamRepository::new(pool.clone()));
+	let api_key_repo = Arc::new(ApiKeyRepository::new(pool.clone()));
+	let audit_repo = Arc::new(AuditRepository::new(pool.clone()));
+	let share_repo = Arc::new(ShareRepository::new(pool));
+	let auth_config = loom_auth::middleware::AuthConfig::from_env();
 	let cse_client = match (
 		std::env::var("LOOM_SERVER_GOOGLE_CSE_API_KEY"),
 		std::env::var("LOOM_SERVER_GOOGLE_CSE_SEARCH_ENGINE_ID"),
@@ -95,8 +139,51 @@ pub async fn create_app_state(repo: Arc<ThreadRepository>, config: &ServerConfig
 	// Initialize weaver provisioner if enabled
 	let (provisioner, webhook_dispatcher) = initialize_weaver_provisioner(config).await;
 
+	// Initialize SMTP client if configured
+	let smtp_client = initialize_smtp_client(config);
+
+	// Initialize OAuth clients
+	let github_oauth = initialize_github_oauth();
+	let google_oauth = initialize_google_oauth();
+	let okta_oauth = initialize_okta_oauth();
+	let oauth_state_store = OAuthStateStore::new();
+
+	// Initialize GeoIP service
+	let geoip_service = GeoIpService::try_from_env().map(Arc::new);
+
+	// Create or fetch dev user if dev mode is enabled
+	let dev_user = if auth_config.dev_mode {
+		tracing::warn!("═══════════════════════════════════════════════════════════════════");
+		tracing::warn!("⚠️  DEV MODE AUTHENTICATION ENABLED - DO NOT USE IN PRODUCTION ⚠️");
+		tracing::warn!("All unauthenticated requests will be auto-authenticated as admin!");
+		tracing::warn!("Set LOOM_ENV=production to prevent accidental production use.");
+		tracing::warn!("═══════════════════════════════════════════════════════════════════");
+		match create_or_get_dev_user(&user_repo).await {
+			Ok(user) => {
+				tracing::info!(user_id = %user.id, "Dev mode enabled, using dev user");
+				Some(user)
+			}
+			Err(e) => {
+				tracing::error!(error = %e, "Failed to create dev user, dev mode disabled");
+				None
+			}
+		}
+	} else {
+		None
+	};
+
 	AppState {
 		repo,
+		user_repo,
+		session_repo,
+		org_repo,
+		team_repo,
+		api_key_repo,
+		audit_repo,
+		share_repo,
+		auth_config,
+		dev_user,
+		base_url: config.base_url.clone(),
 		cse_client,
 		github_client,
 		llm_service,
@@ -105,7 +192,54 @@ pub async fn create_app_state(repo: Arc<ThreadRepository>, config: &ServerConfig
 		trace_store: QueryTraceStore::default(),
 		provisioner,
 		webhook_dispatcher,
+		smtp_client,
+		github_oauth,
+		google_oauth,
+		okta_oauth,
+		oauth_state_store,
+		default_locale: config.default_locale.clone(),
+		geoip_service,
 	}
+}
+
+/// Create or get the development user for dev mode.
+async fn create_or_get_dev_user(
+	user_repo: &Arc<UserRepository>,
+) -> Result<loom_auth::User, crate::error::ServerError> {
+	let email = "dev@localhost";
+	let display_name = "Development User";
+
+	// Check if dev user already exists
+	if let Some(mut user) = user_repo.get_user_by_email(email).await? {
+		// Ensure dev user has admin/support privileges
+		if !user.is_system_admin || !user.is_support {
+			user.is_system_admin = true;
+			user.is_support = true;
+			user_repo.update_user(&user).await?;
+		}
+		return Ok(user);
+	}
+
+	// Create new dev user with full privileges
+	let now = chrono::Utc::now();
+	let user = loom_auth::User {
+		id: loom_auth::UserId::generate(),
+		display_name: display_name.to_string(),
+		primary_email: Some(email.to_string()),
+		avatar_url: None,
+		email_visible: true,
+		is_system_admin: true,
+		is_support: true,
+		is_auditor: false,
+		created_at: now,
+		updated_at: now,
+		deleted_at: None,
+		locale: None,
+	};
+
+	user_repo.create_user(&user).await?;
+	tracing::info!(user_id = %user.id, email = %email, "Created dev user");
+	Ok(user)
 }
 
 /// Initialize the weaver provisioner and webhook dispatcher if enabled.
@@ -168,6 +302,90 @@ async fn initialize_weaver_provisioner(
 	(Some(provisioner), Some(webhook_dispatcher))
 }
 
+/// Initialize the SMTP client if configured.
+fn initialize_smtp_client(config: &ServerConfig) -> Option<Arc<SmtpClient>> {
+	let (host, from_address) = match (&config.smtp_host, &config.smtp_from_address) {
+		(Some(h), Some(f)) if !h.is_empty() && !f.is_empty() => (h.clone(), f.clone()),
+		_ => {
+			tracing::info!("SMTP not configured (smtp_host and smtp_from_address required)");
+			return None;
+		}
+	};
+
+	let smtp_config = loom_smtp::SmtpConfig {
+		host,
+		port: config.smtp_port,
+		username: config.smtp_username.clone(),
+		password: config.smtp_password.clone().map(loom_secret::SecretString::new),
+		from_address,
+		from_name: config.smtp_from_name.clone(),
+		use_tls: config.smtp_use_tls,
+	};
+
+	match SmtpClient::new(smtp_config) {
+		Ok(client) => {
+			tracing::info!("SMTP client configured");
+			Some(Arc::new(client))
+		}
+		Err(e) => {
+			tracing::warn!(error = %e, "Failed to create SMTP client");
+			None
+		}
+	}
+}
+
+/// Initialize the GitHub OAuth client if configured.
+fn initialize_github_oauth() -> Option<Arc<GitHubOAuthClient>> {
+	match GitHubOAuthConfig::from_env() {
+		Ok(config) => {
+			tracing::info!("GitHub OAuth configured");
+			Some(Arc::new(GitHubOAuthClient::new(config)))
+		}
+		Err(_) => {
+			tracing::info!("GitHub OAuth not configured");
+			None
+		}
+	}
+}
+
+/// Initialize the Google OAuth client if configured.
+fn initialize_google_oauth() -> Option<Arc<GoogleOAuthClient>> {
+	match GoogleOAuthConfig::from_env() {
+		Ok(config) => {
+			tracing::info!("Google OAuth configured");
+			Some(Arc::new(GoogleOAuthClient::new(config)))
+		}
+		Err(_) => {
+			tracing::info!("Google OAuth not configured");
+			None
+		}
+	}
+}
+
+/// Initialize the Okta OAuth client if configured.
+fn initialize_okta_oauth() -> Option<Arc<OktaOAuthClient>> {
+	match OktaOAuthConfig::from_env() {
+		Ok(config) => {
+			tracing::info!("Okta OAuth configured");
+			Some(Arc::new(OktaOAuthClient::new(config)))
+		}
+		Err(_) => {
+			tracing::info!("Okta OAuth not configured");
+			None
+		}
+	}
+}
+
+fn admin_routes(audit_repo: Arc<AuditRepository>) -> Router<AppState> {
+	Router::new()
+		.route("/users", get(routes::admin::list_users))
+		.route("/users/{id}/roles", patch(routes::admin::update_user_roles))
+		.route("/users/{id}/impersonate", post(routes::admin::start_impersonation))
+		.route("/impersonate/stop", post(routes::admin::stop_impersonation))
+		.route("/audit-logs", get(routes::admin::list_audit_logs))
+		.route_layer(RequireRole::admin().with_audit(audit_repo))
+}
+
 /// Create the API router with all routes.
 pub fn create_router(state: AppState) -> Router {
 	let bin_dir = std::env::var("LOOM_SERVER_BIN_DIR").unwrap_or_else(|_| "./bin".to_string());
@@ -185,9 +403,75 @@ pub fn create_router(state: AppState) -> Router {
             post(routes::threads::update_thread_visibility),
         )
         .route("/api/threads", get(routes::threads::list_threads))
-        // Auth stub routes
-        .route("/api/auth/login", post(routes::auth::login_stub))
-        .route("/api/auth/logout", post(routes::auth::logout_stub))
+        // Share link routes (authenticated)
+        .route("/api/threads/{id}/share", post(routes::share::create_share_link))
+        .route("/api/threads/{id}/share", delete(routes::share::revoke_share_link))
+        // Support access routes (authenticated)
+        .route("/api/threads/{id}/support-access/request", post(routes::share::request_support_access))
+        .route("/api/threads/{id}/support-access/approve", post(routes::share::approve_support_access))
+        .route("/api/threads/{id}/support-access", delete(routes::share::revoke_support_access))
+        // Public shared thread access (no auth required)
+        .route("/api/threads/{id}/share/{token}", get(routes::share::get_shared_thread))
+        // Auth routes
+        .route("/api/auth/providers", get(routes::auth::get_providers))
+        .route("/api/auth/me", get(routes::auth::get_current_user))
+        .route("/api/auth/logout", post(routes::auth::logout))
+        .route("/api/auth/magic-link", post(routes::auth::request_magic_link))
+        .route("/api/auth/magic-link/verify", get(routes::auth::verify_magic_link))
+        .route("/api/auth/device/start", post(routes::auth::device_start))
+        .route("/api/auth/device/poll", post(routes::auth::device_poll))
+        .route("/api/auth/device/complete", post(routes::auth::device_complete))
+        // OAuth routes
+        .route("/api/auth/login/github", get(routes::auth::login_github))
+        .route("/api/auth/callback/github", get(routes::auth::callback_github))
+        .route("/api/auth/login/google", get(routes::auth::login_google))
+        .route("/api/auth/callback/google", get(routes::auth::callback_google))
+        .route("/api/auth/login/okta", get(routes::auth::login_okta))
+        .route("/api/auth/callback/okta", get(routes::auth::callback_okta))
+        // Session routes
+        .route("/api/sessions", get(routes::sessions::list_sessions))
+        .route("/api/sessions/{id}", delete(routes::sessions::revoke_session))
+        // Organization routes
+        .route("/api/orgs", get(routes::orgs::list_orgs))
+        .route("/api/orgs", post(routes::orgs::create_org))
+        .route("/api/orgs/{id}", get(routes::orgs::get_org))
+        .route("/api/orgs/{id}", axum::routing::patch(routes::orgs::update_org))
+        .route("/api/orgs/{id}", delete(routes::orgs::delete_org))
+        .route("/api/orgs/{id}/members", get(routes::orgs::list_org_members))
+        .route("/api/orgs/{id}/members", post(routes::orgs::add_org_member))
+        .route("/api/orgs/{org_id}/members/{user_id}", delete(routes::orgs::remove_org_member))
+        // Team routes
+        .route("/api/orgs/{org_id}/teams", get(routes::teams::list_teams))
+        .route("/api/orgs/{org_id}/teams", post(routes::teams::create_team))
+        .route("/api/orgs/{org_id}/teams/{team_id}", get(routes::teams::get_team))
+        .route("/api/orgs/{org_id}/teams/{team_id}", axum::routing::patch(routes::teams::update_team))
+        .route("/api/orgs/{org_id}/teams/{team_id}", delete(routes::teams::delete_team))
+        .route("/api/orgs/{org_id}/teams/{team_id}/members", get(routes::teams::list_team_members))
+        .route("/api/orgs/{org_id}/teams/{team_id}/members", post(routes::teams::add_team_member))
+        .route("/api/orgs/{org_id}/teams/{team_id}/members/{user_id}", delete(routes::teams::remove_team_member))
+        // API key routes
+        .route("/api/orgs/{org_id}/api-keys", get(routes::api_keys::list_api_keys))
+        .route("/api/orgs/{org_id}/api-keys", post(routes::api_keys::create_api_key))
+        .route("/api/orgs/{org_id}/api-keys/{id}", delete(routes::api_keys::revoke_api_key))
+        .route("/api/orgs/{org_id}/api-keys/{id}/usage", get(routes::api_keys::get_api_key_usage))
+        // Invitation routes
+        .route("/api/orgs/{org_id}/invitations", get(routes::invitations::list_invitations))
+        .route("/api/orgs/{org_id}/invitations", post(routes::invitations::create_invitation))
+        .route("/api/orgs/{org_id}/invitations/{id}", delete(routes::invitations::cancel_invitation))
+        .route("/api/invitations/accept", post(routes::invitations::accept_invitation))
+        .route("/api/invitations/{token}", get(routes::invitations::get_invitation))
+        // Join request routes
+        .route("/api/orgs/{org_id}/join-requests", get(routes::invitations::list_join_requests))
+        .route("/api/orgs/{org_id}/join-requests", post(routes::invitations::create_join_request))
+        .route("/api/orgs/{org_id}/join-requests/{request_id}/approve", post(routes::invitations::approve_join_request))
+        .route("/api/orgs/{org_id}/join-requests/{request_id}/reject", post(routes::invitations::reject_join_request))
+        // User routes
+        .route("/api/users/{id}", get(routes::users::get_user_profile))
+        .route("/api/users/me", axum::routing::patch(routes::users::update_current_user))
+        .route("/api/users/me/delete", post(routes::users::request_account_deletion))
+        .route("/api/users/me/restore", post(routes::users::restore_account))
+        // Admin routes (nested with role-based authorization layer)
+        .nest("/api/admin", admin_routes(state.audit_repo.clone()))
         // Health and metrics routes
         .route("/health", get(routes::health::health_check))
         .route("/metrics", get(routes::health::prometheus_metrics))
@@ -238,6 +522,10 @@ pub fn create_router(state: AppState) -> Router {
         .route("/api/debug/query-traces/{trace_id}", get(routes::debug::get_query_trace))
         .route("/api/debug/query-traces", get(routes::debug::list_query_traces))
         .route("/api/debug/query-traces/stats", get(routes::debug::get_trace_stats))
+        // WebSocket endpoint (Phase 3)
+        .route("/v1/ws/sessions/{session_id}", get(crate::websocket::handler::ws_upgrade_handler))
+        // Apply auth middleware to all routes
+        .layer(from_fn_with_state(state.clone(), auth_layer))
         .with_state(state.clone())
         // Bin directory endpoints - use fallback to avoid route conflict
         .nest_service(
@@ -289,8 +577,9 @@ mod tests {
 		let db_path = dir.path().join("test.db");
 		let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 		let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
+		let pool = repo.pool().clone();
 		let config = ServerConfig::default();
-		let state = create_app_state(repo, &config).await;
+		let state = create_app_state(pool, repo, &config).await;
 		(create_router(state), dir)
 	}
 
@@ -452,23 +741,7 @@ mod tests {
 	}
 
 	#[tokio::test]
-	async fn test_login_stub() {
-		let (app, _dir) = create_test_app().await;
-		let response = app
-			.oneshot(
-				Request::builder()
-					.method("POST")
-					.uri("/api/auth/login")
-					.body(Body::empty())
-					.unwrap(),
-			)
-			.await
-			.unwrap();
-		assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
-	}
-
-	#[tokio::test]
-	async fn test_logout_stub() {
+	async fn test_logout_requires_auth() {
 		let (app, _dir) = create_test_app().await;
 		let response = app
 			.oneshot(
@@ -480,7 +753,55 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
+		assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+	}
+
+	#[tokio::test]
+	async fn test_get_providers() {
+		let (app, _dir) = create_test_app().await;
+		let response = app
+			.oneshot(
+				Request::builder()
+					.method("GET")
+					.uri("/api/auth/providers")
+					.body(Body::empty())
+					.unwrap(),
+			)
+			.await
+			.unwrap();
+		assert_eq!(response.status(), StatusCode::OK);
+	}
+
+	#[tokio::test]
+	async fn test_get_current_user_unauthorized() {
+		let (app, _dir) = create_test_app().await;
+		let response = app
+			.oneshot(
+				Request::builder()
+					.method("GET")
+					.uri("/api/auth/me")
+					.body(Body::empty())
+					.unwrap(),
+			)
+			.await
+			.unwrap();
+		assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+	}
+
+	#[tokio::test]
+	async fn test_device_start() {
+		let (app, _dir) = create_test_app().await;
+		let response = app
+			.oneshot(
+				Request::builder()
+					.method("POST")
+					.uri("/api/auth/device/start")
+					.body(Body::empty())
+					.unwrap(),
+			)
+			.await
+			.unwrap();
+		assert_eq!(response.status(), StatusCode::OK);
 	}
 
 	#[tokio::test]
@@ -776,8 +1097,9 @@ mod tests {
 		let db_path = dir.path().join("test.db");
 		let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 		let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
+		let pool = repo.pool().clone();
 		let config = ServerConfig::default();
-		let state = create_app_state(repo, &config).await;
+		let state = create_app_state(pool, repo, &config).await;
 
 		// Create and store a trace directly
 		let mut tracer = QueryTracer::new(

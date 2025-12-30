@@ -58,6 +58,10 @@ pub enum ServerError {
 	#[error("Forbidden: {0}")]
 	Forbidden(String),
 
+	/// Not implemented (placeholder for future functionality).
+	#[error("Not implemented: {0}")]
+	NotImplemented(String),
+
 	/// Weaver provisioner error.
 	#[error("Provisioner error: {0}")]
 	Provisioner(#[from] loom_weaver::ProvisionerError),
@@ -197,6 +201,15 @@ impl IntoResponse for ServerError {
 					},
 				)
 			}
+			ServerError::NotImplemented(msg) => (
+				StatusCode::NOT_IMPLEMENTED,
+				ErrorResponse {
+					error: "not_implemented".to_string(),
+					message: msg.clone(),
+					server_version: None,
+					client_version: None,
+				},
+			),
 			ServerError::Provisioner(e) => {
 				use loom_weaver::ProvisionerError;
 				match e {
