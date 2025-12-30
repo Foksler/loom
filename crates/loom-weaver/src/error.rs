@@ -26,6 +26,10 @@ pub enum ProvisionerError {
     #[error("Weaver timed out waiting for ready state: {id}")]
     WeaverTimeout { id: String },
 
+    /// Weaver is not in Running state
+    #[error("Weaver not running: {id} (status: {status})")]
+    WeaverNotRunning { id: String, status: String },
+
     /// Kubernetes error
     #[error(transparent)]
     K8sError(#[from] loom_k8s::K8sError),

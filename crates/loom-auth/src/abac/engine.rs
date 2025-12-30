@@ -12,7 +12,7 @@
 //! All policy decisions are pure functions with no side effects, making them
 //! easy to test and reason about.
 
-use super::policies::{llm, org, thread};
+use super::policies::{llm, org, thread, weaver};
 use super::types::{Action, ResourceAttrs, ResourceType, SubjectAttrs};
 use tracing::instrument;
 
@@ -58,6 +58,7 @@ pub fn is_allowed(subject: &SubjectAttrs, action: Action, resource: &ResourceAtt
         ResourceType::Tool => llm::evaluate_tool(subject, action, resource),
         ResourceType::Workspace => evaluate_workspace(subject, action, resource),
         ResourceType::User => evaluate_user(subject, action, resource),
+        ResourceType::Weaver => weaver::evaluate(subject, action, resource),
     }
 }
 

@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use futures::StreamExt;
 use k8s_openapi::api::core::v1::{Namespace, Pod};
 use kube::{
-	api::{Api, DeleteParams, ListParams, LogParams, PostParams},
+	api::{Api, AttachParams, DeleteParams, ListParams, LogParams, PostParams},
 	Client,
 };
 use tokio_util::compat::FuturesAsyncReadCompatExt;
@@ -13,7 +13,7 @@ use tracing::debug;
 
 use crate::client::K8sClient;
 use crate::error::K8sError;
-use crate::types::{LogOptions, LogStream};
+use crate::types::{AttachedProcess, LogOptions, LogStream};
 
 /// Production K8s client implementation using the kube crate.
 pub struct KubeClient {
@@ -116,9 +116,47 @@ impl K8sClient for KubeClient {
 
 		let compat_stream = stream.compat();
 		let lines_stream = tokio_util::io::ReaderStream::new(compat_stream);
-		let mapped = lines_stream.map(|result| {
-			result.map_err(std::io::Error::other)
-		});
+		let mapped = lines_stream.map(|result| result.map_err(std::io::Error::other));
 		Ok(Box::pin(mapped))
+	}
+
+	async fn exec_attach(
+		&self,
+		name: &str,
+		namespace: &str,
+		container: &str,
+	) -> Result<AttachedProcess, K8sError> {
+		let pods: Api<Pod> = Api::namespaced(self.client.clone(), namespace);
+		let ap = AttachParams {
+			container: Some(container.to_string()),
+			stdin: true,
+			stdout: true,
+			stderr: false,
+			tty: true,
+			..Default::default()
+		};
+
+		let mut attached = pods.attach(name, &ap).await.map_err(|e| match e {
+			kube::Error::Api(ref err) if err.code == 404 => K8sError::PodNotFound { name: name.into() },
+			_ => K8sError::AttachError {
+				message: e.to_string(),
+			},
+		})?;
+
+		let stdin = attached
+			.stdin()
+			.ok_or_else(|| K8sError::AttachError {
+				message: "stdin not available".into(),
+			})?;
+		let stdout = attached
+			.stdout()
+			.ok_or_else(|| K8sError::AttachError {
+				message: "stdout not available".into(),
+			})?;
+
+		Ok(AttachedProcess {
+			stdin: Box::pin(stdin),
+			stdout: Box::pin(stdout),
+		})
 	}
 }

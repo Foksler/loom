@@ -12,8 +12,8 @@ use k8s_openapi::api::core::v1::Capabilities;
 use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
 use loom_k8s::{
-    Container, EnvVar, K8sClient, LogOptions, LogStream, Pod, PodSpec, ResourceRequirements,
-    SecurityContext,
+    AttachedProcess, Container, EnvVar, K8sClient, LogOptions, LogStream, Pod, PodSpec,
+    ResourceRequirements, SecurityContext,
 };
 
 use crate::config::WeaverConfig;
@@ -22,6 +22,7 @@ use crate::types::{Weaver, WeaverId, WeaverStatus, CleanupResult, CreateWeaverRe
 
 const MANAGED_LABEL: &str = "loom.dev/managed";
 const WEAVER_ID_LABEL: &str = "loom.dev/weaver-id";
+const LABEL_OWNER_USER_ID: &str = "loom.dev/owner-user-id";
 const TAGS_ANNOTATION: &str = "loom.dev/tags";
 const LIFETIME_ANNOTATION: &str = "loom.dev/lifetime-hours";
 const CONTAINER_NAME: &str = "weaver";
@@ -98,6 +99,7 @@ impl Provisioner {
             created_at,
             lifetime_hours,
             age_hours: 0.0,
+            owner_user_id: req.owner_user_id.unwrap_or_default(),
         })
     }
 
@@ -216,6 +218,15 @@ impl Provisioner {
         Ok(weavers)
     }
 
+    /// List weavers owned by a specific user.
+    pub async fn list_weavers_for_user(
+        &self,
+        user_id: &str,
+    ) -> Result<Vec<Weaver>, ProvisionerError> {
+        let all = self.list_weavers(None).await?;
+        Ok(all.into_iter().filter(|w| w.owner_user_id == user_id).collect())
+    }
+
     /// Get a specific weaver by ID.
     pub async fn get_weaver(&self, id: &WeaverId) -> Result<Weaver, ProvisionerError> {
         let pod_name = id.as_k8s_name();
@@ -260,6 +271,27 @@ impl Provisioner {
 
         self.client
             .stream_logs(&pod_name, &self.config.namespace, CONTAINER_NAME, log_opts)
+            .await
+            .map_err(Into::into)
+    }
+
+    /// Attach to a weaver's container for interactive I/O.
+    ///
+    /// Returns an `AttachedProcess` with stdin/stdout streams for bidirectional
+    /// communication with the running container.
+    pub async fn attach_weaver(&self, id: &WeaverId) -> Result<AttachedProcess, ProvisionerError> {
+        let weaver = self.get_weaver(id).await?;
+
+        if weaver.status != WeaverStatus::Running {
+            return Err(ProvisionerError::WeaverNotRunning {
+                id: id.to_string(),
+                status: format!("{:?}", weaver.status),
+            });
+        }
+
+        let pod_name = id.as_k8s_name();
+        self.client
+            .exec_attach(&pod_name, &self.config.namespace, CONTAINER_NAME)
             .await
             .map_err(Into::into)
     }
@@ -316,6 +348,10 @@ fn build_pod_spec(
     let mut labels = BTreeMap::new();
     labels.insert(MANAGED_LABEL.to_string(), "true".to_string());
     labels.insert(WEAVER_ID_LABEL.to_string(), id.to_string());
+    labels.insert(
+        LABEL_OWNER_USER_ID.to_string(),
+        req.owner_user_id.clone().unwrap_or_default(),
+    );
 
     let mut annotations = BTreeMap::new();
     if !req.tags.is_empty() {
@@ -325,7 +361,7 @@ fn build_pod_spec(
     }
     annotations.insert(LIFETIME_ANNOTATION.to_string(), lifetime_hours.to_string());
 
-    let env_vars: Vec<EnvVar> = req
+    let mut env_vars: Vec<EnvVar> = req
         .env
         .iter()
         .map(|(k, v)| EnvVar {
@@ -334,6 +370,21 @@ fn build_pod_spec(
             value_from: None,
         })
         .collect();
+
+    if let Some(repo) = &req.repo {
+        env_vars.push(EnvVar {
+            name: "LOOM_REPO".to_string(),
+            value: Some(repo.clone()),
+            value_from: None,
+        });
+    }
+    if let Some(branch) = &req.branch {
+        env_vars.push(EnvVar {
+            name: "LOOM_BRANCH".to_string(),
+            value: Some(branch.clone()),
+            value_from: None,
+        });
+    }
 
     let mut limits = BTreeMap::new();
     limits.insert(
@@ -431,6 +482,11 @@ fn pod_to_weaver(pod: &Pod) -> Result<Weaver, ProvisionerError> {
         .and_then(|s| s.parse().ok())
         .unwrap_or(4);
 
+    let owner_user_id = labels
+        .get(LABEL_OWNER_USER_ID)
+        .cloned()
+        .unwrap_or_default();
+
     let status = map_pod_phase(pod);
 
     let created_at = metadata
@@ -456,6 +512,7 @@ fn pod_to_weaver(pod: &Pod) -> Result<Weaver, ProvisionerError> {
         created_at,
         lifetime_hours,
         age_hours,
+        owner_user_id,
     })
 }
 
@@ -500,6 +557,8 @@ mod tests {
             command: None,
             args: None,
             workdir: None,
+            repo: None,
+            branch: None,
         };
         let config = WeaverConfig::default();
 
@@ -553,6 +612,8 @@ mod tests {
             command: Some(vec!["/bin/sh".to_string(), "-c".to_string()]),
             args: Some(vec!["python worker.py".to_string()]),
             workdir: Some("/app".to_string()),
+            repo: None,
+            branch: None,
         };
         let config = WeaverConfig::default();
 
@@ -595,6 +656,8 @@ mod tests {
             command: None,
             args: None,
             workdir: None,
+            repo: None,
+            branch: None,
         };
         let config = WeaverConfig::default();
 

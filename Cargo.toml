@@ -84,7 +84,7 @@ chrono = { version = "0.4", features = ["serde"] }
 uuid7 = { version = "1", features = ["serde"] }
 
 # Kubernetes
-kube = { version = "0.98", features = ["runtime", "client", "derive"] }
+kube = { version = "0.98", features = ["runtime", "client", "derive", "ws"] }
 k8s-openapi = { version = "0.24", features = ["v1_32"] }
 
 # Cryptography

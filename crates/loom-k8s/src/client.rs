@@ -4,7 +4,7 @@
 use async_trait::async_trait;
 
 use crate::error::K8sError;
-use crate::types::{LogOptions, LogStream, Namespace, Pod};
+use crate::types::{AttachedProcess, LogOptions, LogStream, Namespace, Pod};
 
 /// Trait for K8s client operations.
 ///
@@ -40,4 +40,12 @@ pub trait K8sClient: Send + Sync {
 		container: &str,
 		opts: LogOptions,
 	) -> Result<LogStream, K8sError>;
+
+	/// Attach to a running container's stdin/stdout for interactive I/O.
+	async fn exec_attach(
+		&self,
+		name: &str,
+		namespace: &str,
+		container: &str,
+	) -> Result<AttachedProcess, K8sError>;
 }

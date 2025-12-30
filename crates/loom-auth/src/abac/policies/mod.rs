@@ -6,3 +6,4 @@
 pub mod llm;
 pub mod org;
 pub mod thread;
+pub mod weaver;

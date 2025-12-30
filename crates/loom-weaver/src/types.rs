@@ -62,22 +62,15 @@ pub enum WeaverStatus {
 /// A weaver instance with its current state.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Weaver {
-    /// Unique weaver identifier
     pub id: WeaverId,
-    /// Kubernetes Pod name
     pub pod_name: String,
-    /// Current weaver status
     pub status: WeaverStatus,
-    /// Container image
     pub image: String,
-    /// User-defined metadata tags
     pub tags: HashMap<String, String>,
-    /// When the weaver was created
     pub created_at: DateTime<Utc>,
-    /// Configured lifetime in hours
     pub lifetime_hours: u32,
-    /// Current age in hours
     pub age_hours: f64,
+    pub owner_user_id: String,
 }
 
 /// Resource limits for a weaver.
@@ -92,25 +85,21 @@ pub struct ResourceSpec {
 /// Request to create a new weaver.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateWeaverRequest {
-    /// Container image to run
     pub image: String,
-    /// Environment variables
     #[serde(default)]
     pub env: HashMap<String, String>,
-    /// Resource limits
     #[serde(default)]
     pub resources: ResourceSpec,
-    /// User-defined metadata tags
     #[serde(default)]
     pub tags: HashMap<String, String>,
-    /// TTL override in hours
     pub lifetime_hours: Option<u32>,
-    /// Override container ENTRYPOINT
     pub command: Option<Vec<String>>,
-    /// Override container CMD
     pub args: Option<Vec<String>>,
-    /// Override container WORKDIR
     pub workdir: Option<String>,
+    pub repo: Option<String>,
+    pub branch: Option<String>,
+    #[serde(default)]
+    pub owner_user_id: Option<String>,
 }
 
 /// Options for streaming weaver logs.

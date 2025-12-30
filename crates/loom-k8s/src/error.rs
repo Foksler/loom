@@ -23,6 +23,9 @@ pub enum K8sError {
 
 	#[error("Log stream error: {message}")]
 	StreamError { message: String },
+
+	#[error("Attach error: {message}")]
+	AttachError { message: String },
 }
 
 impl From<kube::Error> for K8sError {

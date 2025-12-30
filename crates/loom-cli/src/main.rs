@@ -58,6 +58,7 @@ use loom_tools::{
 use url::Url;
 
 mod version;
+mod weaver_client;
 
 // loom-auto-commit now re-exports loom-git types directly, so we can use CommandGitClient
 
@@ -85,12 +86,54 @@ struct Args {
 	#[arg(long, env = "LOOM_SERVER_URL", default_value = "http://localhost:8080")]
 	server_url: String,
 
+	/// Authentication token for weaver endpoints
+	#[arg(long, env = "LOOM_TOKEN")]
+	token: Option<String>,
+
 	/// LLM provider to use (anthropic or openai)
 	#[arg(short, long, env = "LOOM_LLM_PROVIDER", default_value = "anthropic")]
 	provider: String,
 
 	#[command(subcommand)]
 	command: Option<Command>,
+}
+
+#[derive(Subcommand, Debug)]
+enum WeaverCommand {
+	/// Create a new remote weaver session
+	New {
+		/// Container image to use
+		#[arg(long, short)]
+		image: Option<String>,
+		/// Git repository to clone (public https URL)
+		#[arg(long)]
+		repo: Option<String>,
+		/// Branch to checkout
+		#[arg(long)]
+		branch: Option<String>,
+		/// Environment variable (repeatable: -e KEY=VALUE)
+		#[arg(long, short = 'e', value_name = "KEY=VALUE")]
+		env: Vec<String>,
+		/// Lifetime in hours (default: 4, max: 48)
+		#[arg(long)]
+		ttl: Option<u32>,
+	},
+	/// Attach to a running weaver
+	Attach {
+		/// Weaver ID to attach to
+		weaver_id: String,
+	},
+	/// List running weavers
+	Ps {
+		/// Output as JSON
+		#[arg(long)]
+		json: bool,
+	},
+	/// Delete a weaver
+	Delete {
+		/// Weaver ID to delete
+		weaver_id: String,
+	},
 }
 
 #[derive(Subcommand, Debug)]
@@ -136,6 +179,34 @@ enum Command {
 	Update,
 	/// Run as ACP agent over stdio (for editor integration)
 	AcpAgent,
+	/// Create a new remote weaver session (alias: weaver new)
+	New {
+		/// Container image to use
+		#[arg(long, short)]
+		image: Option<String>,
+		/// Git repository to clone (public https URL)
+		#[arg(long)]
+		repo: Option<String>,
+		/// Branch to checkout
+		#[arg(long)]
+		branch: Option<String>,
+		/// Environment variable (repeatable: -e KEY=VALUE)
+		#[arg(long, short = 'e', value_name = "KEY=VALUE")]
+		env: Vec<String>,
+		/// Lifetime in hours (default: 4, max: 48)
+		#[arg(long)]
+		ttl: Option<u32>,
+	},
+	/// Attach to a running weaver (alias: weaver attach)
+	Attach {
+		/// Weaver ID to attach to
+		weaver_id: String,
+	},
+	/// Weaver management commands
+	Weaver {
+		#[command(subcommand)]
+		command: WeaverCommand,
+	},
 }
 
 impl From<&Args> for CliOverrides {
@@ -1116,6 +1187,56 @@ async fn main() -> Result<()> {
 			Ok(())
 		}
 		Some(Command::AcpAgent) => run_acp_agent(&config, &args, thread_store).await,
+		Some(Command::New {
+			image,
+			repo,
+			branch,
+			env,
+			ttl,
+		}) => {
+			run_weaver_new(
+				&args.server_url,
+				args.token.as_deref(),
+				image.clone(),
+				repo.clone(),
+				branch.clone(),
+				env.clone(),
+				*ttl,
+			)
+			.await
+		}
+		Some(Command::Attach { weaver_id }) => {
+			run_weaver_attach(&args.server_url, args.token.as_deref(), weaver_id).await
+		}
+		Some(Command::Weaver { command }) => match command {
+			WeaverCommand::New {
+				image,
+				repo,
+				branch,
+				env,
+				ttl,
+			} => {
+				run_weaver_new(
+					&args.server_url,
+					args.token.as_deref(),
+					image.clone(),
+					repo.clone(),
+					branch.clone(),
+					env.clone(),
+					*ttl,
+				)
+				.await
+			}
+			WeaverCommand::Attach { weaver_id } => {
+				run_weaver_attach(&args.server_url, args.token.as_deref(), weaver_id).await
+			}
+			WeaverCommand::Ps { json } => {
+				run_weaver_ps(&args.server_url, args.token.as_deref(), *json).await
+			}
+			WeaverCommand::Delete { weaver_id } => {
+				run_weaver_delete(&args.server_url, args.token.as_deref(), weaver_id).await
+			}
+		}
 		None => {
 			let thread = create_new_thread(&config, &args)?;
 			start_repl_session(&config, &args, thread_store, thread).await
@@ -1195,6 +1316,125 @@ fn setup_ctrlc_handler(shutdown_tx: watch::Sender<bool>) -> Result<()> {
 		eprintln!();
 	})
 	.context("failed to set Ctrl+C handler")?;
+
+	Ok(())
+}
+
+async fn run_weaver_new(
+	server_url: &str,
+	token: Option<&str>,
+	image: Option<String>,
+	repo: Option<String>,
+	branch: Option<String>,
+	env: Vec<String>,
+	ttl: Option<u32>,
+) -> Result<()> {
+	let mut client = weaver_client::WeaverClient::new(server_url)?;
+	if let Some(token) = token {
+		client = client.with_token(token.to_string());
+	}
+
+	let mut env_map = std::collections::HashMap::new();
+	for e in env {
+		if let Some((k, v)) = e.split_once('=') {
+			env_map.insert(k.to_string(), v.to_string());
+		}
+	}
+
+	let request = weaver_client::CreateWeaverRequest {
+		image: image.unwrap_or_else(|| "ghcr.io/ghuntley/loom:latest".to_string()),
+		env: env_map,
+		repo,
+		branch,
+		lifetime_hours: ttl,
+	};
+
+	println!("Creating weaver...");
+	let weaver = client.create_weaver(&request).await?;
+
+	println!("  ID:    {}", weaver.id);
+	println!("  Image: {}", weaver.image.unwrap_or_default());
+	println!("  TTL:   {} hours", weaver.lifetime_hours.unwrap_or(4));
+	println!();
+
+	println!("Attaching to weaver...");
+	client.attach_terminal(&weaver.id).await?;
+
+	println!("\n[detached from weaver {}]", weaver.id);
+	println!(
+		"Weaver still running. Reattach with: loom attach {}",
+		weaver.id
+	);
+
+	Ok(())
+}
+
+async fn run_weaver_ps(server_url: &str, token: Option<&str>, json: bool) -> Result<()> {
+	let mut client = weaver_client::WeaverClient::new(server_url)?;
+	if let Some(token) = token {
+		client = client.with_token(token.to_string());
+	}
+	let list = client.list_weavers().await?;
+
+	if json {
+		println!("{}", serde_json::to_string_pretty(&list.weavers)?);
+	} else if list.weavers.is_empty() {
+		println!("No weavers running.");
+	} else {
+		println!(
+			"{:<40} {:<30} {:<10} {:<8} {:<8}",
+			"ID", "IMAGE", "STATUS", "AGE", "TTL"
+		);
+		println!("{}", "-".repeat(96));
+		for w in &list.weavers {
+			let image = w.image.as_deref().unwrap_or("-");
+			let image_display = if image.len() > 28 {
+				format!("{}...", &image[..25])
+			} else {
+				image.to_string()
+			};
+			let age = w
+				.age_hours
+				.map(|h| format!("{h:.1}h"))
+				.unwrap_or_else(|| "-".to_string());
+			let ttl = w
+				.lifetime_hours
+				.map(|h| format!("{h}h"))
+				.unwrap_or_else(|| "-".to_string());
+			println!(
+				"{:<40} {:<30} {:<10} {:<8} {:<8}",
+				w.id, image_display, w.status, age, ttl
+			);
+		}
+	}
+
+	Ok(())
+}
+
+async fn run_weaver_delete(server_url: &str, token: Option<&str>, weaver_id: &str) -> Result<()> {
+	let mut client = weaver_client::WeaverClient::new(server_url)?;
+	if let Some(token) = token {
+		client = client.with_token(token.to_string());
+	}
+
+	println!("Deleting weaver {weaver_id}...");
+	client.delete_weaver(weaver_id).await?;
+	println!("Weaver deleted.");
+
+	Ok(())
+}
+
+async fn run_weaver_attach(server_url: &str, token: Option<&str>, weaver_id: &str) -> Result<()> {
+	let mut client = weaver_client::WeaverClient::new(server_url)?;
+	if let Some(token) = token {
+		client = client.with_token(token.to_string());
+	}
+
+	println!("[attaching to weaver {weaver_id}]");
+	client.attach_terminal(weaver_id).await?;
+
+	println!("\n[detached from weaver {weaver_id}]");
+	println!("Weaver still running. Reattach with: loom attach {weaver_id}");
 
 	Ok(())
 }

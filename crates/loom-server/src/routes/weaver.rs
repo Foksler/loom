@@ -7,21 +7,29 @@ use std::collections::HashMap;
 use std::convert::Infallible;
 
 use axum::{
-	extract::{Path, Query, State},
+	extract::{
+		ws::{Message, WebSocket, WebSocketUpgrade},
+		Path, Query, State,
+	},
 	http::StatusCode,
 	response::{sse::Event, IntoResponse, Sse},
 	routing::{delete, get, post},
 	Json, Router,
 };
 use chrono::{DateTime, Utc};
-use futures::stream::{Stream, StreamExt};
+use futures::{
+	stream::{Stream, StreamExt},
+	SinkExt,
+};
+use loom_auth::CurrentUser;
 use loom_weaver::{
-	Weaver, WeaverId, WeaverStatus, CreateWeaverRequest, LogStreamOptions, ResourceSpec,
+	CreateWeaverRequest, LogStreamOptions, ResourceSpec, Weaver, WeaverId, WeaverStatus,
 };
 use serde::{Deserialize, Serialize};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use utoipa::{IntoParams, ToSchema};
 
-use crate::{api::AppState, error::ServerError};
+use crate::{api::AppState, auth_middleware::RequireAuth, error::ServerError};
 
 // ============================================================================
 // Request/Response types
@@ -83,6 +91,9 @@ pub struct WeaverApiResponse {
 	/// Current age in hours
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub age_hours: Option<f64>,
+	/// Owner user ID
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub owner_user_id: Option<String>,
 }
 
 /// Weaver status for API responses.
@@ -108,6 +119,11 @@ impl From<WeaverStatus> for WeaverStatusApi {
 
 impl From<Weaver> for WeaverApiResponse {
 	fn from(weaver: Weaver) -> Self {
+		let owner_user_id = if weaver.owner_user_id.is_empty() {
+			None
+		} else {
+			Some(weaver.owner_user_id)
+		};
 		Self {
 			id: weaver.id.to_string(),
 			pod_name: weaver.pod_name,
@@ -117,6 +133,7 @@ impl From<Weaver> for WeaverApiResponse {
 			tags: Some(weaver.tags),
 			lifetime_hours: Some(weaver.lifetime_hours),
 			age_hours: Some(weaver.age_hours),
+			owner_user_id,
 		}
 	}
 }
@@ -182,6 +199,17 @@ pub struct CleanupApiResponse {
 }
 
 // ============================================================================
+// Helper functions
+// ============================================================================
+
+fn is_weaver_owner_or_admin(current_user: &CurrentUser, weaver: &Weaver) -> bool {
+	if current_user.user.is_system_admin() {
+		return true;
+	}
+	weaver.owner_user_id == current_user.user.id.to_string()
+}
+
+// ============================================================================
 // Route handlers
 // ============================================================================
 
@@ -202,6 +230,7 @@ pub struct CleanupApiResponse {
 #[axum::debug_handler]
 pub async fn create_weaver(
 	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
 	Json(request): Json<CreateWeaverApiRequest>,
 ) -> Result<impl IntoResponse, ServerError> {
 	let provisioner = state
@@ -209,7 +238,8 @@ pub async fn create_weaver(
 		.as_ref()
 		.ok_or_else(|| ServerError::Internal("Weaver provisioner not configured".to_string()))?;
 
-	tracing::info!(image = %request.image, "Creating weaver");
+	let actor_id = current_user.user.id.to_string();
+	tracing::info!(image = %request.image, actor_id = %actor_id, "Creating weaver");
 
 	let create_request = CreateWeaverRequest {
 		image: request.image,
@@ -223,11 +253,14 @@ pub async fn create_weaver(
 		command: request.command,
 		args: request.args,
 		workdir: request.workdir,
+		repo: None,
+		branch: None,
+		owner_user_id: Some(actor_id.clone()),
 	};
 
 	let weaver = provisioner.create_weaver(create_request).await?;
 
-	tracing::info!(weaver_id = %weaver.id, pod_name = %weaver.pod_name, "Weaver created");
+	tracing::info!(weaver_id = %weaver.id, pod_name = %weaver.pod_name, actor_id = %actor_id, "Weaver created");
 
 	Ok((StatusCode::CREATED, Json(WeaverApiResponse::from(weaver))))
 }
@@ -248,6 +281,7 @@ pub async fn create_weaver(
 #[axum::debug_handler]
 pub async fn list_weavers(
 	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
 	Query(params): Query<ListWeaversParams>,
 ) -> Result<impl IntoResponse, ServerError> {
 	let provisioner = state
@@ -257,7 +291,20 @@ pub async fn list_weavers(
 
 	let tag_filter = parse_tag_filter(params.tag);
 
-	let weavers = provisioner.list_weavers(tag_filter).await?;
+	let weavers = if current_user.user.is_system_admin() {
+		provisioner.list_weavers(tag_filter).await?
+	} else {
+		let user_id = current_user.user.id.to_string();
+		let all_weavers = provisioner.list_weavers_for_user(&user_id).await?;
+		if let Some(tags) = tag_filter {
+			all_weavers
+				.into_iter()
+				.filter(|w| tags.iter().all(|(k, v)| w.tags.get(k) == Some(v)))
+				.collect()
+		} else {
+			all_weavers
+		}
+	};
 	let count = weavers.len() as u32;
 
 	let response = ListWeaversApiResponse {
@@ -278,6 +325,7 @@ pub async fn list_weavers(
     responses(
         (status = 200, description = "Weaver details", body = WeaverApiResponse),
         (status = 401, description = "Unauthorized", body = crate::error::ErrorResponse),
+        (status = 403, description = "Forbidden", body = crate::error::ErrorResponse),
         (status = 404, description = "Weaver not found", body = crate::error::ErrorResponse),
         (status = 500, description = "Internal server error", body = crate::error::ErrorResponse)
     ),
@@ -287,6 +335,7 @@ pub async fn list_weavers(
 #[axum::debug_handler]
 pub async fn get_weaver(
 	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
 	Path(id): Path<String>,
 ) -> Result<impl IntoResponse, ServerError> {
 	let provisioner = state
@@ -299,6 +348,12 @@ pub async fn get_weaver(
 		.map_err(|_| ServerError::BadRequest(format!("Invalid weaver ID: {id}")))?;
 
 	let weaver = provisioner.get_weaver(&weaver_id).await?;
+
+	if !is_weaver_owner_or_admin(&current_user, &weaver) {
+		return Err(ServerError::Forbidden(
+			"You do not have permission to access this weaver".to_string(),
+		));
+	}
 
 	Ok(Json(WeaverApiResponse::from(weaver)))
 }
@@ -313,6 +368,7 @@ pub async fn get_weaver(
     responses(
         (status = 204, description = "Weaver deleted"),
         (status = 401, description = "Unauthorized", body = crate::error::ErrorResponse),
+        (status = 403, description = "Forbidden", body = crate::error::ErrorResponse),
         (status = 404, description = "Weaver not found", body = crate::error::ErrorResponse),
         (status = 500, description = "Internal server error", body = crate::error::ErrorResponse)
     ),
@@ -322,6 +378,7 @@ pub async fn get_weaver(
 #[axum::debug_handler]
 pub async fn delete_weaver(
 	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
 	Path(id): Path<String>,
 ) -> Result<impl IntoResponse, ServerError> {
 	let provisioner = state
@@ -333,11 +390,20 @@ pub async fn delete_weaver(
 		.parse()
 		.map_err(|_| ServerError::BadRequest(format!("Invalid weaver ID: {id}")))?;
 
-	tracing::info!(weaver_id = %id, "Deleting weaver");
+	let weaver = provisioner.get_weaver(&weaver_id).await?;
+
+	if !is_weaver_owner_or_admin(&current_user, &weaver) {
+		return Err(ServerError::Forbidden(
+			"You do not have permission to delete this weaver".to_string(),
+		));
+	}
+
+	let actor_id = current_user.user.id.to_string();
+	tracing::info!(weaver_id = %id, actor_id = %actor_id, "Deleting weaver");
 
 	provisioner.delete_weaver(&weaver_id).await?;
 
-	tracing::info!(weaver_id = %id, "Weaver deleted");
+	tracing::info!(weaver_id = %id, actor_id = %actor_id, "Weaver deleted");
 
 	Ok(StatusCode::NO_CONTENT)
 }
@@ -353,6 +419,7 @@ pub async fn delete_weaver(
     responses(
         (status = 200, description = "SSE log stream", content_type = "text/event-stream"),
         (status = 401, description = "Unauthorized", body = crate::error::ErrorResponse),
+        (status = 403, description = "Forbidden", body = crate::error::ErrorResponse),
         (status = 404, description = "Weaver not found", body = crate::error::ErrorResponse),
         (status = 500, description = "Internal server error", body = crate::error::ErrorResponse)
     ),
@@ -362,6 +429,7 @@ pub async fn delete_weaver(
 #[axum::debug_handler]
 pub async fn stream_logs(
 	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
 	Path(id): Path<String>,
 	Query(params): Query<LogStreamParams>,
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, ServerError> {
@@ -373,6 +441,14 @@ pub async fn stream_logs(
 	let weaver_id: WeaverId = id
 		.parse()
 		.map_err(|_| ServerError::BadRequest(format!("Invalid weaver ID: {id}")))?;
+
+	let weaver = provisioner.get_weaver(&weaver_id).await?;
+
+	if !is_weaver_owner_or_admin(&current_user, &weaver) {
+		return Err(ServerError::Forbidden(
+			"You do not have permission to access this weaver's logs".to_string(),
+		));
+	}
 
 	tracing::debug!(weaver_id = %id, tail = params.tail, timestamps = params.timestamps, "Starting log stream");
 
@@ -409,6 +485,7 @@ pub async fn stream_logs(
     responses(
         (status = 200, description = "Cleanup result", body = CleanupApiResponse),
         (status = 401, description = "Unauthorized", body = crate::error::ErrorResponse),
+        (status = 403, description = "Forbidden - system admin required", body = crate::error::ErrorResponse),
         (status = 500, description = "Internal server error", body = crate::error::ErrorResponse)
     ),
     tag = "weavers",
@@ -417,21 +494,30 @@ pub async fn stream_logs(
 #[axum::debug_handler]
 pub async fn trigger_cleanup(
 	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
 	Query(params): Query<CleanupParams>,
 ) -> Result<impl IntoResponse, ServerError> {
+	if !current_user.user.is_system_admin() {
+		return Err(ServerError::Forbidden(
+			"System admin access required for cleanup operations".to_string(),
+		));
+	}
+
 	let provisioner = state
 		.provisioner
 		.as_ref()
 		.ok_or_else(|| ServerError::Internal("Weaver provisioner not configured".to_string()))?;
 
+	let actor_id = current_user.user.id.to_string();
+
 	if params.dry_run {
-		tracing::info!("Performing dry-run cleanup check");
+		tracing::info!(actor_id = %actor_id, "Performing dry-run cleanup check");
 
 		let expired = provisioner.find_expired_weavers().await?;
 		let weaver_ids: Vec<String> = expired.iter().map(|w| w.id.to_string()).collect();
 		let count = weaver_ids.len() as u32;
 
-		tracing::info!(count = count, "Found expired weavers (dry run)");
+		tracing::info!(count = count, actor_id = %actor_id, "Found expired weavers (dry run)");
 
 		Ok(Json(CleanupApiResponse {
 			dry_run: true,
@@ -440,12 +526,12 @@ pub async fn trigger_cleanup(
 			count,
 		}))
 	} else {
-		tracing::info!("Triggering cleanup of expired weavers");
+		tracing::info!(actor_id = %actor_id, "Triggering cleanup of expired weavers");
 
 		let result = provisioner.cleanup_expired_weavers().await?;
 		let weaver_ids: Vec<String> = result.deleted.iter().map(|id| id.to_string()).collect();
 
-		tracing::info!(count = result.count, "Cleanup completed");
+		tracing::info!(count = result.count, actor_id = %actor_id, "Cleanup completed");
 
 		Ok(Json(CleanupApiResponse {
 			dry_run: false,
@@ -454,6 +540,123 @@ pub async fn trigger_cleanup(
 			count: result.count,
 		}))
 	}
+}
+
+/// GET /api/weaver/{id}/attach - WebSocket terminal attach.
+#[utoipa::path(
+    get,
+    path = "/api/weaver/{id}/attach",
+    params(
+        ("id" = String, Path, description = "Weaver ID")
+    ),
+    responses(
+        (status = 101, description = "WebSocket upgrade for terminal I/O"),
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden"),
+        (status = 404, description = "Weaver not found")
+    ),
+    tag = "weavers"
+)]
+pub async fn attach_weaver(
+	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
+	Path(id): Path<String>,
+	ws: WebSocketUpgrade,
+) -> Result<impl IntoResponse, ServerError> {
+	let provisioner = state
+		.provisioner
+		.as_ref()
+		.ok_or_else(|| ServerError::Internal("Weaver provisioner not configured".to_string()))?
+		.clone();
+
+	let weaver_id: WeaverId = id
+		.parse()
+		.map_err(|_| ServerError::BadRequest(format!("Invalid weaver ID: {id}")))?;
+
+	let weaver = provisioner
+		.get_weaver(&weaver_id)
+		.await
+		.map_err(|_| ServerError::NotFound(format!("Weaver not found: {id}")))?;
+
+	if !is_weaver_owner_or_admin(&current_user, &weaver) {
+		return Err(ServerError::Forbidden(
+			"You do not have permission to attach to this weaver".to_string(),
+		));
+	}
+
+	let actor_id = current_user.user.id.to_string();
+	tracing::info!(weaver_id = %id, actor_id = %actor_id, "WebSocket attach requested");
+
+	Ok(ws.on_upgrade(move |socket| handle_attach_websocket(socket, provisioner, weaver_id)))
+}
+
+async fn handle_attach_websocket(
+	socket: WebSocket,
+	provisioner: std::sync::Arc<loom_weaver::Provisioner>,
+	weaver_id: WeaverId,
+) {
+	if let Err(e) = handle_attach_websocket_inner(socket, provisioner, weaver_id).await {
+		tracing::error!(error = %e, "WebSocket attach error");
+	}
+}
+
+async fn handle_attach_websocket_inner(
+	socket: WebSocket,
+	provisioner: std::sync::Arc<loom_weaver::Provisioner>,
+	weaver_id: WeaverId,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+	let attached = provisioner.attach_weaver(&weaver_id).await?;
+	let loom_weaver::AttachedProcess { stdin, stdout } = attached;
+
+	let (mut ws_sender, mut ws_receiver) = socket.split();
+	let mut stdin = stdin;
+	let mut stdout = stdout;
+
+	let ws_to_pod = async {
+		while let Some(msg) = ws_receiver.next().await {
+			match msg {
+				Ok(Message::Binary(data)) => {
+					if stdin.write_all(&data).await.is_err() {
+						break;
+					}
+				}
+				Ok(Message::Text(text)) => {
+					if stdin.write_all(text.as_bytes()).await.is_err() {
+						break;
+					}
+				}
+				Ok(Message::Close(_)) | Err(_) => break,
+				_ => {}
+			}
+		}
+	};
+
+	let pod_to_ws = async {
+		let mut buf = [0u8; 4096];
+		loop {
+			match stdout.read(&mut buf).await {
+				Ok(0) => break,
+				Ok(n) => {
+					if ws_sender
+						.send(Message::Binary(buf[..n].to_vec().into()))
+						.await
+						.is_err()
+					{
+						break;
+					}
+				}
+				Err(_) => break,
+			}
+		}
+	};
+
+	tokio::select! {
+		_ = ws_to_pod => {}
+		_ = pod_to_ws => {}
+	}
+
+	tracing::debug!(weaver_id = %weaver_id, "WebSocket attach session ended");
+	Ok(())
 }
 
 // ============================================================================
@@ -468,6 +671,7 @@ pub fn weaver_routes(state: AppState) -> Router {
 		.route("/api/weaver/{id}", get(get_weaver))
 		.route("/api/weaver/{id}", delete(delete_weaver))
 		.route("/api/weaver/{id}/logs", get(stream_logs))
+		.route("/api/weaver/{id}/attach", get(attach_weaver))
 		.route("/api/weavers/cleanup", post(trigger_cleanup))
 		.with_state(state)
 }

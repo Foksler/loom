@@ -26,7 +26,7 @@ pub mod webhook;
 pub use cleanup::start_cleanup_task;
 pub use config::{WeaverConfig, WebhookConfig, WebhookEvent};
 pub use error::ProvisionerError;
-pub use loom_k8s::LogStream;
+pub use loom_k8s::{AttachedProcess, LogStream};
 pub use provisioner::Provisioner;
 pub use types::{
     Weaver, WeaverId, WeaverStatus, CleanupResult, CreateWeaverRequest, LogStreamOptions, ResourceSpec,

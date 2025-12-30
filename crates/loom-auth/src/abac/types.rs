@@ -199,6 +199,18 @@ impl ResourceAttrs {
         }
     }
 
+    /// Creates resource attributes for a weaver.
+    pub fn weaver(owner_user_id: UserId) -> Self {
+        Self {
+            resource_type: ResourceType::Weaver,
+            owner_user_id: Some(owner_user_id),
+            org_id: None,
+            team_id: None,
+            visibility: Visibility::Private,
+            is_shared_with_support: false,
+        }
+    }
+
     /// Builder: set org_id.
     pub fn with_org(mut self, org_id: OrgId) -> Self {
         self.org_id = Some(org_id);
@@ -236,6 +248,7 @@ pub enum ResourceType {
     User,
     ApiKey,
     Llm,
+    Weaver,
 }
 
 /// Actions that can be performed on resources.
