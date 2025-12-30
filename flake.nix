@@ -46,7 +46,11 @@
 
       packages.x86_64-linux = 
         let
-          pkgs = nixpkgs.legacyPackages.${system}.extend overlay;
+          pkgs = import nixpkgs {
+            inherit system;
+            config = { allowUnfree = true; };
+            overlays = [ overlay ];
+          };
           pkgsWithTools = pkgs.extend toolsOverlay;
         in
         {
