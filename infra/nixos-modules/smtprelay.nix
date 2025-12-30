@@ -114,8 +114,12 @@ in
         ''}
 
         ${optionalString (cfg.remoteAuthFile != null) ''
-          REMOTE_AUTH=$(cat ${cfg.remoteAuthFile})
-          ARGS+=("-remote_auth" "$REMOTE_AUTH")
+          REMOTE_CREDS=$(cat ${cfg.remoteAuthFile})
+          REMOTE_USER="''${REMOTE_CREDS%%:*}"
+          REMOTE_PASS="''${REMOTE_CREDS#*:}"
+          ARGS+=("-remote_auth" "plain")
+          ARGS+=("-remote_user" "$REMOTE_USER")
+          ARGS+=("-remote_pass" "$REMOTE_PASS")
         ''}
 
         ${optionalString (cfg.localAuthFile != null) ''
