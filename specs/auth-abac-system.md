@@ -256,7 +256,10 @@ Each session stores:
 
 2. CLI displays: "Visit https://loom.example/device and enter code: 123-456-789"
 
-3. User visits URL in browser, enters code, logs in via OAuth/magic link
+3. User visits URL in browser (/device?code=XXX)
+   → If not authenticated, redirected to /login?redirectTo=/device?code=XXX
+   → After login, user is returned to /device with the code preserved
+   → User submits code via POST /api/auth/device/complete (requires auth)
 
 4. CLI polls: POST /api/auth/device/poll { device_code }
    → Polling interval: 1 second
@@ -1099,7 +1102,8 @@ CREATE INDEX idx_audit_logs_event_type ON audit_logs(event_type);
 | GET | `/api/auth/magic-link/verify` | Verify magic link |
 | POST | `/api/auth/device/start` | Start device code flow |
 | POST | `/api/auth/device/poll` | Poll device code status |
-| GET | `/api/auth/device` | Device code entry page |
+| POST | `/api/auth/device/complete` | Complete device code (requires auth) |
+| GET | `/device` | Device code entry page (requires auth, redirects to login) |
 | POST | `/api/auth/logout` | Logout (invalidate session) |
 | GET | `/api/auth/me` | Get current user |
 
