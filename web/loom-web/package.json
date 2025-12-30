@@ -34,6 +34,7 @@
 		"@lingui/cli": "^4.7.0",
 		"@storybook/addon-a11y": "^8.0.0",
 		"@storybook/addon-essentials": "^8.0.0",
+		"@storybook/svelte": "^8.0.0",
 		"@storybook/svelte-vite": "^8.0.0",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",

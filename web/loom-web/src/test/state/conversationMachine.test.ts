@@ -11,38 +11,23 @@ import { conversationMachine } from '../../lib/state/conversationMachine';
 import type { Thread, AgentStateKind } from '../../lib/api/types';
 
 const AGENT_STATE_KINDS: AgentStateKind[] = [
-	'waiting_for_user_input',
-	'calling_llm',
-	'processing_llm_response',
-	'executing_tools',
-	'post_tools_hook',
+	'idle',
+	'thinking',
+	'streaming',
+	'tool_pending',
+	'tool_executing',
+	'waiting_input',
 	'error',
-	'shutting_down',
 ];
 
 function createMockThread(): Thread {
 	return {
 		id: 'T-test-' + Math.random().toString(36).slice(2),
-		version: 1,
+		title: null,
 		created_at: new Date().toISOString(),
 		updated_at: new Date().toISOString(),
-		last_activity_at: new Date().toISOString(),
-		workspace_root: null,
-		cwd: null,
-		loom_version: null,
-		provider: 'anthropic',
-		model: 'claude-sonnet-4-20250514',
-		visibility: 'organization',
-		is_private: false,
-		is_shared_with_support: false,
-		conversation: { messages: [] },
-		agent_state: {
-			kind: 'waiting_for_user_input',
-			retries: 0,
-			last_error: null,
-			pending_tool_calls: [],
-		},
-		metadata: { title: null, tags: [], is_pinned: false, extra: {} },
+		message_count: 0,
+		metadata: {},
 	};
 }
 
@@ -106,7 +91,7 @@ describe('conversationMachine', () => {
 	 * stuck with an unresponsive UI.
 	 *
 	 * **Invariant**: ∀ reachable loaded states s, after SHUTDOWN_REQUESTED,
-	 * machine state is 'shuttingDown' and context.currentAgentState is 'shutting_down'
+	 * machine state is 'shuttingDown' and context.currentAgentState is 'idle'
 	 */
 	test.prop([fc.array(conversationEventArb, { minLength: 0, maxLength: 20 })])(
 		'shutdown_always_succeeds_from_loaded_state',
@@ -131,8 +116,8 @@ describe('conversationMachine', () => {
 
 			const snapshot = actor.getSnapshot();
 			expect(snapshot.value).toBe('shuttingDown');
-			expect(snapshot.context.currentAgentState).toBe('shutting_down');
-		}
+			expect(snapshot.context.currentAgentState).toBe('idle');
+			}
 	);
 
 	/**
@@ -229,6 +214,6 @@ describe('conversationMachine', () => {
 
 		const snapshot = actor.getSnapshot();
 		expect(snapshot.value).toEqual({ loaded: 'waitingForUserInput' });
-		expect(snapshot.context.currentAgentState).toBe('waiting_for_user_input');
+		expect(snapshot.context.currentAgentState).toBe('waiting_input');
 	});
 });
