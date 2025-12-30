@@ -225,7 +225,8 @@
       port = 2525;
       fromAddress = "noreply@loom.ghuntley.com";
       fromName = "Loom";
-      useTLS = true;
+      # Local smtprelay doesn't support STARTTLS - TLS is used by smtprelay to upstream
+      useTLS = false;
     };
   };
 
