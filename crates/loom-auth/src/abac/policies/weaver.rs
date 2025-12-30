@@ -6,7 +6,12 @@
 use crate::abac::{Action, ResourceAttrs, SubjectAttrs};
 
 /// Evaluates weaver access policies.
-pub fn evaluate(subject: &SubjectAttrs, _action: Action, resource: &ResourceAttrs) -> bool {
+///
+/// Access rules:
+/// - System admins have full access to all weavers
+/// - Owners have full access to their own weavers
+/// - Support users have read-only access to all weavers (Read action only)
+pub fn evaluate(subject: &SubjectAttrs, action: Action, resource: &ResourceAttrs) -> bool {
 	if subject.is_system_admin() {
 		return true;
 	}
@@ -15,6 +20,10 @@ pub fn evaluate(subject: &SubjectAttrs, _action: Action, resource: &ResourceAttr
 		if subject.user_id == *owner_id {
 			return true;
 		}
+	}
+
+	if subject.is_support() && action == Action::Read {
+		return true;
 	}
 
 	false
@@ -65,5 +74,19 @@ mod tests {
 		assert!(evaluate(&subject, Action::Read, &resource));
 		assert!(evaluate(&subject, Action::Write, &resource));
 		assert!(evaluate(&subject, Action::Delete, &resource));
+	}
+
+	#[test]
+	fn support_has_read_only_access() {
+		use crate::GlobalRole;
+
+		let owner_id = test_user_id();
+		let mut subject = SubjectAttrs::new(test_user_id());
+		subject.global_roles.push(GlobalRole::Support);
+		let resource = ResourceAttrs::weaver(owner_id);
+
+		assert!(evaluate(&subject, Action::Read, &resource));
+		assert!(!evaluate(&subject, Action::Write, &resource));
+		assert!(!evaluate(&subject, Action::Delete, &resource));
 	}
 }

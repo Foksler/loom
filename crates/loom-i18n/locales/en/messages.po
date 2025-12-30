@@ -679,3 +679,35 @@ msgstr "Failed to validate share link"
 #: API: Share - Fetch failed
 msgid "server.api.share.fetch_failed"
 msgstr "Failed to fetch thread"
+
+#: API: Weaver - Provisioner not configured
+msgid "server.api.weaver.provisioner_not_configured"
+msgstr "Weaver provisioner not configured"
+
+#: API: Weaver - Invalid ID
+msgid "server.api.weaver.invalid_id"
+msgstr "Invalid weaver ID: {id}"
+
+#: API: Weaver - Not found
+msgid "server.api.weaver.not_found"
+msgstr "Weaver not found: {id}"
+
+#: API: Weaver - Access denied
+msgid "server.api.weaver.access_denied"
+msgstr "You do not have permission to access this weaver"
+
+#: API: Weaver - Attach denied
+msgid "server.api.weaver.attach_denied"
+msgstr "You do not have permission to attach to this weaver"
+
+#: API: Weaver - Delete denied
+msgid "server.api.weaver.delete_denied"
+msgstr "You do not have permission to delete this weaver"
+
+#: API: Weaver - Read only attach
+msgid "server.api.weaver.read_only_attach"
+msgstr "Read-only attach: input is disabled for support users"
+
+#: API: Weaver - Logs access denied
+msgid "server.api.weaver.logs_denied"
+msgstr "You do not have permission to access this weaver's logs"

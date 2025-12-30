@@ -607,3 +607,35 @@ msgstr "Error al validar enlace de compartir"
 #: API: Share - Fetch failed
 msgid "server.api.share.fetch_failed"
 msgstr "Error al obtener el hilo"
+
+#: API: Weaver - Provisioner not configured
+msgid "server.api.weaver.provisioner_not_configured"
+msgstr "El aprovisionador de weaver no está configurado"
+
+#: API: Weaver - Invalid ID
+msgid "server.api.weaver.invalid_id"
+msgstr "ID de weaver inválido: {id}"
+
+#: API: Weaver - Not found
+msgid "server.api.weaver.not_found"
+msgstr "Weaver no encontrado: {id}"
+
+#: API: Weaver - Access denied
+msgid "server.api.weaver.access_denied"
+msgstr "No tienes permiso para acceder a este weaver"
+
+#: API: Weaver - Attach denied
+msgid "server.api.weaver.attach_denied"
+msgstr "No tienes permiso para conectarte a este weaver"
+
+#: API: Weaver - Delete denied
+msgid "server.api.weaver.delete_denied"
+msgstr "No tienes permiso para eliminar este weaver"
+
+#: API: Weaver - Read only attach
+msgid "server.api.weaver.read_only_attach"
+msgstr "Conexión de solo lectura: la entrada está deshabilitada para usuarios de soporte"
+
+#: API: Weaver - Logs access denied
+msgid "server.api.weaver.logs_denied"
+msgstr "No tienes permiso para acceder a los logs de este weaver"

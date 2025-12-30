@@ -607,3 +607,35 @@ msgstr "فشل في التحقق من رابط المشاركة"
 #: API: Share - Fetch failed
 msgid "server.api.share.fetch_failed"
 msgstr "فشل في جلب المحادثة"
+
+#: API: Weaver - Provisioner not configured
+msgid "server.api.weaver.provisioner_not_configured"
+msgstr "لم يتم تكوين مزود الـ weaver"
+
+#: API: Weaver - Invalid ID
+msgid "server.api.weaver.invalid_id"
+msgstr "معرف weaver غير صالح: {id}"
+
+#: API: Weaver - Not found
+msgid "server.api.weaver.not_found"
+msgstr "لم يتم العثور على weaver: {id}"
+
+#: API: Weaver - Access denied
+msgid "server.api.weaver.access_denied"
+msgstr "ليس لديك إذن للوصول إلى هذا الـ weaver"
+
+#: API: Weaver - Attach denied
+msgid "server.api.weaver.attach_denied"
+msgstr "ليس لديك إذن للاتصال بهذا الـ weaver"
+
+#: API: Weaver - Delete denied
+msgid "server.api.weaver.delete_denied"
+msgstr "ليس لديك إذن لحذف هذا الـ weaver"
+
+#: API: Weaver - Read only attach
+msgid "server.api.weaver.read_only_attach"
+msgstr "اتصال للقراءة فقط: الإدخال معطل لمستخدمي الدعم"
+
+#: API: Weaver - Logs access denied
+msgid "server.api.weaver.logs_denied"
+msgstr "ليس لديك إذن للوصول إلى سجلات هذا الـ weaver"

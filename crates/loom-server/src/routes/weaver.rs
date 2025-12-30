@@ -29,7 +29,12 @@ use serde::{Deserialize, Serialize};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use utoipa::{IntoParams, ToSchema};
 
-use crate::{api::AppState, auth_middleware::RequireAuth, error::ServerError};
+use crate::{
+	api::AppState,
+	auth_middleware::RequireAuth,
+	error::ServerError,
+	i18n::{resolve_user_locale, t, t_fmt},
+};
 
 // ============================================================================
 // Request/Response types
@@ -202,11 +207,36 @@ pub struct CleanupApiResponse {
 // Helper functions
 // ============================================================================
 
-fn is_weaver_owner_or_admin(current_user: &CurrentUser, weaver: &Weaver) -> bool {
+/// Access level for weaver operations.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum WeaverAccess {
+	/// Full read/write access (owner or system admin)
+	Full,
+	/// Read-only access (support role)
+	ReadOnly,
+	/// No access
+	None,
+}
+
+fn get_weaver_access(current_user: &CurrentUser, weaver: &Weaver) -> WeaverAccess {
 	if current_user.user.is_system_admin() {
-		return true;
+		return WeaverAccess::Full;
 	}
-	weaver.owner_user_id == current_user.user.id.to_string()
+	if weaver.owner_user_id == current_user.user.id.to_string() {
+		return WeaverAccess::Full;
+	}
+	if current_user.user.is_support() {
+		return WeaverAccess::ReadOnly;
+	}
+	WeaverAccess::None
+}
+
+fn is_weaver_owner_or_admin(current_user: &CurrentUser, weaver: &Weaver) -> bool {
+	matches!(get_weaver_access(current_user, weaver), WeaverAccess::Full)
+}
+
+fn can_read_weaver(current_user: &CurrentUser, weaver: &Weaver) -> bool {
+	!matches!(get_weaver_access(current_user, weaver), WeaverAccess::None)
 }
 
 // ============================================================================
@@ -233,10 +263,14 @@ pub async fn create_weaver(
 	RequireAuth(current_user): RequireAuth,
 	Json(request): Json<CreateWeaverApiRequest>,
 ) -> Result<impl IntoResponse, ServerError> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
 	let provisioner = state
 		.provisioner
 		.as_ref()
-		.ok_or_else(|| ServerError::Internal("Weaver provisioner not configured".to_string()))?;
+		.ok_or_else(|| {
+			ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
+		})?;
 
 	let actor_id = current_user.user.id.to_string();
 	tracing::info!(image = %request.image, actor_id = %actor_id, "Creating weaver");
@@ -284,14 +318,18 @@ pub async fn list_weavers(
 	RequireAuth(current_user): RequireAuth,
 	Query(params): Query<ListWeaversParams>,
 ) -> Result<impl IntoResponse, ServerError> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
 	let provisioner = state
 		.provisioner
 		.as_ref()
-		.ok_or_else(|| ServerError::Internal("Weaver provisioner not configured".to_string()))?;
+		.ok_or_else(|| {
+			ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
+		})?;
 
 	let tag_filter = parse_tag_filter(params.tag);
 
-	let weavers = if current_user.user.is_system_admin() {
+	let weavers = if current_user.user.is_system_admin() || current_user.user.is_support() {
 		provisioner.list_weavers(tag_filter).await?
 	} else {
 		let user_id = current_user.user.id.to_string();
@@ -338,21 +376,30 @@ pub async fn get_weaver(
 	RequireAuth(current_user): RequireAuth,
 	Path(id): Path<String>,
 ) -> Result<impl IntoResponse, ServerError> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
 	let provisioner = state
 		.provisioner
 		.as_ref()
-		.ok_or_else(|| ServerError::Internal("Weaver provisioner not configured".to_string()))?;
+		.ok_or_else(|| {
+			ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
+		})?;
 
-	let weaver_id: WeaverId = id
-		.parse()
-		.map_err(|_| ServerError::BadRequest(format!("Invalid weaver ID: {id}")))?;
+	let weaver_id: WeaverId = id.parse().map_err(|_| {
+		ServerError::BadRequest(t_fmt(
+			locale,
+			"server.api.weaver.invalid_id",
+			&[("id", &id)],
+		))
+	})?;
 
 	let weaver = provisioner.get_weaver(&weaver_id).await?;
 
-	if !is_weaver_owner_or_admin(&current_user, &weaver) {
-		return Err(ServerError::Forbidden(
-			"You do not have permission to access this weaver".to_string(),
-		));
+	if !can_read_weaver(&current_user, &weaver) {
+		return Err(ServerError::Forbidden(t(
+			locale,
+			"server.api.weaver.access_denied",
+		)));
 	}
 
 	Ok(Json(WeaverApiResponse::from(weaver)))
@@ -381,21 +428,30 @@ pub async fn delete_weaver(
 	RequireAuth(current_user): RequireAuth,
 	Path(id): Path<String>,
 ) -> Result<impl IntoResponse, ServerError> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
 	let provisioner = state
 		.provisioner
 		.as_ref()
-		.ok_or_else(|| ServerError::Internal("Weaver provisioner not configured".to_string()))?;
+		.ok_or_else(|| {
+			ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
+		})?;
 
-	let weaver_id: WeaverId = id
-		.parse()
-		.map_err(|_| ServerError::BadRequest(format!("Invalid weaver ID: {id}")))?;
+	let weaver_id: WeaverId = id.parse().map_err(|_| {
+		ServerError::BadRequest(t_fmt(
+			locale,
+			"server.api.weaver.invalid_id",
+			&[("id", &id)],
+		))
+	})?;
 
 	let weaver = provisioner.get_weaver(&weaver_id).await?;
 
 	if !is_weaver_owner_or_admin(&current_user, &weaver) {
-		return Err(ServerError::Forbidden(
-			"You do not have permission to delete this weaver".to_string(),
-		));
+		return Err(ServerError::Forbidden(t(
+			locale,
+			"server.api.weaver.delete_denied",
+		)));
 	}
 
 	let actor_id = current_user.user.id.to_string();
@@ -433,10 +489,14 @@ pub async fn stream_logs(
 	Path(id): Path<String>,
 	Query(params): Query<LogStreamParams>,
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, ServerError> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
 	let provisioner = state
 		.provisioner
 		.as_ref()
-		.ok_or_else(|| ServerError::Internal("Weaver provisioner not configured".to_string()))?;
+		.ok_or_else(|| {
+			ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
+		})?;
 
 	let weaver_id: WeaverId = id
 		.parse()
@@ -444,10 +504,11 @@ pub async fn stream_logs(
 
 	let weaver = provisioner.get_weaver(&weaver_id).await?;
 
-	if !is_weaver_owner_or_admin(&current_user, &weaver) {
-		return Err(ServerError::Forbidden(
-			"You do not have permission to access this weaver's logs".to_string(),
-		));
+	if !can_read_weaver(&current_user, &weaver) {
+		return Err(ServerError::Forbidden(t(
+			locale,
+			"server.api.weaver.logs_denied",
+		)));
 	}
 
 	tracing::debug!(weaver_id = %id, tail = params.tail, timestamps = params.timestamps, "Starting log stream");
@@ -543,6 +604,8 @@ pub async fn trigger_cleanup(
 }
 
 /// GET /api/weaver/{id}/attach - WebSocket terminal attach.
+///
+/// Support users get read-only access (can view output but not send input).
 #[utoipa::path(
     get,
     path = "/api/weaver/{id}/attach",
@@ -563,39 +626,65 @@ pub async fn attach_weaver(
 	Path(id): Path<String>,
 	ws: WebSocketUpgrade,
 ) -> Result<impl IntoResponse, ServerError> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
 	let provisioner = state
 		.provisioner
 		.as_ref()
-		.ok_or_else(|| ServerError::Internal("Weaver provisioner not configured".to_string()))?
+		.ok_or_else(|| {
+			ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
+		})?
 		.clone();
 
-	let weaver_id: WeaverId = id
-		.parse()
-		.map_err(|_| ServerError::BadRequest(format!("Invalid weaver ID: {id}")))?;
+	let weaver_id: WeaverId = id.parse().map_err(|_| {
+		ServerError::BadRequest(t_fmt(
+			locale,
+			"server.api.weaver.invalid_id",
+			&[("id", &id)],
+		))
+	})?;
 
-	let weaver = provisioner
-		.get_weaver(&weaver_id)
-		.await
-		.map_err(|_| ServerError::NotFound(format!("Weaver not found: {id}")))?;
+	let weaver = provisioner.get_weaver(&weaver_id).await.map_err(|_| {
+		ServerError::NotFound(t_fmt(
+			locale,
+			"server.api.weaver.not_found",
+			&[("id", &id)],
+		))
+	})?;
 
-	if !is_weaver_owner_or_admin(&current_user, &weaver) {
-		return Err(ServerError::Forbidden(
-			"You do not have permission to attach to this weaver".to_string(),
-		));
+	let access = get_weaver_access(&current_user, &weaver);
+	if access == WeaverAccess::None {
+		return Err(ServerError::Forbidden(t(
+			locale,
+			"server.api.weaver.attach_denied",
+		)));
 	}
 
+	let read_only = access == WeaverAccess::ReadOnly;
+	let locale = locale.to_string();
 	let actor_id = current_user.user.id.to_string();
-	tracing::info!(weaver_id = %id, actor_id = %actor_id, "WebSocket attach requested");
+	tracing::info!(
+		weaver_id = %id,
+		actor_id = %actor_id,
+		read_only = %read_only,
+		"WebSocket attach requested"
+	);
 
-	Ok(ws.on_upgrade(move |socket| handle_attach_websocket(socket, provisioner, weaver_id)))
+	Ok(ws.on_upgrade(move |socket| {
+		handle_attach_websocket(socket, provisioner, weaver_id, read_only, locale)
+	}))
 }
 
 async fn handle_attach_websocket(
 	socket: WebSocket,
 	provisioner: std::sync::Arc<loom_weaver::Provisioner>,
 	weaver_id: WeaverId,
+	read_only: bool,
+	locale: String,
 ) {
-	if let Err(e) = handle_attach_websocket_inner(socket, provisioner, weaver_id).await {
+	if let Err(e) =
+		handle_attach_websocket_inner(socket, provisioner, weaver_id, read_only, &locale).await
+	{
 		tracing::error!(error = %e, "WebSocket attach error");
 	}
 }
@@ -604,6 +693,8 @@ async fn handle_attach_websocket_inner(
 	mut socket: WebSocket,
 	provisioner: std::sync::Arc<loom_weaver::Provisioner>,
 	weaver_id: WeaverId,
+	read_only: bool,
+	locale: &str,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 	let attached = match provisioner.attach_weaver(&weaver_id).await {
 		Ok(a) => a,
@@ -620,15 +711,28 @@ async fn handle_attach_websocket_inner(
 	let mut stdin = stdin;
 	let mut stdout = stdout;
 
+	if read_only {
+		let notice = t(locale, "server.api.weaver.read_only_attach");
+		let _ = ws_sender
+			.send(Message::Text(format!("\r\n*** {notice} ***\r\n").into()))
+			.await;
+	}
+
 	let ws_to_pod = async {
 		while let Some(msg) = ws_receiver.next().await {
 			match msg {
 				Ok(Message::Binary(data)) => {
+					if read_only {
+						continue;
+					}
 					if stdin.write_all(&data).await.is_err() {
 						break;
 					}
 				}
 				Ok(Message::Text(text)) => {
+					if read_only {
+						continue;
+					}
 					if stdin.write_all(text.as_bytes()).await.is_err() {
 						break;
 					}
