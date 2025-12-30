@@ -4,7 +4,7 @@
   import { createActor } from 'xstate';
   import { conversationMachine, connectionMachine } from '$lib/state';
   import { getApiClient } from '$lib/api';
-  import { createRealtimeClient, type LlmEvent } from '$lib/realtime';
+  import { createRealtimeClient, LoomWebSocketClient, type LlmEvent, type ToolEvent } from '$lib/realtime';
   import {
     MessageList,
     MessageInput,
@@ -23,7 +23,20 @@
   let conversationState = $state(conversationActor.getSnapshot());
   let connectionState = $state(connectionActor.getSnapshot());
   
-  let realtimeClient = createRealtimeClient({ serverUrl: '' });
+  let realtimeClient = createRealtimeClient({
+    serverUrl: import.meta.env.VITE_LOOM_SERVER_URL || '',
+  });
+
+  realtimeClient.onStatus((status) => {
+    if (status === 'connected') {
+      connectionActor.send({ type: 'CONNECTED' });
+    } else if (status === 'disconnected' || status === 'error') {
+      connectionActor.send({ type: 'DISCONNECTED' });
+    } else if (status === 'reconnecting') {
+      connectionActor.send({ type: 'DISCONNECTED' });
+      connectionActor.send({ type: 'RETRY' });
+    }
+  });
 
   conversationActor.subscribe((snapshot) => {
     conversationState = snapshot;
@@ -42,10 +55,11 @@
       const thread = await api.getThread(id);
       conversationActor.send({ type: 'THREAD_LOADED', thread });
       
-      // Connect to realtime
+      // Connect to realtime (status handler will update connectionActor)
       connectionActor.send({ type: 'CONNECT', sessionId: id });
-      await realtimeClient.connect(id);
-      connectionActor.send({ type: 'CONNECTED' });
+      if (realtimeClient instanceof LoomWebSocketClient) {
+        await realtimeClient.connect(id);
+      }
     } catch (error) {
       logger.error('Failed to load thread', { threadId: id, error: String(error) });
       conversationActor.send({ type: 'LOAD_FAILED', error: String(error) });
@@ -74,10 +88,50 @@
     }
   }
 
+  function handleToolEvent(event: ToolEvent) {
+    switch (event.type) {
+      case 'tool_start':
+        conversationActor.send({
+          type: 'LLM_TOOL_CALL_DELTA',
+          callId: event.callId,
+          toolName: event.toolName || '',
+          argsFragment: '',
+        });
+        break;
+      case 'tool_progress':
+        // Update tool progress in state (progress tracking can be added to state machine)
+        break;
+      case 'tool_done':
+        conversationActor.send({
+          type: 'TOOL_COMPLETED',
+          callId: event.callId,
+          outcome: {
+            call_id: event.callId,
+            success: true,
+            result: event.output,
+          },
+        });
+        break;
+      case 'tool_error':
+        conversationActor.send({
+          type: 'TOOL_COMPLETED',
+          callId: event.callId,
+          outcome: {
+            call_id: event.callId,
+            success: false,
+            error: event.error,
+          },
+        });
+        break;
+    }
+  }
+
   function handleSendMessage(content: string) {
+    if (!content.trim()) return;
+    
     logger.info('Sending message', { threadId, content: content.slice(0, 50) });
     conversationActor.send({ type: 'USER_INPUT', content });
-    // In a full implementation, this would send to the server
+    realtimeClient.sendMessage(content);
   }
 
   onMount(() => {
@@ -89,10 +143,14 @@
     }
 
     // Subscribe to realtime events
-    const unsubscribe = realtimeClient.onLlmEvent(handleLlmEvent);
+    const unsubscribeLlm = realtimeClient.onLlmEvent(handleLlmEvent);
+    const unsubscribeTool = realtimeClient instanceof LoomWebSocketClient
+      ? realtimeClient.onToolEvent(handleToolEvent)
+      : undefined;
     
     return () => {
-      unsubscribe();
+      unsubscribeLlm();
+      unsubscribeTool?.();
     };
   });
 
@@ -112,7 +170,7 @@
   const ctx = $derived(conversationState.context);
   const isLoading = $derived(conversationState.value === 'loading');
   const isLoaded = $derived(typeof conversationState.value === 'object' && 'loaded' in conversationState.value);
-  const canSend = $derived(ctx.currentAgentState === 'waiting_for_user_input');
+  const canSend = $derived(ctx.currentAgentState === 'waiting_input');
 </script>
 
 <div class="flex flex-col h-full">
@@ -123,14 +181,18 @@
         {#if isLoading}
           <Skeleton width="200px" height="1.5rem" />
         {:else}
-          {ctx.thread?.metadata.title || `Thread ${threadId?.slice(0, 12)}...`}
+          {ctx.thread?.metadata?.title || `Thread ${threadId?.slice(0, 12)}...`}
         {/if}
       </h2>
       {#if isLoaded}
         <AgentStateBadge state={ctx.currentAgentState} />
       {/if}
     </div>
-    <ConnectionStatusIndicator status={connectionState.value} />
+    <ConnectionStatusIndicator
+      status={connectionState.value as import('$lib/realtime/types').ConnectionStatus}
+      attemptCount={connectionState.context.retries}
+      onreconnect={() => threadId && loadThread(threadId)}
+    />
   </header>
 
   {#if isLoading}
@@ -155,7 +217,7 @@
       <AgentStateTimeline
         currentState={ctx.currentAgentState}
         retries={ctx.retries}
-        pendingToolCalls={ctx.toolExecutions.filter(t => t.type !== 'completed').map(t => t.call_id)}
+        pendingToolCalls={ctx.toolExecutions.filter(t => t.status !== 'completed').map(t => t.call_id)}
       />
     </div>
 
@@ -163,7 +225,7 @@
     <MessageList
       messages={ctx.messages}
       streamingContent={ctx.streamingContent}
-      isStreaming={ctx.currentAgentState === 'calling_llm' && ctx.streamingContent.length > 0}
+      isStreaming={ctx.currentAgentState === 'thinking' && ctx.streamingContent.length > 0}
     />
 
     <!-- Tool execution panel -->
