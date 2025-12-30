@@ -13,13 +13,14 @@
     pending: { label: 'Pending', variant: 'muted' as const, icon: '⏳' },
     running: { label: 'Running', variant: 'accent' as const, icon: '🔄' },
     completed: { label: 'Completed', variant: 'success' as const, icon: '✓' },
+    failed: { label: 'Failed', variant: 'error' as const, icon: '✗' },
   };
 
   const config = $derived(() => {
-    if (status.type === 'completed' && status.outcome.type === 'error') {
-      return { label: 'Failed', variant: 'error' as const, icon: '✗' };
+    if (status.status === 'completed' && status.error) {
+      return statusConfig.failed;
     }
-    return statusConfig[status.type];
+    return statusConfig[status.status];
   });
 </script>
 

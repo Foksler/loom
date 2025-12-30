@@ -24,7 +24,7 @@
   <div class="rounded-lg p-3 {roleStyles[message.role]}">
     {#if message.role === 'tool'}
       <div class="text-xs font-medium text-warning mb-1">
-        🔧 {message.tool_name}
+        🔧 Tool Result{#if message.tool_call_id} <span class="text-fg-muted">({message.tool_call_id})</span>{/if}
       </div>
     {/if}
     
@@ -34,15 +34,6 @@
         <span class="inline-block w-2 h-4 bg-accent animate-pulse ml-0.5"></span>
       {/if}
     </div>
-    
-    {#if message.role === 'tool' && message.tool_output}
-      <details class="mt-2">
-        <summary class="text-xs text-fg-muted cursor-pointer hover:text-fg">
-          Show output
-        </summary>
-        <pre class="mt-1 p-2 bg-bg rounded text-xs overflow-x-auto">{JSON.stringify(message.tool_output, null, 2)}</pre>
-      </details>
-    {/if}
     
     {#if message.created_at}
       <div class="text-xs text-fg-subtle mt-1 {message.role === 'user' ? 'text-right' : ''}">

@@ -6,6 +6,18 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import Input from './Input.svelte';
 
+interface InputProps {
+	value?: string;
+	placeholder?: string;
+	type?: 'text' | 'email' | 'password' | 'search';
+	disabled?: boolean;
+	error?: string;
+	label?: string;
+	id?: string;
+	oninput?: (event: Event) => void;
+	onkeydown?: (event: KeyboardEvent) => void;
+}
+
 const meta = {
 	title: 'UI/Input',
 	component: Input,
@@ -17,10 +29,10 @@ const meta = {
 		},
 		disabled: { control: 'boolean' },
 	},
-} satisfies Meta<Input>;
+} as Meta<InputProps>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<InputProps>;
 
 export const Default: Story = {
 	args: {

@@ -7,61 +7,66 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import AgentStateBadge from './AgentStateBadge.svelte';
 import type { AgentStateKind } from '../api/types';
 
-const meta = {
+interface AgentStateBadgeProps {
+	state: AgentStateKind;
+	showIcon?: boolean;
+}
+
+const meta: Meta<AgentStateBadgeProps> = {
 	title: 'UI/AgentStateBadge',
-	component: AgentStateBadge,
+	component: AgentStateBadge as any,
 	tags: ['autodocs'],
 	argTypes: {
 		state: {
 			control: 'select',
 			options: [
-				'waiting_for_user_input',
-				'calling_llm',
-				'processing_llm_response',
-				'executing_tools',
-				'post_tools_hook',
+				'waiting_input',
+				'thinking',
+				'streaming',
+				'tool_executing',
+				'tool_pending',
 				'error',
-				'shutting_down',
-			] as AgentStateKind[],
+				'idle',
+			],
 		},
 		showIcon: { control: 'boolean' },
 	},
-} satisfies Meta<AgentStateBadge>;
+};
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<AgentStateBadgeProps>;
 
 export const WaitingForInput: Story = {
 	args: {
-		state: 'waiting_for_user_input',
+		state: 'waiting_input',
 		showIcon: true,
 	},
 };
 
 export const CallingLlm: Story = {
 	args: {
-		state: 'calling_llm',
+		state: 'thinking',
 		showIcon: true,
 	},
 };
 
 export const ProcessingResponse: Story = {
 	args: {
-		state: 'processing_llm_response',
+		state: 'streaming',
 		showIcon: true,
 	},
 };
 
 export const ExecutingTools: Story = {
 	args: {
-		state: 'executing_tools',
+		state: 'tool_executing',
 		showIcon: true,
 	},
 };
 
 export const PostToolsHook: Story = {
 	args: {
-		state: 'post_tools_hook',
+		state: 'tool_pending',
 		showIcon: true,
 	},
 };
@@ -75,14 +80,14 @@ export const Error: Story = {
 
 export const ShuttingDown: Story = {
 	args: {
-		state: 'shutting_down',
+		state: 'idle',
 		showIcon: true,
 	},
 };
 
 export const NoIcon: Story = {
 	args: {
-		state: 'calling_llm',
+		state: 'thinking',
 		showIcon: false,
 	},
 };

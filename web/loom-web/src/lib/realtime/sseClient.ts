@@ -50,6 +50,22 @@ export class LoomSseClient {
 		this.setStatus('disconnected');
 	}
 
+	async sendMessage(content: string): Promise<void> {
+		try {
+			const response = await fetch(`${this.serverUrl}/api/messages`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ content, timestamp: new Date().toISOString() }),
+			});
+			if (!response.ok) {
+				throw new Error(`Failed to send message: ${response.status}`);
+			}
+		} catch (error) {
+			logger.error('Failed to send message via SSE client', { error: String(error) });
+			throw error;
+		}
+	}
+
 	onLlmEvent(handler: LlmEventHandler): () => void {
 		this.llmEventHandlers.add(handler);
 		return () => this.llmEventHandlers.delete(handler);

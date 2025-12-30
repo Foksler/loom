@@ -10,16 +10,16 @@
   let { state, showIcon = true }: Props = $props();
 
   const stateConfig: Record<AgentStateKind, { label: string; variant: 'default' | 'accent' | 'success' | 'warning' | 'error' | 'muted'; icon: string }> = {
-    waiting_for_user_input: { label: 'Waiting', variant: 'muted', icon: '⏳' },
-    calling_llm: { label: 'Calling LLM', variant: 'accent', icon: '🔄' },
-    processing_llm_response: { label: 'Processing', variant: 'accent', icon: '📝' },
-    executing_tools: { label: 'Executing Tools', variant: 'warning', icon: '⚙️' },
-    post_tools_hook: { label: 'Post-Hook', variant: 'warning', icon: '🔧' },
+    idle: { label: 'Idle', variant: 'muted', icon: '💤' },
+    thinking: { label: 'Thinking', variant: 'accent', icon: '🔄' },
+    streaming: { label: 'Streaming', variant: 'accent', icon: '📝' },
+    tool_pending: { label: 'Tool Pending', variant: 'warning', icon: '🔧' },
+    tool_executing: { label: 'Executing Tools', variant: 'warning', icon: '⚙️' },
+    waiting_input: { label: 'Waiting', variant: 'muted', icon: '⏳' },
     error: { label: 'Error', variant: 'error', icon: '❌' },
-    shutting_down: { label: 'Shutting Down', variant: 'muted', icon: '🛑' },
   };
 
-  const config = $derived(stateConfig[state] || stateConfig.waiting_for_user_input);
+  const config = $derived(stateConfig[state] || stateConfig.idle);
 </script>
 
 <Badge variant={config.variant}>

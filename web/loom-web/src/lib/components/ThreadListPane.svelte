@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { createActor } from 'xstate';
+  import { createActor, type SnapshotFrom } from 'xstate';
   import { threadListMachine } from '../state';
   import { getApiClient } from '../api';
   import { Input, Skeleton, Button } from '../ui';
@@ -15,17 +15,17 @@
   let { selectedThreadId = null, onSelectThread }: Props = $props();
 
   const actor = createActor(threadListMachine);
-  let state = $state(actor.getSnapshot());
+  let snapshot: SnapshotFrom<typeof threadListMachine> = $state(actor.getSnapshot());
   let searchInput = $state('');
   let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  actor.subscribe((snapshot) => {
-    state = snapshot;
+  actor.subscribe((s) => {
+    snapshot = s;
   });
 
   async function fetchThreads() {
     const api = getApiClient();
-    const ctx = state.context;
+    const ctx = snapshot.context;
 
     try {
       let response;
@@ -36,7 +36,13 @@
         });
         actor.send({
           type: 'FETCH_SUCCESS',
-          threads: response.hits,
+          threads: response.hits.map(hit => ({
+            id: hit.id,
+            title: hit.title,
+            created_at: hit.created_at,
+            updated_at: hit.updated_at,
+            message_count: 0,
+          })),
           total: response.hits.length,
         });
       } else {
@@ -75,8 +81,8 @@
     actor.start();
     actor.send({ type: 'FETCH' });
 
-    actor.subscribe((snapshot) => {
-      if (snapshot.value === 'loading') {
+    actor.subscribe((s) => {
+      if (s.value === 'loading') {
         fetchThreads();
       }
     });
@@ -99,7 +105,7 @@
   </div>
 
   <div class="flex-1 overflow-y-auto p-2">
-    {#if state.value === 'loading' && state.context.threads.length === 0}
+    {#if snapshot.value === 'loading' && snapshot.context.threads.length === 0}
       <div class="space-y-2">
         {#each Array(5) as _}
           <div class="p-3">
@@ -108,20 +114,20 @@
           </div>
         {/each}
       </div>
-    {:else if state.value === 'error'}
+    {:else if snapshot.value === 'error'}
       <div class="p-4 text-center">
-        <p class="text-error mb-2">{state.context.error}</p>
+        <p class="text-error mb-2">{snapshot.context.error}</p>
         <Button variant="secondary" onclick={() => actor.send({ type: 'FETCH' })}>
           Retry
         </Button>
       </div>
-    {:else if state.context.threads.length === 0}
+    {:else if snapshot.context.threads.length === 0}
       <div class="p-4 text-center text-fg-muted">
-        {state.context.searchQuery ? 'No threads found' : 'No threads yet'}
+        {snapshot.context.searchQuery ? 'No threads found' : 'No threads yet'}
       </div>
     {:else}
       <div class="space-y-1">
-        {#each state.context.threads as thread (thread.id)}
+        {#each snapshot.context.threads as thread (thread.id)}
           <ThreadListItem
             {thread}
             isActive={thread.id === selectedThreadId}
@@ -132,23 +138,23 @@
     {/if}
   </div>
 
-  {#if state.context.total > state.context.limit}
+  {#if snapshot.context.total > snapshot.context.limit}
     <div class="p-3 border-t border-border flex justify-between items-center">
       <Button
         variant="ghost"
         size="sm"
-        disabled={state.context.offset === 0}
+        disabled={snapshot.context.offset === 0}
         onclick={() => actor.send({ type: 'PREV_PAGE' })}
       >
         Previous
       </Button>
       <span class="text-sm text-fg-muted">
-        {state.context.offset + 1}-{Math.min(state.context.offset + state.context.limit, state.context.total)} of {state.context.total}
+        {snapshot.context.offset + 1}-{Math.min(snapshot.context.offset + snapshot.context.limit, snapshot.context.total)} of {snapshot.context.total}
       </span>
       <Button
         variant="ghost"
         size="sm"
-        disabled={state.context.offset + state.context.limit >= state.context.total}
+        disabled={snapshot.context.offset + snapshot.context.limit >= snapshot.context.total}
         onclick={() => actor.send({ type: 'NEXT_PAGE' })}
       >
         Next

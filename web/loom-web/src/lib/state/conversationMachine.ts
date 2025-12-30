@@ -32,7 +32,7 @@ type ConversationEvent =
 const initialContext: ConversationContext = {
 	thread: null,
 	messages: [],
-	currentAgentState: 'waiting_for_user_input',
+	currentAgentState: 'waiting_input',
 	toolExecutions: [],
 	streamingContent: '',
 	error: null,
@@ -62,8 +62,8 @@ export const conversationMachine = createMachine({
 					target: 'loaded',
 					actions: assign({
 						thread: ({ event }) => event.thread,
-						messages: ({ event }) => event.thread.conversation.messages,
-						currentAgentState: ({ event }) => event.thread.agent_state.kind,
+						messages: () => [],
+						currentAgentState: () => 'idle' as AgentStateKind,
 						error: null,
 					}),
 				},
@@ -80,7 +80,7 @@ export const conversationMachine = createMachine({
 			states: {
 				waitingForUserInput: {
 					entry: assign({
-						currentAgentState: 'waiting_for_user_input' as AgentStateKind,
+						currentAgentState: 'waiting_input' as AgentStateKind,
 						streamingContent: '',
 					}),
 					on: {
@@ -93,10 +93,6 @@ export const conversationMachine = createMachine({
 										id: `m-${Date.now()}`,
 										role: 'user' as const,
 										content: event.content,
-										tool_name: null,
-										tool_call_id: null,
-										tool_input: null,
-										tool_output: null,
 										created_at: new Date().toISOString(),
 									},
 								],
@@ -106,7 +102,7 @@ export const conversationMachine = createMachine({
 				},
 				callingLlm: {
 					entry: assign({
-						currentAgentState: 'calling_llm' as AgentStateKind,
+						currentAgentState: 'thinking' as AgentStateKind,
 						streamingContent: '',
 					}),
 					on: {
@@ -119,16 +115,16 @@ export const conversationMachine = createMachine({
 							actions: assign({
 								toolExecutions: ({ context, event }) => {
 									const existing = context.toolExecutions.find(
-										(t) => t.type === 'pending' && t.call_id === event.callId
+										(t) => t.status === 'pending' && t.call_id === event.callId
 									);
 									if (existing) return context.toolExecutions;
 									return [
 										...context.toolExecutions,
 										{
-											type: 'pending' as const,
+											status: 'pending' as const,
 											call_id: event.callId,
 											tool_name: event.toolName,
-											requested_at: new Date().toISOString(),
+											started_at: new Date().toISOString(),
 										},
 									];
 								},
@@ -145,10 +141,6 @@ export const conversationMachine = createMachine({
 											id: `m-${Date.now()}`,
 											role: 'assistant' as const,
 											content: context.streamingContent,
-											tool_name: null,
-											tool_call_id: null,
-											tool_input: null,
-											tool_output: null,
 											created_at: new Date().toISOString(),
 										},
 									];
@@ -167,11 +159,11 @@ export const conversationMachine = createMachine({
 				},
 				processingLlmResponse: {
 					entry: assign({
-						currentAgentState: 'processing_llm_response' as AgentStateKind,
+						currentAgentState: 'streaming' as AgentStateKind,
 					}),
 					always: [
 						{
-							guard: ({ context }) => context.toolExecutions.some((t) => t.type === 'pending'),
+							guard: ({ context }) => context.toolExecutions.some((t) => t.status === 'pending'),
 							target: 'executingTools',
 						},
 						{
@@ -181,20 +173,19 @@ export const conversationMachine = createMachine({
 				},
 				executingTools: {
 					entry: assign({
-						currentAgentState: 'executing_tools' as AgentStateKind,
+						currentAgentState: 'tool_executing' as AgentStateKind,
 					}),
 					on: {
 						TOOL_PROGRESS: {
 							actions: assign({
 								toolExecutions: ({ context, event }) =>
 									context.toolExecutions.map((t) =>
-										t.call_id === event.callId && t.type === 'pending'
+										t.call_id === event.callId && t.status === 'pending'
 											? {
-													type: 'running' as const,
+													status: 'running' as const,
 													call_id: t.call_id,
 													tool_name: t.tool_name,
 													started_at: new Date().toISOString(),
-													progress: event.progress,
 												}
 											: t
 									),
@@ -206,10 +197,11 @@ export const conversationMachine = createMachine({
 									context.toolExecutions.map((t) =>
 										t.call_id === event.callId
 											? {
-													type: 'completed' as const,
+													status: 'completed' as const,
 													call_id: t.call_id,
 													tool_name: t.tool_name,
-													outcome: event.outcome,
+													completed_at: new Date().toISOString(),
+													result: event.outcome,
 												}
 											: t
 									),
@@ -222,7 +214,7 @@ export const conversationMachine = createMachine({
 				},
 				postToolsHook: {
 					entry: assign({
-						currentAgentState: 'post_tools_hook' as AgentStateKind,
+						currentAgentState: 'tool_pending' as AgentStateKind,
 					}),
 					on: {
 						HOOK_COMPLETED: {
@@ -262,7 +254,7 @@ export const conversationMachine = createMachine({
 		},
 		shuttingDown: {
 			entry: assign({
-				currentAgentState: 'shutting_down' as AgentStateKind,
+				currentAgentState: 'idle' as AgentStateKind,
 			}),
 			type: 'final',
 		},

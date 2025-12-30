@@ -32,7 +32,7 @@
     
     {#if isStreaming && streamingContent}
       <MessageBubble
-        message={{ id: null, role: 'assistant', content: '', tool_name: null, tool_call_id: null, tool_input: null, tool_output: null, created_at: null }}
+        message={{ id: 'streaming', role: 'assistant', content: '', created_at: new Date().toISOString() }}
         isStreaming={true}
         {streamingContent}
       />

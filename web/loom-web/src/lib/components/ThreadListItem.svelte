@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { ThreadSummary } from '../api/types';
-  import { AgentStateBadge, Badge } from '../ui';
 
   interface Props {
     thread: ThreadSummary;
@@ -39,30 +38,18 @@
       <h3 class="font-medium text-fg truncate">
         {thread.title || `Thread ${thread.id.slice(0, 12)}...`}
       </h3>
-      <p class="text-sm text-fg-muted truncate mt-0.5">
-        {thread.workspace_root || 'No workspace'}
-      </p>
+      {#if thread.last_message_preview}
+        <p class="text-sm text-fg-muted truncate mt-0.5">
+          {thread.last_message_preview}
+        </p>
+      {/if}
     </div>
     <span class="text-xs text-fg-subtle whitespace-nowrap">
-      {formatRelativeTime(thread.last_activity_at)}
+      {formatRelativeTime(thread.updated_at)}
     </span>
   </div>
   
   <div class="flex items-center gap-2 mt-2">
-    {#if thread.provider}
-      <Badge variant="muted" size="sm">{thread.provider}</Badge>
-    {/if}
     <span class="text-xs text-fg-subtle">{thread.message_count} messages</span>
   </div>
-  
-  {#if thread.tags.length > 0}
-    <div class="flex flex-wrap gap-1 mt-2">
-      {#each thread.tags.slice(0, 3) as tag}
-        <Badge variant="default" size="sm">{tag}</Badge>
-      {/each}
-      {#if thread.tags.length > 3}
-        <Badge variant="muted" size="sm">+{thread.tags.length - 3}</Badge>
-      {/if}
-    </div>
-  {/if}
 </button>

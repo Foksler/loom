@@ -58,13 +58,29 @@ export interface QueryResponseWire {
 	responded_at: string;
 }
 
+// Tool event types from server
+export type ToolEventType = 'tool_start' | 'tool_progress' | 'tool_output' | 'tool_done' | 'tool_error';
+
+// Tool event wire format
+export interface ToolEventWire {
+	event_type: ToolEventType;
+	call_id: string;
+	tool_name?: string;
+	progress?: number;
+	message?: string;
+	output?: unknown;
+	error?: string;
+}
+
 // All realtime message types
 export type RealtimeMessage =
 	| { type: 'llm_event'; id: string; data: LlmEventWire; timestamp: string }
+	| { type: 'tool_event'; id: string; data: ToolEventWire; timestamp: string }
 	| { type: 'server_query'; id: string; data: ServerQueryWire; timestamp: string }
 	| { type: 'query_response'; id: string; data: QueryResponseWire; timestamp: string }
 	| { type: 'control'; id: string; data: ControlWire; timestamp: string }
-	| { type: 'ack'; id: string; data: AckWire; timestamp: string };
+	| { type: 'ack'; id: string; data: AckWire; timestamp: string }
+	| { type: 'user_message'; content: string; timestamp: string };
 
 // Parsed LLM event for UI consumption
 export type LlmEvent =
@@ -73,7 +89,19 @@ export type LlmEvent =
 	| { type: 'completed'; response: LlmResponse }
 	| { type: 'error'; error: string };
 
+// Parsed Tool event for UI consumption
+export interface ToolEvent {
+	type: ToolEventType;
+	callId: string;
+	toolName?: string;
+	progress?: number;
+	message?: string;
+	output?: unknown;
+	error?: string;
+}
+
 // Event handler types
 export type MessageHandler = (msg: RealtimeMessage) => void;
 export type LlmEventHandler = (event: LlmEvent) => void;
+export type ToolEventHandler = (event: ToolEvent) => void;
 export type StatusHandler = (status: ConnectionStatus) => void;

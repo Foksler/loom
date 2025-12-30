@@ -4,7 +4,17 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/svelte';
+import type { Snippet } from 'svelte';
+import { createRawSnippet } from 'svelte';
 import Card from './Card.svelte';
+
+interface CardProps {
+	padding?: 'none' | 'sm' | 'md' | 'lg';
+	hover?: boolean;
+	header?: Snippet;
+	footer?: Snippet;
+	children: Snippet;
+}
 
 const meta = {
 	title: 'UI/Card',
@@ -17,15 +27,17 @@ const meta = {
 		},
 		hover: { control: 'boolean' },
 	},
-} satisfies Meta<Card>;
+} as Meta<CardProps>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<CardProps>;
 
 export const Default: Story = {
 	args: {
 		padding: 'md',
-		children: 'Card content goes here. This is a basic card with default padding.',
+		children: createRawSnippet(() => ({
+			render: () => `<span>Card content goes here. This is a basic card with default padding.</span>`,
+		})),
 	},
 };
 
@@ -33,20 +45,26 @@ export const WithHover: Story = {
 	args: {
 		padding: 'md',
 		hover: true,
-		children: 'Hover over this card to see the effect.',
+		children: createRawSnippet(() => ({
+			render: () => `<span>Hover over this card to see the effect.</span>`,
+		})),
 	},
 };
 
 export const NoPadding: Story = {
 	args: {
 		padding: 'none',
-		children: 'Card with no padding.',
+		children: createRawSnippet(() => ({
+			render: () => `<span>Card with no padding.</span>`,
+		})),
 	},
 };
 
 export const LargePadding: Story = {
 	args: {
 		padding: 'lg',
-		children: 'Card with large padding for more spacious content.',
+		children: createRawSnippet(() => ({
+			render: () => `<span>Card with large padding for more spacious content.</span>`,
+		})),
 	},
 };

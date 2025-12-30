@@ -10,10 +10,10 @@
   let { currentState, retries = 0, pendingToolCalls = [] }: Props = $props();
 
   const states: { key: AgentStateKind; label: string; icon: string }[] = [
-    { key: 'waiting_for_user_input', label: 'Waiting', icon: '⏳' },
-    { key: 'calling_llm', label: 'LLM', icon: '🤖' },
-    { key: 'processing_llm_response', label: 'Processing', icon: '📝' },
-    { key: 'executing_tools', label: 'Tools', icon: '⚙️' },
+    { key: 'waiting_input', label: 'Waiting', icon: '⏳' },
+    { key: 'thinking', label: 'LLM', icon: '🤖' },
+    { key: 'streaming', label: 'Processing', icon: '📝' },
+    { key: 'tool_executing', label: 'Tools', icon: '⚙️' },
   ];
 
   function isActive(stateKey: AgentStateKind): boolean {
@@ -22,10 +22,10 @@
 
   function isPast(stateKey: AgentStateKind): boolean {
     const stateOrder: AgentStateKind[] = [
-      'waiting_for_user_input',
-      'calling_llm',
-      'processing_llm_response',
-      'executing_tools',
+      'waiting_input',
+      'thinking',
+      'streaming',
+      'tool_executing',
     ];
     const currentIndex = stateOrder.indexOf(currentState);
     const stateIndex = stateOrder.indexOf(stateKey);
@@ -51,7 +51,7 @@
                {isActive(state.key) ? 'text-accent' : 'text-fg-muted'}"
       >
         {state.label}
-        {#if isActive(state.key) && state.key === 'executing_tools' && pendingToolCalls.length > 0}
+        {#if isActive(state.key) && state.key === 'tool_executing' && pendingToolCalls.length > 0}
           <span class="text-xs">({pendingToolCalls.length})</span>
         {/if}
       </span>

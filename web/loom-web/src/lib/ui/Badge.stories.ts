@@ -4,11 +4,17 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/svelte';
-import Badge from './Badge.svelte';
+import BadgeStoryWrapper from './BadgeStoryWrapper.svelte';
 
-const meta = {
+type BadgeStoryProps = {
+	variant?: 'default' | 'accent' | 'success' | 'warning' | 'error' | 'muted';
+	size?: 'sm' | 'md';
+	text?: string;
+};
+
+const meta: Meta<BadgeStoryProps> = {
 	title: 'UI/Badge',
-	component: Badge,
+	component: BadgeStoryWrapper,
 	tags: ['autodocs'],
 	argTypes: {
 		variant: {
@@ -19,57 +25,60 @@ const meta = {
 			control: 'select',
 			options: ['sm', 'md'],
 		},
+		text: {
+			control: 'text',
+		},
 	},
-} satisfies Meta<Badge>;
+};
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<BadgeStoryProps>;
 
 export const Default: Story = {
 	args: {
 		variant: 'default',
-		children: 'Default',
+		text: 'Default',
 	},
 };
 
 export const Accent: Story = {
 	args: {
 		variant: 'accent',
-		children: 'Accent',
+		text: 'Accent',
 	},
 };
 
 export const Success: Story = {
 	args: {
 		variant: 'success',
-		children: 'Success',
+		text: 'Success',
 	},
 };
 
 export const Warning: Story = {
 	args: {
 		variant: 'warning',
-		children: 'Warning',
+		text: 'Warning',
 	},
 };
 
 export const Error: Story = {
 	args: {
 		variant: 'error',
-		children: 'Error',
+		text: 'Error',
 	},
 };
 
 export const Muted: Story = {
 	args: {
 		variant: 'muted',
-		children: 'Muted',
+		text: 'Muted',
 	},
 };
 
 export const Small: Story = {
 	args: {
 		size: 'sm',
-		children: 'Small Badge',
+		text: 'Small Badge',
 	},
 };
