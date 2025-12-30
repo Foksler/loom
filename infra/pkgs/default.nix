@@ -35,4 +35,8 @@ in
     loom-cli-linux = final.loom-cli-linux;
     inherit loom-cli-windows loom-cli-macos loom-cli-linux-aarch64 loom-cli-windows-aarch64;
   };
+
+  weaver-image = final.callPackage ./weaver-image.nix {
+    loom-cli = final.loom-cli;
+  };
 }

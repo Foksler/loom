@@ -52,7 +52,7 @@
         {
           inherit (pkgs) smtprelay loom-server loom-cli loom-cli-linux loom-web;
           inherit (pkgs) loom-cli-windows loom-cli-macos loom-cli-linux-aarch64 loom-cli-windows-aarch64;
-          inherit (pkgs) loom-cli-binaries;
+          inherit (pkgs) loom-cli-binaries weaver-image;
           inherit (pkgsWithTools) license;
         };
     };
