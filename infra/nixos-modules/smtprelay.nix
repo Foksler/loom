@@ -70,6 +70,14 @@ in
   };
 
   config = mkIf cfg.enable {
+    users.users.smtprelay = {
+      isSystemUser = true;
+      group = "smtprelay";
+      description = "SMTP Relay service user";
+    };
+
+    users.groups.smtprelay = {};
+
     systemd.services.smtprelay = {
       description = "SMTP Relay Service";
       after = [ "network-online.target" ];
@@ -78,7 +86,8 @@ in
 
       serviceConfig = {
         Type = "simple";
-        DynamicUser = true;
+        User = "smtprelay";
+        Group = "smtprelay";
         Restart = "always";
         RestartSec = "5s";
 

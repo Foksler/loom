@@ -135,9 +135,9 @@
   };
 
   sops.secrets.smtp-relay-auth = {
-    owner = "root";
-    group = "root";
-    mode = "0444";
+    owner = "smtprelay";
+    group = "smtprelay";
+    mode = "0400";
   };
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
