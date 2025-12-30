@@ -283,6 +283,53 @@ in
       };
     };
 
+    # SMTP Configuration
+    smtp = {
+      enable = mkEnableOption "SMTP email sending";
+
+      host = mkOption {
+        type = types.str;
+        default = "127.0.0.1";
+        description = "SMTP server hostname.";
+      };
+
+      port = mkOption {
+        type = types.port;
+        default = 2525;
+        description = "SMTP server port.";
+      };
+
+      username = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = "SMTP username for authentication.";
+      };
+
+      passwordFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = "Path to file containing SMTP password.";
+      };
+
+      fromAddress = mkOption {
+        type = types.str;
+        description = "Email address to send from.";
+        example = "noreply@example.com";
+      };
+
+      fromName = mkOption {
+        type = types.str;
+        default = "Loom";
+        description = "Display name for sent emails.";
+      };
+
+      useTLS = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Whether to use TLS for SMTP connection.";
+      };
+    };
+
     # Weaver Provisioner Configuration
     weaver = {
       enable = mkEnableOption "Weaver provisioner for Kubernetes-based code execution environments";
@@ -457,6 +504,16 @@ in
         (mkIf cfg.geoip.enable {
           LOOM_GEOIP_DATABASE_PATH = toString cfg.geoip.databasePath;
         })
+        (mkIf cfg.smtp.enable {
+          LOOM_SERVER_SMTP_HOST = cfg.smtp.host;
+          LOOM_SERVER_SMTP_PORT = toString cfg.smtp.port;
+          LOOM_SERVER_SMTP_FROM_ADDRESS = cfg.smtp.fromAddress;
+          LOOM_SERVER_SMTP_FROM_NAME = cfg.smtp.fromName;
+          LOOM_SERVER_SMTP_USE_TLS = if cfg.smtp.useTLS then "true" else "false";
+        })
+        (mkIf (cfg.smtp.enable && cfg.smtp.username != null) {
+          LOOM_SERVER_SMTP_USERNAME = cfg.smtp.username;
+        })
         cfg.extraEnvironment
       ];
 
@@ -490,6 +547,9 @@ in
         # Google CSE Secrets
         ${loadSecret cfg.googleCse.apiKeyFile "LOOM_SERVER_GOOGLE_CSE_API_KEY"}
         ${loadSecret cfg.googleCse.searchEngineIdFile "LOOM_SERVER_GOOGLE_CSE_SEARCH_ENGINE_ID"}
+
+        # SMTP Secrets
+        ${loadSecret cfg.smtp.passwordFile "LOOM_SERVER_SMTP_PASSWORD"}
 
         exec ${cfg.package}/bin/loom-server
       '';

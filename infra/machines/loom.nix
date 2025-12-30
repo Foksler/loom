@@ -25,6 +25,7 @@
     ../nixos-modules/loom-web.nix
     ../nixos-modules/k3s.nix
     ../nixos-modules/maxmind-geoip-update.nix
+    ../nixos-modules/smtprelay.nix
   ];
 
   # Machine-specific configuration
@@ -133,6 +134,11 @@
     mode = "0400";
   };
 
+  sops.secrets.smtp-relay-auth = {
+    owner = "root";
+    mode = "0400";
+  };
+
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
   system.stateVersion = "25.11";
@@ -205,6 +211,15 @@
     geoip = {
       enable = true;
     };
+
+    smtp = {
+      enable = true;
+      host = "127.0.0.1";
+      port = 2525;
+      fromAddress = "noreply@loom.ghuntley.com";
+      fromName = "Loom";
+      useTLS = false;
+    };
   };
 
   # Loom Web - Web frontend
@@ -222,5 +237,14 @@
     enable = true;
     accountIdFile = config.sops.secrets.maxmind-account-id.path;
     licenseKeyFile = config.sops.secrets.maxmind-license-key.path;
+  };
+
+  # SMTP Relay - forwards emails to external SMTP server (smtp2go)
+  services.loom-smtprelay = {
+    enable = true;
+    listenAddress = "127.0.0.1:2525";
+    remoteHost = "mail-au.smtp2go.com:2525";
+    remoteAuthFile = config.sops.secrets.smtp-relay-auth.path;
+    useTLS = true;
   };
 }
