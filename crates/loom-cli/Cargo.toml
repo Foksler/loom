@@ -23,6 +23,7 @@ dirs = "6"
 futures = { workspace = true }
 hex = { workspace = true }
 sha2 = { workspace = true }
+sys-locale = "0.3"
 humantime = "2"
 loom-acp = { path = "../loom-acp" }
 loom-auto-commit = { path = "../loom-auto-commit" }

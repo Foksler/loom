@@ -763,3 +763,159 @@ msgstr "LOOM_UPDATE_BASE_URL or LOOM_THREAD_SYNC_URL must be set for updates"
 #: CLI: Update - Error: check failed
 msgid "client.update.error.check_failed"
 msgstr "Failed to check for updates: {status}"
+
+# ============================================================================
+# CLI: Authentication
+# ============================================================================
+
+#: CLI: Auth - Visit URL prompt
+msgid "client.auth.visit_url"
+msgstr "Visit {url} and enter code: {code}"
+
+#: CLI: Auth - Browser open failed
+msgid "client.auth.browser_failed"
+msgstr "(could not open browser automatically)"
+
+#: CLI: Auth - Waiting for authorization
+msgid "client.auth.waiting"
+msgstr "Waiting for authorization"
+
+#: CLI: Auth - Authorization timed out
+msgid "client.auth.timed_out"
+msgstr "Authorization timed out"
+
+#: CLI: Auth - Login cancelled
+msgid "client.auth.cancelled"
+msgstr "Login cancelled"
+
+#: CLI: Auth - Login successful
+msgid "client.auth.login_success"
+msgstr "Successfully logged in to {server}"
+
+#: CLI: Auth - Device code expired
+msgid "client.auth.device_expired"
+msgstr "Device code expired"
+
+#: CLI: Auth - Logged out
+msgid "client.auth.logged_out"
+msgstr "Logged out from {server}"
+
+# ============================================================================
+# CLI: REPL
+# ============================================================================
+
+#: CLI: REPL - Welcome message
+msgid "client.repl.welcome"
+msgstr "Welcome to Loom - AI-powered coding assistant"
+
+#: CLI: REPL - Thread ID
+msgid "client.repl.thread_id"
+msgstr "Thread: {id}"
+
+#: CLI: REPL - Instructions
+msgid "client.repl.instructions"
+msgstr "Type your message and press Enter. Use Ctrl+C to exit."
+
+#: CLI: REPL - Interrupted
+msgid "client.repl.interrupted"
+msgstr "Interrupted. Thread saved. Goodbye!"
+
+#: CLI: REPL - Error
+msgid "client.repl.error"
+msgstr "Error: {error}"
+
+# ============================================================================
+# CLI: Search
+# ============================================================================
+
+#: CLI: Search - No results
+msgid "client.search.no_results"
+msgstr "No results found for \"{query}\""
+
+#: CLI: Search - Results header
+msgid "client.search.results_header"
+msgstr "Results for \"{query}\" ({count} hits):"
+
+#: CLI: Search - Local no results
+msgid "client.search.local_no_results"
+msgstr "No results found for \"{query}\" (local search)"
+
+#: CLI: Search - Local results header
+msgid "client.search.local_results_header"
+msgstr "Local results for \"{query}\" ({count} hits):"
+
+# ============================================================================
+# CLI: Threads
+# ============================================================================
+
+#: CLI: Threads - No threads
+msgid "client.threads.no_threads"
+msgstr "No threads found."
+
+#: CLI: Threads - List header
+msgid "client.threads.list_header"
+msgstr "{id:<40} {title:<40} {updated:<20}"
+
+#: CLI: Threads - Private session
+msgid "client.threads.private_session"
+msgstr "Starting private session (local-only, never synced to server)."
+
+#: CLI: Threads - Shared with support
+msgid "client.threads.shared_support"
+msgstr "Thread {id} has been shared with support."
+
+#: CLI: Threads - Visibility changed
+msgid "client.threads.visibility_changed"
+msgstr "Thread {id} visibility changed to {visibility}."
+
+# ============================================================================
+# CLI: Weaver
+# ============================================================================
+
+#: CLI: Weaver - Creating
+msgid "client.weaver.creating"
+msgstr "Creating weaver..."
+
+#: CLI: Weaver - Created ID
+msgid "client.weaver.created_id"
+msgstr "  ID:    {id}"
+
+#: CLI: Weaver - Created image
+msgid "client.weaver.created_image"
+msgstr "  Image: {image}"
+
+#: CLI: Weaver - Created TTL
+msgid "client.weaver.created_ttl"
+msgstr "  TTL:   {hours} hours"
+
+#: CLI: Weaver - Attaching
+msgid "client.weaver.attaching"
+msgstr "Attaching to weaver..."
+
+#: CLI: Weaver - Detached
+msgid "client.weaver.detached"
+msgstr "[detached from weaver {id}]"
+
+#: CLI: Weaver - Reattach hint
+msgid "client.weaver.reattach_hint"
+msgstr "Weaver still running. Reattach with: loom attach {id}"
+
+#: CLI: Weaver - No weavers
+msgid "client.weaver.no_weavers"
+msgstr "No weavers running."
+
+#: CLI: Weaver - List header
+msgid "client.weaver.list_header"
+msgstr "{id:<40} {image:<30} {status:<10} {age:<8} {ttl:<8}"
+
+#: CLI: Weaver - Deleting
+msgid "client.weaver.deleting"
+msgstr "Deleting weaver {id}..."
+
+#: CLI: Weaver - Deleted
+msgid "client.weaver.deleted"
+msgstr "Weaver deleted."
+
+#: CLI: Weaver - Attach prefix
+msgid "client.weaver.attach_prefix"
+msgstr "[attaching to weaver {id}]"

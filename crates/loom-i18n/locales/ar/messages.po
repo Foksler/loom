@@ -691,3 +691,159 @@ msgstr "يجب تعيين LOOM_UPDATE_BASE_URL أو LOOM_THREAD_SYNC_URL للت�
 #: CLI: Update - Error: check failed
 msgid "client.update.error.check_failed"
 msgstr "فشل البحث عن تحديثات: {status}"
+
+# ============================================================================
+# CLI: Authentication
+# ============================================================================
+
+#: CLI: Auth - Visit URL prompt
+msgid "client.auth.visit_url"
+msgstr "قم بزيارة {url} وأدخل الرمز: {code}"
+
+#: CLI: Auth - Browser open failed
+msgid "client.auth.browser_failed"
+msgstr "(تعذر فتح المتصفح تلقائياً)"
+
+#: CLI: Auth - Waiting for authorization
+msgid "client.auth.waiting"
+msgstr "في انتظار التفويض"
+
+#: CLI: Auth - Authorization timed out
+msgid "client.auth.timed_out"
+msgstr "انتهت مهلة التفويض"
+
+#: CLI: Auth - Login cancelled
+msgid "client.auth.cancelled"
+msgstr "تم إلغاء تسجيل الدخول"
+
+#: CLI: Auth - Login successful
+msgid "client.auth.login_success"
+msgstr "تم تسجيل الدخول بنجاح إلى {server}"
+
+#: CLI: Auth - Device code expired
+msgid "client.auth.device_expired"
+msgstr "انتهت صلاحية رمز الجهاز"
+
+#: CLI: Auth - Logged out
+msgid "client.auth.logged_out"
+msgstr "تم تسجيل الخروج من {server}"
+
+# ============================================================================
+# CLI: REPL
+# ============================================================================
+
+#: CLI: REPL - Welcome message
+msgid "client.repl.welcome"
+msgstr "مرحباً بك في Loom - مساعد البرمجة بالذكاء الاصطناعي"
+
+#: CLI: REPL - Thread ID
+msgid "client.repl.thread_id"
+msgstr "المحادثة: {id}"
+
+#: CLI: REPL - Instructions
+msgid "client.repl.instructions"
+msgstr "اكتب رسالتك واضغط Enter. استخدم Ctrl+C للخروج."
+
+#: CLI: REPL - Interrupted
+msgid "client.repl.interrupted"
+msgstr "تم المقاطعة. تم حفظ المحادثة. وداعاً!"
+
+#: CLI: REPL - Error
+msgid "client.repl.error"
+msgstr "خطأ: {error}"
+
+# ============================================================================
+# CLI: Search
+# ============================================================================
+
+#: CLI: Search - No results
+msgid "client.search.no_results"
+msgstr "لم يتم العثور على نتائج لـ \"{query}\""
+
+#: CLI: Search - Results header
+msgid "client.search.results_header"
+msgstr "نتائج \"{query}\" ({count} نتيجة):"
+
+#: CLI: Search - Local no results
+msgid "client.search.local_no_results"
+msgstr "لم يتم العثور على نتائج لـ \"{query}\" (بحث محلي)"
+
+#: CLI: Search - Local results header
+msgid "client.search.local_results_header"
+msgstr "نتائج محلية لـ \"{query}\" ({count} نتيجة):"
+
+# ============================================================================
+# CLI: Threads
+# ============================================================================
+
+#: CLI: Threads - No threads
+msgid "client.threads.no_threads"
+msgstr "لم يتم العثور على محادثات."
+
+#: CLI: Threads - List header
+msgid "client.threads.list_header"
+msgstr "{id:<40} {title:<40} {updated:<20}"
+
+#: CLI: Threads - Private session
+msgid "client.threads.private_session"
+msgstr "بدء جلسة خاصة (محلية فقط، لا تتم مزامنتها مع الخادم)."
+
+#: CLI: Threads - Shared with support
+msgid "client.threads.shared_support"
+msgstr "تمت مشاركة المحادثة {id} مع الدعم."
+
+#: CLI: Threads - Visibility changed
+msgid "client.threads.visibility_changed"
+msgstr "تم تغيير رؤية المحادثة {id} إلى {visibility}."
+
+# ============================================================================
+# CLI: Weaver
+# ============================================================================
+
+#: CLI: Weaver - Creating
+msgid "client.weaver.creating"
+msgstr "جارٍ إنشاء weaver..."
+
+#: CLI: Weaver - Created ID
+msgid "client.weaver.created_id"
+msgstr "  المعرف:    {id}"
+
+#: CLI: Weaver - Created image
+msgid "client.weaver.created_image"
+msgstr "  الصورة: {image}"
+
+#: CLI: Weaver - Created TTL
+msgid "client.weaver.created_ttl"
+msgstr "  المدة:   {hours} ساعة"
+
+#: CLI: Weaver - Attaching
+msgid "client.weaver.attaching"
+msgstr "جارٍ الاتصال بـ weaver..."
+
+#: CLI: Weaver - Detached
+msgid "client.weaver.detached"
+msgstr "[تم فصل الاتصال من weaver {id}]"
+
+#: CLI: Weaver - Reattach hint
+msgid "client.weaver.reattach_hint"
+msgstr "لا يزال weaver يعمل. أعد الاتصال بـ: loom attach {id}"
+
+#: CLI: Weaver - No weavers
+msgid "client.weaver.no_weavers"
+msgstr "لا يوجد weavers قيد التشغيل."
+
+#: CLI: Weaver - List header
+msgid "client.weaver.list_header"
+msgstr "{id:<40} {image:<30} {status:<10} {age:<8} {ttl:<8}"
+
+#: CLI: Weaver - Deleting
+msgid "client.weaver.deleting"
+msgstr "جارٍ حذف weaver {id}..."
+
+#: CLI: Weaver - Deleted
+msgid "client.weaver.deleted"
+msgstr "تم حذف weaver."
+
+#: CLI: Weaver - Attach prefix
+msgid "client.weaver.attach_prefix"
+msgstr "[جارٍ الاتصال بـ weaver {id}]"

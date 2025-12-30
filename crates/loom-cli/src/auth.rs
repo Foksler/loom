@@ -7,10 +7,12 @@ use std::time::{Duration, Instant};
 
 use anyhow::{anyhow, Context, Result};
 use serde::Deserialize;
-use tracing::{debug, info, instrument};
+use tracing::{debug, info, instrument, warn};
 
 use loom_credentials::{CredentialStore, CredentialValue, KeyringThenFileStore};
 use loom_secret::SecretString;
+
+use crate::locale::get_locale;
 
 #[derive(Deserialize)]
 struct DeviceStartResponse {
@@ -69,19 +71,30 @@ pub async fn login(server_url: &str) -> Result<()> {
 	if !resp.status().is_success() {
 		let status = resp.status();
 		let body = resp.text().await.unwrap_or_default();
+		warn!(status = %status, "device start failed");
 		return Err(anyhow!("device start failed: {status} - {body}"));
 	}
 
 	let start: DeviceStartResponse = resp.json().await.context("invalid device start response")?;
+	debug!(
+		verification_url = %start.verification_url,
+		user_code = %start.user_code,
+		expires_in = start.expires_in,
+		"device code flow started"
+	);
 
 	eprintln!(
-		"\nVisit {} and enter code: {}\n",
-		start.verification_url, start.user_code
+		"\n{}\n",
+		loom_i18n::t_fmt(
+			get_locale(),
+			"client.auth.visit_url",
+			&[("url", &start.verification_url), ("code", &start.user_code)]
+		)
 	);
 
 	if let Err(e) = webbrowser::open(&start.verification_url) {
 		debug!(error = %e, "failed to open browser");
-		eprintln!("(could not open browser automatically)");
+		eprintln!("{}", loom_i18n::t(get_locale(), "client.auth.browser_failed"));
 	}
 
 	let poll_url = format!("{base}/api/auth/device/poll");
@@ -89,18 +102,18 @@ pub async fn login(server_url: &str) -> Result<()> {
 	let poll_interval = Duration::from_secs(1);
 	let started = Instant::now();
 
-	eprint!("Waiting for authorization");
+	eprint!("{}", loom_i18n::t(get_locale(), "client.auth.waiting"));
 	io::stderr().flush().ok();
 
 	loop {
 		if started.elapsed() > timeout {
-			eprintln!("\nAuthorization timed out");
+			eprintln!("\n{}", loom_i18n::t(get_locale(), "client.auth.timed_out"));
 			return Err(anyhow!("device code expired"));
 		}
 
 		tokio::select! {
 			_ = tokio::signal::ctrl_c() => {
-				eprintln!("\nLogin cancelled");
+				eprintln!("\n{}", loom_i18n::t(get_locale(), "client.auth.cancelled"));
 				return Err(anyhow!("login cancelled by user"));
 			}
 			_ = tokio::time::sleep(poll_interval) => {}
@@ -118,6 +131,7 @@ pub async fn login(server_url: &str) -> Result<()> {
 			if status.is_client_error() && status != reqwest::StatusCode::TOO_MANY_REQUESTS {
 				let body = resp.text().await.unwrap_or_default();
 				eprintln!();
+				warn!(status = %status, "device auth failed");
 				return Err(anyhow!("device auth failed: {status} - {body}"));
 			}
 			eprint!(".");
@@ -148,11 +162,14 @@ pub async fn login(server_url: &str) -> Result<()> {
 				};
 				store.save(&key, &creds).await.context("failed to save credentials")?;
 				info!("login successful");
-				eprintln!("Successfully logged in to {server_url}");
+				eprintln!(
+					"{}",
+					loom_i18n::t_fmt(get_locale(), "client.auth.login_success", &[("server", server_url)])
+				);
 				return Ok(());
 			}
 			DevicePollResponse::Expired => {
-				eprintln!("\nDevice code expired");
+				eprintln!("\n{}", loom_i18n::t(get_locale(), "client.auth.device_expired"));
 				return Err(anyhow!("device code expired"));
 			}
 		}
@@ -178,9 +195,15 @@ pub async fn logout(server_url: &str) -> Result<()> {
 			.await;
 	}
 
-	store.delete(&sanitize_server_key(server_url)).await.context("failed to delete credentials")?;
+	store
+		.delete(&sanitize_server_key(server_url))
+		.await
+		.context("failed to delete credentials")?;
 	info!("logout complete");
-	eprintln!("Logged out from {server_url}");
+	eprintln!(
+		"{}",
+		loom_i18n::t_fmt(get_locale(), "client.auth.logged_out", &[("server", server_url)])
+	);
 	Ok(())
 }
 
@@ -193,7 +216,7 @@ pub async fn load_token(server_url: &str) -> Option<SecretString> {
 		Ok(Some(CredentialValue::OAuth { access, .. })) => Some(access),
 		Ok(None) => None,
 		Err(e) => {
-			tracing::warn!(server_url = %server_url, error = %e, "failed to load credentials");
+			warn!(server_url = %server_url, error = %e, "failed to load credentials");
 			None
 		}
 	}

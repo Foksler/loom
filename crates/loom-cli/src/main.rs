@@ -58,9 +58,12 @@ use loom_tools::{
 use url::Url;
 
 mod auth;
+mod locale;
 mod update;
 mod version;
 mod weaver_client;
+
+use locale::get_locale;
 
 // loom-auto-commit now re-exports loom-git types directly, so we can use CommandGitClient
 
@@ -419,9 +422,12 @@ async fn run_repl(
 	let mut reader = BufReader::new(stdin);
 	let mut stdout = io::stdout();
 
-	println!("Welcome to Loom - AI-powered coding assistant");
-	println!("Thread: {}", thread.id);
-	println!("Type your message and press Enter. Use Ctrl+C to exit.\n");
+	println!("{}", loom_i18n::t(get_locale(), "client.repl.welcome"));
+	println!(
+		"{}",
+		loom_i18n::t_fmt(get_locale(), "client.repl.thread_id", &[("id", &thread.id.to_string())])
+	);
+	println!("{}\n", loom_i18n::t(get_locale(), "client.repl.instructions"));
 
 	let mut messages: Vec<Message> = Vec::new();
 
@@ -442,7 +448,7 @@ async fn run_repl(
 					if let Err(e) = thread_store.save(thread).await {
 						warn!(error = %e, "failed to save thread on shutdown");
 					}
-					println!("Interrupted. Thread saved. Goodbye!");
+					println!("{}", loom_i18n::t(get_locale(), "client.repl.interrupted"));
 					break;
 				}
 			}
@@ -622,7 +628,10 @@ async fn run_repl(
 							}
 							Err(e) => {
 								error!(error = %e, "failed to start LLM request");
-								eprintln!("Error: {e}");
+								eprintln!(
+									"{}",
+									loom_i18n::t_fmt(get_locale(), "client.repl.error", &[("error", &e.to_string())])
+								);
 							}
 						}
 					}
@@ -825,11 +834,21 @@ async fn search_server(
 
 fn print_search_results(results: &[serde_json::Value], query: &str) {
 	if results.is_empty() {
-		println!("No results found for \"{query}\"");
+		println!(
+			"{}",
+			loom_i18n::t_fmt(get_locale(), "client.search.no_results", &[("query", query)])
+		);
 		return;
 	}
 
-	println!("Results for \"{}\" ({} hits):\n", query, results.len());
+	println!(
+		"{}\n",
+		loom_i18n::t_fmt(
+			get_locale(),
+			"client.search.results_header",
+			&[("query", query), ("count", &results.len().to_string())]
+		)
+	);
 
 	for (i, hit) in results.iter().enumerate() {
 		let summary = hit.get("summary").unwrap_or(hit);
@@ -864,14 +883,20 @@ fn print_search_results(results: &[serde_json::Value], query: &str) {
 
 fn print_local_search_results(results: &[loom_thread::ThreadSummary], query: &str) {
 	if results.is_empty() {
-		println!("No results found for \"{query}\" (local search)");
+		println!(
+			"{}",
+			loom_i18n::t_fmt(get_locale(), "client.search.local_no_results", &[("query", query)])
+		);
 		return;
 	}
 
 	println!(
-		"Results for \"{}\" ({} hits, local search):\n",
-		query,
-		results.len()
+		"{}\n",
+		loom_i18n::t_fmt(
+			get_locale(),
+			"client.search.local_results_header",
+			&[("query", query), ("count", &results.len().to_string())]
+		)
 	);
 
 	for (i, summary) in results.iter().enumerate() {
@@ -967,7 +992,7 @@ async fn main() -> Result<()> {
 				.context("failed to list threads")?;
 
 			if threads.is_empty() {
-				println!("No threads found.");
+				println!("{}", loom_i18n::t(get_locale(), "client.threads.no_threads"));
 			} else {
 				println!(
 					"{:<42} {:<30} {:>6} {:<20}",
@@ -1023,8 +1048,11 @@ async fn main() -> Result<()> {
 			thread.is_private = true;
 			thread.visibility = ThreadVisibility::Private;
 			info!(thread_id = %thread.id, "created new private (local-only) thread");
-			println!("Starting private session (local-only, never synced to server).");
-			println!("Thread: {}", thread.id);
+			println!("{}", loom_i18n::t(get_locale(), "client.threads.private_session"));
+			println!(
+				"{}",
+				loom_i18n::t_fmt(get_locale(), "client.repl.thread_id", &[("id", &thread.id.to_string())])
+			);
 			start_repl_session(&config, &args, thread_store, thread).await
 		}
 		Some(Command::Search { query, limit, json }) => {
@@ -1085,7 +1113,14 @@ async fn main() -> Result<()> {
 					.await
 					.context("failed to save and sync thread")?;
 
-				println!("Thread {} has been shared with support.", updated.id);
+				println!(
+					"{}",
+					loom_i18n::t_fmt(
+						get_locale(),
+						"client.threads.shared_support",
+						&[("id", &updated.id.to_string())]
+					)
+				);
 			} else if let Some(v) = visibility {
 				updated.visibility = ThreadVisibility::from(v.clone());
 				updated.touch();
@@ -1102,8 +1137,15 @@ async fn main() -> Result<()> {
 					.context("failed to save and sync thread with updated visibility")?;
 
 				println!(
-					"Updated visibility of {} to {:?}.",
-					updated.id, updated.visibility
+					"{}",
+					loom_i18n::t_fmt(
+						get_locale(),
+						"client.threads.visibility_changed",
+						&[
+							("id", &updated.id.to_string()),
+							("visibility", &format!("{:?}", updated.visibility)),
+						]
+					)
 				);
 			} else {
 				anyhow::bail!("Either --visibility or --support must be specified");
@@ -1281,21 +1323,41 @@ async fn run_weaver_new(
 		lifetime_hours: ttl,
 	};
 
-	println!("Creating weaver...");
+	println!("{}", loom_i18n::t(get_locale(), "client.weaver.creating"));
 	let weaver = client.create_weaver(&request).await?;
 
-	println!("  ID:    {}", weaver.id);
-	println!("  Image: {}", weaver.image.unwrap_or_default());
-	println!("  TTL:   {} hours", weaver.lifetime_hours.unwrap_or(4));
+	println!(
+		"{}",
+		loom_i18n::t_fmt(get_locale(), "client.weaver.created_id", &[("id", &weaver.id)])
+	);
+	println!(
+		"{}",
+		loom_i18n::t_fmt(
+			get_locale(),
+			"client.weaver.created_image",
+			&[("image", &weaver.image.clone().unwrap_or_default())]
+		)
+	);
+	println!(
+		"{}",
+		loom_i18n::t_fmt(
+			get_locale(),
+			"client.weaver.created_ttl",
+			&[("hours", &weaver.lifetime_hours.unwrap_or(4).to_string())]
+		)
+	);
 	println!();
 
-	println!("Attaching to weaver...");
+	println!("{}", loom_i18n::t(get_locale(), "client.weaver.attaching"));
 	client.attach_terminal(&weaver.id).await?;
 
-	println!("\n[detached from weaver {}]", weaver.id);
 	println!(
-		"Weaver still running. Reattach with: loom attach {}",
-		weaver.id
+		"\n{}",
+		loom_i18n::t_fmt(get_locale(), "client.weaver.detached", &[("id", &weaver.id)])
+	);
+	println!(
+		"{}",
+		loom_i18n::t_fmt(get_locale(), "client.weaver.reattach_hint", &[("id", &weaver.id)])
 	);
 
 	Ok(())
@@ -1311,7 +1373,7 @@ async fn run_weaver_ps(server_url: &str, token: Option<loom_secret::SecretString
 	if json {
 		println!("{}", serde_json::to_string_pretty(&list.weavers)?);
 	} else if list.weavers.is_empty() {
-		println!("No weavers running.");
+		println!("{}", loom_i18n::t(get_locale(), "client.weaver.no_weavers"));
 	} else {
 		println!(
 			"{:<40} {:<30} {:<10} {:<8} {:<8}",
@@ -1349,9 +1411,12 @@ async fn run_weaver_delete(server_url: &str, token: Option<loom_secret::SecretSt
 		client = client.with_token(token);
 	}
 
-	println!("Deleting weaver {weaver_id}...");
+	println!(
+		"{}",
+		loom_i18n::t_fmt(get_locale(), "client.weaver.deleting", &[("id", weaver_id)])
+	);
 	client.delete_weaver(weaver_id).await?;
-	println!("Weaver deleted.");
+	println!("{}", loom_i18n::t(get_locale(), "client.weaver.deleted"));
 
 	Ok(())
 }
@@ -1362,11 +1427,20 @@ async fn run_weaver_attach(server_url: &str, token: Option<loom_secret::SecretSt
 		client = client.with_token(token);
 	}
 
-	println!("[attaching to weaver {weaver_id}]");
+	println!(
+		"{}",
+		loom_i18n::t_fmt(get_locale(), "client.weaver.attach_prefix", &[("id", weaver_id)])
+	);
 	client.attach_terminal(weaver_id).await?;
 
-	println!("\n[detached from weaver {weaver_id}]");
-	println!("Weaver still running. Reattach with: loom attach {weaver_id}");
+	println!(
+		"\n{}",
+		loom_i18n::t_fmt(get_locale(), "client.weaver.detached", &[("id", weaver_id)])
+	);
+	println!(
+		"{}",
+		loom_i18n::t_fmt(get_locale(), "client.weaver.reattach_hint", &[("id", weaver_id)])
+	);
 
 	Ok(())
 }
