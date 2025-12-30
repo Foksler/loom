@@ -106,12 +106,8 @@ in
 
         ARGS=()
         ARGS+=("-listen" "${cfg.listenAddress}")
-        ARGS+=("-remotes" "${cfg.remoteHost}")
+        ARGS+=("-remote_host" "${cfg.remoteHost}")
         ARGS+=("-log_level" "${cfg.logLevel}")
-
-        ${optionalString cfg.useTLS ''
-          ARGS+=("-remote_starttls" "true")
-        ''}
 
         ${optionalString (cfg.remoteAuthFile != null) ''
           REMOTE_CREDS=$(cat ${cfg.remoteAuthFile})
@@ -131,7 +127,7 @@ in
         ''}
 
         ${optionalString (cfg.allowedRecipients != []) ''
-          ARGS+=("-allowed_recipient" "${concatStringsSep "," cfg.allowedRecipients}")
+          ARGS+=("-allowed_recipients" "${concatStringsSep "," cfg.allowedRecipients}")
         ''}
 
         exec ${pkgs.smtprelay}/bin/smtprelay "''${ARGS[@]}"
