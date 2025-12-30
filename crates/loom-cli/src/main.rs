@@ -58,6 +58,7 @@ use loom_tools::{
 use url::Url;
 
 mod auth;
+mod update;
 mod version;
 mod weaver_client;
 
@@ -701,83 +702,7 @@ async fn start_repl_session(
 	.await
 }
 
-fn get_update_base_url() -> Result<Url> {
-	if let Ok(raw) = std::env::var("LOOM_UPDATE_BASE_URL") {
-		return Url::parse(&raw).context("invalid LOOM_UPDATE_BASE_URL");
-	}
-	if let Ok(sync_url) = std::env::var("LOOM_THREAD_SYNC_URL") {
-		let mut base = Url::parse(&sync_url).context("invalid LOOM_THREAD_SYNC_URL")?;
-		base.set_path("");
-		return Ok(base);
-	}
-	anyhow::bail!("LOOM_UPDATE_BASE_URL or LOOM_THREAD_SYNC_URL must be set for updates")
-}
 
-async fn run_update() -> Result<()> {
-	let build_info = version::build_info();
-	let base_url = get_update_base_url()?;
-
-	let bin_url = base_url
-		.join(&format!("bin/{}", build_info.platform))
-		.context("failed to construct update URL")?;
-
-	println!("Current version: {}", build_info.version);
-	println!("Platform:        {}", build_info.platform);
-	println!("Checking for updates from {bin_url}...");
-
-	let current_exe = std::env::current_exe().context("failed to get current executable path")?;
-
-	let http_client = loom_http::new_client();
-	let response = http_client
-		.get(bin_url.clone())
-		.send()
-		.await
-		.context("failed to download update")?;
-
-	if !response.status().is_success() {
-		anyhow::bail!(
-			"Update server returned error: {} - {}",
-			response.status(),
-			response.text().await.unwrap_or_default()
-		);
-	}
-
-	let bytes = response
-		.bytes()
-		.await
-		.context("failed to read update binary")?;
-
-	if bytes.is_empty() {
-		anyhow::bail!("Downloaded binary is empty");
-	}
-
-	println!("Downloaded {} bytes", bytes.len());
-
-	let tmp_path = current_exe.with_extension("new");
-	tokio::fs::write(&tmp_path, &bytes)
-		.await
-		.context("failed to write temporary binary")?;
-
-	#[cfg(unix)]
-	{
-		use std::os::unix::fs::PermissionsExt;
-		let mut perms = std::fs::metadata(&tmp_path)?.permissions();
-		perms.set_mode(0o755);
-		std::fs::set_permissions(&tmp_path, perms)?;
-	}
-
-	let backup_path = current_exe.with_extension("old");
-	if backup_path.exists() {
-		std::fs::remove_file(&backup_path).ok();
-	}
-
-	std::fs::rename(&current_exe, &backup_path).context("failed to backup current binary")?;
-	std::fs::rename(&tmp_path, &current_exe).context("failed to install new binary")?;
-
-	println!("Update complete! Please restart loom.");
-
-	Ok(())
-}
 
 fn snapshot_git_state(thread: &mut Thread, workspace_path: &std::path::Path) {
 	match detect_repo_status(workspace_path) {
@@ -1032,7 +957,7 @@ async fn main() -> Result<()> {
 			println!("{}", version::format_version_info());
 			Ok(())
 		}
-		Some(Command::Update) => run_update().await,
+		Some(Command::Update) => update::run_update().await,
 		Some(Command::Login) => auth::login(&args.server_url).await,
 		Some(Command::Logout) => auth::logout(&args.server_url).await,
 		Some(Command::List) => {

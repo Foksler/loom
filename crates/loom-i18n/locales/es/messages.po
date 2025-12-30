@@ -639,3 +639,55 @@ msgstr "Conexión de solo lectura: la entrada está deshabilitada para usuarios 
 #: API: Weaver - Logs access denied
 msgid "server.api.weaver.logs_denied"
 msgstr "No tienes permiso para acceder a los logs de este weaver"
+
+# ============================================================================
+# CLI: Update command
+# ============================================================================
+
+#: CLI: Update - Current version
+msgid "client.update.current_version"
+msgstr "Versión actual: {version}"
+
+#: CLI: Update - Platform
+msgid "client.update.platform"
+msgstr "Plataforma: {platform}"
+
+#: CLI: Update - Checking
+msgid "client.update.checking"
+msgstr "Buscando actualizaciones..."
+
+#: CLI: Update - Already up to date
+msgid "client.update.up_to_date"
+msgstr "Ya está actualizado (SHA: {sha})"
+
+#: CLI: Update - Update available
+msgid "client.update.available"
+msgstr "Actualización disponible: {current} -> {remote}"
+
+#: CLI: Update - Downloading
+msgid "client.update.downloading"
+msgstr "Descargando desde {url}..."
+
+#: CLI: Update - Downloaded
+msgid "client.update.downloaded"
+msgstr "Descargados {bytes} bytes (verificado)"
+
+#: CLI: Update - Complete
+msgid "client.update.complete"
+msgstr "¡Actualización completa! Por favor reinicia loom."
+
+#: CLI: Update - Error: empty binary
+msgid "client.update.error.empty_binary"
+msgstr "El binario descargado está vacío"
+
+#: CLI: Update - Error: SHA mismatch
+msgid "client.update.error.sha_mismatch"
+msgstr "SHA del binario descargado no coincide: esperado {expected}, obtenido {actual}"
+
+#: CLI: Update - Error: env not set
+msgid "client.update.error.env_not_set"
+msgstr "LOOM_UPDATE_BASE_URL o LOOM_THREAD_SYNC_URL deben estar configurados para actualizaciones"
+
+#: CLI: Update - Error: check failed
+msgid "client.update.error.check_failed"
+msgstr "Error al buscar actualizaciones: {status}"

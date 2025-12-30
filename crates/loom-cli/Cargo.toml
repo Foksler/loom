@@ -21,6 +21,8 @@ clap = { workspace = true }
 ctrlc = "3"
 dirs = "6"
 futures = { workspace = true }
+hex = { workspace = true }
+sha2 = { workspace = true }
 humantime = "2"
 loom-acp = { path = "../loom-acp" }
 loom-auto-commit = { path = "../loom-auto-commit" }
@@ -29,13 +31,14 @@ loom-core = { path = "../loom-core" }
 loom-credentials = { path = "../loom-credentials", features = ["keyring"] }
 loom-git = { path = "../loom-git" }
 loom-http = { path = "../loom-http" }
+loom-i18n = { path = "../loom-i18n" }
 loom-llm-proxy = { path = "../loom-llm-proxy" }
 loom-secret = { path = "../loom-secret" }
 loom-thread = { path = "../loom-thread" }
 loom-tools = { path = "../loom-tools" }
 loom-version = { workspace = true }
 reqwest = { workspace = true }
-self_update = { version = "0.41", default-features = false, features = ["archive-tar", "compression-flate2", "rustls"] }
+self-replace = "1"
 serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true }
