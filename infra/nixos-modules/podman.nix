@@ -1,0 +1,80 @@
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+# SPDX-License-Identifier: Proprietary
+
+# Podman container runtime configuration for Loom
+# Enables podman and loads the weaver image on system activation
+
+{ config, lib, pkgs, ... }:
+
+with lib;
+
+let
+  cfg = config.services.loom-podman;
+in
+{
+  options.services.loom-podman = {
+    enable = mkEnableOption "Podman container runtime for Loom";
+
+    weaverImage = mkOption {
+      type = types.nullOr types.package;
+      default = null;
+      description = "Weaver Docker image package to load.";
+    };
+
+    weaverImageTag = mkOption {
+      type = types.str;
+      default = "weaver:latest";
+      description = "Tag to apply to the weaver image after loading.";
+    };
+  };
+
+  config = mkIf cfg.enable {
+    # Enable podman
+    virtualisation.podman = {
+      enable = true;
+      dockerCompat = true;
+      defaultNetwork.settings.dns_enabled = true;
+    };
+
+    # Load weaver image after podman is ready
+    systemd.services.loom-weaver-image = mkIf (cfg.weaverImage != null) {
+      description = "Load Loom Weaver Docker image into Podman";
+      after = [ "podman.service" "podman.socket" ];
+      wants = [ "podman.socket" ];
+      wantedBy = [ "multi-user.target" ];
+
+      path = [ pkgs.podman ];
+
+      script = ''
+        set -euo pipefail
+
+        echo "Loading weaver image from ${cfg.weaverImage}..."
+        
+        # Load the image from the nix store
+        podman load < ${cfg.weaverImage}
+        
+        # Get the image ID that was just loaded
+        # The nix-built image is named "loom-weaver:latest"
+        IMAGE_ID=$(podman images --format "{{.ID}}" --filter "reference=loom-weaver:latest" | head -1)
+        
+        if [ -n "$IMAGE_ID" ]; then
+          echo "Tagging image $IMAGE_ID as ${cfg.weaverImageTag}"
+          podman tag "$IMAGE_ID" "${cfg.weaverImageTag}"
+          echo "Weaver image loaded and tagged successfully"
+          
+          # List the images for verification
+          podman images | grep -E "weaver|loom-weaver" || true
+        else
+          echo "Warning: Could not find loaded image"
+          podman images
+          exit 1
+        fi
+      '';
+
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+      };
+    };
+  };
+}

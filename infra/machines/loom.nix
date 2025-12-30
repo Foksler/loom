@@ -26,6 +26,7 @@
     ../nixos-modules/k3s.nix
     ../nixos-modules/maxmind-geoip-update.nix
     ../nixos-modules/smtprelay.nix
+    ../nixos-modules/podman.nix
   ];
 
   # Machine-specific configuration
@@ -249,5 +250,12 @@
     remoteHost = "mail-au.smtp2go.com:2525";
     remoteAuthFile = config.sops.secrets.smtp-relay-auth.path;
     useTLS = true;
+  };
+
+  # Podman container runtime with weaver image
+  services.loom-podman = {
+    enable = true;
+    weaverImage = pkgs.weaver-image;
+    weaverImageTag = "weaver:latest";
   };
 }

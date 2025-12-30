@@ -15,6 +15,8 @@
 , dockerTools
 , buildEnv
 , writeShellScriptBin
+, writeTextDir
+, symlinkJoin
 , loom-cli
 , cacert
 , git
@@ -23,6 +25,11 @@
 , btop
 , tmux
 , jq
+, dive
+, devenv
+, direnv
+, starship
+, neovim
 , coreutils
 , bashInteractive
 }:
@@ -60,16 +67,55 @@ let
     exec ${loom-cli}/bin/loom
   '';
 
-  # Create passwd and group files for the loom user
-  passwdFile = builtins.toFile "passwd" ''
+  # Create passwd file with loom user
+  passwdFile = writeTextDir "etc/passwd" ''
     root:x:0:0:root:/root:/bin/bash
+    nobody:x:65534:65534:Nobody:/:/sbin/nologin
     loom:x:1000:1000:loom:/home/loom:/bin/bash
   '';
 
-  groupFile = builtins.toFile "group" ''
+  # Create group file with loom group
+  groupFile = writeTextDir "etc/group" ''
     root:x:0:
+    nobody:x:65534:
     loom:x:1000:
   '';
+
+  # Create bashrc with starship init
+  bashrcFile = writeTextDir "home/loom/.bashrc" ''
+    # Loom Weaver bashrc
+    
+    # Initialize starship prompt
+    eval "$(${starship}/bin/starship init bash)"
+    
+    # Initialize direnv
+    eval "$(${direnv}/bin/direnv hook bash)"
+    
+    # Set PATH
+    export PATH="/bin:$PATH"
+    
+    # Editor aliases
+    alias vi='nvim'
+    alias vim='nvim'
+    export EDITOR=nvim
+    export VISUAL=nvim
+    
+    # Welcome message
+    echo "Welcome to Loom Weaver"
+    echo ""
+  '';
+
+  # Merge passwd/group with cacert's etc
+  etcFiles = symlinkJoin {
+    name = "etc-merged";
+    paths = [ passwdFile groupFile ];
+  };
+
+  # Home directory files
+  homeFiles = symlinkJoin {
+    name = "home-files";
+    paths = [ bashrcFile ];
+  };
 in
 dockerTools.buildImage {
   name = "loom-weaver";
@@ -82,12 +128,19 @@ dockerTools.buildImage {
       loom-cli
       entrypoint
       cacert
+      etcFiles
+      homeFiles
       git
       curl
       gh
       btop
       tmux
       jq
+      dive
+      devenv
+      direnv
+      starship
+      neovim
       coreutils
       bashInteractive
     ];
@@ -100,11 +153,6 @@ dockerTools.buildImage {
     mkdir -p home/loom
     mkdir -p workspace
     mkdir -p tmp
-    mkdir -p etc
-
-    # Create passwd and group files
-    cp ${passwdFile} etc/passwd
-    cp ${groupFile} etc/group
 
     # Set permissions
     chmod 1777 tmp
