@@ -1,0 +1,609 @@
+# Loom Server Translations - Arabic (RTL)
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>
+# SPDX-License-Identifier: Proprietary
+#
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5);\n"
+
+#: Email: Magic Link - Subject
+msgid "server.email.magic_link.subject"
+msgstr "تسجيل الدخول إلى Loom"
+
+#: Email: Magic Link - Body intro
+msgid "server.email.magic_link.body"
+msgstr "انقر على الرابط أدناه لتسجيل الدخول إلى حسابك في Loom."
+
+#: Email: Magic Link - Expiry notice
+msgid "server.email.magic_link.expires"
+msgstr "تنتهي صلاحية هذا الرابط خلال {minutes} دقيقة."
+
+#: Email: Magic Link - Ignore notice
+msgid "server.email.magic_link.ignore"
+msgstr "إذا لم تطلب هذا البريد الإلكتروني، يمكنك تجاهله بأمان."
+
+#: Email: Magic Link - Copy link instruction
+msgid "server.email.magic_link.copy_link"
+msgstr "أو انسخ والصق هذا الرابط:"
+
+#: Email: Org Invitation - Subject
+msgid "server.email.invitation.subject"
+msgstr "لقد تمت دعوتك للانضمام إلى {org_name} على Loom"
+
+#: Email: Org Invitation - Body
+msgid "server.email.invitation.body"
+msgstr "قام {inviter_name} بدعوتك للانضمام إلى منظمة \"{org_name}\" على Loom."
+
+#: Email: Org Invitation - Action instruction
+msgid "server.email.invitation.action"
+msgstr "انقر على الرابط أدناه لقبول الدعوة:"
+
+#: Email: Org Invitation - No expiry notice
+msgid "server.email.invitation.no_expiry"
+msgstr "هذه الدعوة لا تنتهي صلاحيتها، ولكن يمكن إلغاؤها من قبل مسؤول المنظمة."
+
+#: Email: Security Alert - Subject
+msgid "server.email.security_alert.subject"
+msgstr "تنبيه أمان Loom: {event}"
+
+#: Email: Security Alert - Body intro
+msgid "server.email.security_alert.body"
+msgstr "حدث حدث أمني في حسابك على Loom."
+
+#: Email: Security Alert - Event label
+msgid "server.email.security_alert.event"
+msgstr "الحدث: {event}"
+
+#: Email: Security Alert - Details label
+msgid "server.email.security_alert.details"
+msgstr "التفاصيل:"
+
+#: Email: Security Alert - Action instruction
+msgid "server.email.security_alert.action"
+msgstr "إذا لم تكن أنت، يرجى مراجعة إعدادات أمان حسابك فورًا."
+
+#: Email: Deletion Warning - Subject
+msgid "server.email.deletion_warning.subject"
+msgstr "تم جدولة حسابك في Loom للحذف"
+
+#: Email: Deletion Warning - Body
+msgid "server.email.deletion_warning.body"
+msgstr "تم جدولة حسابك في Loom للحذف الدائم خلال {days} أيام."
+
+#: Email: Deletion Warning - Restore instruction
+msgid "server.email.deletion_warning.restore"
+msgstr "إذا لم تطلب هذا الحذف، أو إذا غيرت رأيك، يمكنك استعادة حسابك عن طريق تسجيل الدخول قبل تاريخ الحذف."
+
+#: Email: Deletion Warning - Permanent notice
+msgid "server.email.deletion_warning.permanent"
+msgstr "بعد الحذف الدائم، لا يمكن استرداد بياناتك."
+
+#: Email: Deletion Scheduled - Subject
+msgid "server.email.deletion_scheduled.subject"
+msgstr "تم جدولة حذف الحساب"
+
+#: Email: Deletion Scheduled - Body
+msgid "server.email.deletion_scheduled.body"
+msgstr "تم جدولة حسابك للحذف."
+
+#: Email: Deletion Scheduled - Grace period notice
+msgid "server.email.deletion_scheduled.grace"
+msgstr "لديك {days} أيام لاستعادة حسابك عن طريق تسجيل الدخول وإلغاء الحذف."
+
+#: Email: Deletion Scheduled - Permanent notice
+msgid "server.email.deletion_scheduled.permanent"
+msgstr "بعد فترة السماح، سيتم حذف حسابك وجميع البيانات المرتبطة به بشكل دائم."
+
+#: API: Auth - Check email response
+msgid "server.api.auth.check_email"
+msgstr "تحقق من بريدك الإلكتروني للحصول على رابط تسجيل الدخول"
+
+#: API: Auth - Logged out response
+msgid "server.api.auth.logged_out"
+msgstr "تم تسجيل الخروج بنجاح"
+
+#: API: Error - Internal error
+msgid "server.api.error.internal"
+msgstr "حدث خطأ داخلي"
+
+#: API: Error - Not found
+msgid "server.api.error.not_found"
+msgstr "المورد غير موجود"
+
+#: API: Error - Unauthorized
+msgid "server.api.error.unauthorized"
+msgstr "المصادقة مطلوبة"
+
+#: API: Error - Forbidden
+msgid "server.api.error.forbidden"
+msgstr "الوصول مرفوض"
+
+#: API: Error - Bad request
+msgid "server.api.error.bad_request"
+msgstr "طلب غير صالح"
+
+#: API: Error - Conflict
+msgid "server.api.error.conflict"
+msgstr "تعارض في الموارد"
+
+#: API: Error - Gone
+msgid "server.api.error.gone"
+msgstr "المورد لم يعد متاحًا"
+
+#: API: Error - Not configured
+msgid "server.api.error.not_configured"
+msgstr "الميزة غير مكونة"
+
+# ============================================================================
+# Auth API responses
+# ============================================================================
+
+#: API: Auth - Invalid email
+msgid "server.api.auth.invalid_email"
+msgstr "يرجى تقديم عنوان بريد إلكتروني صالح"
+
+#: API: Auth - Device code authorized
+msgid "server.api.auth.device_authorized"
+msgstr "تم تفويض الجهاز بنجاح"
+
+#: API: Auth - Invalid device code
+msgid "server.api.auth.invalid_device_code"
+msgstr "رمز الجهاز غير صالح أو منتهي الصلاحية"
+
+#: API: Auth - Invalid user code
+msgid "server.api.auth.invalid_user_code"
+msgstr "رمز المستخدم غير صالح أو منتهي الصلاحية"
+
+#: API: Auth - OAuth not configured
+msgid "server.api.auth.oauth_not_configured"
+msgstr "OAuth لـ {provider} غير مكون"
+
+#: API: Auth - Magic link sent (always shown to prevent enumeration)
+msgid "server.api.auth.magic_link_sent"
+msgstr "إذا كان هناك حساب بهذا البريد الإلكتروني، فقد تم إرسال رابط تسجيل الدخول"
+
+#: API: Auth - Email not verified (Google/Okta)
+msgid "server.api.auth.email_not_verified"
+msgstr "لم يتم التحقق من عنوان البريد الإلكتروني من قبل المزود"
+
+#: API: Auth - No verified email (GitHub)
+msgid "server.api.auth.no_verified_email"
+msgstr "لم يتم العثور على عنوان بريد إلكتروني تم التحقق منه. يرجى التحقق من بريدك الإلكتروني مع GitHub والمحاولة مرة أخرى."
+
+# ============================================================================
+# User API responses
+# ============================================================================
+
+#: API: User - Not found
+msgid "server.api.user.not_found"
+msgstr "المستخدم غير موجود"
+
+#: API: User - Invalid ID
+msgid "server.api.user.invalid_id"
+msgstr "تنسيق معرف المستخدم غير صالح"
+
+#: API: User - Display name empty
+msgid "server.api.user.display_name_empty"
+msgstr "لا يمكن أن يكون اسم العرض فارغًا"
+
+#: API: User - Profile updated
+msgid "server.api.user.profile_updated"
+msgstr "تم تحديث الملف الشخصي بنجاح"
+
+#: API: User - Deletion scheduled
+msgid "server.api.user.deletion_scheduled"
+msgstr "تم جدولة الحساب للحذف"
+
+#: API: User - Deletion already scheduled
+msgid "server.api.user.deletion_already_scheduled"
+msgstr "تم جدولة حذف الحساب بالفعل"
+
+#: API: User - Deletion failed
+msgid "server.api.user.deletion_failed"
+msgstr "فشل في جدولة حذف الحساب"
+
+#: API: User - No pending deletion
+msgid "server.api.user.no_pending_deletion"
+msgstr "لا يوجد حذف معلق لهذا الحساب"
+
+#: API: User - Grace period expired
+msgid "server.api.user.grace_period_expired"
+msgstr "انتهت فترة السماح، لا يمكن استعادة الحساب"
+
+#: API: User - Account restored
+msgid "server.api.user.account_restored"
+msgstr "تم استعادة الحساب بنجاح"
+
+#: API: User - Identity unlinked
+msgid "server.api.user.identity_unlinked"
+msgstr "تم إلغاء ربط الهوية بنجاح"
+
+#: API: User - Identity not found
+msgid "server.api.user.identity_not_found"
+msgstr "الهوية غير موجودة"
+
+#: API: User - Cannot unlink last identity
+msgid "server.api.user.cannot_unlink_last_identity"
+msgstr "لا يمكن إلغاء ربط الهوية الأخيرة"
+
+# ============================================================================
+# Organization API responses
+# ============================================================================
+
+#: API: Org - Not found
+msgid "server.api.org.not_found"
+msgstr "المنظمة غير موجودة"
+
+#: API: Org - Invalid ID
+msgid "server.api.org.invalid_id"
+msgstr "معرف المنظمة غير صالح"
+
+#: API: Org - Invalid slug length
+msgid "server.api.org.invalid_slug_length"
+msgstr "يجب أن يكون الرابط المختصر بين 3 و 50 حرفًا"
+
+#: API: Org - Invalid slug format
+msgid "server.api.org.invalid_slug_format"
+msgstr "يجب أن يحتوي الرابط المختصر على أحرف أبجدية رقمية صغيرة وشرطات فقط"
+
+#: API: Org - Slug exists
+msgid "server.api.org.slug_exists"
+msgstr "توجد منظمة بهذا الرابط المختصر بالفعل"
+
+#: API: Org - Invalid role
+msgid "server.api.org.invalid_role"
+msgstr "يجب أن يكون الدور واحدًا من: owner أو admin أو member"
+
+#: API: Org - List failed
+msgid "server.api.org.list_failed"
+msgstr "فشل في إدراج المنظمات"
+
+#: API: Org - Create failed
+msgid "server.api.org.create_failed"
+msgstr "فشل في إنشاء المنظمة"
+
+#: API: Org - Not a member
+msgid "server.api.org.not_a_member"
+msgstr "أنت لست عضوًا في هذه المنظمة"
+
+# ============================================================================
+# Team API responses
+# ============================================================================
+
+#: API: Team - Not found
+msgid "server.api.team.not_found"
+msgstr "الفريق غير موجود"
+
+#: API: Team - Invalid ID
+msgid "server.api.team.invalid_id"
+msgstr "معرف الفريق غير صالح"
+
+#: API: Team - Invalid slug length
+msgid "server.api.team.invalid_slug_length"
+msgstr "يجب أن يكون الرابط المختصر بين 2 و 50 حرفًا"
+
+#: API: Team - Invalid slug format
+msgid "server.api.team.invalid_slug_format"
+msgstr "يجب أن يحتوي الرابط المختصر على أحرف أبجدية رقمية صغيرة وشرطات فقط"
+
+#: API: Team - List failed
+msgid "server.api.team.list_failed"
+msgstr "فشل في إدراج الفرق"
+
+#: API: Team - Membership check failed
+msgid "server.api.team.membership_check_failed"
+msgstr "فشل في التحقق من عضوية المنظمة"
+
+# ============================================================================
+# Invitation API responses
+# ============================================================================
+
+#: API: Invitation - Created
+msgid "server.api.invitation.created"
+msgstr "تم إرسال الدعوة بنجاح"
+
+#: API: Invitation - Cancelled
+msgid "server.api.invitation.cancelled"
+msgstr "تم إلغاء الدعوة"
+
+#: API: Invitation - Accepted
+msgid "server.api.invitation.accepted"
+msgstr "تم قبول الدعوة"
+
+#: API: Invitation - Not found
+msgid "server.api.invitation.not_found"
+msgstr "الدعوة غير موجودة"
+
+#: API: Invitation - Expired
+msgid "server.api.invitation.expired"
+msgstr "انتهت صلاحية هذه الدعوة"
+
+#: API: Invitation - Invalid token
+msgid "server.api.invitation.invalid_token"
+msgstr "رمز الدعوة غير صالح"
+
+#: API: Invitation - Already accepted
+msgid "server.api.invitation.already_accepted"
+msgstr "تم قبول هذه الدعوة بالفعل"
+
+#: API: Invitation - List failed
+msgid "server.api.invitation.list_failed"
+msgstr "فشل في إدراج الدعوات"
+
+# ============================================================================
+# Join request API responses
+# ============================================================================
+
+#: API: Join request - Created
+msgid "server.api.join_request.created"
+msgstr "تم تقديم طلب الانضمام"
+
+#: API: Join request - Approved
+msgid "server.api.join_request.approved"
+msgstr "تم الموافقة على طلب الانضمام"
+
+#: API: Join request - Rejected
+msgid "server.api.join_request.rejected"
+msgstr "تم رفض طلب الانضمام"
+
+#: API: Join request - Already member
+msgid "server.api.join_request.already_member"
+msgstr "أنت عضو بالفعل في هذه المنظمة"
+
+#: API: Join request - Already pending
+msgid "server.api.join_request.already_pending"
+msgstr "لديك طلب انضمام معلق بالفعل"
+
+#: API: Join request - Not found
+msgid "server.api.join_request.not_found"
+msgstr "طلب الانضمام غير موجود"
+
+#: API: Join request - Private org
+msgid "server.api.join_request.private_org"
+msgstr "لا يمكن طلب الانضمام إلى منظمة خاصة"
+
+# ============================================================================
+# API Key responses
+# ============================================================================
+
+#: API: API Key - Invalid org ID
+msgid "server.api.api_key.invalid_org_id"
+msgstr "تنسيق معرف المنظمة غير صالح"
+
+#: API: API Key - Name empty
+msgid "server.api.api_key.name_empty"
+msgstr "لا يمكن أن يكون اسم مفتاح API فارغًا"
+
+#: API: API Key - No scopes
+msgid "server.api.api_key.no_scopes"
+msgstr "يجب تحديد نطاق واحد على الأقل"
+
+#: API: API Key - Created
+msgid "server.api.api_key.created"
+msgstr "تم إنشاء مفتاح API"
+
+#: API: API Key - Revoked
+msgid "server.api.api_key.revoked"
+msgstr "تم إلغاء مفتاح API"
+
+#: API: API Key - Not found
+msgid "server.api.api_key.not_found"
+msgstr "مفتاح API غير موجود"
+
+#: API: API Key - List failed
+msgid "server.api.api_key.list_failed"
+msgstr "فشل في إدراج مفاتيح API"
+
+#: API: API Key - Create failed
+msgid "server.api.api_key.create_failed"
+msgstr "فشل في إنشاء مفتاح API"
+
+# ============================================================================
+# Session API responses
+# ============================================================================
+
+#: API: Session - Invalid ID
+msgid "server.api.session.invalid_id"
+msgstr "تنسيق معرف الجلسة غير صالح"
+
+#: API: Session - Not found
+msgid "server.api.session.not_found"
+msgstr "الجلسة غير موجودة"
+
+#: API: Session - Revoked
+msgid "server.api.session.revoked"
+msgstr "تم إلغاء الجلسة بنجاح"
+
+#: API: Session - List failed
+msgid "server.api.session.list_failed"
+msgstr "فشل في استرداد الجلسات"
+
+#: API: Session - Revoke failed
+msgid "server.api.session.revoke_failed"
+msgstr "فشل في إلغاء الجلسة"
+
+#: API: Session - Ownership check failed
+msgid "server.api.session.ownership_check_failed"
+msgstr "فشل في التحقق من ملكية الجلسة"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - System admin required
+msgid "server.api.admin.system_admin_required"
+msgstr "مطلوب دور مسؤول النظام"
+
+#: API: Admin - Cannot remove own admin
+msgid "server.api.admin.cannot_remove_own_admin"
+msgstr "لا يمكنك إزالة حالة المسؤول الخاصة بك"
+
+#: API: Admin - User list failed
+msgid "server.api.admin.user_list_failed"
+msgstr "فشل في إدراج المستخدمين"
+
+#: API: Admin - User update failed
+msgid "server.api.admin.user_update_failed"
+msgstr "فشل في تحديث المستخدم"
+
+#: API: Admin - Roles updated
+msgid "server.api.admin.roles_updated"
+msgstr "تم تحديث أدوار المستخدم"
+
+#: Auth: Device Page - Title
+msgid "server.auth.device.title"
+msgstr "تفويض الجهاز - Loom"
+
+#: Auth: Device Page - Heading
+msgid "server.auth.device.heading"
+msgstr "تفويض الجهاز"
+
+#: Auth: Device Page - Subtitle
+msgid "server.auth.device.subtitle"
+msgstr "أدخل الرمز الظاهر في الطرفية"
+
+#: Auth: Device Page - Code label
+msgid "server.auth.device.code_label"
+msgstr "رمز التفويض"
+
+#: Auth: Device Page - Submit button
+msgid "server.auth.device.submit"
+msgstr "تفويض الجهاز"
+
+#: Auth: Device Page - Authorizing button
+msgid "server.auth.device.authorizing"
+msgstr "جارٍ التفويض..."
+
+#: Auth: Device Page - Authorized button
+msgid "server.auth.device.authorized"
+msgstr "تم التفويض"
+
+#: Auth: Device Page - Expiry help text
+msgid "server.auth.device.expiry_help"
+msgstr "تنتهي صلاحية هذا الرمز بعد 15 دقيقة."
+
+#: Auth: Device Page - Success message
+msgid "server.auth.device.success"
+msgstr "تم تفويض الجهاز بنجاح! يمكنك إغلاق هذه النافذة."
+
+#: Auth: Device Page - Invalid code format
+msgid "server.auth.device.invalid_format"
+msgstr "يرجى إدخال رمز صالح بالتنسيق XXX-XXX-XXX"
+
+#: Auth: Device Page - Generic error
+msgid "server.auth.device.error"
+msgstr "حدث خطأ. يرجى المحاولة مرة أخرى."
+
+#: Auth: Device Page - Authorization failed
+msgid "server.auth.device.auth_failed"
+msgstr "فشل التفويض. يرجى المحاولة مرة أخرى."
+
+# ============================================================================
+# Support Access API responses
+# ============================================================================
+
+#: API: Support Access - Not support staff
+msgid "server.api.support_access.not_support_staff"
+msgstr "يمكن لموظفي الدعم فقط طلب الوصول إلى الدعم"
+
+#: API: Support Access - Thread not found
+msgid "server.api.support_access.thread_not_found"
+msgstr "المحادثة غير موجودة"
+
+#: API: Support Access - Already requested
+msgid "server.api.support_access.already_requested"
+msgstr "تم طلب الوصول إلى الدعم بالفعل لهذه المحادثة"
+
+#: API: Support Access - Already active
+msgid "server.api.support_access.already_active"
+msgstr "الوصول إلى الدعم نشط بالفعل لهذه المحادثة"
+
+#: API: Support Access - Requested
+msgid "server.api.support_access.requested"
+msgstr "تم طلب الوصول إلى الدعم"
+
+#: API: Support Access - Request failed
+msgid "server.api.support_access.request_failed"
+msgstr "فشل في طلب الوصول إلى الدعم"
+
+#: API: Support Access - Not owner
+msgid "server.api.support_access.not_owner"
+msgstr "يمكن لمالك المحادثة فقط الموافقة على الوصول إلى الدعم أو إلغائه"
+
+#: API: Support Access - No pending request
+msgid "server.api.support_access.no_pending_request"
+msgstr "لم يتم العثور على طلب وصول دعم معلق لهذه المحادثة"
+
+#: API: Support Access - Approved
+msgid "server.api.support_access.approved"
+msgstr "تمت الموافقة على الوصول إلى الدعم"
+
+#: API: Support Access - Approve failed
+msgid "server.api.support_access.approve_failed"
+msgstr "فشل في الموافقة على الوصول إلى الدعم"
+
+#: API: Support Access - No active access
+msgid "server.api.support_access.no_active_access"
+msgstr "لم يتم العثور على وصول دعم نشط لهذه المحادثة"
+
+#: API: Support Access - Revoked
+msgid "server.api.support_access.revoked"
+msgstr "تم إلغاء الوصول إلى الدعم"
+
+#: API: Support Access - Revoke failed
+msgid "server.api.support_access.revoke_failed"
+msgstr "فشل في إلغاء الوصول إلى الدعم"
+
+# ============================================================================
+# Share Link API responses
+# ============================================================================
+
+#: API: Share - Invalid thread ID
+msgid "server.api.share.invalid_thread_id"
+msgstr "تنسيق معرف المحادثة غير صالح"
+
+#: API: Share - Thread not found
+msgid "server.api.share.thread_not_found"
+msgstr "المحادثة غير موجودة"
+
+#: API: Share - Invalid expires_at
+msgid "server.api.share.invalid_expires_at"
+msgstr "تنسيق تاريخ انتهاء الصلاحية غير صالح. استخدم تنسيق RFC 3339."
+
+#: API: Share - Create failed
+msgid "server.api.share.create_failed"
+msgstr "فشل في إنشاء رابط المشاركة"
+
+#: API: Share - Link not found
+msgid "server.api.share.link_not_found"
+msgstr "لم يتم العثور على رابط مشاركة نشط لهذه المحادثة"
+
+#: API: Share - Revoked
+msgid "server.api.share.revoked"
+msgstr "تم إلغاء رابط المشاركة"
+
+#: API: Share - Revoke failed
+msgid "server.api.share.revoke_failed"
+msgstr "فشل في إلغاء رابط المشاركة"
+
+#: API: Share - Invalid or expired link
+msgid "server.api.share.invalid_or_expired"
+msgstr "رابط مشاركة غير صالح أو منتهي الصلاحية"
+
+#: API: Share - Link revoked
+msgid "server.api.share.link_revoked"
+msgstr "تم إلغاء رابط المشاركة هذا"
+
+#: API: Share - Link expired
+msgid "server.api.share.link_expired"
+msgstr "انتهت صلاحية رابط المشاركة هذا"
+
+#: API: Share - Validation failed
+msgid "server.api.share.validation_failed"
+msgstr "فشل في التحقق من رابط المشاركة"
+
+#: API: Share - Fetch failed
+msgid "server.api.share.fetch_failed"
+msgstr "فشل في جلب المحادثة"
