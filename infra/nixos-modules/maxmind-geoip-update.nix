@@ -39,16 +39,58 @@ in
       ];
       description = "List of GeoIP database edition IDs to download.";
     };
+
+    interval = mkOption {
+      type = types.str;
+      default = "weekly";
+      description = "How often to update the databases (systemd timer format).";
+    };
   };
 
   config = mkIf cfg.enable {
-    services.geoipupdate = {
-      enable = true;
-      settings = {
-        AccountID = cfg.accountIdFile;
-        LicenseKey = cfg.licenseKeyFile;
-        EditionIDs = cfg.editionIds;
-        DatabaseDirectory = cfg.stateDir;
+    systemd.tmpfiles.rules = [
+      "d ${cfg.stateDir} 0755 root root -"
+    ];
+
+    systemd.services.geoipupdate = {
+      description = "MaxMind GeoIP database updater";
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+
+      serviceConfig = {
+        Type = "oneshot";
+        User = "root";
+        StateDirectory = "GeoIP";
+      };
+
+      script = ''
+        set -euo pipefail
+
+        ACCOUNT_ID=$(cat ${cfg.accountIdFile})
+        LICENSE_KEY=$(cat ${cfg.licenseKeyFile})
+        EDITION_IDS="${concatStringsSep " " cfg.editionIds}"
+
+        CONFIG_FILE=$(mktemp)
+        trap "rm -f $CONFIG_FILE" EXIT
+
+        cat > "$CONFIG_FILE" <<EOF
+        AccountID $ACCOUNT_ID
+        LicenseKey $LICENSE_KEY
+        EditionIDs $EDITION_IDS
+        DatabaseDirectory ${cfg.stateDir}
+        EOF
+
+        ${pkgs.geoipupdate}/bin/geoipupdate -f "$CONFIG_FILE" -v
+      '';
+    };
+
+    systemd.timers.geoipupdate = {
+      description = "Timer for MaxMind GeoIP database updates";
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnCalendar = cfg.interval;
+        Persistent = true;
+        RandomizedDelaySec = "1h";
       };
     };
   };
