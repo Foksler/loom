@@ -31,9 +31,14 @@ in
   
   inherit loom-cli-windows loom-cli-macos loom-cli-linux-aarch64 loom-cli-windows-aarch64;
   
+  # Only build x86_64 Linux for now - cross-compilation for other platforms
+  # requires additional setup (fenix toolchains, SDKs, etc.)
   loom-cli-binaries = final.callPackage ./loom-cli-binaries.nix {
     loom-cli-linux = final.loom-cli-linux;
-    inherit loom-cli-windows loom-cli-macos loom-cli-linux-aarch64 loom-cli-windows-aarch64;
+    loom-cli-windows = null;
+    loom-cli-macos = null;
+    loom-cli-linux-aarch64 = null;
+    loom-cli-windows-aarch64 = null;
   };
 
   weaver-image = final.callPackage ./weaver-image.nix {
