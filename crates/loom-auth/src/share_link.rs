@@ -7,11 +7,9 @@
 //! with external users (not logged in or from different organizations).
 //! Links are stored hashed for security.
 
+use crate::argon2_config::argon2_instance;
 use crate::UserId;
-use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
-    Argon2,
-};
+use argon2::password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -101,12 +99,14 @@ pub fn generate_share_token() -> (String, String) {
     (token, hash)
 }
 
-/// Hash a share token using Argon2 with default parameters.
+/// Hash a share token using Argon2.
 ///
 /// The resulting hash can be safely stored in the database.
+/// Uses production-strength parameters in release builds,
+/// and fast test parameters in test builds.
 pub fn hash_share_token(token: &str) -> String {
     let salt = SaltString::generate(&mut OsRng);
-    let argon2 = Argon2::default();
+    let argon2 = argon2_instance();
     argon2
         .hash_password(token.as_bytes(), &salt)
         .expect("Argon2 hashing should not fail")
@@ -121,7 +121,7 @@ pub fn verify_share_token(token: &str, hash: &str) -> bool {
         Ok(h) => h,
         Err(_) => return false,
     };
-    Argon2::default()
+    argon2_instance()
         .verify_password(token.as_bytes(), &parsed_hash)
         .is_ok()
 }

@@ -36,6 +36,7 @@
 
 pub mod abac;
 pub mod access_token;
+mod argon2_config;
 pub mod account_deletion;
 pub mod admin;
 pub mod api_key;

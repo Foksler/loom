@@ -33,10 +33,26 @@
 //! The trade-off is slightly higher CPU cost per verification, which is acceptable for
 //! the low-frequency magic link authentication flow.
 
-use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
-    Argon2,
-};
+use argon2::password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
+use argon2::Argon2;
+#[cfg(test)]
+use argon2::{Algorithm, Params, Version};
+
+/// Returns an Argon2 instance configured appropriately for the build context.
+#[inline]
+fn argon2_instance() -> Argon2<'static> {
+    #[cfg(test)]
+    {
+        // Fast, insecure parameters for tests ONLY.
+        let params = Params::new(1024, 1, 1, None).expect("valid Argon2 params for tests");
+        Argon2::new(Algorithm::Argon2id, Version::V0x13, params)
+    }
+
+    #[cfg(not(test))]
+    {
+        Argon2::default()
+    }
+}
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
@@ -245,7 +261,7 @@ pub fn generate_magic_link_token() -> (String, String) {
 #[instrument(name = "magic_link.hash", skip_all)]
 pub fn hash_magic_link_token(token: &str) -> String {
     let salt = SaltString::generate(&mut OsRng);
-    let argon2 = Argon2::default();
+    let argon2 = argon2_instance();
     argon2
         .hash_password(token.as_bytes(), &salt)
         .expect("Argon2 hashing should not fail")
@@ -266,7 +282,7 @@ pub fn verify_magic_link_token(token: &str, hash: &str) -> bool {
         Ok(h) => h,
         Err(_) => return false,
     };
-    Argon2::default()
+    argon2_instance()
         .verify_password(token.as_bytes(), &parsed_hash)
         .is_ok()
 }

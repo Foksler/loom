@@ -6,11 +6,9 @@
 //! API keys are org-level only (not user-level), use action-based scopes,
 //! and are stored hashed with Argon2.
 
+use crate::argon2_config::argon2_instance;
 use crate::{ApiKeyId, ApiKeyScope, OrgId, UserId};
-use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
-    Argon2,
-};
+use argon2::password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
@@ -158,12 +156,14 @@ pub fn generate_api_key() -> (String, String) {
     (key, hash)
 }
 
-/// Hash an API key using Argon2 with default parameters.
+/// Hash an API key using Argon2.
 ///
 /// The resulting hash can be safely stored in the database.
+/// Uses production-strength parameters in release builds,
+/// and fast test parameters in test builds.
 pub fn hash_api_key(key: &str) -> String {
     let salt = SaltString::generate(&mut OsRng);
-    let argon2 = Argon2::default();
+    let argon2 = argon2_instance();
     argon2
         .hash_password(key.as_bytes(), &salt)
         .expect("Argon2 hashing should not fail")
@@ -178,7 +178,7 @@ pub fn verify_api_key(key: &str, hash: &str) -> bool {
         Ok(h) => h,
         Err(_) => return false,
     };
-    Argon2::default()
+    argon2_instance()
         .verify_password(key.as_bytes(), &parsed_hash)
         .is_ok()
 }
