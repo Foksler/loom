@@ -218,7 +218,7 @@
       port = 2525;
       fromAddress = "noreply@loom.ghuntley.com";
       fromName = "Loom";
-      useTLS = false;
+      useTLS = true;
     };
   };
 
