@@ -437,18 +437,19 @@ Authorization: Bearer <token>
 
 Weavers use Attribute-Based Access Control:
 
-| Action | Owner | System Admin |
-|--------|-------|--------------|
-| Create | ✓ | ✓ |
-| List own | ✓ | ✓ (sees all) |
-| Get | ✓ | ✓ |
-| Attach | ✓ | ✓ |
-| Delete | ✓ | ✓ |
-| Cleanup | ✗ | ✓ |
+| Action | Owner | System Admin | Support |
+|--------|-------|--------------|---------|
+| Create | ✓ | ✓ | ✗ |
+| List own | ✓ | ✓ (sees all) | ✓ (sees all) |
+| Get | ✓ | ✓ | ✓ |
+| Attach | ✓ | ✓ | ✓ (read-only) |
+| Delete | ✓ | ✓ | ✗ |
+| Cleanup | ✗ | ✓ | ✗ |
 
 - Each weaver has an `owner_user_id` stored as K8s label
 - Users can only manage their own weavers
 - System admins can manage any weaver
+- Support users have read-only access: they can view weaver output but cannot send input when attached
 
 ### 6.3 Pod Security
 

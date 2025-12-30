@@ -602,12 +602,49 @@ fn is_allowed(subject: &SubjectAttrs, action: Action, resource: &ResourceAttrs) 
 
 ### Weaver Policies
 
+Weavers are user-owned compute resources that run agent sessions.
+
+**Access Model:**
+- System admins have full access to all weavers
+- Owners have full access to their own weavers
+- Support users have read-only access to all weavers (for debugging/assistance)
+- Other users have no access to weavers they don't own
+
+**Permissions Matrix:**
+
+| Action | Owner | Support | System Admin |
+|--------|-------|---------|--------------|
+| Create | ✓ | ✓ | ✓ |
+| List (own) | ✓ | ✓ (all) | ✓ (all) |
+| Get | ✓ | ✓ | ✓ |
+| View Logs | ✓ | ✓ | ✓ |
+| Attach | ✓ | ✓ (read-only) | ✓ |
+| Delete | ✓ | ✗ | ✓ |
+
+**Policy Details:**
+
 **Create:**
 - Any authenticated user allowed
 
-**Read/Write/Delete/Attach:**
+**List:**
+- Owner can list their own weavers
+- `support` role can list all weavers (for debugging)
+- `system_admin` role can list all weavers
+
+**Get/View Logs:**
+- Owner allowed
+- `support` role allowed (read-only access for debugging)
+- `system_admin` role allowed
+
+**Attach:**
+- Owner allowed (full read/write)
+- `support` role allowed (read-only mode for debugging)
+- `system_admin` role allowed (full read/write)
+
+**Delete:**
 - Owner allowed
 - `system_admin` role allowed
+- `support` role **not** allowed (read-only)
 
 **Cleanup (admin operation):**
 - `system_admin` role only
