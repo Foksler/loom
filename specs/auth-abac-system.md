@@ -96,6 +96,7 @@ OAuth providers require the following environment variables:
 │  ┌──────────────────────────────────────────────────────────────────┐   │
 │  │                    Protected Resources                            │   │
 │  │   Threads    Workspaces    LLM Proxy    Tools    Organizations   │   │
+│  │   Weavers                                                         │   │
 │  └──────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────┘
                                │
@@ -542,7 +543,7 @@ struct SubjectAttrs {
 
 ```rust
 struct ResourceAttrs {
-    resource_type: ResourceType,  // Thread, Workspace, Tool, Organization, Team, User, ApiKey, Llm
+    resource_type: ResourceType,  // Thread, Workspace, Tool, Organization, Team, User, ApiKey, Llm, Weaver
     owner_user_id: Option<UserId>,
     org_id: Option<OrgId>,
     team_id: Option<TeamId>,
@@ -598,6 +599,18 @@ fn is_allowed(subject: &SubjectAttrs, action: Action, resource: &ResourceAttrs) 
 
 **Share:**
 - Owner allowed
+
+### Weaver Policies
+
+**Create:**
+- Any authenticated user allowed
+
+**Read/Write/Delete/Attach:**
+- Owner allowed
+- `system_admin` role allowed
+
+**Cleanup (admin operation):**
+- `system_admin` role only
 
 ### Tool/LLM Access
 

@@ -121,6 +121,7 @@ metadata:
   labels:
     loom.dev/managed: "true"
     loom.dev/weaver-id: "018f6b2a-..."
+    loom.dev/owner-user-id: "user-uuid-here"
   annotations:
     loom.dev/tags: '{"project":"ai-worker","env":"prod"}'
     loom.dev/lifetime-hours: "4"
@@ -191,7 +192,9 @@ Provision a new weaver.
   "lifetime_hours": 8,
   "command": ["/bin/sh", "-c"],
   "args": ["python worker.py"],
-  "workdir": "/app"
+  "workdir": "/app",
+  "repo": "https://github.com/org/repo.git",
+  "branch": "main"
 }
 ```
 
@@ -205,6 +208,8 @@ Provision a new weaver.
 | `command` | string[] | No | Override ENTRYPOINT |
 | `args` | string[] | No | Override CMD |
 | `workdir` | string | No | Override WORKDIR |
+| `repo` | string | No | Git repository URL to clone (public https) |
+| `branch` | string | No | Git branch to checkout |
 
 **Response (201 Created):**
 
@@ -213,7 +218,8 @@ Provision a new weaver.
   "id": "018f6b2a-3b4c-7d8e-9f0a-1b2c3d4e5f6g",
   "pod_name": "weaver-018f6b2a-3b4c-7d8e-9f0a-1b2c3d4e5f6g",
   "status": "running",
-  "created_at": "2025-01-15T12:34:56Z"
+  "created_at": "2025-01-15T12:34:56Z",
+  "owner_user_id": "user-uuid-here"
 }
 ```
 
@@ -309,6 +315,16 @@ Trigger manual cleanup of expired weavers.
   "deleted_ids": ["018f6b2a-...", "018f6b2b-...", "018f6b2c-..."]
 }
 ```
+
+### 5.8 Authentication
+
+All weaver endpoints require authentication via:
+- Session cookie (web)
+- Bearer token (CLI/API)
+
+Authorization is based on ownership:
+- Users can only access their own weavers
+- System administrators can access all weavers
 
 ---
 
