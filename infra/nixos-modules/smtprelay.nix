@@ -49,6 +49,20 @@ in
       example = [ "@example.com$" "^admin@" ];
     };
 
+    hostname = mkOption {
+      type = types.str;
+      default = "localhost.localdomain";
+      description = "Hostname for this SMTP server (used in EHLO).";
+      example = "loom.ghuntley.com";
+    };
+
+    remoteSender = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = "Sender e-mail address on outgoing SMTP server. If set, rewrites the sender address.";
+      example = "noreply@loom.ghuntley.com";
+    };
+
     allowedRecipients = mkOption {
       type = types.listOf types.str;
       default = [];
@@ -106,6 +120,7 @@ in
 
         ARGS=()
         ARGS+=("-listen" "${cfg.listenAddress}")
+        ARGS+=("-hostname" "${cfg.hostname}")
         ARGS+=("-remote_host" "${cfg.remoteHost}")
         ARGS+=("-log_level" "${cfg.logLevel}")
 
@@ -127,6 +142,10 @@ in
 
         ${optionalString (cfg.allowedRecipients != []) ''
           ARGS+=("-allowed_recipients" "${concatStringsSep "," cfg.allowedRecipients}")
+        ''}
+
+        ${optionalString (cfg.remoteSender != null) ''
+          ARGS+=("-remote_sender" "${cfg.remoteSender}")
         ''}
 
         exec ${pkgs.smtprelay}/bin/smtprelay "''${ARGS[@]}"

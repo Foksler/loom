@@ -244,6 +244,8 @@
   services.loom-smtprelay = {
     enable = true;
     listenAddress = "127.0.0.1:2525";
+    hostname = "loom.ghuntley.com";
+    remoteSender = "noreply@loom.ghuntley.com";
     remoteHost = "mail-au.smtp2go.com:2525";
     remoteAuthFile = config.sops.secrets.smtp-relay-auth.path;
     useTLS = true;
