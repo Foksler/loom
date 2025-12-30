@@ -141,6 +141,11 @@
     mode = "0400";
   };
 
+  sops.secrets.ghcr-token = {
+    owner = "root";
+    mode = "0400";
+  };
+
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
   system.stateVersion = "25.11";
@@ -257,5 +262,12 @@
     enable = true;
     weaverImage = pkgs.weaver-image;
     weaverImageTag = "weaver:latest";
+
+    ghcr = {
+      enable = true;
+      username = "ghuntley";
+      repository = "ghuntley/loom";
+      tokenFile = config.sops.secrets.ghcr-token.path;
+    };
   };
 }

@@ -26,6 +26,28 @@ in
       default = "weaver:latest";
       description = "Tag to apply to the weaver image after loading.";
     };
+
+    ghcr = {
+      enable = mkEnableOption "Push weaver image to GitHub Container Registry";
+
+      username = mkOption {
+        type = types.str;
+        default = "ghuntley";
+        description = "GitHub username for ghcr.io authentication.";
+      };
+
+      repository = mkOption {
+        type = types.str;
+        default = "ghuntley/loom";
+        description = "GitHub repository for the container image (user/repo).";
+      };
+
+      tokenFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = "Path to file containing GitHub PAT with write:packages scope.";
+      };
+    };
   };
 
   config = mkIf cfg.enable {
@@ -69,6 +91,26 @@ in
           podman images
           exit 1
         fi
+
+        ${optionalString (cfg.ghcr.enable && cfg.ghcr.tokenFile != null) ''
+          echo "Pushing weaver image to ghcr.io/${cfg.ghcr.repository}..."
+          
+          # Login to ghcr.io
+          GITHUB_TOKEN=$(cat ${cfg.ghcr.tokenFile})
+          echo "$GITHUB_TOKEN" | podman login ghcr.io -u ${cfg.ghcr.username} --password-stdin
+          
+          # Tag for ghcr.io
+          GHCR_TAG="ghcr.io/${cfg.ghcr.repository}/weaver:latest"
+          podman tag "$IMAGE_ID" "$GHCR_TAG"
+          
+          # Push to ghcr.io
+          podman push "$GHCR_TAG"
+          
+          echo "Successfully pushed to $GHCR_TAG"
+          
+          # Logout
+          podman logout ghcr.io || true
+        ''}
       '';
 
       serviceConfig = {
