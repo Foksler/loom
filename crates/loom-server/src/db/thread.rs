@@ -1,59 +1,18 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights
 // reserved. SPDX-License-Identifier: Proprietary
 
-//! SQLite database operations for thread persistence.
+//! Thread repository for database operations.
 
 use loom_google_cse::CseResponse;
 use loom_thread::{Thread, ThreadId, ThreadSummary};
-use serde::{Deserialize, Serialize};
-use sqlx::{
-	sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePool, SqliteSynchronous},
-	Row,
-};
-use std::str::FromStr;
+use sqlx::{sqlite::SqlitePool, Row};
 
 use crate::error::ServerError;
 
-/// GitHub App installation info stored in the database.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GithubInstallation {
-	pub installation_id: i64,
-	pub account_id: i64,
-	pub account_login: String,
-	pub account_type: String,
-	pub app_slug: Option<String>,
-	pub repositories_selection: String,
-	pub suspended_at: Option<String>,
-	pub created_at: String,
-	pub updated_at: String,
-}
-
-/// GitHub repository linked to an installation.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GithubRepo {
-	pub repository_id: i64,
-	pub owner: String,
-	pub name: String,
-	pub full_name: String,
-	pub private: bool,
-	pub default_branch: Option<String>,
-}
-
-/// Installation info with minimal fields for lookups.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GithubInstallationInfo {
-	pub installation_id: i64,
-	pub account_login: String,
-	pub account_type: String,
-	pub repositories_selection: String,
-}
-
-/// A search result hit with relevance score
-#[derive(Debug, Clone)]
-pub struct ThreadSearchHit {
-	pub summary: ThreadSummary,
-	pub score: f64,
-}
+use super::{
+	create_pool, run_migrations, GithubInstallation, GithubInstallationInfo, GithubRepo,
+	ThreadSearchHit,
+};
 
 /// Get or create a repo entry in the repos table, returning its id.
 async fn get_or_create_repo_id(pool: &SqlitePool, slug: &str) -> Result<Option<i64>, ServerError> {
@@ -116,122 +75,23 @@ impl ThreadRepository {
 	///
 	/// Configures SQLite with WAL mode for multi-reader, single-writer.
 	pub async fn new(database_url: &str) -> Result<Self, ServerError> {
-		let options = SqliteConnectOptions::from_str(database_url)
-			.map_err(|e| ServerError::Internal(format!("Invalid database URL: {e}")))?
-			.journal_mode(SqliteJournalMode::Wal)
-			.synchronous(SqliteSynchronous::Normal)
-			.create_if_missing(true);
+		let pool = create_pool(database_url).await?;
 
-		let pool = SqlitePool::connect_with(options).await?;
-
-		// Run migrations
-		Self::run_migrations(&pool).await?;
+		run_migrations(&pool).await?;
 
 		tracing::info!(database_url = %database_url, "database connection established");
 
 		Ok(Self { pool })
 	}
 
-	/// Run database migrations.
-	async fn run_migrations(pool: &SqlitePool) -> Result<(), ServerError> {
-		let m1 = include_str!("../migrations/001_create_threads.sql");
-		sqlx::query(m1).execute(pool).await?;
+	/// Create a new repository from an existing pool.
+	pub fn from_pool(pool: SqlitePool) -> Self {
+		Self { pool }
+	}
 
-		let m2 = include_str!("../migrations/002_add_visibility.sql");
-		if let Err(e) = sqlx::query(m2).execute(pool).await {
-			let msg = e.to_string();
-			// Gracefully handle if column already exists
-			if !msg.contains("duplicate column name: visibility")
-				&& !msg.contains("duplicate column")
-				&& !msg.contains("already exists")
-			{
-				return Err(e.into());
-			}
-		}
-
-		let m3 = include_str!("../migrations/003_add_git_metadata.sql");
-		if let Err(e) = sqlx::query(m3).execute(pool).await {
-			let msg = e.to_string();
-			if !msg.contains("duplicate column") && !msg.contains("already exists") {
-				return Err(e.into());
-			}
-		}
-
-		// Migration 004: repos table and thread_commits
-		let m4 = include_str!("../migrations/004_git_repos_and_commits.sql");
-		// Split by semicolons and execute each statement
-		for stmt in m4.split(';').filter(|s| !s.trim().is_empty()) {
-			if let Err(e) = sqlx::query(stmt).execute(pool).await {
-				let msg = e.to_string();
-				if !msg.contains("duplicate column")
-					&& !msg.contains("already exists")
-					&& !msg.contains("table repos already exists")
-					&& !msg.contains("table thread_commits already exists")
-				{
-					return Err(e.into());
-				}
-			}
-		}
-
-		// Migration 005: FTS5 search
-		// Parse statements carefully: split CREATE VIRTUAL TABLE from triggers
-		let m5 = include_str!("../migrations/005_thread_fts.sql");
-
-		// Find the CREATE VIRTUAL TABLE statement (ends with ");")
-		if let Some(vt_end) = m5.find(");") {
-			let create_vt = &m5[..vt_end + 2];
-			if let Err(e) = sqlx::query(create_vt.trim()).execute(pool).await {
-				let msg = e.to_string();
-				if !msg.contains("already exists") && !msg.contains("table thread_fts already exists") {
-					tracing::warn!(error = %e, "FTS CREATE VIRTUAL TABLE failed");
-				}
-			}
-
-			// Parse triggers (split remaining text by "END;")
-			let remaining = &m5[vt_end + 2..];
-			for trigger_block in remaining.split("END;") {
-				let trigger = trigger_block.trim();
-				if trigger.is_empty() || !trigger.contains("CREATE TRIGGER") {
-					continue;
-				}
-				let full_trigger = format!("{trigger} END;");
-				if let Err(e) = sqlx::query(&full_trigger).execute(pool).await {
-					let msg = e.to_string();
-					if !msg.contains("already exists") && !msg.contains("trigger") {
-						tracing::warn!(error = %e, stmt = %full_trigger.chars().take(80).collect::<String>(), "FTS trigger creation failed");
-					}
-				}
-			}
-		}
-
-		// Migration 006: CSE cache table
-		let m6 = include_str!("../migrations/006_cse_cache.sql");
-		for stmt in m6.split(';').filter(|s| !s.trim().is_empty()) {
-			if let Err(e) = sqlx::query(stmt).execute(pool).await {
-				let msg = e.to_string();
-				if !msg.contains("already exists") && !msg.contains("duplicate column") {
-					return Err(e.into());
-				}
-			}
-		}
-
-		// Migration 007: GitHub App tables
-		let m7 = include_str!("../migrations/007_github_app.sql");
-		for stmt in m7.split(';').filter(|s| !s.trim().is_empty()) {
-			if let Err(e) = sqlx::query(stmt).execute(pool).await {
-				let msg = e.to_string();
-				if !msg.contains("already exists")
-					&& !msg.contains("duplicate column")
-					&& !msg.contains("table github_installations already exists")
-					&& !msg.contains("table github_installation_repos already exists")
-				{
-					return Err(e.into());
-				}
-			}
-		}
-
-		tracing::debug!("database migrations complete");
-		Ok(())
+	/// Get the underlying database pool.
+	pub fn pool(&self) -> &SqlitePool {
+		&self.pool
 	}
 
 	/// Upsert a thread with optional version checking.
@@ -243,11 +103,9 @@ impl ThreadRepository {
 		thread: &Thread,
 		expected_version: Option<u64>,
 	) -> Result<Thread, ServerError> {
-		// Check if thread exists
 		let existing = self.get(&thread.id).await?;
 
 		if let Some(existing_thread) = existing {
-			// Update existing thread
 			if let Some(expected) = expected_version {
 				if existing_thread.version != expected {
 					return Err(ServerError::Conflict {
@@ -259,11 +117,9 @@ impl ThreadRepository {
 
 			self.update(thread).await?;
 		} else {
-			// Insert new thread
 			self.insert(thread).await?;
 		}
 
-		// Return the stored thread
 		self
 			.get(&thread.id)
 			.await?
@@ -583,6 +439,67 @@ impl ThreadRepository {
 		Ok(deleted)
 	}
 
+	/// Get the owner_user_id for a thread.
+	pub async fn get_thread_owner_user_id(
+		&self,
+		thread_id: &str,
+	) -> Result<Option<String>, ServerError> {
+		let row: Option<(Option<String>,)> = sqlx::query_as(
+			r#"
+			SELECT owner_user_id
+			FROM threads
+			WHERE id = ? AND deleted_at IS NULL
+			"#,
+		)
+		.bind(thread_id)
+		.fetch_optional(&self.pool)
+		.await?;
+
+		Ok(row.and_then(|(owner,)| owner))
+	}
+
+	/// Set the owner_user_id for a thread.
+	pub async fn set_owner_user_id(
+		&self,
+		thread_id: &str,
+		owner_user_id: &str,
+	) -> Result<bool, ServerError> {
+		let result = sqlx::query(
+			r#"
+			UPDATE threads
+			SET owner_user_id = ?
+			WHERE id = ? AND deleted_at IS NULL
+			"#,
+		)
+		.bind(owner_user_id)
+		.bind(thread_id)
+		.execute(&self.pool)
+		.await?;
+
+		Ok(result.rows_affected() > 0)
+	}
+
+	/// Update the is_shared_with_support flag for a thread.
+	pub async fn set_shared_with_support(
+		&self,
+		thread_id: &str,
+		shared: bool,
+	) -> Result<bool, ServerError> {
+		let result = sqlx::query(
+			r#"
+			UPDATE threads
+			SET is_shared_with_support = ?
+			WHERE id = ? AND deleted_at IS NULL
+			"#,
+		)
+		.bind(shared as i32)
+		.bind(thread_id)
+		.execute(&self.pool)
+		.await?;
+
+		Ok(result.rows_affected() > 0)
+	}
+
 	/// Lightweight database health check (used by /health endpoint).
 	pub async fn health_check(&self) -> Result<(), ServerError> {
 		sqlx::query("SELECT 1")
@@ -634,7 +551,6 @@ impl ThreadRepository {
 	) -> Result<Vec<ThreadSearchHit>, ServerError> {
 		let query = query.trim();
 
-		// SHA-like heuristic: hex chars only, 7-40 length, no spaces
 		let is_sha_like = query.len() >= 7
 			&& query.len() <= 40
 			&& !query.contains(char::is_whitespace)
@@ -719,7 +635,6 @@ impl ThreadRepository {
 		limit: u32,
 		offset: u32,
 	) -> Result<Vec<ThreadSearchHit>, ServerError> {
-		// Escape quotes and wrap in phrase for safety
 		let fts_query = format!("\"{}\"", query.replace('"', " "));
 
 		let sql = if workspace.is_some() {
@@ -845,9 +760,6 @@ impl ThreadRepository {
 	// ========== CSE Cache Methods ==========
 
 	/// Normalizes a query string for cache key purposes.
-	/// - Converts to lowercase
-	/// - Collapses multiple whitespace into single spaces
-	/// - Trims leading/trailing whitespace
 	fn normalize_cache_query(query: &str) -> String {
 		query
 			.split_whitespace()
@@ -904,7 +816,6 @@ impl ThreadRepository {
 	}
 
 	/// Store CSE response in cache, upserting on conflict.
-	/// Also performs opportunistic cleanup of expired entries.
 	pub async fn put_cse_cache(
 		&self,
 		response: &CseResponse,
@@ -915,7 +826,6 @@ impl ThreadRepository {
 		let now = Utc::now().to_rfc3339();
 		let json = serde_json::to_string(response)?;
 
-		// Upsert: insert or update existing entry
 		sqlx::query(
 			r#"
             INSERT INTO cse_cache (query, max_results, response_json, created_at)
@@ -938,7 +848,6 @@ impl ThreadRepository {
 				"cse_cache: stored"
 		);
 
-		// Opportunistic cleanup of expired entries (older than 24h)
 		let cutoff = (Utc::now() - Duration::hours(24)).to_rfc3339();
 		let result = sqlx::query(
 			r#"
@@ -1235,7 +1144,6 @@ impl ThreadRepository {
 	}
 }
 
-// Helper trait for AgentStateKind
 trait AgentStateKindExt {
 	fn as_str(&self) -> &'static str;
 }
@@ -1267,7 +1175,7 @@ mod tests {
 		let db_path = dir.path().join("test.db");
 		let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 		let repo = ThreadRepository::new(&db_url).await.unwrap();
-		(repo, dir) // Return dir to keep it alive
+		(repo, dir)
 	}
 
 	fn create_test_thread() -> Thread {
@@ -1321,10 +1229,8 @@ mod tests {
 		let (repo, _dir) = create_test_repo().await;
 		let thread = create_test_thread();
 
-		// Insert initial thread
 		repo.upsert(&thread, None).await.unwrap();
 
-		// Try to update with wrong version
 		let mut updated = thread.clone();
 		updated.version = 2;
 
@@ -1339,14 +1245,11 @@ mod tests {
 
 		repo.insert(&thread).await.unwrap();
 
-		// Verify thread exists
 		assert!(repo.get(&thread.id).await.unwrap().is_some());
 
-		// Delete
 		let deleted = repo.delete(&thread.id).await.unwrap();
 		assert!(deleted);
 
-		// Verify thread is gone (soft-deleted)
 		assert!(repo.get(&thread.id).await.unwrap().is_none());
 	}
 
@@ -1354,7 +1257,6 @@ mod tests {
 	async fn test_list_threads() {
 		let (repo, _dir) = create_test_repo().await;
 
-		// Insert multiple threads
 		for _ in 0..5 {
 			let thread = create_test_thread();
 			repo.insert(&thread).await.unwrap();
@@ -1468,7 +1370,6 @@ mod tests {
 		thread.git_branch = Some("feature/unique-test-branch".to_string());
 		repo.insert(&thread).await.unwrap();
 
-		// Search by branch name
 		let hits = repo
 			.search("unique-test-branch", None, 10, 0)
 			.await
