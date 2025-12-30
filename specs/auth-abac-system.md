@@ -6,8 +6,15 @@
 # Authentication & ABAC System Specification
 
 **Status:** Implemented\
-**Version:** 1.0\
+**Version:** 1.1\
 **Last Updated:** 2025-01-02
+
+### Implementation Notes
+
+CLI authentication is implemented in `loom-cli/src/auth.rs` using:
+- **Device code flow**: `POST /api/auth/device/start` and `POST /api/auth/device/poll`
+- **Token storage**: `loom-credentials` crate with `KeyringThenFileStore` (keychain → file fallback)
+- **Automatic token loading**: All CLI commands auto-load token from credential store
 
 ---
 
@@ -279,6 +286,13 @@ Each session stores:
 
 1. Try system keychain (macOS Keychain, Windows Credential Manager, Linux Secret Service)
 2. Fallback to config file: `~/.config/loom/credentials.json`
+
+**Implementation:** `loom-credentials` crate provides:
+- `KeyringCredentialStore`: Platform keychain via `keyring` crate
+- `FileCredentialStore`: JSON file with 0600 permissions
+- `KeyringThenFileStore`: Composite store that tries keychain first, falls back to file
+
+Credentials are stored as JSON-serialized `CredentialValue` (ApiKey or OAuth tokens) keyed by sanitized server URL.
 
 ---
 

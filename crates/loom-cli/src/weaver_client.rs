@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use futures::{SinkExt, StreamExt};
+use loom_secret::SecretString;
 use serde::{Deserialize, Serialize};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_tungstenite::{
@@ -48,7 +49,7 @@ pub struct ListWeaversResponse {
 pub struct WeaverClient {
 	base_url: Url,
 	http: reqwest::Client,
-	auth_token: Option<String>,
+	auth_token: Option<SecretString>,
 }
 
 impl WeaverClient {
@@ -62,7 +63,7 @@ impl WeaverClient {
 		})
 	}
 
-	pub fn with_token(mut self, token: String) -> Self {
+	pub fn with_token(mut self, token: SecretString) -> Self {
 		self.auth_token = Some(token);
 		self
 	}
@@ -71,7 +72,7 @@ impl WeaverClient {
 		let url = self.base_url.join("api/weaver")?;
 		let mut req = self.http.post(url).json(request);
 		if let Some(token) = &self.auth_token {
-			req = req.header("Authorization", format!("Bearer {token}"));
+			req = req.header("Authorization", format!("Bearer {}", token.expose()));
 		}
 		let response = req.send().await?;
 
@@ -89,7 +90,7 @@ impl WeaverClient {
 		let url = self.base_url.join("api/weavers")?;
 		let mut req = self.http.get(url);
 		if let Some(token) = &self.auth_token {
-			req = req.header("Authorization", format!("Bearer {token}"));
+			req = req.header("Authorization", format!("Bearer {}", token.expose()));
 		}
 		let response = req.send().await?;
 
@@ -108,7 +109,7 @@ impl WeaverClient {
 		let url = self.base_url.join(&format!("api/weaver/{id}"))?;
 		let mut req = self.http.get(url);
 		if let Some(token) = &self.auth_token {
-			req = req.header("Authorization", format!("Bearer {token}"));
+			req = req.header("Authorization", format!("Bearer {}", token.expose()));
 		}
 		let response = req.send().await?;
 
@@ -126,7 +127,7 @@ impl WeaverClient {
 		let url = self.base_url.join(&format!("api/weaver/{id}"))?;
 		let mut req = self.http.delete(url);
 		if let Some(token) = &self.auth_token {
-			req = req.header("Authorization", format!("Bearer {token}"));
+			req = req.header("Authorization", format!("Bearer {}", token.expose()));
 		}
 		let response = req.send().await?;
 
@@ -156,7 +157,7 @@ impl WeaverClient {
 
 		let mut request = url.as_str().into_client_request()?;
 		if let Some(token) = &self.auth_token {
-			let auth_value = format!("Bearer {token}")
+			let auth_value = format!("Bearer {}", token.expose())
 				.parse()
 				.map_err(|_| anyhow::anyhow!("Invalid token format for Authorization header"))?;
 			request.headers_mut().insert("Authorization", auth_value);

@@ -19,15 +19,18 @@ async-trait = { workspace = true }
 chrono = { version = "0.4", features = ["serde"] }
 clap = { workspace = true }
 ctrlc = "3"
+dirs = "6"
 futures = { workspace = true }
 humantime = "2"
 loom-acp = { path = "../loom-acp" }
 loom-auto-commit = { path = "../loom-auto-commit" }
 loom-config = { path = "../loom-config" }
 loom-core = { path = "../loom-core" }
+loom-credentials = { path = "../loom-credentials", features = ["keyring"] }
 loom-git = { path = "../loom-git" }
 loom-http = { path = "../loom-http" }
 loom-llm-proxy = { path = "../loom-llm-proxy" }
+loom-secret = { path = "../loom-secret" }
 loom-thread = { path = "../loom-thread" }
 loom-tools = { path = "../loom-tools" }
 loom-version = { workspace = true }
@@ -41,3 +44,7 @@ tokio-util = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 url = "2"
+webbrowser = "1"
+
+[dev-dependencies]
+proptest = { workspace = true }

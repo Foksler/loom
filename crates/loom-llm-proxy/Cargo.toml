@@ -14,6 +14,7 @@ bytes = { workspace = true }
 futures = { workspace = true }
 loom-core = { path = "../loom-core" }
 loom-http = { path = "../loom-http" }
+loom-secret = { path = "../loom-secret" }
 pin-project-lite = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }

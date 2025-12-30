@@ -26,6 +26,12 @@ pub enum CredentialError {
 
 	#[error("{0}")]
 	Other(String),
+
+	#[error("Backend error: {0}")]
+	Backend(String),
+
+	#[error("Parse error: {0}")]
+	Parse(String),
 }
 
 impl From<std::io::Error> for CredentialError {

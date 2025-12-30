@@ -4,6 +4,7 @@
 //! HTTP client for LLM proxy communication.
 
 use async_trait::async_trait;
+use loom_secret::SecretString;
 use tracing::{debug, info, instrument};
 
 use loom_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
@@ -38,6 +39,7 @@ pub struct ProxyLlmClient {
 	base_url: String,
 	provider: LlmProvider,
 	http_client: reqwest::Client,
+	auth_token: Option<SecretString>,
 }
 
 impl ProxyLlmClient {
@@ -64,7 +66,14 @@ impl ProxyLlmClient {
 			base_url,
 			provider,
 			http_client: loom_http::new_client(),
+			auth_token: None,
 		}
+	}
+
+	/// Sets an optional authentication token for bearer auth.
+	pub fn with_auth_token(mut self, token: SecretString) -> Self {
+		self.auth_token = Some(token);
+		self
 	}
 
 	/// Creates a new proxy client with a custom HTTP client.
@@ -79,6 +88,7 @@ impl ProxyLlmClient {
 			base_url,
 			provider,
 			http_client,
+			auth_token: None,
 		}
 	}
 
@@ -112,16 +122,15 @@ impl LlmClient for ProxyLlmClient {
 		let url = self.complete_url();
 		debug!(url = %url, "sending completion request to proxy");
 
-		let response = self
-			.http_client
-			.post(&url)
-			.json(&request)
-			.send()
-			.await
-			.map_err(|e| {
-				debug!(error = %e, "HTTP request failed");
-				LlmError::Http(e.to_string())
-			})?;
+		let mut req = self.http_client.post(&url).json(&request);
+		if let Some(token) = &self.auth_token {
+			req = req.bearer_auth(token.expose());
+		}
+
+		let response = req.send().await.map_err(|e| {
+			debug!(error = %e, "HTTP request failed");
+			LlmError::Http(e.to_string())
+		})?;
 
 		let status = response.status();
 		debug!(status = %status, "received response from proxy");
@@ -156,16 +165,15 @@ impl LlmClient for ProxyLlmClient {
 		let url = self.stream_url();
 		debug!(url = %url, "sending streaming request to proxy");
 
-		let response = self
-			.http_client
-			.post(&url)
-			.json(&request)
-			.send()
-			.await
-			.map_err(|e| {
-				debug!(error = %e, "HTTP request failed");
-				LlmError::Http(e.to_string())
-			})?;
+		let mut req = self.http_client.post(&url).json(&request);
+		if let Some(token) = &self.auth_token {
+			req = req.bearer_auth(token.expose());
+		}
+
+		let response = req.send().await.map_err(|e| {
+			debug!(error = %e, "HTTP request failed");
+			LlmError::Http(e.to_string())
+		})?;
 
 		let status = response.status();
 		debug!(status = %status, "received streaming response from proxy");

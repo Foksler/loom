@@ -57,6 +57,7 @@ use loom_tools::{
 };
 use url::Url;
 
+mod auth;
 mod version;
 mod weaver_client;
 
@@ -85,10 +86,6 @@ struct Args {
 	/// Loom server URL for LLM proxy
 	#[arg(long, env = "LOOM_SERVER_URL", default_value = "http://localhost:8080")]
 	server_url: String,
-
-	/// Authentication token for weaver endpoints
-	#[arg(long, env = "LOOM_TOKEN")]
-	token: Option<String>,
 
 	/// LLM provider to use (anthropic or openai)
 	#[arg(short, long, env = "LOOM_LLM_PROVIDER", default_value = "anthropic")]
@@ -262,7 +259,11 @@ fn init_tracing(logging: &loom_config::runtime::LoggingConfig) {
 	}
 }
 
-fn create_llm_client(server_url: &str, provider: &str) -> Result<Arc<dyn LlmClient>> {
+fn create_llm_client(
+	server_url: &str,
+	provider: &str,
+	auth_token: Option<loom_secret::SecretString>,
+) -> Result<Arc<dyn LlmClient>> {
 	let llm_provider = match provider.to_lowercase().as_str() {
 		"anthropic" => LlmProvider::Anthropic,
 		"openai" => LlmProvider::OpenAi,
@@ -270,7 +271,10 @@ fn create_llm_client(server_url: &str, provider: &str) -> Result<Arc<dyn LlmClie
 	};
 
 	info!(server_url = %server_url, provider = %provider, "creating proxy LLM client");
-	let client = ProxyLlmClient::new(server_url, llm_provider);
+	let mut client = ProxyLlmClient::new(server_url, llm_provider);
+	if let Some(token) = auth_token {
+		client = client.with_auth_token(token);
+	}
 	Ok(Arc::new(client))
 }
 
@@ -648,7 +652,8 @@ async fn start_repl_session(
 		.canonicalize()
 		.context("invalid workspace path")?;
 
-	let llm_client = create_llm_client(&args.server_url, &args.provider)?;
+	let token = auth::load_token(&args.server_url).await;
+	let llm_client = create_llm_client(&args.server_url, &args.provider, token.clone())?;
 
 	let tool_registry = create_tool_registry();
 	let tool_definitions = get_tool_definitions(&tool_registry);
@@ -658,10 +663,11 @@ async fn start_repl_session(
 	let auto_commit_enabled = auto_commit_config.enabled;
 	let auto_commit_service = if auto_commit_enabled {
 		let git_client = Arc::new(CommandGitClient::new());
-		let haiku_client = Arc::new(ProxyLlmClient::new(
-			&args.server_url,
-			LlmProvider::Anthropic,
-		));
+		let mut haiku = ProxyLlmClient::new(&args.server_url, LlmProvider::Anthropic);
+		if let Some(t) = &token {
+			haiku = haiku.with_auth_token(t.clone());
+		}
+		let haiku_client = Arc::new(haiku);
 		Some(AutoCommitService::new(
 			git_client,
 			haiku_client,
@@ -1027,14 +1033,8 @@ async fn main() -> Result<()> {
 			Ok(())
 		}
 		Some(Command::Update) => run_update().await,
-		Some(Command::Login) => {
-			println!("loom login: not implemented yet");
-			Ok(())
-		}
-		Some(Command::Logout) => {
-			println!("loom logout: not implemented yet");
-			Ok(())
-		}
+		Some(Command::Login) => auth::login(&args.server_url).await,
+		Some(Command::Logout) => auth::logout(&args.server_url).await,
 		Some(Command::List) => {
 			let threads = thread_store
 				.list(100)
@@ -1194,9 +1194,10 @@ async fn main() -> Result<()> {
 			env,
 			ttl,
 		}) => {
+			let token = auth::load_token(&args.server_url).await;
 			run_weaver_new(
 				&args.server_url,
-				args.token.as_deref(),
+				token,
 				image.clone(),
 				repo.clone(),
 				branch.clone(),
@@ -1206,7 +1207,8 @@ async fn main() -> Result<()> {
 			.await
 		}
 		Some(Command::Attach { weaver_id }) => {
-			run_weaver_attach(&args.server_url, args.token.as_deref(), weaver_id).await
+			let token = auth::load_token(&args.server_url).await;
+			run_weaver_attach(&args.server_url, token, weaver_id).await
 		}
 		Some(Command::Weaver { command }) => match command {
 			WeaverCommand::New {
@@ -1216,9 +1218,10 @@ async fn main() -> Result<()> {
 				env,
 				ttl,
 			} => {
+				let token = auth::load_token(&args.server_url).await;
 				run_weaver_new(
 					&args.server_url,
-					args.token.as_deref(),
+					token,
 					image.clone(),
 					repo.clone(),
 					branch.clone(),
@@ -1228,13 +1231,16 @@ async fn main() -> Result<()> {
 				.await
 			}
 			WeaverCommand::Attach { weaver_id } => {
-				run_weaver_attach(&args.server_url, args.token.as_deref(), weaver_id).await
+				let token = auth::load_token(&args.server_url).await;
+				run_weaver_attach(&args.server_url, token, weaver_id).await
 			}
 			WeaverCommand::Ps { json } => {
-				run_weaver_ps(&args.server_url, args.token.as_deref(), *json).await
+				let token = auth::load_token(&args.server_url).await;
+				run_weaver_ps(&args.server_url, token, *json).await
 			}
 			WeaverCommand::Delete { weaver_id } => {
-				run_weaver_delete(&args.server_url, args.token.as_deref(), weaver_id).await
+				let token = auth::load_token(&args.server_url).await;
+				run_weaver_delete(&args.server_url, token, weaver_id).await
 			}
 		}
 		None => {
@@ -1264,7 +1270,8 @@ async fn run_acp_agent(
 		.canonicalize()
 		.context("invalid workspace path")?;
 
-	let llm_client = create_llm_client(&args.server_url, &args.provider)?;
+	let token = auth::load_token(&args.server_url).await;
+	let llm_client = create_llm_client(&args.server_url, &args.provider, token)?;
 	let tools = Arc::new(create_tool_registry());
 
 	let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<SessionNotificationRequest>();
@@ -1322,7 +1329,7 @@ fn setup_ctrlc_handler(shutdown_tx: watch::Sender<bool>) -> Result<()> {
 
 async fn run_weaver_new(
 	server_url: &str,
-	token: Option<&str>,
+	token: Option<loom_secret::SecretString>,
 	image: Option<String>,
 	repo: Option<String>,
 	branch: Option<String>,
@@ -1331,7 +1338,7 @@ async fn run_weaver_new(
 ) -> Result<()> {
 	let mut client = weaver_client::WeaverClient::new(server_url)?;
 	if let Some(token) = token {
-		client = client.with_token(token.to_string());
+		client = client.with_token(token);
 	}
 
 	let mut env_map = std::collections::HashMap::new();
@@ -1369,10 +1376,10 @@ async fn run_weaver_new(
 	Ok(())
 }
 
-async fn run_weaver_ps(server_url: &str, token: Option<&str>, json: bool) -> Result<()> {
+async fn run_weaver_ps(server_url: &str, token: Option<loom_secret::SecretString>, json: bool) -> Result<()> {
 	let mut client = weaver_client::WeaverClient::new(server_url)?;
 	if let Some(token) = token {
-		client = client.with_token(token.to_string());
+		client = client.with_token(token);
 	}
 	let list = client.list_weavers().await?;
 
@@ -1411,10 +1418,10 @@ async fn run_weaver_ps(server_url: &str, token: Option<&str>, json: bool) -> Res
 	Ok(())
 }
 
-async fn run_weaver_delete(server_url: &str, token: Option<&str>, weaver_id: &str) -> Result<()> {
+async fn run_weaver_delete(server_url: &str, token: Option<loom_secret::SecretString>, weaver_id: &str) -> Result<()> {
 	let mut client = weaver_client::WeaverClient::new(server_url)?;
 	if let Some(token) = token {
-		client = client.with_token(token.to_string());
+		client = client.with_token(token);
 	}
 
 	println!("Deleting weaver {weaver_id}...");
@@ -1424,10 +1431,10 @@ async fn run_weaver_delete(server_url: &str, token: Option<&str>, weaver_id: &st
 	Ok(())
 }
 
-async fn run_weaver_attach(server_url: &str, token: Option<&str>, weaver_id: &str) -> Result<()> {
+async fn run_weaver_attach(server_url: &str, token: Option<loom_secret::SecretString>, weaver_id: &str) -> Result<()> {
 	let mut client = weaver_client::WeaverClient::new(server_url)?;
 	if let Some(token) = token {
-		client = client.with_token(token.to_string());
+		client = client.with_token(token);
 	}
 
 	println!("[attaching to weaver {weaver_id}]");

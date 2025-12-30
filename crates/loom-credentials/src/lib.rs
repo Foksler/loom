@@ -35,8 +35,16 @@
 
 mod error;
 mod store;
+#[cfg(feature = "keyring")]
+mod store_fallback;
+#[cfg(feature = "keyring")]
+mod store_keyring;
 mod value;
 
 pub use error::CredentialError;
 pub use store::{CredentialStore, FileCredentialStore, MemoryCredentialStore};
+#[cfg(feature = "keyring")]
+pub use store_fallback::KeyringThenFileStore;
+#[cfg(feature = "keyring")]
+pub use store_keyring::KeyringCredentialStore;
 pub use value::{CredentialValue, PersistedCredentialValue};
