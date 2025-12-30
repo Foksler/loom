@@ -19,6 +19,7 @@ in
   packages = [ 
     pkgs.age
     pkgs.btop
+    pkgs.gettext      # For msgfmt (i18n .po → .mo compilation)
     pkgs.cargo-watch
     pkgs.cosign      # Container image signing tool
     pkgs.curl

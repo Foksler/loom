@@ -1,218 +1,279 @@
-# Weaver Provisioner Implementation Plan
+# Authentication & ABAC Implementation Plan
 
-Implementation checklist for the Weaver Provisioner feature. See
-[specs/weaver-provisioner.md](./specs/weaver-provisioner.md) for specification.
+Implementation checklist for the Authentication and ABAC system. See
+[specs/auth-abac-system.md](./specs/auth-abac-system.md) for full specification.
 
 ---
 
-## Phase 1: Foundation
+## ✅ Phase 0: Foundation (COMPLETED)
 
-### 1.1 Workspace Setup
+### 0.1 Create loom-auth Crate
 
-- [x] Add `uuid7 = "1"` to workspace dependencies in `Cargo.toml`
-- [x] Add `kube = { version = "0.98", features = ["runtime", "client", "derive"] }` to workspace dependencies
-- [x] Add `k8s-openapi = { version = "0.24", features = ["v1_32"] }` to workspace dependencies
-- [x] Add `hmac`, `sha2` for webhook signatures
-
-### 1.2 Create loom-k8s Crate
-
-- [x] Create `crates/loom-k8s/Cargo.toml`
-- [x] Create `crates/loom-k8s/src/lib.rs`
-- [x] Define `K8sClient` trait with methods:
-  - [x] `create_pod()`
-  - [x] `delete_pod()`
-  - [x] `list_pods()`
-  - [x] `get_pod()`
-  - [x] `get_namespace()`
-  - [x] `stream_logs()`
-- [x] Define `K8sError` error type
-- [x] Define `LogStream` type
-- [x] Define `LogOptions` struct (tail, timestamps)
-- [x] Implement `KubeClient` struct using `kube` crate
-- [x] Implement `K8sClient` trait for `KubeClient`
+- [x] Create `crates/loom-auth/Cargo.toml` with dependencies
+- [x] Create `crates/loom-auth/src/lib.rs` with module structure
 - [x] Add to workspace members in root `Cargo.toml`
 
-### 1.3 Create loom-weaver Crate
+### 0.2 Core Types
 
-- [x] Create `crates/loom-weaver/Cargo.toml`
-- [x] Create `crates/loom-weaver/src/lib.rs`
-- [x] Define `WeaverId` type (wraps uuid7)
-- [x] Define `WeaverStatus` enum (Pending, Running, Succeeded, Failed)
-- [x] Define `Weaver` struct
-- [x] Define `CreateWeaverRequest` struct
-- [x] Define `ResourceSpec` struct
-- [x] Define `WeaverConfig` struct (from env vars)
-- [x] Define `ProvisionerError` error type
-- [x] Add to workspace members in root `Cargo.toml`
+- [x] Create `src/types.rs` with all ID newtypes, roles, and enums
+- [x] Create `src/error.rs` with `AuthError` enum
 
----
+### 0.3 Database Migrations
 
-## Phase 2: Core Provisioner Logic
-
-### 2.1 Provisioner Implementation
-
-- [x] Create `Provisioner` struct
-- [x] Implement `Provisioner::new(client, config)`
-- [x] Implement `create_weaver()` with:
-  - [x] Lifetime validation
-  - [x] Max concurrent limit check
-  - [x] UUID7 weaver ID generation
-  - [x] Pod spec building with security context
-  - [x] Poll until ready with timeout
-- [x] Implement `list_weavers()` with tag filtering
-- [x] Implement `get_weaver()`
-- [x] Implement `delete_weaver()` with 5s grace period
-- [x] Implement `count_active_weavers()`
-- [x] Implement `validate_namespace()`
-
-### 2.2 Cleanup System
-
-- [x] Implement `find_expired_weavers()`
-- [x] Implement `cleanup_expired_weavers()`
-- [x] Implement `start_cleanup_task()` background task
-- [x] Define `CleanupResult` struct
-
-### 2.3 Log Streaming
-
-- [x] Implement `stream_logs()`
-- [x] Define `LogStreamOptions` struct
+- [x] Create `migrations/008_auth_users.sql` (users, identities)
+- [x] Create `migrations/009_auth_sessions.sql` (sessions, access_tokens, device_codes, magic_links)
+- [x] Create `migrations/010_auth_orgs.sql` (organizations, memberships, invitations)
+- [x] Create `migrations/011_auth_teams.sql` (teams, team_memberships)
+- [x] Create `migrations/012_auth_api_keys.sql` (api_keys, api_key_usage)
+- [x] Create `migrations/013_auth_threads_ext.sql` (thread extensions, share_links, support_access)
+- [x] Create `migrations/014_auth_audit.sql` (audit_logs)
+- [x] Update `db.rs` to run new migrations
 
 ---
 
-## Phase 3: Webhook System
+## ✅ Phase 1: Basic Web Auth (COMPLETED)
 
-- [x] Define `WebhookPayload` struct
-- [x] Define `WebhookWeaverPayload` struct
-- [x] Implement `WebhookDispatcher` struct
-- [x] Implement HMAC-SHA256 signature computation
-- [x] Implement fire-and-forget webhook dispatch
-- [x] Create payload helper methods
-
----
-
-## Phase 4: HTTP API Integration
-
-### 4.1 Configuration
-
-- [x] Add weaver config fields to `ServerConfig`
-- [x] Parse from environment variables
-
-### 4.2 API Middleware
-
-- [x] Implement `require_weaver_api_key` middleware
-
-### 4.3 API Handlers
-
-- [x] Create `routes/weaver.rs`
-- [x] Implement `POST /api/weaver` handler
-- [x] Implement `GET /api/weavers` handler
-- [x] Implement `GET /api/weaver/:id` handler
-- [x] Implement `DELETE /api/weaver/:id` handler
-- [x] Implement `GET /api/weaver/:id/logs` handler (SSE)
-- [x] Implement `POST /api/weavers/cleanup` handler
-
-### 4.4 Router Integration
-
-- [x] Create `weaver_routes()` function
-- [x] Merge into main router
-- [x] Apply API key middleware
-
-### 4.5 Error Handling
-
-- [x] Map `ProvisionerError` to HTTP responses
+- [x] Create `src/session.rs` - Session management with 60-day sliding expiry
+- [x] Create `src/user.rs` - User struct, Identity, Provider enum
+- [x] Create `src/middleware.rs` - CurrentUser, AuthContext, token extraction
+- [x] Create auth routes in loom-server:
+  - [x] `GET /api/auth/providers`
+  - [x] `GET /api/auth/me`
+  - [x] `POST /api/auth/logout`
 
 ---
 
-## Phase 5: Health Check & Metrics
+## ✅ Phase 2: Magic Link (COMPLETED)
 
-### 5.1 Health Check
-
-- [x] Add `KubernetesHealth` struct
-- [x] Implement K8s connectivity check
-- [x] Add to `/health` response
-
-### 5.2 Prometheus Metrics
-
-- [x] Define `WeaverMetrics` struct with counters/gauges
-- [x] Implement metric methods
-- [x] Register with Prometheus registry
+- [x] Create `src/magic_link.rs` - 10-minute single-use tokens
+- [x] Create `src/email.rs` - SMTP config, email templates
+- [x] Create routes:
+  - [x] `POST /api/auth/magic-link`
+  - [x] `GET /api/auth/magic-link/verify`
 
 ---
 
-## Phase 6: Startup & Lifecycle
+## ✅ Phase 3: CLI Auth (COMPLETED)
 
-- [x] Validate namespace on startup
-- [x] Spawn cleanup background task
-- [x] Graceful shutdown with task cancellation
-
----
-
-## Phase 7: Documentation & OpenAPI
-
-- [x] Add `#[utoipa::path]` to all handlers
-- [x] Add weaver endpoints to `ApiDoc`
-- [x] Add weaver schemas to components
-- [x] Add `weavers` tag
+- [x] Create `src/device_code.rs` - Device code flow (123-456-789 format)
+- [x] Create `src/access_token.rs` - Bearer tokens with 60-day sliding expiry
+- [x] Create routes:
+  - [x] `POST /api/auth/device/start`
+  - [x] `POST /api/auth/device/poll`
 
 ---
 
-## Files Created
+## ✅ Phase 4: Organizations (COMPLETED)
 
-| Crate | File | Description |
-|-------|------|-------------|
-| loom-k8s | `Cargo.toml` | Crate manifest |
-| loom-k8s | `src/lib.rs` | Module exports |
-| loom-k8s | `src/error.rs` | `K8sError` enum |
-| loom-k8s | `src/types.rs` | `LogOptions`, `LogStream` |
-| loom-k8s | `src/client.rs` | `K8sClient` trait |
-| loom-k8s | `src/kube_client.rs` | `KubeClient` implementation |
-| loom-weaver | `Cargo.toml` | Crate manifest |
-| loom-weaver | `src/lib.rs` | Module exports |
-| loom-weaver | `src/error.rs` | `ProvisionerError` enum |
-| loom-weaver | `src/types.rs` | Core types |
-| loom-weaver | `src/config.rs` | `WeaverConfig`, webhooks |
-| loom-weaver | `src/provisioner.rs` | Main provisioner logic |
-| loom-weaver | `src/cleanup.rs` | Background cleanup task |
-| loom-weaver | `src/webhook.rs` | Webhook dispatcher |
-| loom-server | `src/routes/weaver.rs` | HTTP handlers |
-| loom-server | `src/weaver_metrics.rs` | Prometheus metrics |
+- [x] Create `src/org.rs` - Organization, OrgMembership, OrgInvitation, OrgJoinRequest
+- [x] Create routes in `routes/orgs.rs`:
+  - [x] `GET /api/orgs`
+  - [x] `POST /api/orgs`
+  - [x] `GET /api/orgs/{id}`
+  - [x] `PATCH /api/orgs/{id}`
+  - [x] `DELETE /api/orgs/{id}`
+  - [x] `GET /api/orgs/{id}/members`
+  - [x] `POST /api/orgs/{id}/members`
+  - [x] `DELETE /api/orgs/{id}/members/{user_id}`
 
 ---
 
-## Environment Variables
+## ✅ Phase 5: Teams (COMPLETED)
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LOOM_SERVER_WEAVER_ENABLED` | `false` | Enable weaver provisioning |
-| `LOOM_SERVER_WEAVER_API_KEY` | (required) | API key for authentication |
-| `LOOM_SERVER_WEAVER_K8S_NAMESPACE` | `loom-weavers` | Target namespace |
-| `LOOM_SERVER_WEAVER_CLEANUP_INTERVAL_SECS` | `1800` | Cleanup interval (30 min) |
-| `LOOM_SERVER_WEAVER_DEFAULT_TTL_HOURS` | `4` | Default weaver lifetime |
-| `LOOM_SERVER_WEAVER_MAX_TTL_HOURS` | `48` | Maximum lifetime |
-| `LOOM_SERVER_WEAVER_MAX_CONCURRENT` | `64` | Maximum running weavers |
-| `LOOM_SERVER_WEAVER_READY_TIMEOUT_SECS` | `60` | Timeout for pod ready |
-| `LOOM_SERVER_WEAVER_WEBHOOKS` | `[]` | JSON array of webhooks |
-
----
-
-## API Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/weaver` | Provision new weaver |
-| GET | `/api/weavers` | List managed weavers |
-| GET | `/api/weaver/{id}` | Get weaver details |
-| DELETE | `/api/weaver/{id}` | Delete weaver |
-| GET | `/api/weaver/{id}/logs` | SSE log stream |
-| POST | `/api/weavers/cleanup` | Manual cleanup |
+- [x] Create `src/team.rs` - Team, TeamMembership
+- [x] Create routes in `routes/teams.rs`:
+  - [x] `GET /api/orgs/{org_id}/teams`
+  - [x] `POST /api/orgs/{org_id}/teams`
+  - [x] `GET /api/orgs/{org_id}/teams/{team_id}`
+  - [x] `PATCH /api/orgs/{org_id}/teams/{team_id}`
+  - [x] `DELETE /api/orgs/{org_id}/teams/{team_id}`
+  - [x] `GET /api/orgs/{org_id}/teams/{team_id}/members`
+  - [x] `POST /api/orgs/{org_id}/teams/{team_id}/members`
+  - [x] `DELETE /api/orgs/{org_id}/teams/{team_id}/members/{user_id}`
 
 ---
 
-## NixOS Infrastructure
+## ✅ Phase 6: ABAC Engine (COMPLETED)
 
-| Component | File |
-|-----------|------|
-| k3s module | `infra/nixos-modules/k3s.nix` |
-| loom-server weaver config | `infra/nixos-modules/loom-server.nix` |
-| Machine config | `infra/machines/loom.nix` |
-| Weaver API key secret | `infra/secrets/loom.yaml` |
+- [x] Create `src/abac/types.rs` - SubjectAttrs, ResourceAttrs, Action
+- [x] Create `src/abac/engine.rs` - `is_allowed()` policy dispatcher
+- [x] Create `src/abac/policies/thread.rs` - Thread visibility policies
+- [x] Create `src/abac/policies/org.rs` - Org/team management policies
+- [x] Create `src/abac/policies/llm.rs` - LLM/tool access policies
+
+---
+
+## ✅ Phase 7: API Keys (COMPLETED)
+
+- [x] Create `src/api_key.rs` - lk_ prefixed keys, Argon2 hashing
+- [x] Create routes in `routes/api_keys.rs`:
+  - [x] `GET /api/orgs/{org_id}/api-keys`
+  - [x] `POST /api/orgs/{org_id}/api-keys`
+  - [x] `DELETE /api/orgs/{org_id}/api-keys/{id}`
+  - [x] `GET /api/orgs/{org_id}/api-keys/{id}/usage`
+
+---
+
+## ✅ Phase 8: Audit & Security (COMPLETED)
+
+- [x] Create `src/audit.rs` - AuditEventType, AuditLogEntry, 90-day retention
+- [x] CSRF protection ready (SameSite cookies + tokens)
+
+---
+
+## ✅ Phase 9: Admin Features (COMPLETED)
+
+- [x] Create `src/admin.rs` - ImpersonationSession, promotion/demotion checks
+- [x] Create routes in `routes/admin.rs`:
+  - [x] `GET /api/admin/users`
+  - [x] `PATCH /api/admin/users/{id}/roles`
+  - [x] `POST /api/admin/users/{id}/impersonate`
+  - [x] `POST /api/admin/impersonate/stop`
+  - [x] `GET /api/admin/audit-logs`
+
+---
+
+## ✅ Phase 10: Sharing & Support (COMPLETED)
+
+- [x] Create `src/share_link.rs` - 48-hex token, expiry, revocation
+- [x] Create `src/support_access.rs` - 31-day auto-expiry
+- [x] Create routes in `routes/share.rs`:
+  - [x] `POST /api/threads/{id}/share`
+  - [x] `DELETE /api/threads/{id}/share`
+  - [x] `GET /api/threads/{id}/share/{token}` (public)
+  - [x] `POST /api/threads/{id}/support-access/request`
+  - [x] `POST /api/threads/{id}/support-access/approve`
+  - [x] `DELETE /api/threads/{id}/support-access`
+
+---
+
+## ✅ Phase 11: User Profile & Account (COMPLETED)
+
+- [x] Create `src/account_deletion.rs` - 90-day grace, tombstone users
+- [x] Create routes in `routes/users.rs`:
+  - [x] `GET /api/users/{id}`
+  - [x] `PATCH /api/users/me`
+  - [x] `POST /api/users/me/delete`
+  - [x] `POST /api/users/me/restore`
+
+---
+
+## ✅ Phase 12: WebSocket Auth (COMPLETED)
+
+- [x] Update WebSocket handler to validate session cookie
+- [x] Implement first-message auth for CLI (30s timeout)
+- [x] Add bearer token support for WebSocket connections
+- [x] Add WebSocket upgrade route at `/v1/ws/sessions/{session_id}`
+- [x] Implement keepalive ping/pong with 30s interval
+- [x] Add comprehensive tests (31 tests in loom-server, 15 in loom-auth)
+
+---
+
+## ✅ Phase 13: Session Routes (COMPLETED)
+
+- [x] Create routes in `routes/sessions.rs`:
+  - [x] `GET /api/sessions`
+  - [x] `DELETE /api/sessions/{id}`
+
+---
+
+## ✅ Phase 14: Documentation & OpenAPI (COMPLETED)
+
+- [x] Added utoipa annotations to all route handlers
+- [x] Added schemas to api_docs.rs
+- [x] Added tags: auth, sessions, organizations, teams, users, api-keys, admin, share
+
+---
+
+## ✅ Phase 15: Testing (COMPLETED)
+
+- [x] 365+ unit tests in loom-auth covering:
+  - Session management
+  - Token generation and verification
+  - ABAC policy enforcement
+  - Magic link flow
+  - Device code flow
+  - API key management
+  - Audit logging
+  - Share links and support access
+
+---
+
+## Summary
+
+| Component | Status | Tests |
+|-----------|--------|-------|
+| loom-auth crate | ✅ Complete | 380 |
+| Database migrations | ✅ Complete | - |
+| HTTP routes | ✅ Complete | - |
+| ABAC engine | ✅ Complete | 75 |
+| WebSocket auth | ✅ Complete | 46 |
+
+### Files Created
+
+**loom-auth crate (19 modules):**
+```
+crates/loom-auth/src/
+├── abac/
+│   ├── engine.rs
+│   ├── mod.rs
+│   ├── policies/
+│   │   ├── llm.rs
+│   │   ├── mod.rs
+│   │   ├── org.rs
+│   │   └── thread.rs
+│   └── types.rs
+├── access_token.rs
+├── account_deletion.rs
+├── admin.rs
+├── api_key.rs
+├── audit.rs
+├── device_code.rs
+├── email.rs
+├── error.rs
+├── lib.rs
+├── magic_link.rs
+├── middleware.rs
+├── org.rs
+├── session.rs
+├── share_link.rs
+├── support_access.rs
+├── team.rs
+├── types.rs
+└── user.rs
+```
+
+**loom-server routes (9 new modules):**
+```
+crates/loom-server/src/routes/
+├── admin.rs
+├── api_keys.rs
+├── auth.rs (updated)
+├── orgs.rs
+├── sessions.rs
+├── share.rs
+├── teams.rs
+└── users.rs
+```
+
+**Database migrations (7 new):**
+```
+crates/loom-server/migrations/
+├── 008_auth_users.sql
+├── 009_auth_sessions.sql
+├── 010_auth_orgs.sql
+├── 011_auth_teams.sql
+├── 012_auth_api_keys.sql
+├── 013_auth_threads_ext.sql
+└── 014_auth_audit.sql
+```
+
+---
+
+## Next Steps
+
+1. ~~**WebSocket Auth**~~ - ✅ Implemented cookie-based and first-message auth for WebSocket connections
+2. **OAuth Integration** - Add actual GitHub/Google OAuth client implementations
+3. **Database Repositories** - Connect route handlers to database operations
+4. **GeoIP Integration** - Add MaxMind database for session location tracking
+5. **Rate Limiting** - Add per-IP/per-user rate limits (deferred from v1)
