@@ -172,7 +172,7 @@ in
         echo "🔨 Building loom-cli..."
         
         # Use cargo build for the CLI binary (incremental, fast)
-        if ! cargo build --package loom-cli --release 2>&1; then
+        if ! cargo build --package loom-cli 2>&1; then
           echo "❌ BLOCKED: loom-cli failed to compile!"
           echo "Fix the build errors before committing."
           exit 1
@@ -195,7 +195,7 @@ in
         echo "🔨 Building loom-server..."
         
         # Use cargo build for the server binary (incremental, fast)
-        if ! cargo build --package loom-server --release 2>&1; then
+        if ! cargo build --package loom-server 2>&1; then
           echo "❌ BLOCKED: loom-server failed to compile!"
           echo "Fix the build errors before committing."
           exit 1
