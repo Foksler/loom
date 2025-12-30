@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, type Snippet } from 'svelte';
-  import { loadCatalog, getPreferredLocale, type Locale } from './i18n';
+  import { loadCatalog, getPreferredLocale, getCurrentLocale, isRtl, type Locale } from './i18n';
 
   interface Props {
     children: Snippet;
@@ -9,10 +9,23 @@
   let { children }: Props = $props();
   let loaded = $state(false);
 
+  function updateDocumentDirection() {
+    const locale = getCurrentLocale();
+    document.documentElement.dir = isRtl(locale) ? 'rtl' : 'ltr';
+    document.documentElement.lang = locale;
+  }
+
   onMount(async () => {
     const locale = getPreferredLocale();
     await loadCatalog(locale);
+    updateDocumentDirection();
     loaded = true;
+  });
+
+  $effect(() => {
+    if (loaded) {
+      updateDocumentDirection();
+    }
   });
 </script>
 

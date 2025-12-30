@@ -5,15 +5,22 @@
 
 import { i18n } from '@lingui/core';
 
-export type Locale = 'en' | 'es';
+export type Locale = 'en' | 'es' | 'ar';
 
-export const locales: Locale[] = ['en', 'es'];
+export const locales: Locale[] = ['en', 'es', 'ar'];
 export const defaultLocale: Locale = 'en';
 
 export const localeNames: Record<Locale, string> = {
 	en: 'English',
 	es: 'Español',
+	ar: 'العربية',
 };
+
+export const rtlLocales: Locale[] = ['ar'];
+
+export function isRtl(locale: Locale): boolean {
+	return rtlLocales.includes(locale);
+}
 
 export async function loadCatalog(locale: Locale): Promise<void> {
 	let messages;
@@ -21,6 +28,9 @@ export async function loadCatalog(locale: Locale): Promise<void> {
 	switch (locale) {
 		case 'es':
 			messages = (await import('../../locales/es/messages')).messages;
+			break;
+		case 'ar':
+			messages = (await import('../../locales/ar/messages')).messages;
 			break;
 		case 'en':
 		default:
@@ -36,10 +46,12 @@ export function getPreferredLocale(): Locale {
 	if (typeof window === 'undefined') return defaultLocale;
 
 	const stored = localStorage.getItem('loom-locale');
-	if (stored === 'en' || stored === 'es') return stored;
+	if (stored === 'en' || stored === 'es' || stored === 'ar') return stored;
 
 	const browserLang = navigator.language.split('-')[0];
-	return browserLang === 'es' ? 'es' : 'en';
+	if (browserLang === 'es') return 'es';
+	if (browserLang === 'ar') return 'ar';
+	return 'en';
 }
 
 export function setLocale(locale: Locale): void {

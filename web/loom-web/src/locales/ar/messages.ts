@@ -1,0 +1,215 @@
+/**
+ * Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+ * SPDX-License-Identifier: Proprietary
+ */
+
+export const messages = {
+	// Navigation
+	'nav.threads': 'المحادثات',
+	'nav.settings': 'الإعدادات',
+
+	// Thread actions
+	'thread.new': 'محادثة جديدة',
+	'thread.delete': 'حذف',
+	'thread.search': 'البحث في المحادثات...',
+	'thread.noThreads': 'لا توجد محادثات بعد',
+	'thread.loadError': 'فشل تحميل المحادثات',
+
+	// Agent states
+	'state.waiting_for_user_input': 'في انتظار الإدخال',
+	'state.calling_llm': 'جارٍ الاتصال بالنموذج',
+	'state.processing_llm_response': 'جارٍ معالجة الرد',
+	'state.executing_tools': 'جارٍ تنفيذ الأدوات',
+	'state.post_tools_hook': 'المعالجة اللاحقة',
+	'state.error': 'خطأ',
+	'state.shutting_down': 'جارٍ الإيقاف',
+
+	// Tool status
+	'tool.pending': 'قيد الانتظار',
+	'tool.running': 'قيد التشغيل',
+	'tool.completed': 'مكتمل',
+	'tool.failed': 'فشل',
+
+	// Connection status
+	'connection.connected': 'متصل',
+	'connection.disconnected': 'غير متصل',
+	'connection.connecting': 'جارٍ الاتصال...',
+	'connection.reconnecting': 'جارٍ إعادة الاتصال...',
+	'connection.error': 'خطأ في الاتصال',
+	'connection.clickToReconnect': 'انقر لإعادة الاتصال',
+	'connection.attempt': 'المحاولة {count}',
+
+	// Messages
+	'message.placeholder': 'اكتب رسالة...',
+	'message.send': 'إرسال',
+
+	// Auth - App layout
+	'auth.signOut': 'تسجيل الخروج',
+	'auth.dashboard.welcome': 'مرحباً،',
+	'auth.dashboard.protectedPage': 'هذه صفحة محمية. يجب تسجيل الدخول لرؤيتها.',
+
+	// General
+	'general.loading': 'جارٍ التحميل...',
+	'general.error': 'حدث خطأ',
+	'general.retry': 'إعادة المحاولة',
+	'general.cancel': 'إلغاء',
+	'general.save': 'حفظ',
+	'general.close': 'إغلاق',
+
+	// Auth - Login
+	'auth.login.title': 'تسجيل الدخول إلى Loom',
+	'auth.login.subtitle': 'اختر طريقة تسجيل الدخول المفضلة',
+	'auth.login.github': 'المتابعة مع GitHub',
+	'auth.login.google': 'المتابعة مع Google',
+	'auth.login.or': 'أو',
+	'auth.login.emailLabel': 'البريد الإلكتروني',
+	'auth.login.emailPlaceholder': 'you@example.com',
+	'auth.login.sendMagicLink': 'إرسال رابط سحري',
+	'auth.login.sending': 'جارٍ الإرسال...',
+	'auth.login.checkEmail': 'تحقق من بريدك الإلكتروني',
+	'auth.login.magicLinkSent': 'أرسلنا رابط تسجيل الدخول إلى',
+	'auth.login.useDifferentEmail': 'استخدم بريدًا إلكترونيًا مختلفًا',
+	'auth.login.error': 'تعذر إرسال الرابط السحري. يرجى المحاولة مرة أخرى.',
+
+	// Auth - Device Code
+	'auth.device.title': 'تفويض CLI',
+	'auth.device.subtitle': 'أدخل الرمز المعروض في الطرفية لربط CLI بحسابك',
+	'auth.device.inputLabel': 'أدخل الرمز',
+	'auth.device.placeholder': 'XXX-XXX-XXX',
+	'auth.device.authorize': 'تفويض',
+	'auth.device.authorizing': 'جارٍ التفويض...',
+	'auth.device.success': 'تم التفويض!',
+	'auth.device.successMessage': 'يمكنك الآن إغلاق هذه الصفحة والعودة إلى الطرفية.',
+	'auth.device.error': 'رمز غير صالح أو منتهي الصلاحية. يرجى التحقق من الطرفية والمحاولة مرة أخرى.',
+	'auth.device.noCode': 'ليس لديك رمز؟ شغّل',
+	'auth.device.cliCommand': 'loom login',
+	'auth.device.inTerminal': 'في الطرفية.',
+
+	// Settings - Sessions
+	'settings.sessions.title': 'الجلسات النشطة',
+	'settings.sessions.description': 'إدارة جلساتك النشطة عبر الأجهزة',
+	'settings.sessions.current': 'الجلسة الحالية',
+	'settings.sessions.lastUsed': 'آخر استخدام',
+	'settings.sessions.createdAt': 'تاريخ الإنشاء',
+	'settings.sessions.revoke': 'إلغاء',
+	'settings.sessions.revokeConfirm': 'هل أنت متأكد من أنك تريد إلغاء هذه الجلسة؟',
+	'settings.sessions.noSessions': 'لا توجد جلسات نشطة',
+	'settings.sessions.web': 'ويب',
+	'settings.sessions.cli': 'CLI',
+	'settings.sessions.vscode': 'VS Code',
+
+	// Settings - Navigation
+	'settings.nav.sessions': 'الجلسات',
+	'settings.nav.profile': 'الملف الشخصي',
+	'settings.nav.orgs': 'المنظمات',
+
+	// Settings - Profile
+	'settings.profile.title': 'إعدادات الملف الشخصي',
+	'settings.profile.displayName': 'الاسم المعروض',
+	'settings.profile.email': 'البريد الإلكتروني',
+	'settings.profile.emailHint': 'لا يمكن تغيير البريد الإلكتروني هنا',
+	'settings.profile.locale': 'اللغة',
+	'settings.profile.save': 'حفظ التغييرات',
+	'settings.profile.saving': 'جارٍ الحفظ...',
+	'settings.profile.saved': 'تم تحديث الملف الشخصي بنجاح',
+	'settings.profile.error': 'فشل تحديث الملف الشخصي',
+
+	// Organizations
+	'orgs.title': 'المنظمات',
+	'orgs.description': 'إدارة منظماتك وفرقك',
+	'orgs.create': 'إنشاء منظمة',
+	'orgs.createTitle': 'إنشاء منظمة جديدة',
+	'orgs.name': 'اسم المنظمة',
+	'orgs.slug': 'معرف الرابط',
+	'orgs.slugHint': 'يُستخدم في الروابط، أحرف صغيرة وشرطات فقط',
+	'orgs.visibility': 'الظهور',
+	'orgs.visibilityPublic': 'عامة',
+	'orgs.visibilityPrivate': 'خاصة',
+	'orgs.joinPolicy': 'سياسة الانضمام',
+	'orgs.joinPolicyOpen': 'مفتوحة',
+	'orgs.joinPolicyRequest': 'طلب الانضمام',
+	'orgs.joinPolicyInvite': 'بدعوة فقط',
+	'orgs.members': 'الأعضاء',
+	'orgs.teams': 'الفرق',
+	'orgs.apiKeys': 'مفاتيح API',
+	'orgs.settings': 'الإعدادات',
+	'orgs.noOrgs': 'لا توجد منظمات بعد',
+	'orgs.delete': 'حذف المنظمة',
+	'orgs.deleteConfirm': 'هل أنت متأكد من حذف هذه المنظمة؟',
+
+	// Settings - Organizations
+	'settings.orgs.title': 'المنظمات',
+	'settings.orgs.description': 'إدارة منظماتك وعضويات الفريق',
+	'settings.orgs.create': 'إنشاء منظمة',
+	'settings.orgs.noOrgs': 'لا توجد منظمات بعد',
+	'settings.orgs.loadError': 'فشل تحميل المنظمات',
+	'settings.orgs.personal': 'شخصية',
+	'settings.orgs.slug': 'المعرف',
+	'settings.orgs.member': 'عضو',
+	'settings.orgs.members': 'أعضاء',
+	'settings.orgs.visibility.public': 'عامة',
+	'settings.orgs.visibility.unlisted': 'غير مدرجة',
+	'settings.orgs.visibility.private': 'خاصة',
+
+	// Settings - Organizations - New
+	'settings.orgs.new.title': 'إنشاء منظمة',
+	'settings.orgs.new.name': 'اسم المنظمة',
+	'settings.orgs.new.namePlaceholder': 'منظمتي',
+	'settings.orgs.new.slug': 'المعرف',
+	'settings.orgs.new.slugPlaceholder': 'my-organization',
+	'settings.orgs.new.slugHint': 'معرف آمن للرابط (أحرف صغيرة وأرقام وشرطات)',
+	'settings.orgs.new.visibility': 'الظهور',
+	'settings.orgs.new.create': 'إنشاء منظمة',
+	'settings.orgs.new.creating': 'جارٍ الإنشاء...',
+	'settings.orgs.new.error': 'فشل إنشاء المنظمة',
+	'settings.orgs.new.requiredFields': 'الاسم والمعرف مطلوبان',
+
+	// Members
+	'members.title': 'الأعضاء',
+	'members.add': 'إضافة عضو',
+	'members.remove': 'إزالة',
+	'members.removeConfirm': 'هل أنت متأكد من إزالة هذا العضو؟',
+	'members.role': 'الدور',
+	'members.roleOwner': 'مالك',
+	'members.roleAdmin': 'مسؤول',
+	'members.roleMember': 'عضو',
+	'members.changeRole': 'تغيير الدور',
+	'members.noMembers': 'لا يوجد أعضاء بعد',
+
+	// Teams
+	'teams.title': 'الفرق',
+	'teams.create': 'إنشاء فريق',
+	'teams.createTitle': 'إنشاء فريق جديد',
+	'teams.name': 'اسم الفريق',
+	'teams.slug': 'معرف الرابط',
+	'teams.members': 'أعضاء الفريق',
+	'teams.addMember': 'إضافة عضو',
+	'teams.removeMember': 'إزالة من الفريق',
+	'teams.noTeams': 'لا توجد فرق بعد',
+	'teams.delete': 'حذف الفريق',
+	'teams.deleteConfirm': 'هل أنت متأكد من حذف هذا الفريق؟',
+	'teams.roleMaintainer': 'مشرف',
+	'teams.roleMember': 'عضو',
+
+	// API Keys
+	'apiKeys.title': 'مفاتيح API',
+	'apiKeys.description': 'إدارة مفاتيح API للوصول البرمجي',
+	'apiKeys.create': 'إنشاء مفتاح API',
+	'apiKeys.createTitle': 'إنشاء مفتاح API جديد',
+	'apiKeys.name': 'اسم المفتاح',
+	'apiKeys.nameHint': 'اسم وصفي لهذا المفتاح',
+	'apiKeys.scopes': 'الصلاحيات',
+	'apiKeys.scopesHint': 'اختر الصلاحيات لهذا المفتاح',
+	'apiKeys.scopeThreadsRead': 'قراءة المحادثات',
+	'apiKeys.scopeThreadsWrite': 'كتابة المحادثات',
+	'apiKeys.scopeLlmUse': 'استخدام LLM',
+	'apiKeys.prefix': 'بادئة المفتاح',
+	'apiKeys.createdAt': 'تاريخ الإنشاء',
+	'apiKeys.lastUsed': 'آخر استخدام',
+	'apiKeys.never': 'أبداً',
+	'apiKeys.revoke': 'إلغاء',
+	'apiKeys.revokeConfirm': 'هل أنت متأكد من إلغاء مفتاح API هذا؟',
+	'apiKeys.noKeys': 'لا توجد مفاتيح API بعد',
+	'apiKeys.copyWarning': 'انسخ هذا المفتاح الآن. لن تتمكن من رؤيته مرة أخرى.',
+	'apiKeys.copied': 'تم النسخ إلى الحافظة',
+};
