@@ -1,0 +1,921 @@
+# Loom Server Translations - Estonian
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>
+# SPDX-License-Identifier: Proprietary
+#
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: et\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: Email: Magic Link - Subject
+msgid "server.email.magic_link.subject"
+msgstr "Logi sisse Loomi"
+
+#: Email: Magic Link - Body intro
+msgid "server.email.magic_link.body"
+msgstr "Klõpsa alloleval lingil, et oma Loomi kontole sisse logida."
+
+#: Email: Magic Link - Expiry notice
+msgid "server.email.magic_link.expires"
+msgstr "See link aegub {minutes} minuti pärast."
+
+#: Email: Magic Link - Ignore notice
+msgid "server.email.magic_link.ignore"
+msgstr "Kui sa seda e-kirja ei tellinud, võid selle rahulikult ignoreerida."
+
+#: Email: Magic Link - Copy link instruction
+msgid "server.email.magic_link.copy_link"
+msgstr "Või kopeeri ja kleebi see link:"
+
+#: Email: Org Invitation - Subject
+msgid "server.email.invitation.subject"
+msgstr "Sind kutsuti liituma organisatsiooniga {org_name} Loomis"
+
+#: Email: Org Invitation - Body
+msgid "server.email.invitation.body"
+msgstr "{inviter_name} kutsus sind liituma organisatsiooniga \"{org_name}\" Loomis."
+
+#: Email: Org Invitation - Action instruction
+msgid "server.email.invitation.action"
+msgstr "Klõpsa alloleval lingil, et kutse vastu võtta:"
+
+#: Email: Org Invitation - No expiry notice
+msgid "server.email.invitation.no_expiry"
+msgstr "See kutse ei aegu, kuid organisatsiooni administraator võib selle tühistada."
+
+#: Email: Security Alert - Subject
+msgid "server.email.security_alert.subject"
+msgstr "Loomi turvahoiatus: {event}"
+
+#: Email: Security Alert - Body intro
+msgid "server.email.security_alert.body"
+msgstr "Sinu Loomi kontol toimus turvasündmus."
+
+#: Email: Security Alert - Event label
+msgid "server.email.security_alert.event"
+msgstr "Sündmus: {event}"
+
+#: Email: Security Alert - Details label
+msgid "server.email.security_alert.details"
+msgstr "Üksikasjad:"
+
+#: Email: Security Alert - Action instruction
+msgid "server.email.security_alert.action"
+msgstr "Kui see polnud sina, vaata palun kohe üle oma konto turvaseaded."
+
+#: Email: Deletion Warning - Subject
+msgid "server.email.deletion_warning.subject"
+msgstr "Sinu Loomi konto on kavandatud kustutamiseks"
+
+#: Email: Deletion Warning - Body
+msgid "server.email.deletion_warning.body"
+msgstr "Sinu Loomi konto on kavandatud jäädavaks kustutamiseks {days} päeva pärast."
+
+#: Email: Deletion Warning - Restore instruction
+msgid "server.email.deletion_warning.restore"
+msgstr "Kui sa seda kustutamist ei tellinud või oled meelt muutnud, saad oma konto taastada, logides sisse enne kustutamise kuupäeva."
+
+#: Email: Deletion Warning - Permanent notice
+msgid "server.email.deletion_warning.permanent"
+msgstr "Pärast jäädavat kustutamist ei ole sinu andmeid võimalik taastada."
+
+#: Email: Deletion Scheduled - Subject
+msgid "server.email.deletion_scheduled.subject"
+msgstr "Konto kustutamine kavandatud"
+
+#: Email: Deletion Scheduled - Body
+msgid "server.email.deletion_scheduled.body"
+msgstr "Sinu konto on kavandatud kustutamiseks."
+
+#: Email: Deletion Scheduled - Grace period notice
+msgid "server.email.deletion_scheduled.grace"
+msgstr "Sul on {days} päeva, et oma konto taastada, logides sisse ja kustutamise tühistades."
+
+#: Email: Deletion Scheduled - Permanent notice
+msgid "server.email.deletion_scheduled.permanent"
+msgstr "Pärast ooteperioodi kustutatakse sinu konto ja kõik seotud andmed jäädavalt."
+
+#: API: Auth - Check email response
+msgid "server.api.auth.check_email"
+msgstr "Kontrolli oma e-posti sisselogimislingi saamiseks"
+
+#: API: Auth - Logged out response
+msgid "server.api.auth.logged_out"
+msgstr "Edukalt välja logitud"
+
+#: API: Error - Internal error
+msgid "server.api.error.internal"
+msgstr "Tekkis sisemine viga"
+
+#: API: Error - Not found
+msgid "server.api.error.not_found"
+msgstr "Ressurssi ei leitud"
+
+#: API: Error - Unauthorized
+msgid "server.api.error.unauthorized"
+msgstr "Autentimine nõutav"
+
+#: API: Error - Forbidden
+msgid "server.api.error.forbidden"
+msgstr "Juurdepääs keelatud"
+
+#: API: Error - Bad request
+msgid "server.api.error.bad_request"
+msgstr "Vigane päring"
+
+#: API: Error - Conflict
+msgid "server.api.error.conflict"
+msgstr "Ressursi konflikt"
+
+#: API: Error - Gone
+msgid "server.api.error.gone"
+msgstr "Ressurss pole enam saadaval"
+
+#: API: Error - Not configured
+msgid "server.api.error.not_configured"
+msgstr "Funktsioon pole seadistatud"
+
+# ============================================================================
+# Auth API responses
+# ============================================================================
+
+#: API: Auth - Invalid email
+msgid "server.api.auth.invalid_email"
+msgstr "Palun sisesta kehtiv e-posti aadress"
+
+#: API: Auth - Device code authorized
+msgid "server.api.auth.device_authorized"
+msgstr "Seade edukalt autoriseeritud"
+
+#: API: Auth - Invalid device code
+msgid "server.api.auth.invalid_device_code"
+msgstr "Vigane või aegunud seadme kood"
+
+#: API: Auth - Invalid user code
+msgid "server.api.auth.invalid_user_code"
+msgstr "Vigane või aegunud kasutaja kood"
+
+#: API: Auth - OAuth not configured
+msgid "server.api.auth.oauth_not_configured"
+msgstr "{provider} OAuth pole seadistatud"
+
+#: API: Auth - Magic link sent (always shown to prevent enumeration)
+msgid "server.api.auth.magic_link_sent"
+msgstr "Kui selle e-posti aadressiga konto on olemas, saadeti sisselogimislink"
+
+#: API: Auth - Email not verified (Google/Okta)
+msgid "server.api.auth.email_not_verified"
+msgstr "E-posti aadressi pole teenusepakkuja poolt kinnitatud"
+
+#: API: Auth - No verified email (GitHub)
+msgid "server.api.auth.no_verified_email"
+msgstr "Kinnitatud e-posti aadressi ei leitud. Palun kinnita oma e-post GitHubis ja proovi uuesti."
+
+# ============================================================================
+# User API responses
+# ============================================================================
+
+#: API: User - Not found
+msgid "server.api.user.not_found"
+msgstr "Kasutajat ei leitud"
+
+#: API: User - Invalid ID
+msgid "server.api.user.invalid_id"
+msgstr "Vigane kasutaja ID formaat"
+
+#: API: User - Display name empty
+msgid "server.api.user.display_name_empty"
+msgstr "Kuvatav nimi ei tohi olla tühi"
+
+#: API: User - Profile updated
+msgid "server.api.user.profile_updated"
+msgstr "Profiil edukalt uuendatud"
+
+#: API: User - Deletion scheduled
+msgid "server.api.user.deletion_scheduled"
+msgstr "Konto kavandatud kustutamiseks"
+
+#: API: User - Deletion already scheduled
+msgid "server.api.user.deletion_already_scheduled"
+msgstr "Konto kustutamine on juba kavandatud"
+
+#: API: User - Deletion failed
+msgid "server.api.user.deletion_failed"
+msgstr "Konto kustutamise kavandamine ebaõnnestus"
+
+#: API: User - No pending deletion
+msgid "server.api.user.no_pending_deletion"
+msgstr "Sellel kontol pole ootel kustutamist"
+
+#: API: User - Grace period expired
+msgid "server.api.user.grace_period_expired"
+msgstr "Ooteperiood on lõppenud, kontot ei saa taastada"
+
+#: API: User - Account restored
+msgid "server.api.user.account_restored"
+msgstr "Konto edukalt taastatud"
+
+#: API: User - Identity unlinked
+msgid "server.api.user.identity_unlinked"
+msgstr "Identiteet edukalt lahti ühendatud"
+
+#: API: User - Identity not found
+msgid "server.api.user.identity_not_found"
+msgstr "Identiteeti ei leitud"
+
+#: API: User - Cannot unlink last identity
+msgid "server.api.user.cannot_unlink_last_identity"
+msgstr "Viimast identiteeti ei saa lahti ühendada"
+
+# ============================================================================
+# Organization API responses
+# ============================================================================
+
+#: API: Org - Not found
+msgid "server.api.org.not_found"
+msgstr "Organisatsiooni ei leitud"
+
+#: API: Org - Invalid ID
+msgid "server.api.org.invalid_id"
+msgstr "Vigane organisatsiooni ID"
+
+#: API: Org - Invalid slug length
+msgid "server.api.org.invalid_slug_length"
+msgstr "Lühinimi peab olema 3 kuni 50 tähemärki"
+
+#: API: Org - Invalid slug format
+msgid "server.api.org.invalid_slug_format"
+msgstr "Lühinimi tohib sisaldada ainult väiketähti, numbreid ja sidekriipse"
+
+#: API: Org - Slug exists
+msgid "server.api.org.slug_exists"
+msgstr "Selle lühinimega organisatsioon on juba olemas"
+
+#: API: Org - Invalid role
+msgid "server.api.org.invalid_role"
+msgstr "Roll peab olema üks järgnevatest: owner, admin, member"
+
+#: API: Org - List failed
+msgid "server.api.org.list_failed"
+msgstr "Organisatsioonide loetelu hankimine ebaõnnestus"
+
+#: API: Org - Create failed
+msgid "server.api.org.create_failed"
+msgstr "Organisatsiooni loomine ebaõnnestus"
+
+#: API: Org - Not a member
+msgid "server.api.org.not_a_member"
+msgstr "Sa ei ole selle organisatsiooni liige"
+
+#: API: Org - Already a member
+msgid "server.api.org.already_member"
+msgstr "Kasutaja on juba selle organisatsiooni liige"
+
+#: API: Org - Member added
+msgid "server.api.org.member_added"
+msgstr "Liige lisatud organisatsiooni"
+
+#: API: Org - Member removed
+msgid "server.api.org.member_removed"
+msgstr "Liige eemaldatud organisatsioonist"
+
+#: API: Org - Member not found
+msgid "server.api.org.member_not_found"
+msgstr "Liiget selles organisatsioonis ei leitud"
+
+#: API: Org - Last owner
+msgid "server.api.org.last_owner"
+msgstr "Viimast omanikku ei saa eemaldada ega alandada"
+
+#: API: Org - Cannot delete personal org
+msgid "server.api.org.cannot_delete_personal"
+msgstr "Isiklikku organisatsiooni ei saa kustutada"
+
+#: API: Org - Deleted
+msgid "server.api.org.deleted"
+msgstr "Organisatsioon kustutatud"
+
+#: API: Org - Restored
+msgid "server.api.org.restored"
+msgstr "Organisatsioon taastatud"
+
+#: API: Org - Not deleted
+msgid "server.api.org.not_deleted"
+msgstr "Organisatsioon pole kustutatud"
+
+#: API: Org - Grace period expired
+msgid "server.api.org.grace_period_expired"
+msgstr "Ooteperiood on lõppenud ja seda organisatsiooni ei saa taastada"
+
+#: API: Org - Owner required
+msgid "server.api.org.owner_required"
+msgstr "Ainult omanikud saavad seda toimingut teha"
+
+#: API: Org - Role updated
+msgid "server.api.org.role_updated"
+msgstr "Liikme roll uuendatud"
+
+#: API: Org - Join request for private org
+msgid "server.api.org.join_request_private"
+msgstr "Privaatse organisatsiooniga ei saa liitumist taotleda"
+
+#: API: Org - Join request pending
+msgid "server.api.org.join_request_pending"
+msgstr "Sul on selle organisatsiooniga juba ootel liitumistaotlus"
+
+#: API: Org - Join request created
+msgid "server.api.org.join_request_created"
+msgstr "Liitumistaotlus esitatud"
+
+#: API: Org - Join request not found
+msgid "server.api.org.join_request_not_found"
+msgstr "Liitumistaotlust ei leitud"
+
+#: API: Org - Join request approved
+msgid "server.api.org.join_request_approved"
+msgstr "Liitumistaotlus kinnitatud"
+
+#: API: Org - Join request rejected
+msgid "server.api.org.join_request_rejected"
+msgstr "Liitumistaotlus tagasi lükatud"
+
+# ============================================================================
+# Team API responses
+# ============================================================================
+
+#: API: Team - Not found
+msgid "server.api.team.not_found"
+msgstr "Meeskonda ei leitud"
+
+#: API: Team - Invalid ID
+msgid "server.api.team.invalid_id"
+msgstr "Vigane meeskonna ID"
+
+#: API: Team - Invalid slug length
+msgid "server.api.team.invalid_slug_length"
+msgstr "Lühinimi peab olema 2 kuni 50 tähemärki"
+
+#: API: Team - Invalid slug format
+msgid "server.api.team.invalid_slug_format"
+msgstr "Lühinimi tohib sisaldada ainult väiketähti, numbreid ja sidekriipse"
+
+#: API: Team - List failed
+msgid "server.api.team.list_failed"
+msgstr "Meeskondade loetelu hankimine ebaõnnestus"
+
+#: API: Team - Membership check failed
+msgid "server.api.team.membership_check_failed"
+msgstr "Organisatsiooni liikmesuse kontrollimine ebaõnnestus"
+
+# ============================================================================
+# Invitation API responses
+# ============================================================================
+
+#: API: Invitation - Created
+msgid "server.api.invitation.created"
+msgstr "Kutse edukalt saadetud"
+
+#: API: Invitation - Cancelled
+msgid "server.api.invitation.cancelled"
+msgstr "Kutse tühistatud"
+
+#: API: Invitation - Accepted
+msgid "server.api.invitation.accepted"
+msgstr "Kutse vastu võetud"
+
+#: API: Invitation - Not found
+msgid "server.api.invitation.not_found"
+msgstr "Kutset ei leitud"
+
+#: API: Invitation - Expired
+msgid "server.api.invitation.expired"
+msgstr "See kutse on aegunud"
+
+#: API: Invitation - Invalid token
+msgid "server.api.invitation.invalid_token"
+msgstr "Vigane kutse tunnus"
+
+#: API: Invitation - Already accepted
+msgid "server.api.invitation.already_accepted"
+msgstr "See kutse on juba vastu võetud"
+
+#: API: Invitation - List failed
+msgid "server.api.invitation.list_failed"
+msgstr "Kutsete loetelu hankimine ebaõnnestus"
+
+# ============================================================================
+# Join request API responses
+# ============================================================================
+
+#: API: Join request - Created
+msgid "server.api.join_request.created"
+msgstr "Liitumistaotlus esitatud"
+
+#: API: Join request - Approved
+msgid "server.api.join_request.approved"
+msgstr "Liitumistaotlus kinnitatud"
+
+#: API: Join request - Rejected
+msgid "server.api.join_request.rejected"
+msgstr "Liitumistaotlus tagasi lükatud"
+
+#: API: Join request - Already member
+msgid "server.api.join_request.already_member"
+msgstr "Sa oled juba selle organisatsiooni liige"
+
+#: API: Join request - Already pending
+msgid "server.api.join_request.already_pending"
+msgstr "Sul on juba ootel liitumistaotlus"
+
+#: API: Join request - Not found
+msgid "server.api.join_request.not_found"
+msgstr "Liitumistaotlust ei leitud"
+
+#: API: Join request - Private org
+msgid "server.api.join_request.private_org"
+msgstr "Privaatse organisatsiooniga ei saa liitumist taotleda"
+
+# ============================================================================
+# API Key responses
+# ============================================================================
+
+#: API: API Key - Invalid org ID
+msgid "server.api.api_key.invalid_org_id"
+msgstr "Vigane organisatsiooni ID formaat"
+
+#: API: API Key - Name empty
+msgid "server.api.api_key.name_empty"
+msgstr "API võtme nimi ei tohi olla tühi"
+
+#: API: API Key - No scopes
+msgid "server.api.api_key.no_scopes"
+msgstr "Vähemalt üks õiguste ulatus peab olema määratud"
+
+#: API: API Key - Created
+msgid "server.api.api_key.created"
+msgstr "API võti loodud"
+
+#: API: API Key - Revoked
+msgid "server.api.api_key.revoked"
+msgstr "API võti tühistatud"
+
+#: API: API Key - Not found
+msgid "server.api.api_key.not_found"
+msgstr "API võtit ei leitud"
+
+#: API: API Key - List failed
+msgid "server.api.api_key.list_failed"
+msgstr "API võtmete loetelu hankimine ebaõnnestus"
+
+#: API: API Key - Create failed
+msgid "server.api.api_key.create_failed"
+msgstr "API võtme loomine ebaõnnestus"
+
+# ============================================================================
+# Session API responses
+# ============================================================================
+
+#: API: Session - Invalid ID
+msgid "server.api.session.invalid_id"
+msgstr "Vigane seansi ID formaat"
+
+#: API: Session - Not found
+msgid "server.api.session.not_found"
+msgstr "Seanssi ei leitud"
+
+#: API: Session - Revoked
+msgid "server.api.session.revoked"
+msgstr "Seanss edukalt tühistatud"
+
+#: API: Session - List failed
+msgid "server.api.session.list_failed"
+msgstr "Seansside hankimine ebaõnnestus"
+
+#: API: Session - Revoke failed
+msgid "server.api.session.revoke_failed"
+msgstr "Seansi tühistamine ebaõnnestus"
+
+#: API: Session - Ownership check failed
+msgid "server.api.session.ownership_check_failed"
+msgstr "Seansi omandiõiguse kontrollimine ebaõnnestus"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - System admin required
+msgid "server.api.admin.system_admin_required"
+msgstr "Süsteemiadministraatori roll nõutav"
+
+#: API: Admin - Cannot remove own admin
+msgid "server.api.admin.cannot_remove_own_admin"
+msgstr "Enda administraatori staatust ei saa eemaldada"
+
+#: API: Admin - User list failed
+msgid "server.api.admin.user_list_failed"
+msgstr "Kasutajate loetelu hankimine ebaõnnestus"
+
+#: API: Admin - User update failed
+msgid "server.api.admin.user_update_failed"
+msgstr "Kasutaja uuendamine ebaõnnestus"
+
+#: API: Admin - Roles updated
+msgid "server.api.admin.roles_updated"
+msgstr "Kasutaja rollid uuendatud"
+
+#: Auth: Device Page - Title
+msgid "server.auth.device.title"
+msgstr "Seadme autoriseerimine - Loom"
+
+#: Auth: Device Page - Heading
+msgid "server.auth.device.heading"
+msgstr "Seadme autoriseerimine"
+
+#: Auth: Device Page - Subtitle
+msgid "server.auth.device.subtitle"
+msgstr "Sisesta terminalis näidatud kood"
+
+#: Auth: Device Page - Code label
+msgid "server.auth.device.code_label"
+msgstr "Autoriseerimiskood"
+
+#: Auth: Device Page - Submit button
+msgid "server.auth.device.submit"
+msgstr "Autoriseeri seade"
+
+#: Auth: Device Page - Authorizing button
+msgid "server.auth.device.authorizing"
+msgstr "Autoriseerin..."
+
+#: Auth: Device Page - Authorized button
+msgid "server.auth.device.authorized"
+msgstr "Autoriseeritud"
+
+#: Auth: Device Page - Expiry help text
+msgid "server.auth.device.expiry_help"
+msgstr "See kood aegub 15 minuti pärast."
+
+#: Auth: Device Page - Success message
+msgid "server.auth.device.success"
+msgstr "Seade edukalt autoriseeritud! Võid selle akna sulgeda."
+
+#: Auth: Device Page - Invalid code format
+msgid "server.auth.device.invalid_format"
+msgstr "Palun sisesta kehtiv kood formaadis XXX-XXX-XXX"
+
+#: Auth: Device Page - Generic error
+msgid "server.auth.device.error"
+msgstr "Tekkis viga. Palun proovi uuesti."
+
+#: Auth: Device Page - Authorization failed
+msgid "server.auth.device.auth_failed"
+msgstr "Autoriseerimine ebaõnnestus. Palun proovi uuesti."
+
+# ============================================================================
+# Support Access API responses
+# ============================================================================
+
+#: API: Support Access - Not support staff
+msgid "server.api.support_access.not_support_staff"
+msgstr "Ainult tugitöötajad saavad tugijuurdepääsu taotleda"
+
+#: API: Support Access - Thread not found
+msgid "server.api.support_access.thread_not_found"
+msgstr "Lõime ei leitud"
+
+#: API: Support Access - Already requested
+msgid "server.api.support_access.already_requested"
+msgstr "Tugijuurdepääs on selle lõime jaoks juba taotletud"
+
+#: API: Support Access - Already active
+msgid "server.api.support_access.already_active"
+msgstr "Tugijuurdepääs on selle lõime jaoks juba aktiivne"
+
+#: API: Support Access - Requested
+msgid "server.api.support_access.requested"
+msgstr "Tugijuurdepääs taotletud"
+
+#: API: Support Access - Request failed
+msgid "server.api.support_access.request_failed"
+msgstr "Tugijuurdepääsu taotlemine ebaõnnestus"
+
+#: API: Support Access - Not owner
+msgid "server.api.support_access.not_owner"
+msgstr "Ainult lõime omanik saab tugijuurdepääsu kinnitada või tühistada"
+
+#: API: Support Access - No pending request
+msgid "server.api.support_access.no_pending_request"
+msgstr "Selle lõime jaoks pole ootel tugijuurdepääsu taotlust"
+
+#: API: Support Access - Approved
+msgid "server.api.support_access.approved"
+msgstr "Tugijuurdepääs kinnitatud"
+
+#: API: Support Access - Approve failed
+msgid "server.api.support_access.approve_failed"
+msgstr "Tugijuurdepääsu kinnitamine ebaõnnestus"
+
+#: API: Support Access - No active access
+msgid "server.api.support_access.no_active_access"
+msgstr "Selle lõime jaoks pole aktiivset tugijuurdepääsu"
+
+#: API: Support Access - Revoked
+msgid "server.api.support_access.revoked"
+msgstr "Tugijuurdepääs tühistatud"
+
+#: API: Support Access - Revoke failed
+msgid "server.api.support_access.revoke_failed"
+msgstr "Tugijuurdepääsu tühistamine ebaõnnestus"
+
+# ============================================================================
+# Share Link API responses
+# ============================================================================
+
+#: API: Share - Invalid thread ID
+msgid "server.api.share.invalid_thread_id"
+msgstr "Vigane lõime ID formaat"
+
+#: API: Share - Thread not found
+msgid "server.api.share.thread_not_found"
+msgstr "Lõime ei leitud"
+
+#: API: Share - Invalid expires_at
+msgid "server.api.share.invalid_expires_at"
+msgstr "Vigane aegumiskuupäeva formaat. Kasuta RFC 3339 formaati."
+
+#: API: Share - Create failed
+msgid "server.api.share.create_failed"
+msgstr "Jagamislingi loomine ebaõnnestus"
+
+#: API: Share - Link not found
+msgid "server.api.share.link_not_found"
+msgstr "Selle lõime jaoks pole aktiivset jagamislinki"
+
+#: API: Share - Revoked
+msgid "server.api.share.revoked"
+msgstr "Jagamislink tühistatud"
+
+#: API: Share - Revoke failed
+msgid "server.api.share.revoke_failed"
+msgstr "Jagamislingi tühistamine ebaõnnestus"
+
+#: API: Share - Invalid or expired link
+msgid "server.api.share.invalid_or_expired"
+msgstr "Vigane või aegunud jagamislink"
+
+#: API: Share - Link revoked
+msgid "server.api.share.link_revoked"
+msgstr "See jagamislink on tühistatud"
+
+#: API: Share - Link expired
+msgid "server.api.share.link_expired"
+msgstr "See jagamislink on aegunud"
+
+#: API: Share - Validation failed
+msgid "server.api.share.validation_failed"
+msgstr "Jagamislingi valideerimine ebaõnnestus"
+
+#: API: Share - Fetch failed
+msgid "server.api.share.fetch_failed"
+msgstr "Lõime hankimine ebaõnnestus"
+
+#: API: Weaver - Provisioner not configured
+msgid "server.api.weaver.provisioner_not_configured"
+msgstr "Weaver provisioner pole seadistatud"
+
+#: API: Weaver - Invalid ID
+msgid "server.api.weaver.invalid_id"
+msgstr "Vigane Weaveri ID: {id}"
+
+#: API: Weaver - Not found
+msgid "server.api.weaver.not_found"
+msgstr "Weaverit ei leitud: {id}"
+
+#: API: Weaver - Access denied
+msgid "server.api.weaver.access_denied"
+msgstr "Sul pole õigust sellele Weaverile ligi pääseda"
+
+#: API: Weaver - Attach denied
+msgid "server.api.weaver.attach_denied"
+msgstr "Sul pole õigust selle Weaveriga ühenduda"
+
+#: API: Weaver - Delete denied
+msgid "server.api.weaver.delete_denied"
+msgstr "Sul pole õigust seda Weaverit kustutada"
+
+#: API: Weaver - Read only attach
+msgid "server.api.weaver.read_only_attach"
+msgstr "Ainult lugemisõigusega ühendus: sisend on tugikasutajate jaoks keelatud"
+
+#: API: Weaver - Logs access denied
+msgid "server.api.weaver.logs_denied"
+msgstr "Sul pole õigust selle Weaveri logidele ligi pääseda"
+
+# ============================================================================
+# CLI: Update command
+# ============================================================================
+
+#: CLI: Update - Current version
+msgid "client.update.current_version"
+msgstr "Praegune versioon: {version}"
+
+#: CLI: Update - Platform
+msgid "client.update.platform"
+msgstr "Platvorm: {platform}"
+
+#: CLI: Update - Checking
+msgid "client.update.checking"
+msgstr "Uuenduste kontrollimine..."
+
+#: CLI: Update - Already up to date
+msgid "client.update.up_to_date"
+msgstr "Juba ajakohane (SHA: {sha})"
+
+#: CLI: Update - Update available
+msgid "client.update.available"
+msgstr "Uuendus saadaval: {current} -> {remote}"
+
+#: CLI: Update - Downloading
+msgid "client.update.downloading"
+msgstr "Allalaadimine aadressilt {url}..."
+
+#: CLI: Update - Downloaded
+msgid "client.update.downloaded"
+msgstr "Alla laaditud {bytes} baiti (kontrollitud)"
+
+#: CLI: Update - Complete
+msgid "client.update.complete"
+msgstr "Uuendamine lõpetatud! Palun taaskäivita loom."
+
+#: CLI: Update - Error: empty binary
+msgid "client.update.error.empty_binary"
+msgstr "Alla laaditud programm on tühi"
+
+#: CLI: Update - Error: SHA mismatch
+msgid "client.update.error.sha_mismatch"
+msgstr "Alla laaditud programmi SHA ei ühti: oodati {expected}, saadi {actual}"
+
+#: CLI: Update - Error: env not set
+msgid "client.update.error.env_not_set"
+msgstr "Uuenduste jaoks peab olema seadistatud LOOM_UPDATE_BASE_URL või LOOM_THREAD_SYNC_URL"
+
+#: CLI: Update - Error: check failed
+msgid "client.update.error.check_failed"
+msgstr "Uuenduste kontrollimine ebaõnnestus: {status}"
+
+# ============================================================================
+# CLI: Authentication
+# ============================================================================
+
+#: CLI: Auth - Visit URL prompt
+msgid "client.auth.visit_url"
+msgstr "Külasta {url} ja sisesta kood: {code}"
+
+#: CLI: Auth - Browser open failed
+msgid "client.auth.browser_failed"
+msgstr "(brauserit ei saanud automaatselt avada)"
+
+#: CLI: Auth - Waiting for authorization
+msgid "client.auth.waiting"
+msgstr "Autoriseerimise ootel"
+
+#: CLI: Auth - Authorization timed out
+msgid "client.auth.timed_out"
+msgstr "Autoriseerimise aeg sai läbi"
+
+#: CLI: Auth - Login cancelled
+msgid "client.auth.cancelled"
+msgstr "Sisselogimine tühistatud"
+
+#: CLI: Auth - Login successful
+msgid "client.auth.login_success"
+msgstr "Edukalt sisse logitud serverisse {server}"
+
+#: CLI: Auth - Device code expired
+msgid "client.auth.device_expired"
+msgstr "Seadme kood aegus"
+
+#: CLI: Auth - Logged out
+msgid "client.auth.logged_out"
+msgstr "Välja logitud serverist {server}"
+
+# ============================================================================
+# CLI: REPL
+# ============================================================================
+
+#: CLI: REPL - Welcome message
+msgid "client.repl.welcome"
+msgstr "Tere tulemast Loomi - tehisintellektiga programmeerimisassistent"
+
+#: CLI: REPL - Thread ID
+msgid "client.repl.thread_id"
+msgstr "Lõim: {id}"
+
+#: CLI: REPL - Instructions
+msgid "client.repl.instructions"
+msgstr "Kirjuta oma sõnum ja vajuta Enter. Väljumiseks kasuta Ctrl+C."
+
+#: CLI: REPL - Interrupted
+msgid "client.repl.interrupted"
+msgstr "Katkestatud. Lõim salvestatud. Head aega!"
+
+#: CLI: REPL - Error
+msgid "client.repl.error"
+msgstr "Viga: {error}"
+
+# ============================================================================
+# CLI: Search
+# ============================================================================
+
+#: CLI: Search - No results
+msgid "client.search.no_results"
+msgstr "Tulemusi päringule \"{query}\" ei leitud"
+
+#: CLI: Search - Results header
+msgid "client.search.results_header"
+msgstr "Tulemused päringule \"{query}\" ({count} vastet):"
+
+#: CLI: Search - Local no results
+msgid "client.search.local_no_results"
+msgstr "Tulemusi päringule \"{query}\" ei leitud (kohalik otsing)"
+
+#: CLI: Search - Local results header
+msgid "client.search.local_results_header"
+msgstr "Kohalikud tulemused päringule \"{query}\" ({count} vastet):"
+
+# ============================================================================
+# CLI: Threads
+# ============================================================================
+
+#: CLI: Threads - No threads
+msgid "client.threads.no_threads"
+msgstr "Lõime ei leitud."
+
+#: CLI: Threads - List header
+msgid "client.threads.list_header"
+msgstr "{id:<40} {title:<40} {updated:<20}"
+
+#: CLI: Threads - Private session
+msgid "client.threads.private_session"
+msgstr "Privaatse seansi käivitamine (ainult kohalik, kunagi ei sünkroonita serveriga)."
+
+#: CLI: Threads - Shared with support
+msgid "client.threads.shared_support"
+msgstr "Lõim {id} on jagatud tugimeeskonnaga."
+
+#: CLI: Threads - Visibility changed
+msgid "client.threads.visibility_changed"
+msgstr "Lõime {id} nähtavus muudetud: {visibility}."
+
+# ============================================================================
+# CLI: Weaver
+# ============================================================================
+
+#: CLI: Weaver - Creating
+msgid "client.weaver.creating"
+msgstr "Weaveri loomine..."
+
+#: CLI: Weaver - Created ID
+msgid "client.weaver.created_id"
+msgstr "  ID:    {id}"
+
+#: CLI: Weaver - Created image
+msgid "client.weaver.created_image"
+msgstr "  Pilt:  {image}"
+
+#: CLI: Weaver - Created TTL
+msgid "client.weaver.created_ttl"
+msgstr "  TTL:   {hours} tundi"
+
+#: CLI: Weaver - Attaching
+msgid "client.weaver.attaching"
+msgstr "Weaveriga ühendamine..."
+
+#: CLI: Weaver - Detached
+msgid "client.weaver.detached"
+msgstr "[Weaverist {id} lahti ühendatud]"
+
+#: CLI: Weaver - Reattach hint
+msgid "client.weaver.reattach_hint"
+msgstr "Weaver töötab endiselt. Uuesti ühendamiseks: loom attach {id}"
+
+#: CLI: Weaver - No weavers
+msgid "client.weaver.no_weavers"
+msgstr "Ühtegi Weaverit ei tööta."
+
+#: CLI: Weaver - List header
+msgid "client.weaver.list_header"
+msgstr "{id:<40} {image:<30} {status:<10} {age:<8} {ttl:<8}"
+
+#: CLI: Weaver - Deleting
+msgid "client.weaver.deleting"
+msgstr "Weaveri {id} kustutamine..."
+
+#: CLI: Weaver - Deleted
+msgid "client.weaver.deleted"
+msgstr "Weaver kustutatud."
+
+#: CLI: Weaver - Attach prefix
+msgid "client.weaver.attach_prefix"
+msgstr "[Weaveriga {id} ühendamine]"

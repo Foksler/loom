@@ -1,0 +1,921 @@
+# Loom Server Translations - Bengali
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>
+# SPDX-License-Identifier: Proprietary
+#
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: bn\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: Email: Magic Link - Subject
+msgid "server.email.magic_link.subject"
+msgstr "Loom-এ সাইন ইন করুন"
+
+#: Email: Magic Link - Body intro
+msgid "server.email.magic_link.body"
+msgstr "আপনার Loom অ্যাকাউন্টে সাইন ইন করতে নিচের লিংকে ক্লিক করুন।"
+
+#: Email: Magic Link - Expiry notice
+msgid "server.email.magic_link.expires"
+msgstr "এই লিংকটি {minutes} মিনিটে মেয়াদ শেষ হবে।"
+
+#: Email: Magic Link - Ignore notice
+msgid "server.email.magic_link.ignore"
+msgstr "আপনি যদি এই ইমেইলটি অনুরোধ না করে থাকেন, আপনি এটি নিরাপদে উপেক্ষা করতে পারেন।"
+
+#: Email: Magic Link - Copy link instruction
+msgid "server.email.magic_link.copy_link"
+msgstr "অথবা এই লিংকটি কপি এবং পেস্ট করুন:"
+
+#: Email: Org Invitation - Subject
+msgid "server.email.invitation.subject"
+msgstr "আপনাকে Loom-এ {org_name}-এ যোগদানের জন্য আমন্ত্রণ জানানো হয়েছে"
+
+#: Email: Org Invitation - Body
+msgid "server.email.invitation.body"
+msgstr "{inviter_name} আপনাকে Loom-এ \"{org_name}\" সংস্থায় যোগদানের আমন্ত্রণ জানিয়েছেন।"
+
+#: Email: Org Invitation - Action instruction
+msgid "server.email.invitation.action"
+msgstr "আমন্ত্রণ গ্রহণ করতে নিচের লিংকে ক্লিক করুন:"
+
+#: Email: Org Invitation - No expiry notice
+msgid "server.email.invitation.no_expiry"
+msgstr "এই আমন্ত্রণের মেয়াদ শেষ হয় না, তবে সংস্থার অ্যাডমিন দ্বারা বাতিল করা যেতে পারে।"
+
+#: Email: Security Alert - Subject
+msgid "server.email.security_alert.subject"
+msgstr "Loom নিরাপত্তা সতর্কতা: {event}"
+
+#: Email: Security Alert - Body intro
+msgid "server.email.security_alert.body"
+msgstr "আপনার Loom অ্যাকাউন্টে একটি নিরাপত্তা ইভেন্ট ঘটেছে।"
+
+#: Email: Security Alert - Event label
+msgid "server.email.security_alert.event"
+msgstr "ইভেন্ট: {event}"
+
+#: Email: Security Alert - Details label
+msgid "server.email.security_alert.details"
+msgstr "বিস্তারিত:"
+
+#: Email: Security Alert - Action instruction
+msgid "server.email.security_alert.action"
+msgstr "এটি যদি আপনি না হন, অনুগ্রহ করে অবিলম্বে আপনার অ্যাকাউন্ট নিরাপত্তা সেটিংস পর্যালোচনা করুন।"
+
+#: Email: Deletion Warning - Subject
+msgid "server.email.deletion_warning.subject"
+msgstr "আপনার Loom অ্যাকাউন্ট মুছে ফেলার জন্য নির্ধারিত হয়েছে"
+
+#: Email: Deletion Warning - Body
+msgid "server.email.deletion_warning.body"
+msgstr "আপনার Loom অ্যাকাউন্ট {days} দিনের মধ্যে স্থায়ীভাবে মুছে ফেলার জন্য নির্ধারিত হয়েছে।"
+
+#: Email: Deletion Warning - Restore instruction
+msgid "server.email.deletion_warning.restore"
+msgstr "আপনি যদি এই মুছে ফেলার অনুরোধ না করে থাকেন, বা আপনি মন পরিবর্তন করেছেন, মুছে ফেলার তারিখের আগে লগ ইন করে আপনার অ্যাকাউন্ট পুনরুদ্ধার করতে পারেন।"
+
+#: Email: Deletion Warning - Permanent notice
+msgid "server.email.deletion_warning.permanent"
+msgstr "স্থায়ীভাবে মুছে ফেলার পর, আপনার ডেটা পুনরুদ্ধার করা যাবে না।"
+
+#: Email: Deletion Scheduled - Subject
+msgid "server.email.deletion_scheduled.subject"
+msgstr "অ্যাকাউন্ট মুছে ফেলা নির্ধারিত"
+
+#: Email: Deletion Scheduled - Body
+msgid "server.email.deletion_scheduled.body"
+msgstr "আপনার অ্যাকাউন্ট মুছে ফেলার জন্য নির্ধারিত হয়েছে।"
+
+#: Email: Deletion Scheduled - Grace period notice
+msgid "server.email.deletion_scheduled.grace"
+msgstr "লগ ইন করে এবং মুছে ফেলা বাতিল করে আপনার অ্যাকাউন্ট পুনরুদ্ধার করতে আপনার কাছে {days} দিন আছে।"
+
+#: Email: Deletion Scheduled - Permanent notice
+msgid "server.email.deletion_scheduled.permanent"
+msgstr "গ্রেস পিরিয়ড শেষ হলে, আপনার অ্যাকাউন্ট এবং সমস্ত সম্পর্কিত ডেটা স্থায়ীভাবে মুছে ফেলা হবে।"
+
+#: API: Auth - Check email response
+msgid "server.api.auth.check_email"
+msgstr "লগইন লিংকের জন্য আপনার ইমেইল চেক করুন"
+
+#: API: Auth - Logged out response
+msgid "server.api.auth.logged_out"
+msgstr "সফলভাবে লগ আউট হয়েছে"
+
+#: API: Error - Internal error
+msgid "server.api.error.internal"
+msgstr "একটি অভ্যন্তরীণ ত্রুটি ঘটেছে"
+
+#: API: Error - Not found
+msgid "server.api.error.not_found"
+msgstr "রিসোর্স পাওয়া যায়নি"
+
+#: API: Error - Unauthorized
+msgid "server.api.error.unauthorized"
+msgstr "প্রমাণীকরণ প্রয়োজন"
+
+#: API: Error - Forbidden
+msgid "server.api.error.forbidden"
+msgstr "অ্যাক্সেস অস্বীকৃত"
+
+#: API: Error - Bad request
+msgid "server.api.error.bad_request"
+msgstr "অবৈধ অনুরোধ"
+
+#: API: Error - Conflict
+msgid "server.api.error.conflict"
+msgstr "রিসোর্স দ্বন্দ্ব"
+
+#: API: Error - Gone
+msgid "server.api.error.gone"
+msgstr "রিসোর্স আর উপলব্ধ নেই"
+
+#: API: Error - Not configured
+msgid "server.api.error.not_configured"
+msgstr "বৈশিষ্ট্য কনফিগার করা হয়নি"
+
+# ============================================================================
+# Auth API responses
+# ============================================================================
+
+#: API: Auth - Invalid email
+msgid "server.api.auth.invalid_email"
+msgstr "অনুগ্রহ করে একটি বৈধ ইমেইল ঠিকানা প্রদান করুন"
+
+#: API: Auth - Device code authorized
+msgid "server.api.auth.device_authorized"
+msgstr "ডিভাইস সফলভাবে অনুমোদিত"
+
+#: API: Auth - Invalid device code
+msgid "server.api.auth.invalid_device_code"
+msgstr "অবৈধ বা মেয়াদোত্তীর্ণ ডিভাইস কোড"
+
+#: API: Auth - Invalid user code
+msgid "server.api.auth.invalid_user_code"
+msgstr "অবৈধ বা মেয়াদোত্তীর্ণ ইউজার কোড"
+
+#: API: Auth - OAuth not configured
+msgid "server.api.auth.oauth_not_configured"
+msgstr "{provider} OAuth কনফিগার করা হয়নি"
+
+#: API: Auth - Magic link sent (always shown to prevent enumeration)
+msgid "server.api.auth.magic_link_sent"
+msgstr "এই ইমেইলে একটি অ্যাকাউন্ট থাকলে, একটি লগইন লিংক পাঠানো হয়েছে"
+
+#: API: Auth - Email not verified (Google/Okta)
+msgid "server.api.auth.email_not_verified"
+msgstr "ইমেইল ঠিকানা প্রদানকারী দ্বারা যাচাই করা হয়নি"
+
+#: API: Auth - No verified email (GitHub)
+msgid "server.api.auth.no_verified_email"
+msgstr "কোনো যাচাইকৃত ইমেইল ঠিকানা পাওয়া যায়নি। অনুগ্রহ করে GitHub-এ আপনার ইমেইল যাচাই করুন এবং আবার চেষ্টা করুন।"
+
+# ============================================================================
+# User API responses
+# ============================================================================
+
+#: API: User - Not found
+msgid "server.api.user.not_found"
+msgstr "ব্যবহারকারী পাওয়া যায়নি"
+
+#: API: User - Invalid ID
+msgid "server.api.user.invalid_id"
+msgstr "অবৈধ ব্যবহারকারী ID ফরম্যাট"
+
+#: API: User - Display name empty
+msgid "server.api.user.display_name_empty"
+msgstr "প্রদর্শন নাম খালি হতে পারে না"
+
+#: API: User - Profile updated
+msgid "server.api.user.profile_updated"
+msgstr "প্রোফাইল সফলভাবে আপডেট হয়েছে"
+
+#: API: User - Deletion scheduled
+msgid "server.api.user.deletion_scheduled"
+msgstr "অ্যাকাউন্ট মুছে ফেলার জন্য নির্ধারিত"
+
+#: API: User - Deletion already scheduled
+msgid "server.api.user.deletion_already_scheduled"
+msgstr "অ্যাকাউন্ট মুছে ফেলা ইতিমধ্যে নির্ধারিত"
+
+#: API: User - Deletion failed
+msgid "server.api.user.deletion_failed"
+msgstr "অ্যাকাউন্ট মুছে ফেলা নির্ধারণ করতে ব্যর্থ"
+
+#: API: User - No pending deletion
+msgid "server.api.user.no_pending_deletion"
+msgstr "এই অ্যাকাউন্টের জন্য কোনো মুলতুবি মুছে ফেলা নেই"
+
+#: API: User - Grace period expired
+msgid "server.api.user.grace_period_expired"
+msgstr "গ্রেস পিরিয়ড শেষ হয়েছে, অ্যাকাউন্ট পুনরুদ্ধার করা যাবে না"
+
+#: API: User - Account restored
+msgid "server.api.user.account_restored"
+msgstr "অ্যাকাউন্ট সফলভাবে পুনরুদ্ধার হয়েছে"
+
+#: API: User - Identity unlinked
+msgid "server.api.user.identity_unlinked"
+msgstr "আইডেন্টিটি সফলভাবে আনলিংক হয়েছে"
+
+#: API: User - Identity not found
+msgid "server.api.user.identity_not_found"
+msgstr "আইডেন্টিটি পাওয়া যায়নি"
+
+#: API: User - Cannot unlink last identity
+msgid "server.api.user.cannot_unlink_last_identity"
+msgstr "শেষ আইডেন্টিটি আনলিংক করা যাবে না"
+
+# ============================================================================
+# Organization API responses
+# ============================================================================
+
+#: API: Org - Not found
+msgid "server.api.org.not_found"
+msgstr "সংস্থা পাওয়া যায়নি"
+
+#: API: Org - Invalid ID
+msgid "server.api.org.invalid_id"
+msgstr "অবৈধ সংস্থা ID"
+
+#: API: Org - Invalid slug length
+msgid "server.api.org.invalid_slug_length"
+msgstr "স্লাগ ৩ থেকে ৫০ অক্ষরের মধ্যে হতে হবে"
+
+#: API: Org - Invalid slug format
+msgid "server.api.org.invalid_slug_format"
+msgstr "স্লাগে শুধুমাত্র ছোট হাতের আলফানিউমেরিক অক্ষর এবং হাইফেন থাকতে পারে"
+
+#: API: Org - Slug exists
+msgid "server.api.org.slug_exists"
+msgstr "এই স্লাগ সহ একটি সংস্থা ইতিমধ্যে বিদ্যমান"
+
+#: API: Org - Invalid role
+msgid "server.api.org.invalid_role"
+msgstr "ভূমিকা owner, admin, member এর মধ্যে একটি হতে হবে"
+
+#: API: Org - List failed
+msgid "server.api.org.list_failed"
+msgstr "সংস্থাগুলি তালিকাভুক্ত করতে ব্যর্থ"
+
+#: API: Org - Create failed
+msgid "server.api.org.create_failed"
+msgstr "সংস্থা তৈরি করতে ব্যর্থ"
+
+#: API: Org - Not a member
+msgid "server.api.org.not_a_member"
+msgstr "আপনি এই সংস্থার সদস্য নন"
+
+#: API: Org - Already a member
+msgid "server.api.org.already_member"
+msgstr "ব্যবহারকারী ইতিমধ্যে এই সংস্থার সদস্য"
+
+#: API: Org - Member added
+msgid "server.api.org.member_added"
+msgstr "সংস্থায় সদস্য যোগ করা হয়েছে"
+
+#: API: Org - Member removed
+msgid "server.api.org.member_removed"
+msgstr "সংস্থা থেকে সদস্য সরানো হয়েছে"
+
+#: API: Org - Member not found
+msgid "server.api.org.member_not_found"
+msgstr "এই সংস্থায় সদস্য পাওয়া যায়নি"
+
+#: API: Org - Last owner
+msgid "server.api.org.last_owner"
+msgstr "শেষ মালিককে সরানো বা পদাবনতি করা যাবে না"
+
+#: API: Org - Cannot delete personal org
+msgid "server.api.org.cannot_delete_personal"
+msgstr "ব্যক্তিগত সংস্থা মুছে ফেলা যাবে না"
+
+#: API: Org - Deleted
+msgid "server.api.org.deleted"
+msgstr "সংস্থা মুছে ফেলা হয়েছে"
+
+#: API: Org - Restored
+msgid "server.api.org.restored"
+msgstr "সংস্থা পুনরুদ্ধার হয়েছে"
+
+#: API: Org - Not deleted
+msgid "server.api.org.not_deleted"
+msgstr "সংস্থা মুছে ফেলা হয়নি"
+
+#: API: Org - Grace period expired
+msgid "server.api.org.grace_period_expired"
+msgstr "গ্রেস পিরিয়ড শেষ হয়ে গেছে এবং এই সংস্থা পুনরুদ্ধার করা যাবে না"
+
+#: API: Org - Owner required
+msgid "server.api.org.owner_required"
+msgstr "শুধুমাত্র মালিকরাই এই কাজ করতে পারেন"
+
+#: API: Org - Role updated
+msgid "server.api.org.role_updated"
+msgstr "সদস্যের ভূমিকা আপডেট হয়েছে"
+
+#: API: Org - Join request for private org
+msgid "server.api.org.join_request_private"
+msgstr "প্রাইভেট সংস্থায় যোগদানের অনুরোধ করা যাবে না"
+
+#: API: Org - Join request pending
+msgid "server.api.org.join_request_pending"
+msgstr "এই সংস্থায় আপনার ইতিমধ্যে একটি মুলতুবি যোগদান অনুরোধ আছে"
+
+#: API: Org - Join request created
+msgid "server.api.org.join_request_created"
+msgstr "যোগদান অনুরোধ জমা দেওয়া হয়েছে"
+
+#: API: Org - Join request not found
+msgid "server.api.org.join_request_not_found"
+msgstr "যোগদান অনুরোধ পাওয়া যায়নি"
+
+#: API: Org - Join request approved
+msgid "server.api.org.join_request_approved"
+msgstr "যোগদান অনুরোধ অনুমোদিত"
+
+#: API: Org - Join request rejected
+msgid "server.api.org.join_request_rejected"
+msgstr "যোগদান অনুরোধ প্রত্যাখ্যাত"
+
+# ============================================================================
+# Team API responses
+# ============================================================================
+
+#: API: Team - Not found
+msgid "server.api.team.not_found"
+msgstr "টিম পাওয়া যায়নি"
+
+#: API: Team - Invalid ID
+msgid "server.api.team.invalid_id"
+msgstr "অবৈধ টিম ID"
+
+#: API: Team - Invalid slug length
+msgid "server.api.team.invalid_slug_length"
+msgstr "স্লাগ ২ থেকে ৫০ অক্ষরের মধ্যে হতে হবে"
+
+#: API: Team - Invalid slug format
+msgid "server.api.team.invalid_slug_format"
+msgstr "স্লাগে শুধুমাত্র ছোট হাতের আলফানিউমেরিক অক্ষর এবং হাইফেন থাকতে পারে"
+
+#: API: Team - List failed
+msgid "server.api.team.list_failed"
+msgstr "টিমগুলি তালিকাভুক্ত করতে ব্যর্থ"
+
+#: API: Team - Membership check failed
+msgid "server.api.team.membership_check_failed"
+msgstr "সংস্থার সদস্যপদ পরীক্ষা করতে ব্যর্থ"
+
+# ============================================================================
+# Invitation API responses
+# ============================================================================
+
+#: API: Invitation - Created
+msgid "server.api.invitation.created"
+msgstr "আমন্ত্রণ সফলভাবে পাঠানো হয়েছে"
+
+#: API: Invitation - Cancelled
+msgid "server.api.invitation.cancelled"
+msgstr "আমন্ত্রণ বাতিল হয়েছে"
+
+#: API: Invitation - Accepted
+msgid "server.api.invitation.accepted"
+msgstr "আমন্ত্রণ গৃহীত"
+
+#: API: Invitation - Not found
+msgid "server.api.invitation.not_found"
+msgstr "আমন্ত্রণ পাওয়া যায়নি"
+
+#: API: Invitation - Expired
+msgid "server.api.invitation.expired"
+msgstr "এই আমন্ত্রণের মেয়াদ শেষ হয়ে গেছে"
+
+#: API: Invitation - Invalid token
+msgid "server.api.invitation.invalid_token"
+msgstr "অবৈধ আমন্ত্রণ টোকেন"
+
+#: API: Invitation - Already accepted
+msgid "server.api.invitation.already_accepted"
+msgstr "এই আমন্ত্রণ ইতিমধ্যে গৃহীত হয়েছে"
+
+#: API: Invitation - List failed
+msgid "server.api.invitation.list_failed"
+msgstr "আমন্ত্রণগুলি তালিকাভুক্ত করতে ব্যর্থ"
+
+# ============================================================================
+# Join request API responses
+# ============================================================================
+
+#: API: Join request - Created
+msgid "server.api.join_request.created"
+msgstr "যোগদান অনুরোধ জমা দেওয়া হয়েছে"
+
+#: API: Join request - Approved
+msgid "server.api.join_request.approved"
+msgstr "যোগদান অনুরোধ অনুমোদিত"
+
+#: API: Join request - Rejected
+msgid "server.api.join_request.rejected"
+msgstr "যোগদান অনুরোধ প্রত্যাখ্যাত"
+
+#: API: Join request - Already member
+msgid "server.api.join_request.already_member"
+msgstr "আপনি ইতিমধ্যে এই সংস্থার সদস্য"
+
+#: API: Join request - Already pending
+msgid "server.api.join_request.already_pending"
+msgstr "আপনার ইতিমধ্যে একটি মুলতুবি যোগদান অনুরোধ আছে"
+
+#: API: Join request - Not found
+msgid "server.api.join_request.not_found"
+msgstr "যোগদান অনুরোধ পাওয়া যায়নি"
+
+#: API: Join request - Private org
+msgid "server.api.join_request.private_org"
+msgstr "প্রাইভেট সংস্থায় যোগদানের অনুরোধ করা যাবে না"
+
+# ============================================================================
+# API Key responses
+# ============================================================================
+
+#: API: API Key - Invalid org ID
+msgid "server.api.api_key.invalid_org_id"
+msgstr "অবৈধ সংস্থা ID ফরম্যাট"
+
+#: API: API Key - Name empty
+msgid "server.api.api_key.name_empty"
+msgstr "API কী এর নাম খালি হতে পারে না"
+
+#: API: API Key - No scopes
+msgid "server.api.api_key.no_scopes"
+msgstr "অন্তত একটি স্কোপ নির্দিষ্ট করতে হবে"
+
+#: API: API Key - Created
+msgid "server.api.api_key.created"
+msgstr "API কী তৈরি হয়েছে"
+
+#: API: API Key - Revoked
+msgid "server.api.api_key.revoked"
+msgstr "API কী প্রত্যাহার হয়েছে"
+
+#: API: API Key - Not found
+msgid "server.api.api_key.not_found"
+msgstr "API কী পাওয়া যায়নি"
+
+#: API: API Key - List failed
+msgid "server.api.api_key.list_failed"
+msgstr "API কী তালিকাভুক্ত করতে ব্যর্থ"
+
+#: API: API Key - Create failed
+msgid "server.api.api_key.create_failed"
+msgstr "API কী তৈরি করতে ব্যর্থ"
+
+# ============================================================================
+# Session API responses
+# ============================================================================
+
+#: API: Session - Invalid ID
+msgid "server.api.session.invalid_id"
+msgstr "অবৈধ সেশন ID ফরম্যাট"
+
+#: API: Session - Not found
+msgid "server.api.session.not_found"
+msgstr "সেশন পাওয়া যায়নি"
+
+#: API: Session - Revoked
+msgid "server.api.session.revoked"
+msgstr "সেশন সফলভাবে প্রত্যাহার হয়েছে"
+
+#: API: Session - List failed
+msgid "server.api.session.list_failed"
+msgstr "সেশন পুনরুদ্ধার করতে ব্যর্থ"
+
+#: API: Session - Revoke failed
+msgid "server.api.session.revoke_failed"
+msgstr "সেশন প্রত্যাহার করতে ব্যর্থ"
+
+#: API: Session - Ownership check failed
+msgid "server.api.session.ownership_check_failed"
+msgstr "সেশন মালিকানা যাচাই করতে ব্যর্থ"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - System admin required
+msgid "server.api.admin.system_admin_required"
+msgstr "সিস্টেম অ্যাডমিন ভূমিকা প্রয়োজন"
+
+#: API: Admin - Cannot remove own admin
+msgid "server.api.admin.cannot_remove_own_admin"
+msgstr "আপনার নিজের অ্যাডমিন স্ট্যাটাস সরাতে পারবেন না"
+
+#: API: Admin - User list failed
+msgid "server.api.admin.user_list_failed"
+msgstr "ব্যবহারকারীদের তালিকাভুক্ত করতে ব্যর্থ"
+
+#: API: Admin - User update failed
+msgid "server.api.admin.user_update_failed"
+msgstr "ব্যবহারকারী আপডেট করতে ব্যর্থ"
+
+#: API: Admin - Roles updated
+msgid "server.api.admin.roles_updated"
+msgstr "ব্যবহারকারীর ভূমিকা আপডেট হয়েছে"
+
+#: Auth: Device Page - Title
+msgid "server.auth.device.title"
+msgstr "ডিভাইস অনুমোদন - Loom"
+
+#: Auth: Device Page - Heading
+msgid "server.auth.device.heading"
+msgstr "ডিভাইস অনুমোদন"
+
+#: Auth: Device Page - Subtitle
+msgid "server.auth.device.subtitle"
+msgstr "আপনার টার্মিনালে দেখানো কোড প্রবেশ করুন"
+
+#: Auth: Device Page - Code label
+msgid "server.auth.device.code_label"
+msgstr "অনুমোদন কোড"
+
+#: Auth: Device Page - Submit button
+msgid "server.auth.device.submit"
+msgstr "ডিভাইস অনুমোদন করুন"
+
+#: Auth: Device Page - Authorizing button
+msgid "server.auth.device.authorizing"
+msgstr "অনুমোদন হচ্ছে..."
+
+#: Auth: Device Page - Authorized button
+msgid "server.auth.device.authorized"
+msgstr "অনুমোদিত"
+
+#: Auth: Device Page - Expiry help text
+msgid "server.auth.device.expiry_help"
+msgstr "এই কোডটি ১৫ মিনিট পর মেয়াদ শেষ হয়ে যাবে।"
+
+#: Auth: Device Page - Success message
+msgid "server.auth.device.success"
+msgstr "ডিভাইস সফলভাবে অনুমোদিত! আপনি এই উইন্ডো বন্ধ করতে পারেন।"
+
+#: Auth: Device Page - Invalid code format
+msgid "server.auth.device.invalid_format"
+msgstr "অনুগ্রহ করে XXX-XXX-XXX ফরম্যাটে একটি বৈধ কোড প্রবেশ করুন"
+
+#: Auth: Device Page - Generic error
+msgid "server.auth.device.error"
+msgstr "একটি ত্রুটি ঘটেছে। অনুগ্রহ করে আবার চেষ্টা করুন।"
+
+#: Auth: Device Page - Authorization failed
+msgid "server.auth.device.auth_failed"
+msgstr "অনুমোদন ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।"
+
+# ============================================================================
+# Support Access API responses
+# ============================================================================
+
+#: API: Support Access - Not support staff
+msgid "server.api.support_access.not_support_staff"
+msgstr "শুধুমাত্র সাপোর্ট স্টাফ সাপোর্ট অ্যাক্সেস অনুরোধ করতে পারে"
+
+#: API: Support Access - Thread not found
+msgid "server.api.support_access.thread_not_found"
+msgstr "থ্রেড পাওয়া যায়নি"
+
+#: API: Support Access - Already requested
+msgid "server.api.support_access.already_requested"
+msgstr "এই থ্রেডের জন্য সাপোর্ট অ্যাক্সেস ইতিমধ্যে অনুরোধ করা হয়েছে"
+
+#: API: Support Access - Already active
+msgid "server.api.support_access.already_active"
+msgstr "এই থ্রেডের জন্য সাপোর্ট অ্যাক্সেস ইতিমধ্যে সক্রিয়"
+
+#: API: Support Access - Requested
+msgid "server.api.support_access.requested"
+msgstr "সাপোর্ট অ্যাক্সেস অনুরোধ করা হয়েছে"
+
+#: API: Support Access - Request failed
+msgid "server.api.support_access.request_failed"
+msgstr "সাপোর্ট অ্যাক্সেস অনুরোধ করতে ব্যর্থ"
+
+#: API: Support Access - Not owner
+msgid "server.api.support_access.not_owner"
+msgstr "শুধুমাত্র থ্রেড মালিক সাপোর্ট অ্যাক্সেস অনুমোদন বা প্রত্যাহার করতে পারে"
+
+#: API: Support Access - No pending request
+msgid "server.api.support_access.no_pending_request"
+msgstr "এই থ্রেডের জন্য কোনো মুলতুবি সাপোর্ট অ্যাক্সেস অনুরোধ পাওয়া যায়নি"
+
+#: API: Support Access - Approved
+msgid "server.api.support_access.approved"
+msgstr "সাপোর্ট অ্যাক্সেস অনুমোদিত"
+
+#: API: Support Access - Approve failed
+msgid "server.api.support_access.approve_failed"
+msgstr "সাপোর্ট অ্যাক্সেস অনুমোদন করতে ব্যর্থ"
+
+#: API: Support Access - No active access
+msgid "server.api.support_access.no_active_access"
+msgstr "এই থ্রেডের জন্য কোনো সক্রিয় সাপোর্ট অ্যাক্সেস পাওয়া যায়নি"
+
+#: API: Support Access - Revoked
+msgid "server.api.support_access.revoked"
+msgstr "সাপোর্ট অ্যাক্সেস প্রত্যাহার হয়েছে"
+
+#: API: Support Access - Revoke failed
+msgid "server.api.support_access.revoke_failed"
+msgstr "সাপোর্ট অ্যাক্সেস প্রত্যাহার করতে ব্যর্থ"
+
+# ============================================================================
+# Share Link API responses
+# ============================================================================
+
+#: API: Share - Invalid thread ID
+msgid "server.api.share.invalid_thread_id"
+msgstr "অবৈধ থ্রেড ID ফরম্যাট"
+
+#: API: Share - Thread not found
+msgid "server.api.share.thread_not_found"
+msgstr "থ্রেড পাওয়া যায়নি"
+
+#: API: Share - Invalid expires_at
+msgid "server.api.share.invalid_expires_at"
+msgstr "অবৈধ মেয়াদ শেষের তারিখ ফরম্যাট। RFC 3339 ফরম্যাট ব্যবহার করুন।"
+
+#: API: Share - Create failed
+msgid "server.api.share.create_failed"
+msgstr "শেয়ার লিংক তৈরি করতে ব্যর্থ"
+
+#: API: Share - Link not found
+msgid "server.api.share.link_not_found"
+msgstr "এই থ্রেডের জন্য কোনো সক্রিয় শেয়ার লিংক পাওয়া যায়নি"
+
+#: API: Share - Revoked
+msgid "server.api.share.revoked"
+msgstr "শেয়ার লিংক প্রত্যাহার হয়েছে"
+
+#: API: Share - Revoke failed
+msgid "server.api.share.revoke_failed"
+msgstr "শেয়ার লিংক প্রত্যাহার করতে ব্যর্থ"
+
+#: API: Share - Invalid or expired link
+msgid "server.api.share.invalid_or_expired"
+msgstr "অবৈধ বা মেয়াদোত্তীর্ণ শেয়ার লিংক"
+
+#: API: Share - Link revoked
+msgid "server.api.share.link_revoked"
+msgstr "এই শেয়ার লিংক প্রত্যাহার করা হয়েছে"
+
+#: API: Share - Link expired
+msgid "server.api.share.link_expired"
+msgstr "এই শেয়ার লিংকের মেয়াদ শেষ হয়ে গেছে"
+
+#: API: Share - Validation failed
+msgid "server.api.share.validation_failed"
+msgstr "শেয়ার লিংক যাচাই করতে ব্যর্থ"
+
+#: API: Share - Fetch failed
+msgid "server.api.share.fetch_failed"
+msgstr "থ্রেড আনতে ব্যর্থ"
+
+#: API: Weaver - Provisioner not configured
+msgid "server.api.weaver.provisioner_not_configured"
+msgstr "Weaver প্রোভিশনার কনফিগার করা হয়নি"
+
+#: API: Weaver - Invalid ID
+msgid "server.api.weaver.invalid_id"
+msgstr "অবৈধ weaver ID: {id}"
+
+#: API: Weaver - Not found
+msgid "server.api.weaver.not_found"
+msgstr "Weaver পাওয়া যায়নি: {id}"
+
+#: API: Weaver - Access denied
+msgid "server.api.weaver.access_denied"
+msgstr "এই weaver অ্যাক্সেস করার অনুমতি আপনার নেই"
+
+#: API: Weaver - Attach denied
+msgid "server.api.weaver.attach_denied"
+msgstr "এই weaver-এ সংযুক্ত হওয়ার অনুমতি আপনার নেই"
+
+#: API: Weaver - Delete denied
+msgid "server.api.weaver.delete_denied"
+msgstr "এই weaver মুছে ফেলার অনুমতি আপনার নেই"
+
+#: API: Weaver - Read only attach
+msgid "server.api.weaver.read_only_attach"
+msgstr "শুধুমাত্র পড়ার সংযুক্তি: সাপোর্ট ব্যবহারকারীদের জন্য ইনপুট অক্ষম"
+
+#: API: Weaver - Logs access denied
+msgid "server.api.weaver.logs_denied"
+msgstr "এই weaver-এর লগ অ্যাক্সেস করার অনুমতি আপনার নেই"
+
+# ============================================================================
+# CLI: Update command
+# ============================================================================
+
+#: CLI: Update - Current version
+msgid "client.update.current_version"
+msgstr "বর্তমান সংস্করণ: {version}"
+
+#: CLI: Update - Platform
+msgid "client.update.platform"
+msgstr "প্ল্যাটফর্ম: {platform}"
+
+#: CLI: Update - Checking
+msgid "client.update.checking"
+msgstr "আপডেট পরীক্ষা করা হচ্ছে..."
+
+#: CLI: Update - Already up to date
+msgid "client.update.up_to_date"
+msgstr "ইতিমধ্যে আপ টু ডেট (SHA: {sha})"
+
+#: CLI: Update - Update available
+msgid "client.update.available"
+msgstr "আপডেট উপলব্ধ: {current} -> {remote}"
+
+#: CLI: Update - Downloading
+msgid "client.update.downloading"
+msgstr "{url} থেকে ডাউনলোড হচ্ছে..."
+
+#: CLI: Update - Downloaded
+msgid "client.update.downloaded"
+msgstr "{bytes} বাইট ডাউনলোড হয়েছে (যাচাইকৃত)"
+
+#: CLI: Update - Complete
+msgid "client.update.complete"
+msgstr "আপডেট সম্পন্ন! অনুগ্রহ করে loom পুনরায় চালু করুন।"
+
+#: CLI: Update - Error: empty binary
+msgid "client.update.error.empty_binary"
+msgstr "ডাউনলোড করা বাইনারি খালি"
+
+#: CLI: Update - Error: SHA mismatch
+msgid "client.update.error.sha_mismatch"
+msgstr "ডাউনলোড করা বাইনারি SHA মেলেনি: প্রত্যাশিত {expected}, পাওয়া গেছে {actual}"
+
+#: CLI: Update - Error: env not set
+msgid "client.update.error.env_not_set"
+msgstr "আপডেটের জন্য LOOM_UPDATE_BASE_URL বা LOOM_THREAD_SYNC_URL সেট করতে হবে"
+
+#: CLI: Update - Error: check failed
+msgid "client.update.error.check_failed"
+msgstr "আপডেট পরীক্ষা করতে ব্যর্থ: {status}"
+
+# ============================================================================
+# CLI: Authentication
+# ============================================================================
+
+#: CLI: Auth - Visit URL prompt
+msgid "client.auth.visit_url"
+msgstr "{url} ভিজিট করুন এবং কোড প্রবেশ করুন: {code}"
+
+#: CLI: Auth - Browser open failed
+msgid "client.auth.browser_failed"
+msgstr "(স্বয়ংক্রিয়ভাবে ব্রাউজার খোলা যায়নি)"
+
+#: CLI: Auth - Waiting for authorization
+msgid "client.auth.waiting"
+msgstr "অনুমোদনের জন্য অপেক্ষা করা হচ্ছে"
+
+#: CLI: Auth - Authorization timed out
+msgid "client.auth.timed_out"
+msgstr "অনুমোদনের সময় শেষ"
+
+#: CLI: Auth - Login cancelled
+msgid "client.auth.cancelled"
+msgstr "লগইন বাতিল হয়েছে"
+
+#: CLI: Auth - Login successful
+msgid "client.auth.login_success"
+msgstr "{server}-এ সফলভাবে লগ ইন হয়েছে"
+
+#: CLI: Auth - Device code expired
+msgid "client.auth.device_expired"
+msgstr "ডিভাইস কোডের মেয়াদ শেষ"
+
+#: CLI: Auth - Logged out
+msgid "client.auth.logged_out"
+msgstr "{server} থেকে লগ আউট হয়েছে"
+
+# ============================================================================
+# CLI: REPL
+# ============================================================================
+
+#: CLI: REPL - Welcome message
+msgid "client.repl.welcome"
+msgstr "Loom-এ স্বাগতম - AI-চালিত কোডিং সহকারী"
+
+#: CLI: REPL - Thread ID
+msgid "client.repl.thread_id"
+msgstr "থ্রেড: {id}"
+
+#: CLI: REPL - Instructions
+msgid "client.repl.instructions"
+msgstr "আপনার বার্তা টাইপ করুন এবং Enter চাপুন। বের হতে Ctrl+C ব্যবহার করুন।"
+
+#: CLI: REPL - Interrupted
+msgid "client.repl.interrupted"
+msgstr "বাধাপ্রাপ্ত। থ্রেড সংরক্ষিত। বিদায়!"
+
+#: CLI: REPL - Error
+msgid "client.repl.error"
+msgstr "ত্রুটি: {error}"
+
+# ============================================================================
+# CLI: Search
+# ============================================================================
+
+#: CLI: Search - No results
+msgid "client.search.no_results"
+msgstr "\"{query}\"-এর জন্য কোনো ফলাফল পাওয়া যায়নি"
+
+#: CLI: Search - Results header
+msgid "client.search.results_header"
+msgstr "\"{query}\"-এর জন্য ফলাফল ({count} হিট):"
+
+#: CLI: Search - Local no results
+msgid "client.search.local_no_results"
+msgstr "\"{query}\"-এর জন্য কোনো ফলাফল পাওয়া যায়নি (স্থানীয় অনুসন্ধান)"
+
+#: CLI: Search - Local results header
+msgid "client.search.local_results_header"
+msgstr "\"{query}\"-এর জন্য স্থানীয় ফলাফল ({count} হিট):"
+
+# ============================================================================
+# CLI: Threads
+# ============================================================================
+
+#: CLI: Threads - No threads
+msgid "client.threads.no_threads"
+msgstr "কোনো থ্রেড পাওয়া যায়নি।"
+
+#: CLI: Threads - List header
+msgid "client.threads.list_header"
+msgstr "{id:<40} {title:<40} {updated:<20}"
+
+#: CLI: Threads - Private session
+msgid "client.threads.private_session"
+msgstr "প্রাইভেট সেশন শুরু হচ্ছে (শুধুমাত্র স্থানীয়, কখনো সার্ভারে সিঙ্ক হয় না)।"
+
+#: CLI: Threads - Shared with support
+msgid "client.threads.shared_support"
+msgstr "থ্রেড {id} সাপোর্টের সাথে শেয়ার করা হয়েছে।"
+
+#: CLI: Threads - Visibility changed
+msgid "client.threads.visibility_changed"
+msgstr "থ্রেড {id}-এর দৃশ্যমানতা {visibility}-এ পরিবর্তন হয়েছে।"
+
+# ============================================================================
+# CLI: Weaver
+# ============================================================================
+
+#: CLI: Weaver - Creating
+msgid "client.weaver.creating"
+msgstr "Weaver তৈরি হচ্ছে..."
+
+#: CLI: Weaver - Created ID
+msgid "client.weaver.created_id"
+msgstr "  ID:    {id}"
+
+#: CLI: Weaver - Created image
+msgid "client.weaver.created_image"
+msgstr "  ইমেজ: {image}"
+
+#: CLI: Weaver - Created TTL
+msgid "client.weaver.created_ttl"
+msgstr "  TTL:   {hours} ঘণ্টা"
+
+#: CLI: Weaver - Attaching
+msgid "client.weaver.attaching"
+msgstr "Weaver-এ সংযুক্ত হচ্ছে..."
+
+#: CLI: Weaver - Detached
+msgid "client.weaver.detached"
+msgstr "[weaver {id} থেকে বিচ্ছিন্ন]"
+
+#: CLI: Weaver - Reattach hint
+msgid "client.weaver.reattach_hint"
+msgstr "Weaver এখনো চলছে। পুনরায় সংযুক্ত হতে: loom attach {id}"
+
+#: CLI: Weaver - No weavers
+msgid "client.weaver.no_weavers"
+msgstr "কোনো weaver চলছে না।"
+
+#: CLI: Weaver - List header
+msgid "client.weaver.list_header"
+msgstr "{id:<40} {image:<30} {status:<10} {age:<8} {ttl:<8}"
+
+#: CLI: Weaver - Deleting
+msgid "client.weaver.deleting"
+msgstr "Weaver {id} মুছে ফেলা হচ্ছে..."
+
+#: CLI: Weaver - Deleted
+msgid "client.weaver.deleted"
+msgstr "Weaver মুছে ফেলা হয়েছে।"
+
+#: CLI: Weaver - Attach prefix
+msgid "client.weaver.attach_prefix"
+msgstr "[weaver {id}-এ সংযুক্ত হচ্ছে]"

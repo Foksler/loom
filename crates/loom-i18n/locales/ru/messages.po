@@ -1,0 +1,921 @@
+# Loom Server Translations - Russian
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>
+# SPDX-License-Identifier: Proprietary
+#
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ru\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: Email: Magic Link - Subject
+msgid "server.email.magic_link.subject"
+msgstr "Войти в Loom"
+
+#: Email: Magic Link - Body intro
+msgid "server.email.magic_link.body"
+msgstr "Нажмите на ссылку ниже, чтобы войти в свою учётную запись Loom."
+
+#: Email: Magic Link - Expiry notice
+msgid "server.email.magic_link.expires"
+msgstr "Срок действия этой ссылки истекает через {minutes} минут."
+
+#: Email: Magic Link - Ignore notice
+msgid "server.email.magic_link.ignore"
+msgstr "Если вы не запрашивали это письмо, просто проигнорируйте его."
+
+#: Email: Magic Link - Copy link instruction
+msgid "server.email.magic_link.copy_link"
+msgstr "Или скопируйте и вставьте эту ссылку:"
+
+#: Email: Org Invitation - Subject
+msgid "server.email.invitation.subject"
+msgstr "Вас пригласили присоединиться к {org_name} в Loom"
+
+#: Email: Org Invitation - Body
+msgid "server.email.invitation.body"
+msgstr "{inviter_name} приглашает вас присоединиться к организации «{org_name}» в Loom."
+
+#: Email: Org Invitation - Action instruction
+msgid "server.email.invitation.action"
+msgstr "Нажмите на ссылку ниже, чтобы принять приглашение:"
+
+#: Email: Org Invitation - No expiry notice
+msgid "server.email.invitation.no_expiry"
+msgstr "Срок действия этого приглашения не ограничен, но администратор организации может его отозвать."
+
+#: Email: Security Alert - Subject
+msgid "server.email.security_alert.subject"
+msgstr "Предупреждение безопасности Loom: {event}"
+
+#: Email: Security Alert - Body intro
+msgid "server.email.security_alert.body"
+msgstr "В вашей учётной записи Loom произошло событие безопасности."
+
+#: Email: Security Alert - Event label
+msgid "server.email.security_alert.event"
+msgstr "Событие: {event}"
+
+#: Email: Security Alert - Details label
+msgid "server.email.security_alert.details"
+msgstr "Подробности:"
+
+#: Email: Security Alert - Action instruction
+msgid "server.email.security_alert.action"
+msgstr "Если это были не вы, немедленно проверьте настройки безопасности вашей учётной записи."
+
+#: Email: Deletion Warning - Subject
+msgid "server.email.deletion_warning.subject"
+msgstr "Ваша учётная запись Loom запланирована к удалению"
+
+#: Email: Deletion Warning - Body
+msgid "server.email.deletion_warning.body"
+msgstr "Ваша учётная запись Loom будет безвозвратно удалена через {days} дней."
+
+#: Email: Deletion Warning - Restore instruction
+msgid "server.email.deletion_warning.restore"
+msgstr "Если вы не запрашивали удаление или передумали, вы можете восстановить учётную запись, войдя в систему до даты удаления."
+
+#: Email: Deletion Warning - Permanent notice
+msgid "server.email.deletion_warning.permanent"
+msgstr "После окончательного удаления ваши данные невозможно будет восстановить."
+
+#: Email: Deletion Scheduled - Subject
+msgid "server.email.deletion_scheduled.subject"
+msgstr "Удаление учётной записи запланировано"
+
+#: Email: Deletion Scheduled - Body
+msgid "server.email.deletion_scheduled.body"
+msgstr "Ваша учётная запись запланирована к удалению."
+
+#: Email: Deletion Scheduled - Grace period notice
+msgid "server.email.deletion_scheduled.grace"
+msgstr "У вас есть {days} дней, чтобы восстановить учётную запись, войдя в систему и отменив удаление."
+
+#: Email: Deletion Scheduled - Permanent notice
+msgid "server.email.deletion_scheduled.permanent"
+msgstr "По истечении льготного периода ваша учётная запись и все связанные данные будут безвозвратно удалены."
+
+#: API: Auth - Check email response
+msgid "server.api.auth.check_email"
+msgstr "Проверьте почту — вам отправлена ссылка для входа"
+
+#: API: Auth - Logged out response
+msgid "server.api.auth.logged_out"
+msgstr "Вы успешно вышли из системы"
+
+#: API: Error - Internal error
+msgid "server.api.error.internal"
+msgstr "Произошла внутренняя ошибка"
+
+#: API: Error - Not found
+msgid "server.api.error.not_found"
+msgstr "Ресурс не найден"
+
+#: API: Error - Unauthorized
+msgid "server.api.error.unauthorized"
+msgstr "Требуется аутентификация"
+
+#: API: Error - Forbidden
+msgid "server.api.error.forbidden"
+msgstr "Доступ запрещён"
+
+#: API: Error - Bad request
+msgid "server.api.error.bad_request"
+msgstr "Некорректный запрос"
+
+#: API: Error - Conflict
+msgid "server.api.error.conflict"
+msgstr "Конфликт ресурсов"
+
+#: API: Error - Gone
+msgid "server.api.error.gone"
+msgstr "Ресурс больше недоступен"
+
+#: API: Error - Not configured
+msgid "server.api.error.not_configured"
+msgstr "Функция не настроена"
+
+# ============================================================================
+# Auth API responses
+# ============================================================================
+
+#: API: Auth - Invalid email
+msgid "server.api.auth.invalid_email"
+msgstr "Пожалуйста, укажите действительный адрес электронной почты"
+
+#: API: Auth - Device code authorized
+msgid "server.api.auth.device_authorized"
+msgstr "Устройство успешно авторизовано"
+
+#: API: Auth - Invalid device code
+msgid "server.api.auth.invalid_device_code"
+msgstr "Недействительный или просроченный код устройства"
+
+#: API: Auth - Invalid user code
+msgid "server.api.auth.invalid_user_code"
+msgstr "Недействительный или просроченный код пользователя"
+
+#: API: Auth - OAuth not configured
+msgid "server.api.auth.oauth_not_configured"
+msgstr "OAuth для {provider} не настроен"
+
+#: API: Auth - Magic link sent (always shown to prevent enumeration)
+msgid "server.api.auth.magic_link_sent"
+msgstr "Если учётная запись с таким email существует, ссылка для входа была отправлена"
+
+#: API: Auth - Email not verified (Google/Okta)
+msgid "server.api.auth.email_not_verified"
+msgstr "Адрес электронной почты не подтверждён провайдером"
+
+#: API: Auth - No verified email (GitHub)
+msgid "server.api.auth.no_verified_email"
+msgstr "Подтверждённый адрес электронной почты не найден. Подтвердите свой email в GitHub и попробуйте снова."
+
+# ============================================================================
+# User API responses
+# ============================================================================
+
+#: API: User - Not found
+msgid "server.api.user.not_found"
+msgstr "Пользователь не найден"
+
+#: API: User - Invalid ID
+msgid "server.api.user.invalid_id"
+msgstr "Неверный формат ID пользователя"
+
+#: API: User - Display name empty
+msgid "server.api.user.display_name_empty"
+msgstr "Отображаемое имя не может быть пустым"
+
+#: API: User - Profile updated
+msgid "server.api.user.profile_updated"
+msgstr "Профиль успешно обновлён"
+
+#: API: User - Deletion scheduled
+msgid "server.api.user.deletion_scheduled"
+msgstr "Удаление учётной записи запланировано"
+
+#: API: User - Deletion already scheduled
+msgid "server.api.user.deletion_already_scheduled"
+msgstr "Удаление учётной записи уже запланировано"
+
+#: API: User - Deletion failed
+msgid "server.api.user.deletion_failed"
+msgstr "Не удалось запланировать удаление учётной записи"
+
+#: API: User - No pending deletion
+msgid "server.api.user.no_pending_deletion"
+msgstr "Нет запланированного удаления для этой учётной записи"
+
+#: API: User - Grace period expired
+msgid "server.api.user.grace_period_expired"
+msgstr "Льготный период истёк, учётную запись невозможно восстановить"
+
+#: API: User - Account restored
+msgid "server.api.user.account_restored"
+msgstr "Учётная запись успешно восстановлена"
+
+#: API: User - Identity unlinked
+msgid "server.api.user.identity_unlinked"
+msgstr "Привязка успешно удалена"
+
+#: API: User - Identity not found
+msgid "server.api.user.identity_not_found"
+msgstr "Привязка не найдена"
+
+#: API: User - Cannot unlink last identity
+msgid "server.api.user.cannot_unlink_last_identity"
+msgstr "Невозможно удалить последнюю привязку"
+
+# ============================================================================
+# Organization API responses
+# ============================================================================
+
+#: API: Org - Not found
+msgid "server.api.org.not_found"
+msgstr "Организация не найдена"
+
+#: API: Org - Invalid ID
+msgid "server.api.org.invalid_id"
+msgstr "Неверный ID организации"
+
+#: API: Org - Invalid slug length
+msgid "server.api.org.invalid_slug_length"
+msgstr "Slug должен содержать от 3 до 50 символов"
+
+#: API: Org - Invalid slug format
+msgid "server.api.org.invalid_slug_format"
+msgstr "Slug может содержать только строчные буквенно-цифровые символы и дефисы"
+
+#: API: Org - Slug exists
+msgid "server.api.org.slug_exists"
+msgstr "Организация с таким slug уже существует"
+
+#: API: Org - Invalid role
+msgid "server.api.org.invalid_role"
+msgstr "Роль должна быть одной из: owner, admin, member"
+
+#: API: Org - List failed
+msgid "server.api.org.list_failed"
+msgstr "Не удалось получить список организаций"
+
+#: API: Org - Create failed
+msgid "server.api.org.create_failed"
+msgstr "Не удалось создать организацию"
+
+#: API: Org - Not a member
+msgid "server.api.org.not_a_member"
+msgstr "Вы не являетесь участником этой организации"
+
+#: API: Org - Already a member
+msgid "server.api.org.already_member"
+msgstr "Пользователь уже является участником этой организации"
+
+#: API: Org - Member added
+msgid "server.api.org.member_added"
+msgstr "Участник добавлен в организацию"
+
+#: API: Org - Member removed
+msgid "server.api.org.member_removed"
+msgstr "Участник удалён из организации"
+
+#: API: Org - Member not found
+msgid "server.api.org.member_not_found"
+msgstr "Участник не найден в этой организации"
+
+#: API: Org - Last owner
+msgid "server.api.org.last_owner"
+msgstr "Невозможно удалить или понизить роль последнего владельца"
+
+#: API: Org - Cannot delete personal org
+msgid "server.api.org.cannot_delete_personal"
+msgstr "Невозможно удалить личную организацию"
+
+#: API: Org - Deleted
+msgid "server.api.org.deleted"
+msgstr "Организация удалена"
+
+#: API: Org - Restored
+msgid "server.api.org.restored"
+msgstr "Организация восстановлена"
+
+#: API: Org - Not deleted
+msgid "server.api.org.not_deleted"
+msgstr "Организация не удалена"
+
+#: API: Org - Grace period expired
+msgid "server.api.org.grace_period_expired"
+msgstr "Льготный период истёк, и эту организацию невозможно восстановить"
+
+#: API: Org - Owner required
+msgid "server.api.org.owner_required"
+msgstr "Только владельцы могут выполнять это действие"
+
+#: API: Org - Role updated
+msgid "server.api.org.role_updated"
+msgstr "Роль участника обновлена"
+
+#: API: Org - Join request for private org
+msgid "server.api.org.join_request_private"
+msgstr "Невозможно запросить вступление в закрытую организацию"
+
+#: API: Org - Join request pending
+msgid "server.api.org.join_request_pending"
+msgstr "У вас уже есть ожидающий запрос на вступление в эту организацию"
+
+#: API: Org - Join request created
+msgid "server.api.org.join_request_created"
+msgstr "Запрос на вступление отправлен"
+
+#: API: Org - Join request not found
+msgid "server.api.org.join_request_not_found"
+msgstr "Запрос на вступление не найден"
+
+#: API: Org - Join request approved
+msgid "server.api.org.join_request_approved"
+msgstr "Запрос на вступление одобрен"
+
+#: API: Org - Join request rejected
+msgid "server.api.org.join_request_rejected"
+msgstr "Запрос на вступление отклонён"
+
+# ============================================================================
+# Team API responses
+# ============================================================================
+
+#: API: Team - Not found
+msgid "server.api.team.not_found"
+msgstr "Команда не найдена"
+
+#: API: Team - Invalid ID
+msgid "server.api.team.invalid_id"
+msgstr "Неверный ID команды"
+
+#: API: Team - Invalid slug length
+msgid "server.api.team.invalid_slug_length"
+msgstr "Slug должен содержать от 2 до 50 символов"
+
+#: API: Team - Invalid slug format
+msgid "server.api.team.invalid_slug_format"
+msgstr "Slug может содержать только строчные буквенно-цифровые символы и дефисы"
+
+#: API: Team - List failed
+msgid "server.api.team.list_failed"
+msgstr "Не удалось получить список команд"
+
+#: API: Team - Membership check failed
+msgid "server.api.team.membership_check_failed"
+msgstr "Не удалось проверить членство в организации"
+
+# ============================================================================
+# Invitation API responses
+# ============================================================================
+
+#: API: Invitation - Created
+msgid "server.api.invitation.created"
+msgstr "Приглашение успешно отправлено"
+
+#: API: Invitation - Cancelled
+msgid "server.api.invitation.cancelled"
+msgstr "Приглашение отменено"
+
+#: API: Invitation - Accepted
+msgid "server.api.invitation.accepted"
+msgstr "Приглашение принято"
+
+#: API: Invitation - Not found
+msgid "server.api.invitation.not_found"
+msgstr "Приглашение не найдено"
+
+#: API: Invitation - Expired
+msgid "server.api.invitation.expired"
+msgstr "Срок действия приглашения истёк"
+
+#: API: Invitation - Invalid token
+msgid "server.api.invitation.invalid_token"
+msgstr "Недействительный токен приглашения"
+
+#: API: Invitation - Already accepted
+msgid "server.api.invitation.already_accepted"
+msgstr "Это приглашение уже принято"
+
+#: API: Invitation - List failed
+msgid "server.api.invitation.list_failed"
+msgstr "Не удалось получить список приглашений"
+
+# ============================================================================
+# Join request API responses
+# ============================================================================
+
+#: API: Join request - Created
+msgid "server.api.join_request.created"
+msgstr "Запрос на вступление отправлен"
+
+#: API: Join request - Approved
+msgid "server.api.join_request.approved"
+msgstr "Запрос на вступление одобрен"
+
+#: API: Join request - Rejected
+msgid "server.api.join_request.rejected"
+msgstr "Запрос на вступление отклонён"
+
+#: API: Join request - Already member
+msgid "server.api.join_request.already_member"
+msgstr "Вы уже являетесь участником этой организации"
+
+#: API: Join request - Already pending
+msgid "server.api.join_request.already_pending"
+msgstr "У вас уже есть ожидающий запрос на вступление"
+
+#: API: Join request - Not found
+msgid "server.api.join_request.not_found"
+msgstr "Запрос на вступление не найден"
+
+#: API: Join request - Private org
+msgid "server.api.join_request.private_org"
+msgstr "Невозможно запросить вступление в закрытую организацию"
+
+# ============================================================================
+# API Key responses
+# ============================================================================
+
+#: API: API Key - Invalid org ID
+msgid "server.api.api_key.invalid_org_id"
+msgstr "Неверный формат ID организации"
+
+#: API: API Key - Name empty
+msgid "server.api.api_key.name_empty"
+msgstr "Название API-ключа не может быть пустым"
+
+#: API: API Key - No scopes
+msgid "server.api.api_key.no_scopes"
+msgstr "Необходимо указать хотя бы одну область действия"
+
+#: API: API Key - Created
+msgid "server.api.api_key.created"
+msgstr "API-ключ создан"
+
+#: API: API Key - Revoked
+msgid "server.api.api_key.revoked"
+msgstr "API-ключ отозван"
+
+#: API: API Key - Not found
+msgid "server.api.api_key.not_found"
+msgstr "API-ключ не найден"
+
+#: API: API Key - List failed
+msgid "server.api.api_key.list_failed"
+msgstr "Не удалось получить список API-ключей"
+
+#: API: API Key - Create failed
+msgid "server.api.api_key.create_failed"
+msgstr "Не удалось создать API-ключ"
+
+# ============================================================================
+# Session API responses
+# ============================================================================
+
+#: API: Session - Invalid ID
+msgid "server.api.session.invalid_id"
+msgstr "Неверный формат ID сессии"
+
+#: API: Session - Not found
+msgid "server.api.session.not_found"
+msgstr "Сессия не найдена"
+
+#: API: Session - Revoked
+msgid "server.api.session.revoked"
+msgstr "Сессия успешно завершена"
+
+#: API: Session - List failed
+msgid "server.api.session.list_failed"
+msgstr "Не удалось получить список сессий"
+
+#: API: Session - Revoke failed
+msgid "server.api.session.revoke_failed"
+msgstr "Не удалось завершить сессию"
+
+#: API: Session - Ownership check failed
+msgid "server.api.session.ownership_check_failed"
+msgstr "Не удалось проверить принадлежность сессии"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - System admin required
+msgid "server.api.admin.system_admin_required"
+msgstr "Требуется роль системного администратора"
+
+#: API: Admin - Cannot remove own admin
+msgid "server.api.admin.cannot_remove_own_admin"
+msgstr "Невозможно снять собственный статус администратора"
+
+#: API: Admin - User list failed
+msgid "server.api.admin.user_list_failed"
+msgstr "Не удалось получить список пользователей"
+
+#: API: Admin - User update failed
+msgid "server.api.admin.user_update_failed"
+msgstr "Не удалось обновить пользователя"
+
+#: API: Admin - Roles updated
+msgid "server.api.admin.roles_updated"
+msgstr "Роли пользователя обновлены"
+
+#: Auth: Device Page - Title
+msgid "server.auth.device.title"
+msgstr "Авторизация устройства — Loom"
+
+#: Auth: Device Page - Heading
+msgid "server.auth.device.heading"
+msgstr "Авторизация устройства"
+
+#: Auth: Device Page - Subtitle
+msgid "server.auth.device.subtitle"
+msgstr "Введите код, показанный в вашем терминале"
+
+#: Auth: Device Page - Code label
+msgid "server.auth.device.code_label"
+msgstr "Код авторизации"
+
+#: Auth: Device Page - Submit button
+msgid "server.auth.device.submit"
+msgstr "Авторизовать устройство"
+
+#: Auth: Device Page - Authorizing button
+msgid "server.auth.device.authorizing"
+msgstr "Авторизация..."
+
+#: Auth: Device Page - Authorized button
+msgid "server.auth.device.authorized"
+msgstr "Авторизовано"
+
+#: Auth: Device Page - Expiry help text
+msgid "server.auth.device.expiry_help"
+msgstr "Срок действия этого кода истекает через 15 минут."
+
+#: Auth: Device Page - Success message
+msgid "server.auth.device.success"
+msgstr "Устройство успешно авторизовано! Вы можете закрыть это окно."
+
+#: Auth: Device Page - Invalid code format
+msgid "server.auth.device.invalid_format"
+msgstr "Введите код в формате XXX-XXX-XXX"
+
+#: Auth: Device Page - Generic error
+msgid "server.auth.device.error"
+msgstr "Произошла ошибка. Попробуйте ещё раз."
+
+#: Auth: Device Page - Authorization failed
+msgid "server.auth.device.auth_failed"
+msgstr "Авторизация не удалась. Попробуйте ещё раз."
+
+# ============================================================================
+# Support Access API responses
+# ============================================================================
+
+#: API: Support Access - Not support staff
+msgid "server.api.support_access.not_support_staff"
+msgstr "Только сотрудники поддержки могут запрашивать доступ"
+
+#: API: Support Access - Thread not found
+msgid "server.api.support_access.thread_not_found"
+msgstr "Тред не найден"
+
+#: API: Support Access - Already requested
+msgid "server.api.support_access.already_requested"
+msgstr "Доступ поддержки уже запрошен для этого треда"
+
+#: API: Support Access - Already active
+msgid "server.api.support_access.already_active"
+msgstr "Доступ поддержки уже активен для этого треда"
+
+#: API: Support Access - Requested
+msgid "server.api.support_access.requested"
+msgstr "Доступ поддержки запрошен"
+
+#: API: Support Access - Request failed
+msgid "server.api.support_access.request_failed"
+msgstr "Не удалось запросить доступ поддержки"
+
+#: API: Support Access - Not owner
+msgid "server.api.support_access.not_owner"
+msgstr "Только владелец треда может одобрить или отозвать доступ поддержки"
+
+#: API: Support Access - No pending request
+msgid "server.api.support_access.no_pending_request"
+msgstr "Нет ожидающего запроса на доступ поддержки для этого треда"
+
+#: API: Support Access - Approved
+msgid "server.api.support_access.approved"
+msgstr "Доступ поддержки одобрен"
+
+#: API: Support Access - Approve failed
+msgid "server.api.support_access.approve_failed"
+msgstr "Не удалось одобрить доступ поддержки"
+
+#: API: Support Access - No active access
+msgid "server.api.support_access.no_active_access"
+msgstr "Нет активного доступа поддержки для этого треда"
+
+#: API: Support Access - Revoked
+msgid "server.api.support_access.revoked"
+msgstr "Доступ поддержки отозван"
+
+#: API: Support Access - Revoke failed
+msgid "server.api.support_access.revoke_failed"
+msgstr "Не удалось отозвать доступ поддержки"
+
+# ============================================================================
+# Share Link API responses
+# ============================================================================
+
+#: API: Share - Invalid thread ID
+msgid "server.api.share.invalid_thread_id"
+msgstr "Неверный формат ID треда"
+
+#: API: Share - Thread not found
+msgid "server.api.share.thread_not_found"
+msgstr "Тред не найден"
+
+#: API: Share - Invalid expires_at
+msgid "server.api.share.invalid_expires_at"
+msgstr "Неверный формат даты истечения. Используйте формат RFC 3339."
+
+#: API: Share - Create failed
+msgid "server.api.share.create_failed"
+msgstr "Не удалось создать ссылку для совместного доступа"
+
+#: API: Share - Link not found
+msgid "server.api.share.link_not_found"
+msgstr "Активная ссылка для совместного доступа не найдена для этого треда"
+
+#: API: Share - Revoked
+msgid "server.api.share.revoked"
+msgstr "Ссылка для совместного доступа отозвана"
+
+#: API: Share - Revoke failed
+msgid "server.api.share.revoke_failed"
+msgstr "Не удалось отозвать ссылку для совместного доступа"
+
+#: API: Share - Invalid or expired link
+msgid "server.api.share.invalid_or_expired"
+msgstr "Недействительная или просроченная ссылка для совместного доступа"
+
+#: API: Share - Link revoked
+msgid "server.api.share.link_revoked"
+msgstr "Эта ссылка для совместного доступа была отозвана"
+
+#: API: Share - Link expired
+msgid "server.api.share.link_expired"
+msgstr "Срок действия ссылки для совместного доступа истёк"
+
+#: API: Share - Validation failed
+msgid "server.api.share.validation_failed"
+msgstr "Не удалось проверить ссылку для совместного доступа"
+
+#: API: Share - Fetch failed
+msgid "server.api.share.fetch_failed"
+msgstr "Не удалось загрузить тред"
+
+#: API: Weaver - Provisioner not configured
+msgid "server.api.weaver.provisioner_not_configured"
+msgstr "Провизионер Weaver не настроен"
+
+#: API: Weaver - Invalid ID
+msgid "server.api.weaver.invalid_id"
+msgstr "Неверный ID Weaver: {id}"
+
+#: API: Weaver - Not found
+msgid "server.api.weaver.not_found"
+msgstr "Weaver не найден: {id}"
+
+#: API: Weaver - Access denied
+msgid "server.api.weaver.access_denied"
+msgstr "У вас нет прав доступа к этому Weaver"
+
+#: API: Weaver - Attach denied
+msgid "server.api.weaver.attach_denied"
+msgstr "У вас нет прав подключения к этому Weaver"
+
+#: API: Weaver - Delete denied
+msgid "server.api.weaver.delete_denied"
+msgstr "У вас нет прав удаления этого Weaver"
+
+#: API: Weaver - Read only attach
+msgid "server.api.weaver.read_only_attach"
+msgstr "Подключение только для чтения: ввод отключён для сотрудников поддержки"
+
+#: API: Weaver - Logs access denied
+msgid "server.api.weaver.logs_denied"
+msgstr "У вас нет прав доступа к логам этого Weaver"
+
+# ============================================================================
+# CLI: Update command
+# ============================================================================
+
+#: CLI: Update - Current version
+msgid "client.update.current_version"
+msgstr "Текущая версия: {version}"
+
+#: CLI: Update - Platform
+msgid "client.update.platform"
+msgstr "Платформа: {platform}"
+
+#: CLI: Update - Checking
+msgid "client.update.checking"
+msgstr "Проверка обновлений..."
+
+#: CLI: Update - Already up to date
+msgid "client.update.up_to_date"
+msgstr "Установлена последняя версия (SHA: {sha})"
+
+#: CLI: Update - Update available
+msgid "client.update.available"
+msgstr "Доступно обновление: {current} -> {remote}"
+
+#: CLI: Update - Downloading
+msgid "client.update.downloading"
+msgstr "Загрузка с {url}..."
+
+#: CLI: Update - Downloaded
+msgid "client.update.downloaded"
+msgstr "Загружено {bytes} байт (проверено)"
+
+#: CLI: Update - Complete
+msgid "client.update.complete"
+msgstr "Обновление завершено! Перезапустите loom."
+
+#: CLI: Update - Error: empty binary
+msgid "client.update.error.empty_binary"
+msgstr "Загруженный файл пуст"
+
+#: CLI: Update - Error: SHA mismatch
+msgid "client.update.error.sha_mismatch"
+msgstr "Несоответствие SHA загруженного файла: ожидалось {expected}, получено {actual}"
+
+#: CLI: Update - Error: env not set
+msgid "client.update.error.env_not_set"
+msgstr "Для обновлений должна быть установлена переменная LOOM_UPDATE_BASE_URL или LOOM_THREAD_SYNC_URL"
+
+#: CLI: Update - Error: check failed
+msgid "client.update.error.check_failed"
+msgstr "Не удалось проверить обновления: {status}"
+
+# ============================================================================
+# CLI: Authentication
+# ============================================================================
+
+#: CLI: Auth - Visit URL prompt
+msgid "client.auth.visit_url"
+msgstr "Перейдите по адресу {url} и введите код: {code}"
+
+#: CLI: Auth - Browser open failed
+msgid "client.auth.browser_failed"
+msgstr "(не удалось автоматически открыть браузер)"
+
+#: CLI: Auth - Waiting for authorization
+msgid "client.auth.waiting"
+msgstr "Ожидание авторизации"
+
+#: CLI: Auth - Authorization timed out
+msgid "client.auth.timed_out"
+msgstr "Время авторизации истекло"
+
+#: CLI: Auth - Login cancelled
+msgid "client.auth.cancelled"
+msgstr "Вход отменён"
+
+#: CLI: Auth - Login successful
+msgid "client.auth.login_success"
+msgstr "Успешный вход на сервер {server}"
+
+#: CLI: Auth - Device code expired
+msgid "client.auth.device_expired"
+msgstr "Код устройства истёк"
+
+#: CLI: Auth - Logged out
+msgid "client.auth.logged_out"
+msgstr "Выход с сервера {server} выполнен"
+
+# ============================================================================
+# CLI: REPL
+# ============================================================================
+
+#: CLI: REPL - Welcome message
+msgid "client.repl.welcome"
+msgstr "Добро пожаловать в Loom — ИИ-помощник для программирования"
+
+#: CLI: REPL - Thread ID
+msgid "client.repl.thread_id"
+msgstr "Тред: {id}"
+
+#: CLI: REPL - Instructions
+msgid "client.repl.instructions"
+msgstr "Введите сообщение и нажмите Enter. Ctrl+C для выхода."
+
+#: CLI: REPL - Interrupted
+msgid "client.repl.interrupted"
+msgstr "Прервано. Тред сохранён. До свидания!"
+
+#: CLI: REPL - Error
+msgid "client.repl.error"
+msgstr "Ошибка: {error}"
+
+# ============================================================================
+# CLI: Search
+# ============================================================================
+
+#: CLI: Search - No results
+msgid "client.search.no_results"
+msgstr "По запросу «{query}» ничего не найдено"
+
+#: CLI: Search - Results header
+msgid "client.search.results_header"
+msgstr "Результаты по запросу «{query}» ({count} совпадений):"
+
+#: CLI: Search - Local no results
+msgid "client.search.local_no_results"
+msgstr "По запросу «{query}» ничего не найдено (локальный поиск)"
+
+#: CLI: Search - Local results header
+msgid "client.search.local_results_header"
+msgstr "Локальные результаты по запросу «{query}» ({count} совпадений):"
+
+# ============================================================================
+# CLI: Threads
+# ============================================================================
+
+#: CLI: Threads - No threads
+msgid "client.threads.no_threads"
+msgstr "Треды не найдены."
+
+#: CLI: Threads - List header
+msgid "client.threads.list_header"
+msgstr "{id:<40} {title:<40} {updated:<20}"
+
+#: CLI: Threads - Private session
+msgid "client.threads.private_session"
+msgstr "Запуск приватной сессии (только локально, без синхронизации с сервером)."
+
+#: CLI: Threads - Shared with support
+msgid "client.threads.shared_support"
+msgstr "Тред {id} предоставлен в доступ поддержке."
+
+#: CLI: Threads - Visibility changed
+msgid "client.threads.visibility_changed"
+msgstr "Видимость треда {id} изменена на {visibility}."
+
+# ============================================================================
+# CLI: Weaver
+# ============================================================================
+
+#: CLI: Weaver - Creating
+msgid "client.weaver.creating"
+msgstr "Создание Weaver..."
+
+#: CLI: Weaver - Created ID
+msgid "client.weaver.created_id"
+msgstr "  ID:    {id}"
+
+#: CLI: Weaver - Created image
+msgid "client.weaver.created_image"
+msgstr "  Образ: {image}"
+
+#: CLI: Weaver - Created TTL
+msgid "client.weaver.created_ttl"
+msgstr "  TTL:   {hours} часов"
+
+#: CLI: Weaver - Attaching
+msgid "client.weaver.attaching"
+msgstr "Подключение к Weaver..."
+
+#: CLI: Weaver - Detached
+msgid "client.weaver.detached"
+msgstr "[отключено от Weaver {id}]"
+
+#: CLI: Weaver - Reattach hint
+msgid "client.weaver.reattach_hint"
+msgstr "Weaver всё ещё работает. Переподключиться: loom attach {id}"
+
+#: CLI: Weaver - No weavers
+msgid "client.weaver.no_weavers"
+msgstr "Нет запущенных Weaver."
+
+#: CLI: Weaver - List header
+msgid "client.weaver.list_header"
+msgstr "{id:<40} {image:<30} {status:<10} {age:<8} {ttl:<8}"
+
+#: CLI: Weaver - Deleting
+msgid "client.weaver.deleting"
+msgstr "Удаление Weaver {id}..."
+
+#: CLI: Weaver - Deleted
+msgid "client.weaver.deleted"
+msgstr "Weaver удалён."
+
+#: CLI: Weaver - Attach prefix
+msgid "client.weaver.attach_prefix"
+msgstr "[подключение к Weaver {id}]"

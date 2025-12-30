@@ -1,0 +1,921 @@
+# Loom Server Translations - Japanese
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>
+# SPDX-License-Identifier: Proprietary
+#
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ja\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: Email: Magic Link - Subject
+msgid "server.email.magic_link.subject"
+msgstr "Loomにサインイン"
+
+#: Email: Magic Link - Body intro
+msgid "server.email.magic_link.body"
+msgstr "以下のリンクをクリックして、Loomアカウントにサインインしてください。"
+
+#: Email: Magic Link - Expiry notice
+msgid "server.email.magic_link.expires"
+msgstr "このリンクは{minutes}分で有効期限が切れます。"
+
+#: Email: Magic Link - Ignore notice
+msgid "server.email.magic_link.ignore"
+msgstr "このメールに心当たりがない場合は、無視していただいて問題ありません。"
+
+#: Email: Magic Link - Copy link instruction
+msgid "server.email.magic_link.copy_link"
+msgstr "または、このリンクをコピーして貼り付けてください："
+
+#: Email: Org Invitation - Subject
+msgid "server.email.invitation.subject"
+msgstr "Loomの{org_name}に招待されました"
+
+#: Email: Org Invitation - Body
+msgid "server.email.invitation.body"
+msgstr "{inviter_name}さんからLoomの「{org_name}」組織への招待が届いています。"
+
+#: Email: Org Invitation - Action instruction
+msgid "server.email.invitation.action"
+msgstr "招待を受け入れるには、以下のリンクをクリックしてください："
+
+#: Email: Org Invitation - No expiry notice
+msgid "server.email.invitation.no_expiry"
+msgstr "この招待に有効期限はありませんが、組織管理者によって取り消される可能性があります。"
+
+#: Email: Security Alert - Subject
+msgid "server.email.security_alert.subject"
+msgstr "Loomセキュリティアラート：{event}"
+
+#: Email: Security Alert - Body intro
+msgid "server.email.security_alert.body"
+msgstr "Loomアカウントでセキュリティイベントが発生しました。"
+
+#: Email: Security Alert - Event label
+msgid "server.email.security_alert.event"
+msgstr "イベント：{event}"
+
+#: Email: Security Alert - Details label
+msgid "server.email.security_alert.details"
+msgstr "詳細："
+
+#: Email: Security Alert - Action instruction
+msgid "server.email.security_alert.action"
+msgstr "心当たりがない場合は、すぐにアカウントのセキュリティ設定を確認してください。"
+
+#: Email: Deletion Warning - Subject
+msgid "server.email.deletion_warning.subject"
+msgstr "Loomアカウントの削除が予定されています"
+
+#: Email: Deletion Warning - Body
+msgid "server.email.deletion_warning.body"
+msgstr "Loomアカウントは{days}日後に完全に削除される予定です。"
+
+#: Email: Deletion Warning - Restore instruction
+msgid "server.email.deletion_warning.restore"
+msgstr "この削除をリクエストしていない場合、または気が変わった場合は、削除日までにログインしてアカウントを復元できます。"
+
+#: Email: Deletion Warning - Permanent notice
+msgid "server.email.deletion_warning.permanent"
+msgstr "完全削除後は、データを復元することはできません。"
+
+#: Email: Deletion Scheduled - Subject
+msgid "server.email.deletion_scheduled.subject"
+msgstr "アカウント削除が予定されました"
+
+#: Email: Deletion Scheduled - Body
+msgid "server.email.deletion_scheduled.body"
+msgstr "アカウントの削除が予定されました。"
+
+#: Email: Deletion Scheduled - Grace period notice
+msgid "server.email.deletion_scheduled.grace"
+msgstr "ログインして削除をキャンセルすることで、{days}日以内にアカウントを復元できます。"
+
+#: Email: Deletion Scheduled - Permanent notice
+msgid "server.email.deletion_scheduled.permanent"
+msgstr "猶予期間後、アカウントとすべての関連データは完全に削除されます。"
+
+#: API: Auth - Check email response
+msgid "server.api.auth.check_email"
+msgstr "ログインリンクがメールで送信されました。メールを確認してください"
+
+#: API: Auth - Logged out response
+msgid "server.api.auth.logged_out"
+msgstr "ログアウトしました"
+
+#: API: Error - Internal error
+msgid "server.api.error.internal"
+msgstr "内部エラーが発生しました"
+
+#: API: Error - Not found
+msgid "server.api.error.not_found"
+msgstr "リソースが見つかりません"
+
+#: API: Error - Unauthorized
+msgid "server.api.error.unauthorized"
+msgstr "認証が必要です"
+
+#: API: Error - Forbidden
+msgid "server.api.error.forbidden"
+msgstr "アクセスが拒否されました"
+
+#: API: Error - Bad request
+msgid "server.api.error.bad_request"
+msgstr "無効なリクエストです"
+
+#: API: Error - Conflict
+msgid "server.api.error.conflict"
+msgstr "リソースの競合"
+
+#: API: Error - Gone
+msgid "server.api.error.gone"
+msgstr "リソースは利用できなくなりました"
+
+#: API: Error - Not configured
+msgid "server.api.error.not_configured"
+msgstr "機能が設定されていません"
+
+# ============================================================================
+# Auth API responses
+# ============================================================================
+
+#: API: Auth - Invalid email
+msgid "server.api.auth.invalid_email"
+msgstr "有効なメールアドレスを入力してください"
+
+#: API: Auth - Device code authorized
+msgid "server.api.auth.device_authorized"
+msgstr "デバイスが正常に認証されました"
+
+#: API: Auth - Invalid device code
+msgid "server.api.auth.invalid_device_code"
+msgstr "無効または期限切れのデバイスコードです"
+
+#: API: Auth - Invalid user code
+msgid "server.api.auth.invalid_user_code"
+msgstr "無効または期限切れのユーザーコードです"
+
+#: API: Auth - OAuth not configured
+msgid "server.api.auth.oauth_not_configured"
+msgstr "{provider} OAuthが設定されていません"
+
+#: API: Auth - Magic link sent (always shown to prevent enumeration)
+msgid "server.api.auth.magic_link_sent"
+msgstr "このメールアドレスにアカウントが存在する場合、ログインリンクが送信されました"
+
+#: API: Auth - Email not verified (Google/Okta)
+msgid "server.api.auth.email_not_verified"
+msgstr "メールアドレスがプロバイダーによって確認されていません"
+
+#: API: Auth - No verified email (GitHub)
+msgid "server.api.auth.no_verified_email"
+msgstr "確認済みのメールアドレスが見つかりません。GitHubでメールを確認してから、もう一度お試しください。"
+
+# ============================================================================
+# User API responses
+# ============================================================================
+
+#: API: User - Not found
+msgid "server.api.user.not_found"
+msgstr "ユーザーが見つかりません"
+
+#: API: User - Invalid ID
+msgid "server.api.user.invalid_id"
+msgstr "無効なユーザーID形式です"
+
+#: API: User - Display name empty
+msgid "server.api.user.display_name_empty"
+msgstr "表示名を空にすることはできません"
+
+#: API: User - Profile updated
+msgid "server.api.user.profile_updated"
+msgstr "プロフィールが更新されました"
+
+#: API: User - Deletion scheduled
+msgid "server.api.user.deletion_scheduled"
+msgstr "アカウントの削除が予定されました"
+
+#: API: User - Deletion already scheduled
+msgid "server.api.user.deletion_already_scheduled"
+msgstr "アカウントの削除はすでに予定されています"
+
+#: API: User - Deletion failed
+msgid "server.api.user.deletion_failed"
+msgstr "アカウント削除のスケジュールに失敗しました"
+
+#: API: User - No pending deletion
+msgid "server.api.user.no_pending_deletion"
+msgstr "このアカウントに保留中の削除はありません"
+
+#: API: User - Grace period expired
+msgid "server.api.user.grace_period_expired"
+msgstr "猶予期間が過ぎたため、アカウントを復元できません"
+
+#: API: User - Account restored
+msgid "server.api.user.account_restored"
+msgstr "アカウントが復元されました"
+
+#: API: User - Identity unlinked
+msgid "server.api.user.identity_unlinked"
+msgstr "IDの連携が解除されました"
+
+#: API: User - Identity not found
+msgid "server.api.user.identity_not_found"
+msgstr "IDが見つかりません"
+
+#: API: User - Cannot unlink last identity
+msgid "server.api.user.cannot_unlink_last_identity"
+msgstr "最後のIDの連携を解除することはできません"
+
+# ============================================================================
+# Organization API responses
+# ============================================================================
+
+#: API: Org - Not found
+msgid "server.api.org.not_found"
+msgstr "組織が見つかりません"
+
+#: API: Org - Invalid ID
+msgid "server.api.org.invalid_id"
+msgstr "無効な組織IDです"
+
+#: API: Org - Invalid slug length
+msgid "server.api.org.invalid_slug_length"
+msgstr "スラッグは3文字以上50文字以下である必要があります"
+
+#: API: Org - Invalid slug format
+msgid "server.api.org.invalid_slug_format"
+msgstr "スラッグには小文字の英数字とハイフンのみを使用できます"
+
+#: API: Org - Slug exists
+msgid "server.api.org.slug_exists"
+msgstr "このスラッグの組織はすでに存在します"
+
+#: API: Org - Invalid role
+msgid "server.api.org.invalid_role"
+msgstr "ロールはowner、admin、memberのいずれかである必要があります"
+
+#: API: Org - List failed
+msgid "server.api.org.list_failed"
+msgstr "組織の一覧取得に失敗しました"
+
+#: API: Org - Create failed
+msgid "server.api.org.create_failed"
+msgstr "組織の作成に失敗しました"
+
+#: API: Org - Not a member
+msgid "server.api.org.not_a_member"
+msgstr "この組織のメンバーではありません"
+
+#: API: Org - Already a member
+msgid "server.api.org.already_member"
+msgstr "ユーザーはすでにこの組織のメンバーです"
+
+#: API: Org - Member added
+msgid "server.api.org.member_added"
+msgstr "メンバーを組織に追加しました"
+
+#: API: Org - Member removed
+msgid "server.api.org.member_removed"
+msgstr "メンバーを組織から削除しました"
+
+#: API: Org - Member not found
+msgid "server.api.org.member_not_found"
+msgstr "この組織にメンバーが見つかりません"
+
+#: API: Org - Last owner
+msgid "server.api.org.last_owner"
+msgstr "最後のオーナーを削除または降格することはできません"
+
+#: API: Org - Cannot delete personal org
+msgid "server.api.org.cannot_delete_personal"
+msgstr "個人組織を削除することはできません"
+
+#: API: Org - Deleted
+msgid "server.api.org.deleted"
+msgstr "組織が削除されました"
+
+#: API: Org - Restored
+msgid "server.api.org.restored"
+msgstr "組織が復元されました"
+
+#: API: Org - Not deleted
+msgid "server.api.org.not_deleted"
+msgstr "組織は削除されていません"
+
+#: API: Org - Grace period expired
+msgid "server.api.org.grace_period_expired"
+msgstr "猶予期間が過ぎたため、この組織は復元できません"
+
+#: API: Org - Owner required
+msgid "server.api.org.owner_required"
+msgstr "この操作を実行できるのはオーナーのみです"
+
+#: API: Org - Role updated
+msgid "server.api.org.role_updated"
+msgstr "メンバーのロールが更新されました"
+
+#: API: Org - Join request for private org
+msgid "server.api.org.join_request_private"
+msgstr "非公開組織への参加リクエストはできません"
+
+#: API: Org - Join request pending
+msgid "server.api.org.join_request_pending"
+msgstr "この組織への参加リクエストは保留中です"
+
+#: API: Org - Join request created
+msgid "server.api.org.join_request_created"
+msgstr "参加リクエストが送信されました"
+
+#: API: Org - Join request not found
+msgid "server.api.org.join_request_not_found"
+msgstr "参加リクエストが見つかりません"
+
+#: API: Org - Join request approved
+msgid "server.api.org.join_request_approved"
+msgstr "参加リクエストが承認されました"
+
+#: API: Org - Join request rejected
+msgid "server.api.org.join_request_rejected"
+msgstr "参加リクエストが却下されました"
+
+# ============================================================================
+# Team API responses
+# ============================================================================
+
+#: API: Team - Not found
+msgid "server.api.team.not_found"
+msgstr "チームが見つかりません"
+
+#: API: Team - Invalid ID
+msgid "server.api.team.invalid_id"
+msgstr "無効なチームIDです"
+
+#: API: Team - Invalid slug length
+msgid "server.api.team.invalid_slug_length"
+msgstr "スラッグは2文字以上50文字以下である必要があります"
+
+#: API: Team - Invalid slug format
+msgid "server.api.team.invalid_slug_format"
+msgstr "スラッグには小文字の英数字とハイフンのみを使用できます"
+
+#: API: Team - List failed
+msgid "server.api.team.list_failed"
+msgstr "チームの一覧取得に失敗しました"
+
+#: API: Team - Membership check failed
+msgid "server.api.team.membership_check_failed"
+msgstr "組織メンバーシップの確認に失敗しました"
+
+# ============================================================================
+# Invitation API responses
+# ============================================================================
+
+#: API: Invitation - Created
+msgid "server.api.invitation.created"
+msgstr "招待が正常に送信されました"
+
+#: API: Invitation - Cancelled
+msgid "server.api.invitation.cancelled"
+msgstr "招待がキャンセルされました"
+
+#: API: Invitation - Accepted
+msgid "server.api.invitation.accepted"
+msgstr "招待が受け入れられました"
+
+#: API: Invitation - Not found
+msgid "server.api.invitation.not_found"
+msgstr "招待が見つかりません"
+
+#: API: Invitation - Expired
+msgid "server.api.invitation.expired"
+msgstr "この招待は有効期限が切れています"
+
+#: API: Invitation - Invalid token
+msgid "server.api.invitation.invalid_token"
+msgstr "無効な招待トークンです"
+
+#: API: Invitation - Already accepted
+msgid "server.api.invitation.already_accepted"
+msgstr "この招待はすでに受け入れられています"
+
+#: API: Invitation - List failed
+msgid "server.api.invitation.list_failed"
+msgstr "招待の一覧取得に失敗しました"
+
+# ============================================================================
+# Join request API responses
+# ============================================================================
+
+#: API: Join request - Created
+msgid "server.api.join_request.created"
+msgstr "参加リクエストが送信されました"
+
+#: API: Join request - Approved
+msgid "server.api.join_request.approved"
+msgstr "参加リクエストが承認されました"
+
+#: API: Join request - Rejected
+msgid "server.api.join_request.rejected"
+msgstr "参加リクエストが却下されました"
+
+#: API: Join request - Already member
+msgid "server.api.join_request.already_member"
+msgstr "すでにこの組織のメンバーです"
+
+#: API: Join request - Already pending
+msgid "server.api.join_request.already_pending"
+msgstr "保留中の参加リクエストがすでにあります"
+
+#: API: Join request - Not found
+msgid "server.api.join_request.not_found"
+msgstr "参加リクエストが見つかりません"
+
+#: API: Join request - Private org
+msgid "server.api.join_request.private_org"
+msgstr "非公開組織への参加リクエストはできません"
+
+# ============================================================================
+# API Key responses
+# ============================================================================
+
+#: API: API Key - Invalid org ID
+msgid "server.api.api_key.invalid_org_id"
+msgstr "無効な組織ID形式です"
+
+#: API: API Key - Name empty
+msgid "server.api.api_key.name_empty"
+msgstr "APIキー名を空にすることはできません"
+
+#: API: API Key - No scopes
+msgid "server.api.api_key.no_scopes"
+msgstr "少なくとも1つのスコープを指定する必要があります"
+
+#: API: API Key - Created
+msgid "server.api.api_key.created"
+msgstr "APIキーが作成されました"
+
+#: API: API Key - Revoked
+msgid "server.api.api_key.revoked"
+msgstr "APIキーが取り消されました"
+
+#: API: API Key - Not found
+msgid "server.api.api_key.not_found"
+msgstr "APIキーが見つかりません"
+
+#: API: API Key - List failed
+msgid "server.api.api_key.list_failed"
+msgstr "APIキーの一覧取得に失敗しました"
+
+#: API: API Key - Create failed
+msgid "server.api.api_key.create_failed"
+msgstr "APIキーの作成に失敗しました"
+
+# ============================================================================
+# Session API responses
+# ============================================================================
+
+#: API: Session - Invalid ID
+msgid "server.api.session.invalid_id"
+msgstr "無効なセッションID形式です"
+
+#: API: Session - Not found
+msgid "server.api.session.not_found"
+msgstr "セッションが見つかりません"
+
+#: API: Session - Revoked
+msgid "server.api.session.revoked"
+msgstr "セッションが正常に取り消されました"
+
+#: API: Session - List failed
+msgid "server.api.session.list_failed"
+msgstr "セッションの取得に失敗しました"
+
+#: API: Session - Revoke failed
+msgid "server.api.session.revoke_failed"
+msgstr "セッションの取り消しに失敗しました"
+
+#: API: Session - Ownership check failed
+msgid "server.api.session.ownership_check_failed"
+msgstr "セッションの所有権の確認に失敗しました"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - System admin required
+msgid "server.api.admin.system_admin_required"
+msgstr "システム管理者ロールが必要です"
+
+#: API: Admin - Cannot remove own admin
+msgid "server.api.admin.cannot_remove_own_admin"
+msgstr "自分の管理者ステータスを削除することはできません"
+
+#: API: Admin - User list failed
+msgid "server.api.admin.user_list_failed"
+msgstr "ユーザーの一覧取得に失敗しました"
+
+#: API: Admin - User update failed
+msgid "server.api.admin.user_update_failed"
+msgstr "ユーザーの更新に失敗しました"
+
+#: API: Admin - Roles updated
+msgid "server.api.admin.roles_updated"
+msgstr "ユーザーロールが更新されました"
+
+#: Auth: Device Page - Title
+msgid "server.auth.device.title"
+msgstr "デバイス認証 - Loom"
+
+#: Auth: Device Page - Heading
+msgid "server.auth.device.heading"
+msgstr "デバイス認証"
+
+#: Auth: Device Page - Subtitle
+msgid "server.auth.device.subtitle"
+msgstr "ターミナルに表示されているコードを入力してください"
+
+#: Auth: Device Page - Code label
+msgid "server.auth.device.code_label"
+msgstr "認証コード"
+
+#: Auth: Device Page - Submit button
+msgid "server.auth.device.submit"
+msgstr "デバイスを認証"
+
+#: Auth: Device Page - Authorizing button
+msgid "server.auth.device.authorizing"
+msgstr "認証中..."
+
+#: Auth: Device Page - Authorized button
+msgid "server.auth.device.authorized"
+msgstr "認証完了"
+
+#: Auth: Device Page - Expiry help text
+msgid "server.auth.device.expiry_help"
+msgstr "このコードは15分後に有効期限が切れます。"
+
+#: Auth: Device Page - Success message
+msgid "server.auth.device.success"
+msgstr "デバイスが正常に認証されました！このウィンドウを閉じてください。"
+
+#: Auth: Device Page - Invalid code format
+msgid "server.auth.device.invalid_format"
+msgstr "XXX-XXX-XXX形式の有効なコードを入力してください"
+
+#: Auth: Device Page - Generic error
+msgid "server.auth.device.error"
+msgstr "エラーが発生しました。もう一度お試しください。"
+
+#: Auth: Device Page - Authorization failed
+msgid "server.auth.device.auth_failed"
+msgstr "認証に失敗しました。もう一度お試しください。"
+
+# ============================================================================
+# Support Access API responses
+# ============================================================================
+
+#: API: Support Access - Not support staff
+msgid "server.api.support_access.not_support_staff"
+msgstr "サポートアクセスをリクエストできるのはサポートスタッフのみです"
+
+#: API: Support Access - Thread not found
+msgid "server.api.support_access.thread_not_found"
+msgstr "スレッドが見つかりません"
+
+#: API: Support Access - Already requested
+msgid "server.api.support_access.already_requested"
+msgstr "このスレッドのサポートアクセスはすでにリクエストされています"
+
+#: API: Support Access - Already active
+msgid "server.api.support_access.already_active"
+msgstr "このスレッドのサポートアクセスはすでに有効です"
+
+#: API: Support Access - Requested
+msgid "server.api.support_access.requested"
+msgstr "サポートアクセスがリクエストされました"
+
+#: API: Support Access - Request failed
+msgid "server.api.support_access.request_failed"
+msgstr "サポートアクセスのリクエストに失敗しました"
+
+#: API: Support Access - Not owner
+msgid "server.api.support_access.not_owner"
+msgstr "サポートアクセスを承認または取り消しできるのはスレッドのオーナーのみです"
+
+#: API: Support Access - No pending request
+msgid "server.api.support_access.no_pending_request"
+msgstr "このスレッドに保留中のサポートアクセスリクエストはありません"
+
+#: API: Support Access - Approved
+msgid "server.api.support_access.approved"
+msgstr "サポートアクセスが承認されました"
+
+#: API: Support Access - Approve failed
+msgid "server.api.support_access.approve_failed"
+msgstr "サポートアクセスの承認に失敗しました"
+
+#: API: Support Access - No active access
+msgid "server.api.support_access.no_active_access"
+msgstr "このスレッドに有効なサポートアクセスはありません"
+
+#: API: Support Access - Revoked
+msgid "server.api.support_access.revoked"
+msgstr "サポートアクセスが取り消されました"
+
+#: API: Support Access - Revoke failed
+msgid "server.api.support_access.revoke_failed"
+msgstr "サポートアクセスの取り消しに失敗しました"
+
+# ============================================================================
+# Share Link API responses
+# ============================================================================
+
+#: API: Share - Invalid thread ID
+msgid "server.api.share.invalid_thread_id"
+msgstr "無効なスレッドID形式です"
+
+#: API: Share - Thread not found
+msgid "server.api.share.thread_not_found"
+msgstr "スレッドが見つかりません"
+
+#: API: Share - Invalid expires_at
+msgid "server.api.share.invalid_expires_at"
+msgstr "無効な有効期限形式です。RFC 3339形式を使用してください。"
+
+#: API: Share - Create failed
+msgid "server.api.share.create_failed"
+msgstr "共有リンクの作成に失敗しました"
+
+#: API: Share - Link not found
+msgid "server.api.share.link_not_found"
+msgstr "このスレッドに有効な共有リンクが見つかりません"
+
+#: API: Share - Revoked
+msgid "server.api.share.revoked"
+msgstr "共有リンクが取り消されました"
+
+#: API: Share - Revoke failed
+msgid "server.api.share.revoke_failed"
+msgstr "共有リンクの取り消しに失敗しました"
+
+#: API: Share - Invalid or expired link
+msgid "server.api.share.invalid_or_expired"
+msgstr "無効または期限切れの共有リンクです"
+
+#: API: Share - Link revoked
+msgid "server.api.share.link_revoked"
+msgstr "この共有リンクは取り消されました"
+
+#: API: Share - Link expired
+msgid "server.api.share.link_expired"
+msgstr "この共有リンクは有効期限が切れています"
+
+#: API: Share - Validation failed
+msgid "server.api.share.validation_failed"
+msgstr "共有リンクの検証に失敗しました"
+
+#: API: Share - Fetch failed
+msgid "server.api.share.fetch_failed"
+msgstr "スレッドの取得に失敗しました"
+
+#: API: Weaver - Provisioner not configured
+msgid "server.api.weaver.provisioner_not_configured"
+msgstr "Weaverプロビジョナーが設定されていません"
+
+#: API: Weaver - Invalid ID
+msgid "server.api.weaver.invalid_id"
+msgstr "無効なWeaver ID：{id}"
+
+#: API: Weaver - Not found
+msgid "server.api.weaver.not_found"
+msgstr "Weaverが見つかりません：{id}"
+
+#: API: Weaver - Access denied
+msgid "server.api.weaver.access_denied"
+msgstr "このWeaverにアクセスする権限がありません"
+
+#: API: Weaver - Attach denied
+msgid "server.api.weaver.attach_denied"
+msgstr "このWeaverにアタッチする権限がありません"
+
+#: API: Weaver - Delete denied
+msgid "server.api.weaver.delete_denied"
+msgstr "このWeaverを削除する権限がありません"
+
+#: API: Weaver - Read only attach
+msgid "server.api.weaver.read_only_attach"
+msgstr "読み取り専用アタッチ：サポートユーザーは入力が無効です"
+
+#: API: Weaver - Logs access denied
+msgid "server.api.weaver.logs_denied"
+msgstr "このWeaverのログにアクセスする権限がありません"
+
+# ============================================================================
+# CLI: Update command
+# ============================================================================
+
+#: CLI: Update - Current version
+msgid "client.update.current_version"
+msgstr "現在のバージョン：{version}"
+
+#: CLI: Update - Platform
+msgid "client.update.platform"
+msgstr "プラットフォーム：{platform}"
+
+#: CLI: Update - Checking
+msgid "client.update.checking"
+msgstr "アップデートを確認中..."
+
+#: CLI: Update - Already up to date
+msgid "client.update.up_to_date"
+msgstr "すでに最新です（SHA：{sha}）"
+
+#: CLI: Update - Update available
+msgid "client.update.available"
+msgstr "アップデートが利用可能です：{current} -> {remote}"
+
+#: CLI: Update - Downloading
+msgid "client.update.downloading"
+msgstr "{url}からダウンロード中..."
+
+#: CLI: Update - Downloaded
+msgid "client.update.downloaded"
+msgstr "{bytes}バイトをダウンロードしました（検証済み）"
+
+#: CLI: Update - Complete
+msgid "client.update.complete"
+msgstr "アップデート完了！loomを再起動してください。"
+
+#: CLI: Update - Error: empty binary
+msgid "client.update.error.empty_binary"
+msgstr "ダウンロードされたバイナリが空です"
+
+#: CLI: Update - Error: SHA mismatch
+msgid "client.update.error.sha_mismatch"
+msgstr "ダウンロードされたバイナリのSHAが一致しません：期待値 {expected}、実際 {actual}"
+
+#: CLI: Update - Error: env not set
+msgid "client.update.error.env_not_set"
+msgstr "アップデートにはLOOM_UPDATE_BASE_URLまたはLOOM_THREAD_SYNC_URLを設定する必要があります"
+
+#: CLI: Update - Error: check failed
+msgid "client.update.error.check_failed"
+msgstr "アップデートの確認に失敗しました：{status}"
+
+# ============================================================================
+# CLI: Authentication
+# ============================================================================
+
+#: CLI: Auth - Visit URL prompt
+msgid "client.auth.visit_url"
+msgstr "{url}にアクセスして、コードを入力してください：{code}"
+
+#: CLI: Auth - Browser open failed
+msgid "client.auth.browser_failed"
+msgstr "（ブラウザを自動的に開けませんでした）"
+
+#: CLI: Auth - Waiting for authorization
+msgid "client.auth.waiting"
+msgstr "認証を待っています"
+
+#: CLI: Auth - Authorization timed out
+msgid "client.auth.timed_out"
+msgstr "認証がタイムアウトしました"
+
+#: CLI: Auth - Login cancelled
+msgid "client.auth.cancelled"
+msgstr "ログインがキャンセルされました"
+
+#: CLI: Auth - Login successful
+msgid "client.auth.login_success"
+msgstr "{server}にログインしました"
+
+#: CLI: Auth - Device code expired
+msgid "client.auth.device_expired"
+msgstr "デバイスコードの有効期限が切れました"
+
+#: CLI: Auth - Logged out
+msgid "client.auth.logged_out"
+msgstr "{server}からログアウトしました"
+
+# ============================================================================
+# CLI: REPL
+# ============================================================================
+
+#: CLI: REPL - Welcome message
+msgid "client.repl.welcome"
+msgstr "Loomへようこそ - AI搭載のコーディングアシスタント"
+
+#: CLI: REPL - Thread ID
+msgid "client.repl.thread_id"
+msgstr "スレッド：{id}"
+
+#: CLI: REPL - Instructions
+msgid "client.repl.instructions"
+msgstr "メッセージを入力してEnterを押してください。Ctrl+Cで終了します。"
+
+#: CLI: REPL - Interrupted
+msgid "client.repl.interrupted"
+msgstr "中断されました。スレッドは保存されました。さようなら！"
+
+#: CLI: REPL - Error
+msgid "client.repl.error"
+msgstr "エラー：{error}"
+
+# ============================================================================
+# CLI: Search
+# ============================================================================
+
+#: CLI: Search - No results
+msgid "client.search.no_results"
+msgstr "「{query}」の検索結果はありません"
+
+#: CLI: Search - Results header
+msgid "client.search.results_header"
+msgstr "「{query}」の検索結果（{count}件）："
+
+#: CLI: Search - Local no results
+msgid "client.search.local_no_results"
+msgstr "「{query}」の検索結果はありません（ローカル検索）"
+
+#: CLI: Search - Local results header
+msgid "client.search.local_results_header"
+msgstr "「{query}」のローカル検索結果（{count}件）："
+
+# ============================================================================
+# CLI: Threads
+# ============================================================================
+
+#: CLI: Threads - No threads
+msgid "client.threads.no_threads"
+msgstr "スレッドが見つかりません。"
+
+#: CLI: Threads - List header
+msgid "client.threads.list_header"
+msgstr "{id:<40} {title:<40} {updated:<20}"
+
+#: CLI: Threads - Private session
+msgid "client.threads.private_session"
+msgstr "プライベートセッションを開始しています（ローカル専用、サーバーに同期されません）。"
+
+#: CLI: Threads - Shared with support
+msgid "client.threads.shared_support"
+msgstr "スレッド{id}がサポートと共有されました。"
+
+#: CLI: Threads - Visibility changed
+msgid "client.threads.visibility_changed"
+msgstr "スレッド{id}の表示設定が{visibility}に変更されました。"
+
+# ============================================================================
+# CLI: Weaver
+# ============================================================================
+
+#: CLI: Weaver - Creating
+msgid "client.weaver.creating"
+msgstr "Weaverを作成中..."
+
+#: CLI: Weaver - Created ID
+msgid "client.weaver.created_id"
+msgstr "  ID：   {id}"
+
+#: CLI: Weaver - Created image
+msgid "client.weaver.created_image"
+msgstr "  イメージ：{image}"
+
+#: CLI: Weaver - Created TTL
+msgid "client.weaver.created_ttl"
+msgstr "  TTL：  {hours}時間"
+
+#: CLI: Weaver - Attaching
+msgid "client.weaver.attaching"
+msgstr "Weaverにアタッチ中..."
+
+#: CLI: Weaver - Detached
+msgid "client.weaver.detached"
+msgstr "[Weaver {id}からデタッチしました]"
+
+#: CLI: Weaver - Reattach hint
+msgid "client.weaver.reattach_hint"
+msgstr "Weaverはまだ実行中です。再アタッチ：loom attach {id}"
+
+#: CLI: Weaver - No weavers
+msgid "client.weaver.no_weavers"
+msgstr "実行中のWeaverはありません。"
+
+#: CLI: Weaver - List header
+msgid "client.weaver.list_header"
+msgstr "{id:<40} {image:<30} {status:<10} {age:<8} {ttl:<8}"
+
+#: CLI: Weaver - Deleting
+msgid "client.weaver.deleting"
+msgstr "Weaver {id}を削除中..."
+
+#: CLI: Weaver - Deleted
+msgid "client.weaver.deleted"
+msgstr "Weaverが削除されました。"
+
+#: CLI: Weaver - Attach prefix
+msgid "client.weaver.attach_prefix"
+msgstr "[Weaver {id}にアタッチしています]"

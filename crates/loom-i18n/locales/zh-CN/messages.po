@@ -1,0 +1,921 @@
+# Loom Server Translations - Simplified Chinese
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>
+# SPDX-License-Identifier: Proprietary
+#
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: zh-CN\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: Email: Magic Link - Subject
+msgid "server.email.magic_link.subject"
+msgstr "登录 Loom"
+
+#: Email: Magic Link - Body intro
+msgid "server.email.magic_link.body"
+msgstr "点击以下链接登录您的 Loom 账户。"
+
+#: Email: Magic Link - Expiry notice
+msgid "server.email.magic_link.expires"
+msgstr "此链接将在 {minutes} 分钟后过期。"
+
+#: Email: Magic Link - Ignore notice
+msgid "server.email.magic_link.ignore"
+msgstr "如果您未请求此邮件，可以安全地忽略它。"
+
+#: Email: Magic Link - Copy link instruction
+msgid "server.email.magic_link.copy_link"
+msgstr "或者复制并粘贴此链接："
+
+#: Email: Org Invitation - Subject
+msgid "server.email.invitation.subject"
+msgstr "您已被邀请加入 Loom 上的 {org_name}"
+
+#: Email: Org Invitation - Body
+msgid "server.email.invitation.body"
+msgstr "{inviter_name} 邀请您加入 Loom 上的\"{org_name}\"组织。"
+
+#: Email: Org Invitation - Action instruction
+msgid "server.email.invitation.action"
+msgstr "点击以下链接接受邀请："
+
+#: Email: Org Invitation - No expiry notice
+msgid "server.email.invitation.no_expiry"
+msgstr "此邀请不会过期，但可以被组织管理员撤销。"
+
+#: Email: Security Alert - Subject
+msgid "server.email.security_alert.subject"
+msgstr "Loom 安全警报：{event}"
+
+#: Email: Security Alert - Body intro
+msgid "server.email.security_alert.body"
+msgstr "您的 Loom 账户发生了安全事件。"
+
+#: Email: Security Alert - Event label
+msgid "server.email.security_alert.event"
+msgstr "事件：{event}"
+
+#: Email: Security Alert - Details label
+msgid "server.email.security_alert.details"
+msgstr "详情："
+
+#: Email: Security Alert - Action instruction
+msgid "server.email.security_alert.action"
+msgstr "如果这不是您本人的操作，请立即检查您的账户安全设置。"
+
+#: Email: Deletion Warning - Subject
+msgid "server.email.deletion_warning.subject"
+msgstr "您的 Loom 账户已计划删除"
+
+#: Email: Deletion Warning - Body
+msgid "server.email.deletion_warning.body"
+msgstr "您的 Loom 账户将在 {days} 天后被永久删除。"
+
+#: Email: Deletion Warning - Restore instruction
+msgid "server.email.deletion_warning.restore"
+msgstr "如果您没有请求此删除，或者您改变了主意，可以在删除日期前登录来恢复您的账户。"
+
+#: Email: Deletion Warning - Permanent notice
+msgid "server.email.deletion_warning.permanent"
+msgstr "永久删除后，您的数据将无法恢复。"
+
+#: Email: Deletion Scheduled - Subject
+msgid "server.email.deletion_scheduled.subject"
+msgstr "账户删除已计划"
+
+#: Email: Deletion Scheduled - Body
+msgid "server.email.deletion_scheduled.body"
+msgstr "您的账户已计划删除。"
+
+#: Email: Deletion Scheduled - Grace period notice
+msgid "server.email.deletion_scheduled.grace"
+msgstr "您有 {days} 天时间通过登录并取消删除来恢复您的账户。"
+
+#: Email: Deletion Scheduled - Permanent notice
+msgid "server.email.deletion_scheduled.permanent"
+msgstr "宽限期结束后，您的账户及所有相关数据将被永久删除。"
+
+#: API: Auth - Check email response
+msgid "server.api.auth.check_email"
+msgstr "请检查您的邮箱以获取登录链接"
+
+#: API: Auth - Logged out response
+msgid "server.api.auth.logged_out"
+msgstr "已成功退出登录"
+
+#: API: Error - Internal error
+msgid "server.api.error.internal"
+msgstr "发生内部错误"
+
+#: API: Error - Not found
+msgid "server.api.error.not_found"
+msgstr "未找到资源"
+
+#: API: Error - Unauthorized
+msgid "server.api.error.unauthorized"
+msgstr "需要身份验证"
+
+#: API: Error - Forbidden
+msgid "server.api.error.forbidden"
+msgstr "拒绝访问"
+
+#: API: Error - Bad request
+msgid "server.api.error.bad_request"
+msgstr "无效请求"
+
+#: API: Error - Conflict
+msgid "server.api.error.conflict"
+msgstr "资源冲突"
+
+#: API: Error - Gone
+msgid "server.api.error.gone"
+msgstr "资源已不可用"
+
+#: API: Error - Not configured
+msgid "server.api.error.not_configured"
+msgstr "功能未配置"
+
+# ============================================================================
+# Auth API responses
+# ============================================================================
+
+#: API: Auth - Invalid email
+msgid "server.api.auth.invalid_email"
+msgstr "请提供有效的邮箱地址"
+
+#: API: Auth - Device code authorized
+msgid "server.api.auth.device_authorized"
+msgstr "设备授权成功"
+
+#: API: Auth - Invalid device code
+msgid "server.api.auth.invalid_device_code"
+msgstr "设备代码无效或已过期"
+
+#: API: Auth - Invalid user code
+msgid "server.api.auth.invalid_user_code"
+msgstr "用户代码无效或已过期"
+
+#: API: Auth - OAuth not configured
+msgid "server.api.auth.oauth_not_configured"
+msgstr "{provider} OAuth 未配置"
+
+#: API: Auth - Magic link sent (always shown to prevent enumeration)
+msgid "server.api.auth.magic_link_sent"
+msgstr "如果该邮箱存在账户，登录链接已发送"
+
+#: API: Auth - Email not verified (Google/Okta)
+msgid "server.api.auth.email_not_verified"
+msgstr "邮箱地址尚未被提供商验证"
+
+#: API: Auth - No verified email (GitHub)
+msgid "server.api.auth.no_verified_email"
+msgstr "未找到已验证的邮箱地址。请先在 GitHub 验证您的邮箱后重试。"
+
+# ============================================================================
+# User API responses
+# ============================================================================
+
+#: API: User - Not found
+msgid "server.api.user.not_found"
+msgstr "未找到用户"
+
+#: API: User - Invalid ID
+msgid "server.api.user.invalid_id"
+msgstr "用户 ID 格式无效"
+
+#: API: User - Display name empty
+msgid "server.api.user.display_name_empty"
+msgstr "显示名称不能为空"
+
+#: API: User - Profile updated
+msgid "server.api.user.profile_updated"
+msgstr "个人资料已更新"
+
+#: API: User - Deletion scheduled
+msgid "server.api.user.deletion_scheduled"
+msgstr "账户已计划删除"
+
+#: API: User - Deletion already scheduled
+msgid "server.api.user.deletion_already_scheduled"
+msgstr "账户删除已计划"
+
+#: API: User - Deletion failed
+msgid "server.api.user.deletion_failed"
+msgstr "计划删除账户失败"
+
+#: API: User - No pending deletion
+msgid "server.api.user.no_pending_deletion"
+msgstr "此账户没有待处理的删除"
+
+#: API: User - Grace period expired
+msgid "server.api.user.grace_period_expired"
+msgstr "宽限期已过期，账户无法恢复"
+
+#: API: User - Account restored
+msgid "server.api.user.account_restored"
+msgstr "账户已成功恢复"
+
+#: API: User - Identity unlinked
+msgid "server.api.user.identity_unlinked"
+msgstr "身份已成功解除关联"
+
+#: API: User - Identity not found
+msgid "server.api.user.identity_not_found"
+msgstr "未找到身份"
+
+#: API: User - Cannot unlink last identity
+msgid "server.api.user.cannot_unlink_last_identity"
+msgstr "无法解除最后一个身份的关联"
+
+# ============================================================================
+# Organization API responses
+# ============================================================================
+
+#: API: Org - Not found
+msgid "server.api.org.not_found"
+msgstr "未找到组织"
+
+#: API: Org - Invalid ID
+msgid "server.api.org.invalid_id"
+msgstr "组织 ID 无效"
+
+#: API: Org - Invalid slug length
+msgid "server.api.org.invalid_slug_length"
+msgstr "标识符长度必须在 3 到 50 个字符之间"
+
+#: API: Org - Invalid slug format
+msgid "server.api.org.invalid_slug_format"
+msgstr "标识符只能包含小写字母、数字和连字符"
+
+#: API: Org - Slug exists
+msgid "server.api.org.slug_exists"
+msgstr "具有此标识符的组织已存在"
+
+#: API: Org - Invalid role
+msgid "server.api.org.invalid_role"
+msgstr "角色必须是以下之一：owner、admin、member"
+
+#: API: Org - List failed
+msgid "server.api.org.list_failed"
+msgstr "获取组织列表失败"
+
+#: API: Org - Create failed
+msgid "server.api.org.create_failed"
+msgstr "创建组织失败"
+
+#: API: Org - Not a member
+msgid "server.api.org.not_a_member"
+msgstr "您不是此组织的成员"
+
+#: API: Org - Already a member
+msgid "server.api.org.already_member"
+msgstr "用户已是此组织的成员"
+
+#: API: Org - Member added
+msgid "server.api.org.member_added"
+msgstr "成员已添加到组织"
+
+#: API: Org - Member removed
+msgid "server.api.org.member_removed"
+msgstr "成员已从组织移除"
+
+#: API: Org - Member not found
+msgid "server.api.org.member_not_found"
+msgstr "在此组织中未找到成员"
+
+#: API: Org - Last owner
+msgid "server.api.org.last_owner"
+msgstr "无法移除或降级最后一个所有者"
+
+#: API: Org - Cannot delete personal org
+msgid "server.api.org.cannot_delete_personal"
+msgstr "无法删除个人组织"
+
+#: API: Org - Deleted
+msgid "server.api.org.deleted"
+msgstr "组织已删除"
+
+#: API: Org - Restored
+msgid "server.api.org.restored"
+msgstr "组织已恢复"
+
+#: API: Org - Not deleted
+msgid "server.api.org.not_deleted"
+msgstr "组织未被删除"
+
+#: API: Org - Grace period expired
+msgid "server.api.org.grace_period_expired"
+msgstr "宽限期已过期，此组织无法恢复"
+
+#: API: Org - Owner required
+msgid "server.api.org.owner_required"
+msgstr "只有所有者可以执行此操作"
+
+#: API: Org - Role updated
+msgid "server.api.org.role_updated"
+msgstr "成员角色已更新"
+
+#: API: Org - Join request for private org
+msgid "server.api.org.join_request_private"
+msgstr "无法请求加入私有组织"
+
+#: API: Org - Join request pending
+msgid "server.api.org.join_request_pending"
+msgstr "您已有此组织的待处理加入请求"
+
+#: API: Org - Join request created
+msgid "server.api.org.join_request_created"
+msgstr "加入请求已提交"
+
+#: API: Org - Join request not found
+msgid "server.api.org.join_request_not_found"
+msgstr "未找到加入请求"
+
+#: API: Org - Join request approved
+msgid "server.api.org.join_request_approved"
+msgstr "加入请求已批准"
+
+#: API: Org - Join request rejected
+msgid "server.api.org.join_request_rejected"
+msgstr "加入请求已拒绝"
+
+# ============================================================================
+# Team API responses
+# ============================================================================
+
+#: API: Team - Not found
+msgid "server.api.team.not_found"
+msgstr "未找到团队"
+
+#: API: Team - Invalid ID
+msgid "server.api.team.invalid_id"
+msgstr "团队 ID 无效"
+
+#: API: Team - Invalid slug length
+msgid "server.api.team.invalid_slug_length"
+msgstr "标识符长度必须在 2 到 50 个字符之间"
+
+#: API: Team - Invalid slug format
+msgid "server.api.team.invalid_slug_format"
+msgstr "标识符只能包含小写字母、数字和连字符"
+
+#: API: Team - List failed
+msgid "server.api.team.list_failed"
+msgstr "获取团队列表失败"
+
+#: API: Team - Membership check failed
+msgid "server.api.team.membership_check_failed"
+msgstr "检查组织成员资格失败"
+
+# ============================================================================
+# Invitation API responses
+# ============================================================================
+
+#: API: Invitation - Created
+msgid "server.api.invitation.created"
+msgstr "邀请发送成功"
+
+#: API: Invitation - Cancelled
+msgid "server.api.invitation.cancelled"
+msgstr "邀请已取消"
+
+#: API: Invitation - Accepted
+msgid "server.api.invitation.accepted"
+msgstr "邀请已接受"
+
+#: API: Invitation - Not found
+msgid "server.api.invitation.not_found"
+msgstr "未找到邀请"
+
+#: API: Invitation - Expired
+msgid "server.api.invitation.expired"
+msgstr "此邀请已过期"
+
+#: API: Invitation - Invalid token
+msgid "server.api.invitation.invalid_token"
+msgstr "邀请令牌无效"
+
+#: API: Invitation - Already accepted
+msgid "server.api.invitation.already_accepted"
+msgstr "此邀请已被接受"
+
+#: API: Invitation - List failed
+msgid "server.api.invitation.list_failed"
+msgstr "获取邀请列表失败"
+
+# ============================================================================
+# Join request API responses
+# ============================================================================
+
+#: API: Join request - Created
+msgid "server.api.join_request.created"
+msgstr "加入请求已提交"
+
+#: API: Join request - Approved
+msgid "server.api.join_request.approved"
+msgstr "加入请求已批准"
+
+#: API: Join request - Rejected
+msgid "server.api.join_request.rejected"
+msgstr "加入请求已拒绝"
+
+#: API: Join request - Already member
+msgid "server.api.join_request.already_member"
+msgstr "您已是此组织的成员"
+
+#: API: Join request - Already pending
+msgid "server.api.join_request.already_pending"
+msgstr "您已有待处理的加入请求"
+
+#: API: Join request - Not found
+msgid "server.api.join_request.not_found"
+msgstr "未找到加入请求"
+
+#: API: Join request - Private org
+msgid "server.api.join_request.private_org"
+msgstr "无法请求加入私有组织"
+
+# ============================================================================
+# API Key responses
+# ============================================================================
+
+#: API: API Key - Invalid org ID
+msgid "server.api.api_key.invalid_org_id"
+msgstr "组织 ID 格式无效"
+
+#: API: API Key - Name empty
+msgid "server.api.api_key.name_empty"
+msgstr "API 密钥名称不能为空"
+
+#: API: API Key - No scopes
+msgid "server.api.api_key.no_scopes"
+msgstr "必须指定至少一个权限范围"
+
+#: API: API Key - Created
+msgid "server.api.api_key.created"
+msgstr "API 密钥已创建"
+
+#: API: API Key - Revoked
+msgid "server.api.api_key.revoked"
+msgstr "API 密钥已撤销"
+
+#: API: API Key - Not found
+msgid "server.api.api_key.not_found"
+msgstr "未找到 API 密钥"
+
+#: API: API Key - List failed
+msgid "server.api.api_key.list_failed"
+msgstr "获取 API 密钥列表失败"
+
+#: API: API Key - Create failed
+msgid "server.api.api_key.create_failed"
+msgstr "创建 API 密钥失败"
+
+# ============================================================================
+# Session API responses
+# ============================================================================
+
+#: API: Session - Invalid ID
+msgid "server.api.session.invalid_id"
+msgstr "会话 ID 格式无效"
+
+#: API: Session - Not found
+msgid "server.api.session.not_found"
+msgstr "未找到会话"
+
+#: API: Session - Revoked
+msgid "server.api.session.revoked"
+msgstr "会话已成功撤销"
+
+#: API: Session - List failed
+msgid "server.api.session.list_failed"
+msgstr "获取会话列表失败"
+
+#: API: Session - Revoke failed
+msgid "server.api.session.revoke_failed"
+msgstr "撤销会话失败"
+
+#: API: Session - Ownership check failed
+msgid "server.api.session.ownership_check_failed"
+msgstr "验证会话所有权失败"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - System admin required
+msgid "server.api.admin.system_admin_required"
+msgstr "需要系统管理员角色"
+
+#: API: Admin - Cannot remove own admin
+msgid "server.api.admin.cannot_remove_own_admin"
+msgstr "无法移除自己的管理员状态"
+
+#: API: Admin - User list failed
+msgid "server.api.admin.user_list_failed"
+msgstr "获取用户列表失败"
+
+#: API: Admin - User update failed
+msgid "server.api.admin.user_update_failed"
+msgstr "更新用户失败"
+
+#: API: Admin - Roles updated
+msgid "server.api.admin.roles_updated"
+msgstr "用户角色已更新"
+
+#: Auth: Device Page - Title
+msgid "server.auth.device.title"
+msgstr "设备授权 - Loom"
+
+#: Auth: Device Page - Heading
+msgid "server.auth.device.heading"
+msgstr "设备授权"
+
+#: Auth: Device Page - Subtitle
+msgid "server.auth.device.subtitle"
+msgstr "输入终端中显示的代码"
+
+#: Auth: Device Page - Code label
+msgid "server.auth.device.code_label"
+msgstr "授权代码"
+
+#: Auth: Device Page - Submit button
+msgid "server.auth.device.submit"
+msgstr "授权设备"
+
+#: Auth: Device Page - Authorizing button
+msgid "server.auth.device.authorizing"
+msgstr "正在授权..."
+
+#: Auth: Device Page - Authorized button
+msgid "server.auth.device.authorized"
+msgstr "已授权"
+
+#: Auth: Device Page - Expiry help text
+msgid "server.auth.device.expiry_help"
+msgstr "此代码将在 15 分钟后过期。"
+
+#: Auth: Device Page - Success message
+msgid "server.auth.device.success"
+msgstr "设备授权成功！您可以关闭此窗口。"
+
+#: Auth: Device Page - Invalid code format
+msgid "server.auth.device.invalid_format"
+msgstr "请输入格式为 XXX-XXX-XXX 的有效代码"
+
+#: Auth: Device Page - Generic error
+msgid "server.auth.device.error"
+msgstr "发生错误，请重试。"
+
+#: Auth: Device Page - Authorization failed
+msgid "server.auth.device.auth_failed"
+msgstr "授权失败，请重试。"
+
+# ============================================================================
+# Support Access API responses
+# ============================================================================
+
+#: API: Support Access - Not support staff
+msgid "server.api.support_access.not_support_staff"
+msgstr "只有客服人员可以请求客服访问权限"
+
+#: API: Support Access - Thread not found
+msgid "server.api.support_access.thread_not_found"
+msgstr "未找到会话"
+
+#: API: Support Access - Already requested
+msgid "server.api.support_access.already_requested"
+msgstr "已请求此会话的客服访问权限"
+
+#: API: Support Access - Already active
+msgid "server.api.support_access.already_active"
+msgstr "此会话的客服访问权限已激活"
+
+#: API: Support Access - Requested
+msgid "server.api.support_access.requested"
+msgstr "已请求客服访问权限"
+
+#: API: Support Access - Request failed
+msgid "server.api.support_access.request_failed"
+msgstr "请求客服访问权限失败"
+
+#: API: Support Access - Not owner
+msgid "server.api.support_access.not_owner"
+msgstr "只有会话所有者可以批准或撤销客服访问权限"
+
+#: API: Support Access - No pending request
+msgid "server.api.support_access.no_pending_request"
+msgstr "未找到此会话的待处理客服访问请求"
+
+#: API: Support Access - Approved
+msgid "server.api.support_access.approved"
+msgstr "客服访问权限已批准"
+
+#: API: Support Access - Approve failed
+msgid "server.api.support_access.approve_failed"
+msgstr "批准客服访问权限失败"
+
+#: API: Support Access - No active access
+msgid "server.api.support_access.no_active_access"
+msgstr "未找到此会话的活跃客服访问权限"
+
+#: API: Support Access - Revoked
+msgid "server.api.support_access.revoked"
+msgstr "客服访问权限已撤销"
+
+#: API: Support Access - Revoke failed
+msgid "server.api.support_access.revoke_failed"
+msgstr "撤销客服访问权限失败"
+
+# ============================================================================
+# Share Link API responses
+# ============================================================================
+
+#: API: Share - Invalid thread ID
+msgid "server.api.share.invalid_thread_id"
+msgstr "会话 ID 格式无效"
+
+#: API: Share - Thread not found
+msgid "server.api.share.thread_not_found"
+msgstr "未找到会话"
+
+#: API: Share - Invalid expires_at
+msgid "server.api.share.invalid_expires_at"
+msgstr "过期时间格式无效。请使用 RFC 3339 格式。"
+
+#: API: Share - Create failed
+msgid "server.api.share.create_failed"
+msgstr "创建分享链接失败"
+
+#: API: Share - Link not found
+msgid "server.api.share.link_not_found"
+msgstr "未找到此会话的有效分享链接"
+
+#: API: Share - Revoked
+msgid "server.api.share.revoked"
+msgstr "分享链接已撤销"
+
+#: API: Share - Revoke failed
+msgid "server.api.share.revoke_failed"
+msgstr "撤销分享链接失败"
+
+#: API: Share - Invalid or expired link
+msgid "server.api.share.invalid_or_expired"
+msgstr "分享链接无效或已过期"
+
+#: API: Share - Link revoked
+msgid "server.api.share.link_revoked"
+msgstr "此分享链接已被撤销"
+
+#: API: Share - Link expired
+msgid "server.api.share.link_expired"
+msgstr "此分享链接已过期"
+
+#: API: Share - Validation failed
+msgid "server.api.share.validation_failed"
+msgstr "验证分享链接失败"
+
+#: API: Share - Fetch failed
+msgid "server.api.share.fetch_failed"
+msgstr "获取会话失败"
+
+#: API: Weaver - Provisioner not configured
+msgid "server.api.weaver.provisioner_not_configured"
+msgstr "Weaver 配置器未配置"
+
+#: API: Weaver - Invalid ID
+msgid "server.api.weaver.invalid_id"
+msgstr "无效的 Weaver ID：{id}"
+
+#: API: Weaver - Not found
+msgid "server.api.weaver.not_found"
+msgstr "未找到 Weaver：{id}"
+
+#: API: Weaver - Access denied
+msgid "server.api.weaver.access_denied"
+msgstr "您没有访问此 Weaver 的权限"
+
+#: API: Weaver - Attach denied
+msgid "server.api.weaver.attach_denied"
+msgstr "您没有连接此 Weaver 的权限"
+
+#: API: Weaver - Delete denied
+msgid "server.api.weaver.delete_denied"
+msgstr "您没有删除此 Weaver 的权限"
+
+#: API: Weaver - Read only attach
+msgid "server.api.weaver.read_only_attach"
+msgstr "只读连接：客服用户的输入已禁用"
+
+#: API: Weaver - Logs access denied
+msgid "server.api.weaver.logs_denied"
+msgstr "您没有访问此 Weaver 日志的权限"
+
+# ============================================================================
+# CLI: Update command
+# ============================================================================
+
+#: CLI: Update - Current version
+msgid "client.update.current_version"
+msgstr "当前版本：{version}"
+
+#: CLI: Update - Platform
+msgid "client.update.platform"
+msgstr "平台：{platform}"
+
+#: CLI: Update - Checking
+msgid "client.update.checking"
+msgstr "正在检查更新..."
+
+#: CLI: Update - Already up to date
+msgid "client.update.up_to_date"
+msgstr "已是最新版本（SHA：{sha}）"
+
+#: CLI: Update - Update available
+msgid "client.update.available"
+msgstr "有可用更新：{current} -> {remote}"
+
+#: CLI: Update - Downloading
+msgid "client.update.downloading"
+msgstr "正在从 {url} 下载..."
+
+#: CLI: Update - Downloaded
+msgid "client.update.downloaded"
+msgstr "已下载 {bytes} 字节（已验证）"
+
+#: CLI: Update - Complete
+msgid "client.update.complete"
+msgstr "更新完成！请重启 loom。"
+
+#: CLI: Update - Error: empty binary
+msgid "client.update.error.empty_binary"
+msgstr "下载的二进制文件为空"
+
+#: CLI: Update - Error: SHA mismatch
+msgid "client.update.error.sha_mismatch"
+msgstr "下载的二进制文件 SHA 不匹配：期望 {expected}，实际 {actual}"
+
+#: CLI: Update - Error: env not set
+msgid "client.update.error.env_not_set"
+msgstr "更新需要设置 LOOM_UPDATE_BASE_URL 或 LOOM_THREAD_SYNC_URL"
+
+#: CLI: Update - Error: check failed
+msgid "client.update.error.check_failed"
+msgstr "检查更新失败：{status}"
+
+# ============================================================================
+# CLI: Authentication
+# ============================================================================
+
+#: CLI: Auth - Visit URL prompt
+msgid "client.auth.visit_url"
+msgstr "访问 {url} 并输入代码：{code}"
+
+#: CLI: Auth - Browser open failed
+msgid "client.auth.browser_failed"
+msgstr "（无法自动打开浏览器）"
+
+#: CLI: Auth - Waiting for authorization
+msgid "client.auth.waiting"
+msgstr "正在等待授权"
+
+#: CLI: Auth - Authorization timed out
+msgid "client.auth.timed_out"
+msgstr "授权超时"
+
+#: CLI: Auth - Login cancelled
+msgid "client.auth.cancelled"
+msgstr "登录已取消"
+
+#: CLI: Auth - Login successful
+msgid "client.auth.login_success"
+msgstr "已成功登录到 {server}"
+
+#: CLI: Auth - Device code expired
+msgid "client.auth.device_expired"
+msgstr "设备代码已过期"
+
+#: CLI: Auth - Logged out
+msgid "client.auth.logged_out"
+msgstr "已从 {server} 退出登录"
+
+# ============================================================================
+# CLI: REPL
+# ============================================================================
+
+#: CLI: REPL - Welcome message
+msgid "client.repl.welcome"
+msgstr "欢迎使用 Loom - AI 驱动的编程助手"
+
+#: CLI: REPL - Thread ID
+msgid "client.repl.thread_id"
+msgstr "会话：{id}"
+
+#: CLI: REPL - Instructions
+msgid "client.repl.instructions"
+msgstr "输入您的消息并按回车。使用 Ctrl+C 退出。"
+
+#: CLI: REPL - Interrupted
+msgid "client.repl.interrupted"
+msgstr "已中断。会话已保存。再见！"
+
+#: CLI: REPL - Error
+msgid "client.repl.error"
+msgstr "错误：{error}"
+
+# ============================================================================
+# CLI: Search
+# ============================================================================
+
+#: CLI: Search - No results
+msgid "client.search.no_results"
+msgstr "未找到\"{query}\"的结果"
+
+#: CLI: Search - Results header
+msgid "client.search.results_header"
+msgstr "\"{query}\"的结果（{count} 条匹配）："
+
+#: CLI: Search - Local no results
+msgid "client.search.local_no_results"
+msgstr "未找到\"{query}\"的结果（本地搜索）"
+
+#: CLI: Search - Local results header
+msgid "client.search.local_results_header"
+msgstr "\"{query}\"的本地结果（{count} 条匹配）："
+
+# ============================================================================
+# CLI: Threads
+# ============================================================================
+
+#: CLI: Threads - No threads
+msgid "client.threads.no_threads"
+msgstr "未找到会话。"
+
+#: CLI: Threads - List header
+msgid "client.threads.list_header"
+msgstr "{id:<40} {title:<40} {updated:<20}"
+
+#: CLI: Threads - Private session
+msgid "client.threads.private_session"
+msgstr "启动私有会话（仅本地，不会同步到服务器）。"
+
+#: CLI: Threads - Shared with support
+msgid "client.threads.shared_support"
+msgstr "会话 {id} 已与客服共享。"
+
+#: CLI: Threads - Visibility changed
+msgid "client.threads.visibility_changed"
+msgstr "会话 {id} 的可见性已更改为 {visibility}。"
+
+# ============================================================================
+# CLI: Weaver
+# ============================================================================
+
+#: CLI: Weaver - Creating
+msgid "client.weaver.creating"
+msgstr "正在创建 Weaver..."
+
+#: CLI: Weaver - Created ID
+msgid "client.weaver.created_id"
+msgstr "  ID：   {id}"
+
+#: CLI: Weaver - Created image
+msgid "client.weaver.created_image"
+msgstr "  镜像：{image}"
+
+#: CLI: Weaver - Created TTL
+msgid "client.weaver.created_ttl"
+msgstr "  TTL：  {hours} 小时"
+
+#: CLI: Weaver - Attaching
+msgid "client.weaver.attaching"
+msgstr "正在连接到 Weaver..."
+
+#: CLI: Weaver - Detached
+msgid "client.weaver.detached"
+msgstr "[已从 Weaver {id} 断开]"
+
+#: CLI: Weaver - Reattach hint
+msgid "client.weaver.reattach_hint"
+msgstr "Weaver 仍在运行。重新连接：loom attach {id}"
+
+#: CLI: Weaver - No weavers
+msgid "client.weaver.no_weavers"
+msgstr "没有正在运行的 Weaver。"
+
+#: CLI: Weaver - List header
+msgid "client.weaver.list_header"
+msgstr "{id:<40} {image:<30} {status:<10} {age:<8} {ttl:<8}"
+
+#: CLI: Weaver - Deleting
+msgid "client.weaver.deleting"
+msgstr "正在删除 Weaver {id}..."
+
+#: CLI: Weaver - Deleted
+msgid "client.weaver.deleted"
+msgstr "Weaver 已删除。"
+
+#: CLI: Weaver - Attach prefix
+msgid "client.weaver.attach_prefix"
+msgstr "[正在连接到 Weaver {id}]"

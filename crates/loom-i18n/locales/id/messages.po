@@ -1,0 +1,921 @@
+# Loom Server Translations - Indonesian
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>
+# SPDX-License-Identifier: Proprietary
+#
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: id\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: Email: Magic Link - Subject
+msgid "server.email.magic_link.subject"
+msgstr "Masuk ke Loom"
+
+#: Email: Magic Link - Body intro
+msgid "server.email.magic_link.body"
+msgstr "Klik tautan di bawah untuk masuk ke akun Loom Anda."
+
+#: Email: Magic Link - Expiry notice
+msgid "server.email.magic_link.expires"
+msgstr "Tautan ini kedaluwarsa dalam {minutes} menit."
+
+#: Email: Magic Link - Ignore notice
+msgid "server.email.magic_link.ignore"
+msgstr "Jika Anda tidak meminta email ini, Anda dapat mengabaikannya."
+
+#: Email: Magic Link - Copy link instruction
+msgid "server.email.magic_link.copy_link"
+msgstr "Atau salin dan tempel tautan ini:"
+
+#: Email: Org Invitation - Subject
+msgid "server.email.invitation.subject"
+msgstr "Anda telah diundang untuk bergabung dengan {org_name} di Loom"
+
+#: Email: Org Invitation - Body
+msgid "server.email.invitation.body"
+msgstr "{inviter_name} telah mengundang Anda untuk bergabung dengan organisasi \"{org_name}\" di Loom."
+
+#: Email: Org Invitation - Action instruction
+msgid "server.email.invitation.action"
+msgstr "Klik tautan di bawah untuk menerima undangan:"
+
+#: Email: Org Invitation - No expiry notice
+msgid "server.email.invitation.no_expiry"
+msgstr "Undangan ini tidak kedaluwarsa, tetapi dapat dicabut oleh admin organisasi."
+
+#: Email: Security Alert - Subject
+msgid "server.email.security_alert.subject"
+msgstr "Peringatan Keamanan Loom: {event}"
+
+#: Email: Security Alert - Body intro
+msgid "server.email.security_alert.body"
+msgstr "Terjadi peristiwa keamanan pada akun Loom Anda."
+
+#: Email: Security Alert - Event label
+msgid "server.email.security_alert.event"
+msgstr "Peristiwa: {event}"
+
+#: Email: Security Alert - Details label
+msgid "server.email.security_alert.details"
+msgstr "Detail:"
+
+#: Email: Security Alert - Action instruction
+msgid "server.email.security_alert.action"
+msgstr "Jika ini bukan Anda, segera tinjau pengaturan keamanan akun Anda."
+
+#: Email: Deletion Warning - Subject
+msgid "server.email.deletion_warning.subject"
+msgstr "Akun Loom Anda dijadwalkan untuk dihapus"
+
+#: Email: Deletion Warning - Body
+msgid "server.email.deletion_warning.body"
+msgstr "Akun Loom Anda dijadwalkan untuk dihapus permanen dalam {days} hari."
+
+#: Email: Deletion Warning - Restore instruction
+msgid "server.email.deletion_warning.restore"
+msgstr "Jika Anda tidak meminta penghapusan ini, atau jika Anda berubah pikiran, Anda dapat memulihkan akun dengan masuk sebelum tanggal penghapusan."
+
+#: Email: Deletion Warning - Permanent notice
+msgid "server.email.deletion_warning.permanent"
+msgstr "Setelah penghapusan permanen, data Anda tidak dapat dipulihkan."
+
+#: Email: Deletion Scheduled - Subject
+msgid "server.email.deletion_scheduled.subject"
+msgstr "Penghapusan Akun Dijadwalkan"
+
+#: Email: Deletion Scheduled - Body
+msgid "server.email.deletion_scheduled.body"
+msgstr "Akun Anda telah dijadwalkan untuk dihapus."
+
+#: Email: Deletion Scheduled - Grace period notice
+msgid "server.email.deletion_scheduled.grace"
+msgstr "Anda memiliki {days} hari untuk memulihkan akun dengan masuk dan membatalkan penghapusan."
+
+#: Email: Deletion Scheduled - Permanent notice
+msgid "server.email.deletion_scheduled.permanent"
+msgstr "Setelah masa tenggang, akun Anda dan semua data terkait akan dihapus secara permanen."
+
+#: API: Auth - Check email response
+msgid "server.api.auth.check_email"
+msgstr "Periksa email Anda untuk tautan masuk"
+
+#: API: Auth - Logged out response
+msgid "server.api.auth.logged_out"
+msgstr "Berhasil keluar"
+
+#: API: Error - Internal error
+msgid "server.api.error.internal"
+msgstr "Terjadi kesalahan internal"
+
+#: API: Error - Not found
+msgid "server.api.error.not_found"
+msgstr "Sumber daya tidak ditemukan"
+
+#: API: Error - Unauthorized
+msgid "server.api.error.unauthorized"
+msgstr "Autentikasi diperlukan"
+
+#: API: Error - Forbidden
+msgid "server.api.error.forbidden"
+msgstr "Akses ditolak"
+
+#: API: Error - Bad request
+msgid "server.api.error.bad_request"
+msgstr "Permintaan tidak valid"
+
+#: API: Error - Conflict
+msgid "server.api.error.conflict"
+msgstr "Konflik sumber daya"
+
+#: API: Error - Gone
+msgid "server.api.error.gone"
+msgstr "Sumber daya tidak lagi tersedia"
+
+#: API: Error - Not configured
+msgid "server.api.error.not_configured"
+msgstr "Fitur tidak dikonfigurasi"
+
+# ============================================================================
+# Auth API responses
+# ============================================================================
+
+#: API: Auth - Invalid email
+msgid "server.api.auth.invalid_email"
+msgstr "Harap berikan alamat email yang valid"
+
+#: API: Auth - Device code authorized
+msgid "server.api.auth.device_authorized"
+msgstr "Perangkat berhasil diotorisasi"
+
+#: API: Auth - Invalid device code
+msgid "server.api.auth.invalid_device_code"
+msgstr "Kode perangkat tidak valid atau kedaluwarsa"
+
+#: API: Auth - Invalid user code
+msgid "server.api.auth.invalid_user_code"
+msgstr "Kode pengguna tidak valid atau kedaluwarsa"
+
+#: API: Auth - OAuth not configured
+msgid "server.api.auth.oauth_not_configured"
+msgstr "OAuth {provider} tidak dikonfigurasi"
+
+#: API: Auth - Magic link sent (always shown to prevent enumeration)
+msgid "server.api.auth.magic_link_sent"
+msgstr "Jika ada akun dengan email ini, tautan masuk telah dikirim"
+
+#: API: Auth - Email not verified (Google/Okta)
+msgid "server.api.auth.email_not_verified"
+msgstr "Alamat email belum diverifikasi oleh penyedia"
+
+#: API: Auth - No verified email (GitHub)
+msgid "server.api.auth.no_verified_email"
+msgstr "Tidak ditemukan alamat email terverifikasi. Harap verifikasi email Anda dengan GitHub dan coba lagi."
+
+# ============================================================================
+# User API responses
+# ============================================================================
+
+#: API: User - Not found
+msgid "server.api.user.not_found"
+msgstr "Pengguna tidak ditemukan"
+
+#: API: User - Invalid ID
+msgid "server.api.user.invalid_id"
+msgstr "Format ID pengguna tidak valid"
+
+#: API: User - Display name empty
+msgid "server.api.user.display_name_empty"
+msgstr "Nama tampilan tidak boleh kosong"
+
+#: API: User - Profile updated
+msgid "server.api.user.profile_updated"
+msgstr "Profil berhasil diperbarui"
+
+#: API: User - Deletion scheduled
+msgid "server.api.user.deletion_scheduled"
+msgstr "Akun dijadwalkan untuk dihapus"
+
+#: API: User - Deletion already scheduled
+msgid "server.api.user.deletion_already_scheduled"
+msgstr "Penghapusan akun sudah dijadwalkan"
+
+#: API: User - Deletion failed
+msgid "server.api.user.deletion_failed"
+msgstr "Gagal menjadwalkan penghapusan akun"
+
+#: API: User - No pending deletion
+msgid "server.api.user.no_pending_deletion"
+msgstr "Tidak ada penghapusan tertunda untuk akun ini"
+
+#: API: User - Grace period expired
+msgid "server.api.user.grace_period_expired"
+msgstr "Masa tenggang telah berakhir, akun tidak dapat dipulihkan"
+
+#: API: User - Account restored
+msgid "server.api.user.account_restored"
+msgstr "Akun berhasil dipulihkan"
+
+#: API: User - Identity unlinked
+msgid "server.api.user.identity_unlinked"
+msgstr "Identitas berhasil diputus"
+
+#: API: User - Identity not found
+msgid "server.api.user.identity_not_found"
+msgstr "Identitas tidak ditemukan"
+
+#: API: User - Cannot unlink last identity
+msgid "server.api.user.cannot_unlink_last_identity"
+msgstr "Tidak dapat memutus identitas terakhir"
+
+# ============================================================================
+# Organization API responses
+# ============================================================================
+
+#: API: Org - Not found
+msgid "server.api.org.not_found"
+msgstr "Organisasi tidak ditemukan"
+
+#: API: Org - Invalid ID
+msgid "server.api.org.invalid_id"
+msgstr "ID organisasi tidak valid"
+
+#: API: Org - Invalid slug length
+msgid "server.api.org.invalid_slug_length"
+msgstr "Slug harus antara 3 dan 50 karakter"
+
+#: API: Org - Invalid slug format
+msgid "server.api.org.invalid_slug_format"
+msgstr "Slug hanya boleh berisi karakter alfanumerik huruf kecil dan tanda hubung"
+
+#: API: Org - Slug exists
+msgid "server.api.org.slug_exists"
+msgstr "Organisasi dengan slug ini sudah ada"
+
+#: API: Org - Invalid role
+msgid "server.api.org.invalid_role"
+msgstr "Peran harus salah satu dari: owner, admin, member"
+
+#: API: Org - List failed
+msgid "server.api.org.list_failed"
+msgstr "Gagal menampilkan daftar organisasi"
+
+#: API: Org - Create failed
+msgid "server.api.org.create_failed"
+msgstr "Gagal membuat organisasi"
+
+#: API: Org - Not a member
+msgid "server.api.org.not_a_member"
+msgstr "Anda bukan anggota organisasi ini"
+
+#: API: Org - Already a member
+msgid "server.api.org.already_member"
+msgstr "Pengguna sudah menjadi anggota organisasi ini"
+
+#: API: Org - Member added
+msgid "server.api.org.member_added"
+msgstr "Anggota ditambahkan ke organisasi"
+
+#: API: Org - Member removed
+msgid "server.api.org.member_removed"
+msgstr "Anggota dihapus dari organisasi"
+
+#: API: Org - Member not found
+msgid "server.api.org.member_not_found"
+msgstr "Anggota tidak ditemukan dalam organisasi ini"
+
+#: API: Org - Last owner
+msgid "server.api.org.last_owner"
+msgstr "Tidak dapat menghapus atau menurunkan pemilik terakhir"
+
+#: API: Org - Cannot delete personal org
+msgid "server.api.org.cannot_delete_personal"
+msgstr "Tidak dapat menghapus organisasi pribadi"
+
+#: API: Org - Deleted
+msgid "server.api.org.deleted"
+msgstr "Organisasi dihapus"
+
+#: API: Org - Restored
+msgid "server.api.org.restored"
+msgstr "Organisasi dipulihkan"
+
+#: API: Org - Not deleted
+msgid "server.api.org.not_deleted"
+msgstr "Organisasi tidak dihapus"
+
+#: API: Org - Grace period expired
+msgid "server.api.org.grace_period_expired"
+msgstr "Masa tenggang telah berakhir dan organisasi ini tidak dapat dipulihkan"
+
+#: API: Org - Owner required
+msgid "server.api.org.owner_required"
+msgstr "Hanya pemilik yang dapat melakukan tindakan ini"
+
+#: API: Org - Role updated
+msgid "server.api.org.role_updated"
+msgstr "Peran anggota diperbarui"
+
+#: API: Org - Join request for private org
+msgid "server.api.org.join_request_private"
+msgstr "Tidak dapat meminta bergabung ke organisasi privat"
+
+#: API: Org - Join request pending
+msgid "server.api.org.join_request_pending"
+msgstr "Anda sudah memiliki permintaan bergabung tertunda untuk organisasi ini"
+
+#: API: Org - Join request created
+msgid "server.api.org.join_request_created"
+msgstr "Permintaan bergabung dikirim"
+
+#: API: Org - Join request not found
+msgid "server.api.org.join_request_not_found"
+msgstr "Permintaan bergabung tidak ditemukan"
+
+#: API: Org - Join request approved
+msgid "server.api.org.join_request_approved"
+msgstr "Permintaan bergabung disetujui"
+
+#: API: Org - Join request rejected
+msgid "server.api.org.join_request_rejected"
+msgstr "Permintaan bergabung ditolak"
+
+# ============================================================================
+# Team API responses
+# ============================================================================
+
+#: API: Team - Not found
+msgid "server.api.team.not_found"
+msgstr "Tim tidak ditemukan"
+
+#: API: Team - Invalid ID
+msgid "server.api.team.invalid_id"
+msgstr "ID tim tidak valid"
+
+#: API: Team - Invalid slug length
+msgid "server.api.team.invalid_slug_length"
+msgstr "Slug harus antara 2 dan 50 karakter"
+
+#: API: Team - Invalid slug format
+msgid "server.api.team.invalid_slug_format"
+msgstr "Slug hanya boleh berisi karakter alfanumerik huruf kecil dan tanda hubung"
+
+#: API: Team - List failed
+msgid "server.api.team.list_failed"
+msgstr "Gagal menampilkan daftar tim"
+
+#: API: Team - Membership check failed
+msgid "server.api.team.membership_check_failed"
+msgstr "Gagal memeriksa keanggotaan organisasi"
+
+# ============================================================================
+# Invitation API responses
+# ============================================================================
+
+#: API: Invitation - Created
+msgid "server.api.invitation.created"
+msgstr "Undangan berhasil dikirim"
+
+#: API: Invitation - Cancelled
+msgid "server.api.invitation.cancelled"
+msgstr "Undangan dibatalkan"
+
+#: API: Invitation - Accepted
+msgid "server.api.invitation.accepted"
+msgstr "Undangan diterima"
+
+#: API: Invitation - Not found
+msgid "server.api.invitation.not_found"
+msgstr "Undangan tidak ditemukan"
+
+#: API: Invitation - Expired
+msgid "server.api.invitation.expired"
+msgstr "Undangan ini telah kedaluwarsa"
+
+#: API: Invitation - Invalid token
+msgid "server.api.invitation.invalid_token"
+msgstr "Token undangan tidak valid"
+
+#: API: Invitation - Already accepted
+msgid "server.api.invitation.already_accepted"
+msgstr "Undangan ini sudah diterima"
+
+#: API: Invitation - List failed
+msgid "server.api.invitation.list_failed"
+msgstr "Gagal menampilkan daftar undangan"
+
+# ============================================================================
+# Join request API responses
+# ============================================================================
+
+#: API: Join request - Created
+msgid "server.api.join_request.created"
+msgstr "Permintaan bergabung dikirim"
+
+#: API: Join request - Approved
+msgid "server.api.join_request.approved"
+msgstr "Permintaan bergabung disetujui"
+
+#: API: Join request - Rejected
+msgid "server.api.join_request.rejected"
+msgstr "Permintaan bergabung ditolak"
+
+#: API: Join request - Already member
+msgid "server.api.join_request.already_member"
+msgstr "Anda sudah menjadi anggota organisasi ini"
+
+#: API: Join request - Already pending
+msgid "server.api.join_request.already_pending"
+msgstr "Anda sudah memiliki permintaan bergabung tertunda"
+
+#: API: Join request - Not found
+msgid "server.api.join_request.not_found"
+msgstr "Permintaan bergabung tidak ditemukan"
+
+#: API: Join request - Private org
+msgid "server.api.join_request.private_org"
+msgstr "Tidak dapat meminta bergabung ke organisasi privat"
+
+# ============================================================================
+# API Key responses
+# ============================================================================
+
+#: API: API Key - Invalid org ID
+msgid "server.api.api_key.invalid_org_id"
+msgstr "Format ID organisasi tidak valid"
+
+#: API: API Key - Name empty
+msgid "server.api.api_key.name_empty"
+msgstr "Nama kunci API tidak boleh kosong"
+
+#: API: API Key - No scopes
+msgid "server.api.api_key.no_scopes"
+msgstr "Setidaknya satu cakupan harus ditentukan"
+
+#: API: API Key - Created
+msgid "server.api.api_key.created"
+msgstr "Kunci API dibuat"
+
+#: API: API Key - Revoked
+msgid "server.api.api_key.revoked"
+msgstr "Kunci API dicabut"
+
+#: API: API Key - Not found
+msgid "server.api.api_key.not_found"
+msgstr "Kunci API tidak ditemukan"
+
+#: API: API Key - List failed
+msgid "server.api.api_key.list_failed"
+msgstr "Gagal menampilkan daftar kunci API"
+
+#: API: API Key - Create failed
+msgid "server.api.api_key.create_failed"
+msgstr "Gagal membuat kunci API"
+
+# ============================================================================
+# Session API responses
+# ============================================================================
+
+#: API: Session - Invalid ID
+msgid "server.api.session.invalid_id"
+msgstr "Format ID sesi tidak valid"
+
+#: API: Session - Not found
+msgid "server.api.session.not_found"
+msgstr "Sesi tidak ditemukan"
+
+#: API: Session - Revoked
+msgid "server.api.session.revoked"
+msgstr "Sesi berhasil dicabut"
+
+#: API: Session - List failed
+msgid "server.api.session.list_failed"
+msgstr "Gagal mengambil sesi"
+
+#: API: Session - Revoke failed
+msgid "server.api.session.revoke_failed"
+msgstr "Gagal mencabut sesi"
+
+#: API: Session - Ownership check failed
+msgid "server.api.session.ownership_check_failed"
+msgstr "Gagal memverifikasi kepemilikan sesi"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - System admin required
+msgid "server.api.admin.system_admin_required"
+msgstr "Diperlukan peran admin sistem"
+
+#: API: Admin - Cannot remove own admin
+msgid "server.api.admin.cannot_remove_own_admin"
+msgstr "Tidak dapat menghapus status admin Anda sendiri"
+
+#: API: Admin - User list failed
+msgid "server.api.admin.user_list_failed"
+msgstr "Gagal menampilkan daftar pengguna"
+
+#: API: Admin - User update failed
+msgid "server.api.admin.user_update_failed"
+msgstr "Gagal memperbarui pengguna"
+
+#: API: Admin - Roles updated
+msgid "server.api.admin.roles_updated"
+msgstr "Peran pengguna diperbarui"
+
+#: Auth: Device Page - Title
+msgid "server.auth.device.title"
+msgstr "Otorisasi Perangkat - Loom"
+
+#: Auth: Device Page - Heading
+msgid "server.auth.device.heading"
+msgstr "Otorisasi Perangkat"
+
+#: Auth: Device Page - Subtitle
+msgid "server.auth.device.subtitle"
+msgstr "Masukkan kode yang ditampilkan di terminal Anda"
+
+#: Auth: Device Page - Code label
+msgid "server.auth.device.code_label"
+msgstr "Kode Otorisasi"
+
+#: Auth: Device Page - Submit button
+msgid "server.auth.device.submit"
+msgstr "Otorisasi Perangkat"
+
+#: Auth: Device Page - Authorizing button
+msgid "server.auth.device.authorizing"
+msgstr "Mengotorisasi..."
+
+#: Auth: Device Page - Authorized button
+msgid "server.auth.device.authorized"
+msgstr "Terotorisasi"
+
+#: Auth: Device Page - Expiry help text
+msgid "server.auth.device.expiry_help"
+msgstr "Kode ini kedaluwarsa setelah 15 menit."
+
+#: Auth: Device Page - Success message
+msgid "server.auth.device.success"
+msgstr "Perangkat berhasil diotorisasi! Anda dapat menutup jendela ini."
+
+#: Auth: Device Page - Invalid code format
+msgid "server.auth.device.invalid_format"
+msgstr "Harap masukkan kode valid dalam format XXX-XXX-XXX"
+
+#: Auth: Device Page - Generic error
+msgid "server.auth.device.error"
+msgstr "Terjadi kesalahan. Silakan coba lagi."
+
+#: Auth: Device Page - Authorization failed
+msgid "server.auth.device.auth_failed"
+msgstr "Otorisasi gagal. Silakan coba lagi."
+
+# ============================================================================
+# Support Access API responses
+# ============================================================================
+
+#: API: Support Access - Not support staff
+msgid "server.api.support_access.not_support_staff"
+msgstr "Hanya staf dukungan yang dapat meminta akses dukungan"
+
+#: API: Support Access - Thread not found
+msgid "server.api.support_access.thread_not_found"
+msgstr "Thread tidak ditemukan"
+
+#: API: Support Access - Already requested
+msgid "server.api.support_access.already_requested"
+msgstr "Akses dukungan sudah diminta untuk thread ini"
+
+#: API: Support Access - Already active
+msgid "server.api.support_access.already_active"
+msgstr "Akses dukungan sudah aktif untuk thread ini"
+
+#: API: Support Access - Requested
+msgid "server.api.support_access.requested"
+msgstr "Akses dukungan diminta"
+
+#: API: Support Access - Request failed
+msgid "server.api.support_access.request_failed"
+msgstr "Gagal meminta akses dukungan"
+
+#: API: Support Access - Not owner
+msgid "server.api.support_access.not_owner"
+msgstr "Hanya pemilik thread yang dapat menyetujui atau mencabut akses dukungan"
+
+#: API: Support Access - No pending request
+msgid "server.api.support_access.no_pending_request"
+msgstr "Tidak ada permintaan akses dukungan tertunda untuk thread ini"
+
+#: API: Support Access - Approved
+msgid "server.api.support_access.approved"
+msgstr "Akses dukungan disetujui"
+
+#: API: Support Access - Approve failed
+msgid "server.api.support_access.approve_failed"
+msgstr "Gagal menyetujui akses dukungan"
+
+#: API: Support Access - No active access
+msgid "server.api.support_access.no_active_access"
+msgstr "Tidak ada akses dukungan aktif untuk thread ini"
+
+#: API: Support Access - Revoked
+msgid "server.api.support_access.revoked"
+msgstr "Akses dukungan dicabut"
+
+#: API: Support Access - Revoke failed
+msgid "server.api.support_access.revoke_failed"
+msgstr "Gagal mencabut akses dukungan"
+
+# ============================================================================
+# Share Link API responses
+# ============================================================================
+
+#: API: Share - Invalid thread ID
+msgid "server.api.share.invalid_thread_id"
+msgstr "Format ID thread tidak valid"
+
+#: API: Share - Thread not found
+msgid "server.api.share.thread_not_found"
+msgstr "Thread tidak ditemukan"
+
+#: API: Share - Invalid expires_at
+msgid "server.api.share.invalid_expires_at"
+msgstr "Format tanggal kedaluwarsa tidak valid. Gunakan format RFC 3339."
+
+#: API: Share - Create failed
+msgid "server.api.share.create_failed"
+msgstr "Gagal membuat tautan berbagi"
+
+#: API: Share - Link not found
+msgid "server.api.share.link_not_found"
+msgstr "Tidak ada tautan berbagi aktif untuk thread ini"
+
+#: API: Share - Revoked
+msgid "server.api.share.revoked"
+msgstr "Tautan berbagi dicabut"
+
+#: API: Share - Revoke failed
+msgid "server.api.share.revoke_failed"
+msgstr "Gagal mencabut tautan berbagi"
+
+#: API: Share - Invalid or expired link
+msgid "server.api.share.invalid_or_expired"
+msgstr "Tautan berbagi tidak valid atau kedaluwarsa"
+
+#: API: Share - Link revoked
+msgid "server.api.share.link_revoked"
+msgstr "Tautan berbagi ini telah dicabut"
+
+#: API: Share - Link expired
+msgid "server.api.share.link_expired"
+msgstr "Tautan berbagi ini telah kedaluwarsa"
+
+#: API: Share - Validation failed
+msgid "server.api.share.validation_failed"
+msgstr "Gagal memvalidasi tautan berbagi"
+
+#: API: Share - Fetch failed
+msgid "server.api.share.fetch_failed"
+msgstr "Gagal mengambil thread"
+
+#: API: Weaver - Provisioner not configured
+msgid "server.api.weaver.provisioner_not_configured"
+msgstr "Provisioner Weaver tidak dikonfigurasi"
+
+#: API: Weaver - Invalid ID
+msgid "server.api.weaver.invalid_id"
+msgstr "ID weaver tidak valid: {id}"
+
+#: API: Weaver - Not found
+msgid "server.api.weaver.not_found"
+msgstr "Weaver tidak ditemukan: {id}"
+
+#: API: Weaver - Access denied
+msgid "server.api.weaver.access_denied"
+msgstr "Anda tidak memiliki izin untuk mengakses weaver ini"
+
+#: API: Weaver - Attach denied
+msgid "server.api.weaver.attach_denied"
+msgstr "Anda tidak memiliki izin untuk terhubung ke weaver ini"
+
+#: API: Weaver - Delete denied
+msgid "server.api.weaver.delete_denied"
+msgstr "Anda tidak memiliki izin untuk menghapus weaver ini"
+
+#: API: Weaver - Read only attach
+msgid "server.api.weaver.read_only_attach"
+msgstr "Koneksi hanya-baca: input dinonaktifkan untuk pengguna dukungan"
+
+#: API: Weaver - Logs access denied
+msgid "server.api.weaver.logs_denied"
+msgstr "Anda tidak memiliki izin untuk mengakses log weaver ini"
+
+# ============================================================================
+# CLI: Update command
+# ============================================================================
+
+#: CLI: Update - Current version
+msgid "client.update.current_version"
+msgstr "Versi saat ini: {version}"
+
+#: CLI: Update - Platform
+msgid "client.update.platform"
+msgstr "Platform: {platform}"
+
+#: CLI: Update - Checking
+msgid "client.update.checking"
+msgstr "Memeriksa pembaruan..."
+
+#: CLI: Update - Already up to date
+msgid "client.update.up_to_date"
+msgstr "Sudah versi terbaru (SHA: {sha})"
+
+#: CLI: Update - Update available
+msgid "client.update.available"
+msgstr "Pembaruan tersedia: {current} -> {remote}"
+
+#: CLI: Update - Downloading
+msgid "client.update.downloading"
+msgstr "Mengunduh dari {url}..."
+
+#: CLI: Update - Downloaded
+msgid "client.update.downloaded"
+msgstr "Mengunduh {bytes} byte (terverifikasi)"
+
+#: CLI: Update - Complete
+msgid "client.update.complete"
+msgstr "Pembaruan selesai! Silakan mulai ulang loom."
+
+#: CLI: Update - Error: empty binary
+msgid "client.update.error.empty_binary"
+msgstr "Binary yang diunduh kosong"
+
+#: CLI: Update - Error: SHA mismatch
+msgid "client.update.error.sha_mismatch"
+msgstr "SHA binary yang diunduh tidak cocok: diharapkan {expected}, didapat {actual}"
+
+#: CLI: Update - Error: env not set
+msgid "client.update.error.env_not_set"
+msgstr "LOOM_UPDATE_BASE_URL atau LOOM_THREAD_SYNC_URL harus disetel untuk pembaruan"
+
+#: CLI: Update - Error: check failed
+msgid "client.update.error.check_failed"
+msgstr "Gagal memeriksa pembaruan: {status}"
+
+# ============================================================================
+# CLI: Authentication
+# ============================================================================
+
+#: CLI: Auth - Visit URL prompt
+msgid "client.auth.visit_url"
+msgstr "Kunjungi {url} dan masukkan kode: {code}"
+
+#: CLI: Auth - Browser open failed
+msgid "client.auth.browser_failed"
+msgstr "(tidak dapat membuka browser secara otomatis)"
+
+#: CLI: Auth - Waiting for authorization
+msgid "client.auth.waiting"
+msgstr "Menunggu otorisasi"
+
+#: CLI: Auth - Authorization timed out
+msgid "client.auth.timed_out"
+msgstr "Otorisasi habis waktu"
+
+#: CLI: Auth - Login cancelled
+msgid "client.auth.cancelled"
+msgstr "Masuk dibatalkan"
+
+#: CLI: Auth - Login successful
+msgid "client.auth.login_success"
+msgstr "Berhasil masuk ke {server}"
+
+#: CLI: Auth - Device code expired
+msgid "client.auth.device_expired"
+msgstr "Kode perangkat kedaluwarsa"
+
+#: CLI: Auth - Logged out
+msgid "client.auth.logged_out"
+msgstr "Keluar dari {server}"
+
+# ============================================================================
+# CLI: REPL
+# ============================================================================
+
+#: CLI: REPL - Welcome message
+msgid "client.repl.welcome"
+msgstr "Selamat datang di Loom - Asisten coding bertenaga AI"
+
+#: CLI: REPL - Thread ID
+msgid "client.repl.thread_id"
+msgstr "Thread: {id}"
+
+#: CLI: REPL - Instructions
+msgid "client.repl.instructions"
+msgstr "Ketik pesan Anda dan tekan Enter. Gunakan Ctrl+C untuk keluar."
+
+#: CLI: REPL - Interrupted
+msgid "client.repl.interrupted"
+msgstr "Terputus. Thread disimpan. Sampai jumpa!"
+
+#: CLI: REPL - Error
+msgid "client.repl.error"
+msgstr "Kesalahan: {error}"
+
+# ============================================================================
+# CLI: Search
+# ============================================================================
+
+#: CLI: Search - No results
+msgid "client.search.no_results"
+msgstr "Tidak ada hasil untuk \"{query}\""
+
+#: CLI: Search - Results header
+msgid "client.search.results_header"
+msgstr "Hasil untuk \"{query}\" ({count} ditemukan):"
+
+#: CLI: Search - Local no results
+msgid "client.search.local_no_results"
+msgstr "Tidak ada hasil untuk \"{query}\" (pencarian lokal)"
+
+#: CLI: Search - Local results header
+msgid "client.search.local_results_header"
+msgstr "Hasil lokal untuk \"{query}\" ({count} ditemukan):"
+
+# ============================================================================
+# CLI: Threads
+# ============================================================================
+
+#: CLI: Threads - No threads
+msgid "client.threads.no_threads"
+msgstr "Tidak ada thread ditemukan."
+
+#: CLI: Threads - List header
+msgid "client.threads.list_header"
+msgstr "{id:<40} {title:<40} {updated:<20}"
+
+#: CLI: Threads - Private session
+msgid "client.threads.private_session"
+msgstr "Memulai sesi privat (hanya lokal, tidak pernah disinkronkan ke server)."
+
+#: CLI: Threads - Shared with support
+msgid "client.threads.shared_support"
+msgstr "Thread {id} telah dibagikan dengan dukungan."
+
+#: CLI: Threads - Visibility changed
+msgid "client.threads.visibility_changed"
+msgstr "Visibilitas thread {id} diubah menjadi {visibility}."
+
+# ============================================================================
+# CLI: Weaver
+# ============================================================================
+
+#: CLI: Weaver - Creating
+msgid "client.weaver.creating"
+msgstr "Membuat weaver..."
+
+#: CLI: Weaver - Created ID
+msgid "client.weaver.created_id"
+msgstr "  ID:    {id}"
+
+#: CLI: Weaver - Created image
+msgid "client.weaver.created_image"
+msgstr "  Image: {image}"
+
+#: CLI: Weaver - Created TTL
+msgid "client.weaver.created_ttl"
+msgstr "  TTL:   {hours} jam"
+
+#: CLI: Weaver - Attaching
+msgid "client.weaver.attaching"
+msgstr "Menghubungkan ke weaver..."
+
+#: CLI: Weaver - Detached
+msgid "client.weaver.detached"
+msgstr "[terputus dari weaver {id}]"
+
+#: CLI: Weaver - Reattach hint
+msgid "client.weaver.reattach_hint"
+msgstr "Weaver masih berjalan. Hubungkan kembali dengan: loom attach {id}"
+
+#: CLI: Weaver - No weavers
+msgid "client.weaver.no_weavers"
+msgstr "Tidak ada weaver berjalan."
+
+#: CLI: Weaver - List header
+msgid "client.weaver.list_header"
+msgstr "{id:<40} {image:<30} {status:<10} {age:<8} {ttl:<8}"
+
+#: CLI: Weaver - Deleting
+msgid "client.weaver.deleting"
+msgstr "Menghapus weaver {id}..."
+
+#: CLI: Weaver - Deleted
+msgid "client.weaver.deleted"
+msgstr "Weaver dihapus."
+
+#: CLI: Weaver - Attach prefix
+msgid "client.weaver.attach_prefix"
+msgstr "[menghubungkan ke weaver {id}]"

@@ -11,7 +11,7 @@ use std::process::Command;
 fn main() {
 	println!("cargo:rerun-if-changed=locales/");
 
-	let locales = ["en", "es", "ar"];
+	let locales = ["en", "es", "ar", "fr", "ru", "ja", "ko", "pt", "sv", "nl", "zh-CN", "he", "it", "el", "et", "hi", "bn", "id"];
 	let out_dir = std::env::var("OUT_DIR").expect("OUT_DIR not set");
 
 	for locale in locales {

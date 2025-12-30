@@ -13,6 +13,21 @@ use crate::locale::DEFAULT_LOCALE;
 const EN_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/en.mo"));
 const ES_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/es.mo"));
 const AR_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/ar.mo"));
+const FR_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/fr.mo"));
+const RU_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/ru.mo"));
+const JA_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/ja.mo"));
+const KO_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/ko.mo"));
+const PT_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/pt.mo"));
+const SV_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/sv.mo"));
+const NL_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/nl.mo"));
+const ZH_CN_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/zh-CN.mo"));
+const HE_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/he.mo"));
+const IT_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/it.mo"));
+const EL_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/el.mo"));
+const ET_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/et.mo"));
+const HI_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/hi.mo"));
+const BN_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/bn.mo"));
+const ID_MO: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/id.mo"));
 
 static CATALOGS: Lazy<HashMap<&'static str, Catalog>> = Lazy::new(|| {
 	let mut map = HashMap::new();
@@ -33,6 +48,96 @@ static CATALOGS: Lazy<HashMap<&'static str, Catalog>> = Lazy::new(|| {
 		map.insert("ar", catalog);
 	} else {
 		tracing::warn!("Failed to parse Arabic translation catalog");
+	}
+
+	if let Ok(catalog) = Catalog::parse(FR_MO) {
+		map.insert("fr", catalog);
+	} else {
+		tracing::warn!("Failed to parse French translation catalog");
+	}
+
+	if let Ok(catalog) = Catalog::parse(RU_MO) {
+		map.insert("ru", catalog);
+	} else {
+		tracing::warn!("Failed to parse Russian translation catalog");
+	}
+
+	if let Ok(catalog) = Catalog::parse(JA_MO) {
+		map.insert("ja", catalog);
+	} else {
+		tracing::warn!("Failed to parse Japanese translation catalog");
+	}
+
+	if let Ok(catalog) = Catalog::parse(KO_MO) {
+		map.insert("ko", catalog);
+	} else {
+		tracing::warn!("Failed to parse Korean translation catalog");
+	}
+
+	if let Ok(catalog) = Catalog::parse(PT_MO) {
+		map.insert("pt", catalog);
+	} else {
+		tracing::warn!("Failed to parse Portuguese translation catalog");
+	}
+
+	if let Ok(catalog) = Catalog::parse(SV_MO) {
+		map.insert("sv", catalog);
+	} else {
+		tracing::warn!("Failed to parse Swedish translation catalog");
+	}
+
+	if let Ok(catalog) = Catalog::parse(NL_MO) {
+		map.insert("nl", catalog);
+	} else {
+		tracing::warn!("Failed to parse Dutch translation catalog");
+	}
+
+	if let Ok(catalog) = Catalog::parse(ZH_CN_MO) {
+		map.insert("zh-CN", catalog);
+	} else {
+		tracing::warn!("Failed to parse Simplified Chinese translation catalog");
+	}
+
+	if let Ok(catalog) = Catalog::parse(HE_MO) {
+		map.insert("he", catalog);
+	} else {
+		tracing::warn!("Failed to parse Hebrew translation catalog");
+	}
+
+	if let Ok(catalog) = Catalog::parse(IT_MO) {
+		map.insert("it", catalog);
+	} else {
+		tracing::warn!("Failed to parse Italian translation catalog");
+	}
+
+	if let Ok(catalog) = Catalog::parse(EL_MO) {
+		map.insert("el", catalog);
+	} else {
+		tracing::warn!("Failed to parse Greek translation catalog");
+	}
+
+	if let Ok(catalog) = Catalog::parse(ET_MO) {
+		map.insert("et", catalog);
+	} else {
+		tracing::warn!("Failed to parse Estonian translation catalog");
+	}
+
+	if let Ok(catalog) = Catalog::parse(HI_MO) {
+		map.insert("hi", catalog);
+	} else {
+		tracing::warn!("Failed to parse Hindi translation catalog");
+	}
+
+	if let Ok(catalog) = Catalog::parse(BN_MO) {
+		map.insert("bn", catalog);
+	} else {
+		tracing::warn!("Failed to parse Bengali translation catalog");
+	}
+
+	if let Ok(catalog) = Catalog::parse(ID_MO) {
+		map.insert("id", catalog);
+	} else {
+		tracing::warn!("Failed to parse Indonesian translation catalog");
 	}
 
 	map

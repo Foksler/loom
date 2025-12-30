@@ -1,0 +1,921 @@
+# Loom Server Translations - French
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>
+# SPDX-License-Identifier: Proprietary
+#
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fr\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: Email: Magic Link - Subject
+msgid "server.email.magic_link.subject"
+msgstr "Connexion à Loom"
+
+#: Email: Magic Link - Body intro
+msgid "server.email.magic_link.body"
+msgstr "Cliquez sur le lien ci-dessous pour vous connecter à votre compte Loom."
+
+#: Email: Magic Link - Expiry notice
+msgid "server.email.magic_link.expires"
+msgstr "Ce lien expire dans {minutes} minutes."
+
+#: Email: Magic Link - Ignore notice
+msgid "server.email.magic_link.ignore"
+msgstr "Si vous n'avez pas demandé cet e-mail, vous pouvez l'ignorer en toute sécurité."
+
+#: Email: Magic Link - Copy link instruction
+msgid "server.email.magic_link.copy_link"
+msgstr "Ou copiez et collez ce lien :"
+
+#: Email: Org Invitation - Subject
+msgid "server.email.invitation.subject"
+msgstr "Vous avez été invité à rejoindre {org_name} sur Loom"
+
+#: Email: Org Invitation - Body
+msgid "server.email.invitation.body"
+msgstr "{inviter_name} vous a invité à rejoindre l'organisation « {org_name} » sur Loom."
+
+#: Email: Org Invitation - Action instruction
+msgid "server.email.invitation.action"
+msgstr "Cliquez sur le lien ci-dessous pour accepter l'invitation :"
+
+#: Email: Org Invitation - No expiry notice
+msgid "server.email.invitation.no_expiry"
+msgstr "Cette invitation n'expire pas, mais peut être révoquée par l'administrateur de l'organisation."
+
+#: Email: Security Alert - Subject
+msgid "server.email.security_alert.subject"
+msgstr "Alerte de sécurité Loom : {event}"
+
+#: Email: Security Alert - Body intro
+msgid "server.email.security_alert.body"
+msgstr "Un événement de sécurité s'est produit sur votre compte Loom."
+
+#: Email: Security Alert - Event label
+msgid "server.email.security_alert.event"
+msgstr "Événement : {event}"
+
+#: Email: Security Alert - Details label
+msgid "server.email.security_alert.details"
+msgstr "Détails :"
+
+#: Email: Security Alert - Action instruction
+msgid "server.email.security_alert.action"
+msgstr "Si ce n'était pas vous, veuillez vérifier immédiatement les paramètres de sécurité de votre compte."
+
+#: Email: Deletion Warning - Subject
+msgid "server.email.deletion_warning.subject"
+msgstr "Votre compte Loom est programmé pour être supprimé"
+
+#: Email: Deletion Warning - Body
+msgid "server.email.deletion_warning.body"
+msgstr "Votre compte Loom est programmé pour être supprimé définitivement dans {days} jours."
+
+#: Email: Deletion Warning - Restore instruction
+msgid "server.email.deletion_warning.restore"
+msgstr "Si vous n'avez pas demandé cette suppression, ou si vous avez changé d'avis, vous pouvez restaurer votre compte en vous connectant avant la date de suppression."
+
+#: Email: Deletion Warning - Permanent notice
+msgid "server.email.deletion_warning.permanent"
+msgstr "Après la suppression définitive, vos données ne pourront pas être récupérées."
+
+#: Email: Deletion Scheduled - Subject
+msgid "server.email.deletion_scheduled.subject"
+msgstr "Suppression du compte programmée"
+
+#: Email: Deletion Scheduled - Body
+msgid "server.email.deletion_scheduled.body"
+msgstr "Votre compte a été programmé pour être supprimé."
+
+#: Email: Deletion Scheduled - Grace period notice
+msgid "server.email.deletion_scheduled.grace"
+msgstr "Vous avez {days} jours pour restaurer votre compte en vous connectant et en annulant la suppression."
+
+#: Email: Deletion Scheduled - Permanent notice
+msgid "server.email.deletion_scheduled.permanent"
+msgstr "Après le délai de grâce, votre compte et toutes les données associées seront supprimés définitivement."
+
+#: API: Auth - Check email response
+msgid "server.api.auth.check_email"
+msgstr "Vérifiez votre e-mail pour un lien de connexion"
+
+#: API: Auth - Logged out response
+msgid "server.api.auth.logged_out"
+msgstr "Déconnexion réussie"
+
+#: API: Error - Internal error
+msgid "server.api.error.internal"
+msgstr "Une erreur interne s'est produite"
+
+#: API: Error - Not found
+msgid "server.api.error.not_found"
+msgstr "Ressource introuvable"
+
+#: API: Error - Unauthorized
+msgid "server.api.error.unauthorized"
+msgstr "Authentification requise"
+
+#: API: Error - Forbidden
+msgid "server.api.error.forbidden"
+msgstr "Accès refusé"
+
+#: API: Error - Bad request
+msgid "server.api.error.bad_request"
+msgstr "Requête invalide"
+
+#: API: Error - Conflict
+msgid "server.api.error.conflict"
+msgstr "Conflit de ressource"
+
+#: API: Error - Gone
+msgid "server.api.error.gone"
+msgstr "Ressource plus disponible"
+
+#: API: Error - Not configured
+msgid "server.api.error.not_configured"
+msgstr "Fonctionnalité non configurée"
+
+# ============================================================================
+# Auth API responses
+# ============================================================================
+
+#: API: Auth - Invalid email
+msgid "server.api.auth.invalid_email"
+msgstr "Veuillez fournir une adresse e-mail valide"
+
+#: API: Auth - Device code authorized
+msgid "server.api.auth.device_authorized"
+msgstr "Appareil autorisé avec succès"
+
+#: API: Auth - Invalid device code
+msgid "server.api.auth.invalid_device_code"
+msgstr "Code d'appareil invalide ou expiré"
+
+#: API: Auth - Invalid user code
+msgid "server.api.auth.invalid_user_code"
+msgstr "Code utilisateur invalide ou expiré"
+
+#: API: Auth - OAuth not configured
+msgid "server.api.auth.oauth_not_configured"
+msgstr "OAuth {provider} non configuré"
+
+#: API: Auth - Magic link sent (always shown to prevent enumeration)
+msgid "server.api.auth.magic_link_sent"
+msgstr "Si un compte existe avec cet e-mail, un lien magique a été envoyé"
+
+#: API: Auth - Email not verified (Google/Okta)
+msgid "server.api.auth.email_not_verified"
+msgstr "L'adresse e-mail n'a pas été vérifiée par le fournisseur"
+
+#: API: Auth - No verified email (GitHub)
+msgid "server.api.auth.no_verified_email"
+msgstr "Aucune adresse e-mail vérifiée trouvée. Veuillez vérifier votre e-mail avec GitHub et réessayer."
+
+# ============================================================================
+# User API responses
+# ============================================================================
+
+#: API: User - Not found
+msgid "server.api.user.not_found"
+msgstr "Utilisateur introuvable"
+
+#: API: User - Invalid ID
+msgid "server.api.user.invalid_id"
+msgstr "Format d'identifiant utilisateur invalide"
+
+#: API: User - Display name empty
+msgid "server.api.user.display_name_empty"
+msgstr "Le nom d'affichage ne peut pas être vide"
+
+#: API: User - Profile updated
+msgid "server.api.user.profile_updated"
+msgstr "Profil mis à jour avec succès"
+
+#: API: User - Deletion scheduled
+msgid "server.api.user.deletion_scheduled"
+msgstr "Suppression du compte programmée"
+
+#: API: User - Deletion already scheduled
+msgid "server.api.user.deletion_already_scheduled"
+msgstr "La suppression du compte est déjà programmée"
+
+#: API: User - Deletion failed
+msgid "server.api.user.deletion_failed"
+msgstr "Échec de la programmation de la suppression du compte"
+
+#: API: User - No pending deletion
+msgid "server.api.user.no_pending_deletion"
+msgstr "Aucune suppression en attente pour ce compte"
+
+#: API: User - Grace period expired
+msgid "server.api.user.grace_period_expired"
+msgstr "Le délai de grâce a expiré, le compte ne peut pas être restauré"
+
+#: API: User - Account restored
+msgid "server.api.user.account_restored"
+msgstr "Compte restauré avec succès"
+
+#: API: User - Identity unlinked
+msgid "server.api.user.identity_unlinked"
+msgstr "Identité dissociée avec succès"
+
+#: API: User - Identity not found
+msgid "server.api.user.identity_not_found"
+msgstr "Identité introuvable"
+
+#: API: User - Cannot unlink last identity
+msgid "server.api.user.cannot_unlink_last_identity"
+msgstr "Impossible de dissocier la dernière identité"
+
+# ============================================================================
+# Organization API responses
+# ============================================================================
+
+#: API: Org - Not found
+msgid "server.api.org.not_found"
+msgstr "Organisation introuvable"
+
+#: API: Org - Invalid ID
+msgid "server.api.org.invalid_id"
+msgstr "Identifiant d'organisation invalide"
+
+#: API: Org - Invalid slug length
+msgid "server.api.org.invalid_slug_length"
+msgstr "Le slug doit contenir entre 3 et 50 caractères"
+
+#: API: Org - Invalid slug format
+msgid "server.api.org.invalid_slug_format"
+msgstr "Le slug ne doit contenir que des caractères alphanumériques minuscules et des tirets"
+
+#: API: Org - Slug exists
+msgid "server.api.org.slug_exists"
+msgstr "Une organisation avec ce slug existe déjà"
+
+#: API: Org - Invalid role
+msgid "server.api.org.invalid_role"
+msgstr "Le rôle doit être l'un des suivants : owner, admin, member"
+
+#: API: Org - List failed
+msgid "server.api.org.list_failed"
+msgstr "Échec de la liste des organisations"
+
+#: API: Org - Create failed
+msgid "server.api.org.create_failed"
+msgstr "Échec de la création de l'organisation"
+
+#: API: Org - Not a member
+msgid "server.api.org.not_a_member"
+msgstr "Vous n'êtes pas membre de cette organisation"
+
+#: API: Org - Already a member
+msgid "server.api.org.already_member"
+msgstr "L'utilisateur est déjà membre de cette organisation"
+
+#: API: Org - Member added
+msgid "server.api.org.member_added"
+msgstr "Membre ajouté à l'organisation"
+
+#: API: Org - Member removed
+msgid "server.api.org.member_removed"
+msgstr "Membre retiré de l'organisation"
+
+#: API: Org - Member not found
+msgid "server.api.org.member_not_found"
+msgstr "Membre introuvable dans cette organisation"
+
+#: API: Org - Last owner
+msgid "server.api.org.last_owner"
+msgstr "Impossible de retirer ou de rétrograder le dernier propriétaire"
+
+#: API: Org - Cannot delete personal org
+msgid "server.api.org.cannot_delete_personal"
+msgstr "Impossible de supprimer l'organisation personnelle"
+
+#: API: Org - Deleted
+msgid "server.api.org.deleted"
+msgstr "Organisation supprimée"
+
+#: API: Org - Restored
+msgid "server.api.org.restored"
+msgstr "Organisation restaurée"
+
+#: API: Org - Not deleted
+msgid "server.api.org.not_deleted"
+msgstr "L'organisation n'est pas supprimée"
+
+#: API: Org - Grace period expired
+msgid "server.api.org.grace_period_expired"
+msgstr "Le délai de grâce a expiré et cette organisation ne peut pas être restaurée"
+
+#: API: Org - Owner required
+msgid "server.api.org.owner_required"
+msgstr "Seuls les propriétaires peuvent effectuer cette action"
+
+#: API: Org - Role updated
+msgid "server.api.org.role_updated"
+msgstr "Rôle du membre mis à jour"
+
+#: API: Org - Join request for private org
+msgid "server.api.org.join_request_private"
+msgstr "Impossible de demander à rejoindre une organisation privée"
+
+#: API: Org - Join request pending
+msgid "server.api.org.join_request_pending"
+msgstr "Vous avez déjà une demande d'adhésion en attente pour cette organisation"
+
+#: API: Org - Join request created
+msgid "server.api.org.join_request_created"
+msgstr "Demande d'adhésion soumise"
+
+#: API: Org - Join request not found
+msgid "server.api.org.join_request_not_found"
+msgstr "Demande d'adhésion introuvable"
+
+#: API: Org - Join request approved
+msgid "server.api.org.join_request_approved"
+msgstr "Demande d'adhésion approuvée"
+
+#: API: Org - Join request rejected
+msgid "server.api.org.join_request_rejected"
+msgstr "Demande d'adhésion rejetée"
+
+# ============================================================================
+# Team API responses
+# ============================================================================
+
+#: API: Team - Not found
+msgid "server.api.team.not_found"
+msgstr "Équipe introuvable"
+
+#: API: Team - Invalid ID
+msgid "server.api.team.invalid_id"
+msgstr "Identifiant d'équipe invalide"
+
+#: API: Team - Invalid slug length
+msgid "server.api.team.invalid_slug_length"
+msgstr "Le slug doit contenir entre 2 et 50 caractères"
+
+#: API: Team - Invalid slug format
+msgid "server.api.team.invalid_slug_format"
+msgstr "Le slug ne doit contenir que des caractères alphanumériques minuscules et des tirets"
+
+#: API: Team - List failed
+msgid "server.api.team.list_failed"
+msgstr "Échec de la liste des équipes"
+
+#: API: Team - Membership check failed
+msgid "server.api.team.membership_check_failed"
+msgstr "Échec de la vérification de l'appartenance à l'organisation"
+
+# ============================================================================
+# Invitation API responses
+# ============================================================================
+
+#: API: Invitation - Created
+msgid "server.api.invitation.created"
+msgstr "Invitation envoyée avec succès"
+
+#: API: Invitation - Cancelled
+msgid "server.api.invitation.cancelled"
+msgstr "Invitation annulée"
+
+#: API: Invitation - Accepted
+msgid "server.api.invitation.accepted"
+msgstr "Invitation acceptée"
+
+#: API: Invitation - Not found
+msgid "server.api.invitation.not_found"
+msgstr "Invitation introuvable"
+
+#: API: Invitation - Expired
+msgid "server.api.invitation.expired"
+msgstr "Cette invitation a expiré"
+
+#: API: Invitation - Invalid token
+msgid "server.api.invitation.invalid_token"
+msgstr "Jeton d'invitation invalide"
+
+#: API: Invitation - Already accepted
+msgid "server.api.invitation.already_accepted"
+msgstr "Cette invitation a déjà été acceptée"
+
+#: API: Invitation - List failed
+msgid "server.api.invitation.list_failed"
+msgstr "Échec de la liste des invitations"
+
+# ============================================================================
+# Join request API responses
+# ============================================================================
+
+#: API: Join request - Created
+msgid "server.api.join_request.created"
+msgstr "Demande d'adhésion soumise"
+
+#: API: Join request - Approved
+msgid "server.api.join_request.approved"
+msgstr "Demande d'adhésion approuvée"
+
+#: API: Join request - Rejected
+msgid "server.api.join_request.rejected"
+msgstr "Demande d'adhésion rejetée"
+
+#: API: Join request - Already member
+msgid "server.api.join_request.already_member"
+msgstr "Vous êtes déjà membre de cette organisation"
+
+#: API: Join request - Already pending
+msgid "server.api.join_request.already_pending"
+msgstr "Vous avez déjà une demande d'adhésion en attente"
+
+#: API: Join request - Not found
+msgid "server.api.join_request.not_found"
+msgstr "Demande d'adhésion introuvable"
+
+#: API: Join request - Private org
+msgid "server.api.join_request.private_org"
+msgstr "Impossible de demander à rejoindre une organisation privée"
+
+# ============================================================================
+# API Key responses
+# ============================================================================
+
+#: API: API Key - Invalid org ID
+msgid "server.api.api_key.invalid_org_id"
+msgstr "Format d'identifiant d'organisation invalide"
+
+#: API: API Key - Name empty
+msgid "server.api.api_key.name_empty"
+msgstr "Le nom de la clé API ne peut pas être vide"
+
+#: API: API Key - No scopes
+msgid "server.api.api_key.no_scopes"
+msgstr "Au moins une portée doit être spécifiée"
+
+#: API: API Key - Created
+msgid "server.api.api_key.created"
+msgstr "Clé API créée"
+
+#: API: API Key - Revoked
+msgid "server.api.api_key.revoked"
+msgstr "Clé API révoquée"
+
+#: API: API Key - Not found
+msgid "server.api.api_key.not_found"
+msgstr "Clé API introuvable"
+
+#: API: API Key - List failed
+msgid "server.api.api_key.list_failed"
+msgstr "Échec de la liste des clés API"
+
+#: API: API Key - Create failed
+msgid "server.api.api_key.create_failed"
+msgstr "Échec de la création de la clé API"
+
+# ============================================================================
+# Session API responses
+# ============================================================================
+
+#: API: Session - Invalid ID
+msgid "server.api.session.invalid_id"
+msgstr "Format d'identifiant de session invalide"
+
+#: API: Session - Not found
+msgid "server.api.session.not_found"
+msgstr "Session introuvable"
+
+#: API: Session - Revoked
+msgid "server.api.session.revoked"
+msgstr "Session révoquée avec succès"
+
+#: API: Session - List failed
+msgid "server.api.session.list_failed"
+msgstr "Échec de la récupération des sessions"
+
+#: API: Session - Revoke failed
+msgid "server.api.session.revoke_failed"
+msgstr "Échec de la révocation de la session"
+
+#: API: Session - Ownership check failed
+msgid "server.api.session.ownership_check_failed"
+msgstr "Échec de la vérification de la propriété de la session"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - System admin required
+msgid "server.api.admin.system_admin_required"
+msgstr "Rôle d'administrateur système requis"
+
+#: API: Admin - Cannot remove own admin
+msgid "server.api.admin.cannot_remove_own_admin"
+msgstr "Impossible de supprimer votre propre statut d'administrateur"
+
+#: API: Admin - User list failed
+msgid "server.api.admin.user_list_failed"
+msgstr "Échec de la liste des utilisateurs"
+
+#: API: Admin - User update failed
+msgid "server.api.admin.user_update_failed"
+msgstr "Échec de la mise à jour de l'utilisateur"
+
+#: API: Admin - Roles updated
+msgid "server.api.admin.roles_updated"
+msgstr "Rôles de l'utilisateur mis à jour"
+
+#: Auth: Device Page - Title
+msgid "server.auth.device.title"
+msgstr "Autorisation de l'appareil - Loom"
+
+#: Auth: Device Page - Heading
+msgid "server.auth.device.heading"
+msgstr "Autorisation de l'appareil"
+
+#: Auth: Device Page - Subtitle
+msgid "server.auth.device.subtitle"
+msgstr "Entrez le code affiché dans votre terminal"
+
+#: Auth: Device Page - Code label
+msgid "server.auth.device.code_label"
+msgstr "Code d'autorisation"
+
+#: Auth: Device Page - Submit button
+msgid "server.auth.device.submit"
+msgstr "Autoriser l'appareil"
+
+#: Auth: Device Page - Authorizing button
+msgid "server.auth.device.authorizing"
+msgstr "Autorisation en cours..."
+
+#: Auth: Device Page - Authorized button
+msgid "server.auth.device.authorized"
+msgstr "Autorisé"
+
+#: Auth: Device Page - Expiry help text
+msgid "server.auth.device.expiry_help"
+msgstr "Ce code expire après 15 minutes."
+
+#: Auth: Device Page - Success message
+msgid "server.auth.device.success"
+msgstr "Appareil autorisé avec succès ! Vous pouvez fermer cette fenêtre."
+
+#: Auth: Device Page - Invalid code format
+msgid "server.auth.device.invalid_format"
+msgstr "Veuillez entrer un code valide au format XXX-XXX-XXX"
+
+#: Auth: Device Page - Generic error
+msgid "server.auth.device.error"
+msgstr "Une erreur s'est produite. Veuillez réessayer."
+
+#: Auth: Device Page - Authorization failed
+msgid "server.auth.device.auth_failed"
+msgstr "Échec de l'autorisation. Veuillez réessayer."
+
+# ============================================================================
+# Support Access API responses
+# ============================================================================
+
+#: API: Support Access - Not support staff
+msgid "server.api.support_access.not_support_staff"
+msgstr "Seul le personnel de support peut demander l'accès support"
+
+#: API: Support Access - Thread not found
+msgid "server.api.support_access.thread_not_found"
+msgstr "Fil introuvable"
+
+#: API: Support Access - Already requested
+msgid "server.api.support_access.already_requested"
+msgstr "L'accès support a déjà été demandé pour ce fil"
+
+#: API: Support Access - Already active
+msgid "server.api.support_access.already_active"
+msgstr "L'accès support est déjà actif pour ce fil"
+
+#: API: Support Access - Requested
+msgid "server.api.support_access.requested"
+msgstr "Accès support demandé"
+
+#: API: Support Access - Request failed
+msgid "server.api.support_access.request_failed"
+msgstr "Échec de la demande d'accès support"
+
+#: API: Support Access - Not owner
+msgid "server.api.support_access.not_owner"
+msgstr "Seul le propriétaire du fil peut approuver ou révoquer l'accès support"
+
+#: API: Support Access - No pending request
+msgid "server.api.support_access.no_pending_request"
+msgstr "Aucune demande d'accès support en attente trouvée pour ce fil"
+
+#: API: Support Access - Approved
+msgid "server.api.support_access.approved"
+msgstr "Accès support approuvé"
+
+#: API: Support Access - Approve failed
+msgid "server.api.support_access.approve_failed"
+msgstr "Échec de l'approbation de l'accès support"
+
+#: API: Support Access - No active access
+msgid "server.api.support_access.no_active_access"
+msgstr "Aucun accès support actif trouvé pour ce fil"
+
+#: API: Support Access - Revoked
+msgid "server.api.support_access.revoked"
+msgstr "Accès support révoqué"
+
+#: API: Support Access - Revoke failed
+msgid "server.api.support_access.revoke_failed"
+msgstr "Échec de la révocation de l'accès support"
+
+# ============================================================================
+# Share Link API responses
+# ============================================================================
+
+#: API: Share - Invalid thread ID
+msgid "server.api.share.invalid_thread_id"
+msgstr "Format d'identifiant de fil invalide"
+
+#: API: Share - Thread not found
+msgid "server.api.share.thread_not_found"
+msgstr "Fil introuvable"
+
+#: API: Share - Invalid expires_at
+msgid "server.api.share.invalid_expires_at"
+msgstr "Format de date d'expiration invalide. Utilisez le format RFC 3339."
+
+#: API: Share - Create failed
+msgid "server.api.share.create_failed"
+msgstr "Échec de la création du lien de partage"
+
+#: API: Share - Link not found
+msgid "server.api.share.link_not_found"
+msgstr "Aucun lien de partage actif trouvé pour ce fil"
+
+#: API: Share - Revoked
+msgid "server.api.share.revoked"
+msgstr "Lien de partage révoqué"
+
+#: API: Share - Revoke failed
+msgid "server.api.share.revoke_failed"
+msgstr "Échec de la révocation du lien de partage"
+
+#: API: Share - Invalid or expired link
+msgid "server.api.share.invalid_or_expired"
+msgstr "Lien de partage invalide ou expiré"
+
+#: API: Share - Link revoked
+msgid "server.api.share.link_revoked"
+msgstr "Ce lien de partage a été révoqué"
+
+#: API: Share - Link expired
+msgid "server.api.share.link_expired"
+msgstr "Ce lien de partage a expiré"
+
+#: API: Share - Validation failed
+msgid "server.api.share.validation_failed"
+msgstr "Échec de la validation du lien de partage"
+
+#: API: Share - Fetch failed
+msgid "server.api.share.fetch_failed"
+msgstr "Échec de la récupération du fil"
+
+#: API: Weaver - Provisioner not configured
+msgid "server.api.weaver.provisioner_not_configured"
+msgstr "Provisionneur Weaver non configuré"
+
+#: API: Weaver - Invalid ID
+msgid "server.api.weaver.invalid_id"
+msgstr "Identifiant Weaver invalide : {id}"
+
+#: API: Weaver - Not found
+msgid "server.api.weaver.not_found"
+msgstr "Weaver introuvable : {id}"
+
+#: API: Weaver - Access denied
+msgid "server.api.weaver.access_denied"
+msgstr "Vous n'avez pas la permission d'accéder à ce Weaver"
+
+#: API: Weaver - Attach denied
+msgid "server.api.weaver.attach_denied"
+msgstr "Vous n'avez pas la permission de vous attacher à ce Weaver"
+
+#: API: Weaver - Delete denied
+msgid "server.api.weaver.delete_denied"
+msgstr "Vous n'avez pas la permission de supprimer ce Weaver"
+
+#: API: Weaver - Read only attach
+msgid "server.api.weaver.read_only_attach"
+msgstr "Attachement en lecture seule : la saisie est désactivée pour les utilisateurs du support"
+
+#: API: Weaver - Logs access denied
+msgid "server.api.weaver.logs_denied"
+msgstr "Vous n'avez pas la permission d'accéder aux journaux de ce Weaver"
+
+# ============================================================================
+# CLI: Update command
+# ============================================================================
+
+#: CLI: Update - Current version
+msgid "client.update.current_version"
+msgstr "Version actuelle : {version}"
+
+#: CLI: Update - Platform
+msgid "client.update.platform"
+msgstr "Plateforme : {platform}"
+
+#: CLI: Update - Checking
+msgid "client.update.checking"
+msgstr "Vérification des mises à jour..."
+
+#: CLI: Update - Already up to date
+msgid "client.update.up_to_date"
+msgstr "Déjà à jour (SHA : {sha})"
+
+#: CLI: Update - Update available
+msgid "client.update.available"
+msgstr "Mise à jour disponible : {current} -> {remote}"
+
+#: CLI: Update - Downloading
+msgid "client.update.downloading"
+msgstr "Téléchargement depuis {url}..."
+
+#: CLI: Update - Downloaded
+msgid "client.update.downloaded"
+msgstr "{bytes} octets téléchargés (vérifiés)"
+
+#: CLI: Update - Complete
+msgid "client.update.complete"
+msgstr "Mise à jour terminée ! Veuillez redémarrer loom."
+
+#: CLI: Update - Error: empty binary
+msgid "client.update.error.empty_binary"
+msgstr "Le binaire téléchargé est vide"
+
+#: CLI: Update - Error: SHA mismatch
+msgid "client.update.error.sha_mismatch"
+msgstr "Incohérence SHA du binaire téléchargé : attendu {expected}, obtenu {actual}"
+
+#: CLI: Update - Error: env not set
+msgid "client.update.error.env_not_set"
+msgstr "LOOM_UPDATE_BASE_URL ou LOOM_THREAD_SYNC_URL doit être défini pour les mises à jour"
+
+#: CLI: Update - Error: check failed
+msgid "client.update.error.check_failed"
+msgstr "Échec de la vérification des mises à jour : {status}"
+
+# ============================================================================
+# CLI: Authentication
+# ============================================================================
+
+#: CLI: Auth - Visit URL prompt
+msgid "client.auth.visit_url"
+msgstr "Visitez {url} et entrez le code : {code}"
+
+#: CLI: Auth - Browser open failed
+msgid "client.auth.browser_failed"
+msgstr "(impossible d'ouvrir le navigateur automatiquement)"
+
+#: CLI: Auth - Waiting for authorization
+msgid "client.auth.waiting"
+msgstr "En attente de l'autorisation"
+
+#: CLI: Auth - Authorization timed out
+msgid "client.auth.timed_out"
+msgstr "Délai d'autorisation dépassé"
+
+#: CLI: Auth - Login cancelled
+msgid "client.auth.cancelled"
+msgstr "Connexion annulée"
+
+#: CLI: Auth - Login successful
+msgid "client.auth.login_success"
+msgstr "Connexion réussie à {server}"
+
+#: CLI: Auth - Device code expired
+msgid "client.auth.device_expired"
+msgstr "Code d'appareil expiré"
+
+#: CLI: Auth - Logged out
+msgid "client.auth.logged_out"
+msgstr "Déconnecté de {server}"
+
+# ============================================================================
+# CLI: REPL
+# ============================================================================
+
+#: CLI: REPL - Welcome message
+msgid "client.repl.welcome"
+msgstr "Bienvenue sur Loom - Assistant de programmation propulsé par l'IA"
+
+#: CLI: REPL - Thread ID
+msgid "client.repl.thread_id"
+msgstr "Fil : {id}"
+
+#: CLI: REPL - Instructions
+msgid "client.repl.instructions"
+msgstr "Tapez votre message et appuyez sur Entrée. Utilisez Ctrl+C pour quitter."
+
+#: CLI: REPL - Interrupted
+msgid "client.repl.interrupted"
+msgstr "Interrompu. Fil sauvegardé. Au revoir !"
+
+#: CLI: REPL - Error
+msgid "client.repl.error"
+msgstr "Erreur : {error}"
+
+# ============================================================================
+# CLI: Search
+# ============================================================================
+
+#: CLI: Search - No results
+msgid "client.search.no_results"
+msgstr "Aucun résultat trouvé pour « {query} »"
+
+#: CLI: Search - Results header
+msgid "client.search.results_header"
+msgstr "Résultats pour « {query} » ({count} correspondances) :"
+
+#: CLI: Search - Local no results
+msgid "client.search.local_no_results"
+msgstr "Aucun résultat trouvé pour « {query} » (recherche locale)"
+
+#: CLI: Search - Local results header
+msgid "client.search.local_results_header"
+msgstr "Résultats locaux pour « {query} » ({count} correspondances) :"
+
+# ============================================================================
+# CLI: Threads
+# ============================================================================
+
+#: CLI: Threads - No threads
+msgid "client.threads.no_threads"
+msgstr "Aucun fil trouvé."
+
+#: CLI: Threads - List header
+msgid "client.threads.list_header"
+msgstr "{id:<40} {title:<40} {updated:<20}"
+
+#: CLI: Threads - Private session
+msgid "client.threads.private_session"
+msgstr "Démarrage d'une session privée (locale uniquement, jamais synchronisée avec le serveur)."
+
+#: CLI: Threads - Shared with support
+msgid "client.threads.shared_support"
+msgstr "Le fil {id} a été partagé avec le support."
+
+#: CLI: Threads - Visibility changed
+msgid "client.threads.visibility_changed"
+msgstr "La visibilité du fil {id} a été changée en {visibility}."
+
+# ============================================================================
+# CLI: Weaver
+# ============================================================================
+
+#: CLI: Weaver - Creating
+msgid "client.weaver.creating"
+msgstr "Création du Weaver..."
+
+#: CLI: Weaver - Created ID
+msgid "client.weaver.created_id"
+msgstr "  ID :    {id}"
+
+#: CLI: Weaver - Created image
+msgid "client.weaver.created_image"
+msgstr "  Image : {image}"
+
+#: CLI: Weaver - Created TTL
+msgid "client.weaver.created_ttl"
+msgstr "  TTL :   {hours} heures"
+
+#: CLI: Weaver - Attaching
+msgid "client.weaver.attaching"
+msgstr "Attachement au Weaver..."
+
+#: CLI: Weaver - Detached
+msgid "client.weaver.detached"
+msgstr "[détaché du Weaver {id}]"
+
+#: CLI: Weaver - Reattach hint
+msgid "client.weaver.reattach_hint"
+msgstr "Weaver toujours en cours d'exécution. Réattachez avec : loom attach {id}"
+
+#: CLI: Weaver - No weavers
+msgid "client.weaver.no_weavers"
+msgstr "Aucun Weaver en cours d'exécution."
+
+#: CLI: Weaver - List header
+msgid "client.weaver.list_header"
+msgstr "{id:<40} {image:<30} {status:<10} {age:<8} {ttl:<8}"
+
+#: CLI: Weaver - Deleting
+msgid "client.weaver.deleting"
+msgstr "Suppression du Weaver {id}..."
+
+#: CLI: Weaver - Deleted
+msgid "client.weaver.deleted"
+msgstr "Weaver supprimé."
+
+#: CLI: Weaver - Attach prefix
+msgid "client.weaver.attach_prefix"
+msgstr "[attachement au Weaver {id}]"

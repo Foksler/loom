@@ -1,0 +1,921 @@
+# Loom Server Translations - Swedish
+# Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>
+# SPDX-License-Identifier: Proprietary
+#
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: sv\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: Email: Magic Link - Subject
+msgid "server.email.magic_link.subject"
+msgstr "Logga in på Loom"
+
+#: Email: Magic Link - Body intro
+msgid "server.email.magic_link.body"
+msgstr "Klicka på länken nedan för att logga in på ditt Loom-konto."
+
+#: Email: Magic Link - Expiry notice
+msgid "server.email.magic_link.expires"
+msgstr "Denna länk går ut om {minutes} minuter."
+
+#: Email: Magic Link - Ignore notice
+msgid "server.email.magic_link.ignore"
+msgstr "Om du inte begärde denna e-post kan du lugnt ignorera den."
+
+#: Email: Magic Link - Copy link instruction
+msgid "server.email.magic_link.copy_link"
+msgstr "Eller kopiera och klistra in denna länk:"
+
+#: Email: Org Invitation - Subject
+msgid "server.email.invitation.subject"
+msgstr "Du har blivit inbjuden att gå med i {org_name} på Loom"
+
+#: Email: Org Invitation - Body
+msgid "server.email.invitation.body"
+msgstr "{inviter_name} har bjudit in dig att gå med i organisationen \"{org_name}\" på Loom."
+
+#: Email: Org Invitation - Action instruction
+msgid "server.email.invitation.action"
+msgstr "Klicka på länken nedan för att acceptera inbjudan:"
+
+#: Email: Org Invitation - No expiry notice
+msgid "server.email.invitation.no_expiry"
+msgstr "Denna inbjudan går inte ut, men kan återkallas av organisationsadministratören."
+
+#: Email: Security Alert - Subject
+msgid "server.email.security_alert.subject"
+msgstr "Loom säkerhetsvarning: {event}"
+
+#: Email: Security Alert - Body intro
+msgid "server.email.security_alert.body"
+msgstr "En säkerhetshändelse inträffade på ditt Loom-konto."
+
+#: Email: Security Alert - Event label
+msgid "server.email.security_alert.event"
+msgstr "Händelse: {event}"
+
+#: Email: Security Alert - Details label
+msgid "server.email.security_alert.details"
+msgstr "Detaljer:"
+
+#: Email: Security Alert - Action instruction
+msgid "server.email.security_alert.action"
+msgstr "Om det inte var du, granska dina kontosäkerhetsinställningar omedelbart."
+
+#: Email: Deletion Warning - Subject
+msgid "server.email.deletion_warning.subject"
+msgstr "Ditt Loom-konto är schemalagt för radering"
+
+#: Email: Deletion Warning - Body
+msgid "server.email.deletion_warning.body"
+msgstr "Ditt Loom-konto är schemalagt för permanent radering om {days} dagar."
+
+#: Email: Deletion Warning - Restore instruction
+msgid "server.email.deletion_warning.restore"
+msgstr "Om du inte begärde denna radering, eller om du har ändrat dig, kan du återställa ditt konto genom att logga in före raderingsdatumet."
+
+#: Email: Deletion Warning - Permanent notice
+msgid "server.email.deletion_warning.permanent"
+msgstr "Efter permanent radering kan din data inte återställas."
+
+#: Email: Deletion Scheduled - Subject
+msgid "server.email.deletion_scheduled.subject"
+msgstr "Kontoradering schemalagd"
+
+#: Email: Deletion Scheduled - Body
+msgid "server.email.deletion_scheduled.body"
+msgstr "Ditt konto har schemalagts för radering."
+
+#: Email: Deletion Scheduled - Grace period notice
+msgid "server.email.deletion_scheduled.grace"
+msgstr "Du har {days} dagar på dig att återställa ditt konto genom att logga in och avbryta raderingen."
+
+#: Email: Deletion Scheduled - Permanent notice
+msgid "server.email.deletion_scheduled.permanent"
+msgstr "Efter respitperioden kommer ditt konto och all tillhörande data att raderas permanent."
+
+#: API: Auth - Check email response
+msgid "server.api.auth.check_email"
+msgstr "Kontrollera din e-post för en inloggningslänk"
+
+#: API: Auth - Logged out response
+msgid "server.api.auth.logged_out"
+msgstr "Utloggad"
+
+#: API: Error - Internal error
+msgid "server.api.error.internal"
+msgstr "Ett internt fel uppstod"
+
+#: API: Error - Not found
+msgid "server.api.error.not_found"
+msgstr "Resursen hittades inte"
+
+#: API: Error - Unauthorized
+msgid "server.api.error.unauthorized"
+msgstr "Autentisering krävs"
+
+#: API: Error - Forbidden
+msgid "server.api.error.forbidden"
+msgstr "Åtkomst nekad"
+
+#: API: Error - Bad request
+msgid "server.api.error.bad_request"
+msgstr "Ogiltig begäran"
+
+#: API: Error - Conflict
+msgid "server.api.error.conflict"
+msgstr "Resurskonflikt"
+
+#: API: Error - Gone
+msgid "server.api.error.gone"
+msgstr "Resursen är inte längre tillgänglig"
+
+#: API: Error - Not configured
+msgid "server.api.error.not_configured"
+msgstr "Funktionen är inte konfigurerad"
+
+# ============================================================================
+# Auth API responses
+# ============================================================================
+
+#: API: Auth - Invalid email
+msgid "server.api.auth.invalid_email"
+msgstr "Ange en giltig e-postadress"
+
+#: API: Auth - Device code authorized
+msgid "server.api.auth.device_authorized"
+msgstr "Enheten auktoriserades"
+
+#: API: Auth - Invalid device code
+msgid "server.api.auth.invalid_device_code"
+msgstr "Ogiltig eller utgången enhetskod"
+
+#: API: Auth - Invalid user code
+msgid "server.api.auth.invalid_user_code"
+msgstr "Ogiltig eller utgången användarkod"
+
+#: API: Auth - OAuth not configured
+msgid "server.api.auth.oauth_not_configured"
+msgstr "{provider} OAuth är inte konfigurerat"
+
+#: API: Auth - Magic link sent (always shown to prevent enumeration)
+msgid "server.api.auth.magic_link_sent"
+msgstr "Om ett konto finns med denna e-post har en inloggningslänk skickats"
+
+#: API: Auth - Email not verified (Google/Okta)
+msgid "server.api.auth.email_not_verified"
+msgstr "E-postadressen har inte verifierats av leverantören"
+
+#: API: Auth - No verified email (GitHub)
+msgid "server.api.auth.no_verified_email"
+msgstr "Ingen verifierad e-postadress hittades. Verifiera din e-post hos GitHub och försök igen."
+
+# ============================================================================
+# User API responses
+# ============================================================================
+
+#: API: User - Not found
+msgid "server.api.user.not_found"
+msgstr "Användaren hittades inte"
+
+#: API: User - Invalid ID
+msgid "server.api.user.invalid_id"
+msgstr "Ogiltigt användar-ID-format"
+
+#: API: User - Display name empty
+msgid "server.api.user.display_name_empty"
+msgstr "Visningsnamn kan inte vara tomt"
+
+#: API: User - Profile updated
+msgid "server.api.user.profile_updated"
+msgstr "Profilen uppdaterades"
+
+#: API: User - Deletion scheduled
+msgid "server.api.user.deletion_scheduled"
+msgstr "Kontoradering schemalagd"
+
+#: API: User - Deletion already scheduled
+msgid "server.api.user.deletion_already_scheduled"
+msgstr "Kontoradering är redan schemalagd"
+
+#: API: User - Deletion failed
+msgid "server.api.user.deletion_failed"
+msgstr "Kunde inte schemalägga kontoradering"
+
+#: API: User - No pending deletion
+msgid "server.api.user.no_pending_deletion"
+msgstr "Ingen väntande radering för detta konto"
+
+#: API: User - Grace period expired
+msgid "server.api.user.grace_period_expired"
+msgstr "Respitperioden har gått ut, kontot kan inte återställas"
+
+#: API: User - Account restored
+msgid "server.api.user.account_restored"
+msgstr "Kontot återställdes"
+
+#: API: User - Identity unlinked
+msgid "server.api.user.identity_unlinked"
+msgstr "Identiteten kopplades bort"
+
+#: API: User - Identity not found
+msgid "server.api.user.identity_not_found"
+msgstr "Identiteten hittades inte"
+
+#: API: User - Cannot unlink last identity
+msgid "server.api.user.cannot_unlink_last_identity"
+msgstr "Kan inte koppla bort den sista identiteten"
+
+# ============================================================================
+# Organization API responses
+# ============================================================================
+
+#: API: Org - Not found
+msgid "server.api.org.not_found"
+msgstr "Organisationen hittades inte"
+
+#: API: Org - Invalid ID
+msgid "server.api.org.invalid_id"
+msgstr "Ogiltigt organisations-ID"
+
+#: API: Org - Invalid slug length
+msgid "server.api.org.invalid_slug_length"
+msgstr "Slug måste vara mellan 3 och 50 tecken"
+
+#: API: Org - Invalid slug format
+msgid "server.api.org.invalid_slug_format"
+msgstr "Slug får endast innehålla gemena alfanumeriska tecken och bindestreck"
+
+#: API: Org - Slug exists
+msgid "server.api.org.slug_exists"
+msgstr "En organisation med denna slug finns redan"
+
+#: API: Org - Invalid role
+msgid "server.api.org.invalid_role"
+msgstr "Roll måste vara en av: owner, admin, member"
+
+#: API: Org - List failed
+msgid "server.api.org.list_failed"
+msgstr "Kunde inte lista organisationer"
+
+#: API: Org - Create failed
+msgid "server.api.org.create_failed"
+msgstr "Kunde inte skapa organisation"
+
+#: API: Org - Not a member
+msgid "server.api.org.not_a_member"
+msgstr "Du är inte medlem i denna organisation"
+
+#: API: Org - Already a member
+msgid "server.api.org.already_member"
+msgstr "Användaren är redan medlem i denna organisation"
+
+#: API: Org - Member added
+msgid "server.api.org.member_added"
+msgstr "Medlem tillagd i organisationen"
+
+#: API: Org - Member removed
+msgid "server.api.org.member_removed"
+msgstr "Medlem borttagen från organisationen"
+
+#: API: Org - Member not found
+msgid "server.api.org.member_not_found"
+msgstr "Medlem hittades inte i denna organisation"
+
+#: API: Org - Last owner
+msgid "server.api.org.last_owner"
+msgstr "Kan inte ta bort eller degradera den sista ägaren"
+
+#: API: Org - Cannot delete personal org
+msgid "server.api.org.cannot_delete_personal"
+msgstr "Kan inte radera personlig organisation"
+
+#: API: Org - Deleted
+msgid "server.api.org.deleted"
+msgstr "Organisationen raderades"
+
+#: API: Org - Restored
+msgid "server.api.org.restored"
+msgstr "Organisationen återställdes"
+
+#: API: Org - Not deleted
+msgid "server.api.org.not_deleted"
+msgstr "Organisationen är inte raderad"
+
+#: API: Org - Grace period expired
+msgid "server.api.org.grace_period_expired"
+msgstr "Respitperioden har gått ut och denna organisation kan inte återställas"
+
+#: API: Org - Owner required
+msgid "server.api.org.owner_required"
+msgstr "Endast ägare kan utföra denna åtgärd"
+
+#: API: Org - Role updated
+msgid "server.api.org.role_updated"
+msgstr "Medlemsroll uppdaterad"
+
+#: API: Org - Join request for private org
+msgid "server.api.org.join_request_private"
+msgstr "Kan inte begära att gå med i en privat organisation"
+
+#: API: Org - Join request pending
+msgid "server.api.org.join_request_pending"
+msgstr "Du har redan en väntande begäran att gå med i denna organisation"
+
+#: API: Org - Join request created
+msgid "server.api.org.join_request_created"
+msgstr "Begäran att gå med har skickats"
+
+#: API: Org - Join request not found
+msgid "server.api.org.join_request_not_found"
+msgstr "Begäran att gå med hittades inte"
+
+#: API: Org - Join request approved
+msgid "server.api.org.join_request_approved"
+msgstr "Begäran att gå med godkändes"
+
+#: API: Org - Join request rejected
+msgid "server.api.org.join_request_rejected"
+msgstr "Begäran att gå med avslogs"
+
+# ============================================================================
+# Team API responses
+# ============================================================================
+
+#: API: Team - Not found
+msgid "server.api.team.not_found"
+msgstr "Teamet hittades inte"
+
+#: API: Team - Invalid ID
+msgid "server.api.team.invalid_id"
+msgstr "Ogiltigt team-ID"
+
+#: API: Team - Invalid slug length
+msgid "server.api.team.invalid_slug_length"
+msgstr "Slug måste vara mellan 2 och 50 tecken"
+
+#: API: Team - Invalid slug format
+msgid "server.api.team.invalid_slug_format"
+msgstr "Slug får endast innehålla gemena alfanumeriska tecken och bindestreck"
+
+#: API: Team - List failed
+msgid "server.api.team.list_failed"
+msgstr "Kunde inte lista team"
+
+#: API: Team - Membership check failed
+msgid "server.api.team.membership_check_failed"
+msgstr "Kunde inte kontrollera organisationsmedlemskap"
+
+# ============================================================================
+# Invitation API responses
+# ============================================================================
+
+#: API: Invitation - Created
+msgid "server.api.invitation.created"
+msgstr "Inbjudan skickades"
+
+#: API: Invitation - Cancelled
+msgid "server.api.invitation.cancelled"
+msgstr "Inbjudan avbröts"
+
+#: API: Invitation - Accepted
+msgid "server.api.invitation.accepted"
+msgstr "Inbjudan accepterades"
+
+#: API: Invitation - Not found
+msgid "server.api.invitation.not_found"
+msgstr "Inbjudan hittades inte"
+
+#: API: Invitation - Expired
+msgid "server.api.invitation.expired"
+msgstr "Denna inbjudan har gått ut"
+
+#: API: Invitation - Invalid token
+msgid "server.api.invitation.invalid_token"
+msgstr "Ogiltig inbjudningstoken"
+
+#: API: Invitation - Already accepted
+msgid "server.api.invitation.already_accepted"
+msgstr "Denna inbjudan har redan accepterats"
+
+#: API: Invitation - List failed
+msgid "server.api.invitation.list_failed"
+msgstr "Kunde inte lista inbjudningar"
+
+# ============================================================================
+# Join request API responses
+# ============================================================================
+
+#: API: Join request - Created
+msgid "server.api.join_request.created"
+msgstr "Begäran att gå med har skickats"
+
+#: API: Join request - Approved
+msgid "server.api.join_request.approved"
+msgstr "Begäran att gå med godkändes"
+
+#: API: Join request - Rejected
+msgid "server.api.join_request.rejected"
+msgstr "Begäran att gå med avslogs"
+
+#: API: Join request - Already member
+msgid "server.api.join_request.already_member"
+msgstr "Du är redan medlem i denna organisation"
+
+#: API: Join request - Already pending
+msgid "server.api.join_request.already_pending"
+msgstr "Du har redan en väntande begäran att gå med"
+
+#: API: Join request - Not found
+msgid "server.api.join_request.not_found"
+msgstr "Begäran att gå med hittades inte"
+
+#: API: Join request - Private org
+msgid "server.api.join_request.private_org"
+msgstr "Kan inte begära att gå med i en privat organisation"
+
+# ============================================================================
+# API Key responses
+# ============================================================================
+
+#: API: API Key - Invalid org ID
+msgid "server.api.api_key.invalid_org_id"
+msgstr "Ogiltigt organisations-ID-format"
+
+#: API: API Key - Name empty
+msgid "server.api.api_key.name_empty"
+msgstr "API-nyckelnamn kan inte vara tomt"
+
+#: API: API Key - No scopes
+msgid "server.api.api_key.no_scopes"
+msgstr "Minst ett behörighetsområde måste anges"
+
+#: API: API Key - Created
+msgid "server.api.api_key.created"
+msgstr "API-nyckel skapad"
+
+#: API: API Key - Revoked
+msgid "server.api.api_key.revoked"
+msgstr "API-nyckel återkallad"
+
+#: API: API Key - Not found
+msgid "server.api.api_key.not_found"
+msgstr "API-nyckel hittades inte"
+
+#: API: API Key - List failed
+msgid "server.api.api_key.list_failed"
+msgstr "Kunde inte lista API-nycklar"
+
+#: API: API Key - Create failed
+msgid "server.api.api_key.create_failed"
+msgstr "Kunde inte skapa API-nyckel"
+
+# ============================================================================
+# Session API responses
+# ============================================================================
+
+#: API: Session - Invalid ID
+msgid "server.api.session.invalid_id"
+msgstr "Ogiltigt sessions-ID-format"
+
+#: API: Session - Not found
+msgid "server.api.session.not_found"
+msgstr "Sessionen hittades inte"
+
+#: API: Session - Revoked
+msgid "server.api.session.revoked"
+msgstr "Sessionen återkallades"
+
+#: API: Session - List failed
+msgid "server.api.session.list_failed"
+msgstr "Kunde inte hämta sessioner"
+
+#: API: Session - Revoke failed
+msgid "server.api.session.revoke_failed"
+msgstr "Kunde inte återkalla session"
+
+#: API: Session - Ownership check failed
+msgid "server.api.session.ownership_check_failed"
+msgstr "Kunde inte verifiera sessionsägande"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - System admin required
+msgid "server.api.admin.system_admin_required"
+msgstr "Systemadministratörsroll krävs"
+
+#: API: Admin - Cannot remove own admin
+msgid "server.api.admin.cannot_remove_own_admin"
+msgstr "Kan inte ta bort din egen administratörsstatus"
+
+#: API: Admin - User list failed
+msgid "server.api.admin.user_list_failed"
+msgstr "Kunde inte lista användare"
+
+#: API: Admin - User update failed
+msgid "server.api.admin.user_update_failed"
+msgstr "Kunde inte uppdatera användare"
+
+#: API: Admin - Roles updated
+msgid "server.api.admin.roles_updated"
+msgstr "Användarroller uppdaterade"
+
+#: Auth: Device Page - Title
+msgid "server.auth.device.title"
+msgstr "Enhetsauktorisering - Loom"
+
+#: Auth: Device Page - Heading
+msgid "server.auth.device.heading"
+msgstr "Enhetsauktorisering"
+
+#: Auth: Device Page - Subtitle
+msgid "server.auth.device.subtitle"
+msgstr "Ange koden som visas i din terminal"
+
+#: Auth: Device Page - Code label
+msgid "server.auth.device.code_label"
+msgstr "Auktoriseringskod"
+
+#: Auth: Device Page - Submit button
+msgid "server.auth.device.submit"
+msgstr "Auktorisera enhet"
+
+#: Auth: Device Page - Authorizing button
+msgid "server.auth.device.authorizing"
+msgstr "Auktoriserar..."
+
+#: Auth: Device Page - Authorized button
+msgid "server.auth.device.authorized"
+msgstr "Auktoriserad"
+
+#: Auth: Device Page - Expiry help text
+msgid "server.auth.device.expiry_help"
+msgstr "Denna kod går ut efter 15 minuter."
+
+#: Auth: Device Page - Success message
+msgid "server.auth.device.success"
+msgstr "Enheten auktoriserades! Du kan stänga detta fönster."
+
+#: Auth: Device Page - Invalid code format
+msgid "server.auth.device.invalid_format"
+msgstr "Ange en giltig kod i formatet XXX-XXX-XXX"
+
+#: Auth: Device Page - Generic error
+msgid "server.auth.device.error"
+msgstr "Ett fel uppstod. Försök igen."
+
+#: Auth: Device Page - Authorization failed
+msgid "server.auth.device.auth_failed"
+msgstr "Auktoriseringen misslyckades. Försök igen."
+
+# ============================================================================
+# Support Access API responses
+# ============================================================================
+
+#: API: Support Access - Not support staff
+msgid "server.api.support_access.not_support_staff"
+msgstr "Endast supportpersonal kan begära supportåtkomst"
+
+#: API: Support Access - Thread not found
+msgid "server.api.support_access.thread_not_found"
+msgstr "Tråden hittades inte"
+
+#: API: Support Access - Already requested
+msgid "server.api.support_access.already_requested"
+msgstr "Supportåtkomst har redan begärts för denna tråd"
+
+#: API: Support Access - Already active
+msgid "server.api.support_access.already_active"
+msgstr "Supportåtkomst är redan aktiv för denna tråd"
+
+#: API: Support Access - Requested
+msgid "server.api.support_access.requested"
+msgstr "Supportåtkomst begärd"
+
+#: API: Support Access - Request failed
+msgid "server.api.support_access.request_failed"
+msgstr "Kunde inte begära supportåtkomst"
+
+#: API: Support Access - Not owner
+msgid "server.api.support_access.not_owner"
+msgstr "Endast trådägaren kan godkänna eller återkalla supportåtkomst"
+
+#: API: Support Access - No pending request
+msgid "server.api.support_access.no_pending_request"
+msgstr "Ingen väntande supportåtkomstbegäran hittades för denna tråd"
+
+#: API: Support Access - Approved
+msgid "server.api.support_access.approved"
+msgstr "Supportåtkomst godkänd"
+
+#: API: Support Access - Approve failed
+msgid "server.api.support_access.approve_failed"
+msgstr "Kunde inte godkänna supportåtkomst"
+
+#: API: Support Access - No active access
+msgid "server.api.support_access.no_active_access"
+msgstr "Ingen aktiv supportåtkomst hittades för denna tråd"
+
+#: API: Support Access - Revoked
+msgid "server.api.support_access.revoked"
+msgstr "Supportåtkomst återkallad"
+
+#: API: Support Access - Revoke failed
+msgid "server.api.support_access.revoke_failed"
+msgstr "Kunde inte återkalla supportåtkomst"
+
+# ============================================================================
+# Share Link API responses
+# ============================================================================
+
+#: API: Share - Invalid thread ID
+msgid "server.api.share.invalid_thread_id"
+msgstr "Ogiltigt tråd-ID-format"
+
+#: API: Share - Thread not found
+msgid "server.api.share.thread_not_found"
+msgstr "Tråden hittades inte"
+
+#: API: Share - Invalid expires_at
+msgid "server.api.share.invalid_expires_at"
+msgstr "Ogiltigt utgångsdatumformat. Använd RFC 3339-format."
+
+#: API: Share - Create failed
+msgid "server.api.share.create_failed"
+msgstr "Kunde inte skapa delningslänk"
+
+#: API: Share - Link not found
+msgid "server.api.share.link_not_found"
+msgstr "Ingen aktiv delningslänk hittades för denna tråd"
+
+#: API: Share - Revoked
+msgid "server.api.share.revoked"
+msgstr "Delningslänk återkallad"
+
+#: API: Share - Revoke failed
+msgid "server.api.share.revoke_failed"
+msgstr "Kunde inte återkalla delningslänk"
+
+#: API: Share - Invalid or expired link
+msgid "server.api.share.invalid_or_expired"
+msgstr "Ogiltig eller utgången delningslänk"
+
+#: API: Share - Link revoked
+msgid "server.api.share.link_revoked"
+msgstr "Denna delningslänk har återkallats"
+
+#: API: Share - Link expired
+msgid "server.api.share.link_expired"
+msgstr "Denna delningslänk har gått ut"
+
+#: API: Share - Validation failed
+msgid "server.api.share.validation_failed"
+msgstr "Kunde inte validera delningslänk"
+
+#: API: Share - Fetch failed
+msgid "server.api.share.fetch_failed"
+msgstr "Kunde inte hämta tråd"
+
+#: API: Weaver - Provisioner not configured
+msgid "server.api.weaver.provisioner_not_configured"
+msgstr "Weaver-provisioner är inte konfigurerad"
+
+#: API: Weaver - Invalid ID
+msgid "server.api.weaver.invalid_id"
+msgstr "Ogiltigt weaver-ID: {id}"
+
+#: API: Weaver - Not found
+msgid "server.api.weaver.not_found"
+msgstr "Weaver hittades inte: {id}"
+
+#: API: Weaver - Access denied
+msgid "server.api.weaver.access_denied"
+msgstr "Du har inte behörighet att komma åt denna weaver"
+
+#: API: Weaver - Attach denied
+msgid "server.api.weaver.attach_denied"
+msgstr "Du har inte behörighet att ansluta till denna weaver"
+
+#: API: Weaver - Delete denied
+msgid "server.api.weaver.delete_denied"
+msgstr "Du har inte behörighet att radera denna weaver"
+
+#: API: Weaver - Read only attach
+msgid "server.api.weaver.read_only_attach"
+msgstr "Skrivskyddad anslutning: inmatning är inaktiverad för supportanvändare"
+
+#: API: Weaver - Logs access denied
+msgid "server.api.weaver.logs_denied"
+msgstr "Du har inte behörighet att komma åt denna weavers loggar"
+
+# ============================================================================
+# CLI: Update command
+# ============================================================================
+
+#: CLI: Update - Current version
+msgid "client.update.current_version"
+msgstr "Aktuell version: {version}"
+
+#: CLI: Update - Platform
+msgid "client.update.platform"
+msgstr "Plattform: {platform}"
+
+#: CLI: Update - Checking
+msgid "client.update.checking"
+msgstr "Söker efter uppdateringar..."
+
+#: CLI: Update - Already up to date
+msgid "client.update.up_to_date"
+msgstr "Redan uppdaterad (SHA: {sha})"
+
+#: CLI: Update - Update available
+msgid "client.update.available"
+msgstr "Uppdatering tillgänglig: {current} -> {remote}"
+
+#: CLI: Update - Downloading
+msgid "client.update.downloading"
+msgstr "Laddar ner från {url}..."
+
+#: CLI: Update - Downloaded
+msgid "client.update.downloaded"
+msgstr "Laddade ner {bytes} bytes (verifierad)"
+
+#: CLI: Update - Complete
+msgid "client.update.complete"
+msgstr "Uppdatering klar! Starta om loom."
+
+#: CLI: Update - Error: empty binary
+msgid "client.update.error.empty_binary"
+msgstr "Den nedladdade binärfilen är tom"
+
+#: CLI: Update - Error: SHA mismatch
+msgid "client.update.error.sha_mismatch"
+msgstr "SHA-kontrollsumma för nedladdad binärfil stämmer inte: förväntad {expected}, fick {actual}"
+
+#: CLI: Update - Error: env not set
+msgid "client.update.error.env_not_set"
+msgstr "LOOM_UPDATE_BASE_URL eller LOOM_THREAD_SYNC_URL måste vara inställd för uppdateringar"
+
+#: CLI: Update - Error: check failed
+msgid "client.update.error.check_failed"
+msgstr "Kunde inte söka efter uppdateringar: {status}"
+
+# ============================================================================
+# CLI: Authentication
+# ============================================================================
+
+#: CLI: Auth - Visit URL prompt
+msgid "client.auth.visit_url"
+msgstr "Besök {url} och ange kod: {code}"
+
+#: CLI: Auth - Browser open failed
+msgid "client.auth.browser_failed"
+msgstr "(kunde inte öppna webbläsaren automatiskt)"
+
+#: CLI: Auth - Waiting for authorization
+msgid "client.auth.waiting"
+msgstr "Väntar på auktorisering"
+
+#: CLI: Auth - Authorization timed out
+msgid "client.auth.timed_out"
+msgstr "Auktoriseringen tog för lång tid"
+
+#: CLI: Auth - Login cancelled
+msgid "client.auth.cancelled"
+msgstr "Inloggning avbruten"
+
+#: CLI: Auth - Login successful
+msgid "client.auth.login_success"
+msgstr "Inloggad på {server}"
+
+#: CLI: Auth - Device code expired
+msgid "client.auth.device_expired"
+msgstr "Enhetskoden har gått ut"
+
+#: CLI: Auth - Logged out
+msgid "client.auth.logged_out"
+msgstr "Utloggad från {server}"
+
+# ============================================================================
+# CLI: REPL
+# ============================================================================
+
+#: CLI: REPL - Welcome message
+msgid "client.repl.welcome"
+msgstr "Välkommen till Loom - AI-driven kodningsassistent"
+
+#: CLI: REPL - Thread ID
+msgid "client.repl.thread_id"
+msgstr "Tråd: {id}"
+
+#: CLI: REPL - Instructions
+msgid "client.repl.instructions"
+msgstr "Skriv ditt meddelande och tryck Enter. Använd Ctrl+C för att avsluta."
+
+#: CLI: REPL - Interrupted
+msgid "client.repl.interrupted"
+msgstr "Avbruten. Tråden sparad. Hej då!"
+
+#: CLI: REPL - Error
+msgid "client.repl.error"
+msgstr "Fel: {error}"
+
+# ============================================================================
+# CLI: Search
+# ============================================================================
+
+#: CLI: Search - No results
+msgid "client.search.no_results"
+msgstr "Inga resultat hittades för \"{query}\""
+
+#: CLI: Search - Results header
+msgid "client.search.results_header"
+msgstr "Resultat för \"{query}\" ({count} träffar):"
+
+#: CLI: Search - Local no results
+msgid "client.search.local_no_results"
+msgstr "Inga resultat hittades för \"{query}\" (lokal sökning)"
+
+#: CLI: Search - Local results header
+msgid "client.search.local_results_header"
+msgstr "Lokala resultat för \"{query}\" ({count} träffar):"
+
+# ============================================================================
+# CLI: Threads
+# ============================================================================
+
+#: CLI: Threads - No threads
+msgid "client.threads.no_threads"
+msgstr "Inga trådar hittades."
+
+#: CLI: Threads - List header
+msgid "client.threads.list_header"
+msgstr "{id:<40} {title:<40} {updated:<20}"
+
+#: CLI: Threads - Private session
+msgid "client.threads.private_session"
+msgstr "Startar privat session (endast lokal, synkroniseras aldrig till servern)."
+
+#: CLI: Threads - Shared with support
+msgid "client.threads.shared_support"
+msgstr "Tråd {id} har delats med support."
+
+#: CLI: Threads - Visibility changed
+msgid "client.threads.visibility_changed"
+msgstr "Tråd {id} synlighet ändrad till {visibility}."
+
+# ============================================================================
+# CLI: Weaver
+# ============================================================================
+
+#: CLI: Weaver - Creating
+msgid "client.weaver.creating"
+msgstr "Skapar weaver..."
+
+#: CLI: Weaver - Created ID
+msgid "client.weaver.created_id"
+msgstr "  ID:    {id}"
+
+#: CLI: Weaver - Created image
+msgid "client.weaver.created_image"
+msgstr "  Image: {image}"
+
+#: CLI: Weaver - Created TTL
+msgid "client.weaver.created_ttl"
+msgstr "  TTL:   {hours} timmar"
+
+#: CLI: Weaver - Attaching
+msgid "client.weaver.attaching"
+msgstr "Ansluter till weaver..."
+
+#: CLI: Weaver - Detached
+msgid "client.weaver.detached"
+msgstr "[frånkopplad från weaver {id}]"
+
+#: CLI: Weaver - Reattach hint
+msgid "client.weaver.reattach_hint"
+msgstr "Weaver körs fortfarande. Återanslut med: loom attach {id}"
+
+#: CLI: Weaver - No weavers
+msgid "client.weaver.no_weavers"
+msgstr "Inga weavers körs."
+
+#: CLI: Weaver - List header
+msgid "client.weaver.list_header"
+msgstr "{id:<40} {image:<30} {status:<10} {age:<8} {ttl:<8}"
+
+#: CLI: Weaver - Deleting
+msgid "client.weaver.deleting"
+msgstr "Raderar weaver {id}..."
+
+#: CLI: Weaver - Deleted
+msgid "client.weaver.deleted"
+msgstr "Weaver raderad."
+
+#: CLI: Weaver - Attach prefix
+msgid "client.weaver.attach_prefix"
+msgstr "[ansluter till weaver {id}]"

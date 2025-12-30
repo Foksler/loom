@@ -66,6 +66,96 @@ pub const LOCALES: &[LocaleInfo] = &[
 		native_name: "العربية",
 		direction: Direction::Rtl,
 	},
+	LocaleInfo {
+		code: "fr",
+		name: "French",
+		native_name: "Français",
+		direction: Direction::Ltr,
+	},
+	LocaleInfo {
+		code: "ru",
+		name: "Russian",
+		native_name: "Русский",
+		direction: Direction::Ltr,
+	},
+	LocaleInfo {
+		code: "ja",
+		name: "Japanese",
+		native_name: "日本語",
+		direction: Direction::Ltr,
+	},
+	LocaleInfo {
+		code: "ko",
+		name: "Korean",
+		native_name: "한국어",
+		direction: Direction::Ltr,
+	},
+	LocaleInfo {
+		code: "pt",
+		name: "Portuguese",
+		native_name: "Português",
+		direction: Direction::Ltr,
+	},
+	LocaleInfo {
+		code: "sv",
+		name: "Swedish",
+		native_name: "Svenska",
+		direction: Direction::Ltr,
+	},
+	LocaleInfo {
+		code: "nl",
+		name: "Dutch",
+		native_name: "Nederlands",
+		direction: Direction::Ltr,
+	},
+	LocaleInfo {
+		code: "zh-CN",
+		name: "Chinese (Simplified)",
+		native_name: "简体中文",
+		direction: Direction::Ltr,
+	},
+	LocaleInfo {
+		code: "he",
+		name: "Hebrew",
+		native_name: "עברית",
+		direction: Direction::Rtl,
+	},
+	LocaleInfo {
+		code: "it",
+		name: "Italian",
+		native_name: "Italiano",
+		direction: Direction::Ltr,
+	},
+	LocaleInfo {
+		code: "el",
+		name: "Greek",
+		native_name: "Ελληνικά",
+		direction: Direction::Ltr,
+	},
+	LocaleInfo {
+		code: "et",
+		name: "Estonian",
+		native_name: "Eesti",
+		direction: Direction::Ltr,
+	},
+	LocaleInfo {
+		code: "hi",
+		name: "Hindi",
+		native_name: "हिन्दी",
+		direction: Direction::Ltr,
+	},
+	LocaleInfo {
+		code: "bn",
+		name: "Bengali",
+		native_name: "বাংলা",
+		direction: Direction::Ltr,
+	},
+	LocaleInfo {
+		code: "id",
+		name: "Indonesian",
+		native_name: "Bahasa Indonesia",
+		direction: Direction::Ltr,
+	},
 ];
 
 /// Get metadata for a locale.
@@ -114,6 +204,9 @@ mod tests {
 		assert!(!is_rtl("en"));
 		assert!(!is_rtl("es"));
 		assert!(is_rtl("ar"));
+		assert!(is_rtl("he"));
+		assert!(!is_rtl("it"));
+		assert!(!is_rtl("el"));
 		assert!(!is_rtl("unknown"));
 	}
 
@@ -122,17 +215,47 @@ mod tests {
 		assert!(is_supported("en"));
 		assert!(is_supported("es"));
 		assert!(is_supported("ar"));
-		assert!(!is_supported("fr"));
+		assert!(is_supported("fr"));
+		assert!(is_supported("ru"));
+		assert!(is_supported("ja"));
+		assert!(is_supported("ko"));
+		assert!(is_supported("pt"));
+		assert!(is_supported("sv"));
+		assert!(is_supported("nl"));
+		assert!(is_supported("zh-CN"));
+		assert!(is_supported("he"));
+		assert!(is_supported("it"));
+		assert!(is_supported("el"));
+		assert!(is_supported("et"));
+		assert!(is_supported("hi"));
+		assert!(is_supported("bn"));
+		assert!(is_supported("id"));
+		assert!(!is_supported("de"));
 		assert!(!is_supported(""));
 	}
 
 	#[test]
 	fn test_available_locales() {
 		let locales = available_locales();
-		assert_eq!(locales.len(), 3);
+		assert_eq!(locales.len(), 18);
 		assert!(locales.iter().any(|l| l.code == "en"));
 		assert!(locales.iter().any(|l| l.code == "es"));
 		assert!(locales.iter().any(|l| l.code == "ar"));
+		assert!(locales.iter().any(|l| l.code == "fr"));
+		assert!(locales.iter().any(|l| l.code == "ru"));
+		assert!(locales.iter().any(|l| l.code == "ja"));
+		assert!(locales.iter().any(|l| l.code == "ko"));
+		assert!(locales.iter().any(|l| l.code == "pt"));
+		assert!(locales.iter().any(|l| l.code == "sv"));
+		assert!(locales.iter().any(|l| l.code == "nl"));
+		assert!(locales.iter().any(|l| l.code == "zh-CN"));
+		assert!(locales.iter().any(|l| l.code == "he"));
+		assert!(locales.iter().any(|l| l.code == "it"));
+		assert!(locales.iter().any(|l| l.code == "el"));
+		assert!(locales.iter().any(|l| l.code == "et"));
+		assert!(locales.iter().any(|l| l.code == "hi"));
+		assert!(locales.iter().any(|l| l.code == "bn"));
+		assert!(locales.iter().any(|l| l.code == "id"));
 	}
 
 	#[test]
