@@ -1,0 +1,226 @@
+// Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights
+// reserved. SPDX-License-Identifier: Proprietary
+
+//! Session management HTTP handlers.
+//!
+//! Implements session endpoints per the auth-abac-system.md specification:
+//! - List user's sessions
+//! - Revoke a session
+
+use axum::{
+	extract::{Path, State},
+	http::StatusCode,
+	response::IntoResponse,
+	Json,
+};
+use chrono::{DateTime, Utc};
+use loom_auth::SessionId;
+use uuid::Uuid;
+use serde::Serialize;
+use utoipa::ToSchema;
+
+use crate::{
+	api::AppState,
+	auth_middleware::RequireAuth,
+	i18n::{resolve_user_locale, t},
+};
+
+/// A session in the list response.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct SessionResponse {
+	pub id: String,
+	pub session_type: String,
+	pub created_at: DateTime<Utc>,
+	pub last_used_at: DateTime<Utc>,
+	pub expires_at: DateTime<Utc>,
+	pub ip_address: Option<String>,
+	pub user_agent: Option<String>,
+	pub geo_city: Option<String>,
+	pub geo_country: Option<String>,
+	pub is_current: bool,
+}
+
+/// Response for listing sessions.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ListSessionsResponse {
+	pub sessions: Vec<SessionResponse>,
+}
+
+/// Response for session operations.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct SessionSuccessResponse {
+	pub message: String,
+}
+
+/// Error response for session operations.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct SessionErrorResponse {
+	pub error: String,
+	pub message: String,
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/sessions",
+    responses(
+        (status = 200, description = "List of user's sessions", body = ListSessionsResponse),
+        (status = 401, description = "Not authenticated", body = SessionErrorResponse)
+    ),
+    tag = "sessions"
+)]
+/// GET /api/sessions - List all sessions for the current user.
+///
+/// Returns all active sessions including device info, location, and whether
+/// each session is the current one making the request.
+pub async fn list_sessions(
+	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let current_session_id = current_user.session_id.clone();
+
+	match state
+		.session_repo
+		.get_sessions_for_user(&current_user.user.id)
+		.await
+	{
+		Ok(sessions) => {
+			let session_responses: Vec<SessionResponse> = sessions
+				.into_iter()
+				.map(|s| SessionResponse {
+					id: s.id.to_string(),
+					session_type: s.session_type.to_string(),
+					created_at: s.created_at,
+					last_used_at: s.last_used_at,
+					expires_at: s.expires_at,
+					ip_address: s.ip_address,
+					user_agent: s.user_agent,
+					geo_city: s.geo_city,
+					geo_country: s.geo_country,
+					is_current: current_session_id.as_ref() == Some(&s.id),
+				})
+				.collect();
+
+			Json(ListSessionsResponse {
+				sessions: session_responses,
+			})
+			.into_response()
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to list sessions");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(SessionErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.session.list_failed").to_string(),
+				}),
+			)
+				.into_response()
+		}
+	}
+}
+
+#[utoipa::path(
+    delete,
+    path = "/api/sessions/{id}",
+    params(
+        ("id" = String, Path, description = "Session ID to revoke")
+    ),
+    responses(
+        (status = 200, description = "Session revoked", body = SessionSuccessResponse),
+        (status = 401, description = "Not authenticated", body = SessionErrorResponse),
+        (status = 403, description = "Cannot revoke this session", body = SessionErrorResponse),
+        (status = 404, description = "Session not found", body = SessionErrorResponse)
+    ),
+    tag = "sessions"
+)]
+/// DELETE /api/sessions/{id} - Revoke a specific session.
+///
+/// Users can revoke their own sessions. Revoking the current session
+/// is equivalent to logging out.
+pub async fn revoke_session(
+	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
+	Path(session_id): Path<String>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	// Parse the session ID
+	let session_id = match Uuid::parse_str(&session_id) {
+		Ok(uuid) => SessionId::new(uuid),
+		Err(_) => {
+			return (
+				StatusCode::BAD_REQUEST,
+				Json(SessionErrorResponse {
+					error: "invalid_id".to_string(),
+					message: t(locale, "server.api.session.invalid_id").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Get all sessions for the user to verify ownership
+	let sessions = match state
+		.session_repo
+		.get_sessions_for_user(&current_user.user.id)
+		.await
+	{
+		Ok(sessions) => sessions,
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get sessions for ownership check");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(SessionErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.session.ownership_check_failed").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Check if the session belongs to the current user
+	if !sessions.iter().any(|s| s.id == session_id) {
+		return (
+			StatusCode::NOT_FOUND,
+			Json(SessionErrorResponse {
+				error: "not_found".to_string(),
+				message: t(locale, "server.api.session.not_found").to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	// Delete the session
+	match state.session_repo.delete_session(&session_id).await {
+		Ok(deleted) => {
+			if deleted {
+				Json(SessionSuccessResponse {
+					message: t(locale, "server.api.session.revoked").to_string(),
+				})
+				.into_response()
+			} else {
+				(
+					StatusCode::NOT_FOUND,
+					Json(SessionErrorResponse {
+						error: "not_found".to_string(),
+						message: t(locale, "server.api.session.not_found").to_string(),
+					}),
+				)
+					.into_response()
+			}
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to delete session");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(SessionErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.session.revoke_failed").to_string(),
+				}),
+			)
+				.into_response()
+		}
+	}
+}
