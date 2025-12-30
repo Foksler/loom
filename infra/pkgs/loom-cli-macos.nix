@@ -20,6 +20,7 @@
 , cargo-zigbuild
 , zig
 , makeRustPlatform
+, gettext
 }:
 
 let
@@ -59,6 +60,7 @@ stdenv.mkDerivation rec {
     rustToolchain
     cargo-zigbuild
     zig
+    gettext
   ];
 
   cargoDeps = crossRustPlatform.importCargoLock {

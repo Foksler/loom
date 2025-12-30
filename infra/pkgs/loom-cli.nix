@@ -6,6 +6,7 @@
 , pkg-config
 , openssl
 , sqlite
+, gettext
 }:
 
 rustPlatform.buildRustPackage rec {
@@ -20,6 +21,7 @@ rustPlatform.buildRustPackage rec {
 
   nativeBuildInputs = [
     pkg-config
+    gettext
   ];
 
   buildInputs = [

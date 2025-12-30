@@ -16,6 +16,7 @@
 , openssl
 , pkg-config
 , makeRustPlatform
+, gettext
 }:
 
 let
@@ -51,6 +52,7 @@ stdenv.mkDerivation rec {
     mingw  # Need mingw binutils (dlltool, ar, etc.) in PATH
     pkg-config
     zlib
+    gettext
   ];
 
   buildInputs = [
