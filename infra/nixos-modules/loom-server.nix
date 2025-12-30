@@ -562,6 +562,9 @@ in
         StateDirectory = "loom-server";
         RuntimeDirectory = "loom-server";
 
+        # Wait for port to be free before starting (prevents race during restarts)
+        ExecStartPre = "${pkgs.bash}/bin/bash -c 'for i in {1..10}; do ${pkgs.iproute2}/bin/ss -tlnp | grep -q \":${toString cfg.port} \" || exit 0; sleep 0.5; done; exit 1'";
+
         # Security hardening
         NoNewPrivileges = true;
         ProtectSystem = "strict";
