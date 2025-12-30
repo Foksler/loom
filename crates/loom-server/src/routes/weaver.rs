@@ -601,11 +601,19 @@ async fn handle_attach_websocket(
 }
 
 async fn handle_attach_websocket_inner(
-	socket: WebSocket,
+	mut socket: WebSocket,
 	provisioner: std::sync::Arc<loom_weaver::Provisioner>,
 	weaver_id: WeaverId,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-	let attached = provisioner.attach_weaver(&weaver_id).await?;
+	let attached = match provisioner.attach_weaver(&weaver_id).await {
+		Ok(a) => a,
+		Err(e) => {
+			let _ = socket
+				.send(Message::Text(format!("ERROR: {e}").into()))
+				.await;
+			return Err(Box::new(e));
+		}
+	};
 	let loom_weaver::AttachedProcess { stdin, stdout } = attached;
 
 	let (mut ws_sender, mut ws_receiver) = socket.split();

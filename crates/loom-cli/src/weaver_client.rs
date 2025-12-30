@@ -156,10 +156,10 @@ impl WeaverClient {
 
 		let mut request = url.as_str().into_client_request()?;
 		if let Some(token) = &self.auth_token {
-			request.headers_mut().insert(
-				"Authorization",
-				format!("Bearer {token}").parse().unwrap(),
-			);
+			let auth_value = format!("Bearer {token}")
+				.parse()
+				.map_err(|_| anyhow::anyhow!("Invalid token format for Authorization header"))?;
+			request.headers_mut().insert("Authorization", auth_value);
 		}
 
 		let (ws_stream, _) = connect_async(request)
@@ -171,17 +171,28 @@ impl WeaverClient {
 		let mut stdin = tokio::io::stdin();
 		let mut stdout = tokio::io::stdout();
 
+		let (pong_tx, mut pong_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(16);
+
 		let stdin_task = tokio::spawn(async move {
 			let mut buf = [0u8; 1024];
 			loop {
-				match stdin.read(&mut buf).await {
-					Ok(0) => break,
-					Ok(n) => {
-						if write.send(Message::Binary(buf[..n].to_vec())).await.is_err() {
+				tokio::select! {
+					result = stdin.read(&mut buf) => {
+						match result {
+							Ok(0) => break,
+							Ok(n) => {
+								if write.send(Message::Binary(buf[..n].to_vec())).await.is_err() {
+									break;
+								}
+							}
+							Err(_) => break,
+						}
+					}
+					Some(pong_data) = pong_rx.recv() => {
+						if write.send(Message::Pong(pong_data)).await.is_err() {
 							break;
 						}
 					}
-					Err(_) => break,
 				}
 			}
 		});
@@ -193,12 +204,17 @@ impl WeaverClient {
 					stdout.flush().await?;
 				}
 				Ok(Message::Text(text)) => {
-					tracing::debug!(text = %text, "Received text message");
+					eprintln!("{text}");
 				}
 				Ok(Message::Close(_)) => break,
+				Ok(Message::Ping(data)) => {
+					if pong_tx.send(data).await.is_err() {
+						break;
+					}
+				}
 				Err(e) => {
 					tracing::error!(error = %e, "WebSocket error");
-					break;
+					return Err(anyhow::anyhow!("WebSocket error: {e}"));
 				}
 				_ => {}
 			}

@@ -7,6 +7,10 @@ use crate::abac::{Action, ResourceAttrs, SubjectAttrs};
 
 /// Evaluates weaver access policies.
 pub fn evaluate(subject: &SubjectAttrs, _action: Action, resource: &ResourceAttrs) -> bool {
+	if subject.is_system_admin() {
+		return true;
+	}
+
 	if let Some(owner_id) = &resource.owner_user_id {
 		if subject.user_id == *owner_id {
 			return true;
@@ -47,5 +51,19 @@ mod tests {
 		assert!(!evaluate(&subject, Action::Read, &resource));
 		assert!(!evaluate(&subject, Action::Write, &resource));
 		assert!(!evaluate(&subject, Action::Delete, &resource));
+	}
+
+	#[test]
+	fn system_admin_has_full_access() {
+		use crate::GlobalRole;
+
+		let owner_id = test_user_id();
+		let mut subject = SubjectAttrs::new(test_user_id());
+		subject.global_roles.push(GlobalRole::SystemAdmin);
+		let resource = ResourceAttrs::weaver(owner_id);
+
+		assert!(evaluate(&subject, Action::Read, &resource));
+		assert!(evaluate(&subject, Action::Write, &resource));
+		assert!(evaluate(&subject, Action::Delete, &resource));
 	}
 }
