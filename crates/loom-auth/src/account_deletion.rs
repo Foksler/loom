@@ -166,7 +166,7 @@ mod tests {
             let request = DeletionRequest::new(user_id);
 
             let days = request.days_until_purge().unwrap();
-            assert!(days >= 89 && days <= 90);
+            assert!((89..=90).contains(&days));
         }
 
         #[test]

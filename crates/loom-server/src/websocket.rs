@@ -103,7 +103,7 @@ impl WebSocketConnection {
         Self {
             session_id,
             state: Arc::new(RwLock::new(ConnectionState::Active)),
-            auth_state: Arc::new(RwLock::new(WsAuthState::Authenticated(auth_ctx))),
+            auth_state: Arc::new(RwLock::new(WsAuthState::Authenticated(Box::new(auth_ctx)))),
             connected_at: Instant::now(),
         }
     }
@@ -239,7 +239,7 @@ impl WebSocketConnection {
             "WebSocket authenticated successfully"
         );
 
-        *self.auth_state.write().await = WsAuthState::Authenticated(auth_ctx);
+        *self.auth_state.write().await = WsAuthState::Authenticated(Box::new(auth_ctx));
         *self.state.write().await = ConnectionState::Active;
 
         Ok(WsAuthResponse::success(&user_id))
@@ -751,7 +751,7 @@ pub mod handler {
         user_repo: &Arc<crate::db::UserRepository>,
     ) -> Result<(), String> {
         let msg: WebSocketMessage = serde_json::from_str(text)
-            .map_err(|e| format!("Invalid JSON: {}", e))?;
+            .map_err(|e| format!("Invalid JSON: {e}"))?;
 
         match msg {
             WebSocketMessage::Auth(_auth_msg) => {

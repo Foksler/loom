@@ -296,7 +296,7 @@ pub async fn get_weaver(
 
 	let weaver_id: WeaverId = id
 		.parse()
-		.map_err(|_| ServerError::BadRequest(format!("Invalid weaver ID: {}", id)))?;
+		.map_err(|_| ServerError::BadRequest(format!("Invalid weaver ID: {id}")))?;
 
 	let weaver = provisioner.get_weaver(&weaver_id).await?;
 
@@ -331,7 +331,7 @@ pub async fn delete_weaver(
 
 	let weaver_id: WeaverId = id
 		.parse()
-		.map_err(|_| ServerError::BadRequest(format!("Invalid weaver ID: {}", id)))?;
+		.map_err(|_| ServerError::BadRequest(format!("Invalid weaver ID: {id}")))?;
 
 	tracing::info!(weaver_id = %id, "Deleting weaver");
 
@@ -372,7 +372,7 @@ pub async fn stream_logs(
 
 	let weaver_id: WeaverId = id
 		.parse()
-		.map_err(|_| ServerError::BadRequest(format!("Invalid weaver ID: {}", id)))?;
+		.map_err(|_| ServerError::BadRequest(format!("Invalid weaver ID: {id}")))?;
 
 	tracing::debug!(weaver_id = %id, tail = params.tail, timestamps = params.timestamps, "Starting log stream");
 

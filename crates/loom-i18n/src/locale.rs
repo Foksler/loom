@@ -79,7 +79,7 @@ pub fn locale_info(locale: &str) -> Option<&'static LocaleInfo> {
 ///
 /// Returns `false` for unsupported locales.
 pub fn is_rtl(locale: &str) -> bool {
-	locale_info(locale).map_or(false, |info| info.direction == Direction::Rtl)
+	locale_info(locale).is_some_and(|info| info.direction == Direction::Rtl)
 }
 
 /// Check if a locale is supported.

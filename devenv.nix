@@ -15,6 +15,8 @@ in
   # Faster git operations for cargo
   env.CARGO_NET_GIT_FETCH_WITH_CLI = "true";
 
+  
+
   # https://devenv.sh/packages/
   packages = [ 
     pkgs.age
@@ -115,6 +117,28 @@ in
       ''}";
       pass_filenames = false;
       # Only run when Rust-related files change (not docs, nix, etc.)
+      always_run = false;
+      types = [ "rust" ];
+    };
+    
+    # Run clippy for linting
+    # Uses cargo-clippy directly to avoid rustup conflicts with nix toolchain
+    clippy = {
+      enable = true;
+      name = "Clippy lint check";
+      entry = "${pkgs.writeShellScript "clippy-check" ''
+        echo "🔍 Running clippy..."
+        
+        # Use cargo-clippy directly (nix-provided) to avoid rustup conflicts
+        if ! cargo-clippy --all-targets --all-features -- -D warnings 2>&1; then
+          echo "❌ BLOCKED: Clippy found warnings/errors!"
+          echo "Fix the clippy issues before committing."
+          exit 1
+        fi
+        
+        echo "✅ Clippy passed"
+      ''}";
+      pass_filenames = false;
       always_run = false;
       types = [ "rust" ];
     };

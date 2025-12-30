@@ -272,6 +272,17 @@ in
       };
     };
 
+    # GeoIP Configuration
+    geoip = {
+      enable = mkEnableOption "GeoIP lookup service using MaxMind databases";
+
+      databasePath = mkOption {
+        type = types.path;
+        default = "/var/lib/GeoIP/GeoLite2-City.mmdb";
+        description = "Path to the MaxMind GeoIP database file.";
+      };
+    };
+
     # Weaver Provisioner Configuration
     weaver = {
       enable = mkEnableOption "Weaver provisioner for Kubernetes-based code execution environments";
@@ -442,6 +453,9 @@ in
           LOOM_SERVER_WEAVER_READY_TIMEOUT_SECS = toString cfg.weaver.readyTimeoutSecs;
           LOOM_SERVER_WEAVER_WEBHOOKS = cfg.weaver.webhooks;
           KUBECONFIG = toString cfg.weaver.kubeconfigPath;
+        })
+        (mkIf cfg.geoip.enable {
+          LOOM_GEOIP_DATABASE_PATH = toString cfg.geoip.databasePath;
         })
         cfg.extraEnvironment
       ];

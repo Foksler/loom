@@ -115,7 +115,7 @@ impl std::fmt::Display for AuditEventType {
             AuditEventType::SupportAccessApproved => "support_access_approved",
             AuditEventType::SupportAccessRevoked => "support_access_revoked",
         };
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
 
@@ -148,7 +148,7 @@ pub struct AuditLogEntry {
 
 impl AuditLogEntry {
     /// Create a new audit log builder for the given event type.
-    pub fn new(event_type: AuditEventType) -> AuditLogBuilder {
+    pub fn builder(event_type: AuditEventType) -> AuditLogBuilder {
         AuditLogBuilder::new(event_type)
     }
 }
@@ -315,7 +315,7 @@ mod tests {
 
         #[test]
         fn new_returns_builder() {
-            let builder = AuditLogEntry::new(AuditEventType::Login);
+            let builder = AuditLogEntry::builder(AuditEventType::Login);
             let entry = builder.build();
             assert_eq!(entry.event_type, AuditEventType::Login);
         }
@@ -323,7 +323,7 @@ mod tests {
         #[test]
         fn serializes_to_json() {
             let user_id = UserId::generate();
-            let entry = AuditLogEntry::new(AuditEventType::Login)
+            let entry = AuditLogEntry::builder(AuditEventType::Login)
                 .actor(user_id)
                 .ip_address("192.168.1.1")
                 .build();
@@ -336,7 +336,7 @@ mod tests {
         #[test]
         fn deserializes_from_json() {
             let user_id = UserId::generate();
-            let original = AuditLogEntry::new(AuditEventType::AccessDenied)
+            let original = AuditLogEntry::builder(AuditEventType::AccessDenied)
                 .actor(user_id)
                 .resource("thread", "thread-123")
                 .action("User attempted to access private thread")

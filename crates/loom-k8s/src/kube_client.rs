@@ -50,7 +50,7 @@ impl K8sClient for KubeClient {
 	) -> Result<(), K8sError> {
 		let pods: Api<Pod> = Api::namespaced(self.client.clone(), namespace);
 		let dp = DeleteParams {
-			grace_period_seconds: Some(grace_period_seconds.into()),
+			grace_period_seconds: Some(grace_period_seconds),
 			..Default::default()
 		};
 		match pods.delete(name, &dp).await {
@@ -117,7 +117,7 @@ impl K8sClient for KubeClient {
 		let compat_stream = stream.compat();
 		let lines_stream = tokio_util::io::ReaderStream::new(compat_stream);
 		let mapped = lines_stream.map(|result| {
-			result.map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+			result.map_err(std::io::Error::other)
 		});
 		Ok(Box::pin(mapped))
 	}

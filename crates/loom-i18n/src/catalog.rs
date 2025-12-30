@@ -105,7 +105,7 @@ pub fn t_fmt(locale: &str, msgid: &str, args: &[(&str, &str)]) -> String {
 	let mut result = t(locale, msgid);
 
 	for (name, value) in args {
-		let placeholder = format!("{{{}}}", name);
+		let placeholder = format!("{{{name}}}");
 		result = result.replace(&placeholder, value);
 	}
 

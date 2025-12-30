@@ -907,8 +907,8 @@ impl OrgRepository {
 	) -> Result<Organization, ServerError> {
 		let org = Organization {
 			id: OrgId::generate(),
-			name: format!("{}'s Personal", display_name),
-			slug: format!("personal-{}", user_id),
+			name: format!("{display_name}'s Personal"),
+			slug: format!("personal-{user_id}"),
 			visibility: OrgVisibility::Private,
 			is_personal: true,
 			created_at: Utc::now(),
@@ -957,12 +957,11 @@ impl OrgRepository {
 				.map_err(|e| ServerError::Internal(format!("Invalid updated_at: {e}")))?
 				.with_timezone(&Utc),
 			deleted_at: deleted_at
-				.map(|d| {
+				.and_then(|d| {
 					chrono::DateTime::parse_from_rfc3339(&d)
 						.map(|dt| dt.with_timezone(&Utc))
 						.ok()
-				})
-				.flatten(),
+				}),
 		})
 	}
 
@@ -1024,12 +1023,11 @@ impl OrgRepository {
 				.map_err(|e| ServerError::Internal(format!("Invalid updated_at: {e}")))?
 				.with_timezone(&Utc),
 			deleted_at: deleted_at
-				.map(|d| {
+				.and_then(|d| {
 					chrono::DateTime::parse_from_rfc3339(&d)
 						.map(|dt| dt.with_timezone(&Utc))
 						.ok()
-				})
-				.flatten(),
+				}),
 			locale: row.get("locale"),
 		})
 	}
@@ -1072,12 +1070,11 @@ impl OrgRepository {
 				.map_err(|e| ServerError::Internal(format!("Invalid expires_at: {e}")))?
 				.with_timezone(&Utc),
 			accepted_at: accepted_at
-				.map(|d| {
+				.and_then(|d| {
 					chrono::DateTime::parse_from_rfc3339(&d)
 						.map(|dt| dt.with_timezone(&Utc))
 						.ok()
-				})
-				.flatten(),
+				}),
 		})
 	}
 
@@ -1104,19 +1101,17 @@ impl OrgRepository {
 				.map_err(|e| ServerError::Internal(format!("Invalid created_at: {e}")))?
 				.with_timezone(&Utc),
 			handled_at: handled_at
-				.map(|d| {
+				.and_then(|d| {
 					chrono::DateTime::parse_from_rfc3339(&d)
 						.map(|dt| dt.with_timezone(&Utc))
 						.ok()
-				})
-				.flatten(),
+				}),
 			handled_by: handled_by
-				.map(|h| {
+				.and_then(|h| {
 					Uuid::parse_str(&h)
 						.map(UserId::new)
 						.ok()
-				})
-				.flatten(),
+				}),
 			approved: approved.map(|a| a != 0),
 		})
 	}
@@ -1146,19 +1141,17 @@ impl OrgRepository {
 				.map_err(|e| ServerError::Internal(format!("Invalid created_at: {e}")))?
 				.with_timezone(&Utc),
 			handled_at: handled_at
-				.map(|d| {
+				.and_then(|d| {
 					chrono::DateTime::parse_from_rfc3339(&d)
 						.map(|dt| dt.with_timezone(&Utc))
 						.ok()
-				})
-				.flatten(),
+				}),
 			handled_by: handled_by
-				.map(|h| {
+				.and_then(|h| {
 					Uuid::parse_str(&h)
 						.map(UserId::new)
 						.ok()
-				})
-				.flatten(),
+				}),
 			approved: approved.map(|a| a != 0),
 		})
 	}

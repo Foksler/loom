@@ -23,7 +23,7 @@ pub async fn list_bin_directory(request: Request) -> impl IntoResponse {
 	// - /bin or /bin/ becomes / or empty
 	// - /bin/does-not-exist becomes /does-not-exist
 	// Only show directory listing for the root path (the /bin directory itself)
-	if request_path != "/" && request_path != "" {
+	if request_path != "/" && !request_path.is_empty() {
 		return (
 			StatusCode::NOT_FOUND,
 			[("Content-Type", "text/plain; charset=utf-8")],

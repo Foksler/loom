@@ -385,12 +385,11 @@ pub async fn request_account_deletion(
 			let grace = t_fmt(locale, "server.email.deletion_scheduled.grace", &[("days", &days)]);
 			let permanent = t(locale, "server.email.deletion_scheduled.permanent");
 
-			let body_text = format!("{}\n\n{}\n\n{}", body, grace, permanent);
+			let body_text = format!("{body}\n\n{grace}\n\n{permanent}");
 
 			let dir = if is_rtl(locale) { "rtl" } else { "ltr" };
 			let body_html = format!(
-				"<div dir=\"{}\"><p>{}</p><p>{}</p><p>{}</p></div>",
-				dir, body, grace, permanent
+				"<div dir=\"{dir}\"><p>{body}</p><p>{grace}</p><p>{permanent}</p></div>"
 			);
 
 			if let Err(e) = smtp.send_email(email, &subject, &body_html, &body_text).await {

@@ -138,12 +138,12 @@ impl OrgRole {
 
     /// Returns true if this role has at least the permissions of the given role.
     pub fn has_permission_of(&self, other: &OrgRole) -> bool {
-        match (self, other) {
-            (OrgRole::Owner, _) => true,
-            (OrgRole::Admin, OrgRole::Admin | OrgRole::Member) => true,
-            (OrgRole::Member, OrgRole::Member) => true,
-            _ => false,
-        }
+        matches!(
+            (self, other),
+            (OrgRole::Owner, _)
+                | (OrgRole::Admin, OrgRole::Admin | OrgRole::Member)
+                | (OrgRole::Member, OrgRole::Member)
+        )
     }
 }
 
@@ -179,11 +179,10 @@ impl TeamRole {
 
     /// Returns true if this role has at least the permissions of the given role.
     pub fn has_permission_of(&self, other: &TeamRole) -> bool {
-        match (self, other) {
-            (TeamRole::Maintainer, _) => true,
-            (TeamRole::Member, TeamRole::Member) => true,
-            _ => false,
-        }
+        matches!(
+            (self, other),
+            (TeamRole::Maintainer, _) | (TeamRole::Member, TeamRole::Member)
+        )
     }
 }
 
@@ -227,10 +226,11 @@ impl fmt::Display for SessionType {
 // =============================================================================
 
 /// Visibility level for resources (threads, workspaces, etc.).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Visibility {
     /// Only the owner can access.
+    #[default]
     Private,
     /// Visible to specific team(s).
     Team,
@@ -238,12 +238,6 @@ pub enum Visibility {
     Organization,
     /// Visible to everyone (with link).
     Public,
-}
-
-impl Default for Visibility {
-    fn default() -> Self {
-        Visibility::Private
-    }
 }
 
 impl fmt::Display for Visibility {
@@ -348,7 +342,7 @@ pub enum IdentityProvider {
 impl fmt::Display for IdentityProvider {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            IdentityProvider::OAuth { provider, .. } => write!(f, "oauth:{}", provider),
+            IdentityProvider::OAuth { provider, .. } => write!(f, "oauth:{provider}"),
             IdentityProvider::MagicLink { .. } => write!(f, "magic_link"),
         }
     }

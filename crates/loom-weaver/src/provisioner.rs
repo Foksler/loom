@@ -105,7 +105,7 @@ impl Provisioner {
     pub async fn count_active_weavers(&self) -> Result<u32, ProvisionerError> {
         let pods = self
             .client
-            .list_pods(&self.config.namespace, &format!("{}=true", MANAGED_LABEL))
+            .list_pods(&self.config.namespace, &format!("{MANAGED_LABEL}=true"))
             .await?;
 
         let count = pods
@@ -192,7 +192,7 @@ impl Provisioner {
     ) -> Result<Vec<Weaver>, ProvisionerError> {
         let pods = self
             .client
-            .list_pods(&self.config.namespace, &format!("{}=true", MANAGED_LABEL))
+            .list_pods(&self.config.namespace, &format!("{MANAGED_LABEL}=true"))
             .await?;
 
         let mut weavers = Vec::new();
@@ -413,12 +413,12 @@ fn pod_to_weaver(pod: &Pod) -> Result<Weaver, ProvisionerError> {
         .get(WEAVER_ID_LABEL)
         .ok_or_else(|| ProvisionerError::WeaverFailed {
             id: pod_name.clone(),
-            reason: format!("Missing {} label", WEAVER_ID_LABEL),
+            reason: format!("Missing {WEAVER_ID_LABEL} label"),
         })?;
 
     let id = id_str.parse::<WeaverId>().map_err(|_| ProvisionerError::WeaverFailed {
         id: pod_name.clone(),
-        reason: format!("Invalid weaver ID: {}", id_str),
+        reason: format!("Invalid weaver ID: {id_str}"),
     })?;
 
     let tags: HashMap<String, String> = annotations

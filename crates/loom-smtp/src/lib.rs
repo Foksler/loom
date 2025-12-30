@@ -253,11 +253,11 @@ impl SmtpClient {
     pub fn new(config: SmtpConfig) -> Result<Self, SmtpError> {
         let from_mailbox: Mailbox = format!("{} <{}>", config.from_name, config.from_address)
             .parse()
-            .map_err(|e| SmtpError::Address(format!("{}", e)))?;
+            .map_err(|e| SmtpError::Address(format!("{e}")))?;
 
         let builder = if config.use_tls {
             AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&config.host)
-                .map_err(|e| SmtpError::Connection(format!("{}", e)))?
+                .map_err(|e| SmtpError::Connection(format!("{e}")))?
         } else {
             AsyncSmtpTransport::<Tokio1Executor>::builder_dangerous(&config.host)
         };
@@ -293,7 +293,7 @@ impl SmtpClient {
         self.transport
             .test_connection()
             .await
-            .map_err(|e| SmtpError::Connection(format!("{}", e)))?;
+            .map_err(|e| SmtpError::Connection(format!("{e}")))?;
         tracing::debug!("SMTP server is healthy");
         Ok(())
     }
@@ -343,7 +343,7 @@ impl SmtpClient {
     ) -> Result<(), SmtpError> {
         let to_mailbox: Mailbox = to
             .parse()
-            .map_err(|e| SmtpError::Address(format!("{}", e)))?;
+            .map_err(|e| SmtpError::Address(format!("{e}")))?;
 
         tracing::debug!("building email message");
 
@@ -364,14 +364,14 @@ impl SmtpClient {
                             .body(body_html.to_string()),
                     ),
             )
-            .map_err(|e| SmtpError::Send(format!("failed to build message: {}", e)))?;
+            .map_err(|e| SmtpError::Send(format!("failed to build message: {e}")))?;
 
         tracing::debug!("sending email");
 
         self.transport
             .send(message)
             .await
-            .map_err(|e| SmtpError::Send(format!("{}", e)))?;
+            .map_err(|e| SmtpError::Send(format!("{e}")))?;
 
         tracing::info!("email sent successfully");
 
@@ -474,7 +474,7 @@ mod tests {
                 use_tls: true,
             };
 
-            let debug = format!("{:?}", config);
+            let debug = format!("{config:?}");
             assert!(!debug.contains("super-secret-password"));
             assert!(debug.contains("[REDACTED]"));
         }
@@ -496,7 +496,7 @@ mod tests {
                 domain in "[a-zA-Z][a-zA-Z0-9]{0,20}",
                 tld in "(com|org|net|io|dev)"
             ) {
-                let email = format!("{}@{}.{}", local, domain, tld);
+                let email = format!("{local}@{domain}.{tld}");
                 prop_assert!(is_valid_email(&email), "Expected valid: {}", email);
             }
 
@@ -505,13 +505,13 @@ mod tests {
                 domain in "[a-zA-Z][a-zA-Z0-9-]{1,20}",
                 tld in "(com|org|net)"
             ) {
-                let email = format!("@{}.{}", domain, tld);
+                let email = format!("@{domain}.{tld}");
                 prop_assert!(!is_valid_email(&email));
             }
 
             #[test]
             fn empty_domain_is_invalid(local in "[a-zA-Z][a-zA-Z0-9]{1,20}") {
-                let email = format!("{}@", local);
+                let email = format!("{local}@");
                 prop_assert!(!is_valid_email(&email));
             }
 
@@ -536,7 +536,7 @@ mod tests {
                     use_tls: true,
                 };
 
-                let debug = format!("{:?}", config);
+                let debug = format!("{config:?}");
                 prop_assert!(
                     !debug.contains(&password),
                     "Password leaked in debug output"

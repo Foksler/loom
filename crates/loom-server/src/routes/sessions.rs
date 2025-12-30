@@ -77,7 +77,7 @@ pub async fn list_sessions(
 	RequireAuth(current_user): RequireAuth,
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
-	let current_session_id = current_user.session_id.clone();
+	let current_session_id = current_user.session_id;
 
 	match state
 		.session_repo

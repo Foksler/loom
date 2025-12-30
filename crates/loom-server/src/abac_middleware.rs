@@ -198,7 +198,7 @@ where
 			);
 
 			if let Some(audit_repo) = &self.audit_repo {
-				let audit_entry = AuditLogEntry::new(AuditEventType::AccessDenied)
+				let audit_entry = AuditLogEntry::builder(AuditEventType::AccessDenied)
 					.actor(current_user.user.id)
 					.resource(
 						format!("{:?}", self.resource_type).to_lowercase(),
@@ -455,7 +455,7 @@ where
 					required_roles.push("auditor");
 				}
 
-				let audit_entry = AuditLogEntry::new(AuditEventType::AccessDenied)
+				let audit_entry = AuditLogEntry::builder(AuditEventType::AccessDenied)
 					.actor(current_user.user.id)
 					.resource("role", "role_check")
 					.action("role_check")
@@ -813,10 +813,10 @@ pub async fn check_authorization_with_audit(
 			.or_else(|| resource.team_id.map(|id| id.to_string()))
 			.unwrap_or_else(|| "unknown".to_string());
 
-		let audit_entry = AuditLogEntry::new(AuditEventType::AccessDenied)
+		let audit_entry = AuditLogEntry::builder(AuditEventType::AccessDenied)
 			.actor(subject.user_id)
 			.resource(format!("{:?}", resource.resource_type).to_lowercase(), resource_id)
-			.action(format!("{:?}", action).to_lowercase())
+			.action(format!("{action:?}").to_lowercase())
 			.details(json!({
 				"reason": "authorization check failed",
 				"resource_type": format!("{:?}", resource.resource_type),

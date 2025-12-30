@@ -509,7 +509,7 @@ impl OktaOAuthClient {
 
 		let response = self
 			.http_client
-			.post(&self.token_endpoint())
+			.post(self.token_endpoint())
 			.header("Accept", "application/json")
 			.header("Content-Type", "application/x-www-form-urlencoded")
 			.header("Authorization", self.basic_auth_header())
@@ -559,7 +559,7 @@ impl OktaOAuthClient {
 
 		let response = self
 			.http_client
-			.get(&self.userinfo_endpoint())
+			.get(self.userinfo_endpoint())
 			.header("Accept", "application/json")
 			.header("Authorization", format!("Bearer {access_token}"))
 			.send()
@@ -610,7 +610,7 @@ impl OktaOAuthClient {
 
 		let response = self
 			.http_client
-			.post(&self.introspect_endpoint())
+			.post(self.introspect_endpoint())
 			.header("Accept", "application/json")
 			.header("Content-Type", "application/x-www-form-urlencoded")
 			.header("Authorization", self.basic_auth_header())
@@ -844,7 +844,7 @@ mod tests {
 			scopes: vec!["openid".to_string()],
 		};
 
-		let debug_output = format!("{:?}", config);
+		let debug_output = format!("{config:?}");
 		assert!(!debug_output.contains("super_secret_value"));
 		assert!(debug_output.contains("[REDACTED]"));
 	}
@@ -860,7 +860,7 @@ mod tests {
         }"#;
 
 		let token: OktaTokenResponse = serde_json::from_str(json).unwrap();
-		let debug_output = format!("{:?}", token);
+		let debug_output = format!("{token:?}");
 
 		assert!(!debug_output.contains("_secret_token"));
 		assert!(!debug_output.contains("_secret_id"));
@@ -1029,7 +1029,7 @@ mod proptests {
 				scopes: vec![],
 			};
 
-			let debug = format!("{:?}", config);
+			let debug = format!("{config:?}");
 			prop_assert!(!debug.contains(&secret));
 		}
 
@@ -1041,12 +1041,11 @@ mod proptests {
 			prop_assume!(!token.contains("REDACTED"));
 
 			let json = format!(
-				r#"{{"access_token": "{}", "id_token": "eyJtest", "token_type": "Bearer", "expires_in": 3600, "scope": "openid"}}"#,
-				token
+				r#"{{"access_token": "{token}", "id_token": "eyJtest", "token_type": "Bearer", "expires_in": 3600, "scope": "openid"}}"#
 			);
 			let response: OktaTokenResponse = serde_json::from_str(&json).unwrap();
 
-			let debug = format!("{:?}", response);
+			let debug = format!("{response:?}");
 			prop_assert!(!debug.contains(&token));
 		}
 
@@ -1058,12 +1057,11 @@ mod proptests {
 			prop_assume!(!token.contains("REDACTED"));
 
 			let json = format!(
-				r#"{{"access_token": "eyJtest", "id_token": "{}", "token_type": "Bearer", "expires_in": 3600, "scope": "openid"}}"#,
-				token
+				r#"{{"access_token": "eyJtest", "id_token": "{token}", "token_type": "Bearer", "expires_in": 3600, "scope": "openid"}}"#
 			);
 			let response: OktaTokenResponse = serde_json::from_str(&json).unwrap();
 
-			let debug = format!("{:?}", response);
+			let debug = format!("{response:?}");
 			prop_assert!(!debug.contains(&token));
 		}
 	}

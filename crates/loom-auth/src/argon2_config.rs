@@ -61,6 +61,6 @@ mod tests {
     fn test_argon2_instance_returns_valid_hasher() {
         let argon2 = argon2_instance();
         // Just verify we can create an instance without panicking
-        let _ = format!("{:?}", argon2);
+        let _ = format!("{argon2:?}");
     }
 }

@@ -119,7 +119,7 @@ async fn test_cannot_create_share_link_for_others_thread() {
 	let response = app
 		.oneshot(
 			Request::builder()
-				.uri(&format!("/api/threads/{}/share", thread.id.as_str()))
+				.uri(format!("/api/threads/{}/share", thread.id.as_str()))
 				.method("POST")
 				.header("content-type", "application/json")
 				.header("cookie", format!("loom_session={token_b}"))
@@ -161,7 +161,7 @@ async fn test_cannot_revoke_share_link_for_others_thread() {
 		.clone()
 		.oneshot(
 			Request::builder()
-				.uri(&format!("/api/threads/{}/share", thread.id.as_str()))
+				.uri(format!("/api/threads/{}/share", thread.id.as_str()))
 				.method("POST")
 				.header("content-type", "application/json")
 				.header("cookie", format!("loom_session={token_a}"))
@@ -181,7 +181,7 @@ async fn test_cannot_revoke_share_link_for_others_thread() {
 	let response = app
 		.oneshot(
 			Request::builder()
-				.uri(&format!("/api/threads/{}/share", thread.id.as_str()))
+				.uri(format!("/api/threads/{}/share", thread.id.as_str()))
 				.method("DELETE")
 				.header("cookie", format!("loom_session={token_b}"))
 				.body(Body::empty())
@@ -219,7 +219,7 @@ async fn test_owner_can_manage_share_links() {
 		.clone()
 		.oneshot(
 			Request::builder()
-				.uri(&format!("/api/threads/{}/share", thread.id.as_str()))
+				.uri(format!("/api/threads/{}/share", thread.id.as_str()))
 				.method("POST")
 				.header("content-type", "application/json")
 				.header("cookie", format!("loom_session={token_a}"))
@@ -245,7 +245,7 @@ async fn test_owner_can_manage_share_links() {
 	let revoke_response = app
 		.oneshot(
 			Request::builder()
-				.uri(&format!("/api/threads/{}/share", thread.id.as_str()))
+				.uri(format!("/api/threads/{}/share", thread.id.as_str()))
 				.method("DELETE")
 				.header("cookie", format!("loom_session={token_a}"))
 				.body(Body::empty())
@@ -274,7 +274,7 @@ async fn test_unauthenticated_user_cannot_create_share_link() {
 	let response = app
 		.oneshot(
 			Request::builder()
-				.uri(&format!("/api/threads/{}/share", thread.id.as_str()))
+				.uri(format!("/api/threads/{}/share", thread.id.as_str()))
 				.method("POST")
 				.header("content-type", "application/json")
 				.body(Body::from(body))
@@ -303,7 +303,7 @@ async fn test_invalid_token_cannot_create_share_link() {
 	let response = app
 		.oneshot(
 			Request::builder()
-				.uri(&format!("/api/threads/{}/share", thread.id.as_str()))
+				.uri(format!("/api/threads/{}/share", thread.id.as_str()))
 				.method("POST")
 				.header("content-type", "application/json")
 				.header("cookie", "loom_session=invalid-token-12345")

@@ -275,9 +275,9 @@ pub fn extract_session_cookie_with_name(headers: &HeaderMap, cookie_name: &str) 
         .split(';')
         .find_map(|cookie| {
             let cookie = cookie.trim();
-            let mut parts = cookie.splitn(2, '=');
-            let name = parts.next()?;
-            let value = parts.next()?;
+            let (name, value) = cookie.split_once('=')?;
+            
+            
             if name == cookie_name {
                 Some(value.to_string())
             } else {
@@ -306,11 +306,7 @@ pub fn extract_session_cookie_with_name(headers: &HeaderMap, cookie_name: &str) 
 pub fn extract_bearer_token(headers: &HeaderMap) -> Option<String> {
     let auth_header = headers.get(AUTHORIZATION)?;
     let auth_str = auth_header.to_str().ok()?;
-    if let Some(token) = auth_str.strip_prefix("Bearer ") {
-        Some(token.to_string())
-    } else {
-        None
-    }
+    auth_str.strip_prefix("Bearer ").map(|token| token.to_string())
 }
 
 /// Check if a token is an API key (starts with `lk_`).
@@ -570,7 +566,7 @@ mod tests {
         fn dev_mode_panics_in_production() {
             let result = with_env_vars(
                 &[(DEV_MODE_ENV_VAR, "1"), (LOOM_ENV_VAR, "production")],
-                || AuthConfig::from_env(),
+                AuthConfig::from_env,
             );
             assert!(result.is_err(), "Expected panic when dev mode enabled in production");
         }
@@ -579,7 +575,7 @@ mod tests {
         fn dev_mode_allowed_in_development() {
             let result = with_env_vars(
                 &[(DEV_MODE_ENV_VAR, "1"), (LOOM_ENV_VAR, "development")],
-                || AuthConfig::from_env(),
+                AuthConfig::from_env,
             );
             let config = result.expect("Should not panic in development");
             assert!(config.dev_mode);
@@ -599,7 +595,7 @@ mod tests {
         fn production_mode_works_without_dev_mode() {
             let result = with_env_vars(
                 &[(DEV_MODE_ENV_VAR, "0"), (LOOM_ENV_VAR, "production")],
-                || AuthConfig::from_env(),
+                AuthConfig::from_env,
             );
             let config = result.expect("Should not panic when dev mode disabled");
             assert!(!config.dev_mode);

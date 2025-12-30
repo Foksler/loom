@@ -83,8 +83,8 @@ impl Organization {
         let now = Utc::now();
         Self {
             id: OrgId::generate(),
-            name: format!("{}'s Personal", owner),
-            slug: format!("personal-{}", owner),
+            name: format!("{owner}'s Personal"),
+            slug: format!("personal-{owner}"),
             visibility: OrgVisibility::Public,
             is_personal: true,
             created_at: now,

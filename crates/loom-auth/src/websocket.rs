@@ -42,7 +42,7 @@ pub enum WsAuthState {
     AwaitingAuth,
 
     /// Connection is authenticated with user context.
-    Authenticated(WsAuthContext),
+    Authenticated(Box<WsAuthContext>),
 
     /// Authentication failed (invalid token, timeout, etc.).
     Failed(WsAuthError),
@@ -57,7 +57,7 @@ impl WsAuthState {
     /// Get the authenticated user context, if any.
     pub fn user(&self) -> Option<&WsAuthContext> {
         match self {
-            WsAuthState::Authenticated(ctx) => Some(ctx),
+            WsAuthState::Authenticated(ctx) => Some(ctx.as_ref()),
             _ => None,
         }
     }
@@ -285,7 +285,7 @@ mod tests {
             let session = Session::new(user.id, SessionType::Web);
             let current_user = CurrentUser::from_session(user, session.id);
             let ctx = WsAuthContext::new(current_user, WsAuthMethod::SessionCookie);
-            let state = WsAuthState::Authenticated(ctx);
+            let state = WsAuthState::Authenticated(Box::new(ctx));
 
             assert!(state.is_authenticated());
             assert!(state.user().is_some());

@@ -15,12 +15,12 @@ fn main() {
 	let out_dir = std::env::var("OUT_DIR").expect("OUT_DIR not set");
 
 	for locale in locales {
-		let po_path = format!("locales/{}/messages.po", locale);
-		let precompiled_mo_path = format!("locales/{}/messages.mo", locale);
-		let out_mo_path = format!("{}/{}.mo", out_dir, locale);
+		let po_path = format!("locales/{locale}/messages.po");
+		let precompiled_mo_path = format!("locales/{locale}/messages.mo");
+		let out_mo_path = format!("{out_dir}/{locale}.mo");
 
-		println!("cargo:rerun-if-changed={}", po_path);
-		println!("cargo:rerun-if-changed={}", precompiled_mo_path);
+		println!("cargo:rerun-if-changed={po_path}");
+		println!("cargo:rerun-if-changed={precompiled_mo_path}");
 
 		if let Ok(status) = Command::new("msgfmt")
 			.args(["-o", &out_mo_path, &po_path])
@@ -36,9 +36,8 @@ fn main() {
 				.expect("Failed to copy pre-compiled .mo file");
 		} else {
 			panic!(
-				"msgfmt not available and no pre-compiled .mo file for locale: {}. \
-				 Install gettext or run: msgfmt -o {} {}",
-				locale, precompiled_mo_path, po_path
+				"msgfmt not available and no pre-compiled .mo file for locale: {locale}. \
+				 Install gettext or run: msgfmt -o {precompiled_mo_path} {po_path}"
 			);
 		}
 	}

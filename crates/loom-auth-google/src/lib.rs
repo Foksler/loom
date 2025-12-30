@@ -225,7 +225,7 @@ impl GoogleOAuthConfig {
 	/// Handles both space-separated and comma-separated scope lists.
 	pub fn parse_scopes(scope_str: &str) -> Vec<String> {
 		scope_str
-			.split(|c| c == ' ' || c == ',')
+			.split([' ', ','])
 			.map(|s| s.trim().to_string())
 			.filter(|s| !s.is_empty())
 			.collect()
@@ -763,7 +763,7 @@ mod tests {
 
 		let payload = r#"{"iss":"https://accounts.google.com","sub":"123456789","aud":"test_client_id","exp":1735600000,"iat":1735596400,"email":"test@example.com","email_verified":true,"name":"Test User","picture":"https://example.com/photo.jpg","nonce":"test-nonce"}"#;
 		let encoded_payload = URL_SAFE_NO_PAD.encode(payload);
-		let id_token = format!("header.{}.signature", encoded_payload);
+		let id_token = format!("header.{encoded_payload}.signature");
 
 		let claims = client.decode_id_token(&id_token).unwrap();
 		assert_eq!(claims.iss, "https://accounts.google.com");
@@ -814,7 +814,7 @@ mod tests {
 		let client = GoogleOAuthClient::new(config);
 
 		let encoded_payload = URL_SAFE_NO_PAD.encode("not valid json");
-		let id_token = format!("header.{}.signature", encoded_payload);
+		let id_token = format!("header.{encoded_payload}.signature");
 
 		let result = client.decode_id_token(&id_token);
 		assert!(matches!(result, Err(OAuthError::InvalidIdToken(_))));
@@ -855,7 +855,7 @@ mod tests {
 			scopes: vec![],
 		};
 
-		let debug_output = format!("{:?}", config);
+		let debug_output = format!("{config:?}");
 
 		assert!(!debug_output.contains("super_secret_value"));
 		assert!(debug_output.contains("[REDACTED]"));
@@ -1075,7 +1075,7 @@ mod proptests {
 				scopes: vec![],
 			};
 
-			let debug = format!("{:?}", config);
+			let debug = format!("{config:?}");
 			prop_assert!(!debug.contains(&secret));
 		}
 
@@ -1087,12 +1087,11 @@ mod proptests {
 			prop_assume!(!token.contains("REDACTED"));
 
 			let json = format!(
-				r#"{{"access_token": "{}", "id_token": "eyJ.eyJ.sig", "token_type": "Bearer", "expires_in": 3600, "scope": "openid"}}"#,
-				token
+				r#"{{"access_token": "{token}", "id_token": "eyJ.eyJ.sig", "token_type": "Bearer", "expires_in": 3600, "scope": "openid"}}"#
 			);
 			let response: GoogleTokenResponse = serde_json::from_str(&json).unwrap();
 
-			let debug = format!("{:?}", response);
+			let debug = format!("{response:?}");
 			prop_assert!(!debug.contains(&token));
 		}
 
@@ -1104,14 +1103,13 @@ mod proptests {
 			prop_assume!(!payload.contains("REDACTED"));
 			prop_assume!(!payload.contains("Secret"));
 
-			let id_token = format!("eyJhbGciOiJSUzI1NiJ9.{}.signature", payload);
+			let id_token = format!("eyJhbGciOiJSUzI1NiJ9.{payload}.signature");
 			let json = format!(
-				r#"{{"access_token": "ya29.token", "id_token": "{}", "token_type": "Bearer", "expires_in": 3600, "scope": "openid"}}"#,
-				id_token
+				r#"{{"access_token": "ya29.token", "id_token": "{id_token}", "token_type": "Bearer", "expires_in": 3600, "scope": "openid"}}"#
 			);
 			let response: GoogleTokenResponse = serde_json::from_str(&json).unwrap();
 
-			let debug = format!("{:?}", response);
+			let debug = format!("{response:?}");
 			prop_assert!(!debug.contains(&payload));
 		}
 
@@ -1153,11 +1151,10 @@ mod proptests {
 			let client = GoogleOAuthClient::new(config);
 
 			let claims_json = format!(
-				r#"{{"iss":"https://accounts.google.com","sub":"{}","aud":"test_client","exp":9999999999,"iat":1000000000,"email":"{}"}}"#,
-				sub, email
+				r#"{{"iss":"https://accounts.google.com","sub":"{sub}","aud":"test_client","exp":9999999999,"iat":1000000000,"email":"{email}"}}"#
 			);
 			let encoded = URL_SAFE_NO_PAD.encode(&claims_json);
-			let token = format!("header.{}.signature", encoded);
+			let token = format!("header.{encoded}.signature");
 
 			let result = client.decode_id_token(&token);
 			prop_assert!(result.is_ok());

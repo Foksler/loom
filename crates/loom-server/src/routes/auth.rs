@@ -203,8 +203,7 @@ pub async fn logout(
 	let mut headers = HeaderMap::new();
 	let cookie_name = &state.auth_config.session_cookie_name;
 	let clear_cookie = format!(
-		"{}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax",
-		cookie_name
+		"{cookie_name}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax"
 	);
 	if let Ok(value) = HeaderValue::from_str(&clear_cookie) {
 		headers.insert(SET_COOKIE, value);
@@ -343,24 +342,10 @@ fn render_magic_link_email(verification_url: &str, locale: &str) -> (String, Str
     <p style="margin-top: 20px; color: #666; font-size: 12px;">{copy_link} <span dir="ltr">{verification_url}</span></p>
 </body>
 </html>"#,
-		locale = locale,
-		dir = dir,
-		align = align,
-		subject = subject,
-		body = body,
-		expires = expires,
-		verification_url = verification_url,
-		ignore = ignore,
-		copy_link = copy_link,
 	);
 
 	let text = format!(
 		"{subject}\n\n{body} {expires}\n\n{verification_url}\n\n{ignore}",
-		subject = subject,
-		body = body,
-		expires = expires,
-		verification_url = verification_url,
-		ignore = ignore,
 	);
 
 	(html, text)

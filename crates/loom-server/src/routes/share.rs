@@ -282,7 +282,7 @@ pub async fn create_share_link(
 
 	let url = format!("{}/api/threads/{}/share/{}", state.base_url, id, plaintext_token);
 
-	let audit_entry = AuditLogEntry::new(AuditEventType::ThreadShared)
+	let audit_entry = AuditLogEntry::builder(AuditEventType::ThreadShared)
 		.actor(current_user.user.id)
 		.resource("thread", &id)
 		.action("Created share link")
@@ -456,7 +456,7 @@ pub async fn revoke_share_link(
 
 	match state.share_repo.revoke_share_link(&id).await {
 		Ok(count) if count > 0 => {
-			let audit_entry = AuditLogEntry::new(AuditEventType::ThreadUnshared)
+			let audit_entry = AuditLogEntry::builder(AuditEventType::ThreadUnshared)
 				.actor(current_user.user.id)
 				.resource("thread", &id)
 				.action("Revoked share link")
@@ -635,7 +635,7 @@ pub async fn get_shared_thread(
 	};
 
 	let content = serde_json::to_value(&thread.conversation)
-		.unwrap_or_else(|_| serde_json::Value::Null);
+		.unwrap_or(serde_json::Value::Null);
 
 	tracing::info!(share_link_id = %share_link.id, "shared thread accessed");
 
@@ -784,7 +784,7 @@ pub async fn request_support_access(
 			.into_response();
 	}
 
-	let audit_entry = AuditLogEntry::new(AuditEventType::SupportAccessRequested)
+	let audit_entry = AuditLogEntry::builder(AuditEventType::SupportAccessRequested)
 		.actor(current_user.user.id)
 		.resource("thread", &id)
 		.action("Requested support access")
@@ -977,7 +977,7 @@ pub async fn approve_support_access(
 		tracing::error!(error = %e, thread_id = %id, "Failed to set is_shared_with_support flag");
 	}
 
-	let audit_entry = AuditLogEntry::new(AuditEventType::SupportAccessApproved)
+	let audit_entry = AuditLogEntry::builder(AuditEventType::SupportAccessApproved)
 		.actor(current_user.user.id)
 		.resource("thread", &id)
 		.action("Approved support access")
@@ -1166,7 +1166,7 @@ pub async fn revoke_support_access(
 		tracing::error!(error = %e, thread_id = %id, "Failed to clear is_shared_with_support flag");
 	}
 
-	let audit_entry = AuditLogEntry::new(AuditEventType::SupportAccessRevoked)
+	let audit_entry = AuditLogEntry::builder(AuditEventType::SupportAccessRevoked)
 		.actor(current_user.user.id)
 		.resource("thread", &id)
 		.action("Revoked support access")

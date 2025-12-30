@@ -540,8 +540,7 @@ fn test_okta_user_with_missing_email_verified_fails_check() {
 
 #[test]
 fn test_github_verified_primary_email_passes_check() {
-	let emails = vec![
-		GitHubEmail {
+	let emails = [GitHubEmail {
 			email: "primary@example.com".to_string(),
 			primary: true,
 			verified: true,
@@ -550,8 +549,7 @@ fn test_github_verified_primary_email_passes_check() {
 			email: "secondary@example.com".to_string(),
 			primary: false,
 			verified: true,
-		},
-	];
+		}];
 
 	let verified_primary = emails.iter().find(|e| e.primary && e.verified).map(|e| e.email.clone());
 	assert_eq!(
@@ -563,8 +561,7 @@ fn test_github_verified_primary_email_passes_check() {
 
 #[test]
 fn test_github_unverified_primary_email_fails_check() {
-	let emails = vec![
-		GitHubEmail {
+	let emails = [GitHubEmail {
 			email: "primary@example.com".to_string(),
 			primary: true,
 			verified: false,
@@ -573,8 +570,7 @@ fn test_github_unverified_primary_email_fails_check() {
 			email: "secondary@example.com".to_string(),
 			primary: false,
 			verified: true,
-		},
-	];
+		}];
 
 	let verified_primary = emails.iter().find(|e| e.primary && e.verified).map(|e| e.email.clone());
 	assert!(
@@ -585,8 +581,7 @@ fn test_github_unverified_primary_email_fails_check() {
 
 #[test]
 fn test_github_no_verified_emails_fails_check() {
-	let emails = vec![
-		GitHubEmail {
+	let emails = [GitHubEmail {
 			email: "primary@example.com".to_string(),
 			primary: true,
 			verified: false,
@@ -595,8 +590,7 @@ fn test_github_no_verified_emails_fails_check() {
 			email: "secondary@example.com".to_string(),
 			primary: false,
 			verified: false,
-		},
-	];
+		}];
 
 	let verified_primary = emails.iter().find(|e| e.primary && e.verified).map(|e| e.email.clone());
 	assert!(
@@ -675,7 +669,7 @@ async fn test_access_denial_is_audit_logged() {
 		.oneshot(
 			Request::builder()
 				.uri("/api/admin/users")
-				.header("cookie", format!("loom_session={}", session_token))
+				.header("cookie", format!("loom_session={session_token}"))
 				.body(Body::empty())
 				.unwrap(),
 		)
@@ -704,7 +698,7 @@ async fn test_access_denial_is_audit_logged() {
 		.await
 		.unwrap();
 
-	assert!(count >= 1, "Expected at least 1 AccessDenied audit log entry, got {}", count);
+	assert!(count >= 1, "Expected at least 1 AccessDenied audit log entry, got {count}");
 
 	// Verify the logged event has correct details
 	let log = logs.first().expect("Should have at least one log entry");
@@ -739,7 +733,7 @@ async fn test_access_denial_audit_contains_correct_details() {
 		.oneshot(
 			Request::builder()
 				.uri("/api/admin/audit-logs")
-				.header("cookie", format!("loom_session={}", session_token))
+				.header("cookie", format!("loom_session={session_token}"))
 				.body(Body::empty())
 				.unwrap(),
 		)
@@ -830,8 +824,7 @@ async fn test_unauthenticated_request_does_not_log_access_denied() {
 	// Should have no AccessDenied events (unauthenticated = 401, not 403)
 	assert_eq!(
 		count, 0,
-		"Unauthenticated requests should not create AccessDenied audit logs, found {}: {:?}",
-		count, logs
+		"Unauthenticated requests should not create AccessDenied audit logs, found {count}: {logs:?}"
 	);
 }
 

@@ -24,6 +24,7 @@
     ../nixos-modules/loom-server.nix
     ../nixos-modules/loom-web.nix
     ../nixos-modules/k3s.nix
+    ../nixos-modules/maxmind-geoip-update.nix
   ];
 
   # Machine-specific configuration
@@ -122,7 +123,16 @@
     mode = "0400";
   };
 
-  
+  sops.secrets.maxmind-account-id = {
+    owner = "root";
+    mode = "0400";
+  };
+
+  sops.secrets.maxmind-license-key = {
+    owner = "root";
+    mode = "0400";
+  };
+
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
   system.stateVersion = "25.11";
@@ -191,6 +201,10 @@
       enable = true;
       namespace = "loom-weavers";
     };
+
+    geoip = {
+      enable = true;
+    };
   };
 
   # Loom Web - Web frontend
@@ -201,5 +215,12 @@
     domain = "loom.ghuntley.com";
     enableSSL = true;
     acmeEmail = "ghuntley@ghuntley.com";
+  };
+
+  # MaxMind GeoIP database updates
+  services.loom-geoipupdate = {
+    enable = true;
+    accountIdFile = config.sops.secrets.maxmind-account-id.path;
+    licenseKeyFile = config.sops.secrets.maxmind-license-key.path;
   };
 }

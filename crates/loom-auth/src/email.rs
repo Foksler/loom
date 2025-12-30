@@ -36,8 +36,7 @@ impl TlsMode {
             "starttls" => Ok(TlsMode::StartTls),
             "false" | "none" => Ok(TlsMode::None),
             _ => Err(AuthError::Configuration(format!(
-                "Invalid LOOM_SERVER_SMTP_TLS value: '{}'. Expected: true, tls, starttls, false, none",
-                value
+                "Invalid LOOM_SERVER_SMTP_TLS value: '{value}'. Expected: true, tls, starttls, false, none"
             ))),
         }
     }
@@ -80,29 +79,26 @@ impl SmtpConfig {
             Err(std::env::VarError::NotPresent) => return Ok(None),
             Err(e) => {
                 return Err(AuthError::Configuration(format!(
-                    "Failed to read LOOM_SERVER_SMTP_HOST: {}",
-                    e
+                    "Failed to read LOOM_SERVER_SMTP_HOST: {e}"
                 )))
             }
         };
 
         let port = match std::env::var("LOOM_SERVER_SMTP_PORT") {
             Ok(p) => p.parse::<u16>().map_err(|e| {
-                AuthError::Configuration(format!("Invalid LOOM_SERVER_SMTP_PORT: {}", e))
+                AuthError::Configuration(format!("Invalid LOOM_SERVER_SMTP_PORT: {e}"))
             })?,
             Err(std::env::VarError::NotPresent) => 587,
             Err(e) => {
                 return Err(AuthError::Configuration(format!(
-                    "Failed to read LOOM_SERVER_SMTP_PORT: {}",
-                    e
+                    "Failed to read LOOM_SERVER_SMTP_PORT: {e}"
                 )))
             }
         };
 
         let from_address = std::env::var("LOOM_SERVER_SMTP_FROM").map_err(|e| {
             AuthError::Configuration(format!(
-                "LOOM_SERVER_SMTP_FROM is required when LOOM_SERVER_SMTP_HOST is set: {}",
-                e
+                "LOOM_SERVER_SMTP_FROM is required when LOOM_SERVER_SMTP_HOST is set: {e}"
             ))
         })?;
 
@@ -124,8 +120,7 @@ impl SmtpConfig {
             Err(std::env::VarError::NotPresent) => TlsMode::Tls,
             Err(e) => {
                 return Err(AuthError::Configuration(format!(
-                    "Failed to read LOOM_SERVER_SMTP_TLS: {}",
-                    e
+                    "Failed to read LOOM_SERVER_SMTP_TLS: {e}"
                 )))
             }
         };

@@ -190,7 +190,7 @@ impl GitHubOAuthConfig {
 	/// Parse a scope string into a vector of individual scopes.
 	pub fn parse_scopes(scope_str: &str) -> Vec<String> {
 		scope_str
-			.split(|c| c == ' ' || c == ',')
+			.split([' ', ','])
 			.map(|s| s.trim().to_string())
 			.filter(|s| !s.is_empty())
 			.collect()
@@ -679,7 +679,7 @@ mod tests {
         }"#;
 
 		let token: GitHubTokenResponse = serde_json::from_str(json).unwrap();
-		let debug_output = format!("{:?}", token);
+		let debug_output = format!("{token:?}");
 
 		assert!(!debug_output.contains("gho_supersecrettoken"));
 		assert!(debug_output.contains("[REDACTED]"));
@@ -693,7 +693,7 @@ mod tests {
 			redirect_uri: "https://example.com".to_string(),
 			scopes: vec![],
 		};
-		let debug_output = format!("{:?}", config);
+		let debug_output = format!("{config:?}");
 
 		assert!(!debug_output.contains("super_secret_value"));
 		assert!(debug_output.contains("[REDACTED]"));
@@ -829,7 +829,7 @@ mod proptests {
 				scopes: vec![],
 			};
 
-			let debug = format!("{:?}", config);
+			let debug = format!("{config:?}");
 			prop_assert!(!debug.contains(&secret));
 		}
 
@@ -841,12 +841,11 @@ mod proptests {
 			prop_assume!(!token.contains("REDACTED"));
 
 			let json = format!(
-				r#"{{"access_token": "{}", "token_type": "bearer", "scope": "user:email"}}"#,
-				token
+				r#"{{"access_token": "{token}", "token_type": "bearer", "scope": "user:email"}}"#
 			);
 			let response: GitHubTokenResponse = serde_json::from_str(&json).unwrap();
 
-			let debug = format!("{:?}", response);
+			let debug = format!("{response:?}");
 			prop_assert!(!debug.contains(&token));
 		}
 	}

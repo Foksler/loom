@@ -574,9 +574,9 @@ mod tests {
 			#[test]
 			fn whitespace_tokens_are_distinct(token in "[a-zA-Z0-9]{4,20}") {
 				let hash_plain = hash_token(&token);
-				let hash_leading = hash_token(&format!(" {}", token));
-				let hash_trailing = hash_token(&format!("{} ", token));
-				let hash_both = hash_token(&format!(" {} ", token));
+				let hash_leading = hash_token(&format!(" {token}"));
+				let hash_trailing = hash_token(&format!("{token} "));
+				let hash_both = hash_token(&format!(" {token} "));
 
 				prop_assert_ne!(hash_plain.clone(), hash_leading);
 				prop_assert_ne!(hash_plain.clone(), hash_trailing);

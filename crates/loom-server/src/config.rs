@@ -86,7 +86,7 @@ impl ServerConfig {
 			env::var("LOOM_SERVER_DATABASE_URL").unwrap_or_else(|_| "sqlite:./loom.db".to_string());
 
 		let base_url = env::var("LOOM_SERVER_BASE_URL")
-			.unwrap_or_else(|_| format!("http://localhost:{}", port));
+			.unwrap_or_else(|_| format!("http://localhost:{port}"));
 
 		let log_level = env::var("LOOM_SERVER_LOG_LEVEL")
 			.unwrap_or_else(|_| "info,tower_http::trace=debug".to_string());

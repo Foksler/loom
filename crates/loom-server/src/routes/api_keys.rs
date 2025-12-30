@@ -449,7 +449,7 @@ pub async fn create_api_key(
 		Ok(id) => {
 			let now = Utc::now();
 
-			let audit_entry = AuditLogEntry::new(AuditEventType::ApiKeyCreated)
+			let audit_entry = AuditLogEntry::builder(AuditEventType::ApiKeyCreated)
 				.actor(current_user.user.id)
 				.resource("api_key", &id)
 				.action("Created API key")
@@ -657,7 +657,7 @@ pub async fn revoke_api_key(
 
 	match state.api_key_repo.revoke_api_key(&id, &current_user.user.id).await {
 		Ok(true) => {
-			let audit_entry = AuditLogEntry::new(AuditEventType::ApiKeyRevoked)
+			let audit_entry = AuditLogEntry::builder(AuditEventType::ApiKeyRevoked)
 				.actor(current_user.user.id)
 				.resource("api_key", &id)
 				.action("Revoked API key")

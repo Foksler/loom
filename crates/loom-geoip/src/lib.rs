@@ -61,7 +61,7 @@ pub struct GeoLocation {
 impl GeoLocation {
 	pub fn display_string(&self) -> Option<String> {
 		match (&self.city, &self.country) {
-			(Some(city), Some(country)) => Some(format!("{}, {}", city, country)),
+			(Some(city), Some(country)) => Some(format!("{city}, {country}")),
 			(None, Some(country)) => Some(country.clone()),
 			(Some(city), None) => Some(city.clone()),
 			(None, None) => None,

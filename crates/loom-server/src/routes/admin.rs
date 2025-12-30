@@ -458,7 +458,7 @@ pub async fn update_user_roles(
 		"Admin updated user roles"
 	);
 
-	let audit_entry = AuditLogEntry::new(AuditEventType::RoleChanged)
+	let audit_entry = AuditLogEntry::builder(AuditEventType::RoleChanged)
 		.actor(current_user.user.id)
 		.resource("user", target_user.id.to_string())
 		.action("Updated user roles")
@@ -664,7 +664,7 @@ pub async fn start_impersonation(
 		"Admin started impersonation"
 	);
 
-	let audit_entry = AuditLogEntry::new(AuditEventType::ImpersonationStarted)
+	let audit_entry = AuditLogEntry::builder(AuditEventType::ImpersonationStarted)
 		.actor(target_user_id)
 		.impersonating(current_user.user.id)
 		.resource("user", target_user.id.to_string())
@@ -784,7 +784,7 @@ pub async fn stop_impersonation(
 		"Admin stopped impersonation"
 	);
 
-	let audit_entry = AuditLogEntry::new(AuditEventType::ImpersonationEnded)
+	let audit_entry = AuditLogEntry::builder(AuditEventType::ImpersonationEnded)
 		.actor(target_user_id)
 		.impersonating(current_user.user.id)
 		.resource("user", target_user_id.to_string())
