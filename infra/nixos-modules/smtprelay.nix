@@ -76,6 +76,16 @@ in
       description = "Log level for smtprelay.";
     };
 
+    metricsListen = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = ''
+        Address and port to listen for metrics exposition.
+        Set to "" to disable metrics. Defaults to null which uses smtprelay's default (:8080).
+      '';
+      example = "127.0.0.1:9090";
+    };
+
     useTLS = mkOption {
       type = types.bool;
       default = true;
@@ -146,6 +156,10 @@ in
 
         ${optionalString (cfg.remoteSender != null) ''
           ARGS+=("-remote_sender" "${cfg.remoteSender}")
+        ''}
+
+        ${optionalString (cfg.metricsListen != null) ''
+          ARGS+=("-metrics_listen" "${cfg.metricsListen}")
         ''}
 
         exec ${pkgs.smtprelay}/bin/smtprelay "''${ARGS[@]}"

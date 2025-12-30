@@ -254,6 +254,7 @@
     remoteSender = "noreply@loom.ghuntley.com";
     remoteHost = "mail-au.smtp2go.com:2525";
     remoteAuthFile = config.sops.secrets.smtp-relay-auth.path;
+    metricsListen = "";
     useTLS = true;
   };
 
