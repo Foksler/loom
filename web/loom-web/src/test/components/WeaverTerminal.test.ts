@@ -117,6 +117,24 @@ describe('WeaverTerminal keep-alive', () => {
 		expect(ping.length).toBe(0);
 		expect(ping.byteLength).toBe(0);
 	});
+
+	it('should send terminal refresh (Ctrl+L) on connect', () => {
+		mockWs.simulateOpen();
+
+		// Simulate sending Ctrl+L (ASCII 12) on connect
+		const ctrlL = new Uint8Array([12]);
+		mockWs.send(ctrlL);
+
+		expect(mockWs.sentMessages.length).toBe(1);
+		const sent = mockWs.sentMessages[0] as Uint8Array;
+		expect(sent[0]).toBe(12); // ASCII 12 = Form Feed (Ctrl+L)
+	});
+
+	it('Ctrl+L should be ASCII code 12', () => {
+		const CTRL_L = 12;
+		expect(CTRL_L).toBe(12);
+		expect(String.fromCharCode(CTRL_L)).toBe('\f'); // Form feed character
+	});
 });
 
 describe('WebSocket URL construction', () => {

@@ -101,6 +101,9 @@
 			connectionStatus = 'connected';
 			terminal?.focus();
 			startKeepAlive();
+			// Send Ctrl+L to refresh the terminal display
+			// This triggers a redraw so user sees current PTY state
+			sendTerminalRefresh();
 		};
 
 		ws.onmessage = (event) => {
@@ -126,6 +129,13 @@
 			stopKeepAlive();
 			errorMessage = 'Failed to connect to weaver';
 		};
+	}
+
+	function sendTerminalRefresh() {
+		if (ws && ws.readyState === WebSocket.OPEN) {
+			// Send Ctrl+L (ASCII 12 = Form Feed) to trigger terminal redraw
+			ws.send(new Uint8Array([12]));
+		}
 	}
 
 	function startKeepAlive() {
