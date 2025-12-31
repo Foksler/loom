@@ -17,6 +17,9 @@
 	let terminal: import('@xterm/xterm').Terminal | null = null;
 	let fitAddon: import('@xterm/addon-fit').FitAddon | null = null;
 	let ws: WebSocket | null = null;
+	let keepAliveInterval: ReturnType<typeof setInterval> | null = null;
+
+	const KEEPALIVE_INTERVAL_MS = 15000; // Send ping every 15 seconds
 
 	let connectionStatus = $state<'connecting' | 'connected' | 'disconnected' | 'error'>('connecting');
 	let errorMessage = $state<string | null>(null);
@@ -97,6 +100,7 @@
 		ws.onopen = () => {
 			connectionStatus = 'connected';
 			terminal?.focus();
+			startKeepAlive();
 		};
 
 		ws.onmessage = (event) => {
@@ -110,6 +114,7 @@
 
 		ws.onclose = (event) => {
 			connectionStatus = 'disconnected';
+			stopKeepAlive();
 			if (event.code !== 1000) {
 				errorMessage = `Connection closed: ${event.reason || 'Unknown reason'}`;
 			}
@@ -118,8 +123,26 @@
 
 		ws.onerror = () => {
 			connectionStatus = 'error';
+			stopKeepAlive();
 			errorMessage = 'Failed to connect to weaver';
 		};
+	}
+
+	function startKeepAlive() {
+		stopKeepAlive();
+		keepAliveInterval = setInterval(() => {
+			if (ws && ws.readyState === WebSocket.OPEN) {
+				// Send empty ping frame to keep connection alive
+				ws.send(new Uint8Array(0));
+			}
+		}, KEEPALIVE_INTERVAL_MS);
+	}
+
+	function stopKeepAlive() {
+		if (keepAliveInterval) {
+			clearInterval(keepAliveInterval);
+			keepAliveInterval = null;
+		}
 	}
 
 	function reconnect() {
@@ -146,6 +169,7 @@
 
 		return () => {
 			resizeObserver.disconnect();
+			stopKeepAlive();
 			if (ws) {
 				ws.close();
 			}
