@@ -30,6 +30,7 @@
 	const DEFAULT_WEAVER_IMAGE = 'ghcr.io/ghuntley/loom/weaver:latest';
 	const PRESET_IMAGES = [
 		{ value: 'ghcr.io/ghuntley/loom/weaver:latest', label: 'Loom Weaver (latest)' },
+		{ value: 'nixos/nix:latest', label: 'NixOS (latest)' },
 		{ value: 'ubuntu:24.04', label: 'Ubuntu 24.04' },
 		{ value: 'debian:bookworm', label: 'Debian Bookworm' },
 		{ value: 'alpine:latest', label: 'Alpine (latest)' },
