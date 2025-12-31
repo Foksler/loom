@@ -18,6 +18,12 @@
 
 	let showCreateModal = $state(false);
 	let creating = $state(false);
+	let showLogsModal = $state(false);
+	let logsWeaver = $state<Weaver | null>(null);
+	let logLines = $state<string[]>([]);
+	let logsError = $state<string | null>(null);
+	let logsConnecting = $state(false);
+	let logsEventSource: EventSource | null = null;
 	const DEFAULT_WEAVER_IMAGE = 'ghcr.io/ghuntley/loom/weaver:latest';
 	const PRESET_IMAGES = [
 		{ value: 'ghcr.io/ghuntley/loom/weaver:latest', label: 'Loom Weaver (latest)' },
@@ -111,8 +117,59 @@
 		showImageDropdown = false;
 	}
 
+	function openLogsModal(weaver: Weaver) {
+		logsWeaver = weaver;
+		logLines = [];
+		logsError = null;
+		logsConnecting = true;
+		showLogsModal = true;
+
+		const url = `/api/weaver/${encodeURIComponent(weaver.id)}/logs?tail=500&timestamps=true`;
+		logsEventSource = new EventSource(url);
+
+		logsEventSource.onopen = () => {
+			logsConnecting = false;
+		};
+
+		logsEventSource.onmessage = (event) => {
+			logsConnecting = false;
+			if (event.data && event.data !== 'keep-alive') {
+				logLines = [...logLines, event.data];
+			}
+		};
+
+		logsEventSource.onerror = () => {
+			logsConnecting = false;
+			if (logsEventSource?.readyState === EventSource.CLOSED) {
+				logsError = i18n._('weavers.logsClosed');
+			} else {
+				logsError = i18n._('weavers.logsError');
+			}
+			logsEventSource?.close();
+			logsEventSource = null;
+		};
+	}
+
+	function closeLogsModal() {
+		showLogsModal = false;
+		logsWeaver = null;
+		logLines = [];
+		logsError = null;
+		logsConnecting = false;
+		if (logsEventSource) {
+			logsEventSource.close();
+			logsEventSource = null;
+		}
+	}
+
 	$effect(() => {
 		loadWeavers();
+		return () => {
+			if (logsEventSource) {
+				logsEventSource.close();
+				logsEventSource = null;
+			}
+		};
 	});
 </script>
 
@@ -195,6 +252,13 @@
 							{/if}
 						</div>
 						<div class="flex gap-2 flex-shrink-0">
+							<Button
+								variant="secondary"
+								size="sm"
+								onclick={() => openLogsModal(weaver)}
+							>
+								{i18n._('weavers.logs')}
+							</Button>
 							{#if weaver.status === 'running'}
 								<a href="/weavers/{weaver.id}">
 									<Button variant="primary" size="sm">
@@ -312,6 +376,62 @@
 					</Button>
 				</div>
 			</form>
+		</div>
+	</div>
+{/if}
+
+{#if showLogsModal && logsWeaver}
+	<div
+		class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="logs-modal-title"
+		tabindex="-1"
+		onclick={closeLogsModal}
+		onkeydown={(e) => e.key === 'Escape' && closeLogsModal()}
+	>
+		<div
+			class="bg-bg border border-border rounded-lg w-full max-w-4xl max-h-[80vh] flex flex-col"
+			role="document"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+		>
+			<div class="flex items-center justify-between p-4 border-b border-border">
+				<div>
+					<h2 id="logs-modal-title" class="text-lg font-bold text-fg">
+						{i18n._('weavers.logsTitle')}
+					</h2>
+					<p class="text-sm text-fg-muted font-mono">{logsWeaver.id}</p>
+				</div>
+				<button
+					type="button"
+					onclick={closeLogsModal}
+					class="text-fg-muted hover:text-fg p-1"
+					aria-label={i18n._('general.close')}
+				>
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				</button>
+			</div>
+
+			<div class="flex-1 overflow-auto p-4 bg-black">
+				{#if logsConnecting}
+					<p class="text-fg-muted text-sm">{i18n._('weavers.logsConnecting')}</p>
+				{:else if logsError}
+					<p class="text-error text-sm">{logsError}</p>
+				{:else if logLines.length === 0}
+					<p class="text-fg-muted text-sm">{i18n._('weavers.logsNoData')}</p>
+				{:else}
+					<pre class="font-mono text-xs text-green-400 whitespace-pre-wrap break-all">{logLines.join('\n')}</pre>
+				{/if}
+			</div>
+
+			<div class="flex justify-end p-4 border-t border-border">
+				<Button variant="secondary" onclick={closeLogsModal}>
+					{i18n._('general.close')}
+				</Button>
+			</div>
 		</div>
 	</div>
 {/if}

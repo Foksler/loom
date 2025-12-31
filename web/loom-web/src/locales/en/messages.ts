@@ -276,6 +276,12 @@ export const messages = {
 	'weavers.attach': 'Attach',
 	'weavers.backToList': 'Back to Weavers',
 	'weavers.notFound': 'Weaver not found',
+	'weavers.logs': 'Logs',
+	'weavers.logsTitle': 'Weaver Logs',
+	'weavers.logsConnecting': 'Connecting to log stream...',
+	'weavers.logsNoData': 'No logs available yet',
+	'weavers.logsError': 'Failed to connect to log stream',
+	'weavers.logsClosed': 'Log stream closed',
 
 	// Weavers - Terminal
 	'weavers.terminal.connected': 'Connected',
