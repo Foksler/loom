@@ -411,7 +411,7 @@ fn build_pod_spec(
         run_as_user: Some(1000),
         run_as_group: Some(1000),
         allow_privilege_escalation: Some(false),
-        read_only_root_filesystem: Some(true),
+        read_only_root_filesystem: Some(false),
         capabilities: Some(Capabilities {
             drop: Some(vec!["ALL".to_string()]),
             add: None,
