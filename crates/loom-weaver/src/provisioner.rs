@@ -432,6 +432,10 @@ fn build_pod_spec(
         working_dir: req.workdir.clone(),
         resources: Some(resources),
         security_context: Some(security_context),
+        // Enable TTY and stdin for interactive REPL sessions
+        // Required for tmux to work inside the container
+        tty: Some(true),
+        stdin: Some(true),
         ..Default::default()
     };
 
