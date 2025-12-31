@@ -57,6 +57,8 @@ pub enum WeaverStatus {
     Succeeded,
     /// Container failed (non-zero exit)
     Failed,
+    /// Pod is being deleted (has deletionTimestamp)
+    Terminating,
 }
 
 /// A weaver instance with its current state.

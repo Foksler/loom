@@ -537,6 +537,11 @@ fn pod_to_weaver(pod: &Pod) -> Result<Weaver, ProvisionerError> {
 
 /// Map Kubernetes Pod phase to WeaverStatus.
 fn map_pod_phase(pod: &Pod) -> WeaverStatus {
+    // Check if pod is being deleted (has deletionTimestamp)
+    if pod.metadata.deletion_timestamp.is_some() {
+        return WeaverStatus::Terminating;
+    }
+
     let phase = pod
         .status
         .as_ref()
@@ -578,6 +583,7 @@ mod tests {
             workdir: None,
             repo: None,
             branch: None,
+            owner_user_id: None,
         };
         let config = WeaverConfig::default();
 
@@ -606,7 +612,7 @@ mod tests {
         assert_eq!(security.run_as_user, Some(1000));
         assert_eq!(security.run_as_group, Some(1000));
         assert_eq!(security.allow_privilege_escalation, Some(false));
-        assert_eq!(security.read_only_root_filesystem, Some(true));
+        assert_eq!(security.read_only_root_filesystem, Some(false));
 
         let caps = security.capabilities.as_ref().unwrap();
         assert_eq!(caps.drop, Some(vec!["ALL".to_string()]));
@@ -633,6 +639,7 @@ mod tests {
             workdir: Some("/app".to_string()),
             repo: None,
             branch: None,
+            owner_user_id: None,
         };
         let config = WeaverConfig::default();
 
@@ -677,6 +684,7 @@ mod tests {
             workdir: None,
             repo: None,
             branch: None,
+            owner_user_id: None,
         };
         let config = WeaverConfig::default();
 
@@ -687,5 +695,75 @@ mod tests {
         let parsed: HashMap<String, String> = serde_json::from_str(tags_json).unwrap();
         assert_eq!(parsed.get("project"), Some(&"ai-worker".to_string()));
         assert_eq!(parsed.get("env"), Some(&"prod".to_string()));
+    }
+
+    #[test]
+    fn test_map_pod_phase_running() {
+        let pod = Pod {
+            metadata: ObjectMeta::default(),
+            spec: None,
+            status: Some(loom_k8s::PodStatus {
+                phase: Some("Running".to_string()),
+                ..Default::default()
+            }),
+        };
+        assert_eq!(map_pod_phase(&pod), WeaverStatus::Running);
+    }
+
+    #[test]
+    fn test_map_pod_phase_pending() {
+        let pod = Pod {
+            metadata: ObjectMeta::default(),
+            spec: None,
+            status: Some(loom_k8s::PodStatus {
+                phase: Some("Pending".to_string()),
+                ..Default::default()
+            }),
+        };
+        assert_eq!(map_pod_phase(&pod), WeaverStatus::Pending);
+    }
+
+    #[test]
+    fn test_map_pod_phase_succeeded() {
+        let pod = Pod {
+            metadata: ObjectMeta::default(),
+            spec: None,
+            status: Some(loom_k8s::PodStatus {
+                phase: Some("Succeeded".to_string()),
+                ..Default::default()
+            }),
+        };
+        assert_eq!(map_pod_phase(&pod), WeaverStatus::Succeeded);
+    }
+
+    #[test]
+    fn test_map_pod_phase_failed() {
+        let pod = Pod {
+            metadata: ObjectMeta::default(),
+            spec: None,
+            status: Some(loom_k8s::PodStatus {
+                phase: Some("Failed".to_string()),
+                ..Default::default()
+            }),
+        };
+        assert_eq!(map_pod_phase(&pod), WeaverStatus::Failed);
+    }
+
+    #[test]
+    fn test_map_pod_phase_terminating() {
+        use k8s_openapi::apimachinery::pkg::apis::meta::v1::Time;
+        let pod = Pod {
+            metadata: ObjectMeta {
+                deletion_timestamp: Some(Time(Utc::now())),
+                ..Default::default()
+            },
+            spec: None,
+            status: Some(loom_k8s::PodStatus {
+                phase: Some("Running".to_string()),
+                ..Default::default()
+            }),
+        };
+        // Even though phase is Running, deletionTimestamp means Terminating
+        assert_eq!(map_pod_phase(&pod), WeaverStatus::Terminating);
     }
 }

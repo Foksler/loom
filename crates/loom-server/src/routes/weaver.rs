@@ -109,6 +109,7 @@ pub enum WeaverStatusApi {
 	Running,
 	Succeeded,
 	Failed,
+	Terminating,
 }
 
 impl From<WeaverStatus> for WeaverStatusApi {
@@ -118,6 +119,7 @@ impl From<WeaverStatus> for WeaverStatusApi {
 			WeaverStatus::Running => WeaverStatusApi::Running,
 			WeaverStatus::Succeeded => WeaverStatusApi::Succeeded,
 			WeaverStatus::Failed => WeaverStatusApi::Failed,
+			WeaverStatus::Terminating => WeaverStatusApi::Terminating,
 		}
 	}
 }
