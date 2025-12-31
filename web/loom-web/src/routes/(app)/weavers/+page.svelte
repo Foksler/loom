@@ -17,9 +17,10 @@
 
 	let showCreateModal = $state(false);
 	let creating = $state(false);
-	let newWeaver = $state<CreateWeaverRequest>({
+	let newWeaver = $state({
 		image: '',
 		lifetime_hours: 24,
+		workdir: '',
 	});
 
 	async function loadWeavers() {
@@ -43,7 +44,7 @@
 			const weaver = await client.createWeaver(newWeaver);
 			weavers = [weaver, ...weavers];
 			showCreateModal = false;
-			newWeaver = { image: '', lifetime_hours: 24 };
+			newWeaver = { image: '', lifetime_hours: 24, workdir: '' };
 		} catch (e) {
 			error = e instanceof Error ? e.message : i18n._('general.error');
 		} finally {
@@ -91,7 +92,7 @@
 
 	function closeModal() {
 		showCreateModal = false;
-		newWeaver = { image: '', lifetime_hours: 24 };
+		newWeaver = { image: '', lifetime_hours: 24, workdir: '' };
 	}
 
 	$effect(() => {
