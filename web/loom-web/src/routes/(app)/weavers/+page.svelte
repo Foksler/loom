@@ -17,11 +17,21 @@
 
 	let showCreateModal = $state(false);
 	let creating = $state(false);
+	const DEFAULT_WEAVER_IMAGE = 'ghcr.io/ghuntley/loom/weaver:latest';
+	const PRESET_IMAGES = [
+		{ value: 'ghcr.io/ghuntley/loom/weaver:latest', label: 'Loom Weaver (latest)' },
+		{ value: 'ghcr.io/ghuntley/loom/weaver:nightly', label: 'Loom Weaver (nightly)' },
+		{ value: 'ubuntu:24.04', label: 'Ubuntu 24.04' },
+		{ value: 'debian:bookworm', label: 'Debian Bookworm' },
+		{ value: 'alpine:latest', label: 'Alpine (latest)' },
+	];
+
 	let newWeaver = $state({
-		image: '',
+		image: DEFAULT_WEAVER_IMAGE,
 		lifetime_hours: 24,
 		workdir: '',
 	});
+	let showImageDropdown = $state(false);
 
 	async function loadWeavers() {
 		loading = true;
@@ -44,7 +54,7 @@
 			const weaver = await client.createWeaver(newWeaver);
 			weavers = [weaver, ...weavers];
 			showCreateModal = false;
-			newWeaver = { image: '', lifetime_hours: 24, workdir: '' };
+			newWeaver = { image: DEFAULT_WEAVER_IMAGE, lifetime_hours: 24, workdir: '' };
 		} catch (e) {
 			error = e instanceof Error ? e.message : i18n._('general.error');
 		} finally {
@@ -92,7 +102,13 @@
 
 	function closeModal() {
 		showCreateModal = false;
-		newWeaver = { image: '', lifetime_hours: 24, workdir: '' };
+		newWeaver = { image: DEFAULT_WEAVER_IMAGE, lifetime_hours: 24, workdir: '' };
+		showImageDropdown = false;
+	}
+
+	function selectImage(value: string) {
+		newWeaver.image = value;
+		showImageDropdown = false;
 	}
 
 	$effect(() => {
@@ -224,12 +240,45 @@
 			</h2>
 
 			<form onsubmit={(e) => { e.preventDefault(); createWeaver(); }} class="space-y-4">
-				<Input
-					label={i18n._('weavers.imageName')}
-					bind:value={newWeaver.image}
-					placeholder="ghcr.io/org/image:tag"
-					required
-				/>
+				<div class="w-full">
+					<label for="image" class="block text-sm font-medium text-fg mb-1.5">
+						{i18n._('weavers.imageName')}
+					</label>
+					<div class="relative">
+						<input
+							id="image"
+							type="text"
+							bind:value={newWeaver.image}
+							placeholder="ghcr.io/org/image:tag"
+							required
+							onfocus={() => (showImageDropdown = true)}
+							class="w-full h-10 px-3 pr-10 rounded-md border border-border bg-bg text-fg placeholder:text-fg-subtle focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-bg"
+						/>
+						<button
+							type="button"
+							onclick={() => (showImageDropdown = !showImageDropdown)}
+							class="absolute right-0 top-0 h-10 w-10 flex items-center justify-center text-fg-muted hover:text-fg"
+						>
+							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+							</svg>
+						</button>
+						{#if showImageDropdown}
+							<div class="absolute z-10 w-full mt-1 bg-bg border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+								{#each PRESET_IMAGES as preset}
+									<button
+										type="button"
+										onclick={() => selectImage(preset.value)}
+										class="w-full px-3 py-2 text-left text-sm hover:bg-bg-muted flex flex-col {newWeaver.image === preset.value ? 'bg-accent/10' : ''}"
+									>
+										<span class="text-fg font-medium">{preset.label}</span>
+										<span class="text-fg-muted text-xs font-mono">{preset.value}</span>
+									</button>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				</div>
 
 				<div class="w-full">
 					<label for="lifetime" class="block text-sm font-medium text-fg mb-1.5">
