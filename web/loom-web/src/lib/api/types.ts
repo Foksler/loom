@@ -338,6 +338,40 @@ export interface AdminUserListResponse {
 	offset: number;
 }
 
+// Weaver types
+export type WeaverStatus = 'pending' | 'running' | 'succeeded' | 'failed' | 'terminating';
+
+export interface Weaver {
+	id: string;
+	pod_name: string;
+	status: WeaverStatus;
+	created_at: string;
+	image?: string;
+	tags?: Record<string, string>;
+	lifetime_hours?: number;
+	age_hours?: number;
+	owner_user_id?: string;
+}
+
+export interface ListWeaversResponse {
+	weavers: Weaver[];
+	count: number;
+}
+
+export interface CreateWeaverRequest {
+	image: string;
+	env?: Record<string, string>;
+	resources?: {
+		memory_limit?: string;
+		cpu_limit?: string;
+	};
+	tags?: Record<string, string>;
+	lifetime_hours?: number;
+	command?: string[];
+	args?: string[];
+	workdir?: string;
+}
+
 // Support Access types
 export type SupportAccessStatus = 'pending' | 'approved' | 'revoked' | 'expired';
 

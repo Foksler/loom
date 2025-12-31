@@ -6,6 +6,7 @@
 export const messages = {
 	// Navigation
 	'nav.threads': 'Threads',
+	'nav.weavers': 'Weavers',
 	'nav.settings': 'Settings',
 	'nav.admin': 'Admin',
 
@@ -239,6 +240,7 @@ export const messages = {
 	'general.previous': 'Previous',
 	'general.next': 'Next',
 	'general.done': 'Done',
+	'general.refresh': 'Refresh',
 
 	// Admin - Users
 	'admin.users.title': 'User Management',
@@ -252,4 +254,23 @@ export const messages = {
 	// Admin - Impersonation
 	'admin.impersonation.banner': 'Admin {admin} impersonating {user}',
 	'admin.impersonation.stop': 'Stop Impersonating',
+
+	// Weavers
+	'weavers.title': 'Weavers',
+	'weavers.description': 'Manage ephemeral development environments',
+	'weavers.create': 'Create Weaver',
+	'weavers.createFirst': 'Create your first weaver',
+	'weavers.createTitle': 'Create New Weaver',
+	'weavers.empty': 'No weavers running',
+	'weavers.delete': 'Delete',
+	'weavers.deleteConfirm': 'Are you sure you want to delete this weaver?',
+	'weavers.image': 'Image',
+	'weavers.imageName': 'Container Image',
+	'weavers.created': 'Created',
+	'weavers.age': 'Age',
+	'weavers.lifetime': 'Lifetime',
+	'weavers.lifetimeLabel': 'Lifetime (TTL)',
+	'weavers.workdir': 'Working Directory',
+	'weavers.hour': 'hour',
+	'weavers.hours': 'hours',
 };

@@ -41,6 +41,9 @@ import type {
 	ImpersonateResponse,
 	StopImpersonationResponse,
 	AdminUserListResponse,
+	Weaver,
+	ListWeaversResponse,
+	CreateWeaverRequest,
 } from './types';
 import { ApiError } from './types';
 
@@ -361,6 +364,28 @@ export class LoomApiClient {
 		const queryStr = query.toString();
 		const path = queryStr ? `/api/admin/users?${queryStr}` : '/api/admin/users';
 		return this.request<AdminUserListResponse>(path);
+	}
+
+	// Weaver methods
+	async listWeavers(): Promise<ListWeaversResponse> {
+		return this.request<ListWeaversResponse>('/api/weavers');
+	}
+
+	async getWeaver(id: string): Promise<Weaver> {
+		return this.request<Weaver>(`/api/weaver/${encodeURIComponent(id)}`);
+	}
+
+	async createWeaver(data: CreateWeaverRequest): Promise<Weaver> {
+		return this.request<Weaver>('/api/weaver', {
+			method: 'POST',
+			body: JSON.stringify(data),
+		});
+	}
+
+	async deleteWeaver(id: string): Promise<void> {
+		await this.request<void>(`/api/weaver/${encodeURIComponent(id)}`, {
+			method: 'DELETE',
+		});
 	}
 }
 

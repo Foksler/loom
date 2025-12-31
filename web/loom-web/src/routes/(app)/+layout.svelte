@@ -73,6 +73,9 @@
 						<a href="/threads" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
 							{i18n._('nav.threads')}
 						</a>
+						<a href="/weavers" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+							{i18n._('nav.weavers')}
+						</a>
 						<a href="/settings/profile" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
 							{i18n._('nav.settings')}
 						</a>
