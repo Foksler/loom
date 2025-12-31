@@ -148,18 +148,18 @@ dockerTools.buildImage {
   };
 
   # Additional configuration
-  extraCommands = ''
-    # Create directory structure
-    mkdir -p home/loom
-    mkdir -p workspace
-    mkdir -p tmp
+  fakeRootCommands = ''
+    # Create directory structure with correct ownership for loom user (1000:1000)
+    mkdir -p ./home/loom
+    mkdir -p ./workspace
+    mkdir -p ./tmp
 
-    # Set permissions - loom user (1000:1000) needs write access
-    chmod 1777 tmp
-    chown -R 1000:1000 home/loom
-    chmod 755 home/loom
-    chown -R 1000:1000 workspace
-    chmod 755 workspace
+    # Set permissions
+    chmod 1777 ./tmp
+    chown -R 1000:1000 ./home/loom
+    chmod 755 ./home/loom
+    chown -R 1000:1000 ./workspace
+    chmod 755 ./workspace
   '';
 
   # Container configuration
