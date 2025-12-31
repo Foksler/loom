@@ -90,7 +90,10 @@ impl WeaverClient {
 		let url = self.base_url.join("api/weavers")?;
 		let mut req = self.http.get(url);
 		if let Some(token) = &self.auth_token {
+			tracing::debug!("adding auth token to list_weavers request");
 			req = req.header("Authorization", format!("Bearer {}", token.expose()));
+		} else {
+			tracing::warn!("no auth token available for list_weavers request");
 		}
 		let response = req.send().await?;
 

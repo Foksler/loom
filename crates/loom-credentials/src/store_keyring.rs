@@ -52,7 +52,26 @@ impl CredentialStore for KeyringCredentialStore {
 		tokio::task::spawn_blocking(move || {
 			let entry = keyring::Entry::new(&service, &provider)
 				.map_err(|e| CredentialError::Backend(e.to_string()))?;
-			entry.set_password(&data).map_err(|e| CredentialError::Backend(e.to_string()))
+			entry
+				.set_password(&data)
+				.map_err(|e| CredentialError::Backend(e.to_string()))?;
+
+			// Verify the save worked by reading back with a NEW entry instance.
+			// This detects mock backends that only store in-memory per-instance.
+			let verify_entry = keyring::Entry::new(&service, &provider)
+				.map_err(|e| CredentialError::Backend(e.to_string()))?;
+			match verify_entry.get_password() {
+				Ok(stored) if stored == data => Ok(()),
+				Ok(_) => Err(CredentialError::Backend(
+					"keyring verification failed: stored data mismatch".to_string(),
+				)),
+				Err(keyring::Error::NoEntry) => Err(CredentialError::Backend(
+					"keyring verification failed: credential not persisted (mock backend?)".to_string(),
+				)),
+				Err(e) => Err(CredentialError::Backend(format!(
+					"keyring verification failed: {e}"
+				))),
+			}
 		})
 		.await
 		.map_err(|e| CredentialError::Backend(e.to_string()))?

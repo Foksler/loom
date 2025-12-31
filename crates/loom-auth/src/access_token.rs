@@ -4,11 +4,9 @@
 //! Access token management for CLI and VS Code bearer token authentication.
 //!
 //! Access tokens are user-level bearer tokens with 60-day sliding expiry.
-//! Tokens are stored hashed with Argon2 and are only shown once at creation.
+//! Tokens are stored hashed with SHA-256 and are only shown once at creation.
 
-use crate::argon2_config::argon2_instance;
 use crate::{SessionType, UserId};
-use argon2::password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -31,7 +29,7 @@ pub struct AccessToken {
     pub id: Uuid,
     /// User who owns this token.
     pub user_id: UserId,
-    /// Argon2 hash of the token (the actual token is never stored).
+    /// SHA-256 hash of the token (the actual token is never stored).
     pub token_hash: String,
     /// Human-readable label (e.g., "MacBook CLI", "Work VS Code").
     pub label: String,
@@ -161,7 +159,7 @@ impl AccessToken {
 
 /// Generate a new access token.
 ///
-/// Returns a tuple of (plaintext_token, argon2_hash).
+/// Returns a tuple of (plaintext_token, sha256_hash).
 /// The plaintext token format is: `lt_` + 64 hex characters (32 bytes).
 pub fn generate_access_token() -> (String, String) {
     use rand::Rng;
@@ -172,31 +170,23 @@ pub fn generate_access_token() -> (String, String) {
     (token, hash)
 }
 
-/// Hash an access token using Argon2.
+/// Hash an access token using SHA-256.
 ///
 /// The resulting hash can be safely stored in the database.
-/// Uses production-strength parameters in release builds,
-/// and fast test parameters in test builds.
+/// SHA-256 is sufficient for high-entropy random tokens (32+ bytes).
+/// This must match the hash function used in auth_middleware for lookup.
 pub fn hash_access_token(token: &str) -> String {
-    let salt = SaltString::generate(&mut OsRng);
-    let argon2 = argon2_instance();
-    argon2
-        .hash_password(token.as_bytes(), &salt)
-        .expect("Argon2 hashing should not fail")
-        .to_string()
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(token.as_bytes());
+    hex::encode(hasher.finalize())
 }
 
-/// Verify an access token against its stored Argon2 hash.
+/// Verify an access token against its stored SHA-256 hash.
 ///
 /// Returns true if the token matches the hash.
 pub fn verify_access_token(token: &str, hash: &str) -> bool {
-    let parsed_hash = match PasswordHash::new(hash) {
-        Ok(h) => h,
-        Err(_) => return false,
-    };
-    argon2_instance()
-        .verify_password(token.as_bytes(), &parsed_hash)
-        .is_ok()
+    hash_access_token(token) == hash
 }
 
 /// Check if a string looks like a valid access token format.
@@ -253,16 +243,17 @@ mod tests {
         use super::*;
 
         #[test]
-        fn hash_produces_argon2_format() {
+        fn hash_produces_hex_sha256_format() {
             let hash = hash_access_token("test_token");
-            assert!(hash.starts_with("$argon2"));
+            assert_eq!(hash.len(), 64, "SHA-256 produces 64 hex characters");
+            assert!(hash.chars().all(|c| c.is_ascii_hexdigit()));
         }
 
         #[test]
-        fn same_token_produces_different_hashes() {
+        fn same_token_produces_same_hash() {
             let hash1 = hash_access_token("test_token");
             let hash2 = hash_access_token("test_token");
-            assert_ne!(hash1, hash2, "Different salts should produce different hashes");
+            assert_eq!(hash1, hash2, "SHA-256 is deterministic");
         }
 
         #[test]

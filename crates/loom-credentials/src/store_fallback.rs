@@ -27,13 +27,20 @@ impl KeyringThenFileStore {
 impl CredentialStore for KeyringThenFileStore {
 	async fn load(&self, provider: &str) -> Result<Option<CredentialValue>, CredentialError> {
 		match self.keyring.load(provider).await {
-			Ok(Some(creds)) => return Ok(Some(creds)),
-			Ok(None) => {}
+			Ok(Some(creds)) => {
+				tracing::debug!(provider = %provider, "loaded credentials from keyring");
+				return Ok(Some(creds));
+			}
+			Ok(None) => {
+				tracing::debug!(provider = %provider, "keyring returned None, trying file store");
+			}
 			Err(e) => {
 				warn!(provider = %provider, error = %e, "keyring load failed, trying file store");
 			}
 		}
-		self.file.load(provider).await
+		let result = self.file.load(provider).await;
+		tracing::debug!(provider = %provider, found = result.as_ref().map(|r| r.is_some()).unwrap_or(false), "file store load result");
+		result
 	}
 
 	async fn save(&self, provider: &str, creds: &CredentialValue) -> Result<(), CredentialError> {
