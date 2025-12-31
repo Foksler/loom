@@ -273,4 +273,17 @@ export const messages = {
 	'weavers.workdir': 'Working Directory',
 	'weavers.hour': 'hour',
 	'weavers.hours': 'hours',
+	'weavers.attach': 'Attach',
+	'weavers.backToList': 'Back to Weavers',
+	'weavers.notFound': 'Weaver not found',
+
+	// Weavers - Terminal
+	'weavers.terminal.connected': 'Connected',
+	'weavers.terminal.connecting': 'Connecting...',
+	'weavers.terminal.disconnected': 'Disconnected',
+	'weavers.terminal.error': 'Connection error',
+	'weavers.terminal.reconnect': 'Reconnect',
+	'weavers.terminal.pending': 'Weaver is starting...',
+	'weavers.terminal.pendingHint': 'The terminal will be available once the weaver is running',
+	'weavers.terminal.notRunning': 'Weaver is not running (status: {status})',
 };

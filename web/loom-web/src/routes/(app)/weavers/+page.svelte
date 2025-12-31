@@ -178,6 +178,13 @@
 							{/if}
 						</div>
 						<div class="flex gap-2 flex-shrink-0">
+							{#if weaver.status === 'running'}
+								<a href="/weavers/{weaver.id}">
+									<Button variant="primary" size="sm">
+										{i18n._('weavers.attach')}
+									</Button>
+								</a>
+							{/if}
 							<Button
 								variant="danger"
 								size="sm"
