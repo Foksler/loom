@@ -3,6 +3,7 @@
   SPDX-License-Identifier: Proprietary
 -->
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { i18n } from '$lib/i18n';
 	import { getApiClient } from '$lib/api/client';
 	import type { Weaver, WeaverStatus, CreateWeaverRequest } from '$lib/api/types';
@@ -52,12 +53,11 @@
 		error = null;
 		try {
 			const weaver = await client.createWeaver(newWeaver);
-			weavers = [weaver, ...weavers];
 			showCreateModal = false;
 			newWeaver = { image: DEFAULT_WEAVER_IMAGE, lifetime_hours: 24, workdir: '' };
+			goto(`/weavers/${weaver.id}`);
 		} catch (e) {
 			error = e instanceof Error ? e.message : i18n._('general.error');
-		} finally {
 			creating = false;
 		}
 	}
