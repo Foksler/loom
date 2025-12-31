@@ -9,6 +9,14 @@
 - **Check all:** `make check` (format + lint + build + test)
 - **Web dev:** `cd web/loom-web && pnpm dev` | **Web test:** `pnpm test`
 
+## Deployment
+Deployments happen automatically via `git push` to the `trunk` branch. The production server runs NixOS with auto-update enabled.
+
+- **Deploy:** `git push origin trunk`
+- **Check status:** `systemctl status nixos-auto-update.service`
+- **View logs:** `journalctl -u nixos-auto-update.service -f` (follow) or `-n 100` (last 100 lines)
+- **Service state:** `activating` = deploying, `active (exited)` = completed successfully
+
 ## Architecture
 Rust workspace with 30+ crates under `crates/`. Key crates: `loom-core` (agent logic), `loom-server` (HTTP API), `loom-thread` (conversation state), `loom-llm-*` (LLM providers), `loom-tools` (agent tools), `loom-auth*` (authentication). Web frontend in `web/loom-web` (SvelteKit + Tailwind). SQLite database (`sqlx`). Dev environment via `devenv.nix`. Infra in `infra/` (Nix/K8s).
 
