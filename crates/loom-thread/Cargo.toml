@@ -16,6 +16,7 @@ openapi = ["dep:utoipa"]
 utoipa = { version = "5", optional = true }
 loom-core = { path = "../loom-core" }
 loom-http = { path = "../loom-http" }
+loom-secret = { path = "../loom-secret" }
 
 async-trait = { workspace = true }
 dirs = { workspace = true }

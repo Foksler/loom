@@ -12,3 +12,4 @@ export { default as AgentStateTimeline } from './AgentStateTimeline.svelte';
 export { default as ToolExecutionPanel } from './ToolExecutionPanel.svelte';
 export { default as ToolExecutionRow } from './ToolExecutionRow.svelte';
 export { default as ConnectionStatusIndicator } from './ConnectionStatusIndicator.svelte';
+export { default as SupportAccessDenied } from './SupportAccessDenied.svelte';

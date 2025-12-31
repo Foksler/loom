@@ -17,3 +17,6 @@ export { default as Skeleton } from './Skeleton.svelte';
 // Agent-specific components
 export { default as AgentStateBadge } from './AgentStateBadge.svelte';
 export { default as ToolStatusBadge } from './ToolStatusBadge.svelte';
+
+// Admin components
+export { default as ImpersonationBanner } from './ImpersonationBanner.svelte';

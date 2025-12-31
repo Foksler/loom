@@ -7,6 +7,7 @@ export const messages = {
 	// Navigation
 	'nav.threads': 'Threads',
 	'nav.settings': 'Settings',
+	'nav.admin': 'Admin',
 
 	// Thread actions
 	'thread.new': 'New Thread',
@@ -232,4 +233,23 @@ export const messages = {
 	'apiKeys.noKeys': 'No API keys yet',
 	'apiKeys.copyWarning': "Copy this key now. You won't be able to see it again.",
 	'apiKeys.copied': 'Copied to clipboard',
+
+	// General - Pagination
+	'general.search': 'Search',
+	'general.previous': 'Previous',
+	'general.next': 'Next',
+	'general.done': 'Done',
+
+	// Admin - Users
+	'admin.users.title': 'User Management',
+	'admin.users.description': 'View and manage users across the platform',
+	'admin.users.searchPlaceholder': 'Search by name or email...',
+	'admin.users.empty': 'No users found',
+	'admin.users.created': 'Created',
+	'admin.users.lastLogin': 'Last login',
+	'admin.users.impersonate': 'Impersonate',
+
+	// Admin - Impersonation
+	'admin.impersonation.banner': 'Admin {admin} impersonating {user}',
+	'admin.impersonation.stop': 'Stop Impersonating',
 };

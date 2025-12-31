@@ -950,31 +950,26 @@ async fn main() -> Result<()> {
 			"starting loom"
 	);
 
+	// Get auth token for thread sync
+	let auth_token = auth::load_token(&args.server_url).await;
+
 	let thread_store: Arc<dyn ThreadStore> = {
 		let local_store =
 			LocalThreadStore::from_xdg().context("failed to create local thread store")?;
 
-		// Use LOOM_THREAD_SYNC_URL if set, otherwise default to localhost in debug builds
-		let sync_url = std::env::var("LOOM_THREAD_SYNC_URL").ok().or_else(|| {
-			#[cfg(debug_assertions)]
-			{
-				Some("http://localhost:8080/api/".to_string())
-			}
-			#[cfg(not(debug_assertions))]
-			{
-				None
-			}
-		});
+		// Use server_url for thread sync (append /api/ if needed)
+		let sync_url = format!(
+			"{}/api/",
+			args.server_url.trim_end_matches('/')
+		);
+		let base_url = Url::parse(&sync_url).context("invalid server URL for thread sync")?;
+		let http_client = loom_http::new_client();
 
-		if let Some(sync_url) = sync_url {
-			let base_url = Url::parse(&sync_url).context("invalid LOOM_THREAD_SYNC_URL")?;
-			let http_client = loom_http::new_client();
-
-			let sync_client = ThreadSyncClient::new(base_url, http_client);
-			Arc::new(SyncingThreadStore::with_sync(local_store, sync_client))
-		} else {
-			Arc::new(SyncingThreadStore::local_only(local_store))
+		let mut sync_client = ThreadSyncClient::new(base_url, http_client);
+		if let Some(token) = auth_token.clone() {
+			sync_client = sync_client.with_auth_token(token);
 		}
+		Arc::new(SyncingThreadStore::with_sync(local_store, sync_client))
 	};
 
 	match &args.command {

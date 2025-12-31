@@ -18,6 +18,7 @@ pub struct ThreadSyncClient {
 	base_url: Url,
 	http: reqwest::Client,
 	retry_config: loom_http::RetryConfig,
+	auth_token: Option<loom_secret::SecretString>,
 }
 
 impl ThreadSyncClient {
@@ -26,12 +27,26 @@ impl ThreadSyncClient {
 			base_url,
 			http,
 			retry_config: loom_http::RetryConfig::default(),
+			auth_token: None,
 		}
+	}
+
+	pub fn with_auth_token(mut self, token: loom_secret::SecretString) -> Self {
+		self.auth_token = Some(token);
+		self
 	}
 
 	pub fn with_retry_config(mut self, config: loom_http::RetryConfig) -> Self {
 		self.retry_config = config;
 		self
+	}
+
+	fn apply_auth(&self, req: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
+		if let Some(token) = &self.auth_token {
+			req.header("Authorization", format!("Bearer {}", token.expose()))
+		} else {
+			req
+		}
 	}
 
 	fn threads_url(&self) -> Result<Url, ThreadSyncError> {
@@ -59,10 +74,9 @@ impl ThreadSyncClient {
 		);
 
 		let response = loom_http::retry(&self.retry_config, || async {
+			let req = self.http.put(url.clone()).json(thread);
 			self
-				.http
-				.put(url.clone())
-				.json(thread)
+				.apply_auth(req)
 				.send()
 				.await
 				.map_err(ThreadSyncError::from)
@@ -100,9 +114,9 @@ impl ThreadSyncClient {
 		debug!(thread_id = %id, url = %url, "fetching thread from server");
 
 		let response = loom_http::retry(&self.retry_config, || async {
+			let req = self.http.get(url.clone());
 			self
-				.http
-				.get(url.clone())
+				.apply_auth(req)
 				.send()
 				.await
 				.map_err(ThreadSyncError::from)
@@ -140,9 +154,9 @@ impl ThreadSyncClient {
 		debug!(url = %url, limit = limit, "listing threads from server");
 
 		let response = loom_http::retry(&self.retry_config, || async {
+			let req = self.http.get(url.clone());
 			self
-				.http
-				.get(url.clone())
+				.apply_auth(req)
 				.send()
 				.await
 				.map_err(ThreadSyncError::from)
@@ -170,9 +184,9 @@ impl ThreadSyncClient {
 		debug!(thread_id = %id, url = %url, "deleting thread from server");
 
 		let response = loom_http::retry(&self.retry_config, || async {
+			let req = self.http.delete(url.clone());
 			self
-				.http
-				.delete(url.clone())
+				.apply_auth(req)
 				.send()
 				.await
 				.map_err(ThreadSyncError::from)
@@ -324,6 +338,7 @@ impl ThreadStore for SyncingThreadStore {
 			let sync_client_base_url = sync_client.base_url.clone();
 			let http_clone = sync_client.http.clone();
 			let retry_config = sync_client.retry_config.clone();
+			let auth_token = sync_client.auth_token.clone();
 			let pending_store = self.pending_store.clone();
 
 			tokio::spawn(async move {
@@ -331,6 +346,7 @@ impl ThreadStore for SyncingThreadStore {
 					base_url: sync_client_base_url,
 					http: http_clone,
 					retry_config,
+					auth_token,
 				};
 
 				match client.upsert_thread(&thread_clone).await {
@@ -437,6 +453,7 @@ impl ThreadStore for SyncingThreadStore {
 			let sync_client_base_url = sync_client.base_url.clone();
 			let http_clone = sync_client.http.clone();
 			let retry_config = sync_client.retry_config.clone();
+			let auth_token = sync_client.auth_token.clone();
 			let pending_store = self.pending_store.clone();
 
 			tokio::spawn(async move {
@@ -444,6 +461,7 @@ impl ThreadStore for SyncingThreadStore {
 					base_url: sync_client_base_url,
 					http: http_clone,
 					retry_config,
+					auth_token,
 				};
 
 				match client.delete_thread(&id_clone).await {

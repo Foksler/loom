@@ -4,6 +4,7 @@
   import { createActor } from 'xstate';
   import { conversationMachine, connectionMachine } from '$lib/state';
   import { getApiClient } from '$lib/api';
+  import { ApiError } from '$lib/api/types';
   import { createRealtimeClient, LoomWebSocketClient, type LlmEvent, type ToolEvent } from '$lib/realtime';
   import {
     MessageList,
@@ -11,14 +12,20 @@
     AgentStateTimeline,
     ToolExecutionPanel,
     ConnectionStatusIndicator,
+    SupportAccessDenied,
   } from '$lib/components';
   import { AgentStateBadge, Skeleton, Card } from '$lib/ui';
   import { logger } from '$lib/logging';
+  import type { CurrentUser } from '$lib/api/types';
 
   const threadId = $derived($page.params.threadId);
 
   const conversationActor = createActor(conversationMachine);
   const connectionActor = createActor(connectionMachine);
+  
+  let currentUser = $state<CurrentUser | null>(null);
+  let accessDenied = $state(false);
+  let isSupportUser = $derived(currentUser?.global_roles?.includes('support') ?? false);
   
   let conversationState = $state(conversationActor.getSnapshot());
   let connectionState = $state(connectionActor.getSnapshot());
@@ -49,6 +56,7 @@
   async function loadThread(id: string) {
     logger.info('Loading thread', { threadId: id });
     conversationActor.send({ type: 'LOAD_THREAD', threadId: id });
+    accessDenied = false;
     
     try {
       const api = getApiClient();
@@ -62,7 +70,24 @@
       }
     } catch (error) {
       logger.error('Failed to load thread', { threadId: id, error: String(error) });
+      
+      // Check if this is a 403 Forbidden error
+      if (error instanceof ApiError && error.isForbidden) {
+        accessDenied = true;
+        conversationActor.send({ type: 'LOAD_FAILED', error: 'Access denied' });
+        return;
+      }
+      
       conversationActor.send({ type: 'LOAD_FAILED', error: String(error) });
+    }
+  }
+  
+  async function loadCurrentUser() {
+    try {
+      const api = getApiClient();
+      currentUser = await api.getCurrentUser();
+    } catch (error) {
+      logger.warn('Failed to load current user', { error: String(error) });
     }
   }
 
@@ -138,6 +163,9 @@
     conversationActor.start();
     connectionActor.start();
     
+    // Load current user to check for support role
+    loadCurrentUser();
+    
     if (threadId) {
       loadThread(threadId);
     }
@@ -199,6 +227,14 @@
     <div class="flex-1 flex items-center justify-center">
       <div class="animate-spin h-8 w-8 border-4 border-accent border-t-transparent rounded-full"></div>
     </div>
+  {:else if accessDenied && isSupportUser && threadId}
+    <!-- Support user denied access - show request access UI -->
+    <SupportAccessDenied 
+      threadId={threadId}
+      onAccessRequested={() => {
+        logger.info('Support access requested, user should wait for approval', { threadId });
+      }}
+    />
   {:else if conversationState.value === 'error'}
     <div class="flex-1 flex items-center justify-center">
       <Card padding="lg">

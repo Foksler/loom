@@ -7,8 +7,9 @@
 	import { authStore } from '$lib/auth';
 	import { getApiClient } from '$lib/api/client';
 	import { i18n } from '$lib/i18n';
+	import { ImpersonationBanner } from '$lib/ui';
 	import type { Snippet } from 'svelte';
-	import type { CurrentUser } from '$lib/api/types';
+	import type { CurrentUser, ImpersonationState } from '$lib/api/types';
 
 	interface Props {
 		children: Snippet;
@@ -17,11 +18,30 @@
 
 	let { children, data }: Props = $props();
 
+	let impersonationState = $state<ImpersonationState | null>(null);
+
+	const isSystemAdmin = $derived(data.user?.global_roles?.includes('system_admin') ?? false);
+
 	// Initialize auth store with server-loaded user
 	$effect(() => {
 		authStore.start();
 		authStore.loginSuccess(data.user);
 	});
+
+	$effect(() => {
+		if (isSystemAdmin) {
+			loadImpersonationState();
+		}
+	});
+
+	async function loadImpersonationState() {
+		try {
+			const client = getApiClient();
+			impersonationState = await client.getImpersonationState();
+		} catch {
+			// Ignore errors - impersonation state is optional
+		}
+	}
 
 	async function handleLogout() {
 		try {
@@ -36,6 +56,11 @@
 </script>
 
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+	<!-- Impersonation banner -->
+	{#if impersonationState?.is_impersonating}
+		<ImpersonationBanner impersonation={impersonationState} onStop={loadImpersonationState} />
+	{/if}
+
 	<!-- Header with user info and logout -->
 	<header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -51,6 +76,11 @@
 						<a href="/settings/profile" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
 							{i18n._('nav.settings')}
 						</a>
+						{#if isSystemAdmin}
+							<a href="/admin/users" class="text-sm text-warning hover:text-warning/80">
+								{i18n._('nav.admin')}
+							</a>
+						{/if}
 					</nav>
 				</div>
 				

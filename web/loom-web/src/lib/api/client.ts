@@ -34,6 +34,13 @@ import type {
 	ApiKeyListResponse,
 	CreateApiKeyRequest,
 	CreateApiKeyResponse,
+	SupportAccessRequest,
+	SupportAccessApproval,
+	SupportAccessResponse,
+	ImpersonationState,
+	ImpersonateResponse,
+	StopImpersonationResponse,
+	AdminUserListResponse,
 } from './types';
 import { ApiError } from './types';
 
@@ -302,6 +309,58 @@ export class LoomApiClient {
 		await this.request<void>(`/api/orgs/${encodeURIComponent(orgId)}/api-keys/${encodeURIComponent(keyId)}`, {
 			method: 'DELETE',
 		});
+	}
+
+	// Support Access methods
+	async requestSupportAccess(threadId: string): Promise<SupportAccessRequest> {
+		return this.request<SupportAccessRequest>(
+			`/api/threads/${encodeURIComponent(threadId)}/support-access/request`,
+			{ method: 'POST' }
+		);
+	}
+
+	async approveSupportAccess(threadId: string): Promise<SupportAccessApproval> {
+		return this.request<SupportAccessApproval>(
+			`/api/threads/${encodeURIComponent(threadId)}/support-access/approve`,
+			{ method: 'POST' }
+		);
+	}
+
+	async revokeSupportAccess(threadId: string): Promise<SupportAccessResponse> {
+		return this.request<SupportAccessResponse>(
+			`/api/threads/${encodeURIComponent(threadId)}/support-access`,
+			{ method: 'DELETE' }
+		);
+	}
+
+	// Admin impersonation methods
+	async getImpersonationState(): Promise<ImpersonationState> {
+		return this.request<ImpersonationState>('/api/admin/impersonate/state');
+	}
+
+	async startImpersonation(userId: string): Promise<ImpersonateResponse> {
+		return this.request<ImpersonateResponse>(
+			`/api/admin/users/${encodeURIComponent(userId)}/impersonate`,
+			{ method: 'POST' }
+		);
+	}
+
+	async stopImpersonation(): Promise<StopImpersonationResponse> {
+		return this.request<StopImpersonationResponse>('/api/admin/impersonate/stop', {
+			method: 'POST',
+		});
+	}
+
+	// Admin user management
+	async listAdminUsers(params: { limit?: number; offset?: number; search?: string } = {}): Promise<AdminUserListResponse> {
+		const query = new URLSearchParams();
+		if (params.limit) query.set('limit', String(params.limit));
+		if (params.offset) query.set('offset', String(params.offset));
+		if (params.search) query.set('search', params.search);
+
+		const queryStr = query.toString();
+		const path = queryStr ? `/api/admin/users?${queryStr}` : '/api/admin/users';
+		return this.request<AdminUserListResponse>(path);
 	}
 }
 

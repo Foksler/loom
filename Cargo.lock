@@ -2787,6 +2787,7 @@ dependencies = [
  "dirs 5.0.1",
  "loom-core",
  "loom-http",
+ "loom-secret",
  "proptest",
  "reqwest",
  "serde",

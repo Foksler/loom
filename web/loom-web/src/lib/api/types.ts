@@ -295,6 +295,75 @@ export interface UpdateProfileRequest {
 	locale?: string;
 }
 
+// Impersonation types
+export interface ImpersonationState {
+	is_impersonating: boolean;
+	original_user?: {
+		id: string;
+		display_name: string;
+	};
+	impersonated_user?: {
+		id: string;
+		display_name: string;
+	};
+}
+
+export interface ImpersonateResponse {
+	message: string;
+	impersonated_user: {
+		id: string;
+		display_name: string;
+	};
+}
+
+export interface StopImpersonationResponse {
+	message: string;
+}
+
+// Admin user list types
+export interface AdminUser {
+	id: string;
+	display_name: string;
+	email: string | null;
+	avatar_url: string | null;
+	global_roles: string[];
+	created_at: string;
+	last_login_at: string | null;
+}
+
+export interface AdminUserListResponse {
+	users: AdminUser[];
+	total: number;
+	limit: number;
+	offset: number;
+}
+
+// Support Access types
+export type SupportAccessStatus = 'pending' | 'approved' | 'revoked' | 'expired';
+
+export interface SupportAccessRequest {
+	request_id: string;
+	thread_id: string;
+	requested_at: string;
+	status: SupportAccessStatus;
+}
+
+export interface SupportAccessApproval {
+	thread_id: string;
+	granted_to: string;
+	approved_at: string;
+	expires_at: string;
+}
+
+export interface SupportAccessResponse {
+	message: string;
+}
+
+export interface SupportAccessErrorResponse {
+	message: string;
+	code: string;
+}
+
 // Error class for API errors
 export class ApiError extends Error {
 	constructor(
@@ -303,5 +372,26 @@ export class ApiError extends Error {
 	) {
 		super(`API Error ${status}: ${body}`);
 		this.name = 'ApiError';
+	}
+
+	get statusCode(): number {
+		return this.status;
+	}
+
+	get isForbidden(): boolean {
+		return this.status === 403;
+	}
+
+	get isNotFound(): boolean {
+		return this.status === 404;
+	}
+
+	getErrorCode(): string | null {
+		try {
+			const parsed = JSON.parse(this.body);
+			return parsed.code || null;
+		} catch {
+			return null;
+		}
 	}
 }
