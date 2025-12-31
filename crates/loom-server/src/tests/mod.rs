@@ -10,13 +10,8 @@
 //! - Security validation and hardening
 //! - End-to-end LLM → Query → Response flows
 
-pub mod support;
-
 mod auth_integration_tests;
-mod authz_threads_tests;
-mod authz_orgs_tests;
-mod authz_admin_tests;
-mod authz_users_tests;
+mod authz;
 mod end_to_end_tests;
 mod query_detection_tests;
 mod query_handler_tests;
