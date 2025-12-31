@@ -28,6 +28,8 @@ Before deploying, test changes locally to verify behavior:
 ## Architecture
 Rust workspace with 30+ crates under `crates/`. Key crates: `loom-core` (agent logic), `loom-server` (HTTP API), `loom-thread` (conversation state), `loom-llm-*` (LLM providers), `loom-tools` (agent tools), `loom-auth*` (authentication). Web frontend in `web/loom-web` (SvelteKit + Tailwind). SQLite database (`sqlx`). Dev environment via `devenv.nix`. Infra in `infra/` (Nix/K8s).
 
+**Routes:** Use `PublicRouter` for unauthenticated routes, `AuthedRouter` for protected routes (see `typed_router.rs`). If unsure, ask. When adding/modifying routes, update authz tests in `tests/authz_*_tests.rs`.
+
 ## Svelte 5 (NOT Svelte 4)
 **Always use Svelte 5 runes syntax. Never use Svelte 4 patterns.**
 
