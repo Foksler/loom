@@ -156,6 +156,11 @@
     role = "server";
     clusterInit = true;
     disableTraefik = true;  # We use nginx via loom-web
+    ghcrSecret = {
+      enable = true;
+      username = "ghuntley";
+      tokenFile = config.sops.secrets.ghcr-token.path;
+    };
   };
 
   # Auto-update NixOS from git repository
@@ -213,6 +218,7 @@
     weaver = {
       enable = true;
       namespace = "loom-weavers";
+      imagePullSecrets = [ "ghcr-secret" ];
     };
 
     geoip = {

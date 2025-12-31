@@ -385,6 +385,13 @@ in
         default = "[]";
         description = "JSON string of webhook configurations.";
       };
+
+      imagePullSecrets = mkOption {
+        type = types.listOf types.str;
+        default = [ ];
+        description = "List of Kubernetes secret names for pulling private container images.";
+        example = [ "ghcr-secret" ];
+      };
     };
 
     extraEnvironment = mkOption {
@@ -499,6 +506,7 @@ in
           LOOM_SERVER_WEAVER_MAX_CONCURRENT = toString cfg.weaver.maxConcurrent;
           LOOM_SERVER_WEAVER_READY_TIMEOUT_SECS = toString cfg.weaver.readyTimeoutSecs;
           LOOM_SERVER_WEAVER_WEBHOOKS = cfg.weaver.webhooks;
+          LOOM_SERVER_WEAVER_IMAGE_PULL_SECRETS = lib.concatStringsSep "," cfg.weaver.imagePullSecrets;
           KUBECONFIG = toString cfg.weaver.kubeconfigPath;
         })
         (mkIf cfg.geoip.enable {

@@ -17,6 +17,6 @@ pub use client::K8sClient;
 pub use error::{K8sError, K8sResult};
 pub use kube_client::KubeClient;
 pub use types::{
-	AttachedProcess, Container, ContainerPort, EnvVar, LogOptions, LogStream, Namespace, Pod,
-	PodSpec, PodStatus, ResourceRequirements, SecurityContext,
+	AttachedProcess, Container, ContainerPort, EnvVar, LocalObjectReference, LogOptions, LogStream,
+	Namespace, Pod, PodSpec, PodStatus, ResourceRequirements, SecurityContext,
 };

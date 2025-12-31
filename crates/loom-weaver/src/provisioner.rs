@@ -12,8 +12,8 @@ use k8s_openapi::api::core::v1::Capabilities;
 use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
 use loom_k8s::{
-    AttachedProcess, Container, EnvVar, K8sClient, LogOptions, LogStream, Pod, PodSpec,
-    ResourceRequirements, SecurityContext,
+    AttachedProcess, Container, EnvVar, K8sClient, LocalObjectReference, LogOptions, LogStream,
+    Pod, PodSpec, ResourceRequirements, SecurityContext,
 };
 
 use crate::config::WeaverConfig;
@@ -435,6 +435,20 @@ fn build_pod_spec(
         ..Default::default()
     };
 
+    let image_pull_secrets = if config.image_pull_secrets.is_empty() {
+        None
+    } else {
+        Some(
+            config
+                .image_pull_secrets
+                .iter()
+                .map(|name| LocalObjectReference {
+                    name: name.clone(),
+                })
+                .collect(),
+        )
+    };
+
     Pod {
         metadata: ObjectMeta {
             name: Some(pod_name),
@@ -446,6 +460,7 @@ fn build_pod_spec(
         spec: Some(PodSpec {
             containers: vec![container],
             restart_policy: Some("Never".to_string()),
+            image_pull_secrets,
             ..Default::default()
         }),
         status: None,

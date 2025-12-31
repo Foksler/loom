@@ -1316,7 +1316,7 @@ async fn run_weaver_new(
 	}
 
 	let request = weaver_client::CreateWeaverRequest {
-		image: image.unwrap_or_else(|| "ghcr.io/ghuntley/loom:latest".to_string()),
+		image: image.unwrap_or_else(|| "ghcr.io/ghuntley/loom/weaver:latest".to_string()),
 		env: env_map,
 		repo,
 		branch,

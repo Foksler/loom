@@ -22,6 +22,8 @@ pub struct WeaverConfig {
     pub ready_timeout_secs: u64,
     /// Webhook configurations
     pub webhooks: Vec<WebhookConfig>,
+    /// Image pull secret names for private registries (e.g., ghcr.io)
+    pub image_pull_secrets: Vec<String>,
 }
 
 impl Default for WeaverConfig {
@@ -34,6 +36,7 @@ impl Default for WeaverConfig {
             max_concurrent: 64,
             ready_timeout_secs: 60,
             webhooks: Vec::new(),
+            image_pull_secrets: Vec::new(),
         }
     }
 }

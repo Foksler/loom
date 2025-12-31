@@ -8,8 +8,8 @@ use futures::Stream;
 use tokio::io::{AsyncRead, AsyncWrite};
 
 pub use k8s_openapi::api::core::v1::{
-	Container, ContainerPort, EnvVar, Namespace, Pod, PodSpec, PodStatus, ResourceRequirements,
-	SecurityContext,
+	Container, ContainerPort, EnvVar, LocalObjectReference, Namespace, Pod, PodSpec, PodStatus,
+	ResourceRequirements, SecurityContext,
 };
 
 /// Options for log streaming.

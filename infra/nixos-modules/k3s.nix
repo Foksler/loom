@@ -83,6 +83,22 @@ in
       default = false;
       description = "Whether to open firewall ports for k3s.";
     };
+
+    ghcrSecret = {
+      enable = mkEnableOption "Create ghcr.io image pull secret in loom-weavers namespace";
+
+      username = mkOption {
+        type = types.str;
+        default = "ghuntley";
+        description = "GitHub username for ghcr.io authentication.";
+      };
+
+      tokenFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = "Path to file containing GitHub PAT with read:packages scope.";
+      };
+    };
   };
 
   config = mkIf cfg.enable {
@@ -170,6 +186,42 @@ in
         # Make readable by loom-server group
         chmod 640 ${cfg.kubeconfigPath}
         chown root:loom-server ${cfg.kubeconfigPath} || true
+      '';
+
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+      };
+    };
+
+    # Create ghcr.io image pull secret if enabled
+    systemd.services.k3s-ghcr-secret = mkIf (cfg.ghcrSecret.enable && cfg.ghcrSecret.tokenFile != null) {
+      description = "Create ghcr.io image pull secret in loom-weavers namespace";
+      after = [ "k3s.service" "k3s-loom-namespace.service" ];
+      requires = [ "k3s.service" "k3s-loom-namespace.service" ];
+      wantedBy = [ "multi-user.target" ];
+
+      path = [ pkgs.kubectl ];
+
+      script = ''
+        # Wait for namespace to exist
+        until kubectl --kubeconfig=${cfg.kubeconfigPath} get namespace loom-weavers &>/dev/null; do
+          echo "Waiting for loom-weavers namespace..."
+          sleep 2
+        done
+
+        # Delete existing secret if it exists (to update it)
+        kubectl --kubeconfig=${cfg.kubeconfigPath} delete secret ghcr-secret -n loom-weavers --ignore-not-found=true
+
+        # Create the docker-registry secret
+        GITHUB_TOKEN=$(cat ${cfg.ghcrSecret.tokenFile})
+        kubectl --kubeconfig=${cfg.kubeconfigPath} create secret docker-registry ghcr-secret \
+          --namespace=loom-weavers \
+          --docker-server=ghcr.io \
+          --docker-username=${cfg.ghcrSecret.username} \
+          --docker-password="$GITHUB_TOKEN"
+
+        echo "Created ghcr-secret in loom-weavers namespace"
       '';
 
       serviceConfig = {

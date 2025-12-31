@@ -36,6 +36,8 @@ pub struct ServerConfig {
 	pub weaver_ready_timeout_secs: u64,
 	/// Webhooks JSON configuration.
 	pub weaver_webhooks: String,
+	/// Comma-separated list of image pull secret names for private registries.
+	pub weaver_image_pull_secrets: String,
 	/// SMTP server hostname.
 	pub smtp_host: Option<String>,
 	/// SMTP server port.
@@ -73,6 +75,7 @@ impl ServerConfig {
 	/// - `LOOM_SERVER_WEAVER_MAX_CONCURRENT`: Max concurrent weavers (default: 64)
 	/// - `LOOM_SERVER_WEAVER_READY_TIMEOUT_SECS`: Ready timeout (default: 60)
 	/// - `LOOM_SERVER_WEAVER_WEBHOOKS`: Webhooks JSON (default: [])
+	/// - `LOOM_SERVER_WEAVER_IMAGE_PULL_SECRETS`: Comma-separated secret names (default: "")
 	/// - `LOOM_SERVER_DEFAULT_LOCALE`: Default locale for emails (default: en)
 	pub fn from_env() -> Result<Self, ConfigError> {
 		let host = env::var("LOOM_SERVER_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
@@ -128,6 +131,9 @@ impl ServerConfig {
 		let weaver_webhooks =
 			env::var("LOOM_SERVER_WEAVER_WEBHOOKS").unwrap_or_else(|_| "[]".to_string());
 
+		let weaver_image_pull_secrets =
+			env::var("LOOM_SERVER_WEAVER_IMAGE_PULL_SECRETS").unwrap_or_default();
+
 		let smtp_host = env::var("LOOM_SERVER_SMTP_HOST").ok();
 
 		let smtp_port = env::var("LOOM_SERVER_SMTP_PORT")
@@ -164,6 +170,7 @@ impl ServerConfig {
 			weaver_max_concurrent,
 			weaver_ready_timeout_secs,
 			weaver_webhooks,
+			weaver_image_pull_secrets,
 			smtp_host,
 			smtp_port,
 			smtp_username,
@@ -198,6 +205,7 @@ impl Default for ServerConfig {
 			weaver_max_concurrent: 64,
 			weaver_ready_timeout_secs: 60,
 			weaver_webhooks: "[]".to_string(),
+			weaver_image_pull_secrets: String::new(),
 			smtp_host: None,
 			smtp_port: 587,
 			smtp_username: None,

@@ -25,6 +25,32 @@ Before deploying, test changes locally to verify behavior:
 - **Test against local:** `curl http://localhost:9090/health`
 - **Run integration tests:** `cargo test -p loom-server <test_name>`
 
+## Weaver Troubleshooting
+Weavers are ephemeral K8s pods for running remote Loom REPL sessions.
+
+### CLI Commands
+- **Login first:** `loom --server-url https://loom.ghuntley.com login`
+- **List weavers:** `loom --server-url https://loom.ghuntley.com weaver ps`
+- **Create weaver:** `loom --server-url https://loom.ghuntley.com new --image <image>`
+- **Attach:** `loom --server-url https://loom.ghuntley.com attach <weaver-id>`
+- **Delete:** `loom --server-url https://loom.ghuntley.com weaver delete <weaver-id>`
+
+### Kubernetes Debugging
+Weavers run in the `loom-weavers` namespace:
+
+- **List pods:** `sudo kubectl get pods -n loom-weavers`
+- **Describe pod:** `sudo kubectl describe pod <pod-name> -n loom-weavers`
+- **Pod logs:** `sudo kubectl logs <pod-name> -n loom-weavers`
+- **Delete stuck pod:** `sudo kubectl delete pod <pod-name> -n loom-weavers`
+
+### Server Logs
+- **loom-server logs:** `journalctl -u loom-server -f` (follow) or `-n 100` (last 100 lines)
+
+### Common Issues
+- **ErrImagePull:** The container image doesn't exist or is private. Check `kubectl describe pod` for details.
+- **Succeeded status immediately:** The container exited because it has no long-running entrypoint. Weaver images must run a persistent process (e.g., the loom REPL).
+- **401 Unauthorized:** Run `loom --server-url <url> login` first to authenticate.
+
 ## Architecture
 Rust workspace with 30+ crates under `crates/`. Key crates: `loom-core` (agent logic), `loom-server` (HTTP API), `loom-thread` (conversation state), `loom-llm-*` (LLM providers), `loom-tools` (agent tools), `loom-auth*` (authentication). Web frontend in `web/loom-web` (SvelteKit + Tailwind). SQLite database (`sqlx`). Dev environment via `devenv.nix`. Infra in `infra/` (Nix/K8s).
 

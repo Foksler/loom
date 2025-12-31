@@ -277,6 +277,14 @@ async fn initialize_weaver_provisioner(
 		}
 	};
 
+	// Parse image pull secrets from comma-separated string
+	let image_pull_secrets: Vec<String> = config
+		.weaver_image_pull_secrets
+		.split(',')
+		.map(|s| s.trim().to_string())
+		.filter(|s| !s.is_empty())
+		.collect();
+
 	// Create weaver config from server config
 	let weaver_config = WeaverConfig {
 		namespace: config.weaver_namespace.clone(),
@@ -286,6 +294,7 @@ async fn initialize_weaver_provisioner(
 		max_concurrent: config.weaver_max_concurrent,
 		ready_timeout_secs: config.weaver_ready_timeout_secs,
 		webhooks: webhooks.clone(),
+		image_pull_secrets,
 	};
 
 	// Create provisioner and webhook dispatcher
