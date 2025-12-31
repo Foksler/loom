@@ -39,7 +39,13 @@ let
   entrypoint = writeShellScriptBin "entrypoint" ''
     #!/bin/bash
     # Weaver pod entrypoint script
-    # Clones a git repository if specified, then starts loom REPL
+    # Clones a git repository if specified, then starts loom REPL in tmux
+    #
+    # We use tmux to provide a persistent PTY for the loom REPL.
+    # Without tmux, the container's stdin is not connected to anything,
+    # causing the REPL to receive immediate EOF and exit.
+    # With tmux, the REPL has a proper PTY and waits for input.
+    # When clients attach via K8s attach API, they connect to tmux.
 
     set -e
 
@@ -63,8 +69,11 @@ let
       cd "$WORKSPACE"
     fi
 
-    # Start loom REPL
-    exec ${loom-cli}/bin/loom
+    # Start loom REPL inside tmux session
+    # -A: attach to existing session or create new one
+    # -s loom: name the session "loom"
+    # The tmux session provides a PTY so loom doesn't get EOF
+    exec ${tmux}/bin/tmux new-session -A -s loom "${loom-cli}/bin/loom"
   '';
 
   # Create passwd file with loom user
