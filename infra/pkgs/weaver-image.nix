@@ -154,9 +154,11 @@ dockerTools.buildImage {
     mkdir -p workspace
     mkdir -p tmp
 
-    # Set permissions
+    # Set permissions - loom user (1000:1000) needs write access
     chmod 1777 tmp
+    chown -R 1000:1000 home/loom
     chmod 755 home/loom
+    chown -R 1000:1000 workspace
     chmod 755 workspace
   '';
 
