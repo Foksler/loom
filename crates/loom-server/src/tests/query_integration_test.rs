@@ -27,15 +27,23 @@ use tower::ServiceExt;
 // Test Utilities & Mocks
 // ============================================================================
 
-/// Creates a test app with isolated database
+/// Creates a test app with isolated database and dev mode enabled
 async fn setup_test_app() -> (axum::Router, tempfile::TempDir) {
+	use crate::api::create_or_get_dev_user;
+
 	let dir = tempdir().unwrap();
 	let db_path = dir.path().join("test_query.db");
 	let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 	let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
 	let pool = repo.pool().clone();
 	let config = ServerConfig::default();
-	let state = create_app_state(pool, repo, &config).await;
+	let mut state = create_app_state(pool, repo, &config).await;
+	// Enable dev mode for query tests
+	state.auth_config.dev_mode = true;
+	state.dev_user = match create_or_get_dev_user(&state.user_repo).await {
+		Ok(user) => Some(user),
+		Err(_) => None,
+	};
 	(create_router(state), dir)
 }
 

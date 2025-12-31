@@ -388,6 +388,29 @@ async fn authenticate_access_token(
 	Some(AuthContext::authenticated(current_user))
 }
 
+pub async fn require_auth_layer(request: Request<Body>, next: Next) -> Response {
+	let auth_ctx = request
+		.extensions()
+		.get::<AuthContext>()
+		.cloned()
+		.unwrap_or_else(AuthContext::unauthenticated);
+
+	if auth_ctx.current_user.is_some() {
+		next.run(request).await
+	} else {
+		(
+			StatusCode::UNAUTHORIZED,
+			Json(ErrorResponse {
+				error: "unauthorized".to_string(),
+				message: "Authentication required".to_string(),
+				server_version: None,
+				client_version: None,
+			}),
+		)
+			.into_response()
+	}
+}
+
 /// Extractor that requires authentication.
 ///
 /// Use this in handlers that require an authenticated user.
@@ -591,6 +614,87 @@ mod tests {
 				let hash_upper = hash_token(&token.to_uppercase());
 				prop_assert_ne!(hash_lower, hash_upper, "Tokens should be case-sensitive");
 			}
+		}
+	}
+
+	mod require_auth_layer_tests {
+		use super::*;
+		use axum::{body::Body, http::Request, middleware, routing::get, Router};
+		use loom_auth::{User, UserId};
+		use tower::ServiceExt;
+
+		fn test_user() -> User {
+			User {
+				id: UserId::generate(),
+				display_name: "Test User".to_string(),
+				primary_email: Some("test@example.com".to_string()),
+				avatar_url: None,
+				email_visible: true,
+				is_system_admin: false,
+				is_support: false,
+				is_auditor: false,
+				created_at: chrono::Utc::now(),
+				updated_at: chrono::Utc::now(),
+				deleted_at: None,
+				locale: None,
+			}
+		}
+
+		async fn dummy_handler() -> &'static str {
+			"ok"
+		}
+
+		#[tokio::test]
+		async fn test_require_auth_layer_with_valid_auth_proceeds() {
+			let app = Router::new()
+				.route("/test", get(dummy_handler))
+				.layer(middleware::from_fn(require_auth_layer));
+
+			let user = test_user();
+			let current_user = CurrentUser::from_access_token(user);
+			let auth_ctx = AuthContext::authenticated(current_user);
+
+			let mut request = Request::builder()
+				.uri("/test")
+				.body(Body::empty())
+				.unwrap();
+			request.extensions_mut().insert(auth_ctx);
+
+			let response = app.oneshot(request).await.unwrap();
+			assert_eq!(response.status(), StatusCode::OK);
+		}
+
+		#[tokio::test]
+		async fn test_require_auth_layer_unauthenticated_returns_401() {
+			let app = Router::new()
+				.route("/test", get(dummy_handler))
+				.layer(middleware::from_fn(require_auth_layer));
+
+			let auth_ctx = AuthContext::unauthenticated();
+
+			let mut request = Request::builder()
+				.uri("/test")
+				.body(Body::empty())
+				.unwrap();
+			request.extensions_mut().insert(auth_ctx);
+
+			let response = app.oneshot(request).await.unwrap();
+			assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+		}
+
+		#[tokio::test]
+		async fn test_require_auth_layer_no_context_returns_401() {
+			let app = Router::new()
+				.route("/test", get(dummy_handler))
+				.layer(middleware::from_fn(require_auth_layer));
+
+			let request = Request::builder()
+				.uri("/test")
+				.body(Body::empty())
+				.unwrap();
+
+			let response = app.oneshot(request).await.unwrap();
+			assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 		}
 	}
 }

@@ -27,7 +27,7 @@ use std::sync::Arc;
 use tempfile::tempdir;
 use tower::ServiceExt;
 
-/// Creates a test app with isolated database
+/// Creates a test app with isolated database (no dev mode - for testing auth requirements)
 async fn setup_test_app() -> (axum::Router, tempfile::TempDir) {
 	let dir = tempdir().unwrap();
 	let db_path = dir.path().join("test_auth.db");
@@ -35,7 +35,9 @@ async fn setup_test_app() -> (axum::Router, tempfile::TempDir) {
 	let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
 	let pool = repo.pool().clone();
 	let config = ServerConfig::default();
-	let state = create_app_state(pool, repo, &config).await;
+	let mut state = create_app_state(pool, repo, &config).await;
+	// Explicitly disable dev mode for auth tests
+	state.auth_config.dev_mode = false;
 	(create_router(state), dir)
 }
 
@@ -47,7 +49,9 @@ async fn setup_test_app_with_state() -> (axum::Router, AppState, tempfile::TempD
 	let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
 	let pool = repo.pool().clone();
 	let config = ServerConfig::default();
-	let state = create_app_state(pool, repo, &config).await;
+	let mut state = create_app_state(pool, repo, &config).await;
+	// Explicitly disable dev mode for auth tests
+	state.auth_config.dev_mode = false;
 	(create_router(state.clone()), state, dir)
 }
 

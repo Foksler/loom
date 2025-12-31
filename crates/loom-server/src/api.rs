@@ -3,13 +3,12 @@
 
 //! HTTP API routes and handlers for thread operations.
 
-use axum::{
-	middleware::from_fn_with_state,
-	routing::{delete, get, patch, post, put},
-	Router,
-};
+use axum::routing::{delete, get, patch, post, put};
 
-use crate::abac_middleware::RequireRole;
+use crate::{
+	abac_middleware::RequireRole,
+	typed_router::{AuthedRouter, PublicRouter},
+};
 use loom_auth_github::{GitHubOAuthClient, GitHubOAuthConfig};
 use loom_auth_google::{GoogleOAuthClient, GoogleOAuthConfig};
 use loom_auth_okta::{OktaOAuthClient, OktaOAuthConfig};
@@ -25,8 +24,9 @@ use tower_http::services::{ServeDir, ServeFile};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
+use axum::Router;
+
 use crate::{
-	auth_middleware::auth_layer,
 	config::ServerConfig,
 	db::{
 		ApiKeyRepository, AuditRepository, OrgRepository, SessionRepository, ShareRepository,
@@ -203,7 +203,7 @@ pub async fn create_app_state(
 }
 
 /// Create or get the development user for dev mode.
-async fn create_or_get_dev_user(
+pub async fn create_or_get_dev_user(
 	user_repo: &Arc<UserRepository>,
 ) -> Result<loom_auth::User, crate::error::ServerError> {
 	let email = "dev@localhost";
@@ -376,14 +376,28 @@ fn initialize_okta_oauth() -> Option<Arc<OktaOAuthClient>> {
 	}
 }
 
-fn admin_routes(audit_repo: Arc<AuditRepository>) -> Router<AppState> {
+fn admin_routes(state: AppState) -> Router<AppState> {
+	use axum::middleware::from_fn_with_state;
+	use crate::{auth_middleware::auth_layer, typed_router::require_auth_layer};
+
 	Router::new()
 		.route("/users", get(routes::admin::list_users))
-		.route("/users/{id}/roles", patch(routes::admin::update_user_roles))
-		.route("/users/{id}/impersonate", post(routes::admin::start_impersonation))
-		.route("/impersonate/stop", post(routes::admin::stop_impersonation))
+		.route(
+			"/users/{id}/roles",
+			patch(routes::admin::update_user_roles),
+		)
+		.route(
+			"/users/{id}/impersonate",
+			post(routes::admin::start_impersonation),
+		)
+		.route(
+			"/impersonate/stop",
+			post(routes::admin::stop_impersonation),
+		)
 		.route("/audit-logs", get(routes::admin::list_audit_logs))
-		.route_layer(RequireRole::admin().with_audit(audit_repo))
+		.route_layer(RequireRole::admin().with_audit(state.audit_repo.clone()))
+		.layer(from_fn_with_state(state.clone(), require_auth_layer))
+		.layer(from_fn_with_state(state, auth_layer))
 }
 
 /// Create the API router with all routes.
@@ -392,164 +406,341 @@ pub fn create_router(state: AppState) -> Router {
 	let web_dir = std::env::var("LOOM_SERVER_WEB_DIR").ok();
 	let has_provisioner = state.provisioner.is_some();
 
-	let mut router = Router::new()
-        // Thread API routes
-        .route("/api/threads/search", get(routes::threads::search_threads))
-        .route("/api/threads/{id}", put(routes::threads::upsert_thread))
-        .route("/api/threads/{id}", get(routes::threads::get_thread))
-        .route("/api/threads/{id}", delete(routes::threads::delete_thread))
-        .route(
-            "/api/threads/{id}/visibility",
-            post(routes::threads::update_thread_visibility),
-        )
-        .route("/api/threads", get(routes::threads::list_threads))
-        // Share link routes (authenticated)
-        .route("/api/threads/{id}/share", post(routes::share::create_share_link))
-        .route("/api/threads/{id}/share", delete(routes::share::revoke_share_link))
-        // Support access routes (authenticated)
-        .route("/api/threads/{id}/support-access/request", post(routes::share::request_support_access))
-        .route("/api/threads/{id}/support-access/approve", post(routes::share::approve_support_access))
-        .route("/api/threads/{id}/support-access", delete(routes::share::revoke_support_access))
-        // Public shared thread access (no auth required)
-        .route("/api/threads/{id}/share/{token}", get(routes::share::get_shared_thread))
-        // Auth routes
-        .route("/api/auth/providers", get(routes::auth::get_providers))
-        .route("/api/auth/me", get(routes::auth::get_current_user))
-        .route("/api/auth/logout", post(routes::auth::logout))
-        .route("/api/auth/magic-link", post(routes::auth::request_magic_link))
-        .route("/api/auth/magic-link/verify", get(routes::auth::verify_magic_link))
-        .route("/api/auth/device/start", post(routes::auth::device_start))
-        .route("/api/auth/device/poll", post(routes::auth::device_poll))
-        .route("/api/auth/device/complete", post(routes::auth::device_complete))
-        // OAuth routes
-        .route("/api/auth/login/github", get(routes::auth::login_github))
-        .route("/api/auth/callback/github", get(routes::auth::callback_github))
-        .route("/api/auth/login/google", get(routes::auth::login_google))
-        .route("/api/auth/callback/google", get(routes::auth::callback_google))
-        .route("/api/auth/login/okta", get(routes::auth::login_okta))
-        .route("/api/auth/callback/okta", get(routes::auth::callback_okta))
-        // Session routes
-        .route("/api/sessions", get(routes::sessions::list_sessions))
-        .route("/api/sessions/{id}", delete(routes::sessions::revoke_session))
-        // Organization routes
-        .route("/api/orgs", get(routes::orgs::list_orgs))
-        .route("/api/orgs", post(routes::orgs::create_org))
-        .route("/api/orgs/{id}", get(routes::orgs::get_org))
-        .route("/api/orgs/{id}", axum::routing::patch(routes::orgs::update_org))
-        .route("/api/orgs/{id}", delete(routes::orgs::delete_org))
-        .route("/api/orgs/{id}/members", get(routes::orgs::list_org_members))
-        .route("/api/orgs/{id}/members", post(routes::orgs::add_org_member))
-        .route("/api/orgs/{org_id}/members/{user_id}", delete(routes::orgs::remove_org_member))
-        // Team routes
-        .route("/api/orgs/{org_id}/teams", get(routes::teams::list_teams))
-        .route("/api/orgs/{org_id}/teams", post(routes::teams::create_team))
-        .route("/api/orgs/{org_id}/teams/{team_id}", get(routes::teams::get_team))
-        .route("/api/orgs/{org_id}/teams/{team_id}", axum::routing::patch(routes::teams::update_team))
-        .route("/api/orgs/{org_id}/teams/{team_id}", delete(routes::teams::delete_team))
-        .route("/api/orgs/{org_id}/teams/{team_id}/members", get(routes::teams::list_team_members))
-        .route("/api/orgs/{org_id}/teams/{team_id}/members", post(routes::teams::add_team_member))
-        .route("/api/orgs/{org_id}/teams/{team_id}/members/{user_id}", delete(routes::teams::remove_team_member))
-        // API key routes
-        .route("/api/orgs/{org_id}/api-keys", get(routes::api_keys::list_api_keys))
-        .route("/api/orgs/{org_id}/api-keys", post(routes::api_keys::create_api_key))
-        .route("/api/orgs/{org_id}/api-keys/{id}", delete(routes::api_keys::revoke_api_key))
-        .route("/api/orgs/{org_id}/api-keys/{id}/usage", get(routes::api_keys::get_api_key_usage))
-        // Invitation routes
-        .route("/api/orgs/{org_id}/invitations", get(routes::invitations::list_invitations))
-        .route("/api/orgs/{org_id}/invitations", post(routes::invitations::create_invitation))
-        .route("/api/orgs/{org_id}/invitations/{id}", delete(routes::invitations::cancel_invitation))
-        .route("/api/invitations/accept", post(routes::invitations::accept_invitation))
-        .route("/api/invitations/{token}", get(routes::invitations::get_invitation))
-        // Join request routes
-        .route("/api/orgs/{org_id}/join-requests", get(routes::invitations::list_join_requests))
-        .route("/api/orgs/{org_id}/join-requests", post(routes::invitations::create_join_request))
-        .route("/api/orgs/{org_id}/join-requests/{request_id}/approve", post(routes::invitations::approve_join_request))
-        .route("/api/orgs/{org_id}/join-requests/{request_id}/reject", post(routes::invitations::reject_join_request))
-        // User routes
-        .route("/api/users/{id}", get(routes::users::get_user_profile))
-        .route("/api/users/me", axum::routing::patch(routes::users::update_current_user))
-        .route("/api/users/me/delete", post(routes::users::request_account_deletion))
-        .route("/api/users/me/restore", post(routes::users::restore_account))
-        // Admin routes (nested with role-based authorization layer)
-        .nest("/api/admin", admin_routes(state.audit_repo.clone()))
-        // Health and metrics routes
-        .route("/health", get(routes::health::health_check))
-        .route("/metrics", get(routes::health::prometheus_metrics))
-        // CSE proxy route
-        .route("/proxy/cse", post(routes::cse::proxy_cse))
-        // GitHub App endpoints
-        .route("/api/github/app", get(routes::github::get_github_app_info))
-        .route("/api/github/webhook", post(routes::github::github_webhook))
-        .route(
-            "/api/github/installations/by-repo",
-            get(routes::github::get_github_installation_by_repo),
-        )
-        .route("/proxy/github/search-code", post(routes::github::proxy_github_search_code))
-        .route("/proxy/github/repo-info", post(routes::github::proxy_github_repo_info))
-        .route(
-            "/proxy/github/file-contents",
-            post(routes::github::proxy_github_file_contents),
-        )
-        // LLM proxy endpoints
-        .route(
-            "/proxy/anthropic/complete",
-            post(llm_proxy::proxy_anthropic_complete),
-        )
-        .route(
-            "/proxy/anthropic/stream",
-            post(llm_proxy::proxy_anthropic_stream),
-        )
-        .route(
-            "/proxy/openai/complete",
-            post(llm_proxy::proxy_openai_complete),
-        )
-        .route("/proxy/openai/stream", post(llm_proxy::proxy_openai_stream))
-        .route(
-            "/proxy/vertex/complete",
-            post(llm_proxy::proxy_vertex_complete),
-        )
-        .route("/proxy/vertex/stream", post(llm_proxy::proxy_vertex_stream))
-        // Server query endpoints
-        .route(
-            "/api/sessions/{session_id}/query-response",
-            post(server_query::handle_query_response),
-        )
-        .route(
-            "/api/sessions/{session_id}/queries",
-            get(server_query::list_pending_queries),
-        )
-        // Debug/tracing endpoints
-        .route("/api/debug/query-traces/{trace_id}", get(routes::debug::get_query_trace))
-        .route("/api/debug/query-traces", get(routes::debug::list_query_traces))
-        .route("/api/debug/query-traces/stats", get(routes::debug::get_trace_stats))
-        // WebSocket endpoint (Phase 3)
-        .route("/v1/ws/sessions/{session_id}", get(crate::websocket::handler::ws_upgrade_handler))
-        .with_state(state.clone())
-        // Bin directory endpoints - use fallback to avoid route conflict
-        .nest_service(
-            "/bin",
-            ServeDir::new(&bin_dir)
-                .precompressed_gzip()
-                .fallback(axum::routing::get(routes::bin::list_bin_directory)),
-        );
+	// Public routes - no authentication required
+	let public = PublicRouter::new()
+		// Health and metrics
+		.route("/health", get(routes::health::health_check))
+		.route("/metrics", get(routes::health::prometheus_metrics))
+		// Auth routes (public)
+		.route("/api/auth/providers", get(routes::auth::get_providers))
+		.route(
+			"/api/auth/magic-link",
+			post(routes::auth::request_magic_link),
+		)
+		.route(
+			"/api/auth/magic-link/verify",
+			get(routes::auth::verify_magic_link),
+		)
+		.route("/api/auth/device/start", post(routes::auth::device_start))
+		.route("/api/auth/device/poll", post(routes::auth::device_poll))
+		// OAuth login/callback routes
+		.route("/api/auth/login/github", get(routes::auth::login_github))
+		.route(
+			"/api/auth/callback/github",
+			get(routes::auth::callback_github),
+		)
+		.route("/api/auth/login/google", get(routes::auth::login_google))
+		.route(
+			"/api/auth/callback/google",
+			get(routes::auth::callback_google),
+		)
+		.route("/api/auth/login/okta", get(routes::auth::login_okta))
+		.route("/api/auth/callback/okta", get(routes::auth::callback_okta))
+		// Public invitation view (GET only)
+		.route(
+			"/api/invitations/{token}",
+			get(routes::invitations::get_invitation),
+		)
+		// Public shared thread access
+		.route(
+			"/api/threads/{id}/share/{token}",
+			get(routes::share::get_shared_thread),
+		)
+		// GitHub webhook (signature verified separately)
+		.route(
+			"/api/github/webhook",
+			post(routes::github::github_webhook),
+		)
+		.build();
+
+	// Authenticated routes - require valid session/token
+	let mut authed = AuthedRouter::new()
+		// Thread API routes
+		.route(
+			"/api/threads/search",
+			get(routes::threads::search_threads),
+		)
+		.route("/api/threads/{id}", put(routes::threads::upsert_thread))
+		.route("/api/threads/{id}", get(routes::threads::get_thread))
+		.route(
+			"/api/threads/{id}",
+			delete(routes::threads::delete_thread),
+		)
+		.route(
+			"/api/threads/{id}/visibility",
+			post(routes::threads::update_thread_visibility),
+		)
+		.route("/api/threads", get(routes::threads::list_threads))
+		// Share link routes (authenticated)
+		.route(
+			"/api/threads/{id}/share",
+			post(routes::share::create_share_link),
+		)
+		.route(
+			"/api/threads/{id}/share",
+			delete(routes::share::revoke_share_link),
+		)
+		// Support access routes (authenticated)
+		.route(
+			"/api/threads/{id}/support-access/request",
+			post(routes::share::request_support_access),
+		)
+		.route(
+			"/api/threads/{id}/support-access/approve",
+			post(routes::share::approve_support_access),
+		)
+		.route(
+			"/api/threads/{id}/support-access",
+			delete(routes::share::revoke_support_access),
+		)
+		// Auth routes (authenticated)
+		.route("/api/auth/me", get(routes::auth::get_current_user))
+		.route("/api/auth/logout", post(routes::auth::logout))
+		.route(
+			"/api/auth/device/complete",
+			post(routes::auth::device_complete),
+		)
+		// Session routes
+		.route("/api/sessions", get(routes::sessions::list_sessions))
+		.route(
+			"/api/sessions/{id}",
+			delete(routes::sessions::revoke_session),
+		)
+		// Organization routes
+		.route("/api/orgs", get(routes::orgs::list_orgs))
+		.route("/api/orgs", post(routes::orgs::create_org))
+		.route("/api/orgs/{id}", get(routes::orgs::get_org))
+		.route("/api/orgs/{id}", patch(routes::orgs::update_org))
+		.route("/api/orgs/{id}", delete(routes::orgs::delete_org))
+		.route(
+			"/api/orgs/{id}/members",
+			get(routes::orgs::list_org_members),
+		)
+		.route(
+			"/api/orgs/{id}/members",
+			post(routes::orgs::add_org_member),
+		)
+		.route(
+			"/api/orgs/{org_id}/members/{user_id}",
+			delete(routes::orgs::remove_org_member),
+		)
+		// Team routes
+		.route(
+			"/api/orgs/{org_id}/teams",
+			get(routes::teams::list_teams),
+		)
+		.route(
+			"/api/orgs/{org_id}/teams",
+			post(routes::teams::create_team),
+		)
+		.route(
+			"/api/orgs/{org_id}/teams/{team_id}",
+			get(routes::teams::get_team),
+		)
+		.route(
+			"/api/orgs/{org_id}/teams/{team_id}",
+			patch(routes::teams::update_team),
+		)
+		.route(
+			"/api/orgs/{org_id}/teams/{team_id}",
+			delete(routes::teams::delete_team),
+		)
+		.route(
+			"/api/orgs/{org_id}/teams/{team_id}/members",
+			get(routes::teams::list_team_members),
+		)
+		.route(
+			"/api/orgs/{org_id}/teams/{team_id}/members",
+			post(routes::teams::add_team_member),
+		)
+		.route(
+			"/api/orgs/{org_id}/teams/{team_id}/members/{user_id}",
+			delete(routes::teams::remove_team_member),
+		)
+		// API key routes
+		.route(
+			"/api/orgs/{org_id}/api-keys",
+			get(routes::api_keys::list_api_keys),
+		)
+		.route(
+			"/api/orgs/{org_id}/api-keys",
+			post(routes::api_keys::create_api_key),
+		)
+		.route(
+			"/api/orgs/{org_id}/api-keys/{id}",
+			delete(routes::api_keys::revoke_api_key),
+		)
+		.route(
+			"/api/orgs/{org_id}/api-keys/{id}/usage",
+			get(routes::api_keys::get_api_key_usage),
+		)
+		// Invitation routes (authenticated)
+		.route(
+			"/api/orgs/{org_id}/invitations",
+			get(routes::invitations::list_invitations),
+		)
+		.route(
+			"/api/orgs/{org_id}/invitations",
+			post(routes::invitations::create_invitation),
+		)
+		.route(
+			"/api/orgs/{org_id}/invitations/{id}",
+			delete(routes::invitations::cancel_invitation),
+		)
+		.route(
+			"/api/invitations/accept",
+			post(routes::invitations::accept_invitation),
+		)
+		// Join request routes
+		.route(
+			"/api/orgs/{org_id}/join-requests",
+			get(routes::invitations::list_join_requests),
+		)
+		.route(
+			"/api/orgs/{org_id}/join-requests",
+			post(routes::invitations::create_join_request),
+		)
+		.route(
+			"/api/orgs/{org_id}/join-requests/{request_id}/approve",
+			post(routes::invitations::approve_join_request),
+		)
+		.route(
+			"/api/orgs/{org_id}/join-requests/{request_id}/reject",
+			post(routes::invitations::reject_join_request),
+		)
+		// User routes
+		.route("/api/users/{id}", get(routes::users::get_user_profile))
+		.route(
+			"/api/users/me",
+			patch(routes::users::update_current_user),
+		)
+		.route(
+			"/api/users/me/delete",
+			post(routes::users::request_account_deletion),
+		)
+		.route(
+			"/api/users/me/restore",
+			post(routes::users::restore_account),
+		)
+		// CSE proxy route
+		.route("/proxy/cse", post(routes::cse::proxy_cse))
+		// GitHub App endpoints (authenticated)
+		.route(
+			"/api/github/app",
+			get(routes::github::get_github_app_info),
+		)
+		.route(
+			"/api/github/installations/by-repo",
+			get(routes::github::get_github_installation_by_repo),
+		)
+		.route(
+			"/proxy/github/search-code",
+			post(routes::github::proxy_github_search_code),
+		)
+		.route(
+			"/proxy/github/repo-info",
+			post(routes::github::proxy_github_repo_info),
+		)
+		.route(
+			"/proxy/github/file-contents",
+			post(routes::github::proxy_github_file_contents),
+		)
+		// LLM proxy endpoints
+		.route(
+			"/proxy/anthropic/complete",
+			post(llm_proxy::proxy_anthropic_complete),
+		)
+		.route(
+			"/proxy/anthropic/stream",
+			post(llm_proxy::proxy_anthropic_stream),
+		)
+		.route(
+			"/proxy/openai/complete",
+			post(llm_proxy::proxy_openai_complete),
+		)
+		.route(
+			"/proxy/openai/stream",
+			post(llm_proxy::proxy_openai_stream),
+		)
+		.route(
+			"/proxy/vertex/complete",
+			post(llm_proxy::proxy_vertex_complete),
+		)
+		.route(
+			"/proxy/vertex/stream",
+			post(llm_proxy::proxy_vertex_stream),
+		)
+		// Server query endpoints
+		.route(
+			"/api/sessions/{session_id}/query-response",
+			post(server_query::handle_query_response),
+		)
+		.route(
+			"/api/sessions/{session_id}/queries",
+			get(server_query::list_pending_queries),
+		)
+		// Debug/tracing endpoints
+		.route(
+			"/api/debug/query-traces/{trace_id}",
+			get(routes::debug::get_query_trace),
+		)
+		.route(
+			"/api/debug/query-traces",
+			get(routes::debug::list_query_traces),
+		)
+		.route(
+			"/api/debug/query-traces/stats",
+			get(routes::debug::get_trace_stats),
+		);
 
 	// Add weaver routes if provisioner is configured
 	if has_provisioner {
-		router = router.merge(routes::weaver::weaver_routes(state.clone()));
+		authed = authed
+			.route("/api/weaver", post(routes::weaver::create_weaver))
+			.route("/api/weavers", get(routes::weaver::list_weavers))
+			.route("/api/weaver/{id}", get(routes::weaver::get_weaver))
+			.route("/api/weaver/{id}", delete(routes::weaver::delete_weaver))
+			.route("/api/weaver/{id}/logs", get(routes::weaver::stream_logs))
+			.route(
+				"/api/weaver/{id}/attach",
+				get(routes::weaver::attach_weaver),
+			)
+			.route(
+				"/api/weavers/cleanup",
+				post(routes::weaver::trigger_cleanup),
+			);
 	}
 
-	// Apply auth middleware to all routes (must be after all routes are added)
-	router = router.layer(from_fn_with_state(state, auth_layer));
+	// Build the authenticated router with auth middleware
+	let authed = authed.build(state.clone());
+
+	// Merge public and authenticated routes
+	let mut router = Router::new()
+		.merge(public)
+		.merge(authed)
+		// Admin routes (nested with role-based authorization layer, built on raw Router)
+		.nest("/api/admin", admin_routes(state.clone()))
+		// WebSocket endpoint - no auth middleware (uses first-message auth)
+		.route(
+			"/v1/ws/sessions/{session_id}",
+			get(crate::websocket::handler::ws_upgrade_handler),
+		)
+		.with_state(state)
+		// Bin directory endpoints
+		.nest_service(
+			"/bin",
+			ServeDir::new(&bin_dir)
+				.precompressed_gzip()
+				.fallback(axum::routing::get(routes::bin::list_bin_directory)),
+		);
 
 	// Add OpenAPI documentation
 	router = router
 		.merge(SwaggerUi::new("/api").url("/api/openapi.json", crate::api_docs::ApiDoc::openapi()));
 
 	// Serve static web assets if LOOM_SERVER_WEB_DIR is set
-	// This serves the built loom-web SPA
 	if let Some(web_path) = web_dir {
 		tracing::info!(web_dir = %web_path, "serving static web assets");
-		// Serve static files and fall back to index.html for SPA routing
 		router = router.fallback_service(
 			ServeDir::new(&web_path).fallback(ServeFile::new(format!("{web_path}/index.html"))),
 		);
@@ -574,13 +765,30 @@ mod tests {
 	use tower::ServiceExt;
 
 	async fn create_test_app() -> (Router, tempfile::TempDir) {
+		create_test_app_with_dev_mode(true).await
+	}
+
+	async fn create_test_app_no_auth() -> (Router, tempfile::TempDir) {
+		create_test_app_with_dev_mode(false).await
+	}
+
+	async fn create_test_app_with_dev_mode(dev_mode: bool) -> (Router, tempfile::TempDir) {
 		let dir = tempdir().unwrap();
 		let db_path = dir.path().join("test.db");
 		let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 		let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
 		let pool = repo.pool().clone();
 		let config = ServerConfig::default();
-		let state = create_app_state(pool, repo, &config).await;
+		let mut state = create_app_state(pool, repo, &config).await;
+		// Override auth config for testing
+		state.auth_config.dev_mode = dev_mode;
+		if dev_mode && state.dev_user.is_none() {
+			// Create dev user if not exists
+			state.dev_user = match create_or_get_dev_user(&state.user_repo).await {
+				Ok(user) => Some(user),
+				Err(_) => None,
+			};
+		}
 		(create_router(state), dir)
 	}
 
@@ -743,7 +951,7 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_logout_requires_auth() {
-		let (app, _dir) = create_test_app().await;
+		let (app, _dir) = create_test_app_no_auth().await;
 		let response = app
 			.oneshot(
 				Request::builder()
@@ -775,7 +983,7 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_get_current_user_unauthorized() {
-		let (app, _dir) = create_test_app().await;
+		let (app, _dir) = create_test_app_no_auth().await;
 		let response = app
 			.oneshot(
 				Request::builder()
@@ -1100,7 +1308,14 @@ mod tests {
 		let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
 		let pool = repo.pool().clone();
 		let config = ServerConfig::default();
-		let state = create_app_state(pool, repo, &config).await;
+		let mut state = create_app_state(pool, repo, &config).await;
+
+		// Enable dev mode for testing
+		state.auth_config.dev_mode = true;
+		state.dev_user = match create_or_get_dev_user(&state.user_repo).await {
+			Ok(user) => Some(user),
+			Err(_) => None,
+		};
 
 		// Create and store a trace directly
 		let mut tracer = QueryTracer::new(

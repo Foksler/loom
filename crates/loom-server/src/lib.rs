@@ -26,6 +26,7 @@ pub mod query_security;
 pub mod query_tracing;
 pub mod routes;
 pub mod server_query;
+pub mod typed_router;
 pub mod websocket;
 
 #[cfg(test)]
@@ -44,3 +45,4 @@ pub use query_security::{
 };
 pub use query_tracing::{QueryTraceStore, QueryTracer, TraceEvent, TraceId, TraceTimeline};
 pub use server_query::ServerQueryManager;
+pub use typed_router::{AuthedRouter, OptionalAuthRouter, PublicRouter};
