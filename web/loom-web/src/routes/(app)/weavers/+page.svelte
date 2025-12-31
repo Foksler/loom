@@ -18,6 +18,9 @@
 
 	let showCreateModal = $state(false);
 	let creating = $state(false);
+	let createdWeaverId = $state<string | null>(null);
+	let createLogLines = $state<string[]>([]);
+	let createEventSource: EventSource | null = null;
 	let showLogsModal = $state(false);
 	let logsWeaver = $state<Weaver | null>(null);
 	let logLines = $state<string[]>([]);
@@ -57,14 +60,71 @@
 		if (!newWeaver.image) return;
 		creating = true;
 		error = null;
+		createLogLines = [];
+		createdWeaverId = null;
+
 		try {
 			const weaver = await client.createWeaver(newWeaver);
-			showCreateModal = false;
-			newWeaver = { image: DEFAULT_WEAVER_IMAGE, lifetime_hours: 24, workdir: '' };
-			goto(`/weavers/${weaver.id}`);
+			createdWeaverId = weaver.id;
+
+			const url = `/api/weaver/${encodeURIComponent(weaver.id)}/logs?tail=100&timestamps=true`;
+			createEventSource = new EventSource(url);
+
+			createEventSource.onmessage = (event) => {
+				if (event.data && event.data !== 'keep-alive') {
+					createLogLines = [...createLogLines, event.data];
+				}
+			};
+
+			createEventSource.onerror = () => {
+				createEventSource?.close();
+				createEventSource = null;
+			};
+
+			const pollForRunning = async () => {
+				const maxAttempts = 60;
+				for (let i = 0; i < maxAttempts; i++) {
+					try {
+						const updated = await client.getWeaver(weaver.id);
+						if (updated.status === 'running') {
+							cleanupCreateState();
+							goto(`/weavers/${weaver.id}`);
+							return;
+						}
+						if (updated.status === 'failed') {
+							error = i18n._('weavers.createFailed');
+							creating = false;
+							createEventSource?.close();
+							createEventSource = null;
+							return;
+						}
+					} catch {
+						// Ignore polling errors, keep trying
+					}
+					await new Promise((r) => setTimeout(r, 1000));
+				}
+				error = i18n._('weavers.createTimeout');
+				creating = false;
+				createEventSource?.close();
+				createEventSource = null;
+			};
+
+			pollForRunning();
 		} catch (e) {
 			error = e instanceof Error ? e.message : i18n._('general.error');
 			creating = false;
+		}
+	}
+
+	function cleanupCreateState() {
+		showCreateModal = false;
+		creating = false;
+		createdWeaverId = null;
+		createLogLines = [];
+		newWeaver = { image: DEFAULT_WEAVER_IMAGE, lifetime_hours: 24, workdir: '' };
+		if (createEventSource) {
+			createEventSource.close();
+			createEventSource = null;
 		}
 	}
 
@@ -107,9 +167,19 @@
 	}
 
 	function closeModal() {
+		if (creating && createdWeaverId) {
+			return;
+		}
 		showCreateModal = false;
 		newWeaver = { image: DEFAULT_WEAVER_IMAGE, lifetime_hours: 24, workdir: '' };
 		showImageDropdown = false;
+		createdWeaverId = null;
+		createLogLines = [];
+		creating = false;
+		if (createEventSource) {
+			createEventSource.close();
+			createEventSource = null;
+		}
 	}
 
 	function selectImage(value: string) {
@@ -168,6 +238,10 @@
 			if (logsEventSource) {
 				logsEventSource.close();
 				logsEventSource = null;
+			}
+			if (createEventSource) {
+				createEventSource.close();
+				createEventSource = null;
 			}
 		};
 	});
@@ -294,88 +368,110 @@
 		onkeydown={(e) => e.key === 'Escape' && closeModal()}
 	>
 		<div
-			class="bg-bg border border-border rounded-lg p-6 w-full max-w-lg"
+			class="bg-bg border border-border rounded-lg w-full max-w-lg flex flex-col {createdWeaverId ? 'max-h-[80vh]' : ''}"
 			role="document"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 		>
-			<h2 id="create-weaver-title" class="text-lg font-bold text-fg mb-4">
-				{i18n._('weavers.createTitle')}
-			</h2>
+			<div class="p-6 {createdWeaverId ? 'pb-0' : ''}">
+				<h2 id="create-weaver-title" class="text-lg font-bold text-fg mb-4">
+					{createdWeaverId ? i18n._('weavers.creatingTitle') : i18n._('weavers.createTitle')}
+				</h2>
 
-			<form onsubmit={(e) => { e.preventDefault(); createWeaver(); }} class="space-y-4">
-				<div class="w-full">
-					<label for="image" class="block text-sm font-medium text-fg mb-1.5">
-						{i18n._('weavers.imageName')}
-					</label>
-					<div class="relative">
-						<input
-							id="image"
-							type="text"
-							bind:value={newWeaver.image}
-							placeholder="ghcr.io/org/image:tag"
-							required
-							onfocus={() => (showImageDropdown = true)}
-							class="w-full h-10 px-3 pr-10 rounded-md border border-border bg-bg text-fg placeholder:text-fg-subtle focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-bg"
-						/>
-						<button
-							type="button"
-							onclick={() => (showImageDropdown = !showImageDropdown)}
-							class="absolute right-0 top-0 h-10 w-10 flex items-center justify-center text-fg-muted hover:text-fg"
-						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-							</svg>
-						</button>
-						{#if showImageDropdown}
-							<div class="absolute z-10 w-full mt-1 bg-bg border border-border rounded-md shadow-lg max-h-60 overflow-auto">
-								{#each PRESET_IMAGES as preset}
-									<button
-										type="button"
-										onclick={() => selectImage(preset.value)}
-										class="w-full px-3 py-2 text-left text-sm hover:bg-bg-muted flex flex-col {newWeaver.image === preset.value ? 'bg-accent/10' : ''}"
-									>
-										<span class="text-fg font-medium">{preset.label}</span>
-										<span class="text-fg-muted text-xs font-mono">{preset.value}</span>
-									</button>
-								{/each}
-							</div>
-						{/if}
+				{#if createdWeaverId}
+					<div class="mb-4">
+						<p class="text-sm text-fg-muted mb-2">{i18n._('weavers.creatingProgress')}</p>
+						<p class="text-xs font-mono text-fg-muted">{createdWeaverId}</p>
 					</div>
-				</div>
+				{:else}
+					<form onsubmit={(e) => { e.preventDefault(); createWeaver(); }} class="space-y-4">
+						<div class="w-full">
+							<label for="image" class="block text-sm font-medium text-fg mb-1.5">
+								{i18n._('weavers.imageName')}
+							</label>
+							<div class="relative">
+								<input
+									id="image"
+									type="text"
+									bind:value={newWeaver.image}
+									placeholder="ghcr.io/org/image:tag"
+									required
+									onfocus={() => (showImageDropdown = true)}
+									class="w-full h-10 px-3 pr-10 rounded-md border border-border bg-bg text-fg placeholder:text-fg-subtle focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-bg"
+								/>
+								<button
+									type="button"
+									onclick={() => (showImageDropdown = !showImageDropdown)}
+									class="absolute right-0 top-0 h-10 w-10 flex items-center justify-center text-fg-muted hover:text-fg"
+								>
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+									</svg>
+								</button>
+								{#if showImageDropdown}
+									<div class="absolute z-10 w-full mt-1 bg-bg border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+										{#each PRESET_IMAGES as preset}
+											<button
+												type="button"
+												onclick={() => selectImage(preset.value)}
+												class="w-full px-3 py-2 text-left text-sm hover:bg-bg-muted flex flex-col {newWeaver.image === preset.value ? 'bg-accent/10' : ''}"
+											>
+												<span class="text-fg font-medium">{preset.label}</span>
+												<span class="text-fg-muted text-xs font-mono">{preset.value}</span>
+											</button>
+										{/each}
+									</div>
+								{/if}
+							</div>
+						</div>
 
-				<div class="w-full">
-					<label for="lifetime" class="block text-sm font-medium text-fg mb-1.5">
-						{i18n._('weavers.lifetimeLabel')}
-					</label>
-					<select
-						id="lifetime"
-						bind:value={newWeaver.lifetime_hours}
-						class="w-full h-10 px-3 rounded-md border border-border bg-bg text-fg"
-					>
-						<option value={1}>1 {i18n._('weavers.hour')}</option>
-						<option value={4}>4 {i18n._('weavers.hours')}</option>
-						<option value={8}>8 {i18n._('weavers.hours')}</option>
-						<option value={24}>24 {i18n._('weavers.hours')}</option>
-						<option value={48}>48 {i18n._('weavers.hours')}</option>
-					</select>
-				</div>
+						<div class="w-full">
+							<label for="lifetime" class="block text-sm font-medium text-fg mb-1.5">
+								{i18n._('weavers.lifetimeLabel')}
+							</label>
+							<select
+								id="lifetime"
+								bind:value={newWeaver.lifetime_hours}
+								class="w-full h-10 px-3 rounded-md border border-border bg-bg text-fg"
+							>
+								<option value={1}>1 {i18n._('weavers.hour')}</option>
+								<option value={4}>4 {i18n._('weavers.hours')}</option>
+								<option value={8}>8 {i18n._('weavers.hours')}</option>
+								<option value={24}>24 {i18n._('weavers.hours')}</option>
+								<option value={48}>48 {i18n._('weavers.hours')}</option>
+							</select>
+						</div>
 
-				<Input
-					label={i18n._('weavers.workdir')}
-					bind:value={newWeaver.workdir}
-					placeholder="/app"
-				/>
+						<Input
+							label={i18n._('weavers.workdir')}
+							bind:value={newWeaver.workdir}
+							placeholder="/app"
+						/>
 
-				<div class="flex justify-end gap-2 pt-2">
-					<Button variant="secondary" type="button" onclick={closeModal}>
-						{i18n._('general.cancel')}
-					</Button>
-					<Button type="submit" disabled={creating || !newWeaver.image} loading={creating}>
-						{i18n._('weavers.create')}
-					</Button>
+						<div class="flex justify-end gap-2 pt-2">
+							<Button variant="secondary" type="button" onclick={closeModal}>
+								{i18n._('general.cancel')}
+							</Button>
+							<Button type="submit" disabled={creating || !newWeaver.image} loading={creating}>
+								{i18n._('weavers.create')}
+							</Button>
+						</div>
+					</form>
+				{/if}
+			</div>
+
+			{#if createdWeaverId}
+				<div class="flex-1 overflow-auto mx-6 my-4 p-3 bg-black rounded-md min-h-[200px] max-h-[300px]">
+					{#if createLogLines.length === 0}
+						<p class="text-fg-muted text-sm">{i18n._('weavers.logsConnecting')}</p>
+					{:else}
+						<pre class="font-mono text-xs text-green-400 whitespace-pre-wrap break-all">{createLogLines.join('\n')}</pre>
+					{/if}
 				</div>
-			</form>
+				<div class="p-6 pt-0 border-t border-border mt-auto">
+					<p class="text-xs text-fg-muted text-center">{i18n._('weavers.creatingWait')}</p>
+				</div>
+			{/if}
 		</div>
 	</div>
 {/if}

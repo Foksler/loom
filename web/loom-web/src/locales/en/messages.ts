@@ -282,6 +282,11 @@ export const messages = {
 	'weavers.logsNoData': 'No logs available yet',
 	'weavers.logsError': 'Failed to connect to log stream',
 	'weavers.logsClosed': 'Log stream closed',
+	'weavers.creatingTitle': 'Creating Weaver',
+	'weavers.creatingProgress': 'Provisioning your weaver environment...',
+	'weavers.creatingWait': 'Waiting for weaver to become ready. You will be redirected automatically.',
+	'weavers.createFailed': 'Weaver creation failed',
+	'weavers.createTimeout': 'Weaver creation timed out',
 
 	// Weavers - Terminal
 	'weavers.terminal.connected': 'Connected',
