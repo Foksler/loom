@@ -961,3 +961,208 @@ async fn test_admin_can_access_admin_routes() {
 		"Admin user should be able to access admin routes"
 	);
 }
+
+// ============================================================================
+// Route Authentication Tests - Verify all protected routes require auth
+// ============================================================================
+
+/// Protected API routes that MUST require authentication.
+/// These routes should return 401 Unauthorized without a valid token.
+/// Routes may return 404 if optional features (like K8s/weaver) aren't configured.
+///
+/// NOTE: Thread routes (/api/threads/*) are intentionally PUBLIC and not listed here.
+/// Only routes with RequireAuth extractor in their handlers are listed.
+const PROTECTED_GET_ROUTES: &[&str] = &[
+	// Session routes (sessions.rs uses RequireAuth)
+	"/api/sessions",
+	// Org routes (orgs.rs uses RequireAuth)
+	"/api/orgs",
+	"/api/orgs/test-id",
+	"/api/orgs/test-id/members",
+	// Team routes (teams.rs uses RequireAuth)
+	"/api/orgs/test-org/teams",
+	"/api/orgs/test-org/teams/test-team",
+	"/api/orgs/test-org/teams/test-team/members",
+	// API key routes (api_keys.rs uses RequireAuth)
+	"/api/orgs/test-org/api-keys",
+	"/api/orgs/test-org/api-keys/test-key/usage",
+	// Invitation routes (invitations.rs uses RequireAuth)
+	"/api/orgs/test-org/invitations",
+	// User routes (auth.rs get_current_user uses RequireAuth)
+	"/api/auth/me",
+	// Weaver routes (weaver.rs uses RequireAuth, may 404 if K8s not configured)
+	"/api/weavers",
+	"/api/weaver/test-id",
+	"/api/weaver/test-id/logs",
+	// Admin routes (admin.rs uses RequireAuth + RequireRole)
+	"/api/admin/users",
+	"/api/admin/audit-logs",
+];
+
+const PROTECTED_POST_ROUTES: &[&str] = &[
+	// Auth routes that need session (auth.rs uses RequireAuth)
+	"/api/auth/logout",
+	"/api/auth/device/complete",
+	// Org routes (orgs.rs uses RequireAuth)
+	"/api/orgs",
+	"/api/orgs/test-id/members",
+	// Team routes (teams.rs uses RequireAuth)
+	"/api/orgs/test-org/teams",
+	"/api/orgs/test-org/teams/test-team/members",
+	// API key routes (api_keys.rs uses RequireAuth)
+	"/api/orgs/test-org/api-keys",
+	// Invitation routes (invitations.rs uses RequireAuth)
+	"/api/orgs/test-org/invitations",
+	// Share routes (share.rs uses RequireAuth)
+	"/api/threads/test-id/share",
+	"/api/threads/test-id/support-access/request",
+	"/api/threads/test-id/support-access/approve",
+	// Weaver routes (weaver.rs uses RequireAuth, may 404 if K8s not configured)
+	"/api/weaver",
+	"/api/weavers/cleanup",
+];
+
+const PROTECTED_DELETE_ROUTES: &[&str] = &[
+	// Session routes (sessions.rs uses RequireAuth)
+	"/api/sessions/test-id",
+	// Org routes (orgs.rs uses RequireAuth)
+	"/api/orgs/test-id",
+	"/api/orgs/test-org/members/test-user",
+	// Team routes (teams.rs uses RequireAuth)
+	"/api/orgs/test-org/teams/test-team",
+	"/api/orgs/test-org/teams/test-team/members/test-user",
+	// API key routes (api_keys.rs uses RequireAuth)
+	"/api/orgs/test-org/api-keys/test-key",
+	// Invitation routes (invitations.rs uses RequireAuth)
+	"/api/orgs/test-org/invitations/test-id",
+	// Share routes (share.rs uses RequireAuth)
+	"/api/threads/test-id/share",
+	"/api/threads/test-id/support-access",
+	// Weaver routes (weaver.rs uses RequireAuth, may 404 if K8s not configured)
+	"/api/weaver/test-id",
+];
+
+/// Test that all protected GET routes require authentication
+#[tokio::test]
+async fn test_protected_get_routes_require_auth() {
+	let (app, _dir) = setup_test_app().await;
+
+	for route in PROTECTED_GET_ROUTES {
+		let response = app
+			.clone()
+			.oneshot(Request::builder().uri(*route).body(Body::empty()).unwrap())
+			.await
+			.unwrap();
+
+		// 401 = auth required (correct)
+		// 404 = route not found or feature not configured (acceptable)
+		// 400/422 = route exists, processed request but bad params (acceptable - auth was checked first)
+		// 200 with actual data = auth bypass bug!
+		assert!(
+			response.status() == StatusCode::UNAUTHORIZED
+				|| response.status() == StatusCode::NOT_FOUND
+				|| response.status() == StatusCode::METHOD_NOT_ALLOWED
+				|| response.status() == StatusCode::BAD_REQUEST
+				|| response.status() == StatusCode::UNPROCESSABLE_ENTITY,
+			"GET {} should require auth (401), got unexpected {}",
+			route,
+			response.status()
+		);
+	}
+}
+
+/// Test that all protected POST routes require authentication
+#[tokio::test]
+async fn test_protected_post_routes_require_auth() {
+	let (app, _dir) = setup_test_app().await;
+
+	for route in PROTECTED_POST_ROUTES {
+		let response = app
+			.clone()
+			.oneshot(
+				Request::builder()
+					.method("POST")
+					.uri(*route)
+					.header("content-type", "application/json")
+					.body(Body::from("{}"))
+					.unwrap(),
+			)
+			.await
+			.unwrap();
+
+		assert!(
+			response.status() == StatusCode::UNAUTHORIZED
+				|| response.status() == StatusCode::NOT_FOUND
+				|| response.status() == StatusCode::METHOD_NOT_ALLOWED
+				|| response.status() == StatusCode::BAD_REQUEST
+				|| response.status() == StatusCode::UNPROCESSABLE_ENTITY,
+			"POST {} should require auth (401), got unexpected {}",
+			route,
+			response.status()
+		);
+	}
+}
+
+/// Test that all protected DELETE routes require authentication
+#[tokio::test]
+async fn test_protected_delete_routes_require_auth() {
+	let (app, _dir) = setup_test_app().await;
+
+	for route in PROTECTED_DELETE_ROUTES {
+		let response = app
+			.clone()
+			.oneshot(
+				Request::builder()
+					.method("DELETE")
+					.uri(*route)
+					.body(Body::empty())
+					.unwrap(),
+			)
+			.await
+			.unwrap();
+
+		assert!(
+			response.status() == StatusCode::UNAUTHORIZED
+				|| response.status() == StatusCode::NOT_FOUND
+				|| response.status() == StatusCode::METHOD_NOT_ALLOWED
+				|| response.status() == StatusCode::BAD_REQUEST
+				|| response.status() == StatusCode::UNPROCESSABLE_ENTITY,
+			"DELETE {} should require auth (401), got unexpected {}",
+			route,
+			response.status()
+		);
+	}
+}
+
+/// Test that protected routes process bearer tokens (auth middleware is applied)
+#[tokio::test]
+async fn test_routes_process_bearer_token() {
+	let (app, _dir) = setup_test_app().await;
+
+	// Sample of PROTECTED routes to test with invalid bearer token
+	// (thread routes are public, so they're not included here)
+	let sample_routes = ["/api/orgs", "/api/weavers", "/api/sessions", "/api/auth/me"];
+
+	for route in sample_routes {
+		let response = app
+			.clone()
+			.oneshot(
+				Request::builder()
+					.uri(route)
+					.header("Authorization", "Bearer lt_invalid_token_for_testing")
+					.body(Body::empty())
+					.unwrap(),
+			)
+			.await
+			.unwrap();
+
+		// Should be 401 (token processed but invalid) or 404 (feature not configured)
+		// NOT 200 (which would indicate auth was bypassed)
+		assert!(
+			response.status() == StatusCode::UNAUTHORIZED || response.status() == StatusCode::NOT_FOUND,
+			"{} with invalid bearer token should return 401 or 404, got {}",
+			route,
+			response.status()
+		);
+	}
+}

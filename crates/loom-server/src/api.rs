@@ -524,8 +524,6 @@ pub fn create_router(state: AppState) -> Router {
         .route("/api/debug/query-traces/stats", get(routes::debug::get_trace_stats))
         // WebSocket endpoint (Phase 3)
         .route("/v1/ws/sessions/{session_id}", get(crate::websocket::handler::ws_upgrade_handler))
-        // Apply auth middleware to all routes
-        .layer(from_fn_with_state(state.clone(), auth_layer))
         .with_state(state.clone())
         // Bin directory endpoints - use fallback to avoid route conflict
         .nest_service(
@@ -537,8 +535,11 @@ pub fn create_router(state: AppState) -> Router {
 
 	// Add weaver routes if provisioner is configured
 	if has_provisioner {
-		router = router.merge(routes::weaver::weaver_routes(state));
+		router = router.merge(routes::weaver::weaver_routes(state.clone()));
 	}
+
+	// Apply auth middleware to all routes (must be after all routes are added)
+	router = router.layer(from_fn_with_state(state, auth_layer));
 
 	// Add OpenAPI documentation
 	router = router

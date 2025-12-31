@@ -17,6 +17,14 @@ Deployments happen automatically via `git push` to the `trunk` branch. The produ
 - **View logs:** `journalctl -u nixos-auto-update.service -f` (follow) or `-n 100` (last 100 lines)
 - **Service state:** `activating` = deploying, `active (exited)` = completed successfully
 
+## Local Testing
+Before deploying, test changes locally to verify behavior:
+
+- **Run server on alternate port:** `LOOM_SERVER_PORT=9090 LOOM_SERVER_DB_PATH=/tmp/loom-test.db ./target/release/loom-server`
+- **Dev mode (auto-auth):** Add `LOOM_SERVER_AUTH_DEV_MODE=1` for testing without real auth
+- **Test against local:** `curl http://localhost:9090/health`
+- **Run integration tests:** `cargo test -p loom-server <test_name>`
+
 ## Architecture
 Rust workspace with 30+ crates under `crates/`. Key crates: `loom-core` (agent logic), `loom-server` (HTTP API), `loom-thread` (conversation state), `loom-llm-*` (LLM providers), `loom-tools` (agent tools), `loom-auth*` (authentication). Web frontend in `web/loom-web` (SvelteKit + Tailwind). SQLite database (`sqlx`). Dev environment via `devenv.nix`. Infra in `infra/` (Nix/K8s).
 
