@@ -31,7 +31,7 @@
 //! # Security Considerations
 //!
 //! - Session tokens and API keys are stored as Argon2 hashes, never plaintext
-//! - Secrets use [`loom_secret::SecretString`] to prevent accidental logging
+//! - Secrets use [`loom_common_secret::SecretString`] to prevent accidental logging
 //! - All authentication operations support structured logging with automatic redaction
 
 pub mod abac;

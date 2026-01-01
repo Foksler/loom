@@ -11,7 +11,7 @@ use chrono::{DateTime, Utc};
 use k8s_openapi::api::core::v1::Capabilities;
 use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
-use loom_k8s::{
+use loom_server_k8s::{
     AttachedProcess, Container, EnvVar, K8sClient, LocalObjectReference, LogOptions, LogStream,
     Pod, PodSpec, ResourceRequirements, SecurityContext,
 };
@@ -56,7 +56,7 @@ impl Provisioner {
                 tracing::info!(namespace = %self.config.namespace, "Validated namespace exists");
                 Ok(())
             }
-            Err(loom_k8s::K8sError::NamespaceNotFound { .. }) => {
+            Err(loom_server_k8s::K8sError::NamespaceNotFound { .. }) => {
                 Err(ProvisionerError::NamespaceNotFound {
                     name: self.config.namespace.clone(),
                 })
@@ -232,7 +232,7 @@ impl Provisioner {
         let pod_name = id.as_k8s_name();
         match self.client.get_pod(&pod_name, &self.config.namespace).await {
             Ok(pod) => pod_to_weaver(&pod),
-            Err(loom_k8s::K8sError::PodNotFound { .. }) => Err(ProvisionerError::WeaverNotFound {
+            Err(loom_server_k8s::K8sError::PodNotFound { .. }) => Err(ProvisionerError::WeaverNotFound {
                 id: id.to_string(),
             }),
             Err(e) => Err(e.into()),
@@ -248,7 +248,7 @@ impl Provisioner {
             .await
         {
             Ok(()) => Ok(()),
-            Err(loom_k8s::K8sError::PodNotFound { .. }) => Err(ProvisionerError::WeaverNotFound {
+            Err(loom_server_k8s::K8sError::PodNotFound { .. }) => Err(ProvisionerError::WeaverNotFound {
                 id: id.to_string(),
             }),
             Err(e) => Err(e.into()),
@@ -702,7 +702,7 @@ mod tests {
         let pod = Pod {
             metadata: ObjectMeta::default(),
             spec: None,
-            status: Some(loom_k8s::PodStatus {
+            status: Some(loom_server_k8s::PodStatus {
                 phase: Some("Running".to_string()),
                 ..Default::default()
             }),
@@ -715,7 +715,7 @@ mod tests {
         let pod = Pod {
             metadata: ObjectMeta::default(),
             spec: None,
-            status: Some(loom_k8s::PodStatus {
+            status: Some(loom_server_k8s::PodStatus {
                 phase: Some("Pending".to_string()),
                 ..Default::default()
             }),
@@ -728,7 +728,7 @@ mod tests {
         let pod = Pod {
             metadata: ObjectMeta::default(),
             spec: None,
-            status: Some(loom_k8s::PodStatus {
+            status: Some(loom_server_k8s::PodStatus {
                 phase: Some("Succeeded".to_string()),
                 ..Default::default()
             }),
@@ -741,7 +741,7 @@ mod tests {
         let pod = Pod {
             metadata: ObjectMeta::default(),
             spec: None,
-            status: Some(loom_k8s::PodStatus {
+            status: Some(loom_server_k8s::PodStatus {
                 phase: Some("Failed".to_string()),
                 ..Default::default()
             }),
@@ -758,7 +758,7 @@ mod tests {
                 ..Default::default()
             },
             spec: None,
-            status: Some(loom_k8s::PodStatus {
+            status: Some(loom_server_k8s::PodStatus {
                 phase: Some("Running".to_string()),
                 ..Default::default()
             }),

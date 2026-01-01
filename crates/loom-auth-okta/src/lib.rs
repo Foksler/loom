@@ -87,7 +87,7 @@
 //! - Always validate the `state` parameter in callbacks to prevent CSRF attacks.
 //! - Validate the `nonce` in the ID token to prevent replay attacks.
 
-use loom_secret::SecretString;
+use loom_common_secret::SecretString;
 use serde::{Deserialize, Serialize};
 use std::env;
 use url::Url;

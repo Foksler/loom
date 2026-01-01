@@ -54,7 +54,7 @@
 //! - All tracing instrumentation skips sensitive parameters.
 //! - Always validate the `state` parameter in callbacks to prevent CSRF attacks.
 
-use loom_secret::SecretString;
+use loom_common_secret::SecretString;
 use serde::{Deserialize, Serialize};
 use std::env;
 use url::Url;

@@ -13,51 +13,16 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use chrono::{DateTime, Utc};
 use loom_auth::SessionId;
 use uuid::Uuid;
-use serde::Serialize;
-use utoipa::ToSchema;
+
+pub use loom_server_api::sessions::*;
 
 use crate::{
 	api::AppState,
 	auth_middleware::RequireAuth,
 	i18n::{resolve_user_locale, t},
 };
-
-/// A session in the list response.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct SessionResponse {
-	pub id: String,
-	pub session_type: String,
-	pub created_at: DateTime<Utc>,
-	pub last_used_at: DateTime<Utc>,
-	pub expires_at: DateTime<Utc>,
-	pub ip_address: Option<String>,
-	pub user_agent: Option<String>,
-	pub geo_city: Option<String>,
-	pub geo_country: Option<String>,
-	pub is_current: bool,
-}
-
-/// Response for listing sessions.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ListSessionsResponse {
-	pub sessions: Vec<SessionResponse>,
-}
-
-/// Response for session operations.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct SessionSuccessResponse {
-	pub message: String,
-}
-
-/// Error response for session operations.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct SessionErrorResponse {
-	pub error: String,
-	pub message: String,
-}
 
 #[utoipa::path(
     get,

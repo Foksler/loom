@@ -3,7 +3,7 @@
 
 //! Credential value types.
 
-use loom_secret::SecretString;
+use loom_common_secret::SecretString;
 use serde::{Deserialize, Serialize};
 
 /// On-disk credential representation (JSON serializable).

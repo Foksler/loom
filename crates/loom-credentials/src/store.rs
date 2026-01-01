@@ -151,7 +151,7 @@ impl CredentialStore for MemoryCredentialStore {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use loom_secret::SecretString;
+	use loom_common_secret::SecretString;
 
 	#[tokio::test]
 	async fn test_memory_store_roundtrip() {

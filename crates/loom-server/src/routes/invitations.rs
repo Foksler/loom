@@ -38,14 +38,14 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use loom_auth::{
 	org::OrgVisibility, render_email, Action, EmailTemplate, OrgId, OrgRole, Visibility,
 };
-use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use utoipa::ToSchema;
 use uuid::Uuid;
+
+pub use loom_server_api::invitations::*;
 
 use crate::{
 	abac_middleware::{build_subject_attrs, org_resource},
@@ -92,87 +92,6 @@ fn parse_role(role_str: &str, locale: &str) -> Result<OrgRole, InvitationErrorRe
 			message: t(locale, "server.api.org.invalid_role").to_string(),
 		}),
 	}
-}
-
-/// An invitation in API responses.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct InvitationResponse {
-	pub id: String,
-	pub org_id: String,
-	pub org_name: String,
-	pub email: String,
-	pub role: String,
-	pub invited_by: String,
-	pub invited_by_name: String,
-	pub created_at: DateTime<Utc>,
-	pub expires_at: DateTime<Utc>,
-	pub is_expired: bool,
-}
-
-/// Response for listing invitations.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ListInvitationsResponse {
-	pub invitations: Vec<InvitationResponse>,
-}
-
-/// Request to create an invitation.
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct CreateInvitationRequest {
-	pub email: String,
-	#[serde(default)]
-	pub role: Option<String>,
-}
-
-/// Response for creating an invitation.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct CreateInvitationResponse {
-	pub id: String,
-	pub email: String,
-	pub role: String,
-	pub expires_at: DateTime<Utc>,
-}
-
-/// Success response for invitation operations.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct InvitationSuccessResponse {
-	pub message: String,
-}
-
-/// Error response for invitation operations.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct InvitationErrorResponse {
-	pub error: String,
-	pub message: String,
-}
-
-/// Request to accept an invitation.
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct AcceptInvitationRequest {
-	pub token: String,
-}
-
-/// Response for accepting an invitation.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct AcceptInvitationResponse {
-	pub org_id: String,
-	pub org_name: String,
-	pub role: String,
-}
-
-/// A join request in API responses.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct JoinRequestResponse {
-	pub id: String,
-	pub user_id: String,
-	pub display_name: String,
-	pub email: Option<String>,
-	pub created_at: DateTime<Utc>,
-}
-
-/// Response for listing join requests.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ListJoinRequestsResponse {
-	pub requests: Vec<JoinRequestResponse>,
 }
 
 /// List pending invitations for an organization.

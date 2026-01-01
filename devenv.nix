@@ -14,6 +14,13 @@ in
   
   # Faster git operations for cargo
   env.CARGO_NET_GIT_FETCH_WITH_CLI = "true";
+  
+  # Library path for native dependencies (zlib, openssl, etc.)
+  # Required for build scripts that link dynamically to C libraries
+  env.LD_LIBRARY_PATH = lib.makeLibraryPath [
+    pkgs.zlib
+    pkgs.openssl
+  ];
 
   
 
@@ -21,6 +28,8 @@ in
   packages = [ 
     pkgs.age
     pkgs.btop
+    pkgs.clang        # For mold linker wrapper
+    pkgs.zlib         # Required by libz-sys (git2, etc.)
     pkgs.gettext      # For msgfmt (i18n .po → .mo compilation)
     pkgs.cargo-watch
     pkgs.cosign      # Container image signing tool
@@ -31,6 +40,7 @@ in
     pkgs.jq
     pkgs.lazygit
     tools.license    # License header management tool
+    pkgs.mold        # Fast linker for Rust (see .cargo/config.toml)
     pkgs.nixos-rebuild
     pkgs.nodejs_22   # Node.js for web tooling compatibility
     pkgs.pnpm_9

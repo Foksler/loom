@@ -11,7 +11,7 @@ license.workspace = true
 [dependencies]
 chrono = { workspace = true }
 gix = { version = "0.68", default-features = false, features = ["blocking-network-client", "worktree-mutation"] }
-loom-secret = { path = "../loom-secret" }
+loom-common-secret = { path = "../loom-common-secret" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sqlx = { workspace = true }

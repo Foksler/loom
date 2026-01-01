@@ -19,7 +19,7 @@ use clap::{Parser, Subcommand};
 use tracing::{debug, error, info, instrument, warn};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
-use loom_auto_commit::{AutoCommitConfig, AutoCommitResult, AutoCommitService, CompletedToolInfo};
+use loom_cli_auto_commit::{AutoCommitConfig, AutoCommitResult, AutoCommitService, CompletedToolInfo};
 use loom_config::{
 	load_config_with_cli,
 	runtime::{LogFormat, LogLevel},
@@ -29,7 +29,7 @@ use loom_core::{
 	LlmClient, LlmEvent, Message, ToolCall, ToolContext, ToolDefinition, ToolExecutionOutcome,
 };
 use loom_git::{detect_repo_status, CommandGitClient};
-use loom_llm_proxy::{LlmProvider, ProxyLlmClient};
+use loom_server_llm_proxy::{LlmProvider, ProxyLlmClient};
 use loom_thread::{
 	AgentStateKind, AgentStateSnapshot, LocalThreadStore, MessageRole, MessageSnapshot,
 	SyncingThreadStore, Thread, ThreadId, ThreadStore, ThreadSyncClient, ThreadVisibility,
@@ -273,7 +273,7 @@ fn init_tracing(logging: &loom_config::runtime::LoggingConfig) {
 fn create_llm_client(
 	server_url: &str,
 	provider: &str,
-	auth_token: Option<loom_secret::SecretString>,
+	auth_token: Option<loom_common_secret::SecretString>,
 ) -> Result<Arc<dyn LlmClient>> {
 	let llm_provider = match provider.to_lowercase().as_str() {
 		"anthropic" => LlmProvider::Anthropic,
@@ -1303,7 +1303,7 @@ fn setup_ctrlc_handler(shutdown_tx: watch::Sender<bool>) -> Result<()> {
 
 async fn run_weaver_new(
 	server_url: &str,
-	token: Option<loom_secret::SecretString>,
+	token: Option<loom_common_secret::SecretString>,
 	image: Option<String>,
 	repo: Option<String>,
 	branch: Option<String>,
@@ -1370,7 +1370,7 @@ async fn run_weaver_new(
 	Ok(())
 }
 
-async fn run_weaver_ps(server_url: &str, token: Option<loom_secret::SecretString>, json: bool) -> Result<()> {
+async fn run_weaver_ps(server_url: &str, token: Option<loom_common_secret::SecretString>, json: bool) -> Result<()> {
 	let mut client = weaver_client::WeaverClient::new(server_url)?;
 	if let Some(token) = token {
 		client = client.with_token(token);
@@ -1412,7 +1412,7 @@ async fn run_weaver_ps(server_url: &str, token: Option<loom_secret::SecretString
 	Ok(())
 }
 
-async fn run_weaver_delete(server_url: &str, token: Option<loom_secret::SecretString>, weaver_id: &str) -> Result<()> {
+async fn run_weaver_delete(server_url: &str, token: Option<loom_common_secret::SecretString>, weaver_id: &str) -> Result<()> {
 	let mut client = weaver_client::WeaverClient::new(server_url)?;
 	if let Some(token) = token {
 		client = client.with_token(token);
@@ -1428,7 +1428,7 @@ async fn run_weaver_delete(server_url: &str, token: Option<loom_secret::SecretSt
 	Ok(())
 }
 
-async fn run_weaver_attach(server_url: &str, token: Option<loom_secret::SecretString>, weaver_id: &str) -> Result<()> {
+async fn run_weaver_attach(server_url: &str, token: Option<loom_common_secret::SecretString>, weaver_id: &str) -> Result<()> {
 	let mut client = weaver_client::WeaverClient::new(server_url)?;
 	if let Some(token) = token {
 		client = client.with_token(token);

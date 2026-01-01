@@ -18,6 +18,10 @@ pub enum ServerError {
 	#[error("Database error: {0}")]
 	Db(#[from] sqlx::Error),
 
+	/// Database error from loom-db.
+	#[error("Database error: {0}")]
+	DbError(#[from] crate::db::DbError),
+
 	/// Thread not found.
 	#[error("Thread not found: {0}")]
 	NotFound(String),
@@ -82,6 +86,18 @@ impl IntoResponse for ServerError {
 	fn into_response(self) -> Response {
 		let (status, error_response) = match &self {
 			ServerError::Db(e) => {
+				tracing::error!(error = %e, "database error");
+				(
+					StatusCode::INTERNAL_SERVER_ERROR,
+					ErrorResponse {
+						error: "database_error".to_string(),
+						message: "A database error occurred".to_string(),
+						server_version: None,
+						client_version: None,
+					},
+				)
+			}
+			ServerError::DbError(e) => {
 				tracing::error!(error = %e, "database error");
 				(
 					StatusCode::INTERNAL_SERVER_ERROR,

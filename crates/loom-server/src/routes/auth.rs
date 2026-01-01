@@ -24,6 +24,11 @@ use axum::{
 use loom_auth::{generate_access_token, generate_session_token, Session, SessionType};
 use loom_auth_devicecode::{DeviceCode, DEVICE_CODE_EXPIRY_MINUTES};
 use loom_auth_magiclink::{verify_magic_link_token, MagicLink};
+pub use loom_server_api::auth::{
+	AuthErrorResponse, AuthProvidersResponse, AuthSuccessResponse, CurrentUserResponse,
+	DeviceCodeCompleteRequest, DeviceCodeCompleteResponse, DeviceCodePollRequest,
+	DeviceCodePollResponse, DeviceCodeStartResponse, MagicLinkRequest,
+};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use utoipa::ToSchema;
@@ -36,80 +41,6 @@ use crate::{
 	i18n::{resolve_user_locale, t, t_fmt},
 	oauth_state::{generate_nonce, generate_state, sanitize_redirect},
 };
-
-/// List of available authentication providers.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct AuthProvidersResponse {
-	pub providers: Vec<String>,
-}
-
-/// Current authenticated user information.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct CurrentUserResponse {
-	pub id: String,
-	pub display_name: String,
-	pub username: Option<String>,
-	pub email: Option<String>,
-	pub avatar_url: Option<String>,
-}
-
-/// Generic success response for auth operations.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct AuthSuccessResponse {
-	pub message: String,
-}
-
-/// Error response for auth operations.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct AuthErrorResponse {
-	pub error: String,
-	pub message: String,
-}
-
-/// Request body for magic link authentication.
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct MagicLinkRequest {
-	pub email: String,
-}
-
-/// Response for starting device code flow.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct DeviceCodeStartResponse {
-	pub device_code: String,
-	pub user_code: String,
-	pub verification_url: String,
-	pub expires_in: i64,
-}
-
-/// Request body for polling device code status.
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct DeviceCodePollRequest {
-	pub device_code: String,
-}
-
-/// Response for polling device code status.
-#[derive(Debug, Serialize, ToSchema)]
-#[serde(tag = "status")]
-pub enum DeviceCodePollResponse {
-	#[serde(rename = "pending")]
-	Pending,
-	#[serde(rename = "completed")]
-	Completed { access_token: String },
-	#[serde(rename = "expired")]
-	Expired,
-}
-
-/// Request body for completing device code flow.
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct DeviceCodeCompleteRequest {
-	pub user_code: String,
-}
-
-/// Response for completing device code flow.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct DeviceCodeCompleteResponse {
-	pub message: String,
-}
 
 #[utoipa::path(
     get,

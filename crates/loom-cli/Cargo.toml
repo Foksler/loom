@@ -26,15 +26,15 @@ sha2 = { workspace = true }
 sys-locale = "0.3"
 humantime = "2"
 loom-acp = { path = "../loom-acp" }
-loom-auto-commit = { path = "../loom-auto-commit" }
+loom-cli-auto-commit = { path = "../loom-cli-auto-commit" }
 loom-config = { path = "../loom-config" }
 loom-core = { path = "../loom-core" }
 loom-credentials = { path = "../loom-credentials", features = ["keyring"] }
 loom-git = { path = "../loom-git" }
 loom-http = { path = "../loom-http" }
 loom-i18n = { path = "../loom-i18n" }
-loom-llm-proxy = { path = "../loom-llm-proxy" }
-loom-secret = { path = "../loom-secret" }
+loom-server-llm-proxy = { path = "../loom-server-llm-proxy" }
+loom-common-secret = { path = "../loom-common-secret" }
 loom-thread = { path = "../loom-thread" }
 loom-tools = { path = "../loom-tools" }
 loom-version = { workspace = true }

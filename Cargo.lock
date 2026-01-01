@@ -3118,7 +3118,7 @@ dependencies = [
  "chrono",
  "futures",
  "loom-core",
- "loom-llm-proxy",
+ "loom-server-llm-proxy",
  "loom-thread",
  "loom-tools",
  "proptest",
@@ -3143,8 +3143,8 @@ dependencies = [
  "http",
  "loom-auth-devicecode",
  "loom-auth-magiclink",
+ "loom-common-secret",
  "loom-i18n",
- "loom-secret",
  "proptest",
  "rand 0.8.5",
  "serde",
@@ -3178,8 +3178,8 @@ dependencies = [
 name = "loom-auth-github"
 version = "0.1.0"
 dependencies = [
+ "loom-common-secret",
  "loom-http",
- "loom-secret",
  "proptest",
  "reqwest",
  "serde",
@@ -3195,8 +3195,8 @@ name = "loom-auth-google"
 version = "0.1.0"
 dependencies = [
  "base64",
+ "loom-common-secret",
  "loom-http",
- "loom-secret",
  "proptest",
  "reqwest",
  "serde",
@@ -3227,8 +3227,8 @@ name = "loom-auth-okta"
 version = "0.1.0"
 dependencies = [
  "base64",
+ "loom-common-secret",
  "loom-http",
- "loom-secret",
  "proptest",
  "reqwest",
  "serde",
@@ -3237,22 +3237,6 @@ dependencies = [
  "tokio",
  "tracing",
  "url",
-]
-
-[[package]]
-name = "loom-auto-commit"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "loom-core",
- "loom-git",
- "proptest",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "tracing",
 ]
 
 [[package]]
@@ -3270,15 +3254,15 @@ dependencies = [
  "hex",
  "humantime",
  "loom-acp",
- "loom-auto-commit",
+ "loom-cli-auto-commit",
+ "loom-common-secret",
  "loom-config",
  "loom-core",
  "loom-credentials",
  "loom-git",
  "loom-http",
  "loom-i18n",
- "loom-llm-proxy",
- "loom-secret",
+ "loom-server-llm-proxy",
  "loom-thread",
  "loom-tools",
  "loom-version",
@@ -3299,12 +3283,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-cli-auto-commit"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "loom-core",
+ "loom-git",
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+]
+
+[[package]]
+name = "loom-common-secret"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "serde_json",
+ "tracing",
+ "tracing-subscriber",
+ "zeroize",
+]
+
+[[package]]
 name = "loom-config"
 version = "0.1.0"
 dependencies = [
  "dirs 5.0.1",
+ "loom-common-secret",
  "loom-config-common",
- "loom-secret",
  "proptest",
  "serde",
  "serde_json",
@@ -3318,7 +3330,7 @@ dependencies = [
 name = "loom-config-common"
 version = "0.1.0"
 dependencies = [
- "loom-secret",
+ "loom-common-secret",
  "proptest",
  "serde",
  "serde_json",
@@ -3350,7 +3362,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "keyring",
- "loom-secret",
+ "loom-common-secret",
  "serde",
  "serde_json",
  "tempfile",
@@ -3358,6 +3370,27 @@ dependencies = [
  "tokio",
  "tokio-test",
  "tracing",
+]
+
+[[package]]
+name = "loom-db"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "loom-auth",
+ "loom-common-secret",
+ "loom-thread",
+ "proptest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sqlx",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "uuid",
 ]
 
 [[package]]
@@ -3450,144 +3483,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "loom-jobs"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "chrono",
- "serde",
- "serde_json",
- "sqlx",
- "thiserror 1.0.69",
- "tokio",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "loom-k8s"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "bytes",
- "futures",
- "k8s-openapi",
- "kube",
- "pin-project-lite",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "tokio-util",
- "tracing",
-]
-
-[[package]]
-name = "loom-llm-anthropic"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "base64",
- "bytes",
- "chrono",
- "futures",
- "getrandom 0.2.16",
- "loom-core",
- "loom-credentials",
- "loom-http",
- "loom-secret",
- "pin-project-lite",
- "reqwest",
- "serde",
- "serde_json",
- "sha2",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "loom-llm-openai"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "bytes",
- "futures",
- "loom-core",
- "loom-http",
- "pin-project-lite",
- "reqwest",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "tracing",
-]
-
-[[package]]
-name = "loom-llm-proxy"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "bytes",
- "futures",
- "loom-core",
- "loom-http",
- "loom-secret",
- "pin-project-lite",
- "proptest",
- "reqwest",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "tracing",
-]
-
-[[package]]
-name = "loom-llm-service"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "loom-config-common",
- "loom-core",
- "loom-http",
- "loom-llm-anthropic",
- "loom-llm-openai",
- "loom-llm-vertex",
- "proptest",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "loom-llm-vertex"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "bytes",
- "futures",
- "gcp_auth",
- "loom-core",
- "loom-http",
- "pin-project-lite",
- "proptest",
- "reqwest",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "tracing",
-]
-
-[[package]]
 name = "loom-scm"
 version = "0.1.0"
 dependencies = [
@@ -3596,7 +3491,7 @@ dependencies = [
  "gix",
  "hex",
  "hmac",
- "loom-secret",
+ "loom-common-secret",
  "proptest",
  "reqwest",
  "serde",
@@ -3618,10 +3513,10 @@ dependencies = [
  "async-trait",
  "chrono",
  "gix",
+ "loom-common-secret",
  "loom-credentials",
  "loom-http",
  "loom-scm",
- "loom-secret",
  "proptest",
  "reqwest",
  "serde",
@@ -3632,18 +3527,6 @@ dependencies = [
  "tokio-test",
  "tracing",
  "uuid",
-]
-
-[[package]]
-name = "loom-secret"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "serde_json",
- "tracing",
- "tracing-subscriber",
- "zeroize",
 ]
 
 [[package]]
@@ -3668,18 +3551,20 @@ dependencies = [
  "loom-auth-google",
  "loom-auth-magiclink",
  "loom-auth-okta",
+ "loom-common-secret",
  "loom-core",
+ "loom-db",
  "loom-geoip",
  "loom-github-app",
  "loom-google-cse",
  "loom-i18n",
- "loom-jobs",
- "loom-k8s",
- "loom-llm-anthropic",
- "loom-llm-service",
  "loom-scm",
  "loom-scm-mirror",
- "loom-secret",
+ "loom-server-api",
+ "loom-server-jobs",
+ "loom-server-k8s",
+ "loom-server-llm-anthropic",
+ "loom-server-llm-service",
  "loom-smtp",
  "loom-thread",
  "loom-version",
@@ -3709,11 +3594,181 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-server-api"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "chrono",
+ "loom-auth",
+ "loom-common-secret",
+ "loom-db",
+ "loom-github-app",
+ "loom-google-cse",
+ "loom-i18n",
+ "loom-scm",
+ "loom-scm-mirror",
+ "loom-server-jobs",
+ "loom-server-llm-anthropic",
+ "loom-smtp",
+ "loom-thread",
+ "loom-version",
+ "loom-weaver",
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "url",
+ "utoipa",
+ "uuid",
+]
+
+[[package]]
+name = "loom-server-jobs"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "loom-server-k8s"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "futures",
+ "k8s-openapi",
+ "kube",
+ "pin-project-lite",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
+name = "loom-server-llm-anthropic"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64",
+ "bytes",
+ "chrono",
+ "futures",
+ "getrandom 0.2.16",
+ "loom-common-secret",
+ "loom-core",
+ "loom-credentials",
+ "loom-http",
+ "pin-project-lite",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "loom-server-llm-openai"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "futures",
+ "loom-core",
+ "loom-http",
+ "pin-project-lite",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+]
+
+[[package]]
+name = "loom-server-llm-proxy"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "futures",
+ "loom-common-secret",
+ "loom-core",
+ "loom-http",
+ "pin-project-lite",
+ "proptest",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+]
+
+[[package]]
+name = "loom-server-llm-service"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "loom-config-common",
+ "loom-core",
+ "loom-http",
+ "loom-server-llm-anthropic",
+ "loom-server-llm-openai",
+ "loom-server-llm-vertex",
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "loom-server-llm-vertex"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "futures",
+ "gcp_auth",
+ "loom-core",
+ "loom-http",
+ "pin-project-lite",
+ "proptest",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+]
+
+[[package]]
 name = "loom-smtp"
 version = "0.1.0"
 dependencies = [
  "lettre",
- "loom-secret",
+ "loom-common-secret",
  "proptest",
  "serde",
  "thiserror 1.0.69",
@@ -3729,9 +3784,9 @@ dependencies = [
  "async-trait",
  "chrono",
  "dirs 5.0.1",
+ "loom-common-secret",
  "loom-core",
  "loom-http",
- "loom-secret",
  "proptest",
  "reqwest",
  "serde",
@@ -3783,8 +3838,8 @@ dependencies = [
  "hex",
  "hmac",
  "k8s-openapi",
- "loom-k8s",
- "loom-secret",
+ "loom-common-secret",
+ "loom-server-k8s",
  "reqwest",
  "serde",
  "serde_json",

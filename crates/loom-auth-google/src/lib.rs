@@ -73,7 +73,7 @@
 
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
-use loom_secret::SecretString;
+use loom_common_secret::SecretString;
 use serde::{Deserialize, Serialize};
 use std::env;
 use url::Url;

@@ -32,7 +32,7 @@ pub enum ProvisionerError {
 
     /// Kubernetes error
     #[error(transparent)]
-    K8sError(#[from] loom_k8s::K8sError),
+    K8sError(#[from] loom_server_k8s::K8sError),
 
     /// Namespace not found
     #[error("Namespace not found: {name}")]

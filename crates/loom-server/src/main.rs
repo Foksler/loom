@@ -4,7 +4,7 @@
 //! Loom thread persistence server binary.
 
 use clap::{Parser, Subcommand};
-use loom_jobs::{JobRepository, JobScheduler};
+use loom_server_jobs::{JobRepository, JobScheduler};
 use loom_server::{create_app_state, create_router, ServerConfig, ThreadRepository};
 use std::sync::Arc;
 use std::time::Duration;
@@ -68,11 +68,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 			"starting loom-server"
 	);
 
-	// Create database repository
-	let repo = Arc::new(ThreadRepository::new(&config.database_url).await?);
-
-	// Create application state and router with middleware
-	let pool = repo.pool().clone();
+	// Create database pool and repository
+	let pool = loom_server::db::create_pool(&config.database_url).await?;
+	let repo = Arc::new(ThreadRepository::new(pool.clone()));
 	let mut state = create_app_state(pool.clone(), repo, &config).await;
 
 	// Weaver provisioner startup lifecycle - validate namespace

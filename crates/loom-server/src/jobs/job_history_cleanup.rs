@@ -2,7 +2,7 @@
 // reserved. SPDX-License-Identifier: Proprietary
 
 use async_trait::async_trait;
-use loom_jobs::{Job, JobContext, JobError, JobOutput, JobRepository};
+use loom_server_jobs::{Job, JobContext, JobError, JobOutput, JobRepository};
 use std::sync::Arc;
 
 pub struct JobHistoryCleanupJob {

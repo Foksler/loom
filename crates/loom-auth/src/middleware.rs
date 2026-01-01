@@ -300,7 +300,7 @@ pub fn extract_session_cookie_with_name(headers: &HeaderMap, cookie_name: &str) 
 ///
 /// # Security
 ///
-/// The returned token should be treated as a secret. Use [`loom_secret::SecretString`]
+/// The returned token should be treated as a secret. Use [`loom_common_secret::SecretString`]
 /// when storing or passing tokens to prevent accidental logging.
 #[instrument(level = "trace", skip_all, fields(has_auth_header))]
 pub fn extract_bearer_token(headers: &HeaderMap) -> Option<String> {

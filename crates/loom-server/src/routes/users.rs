@@ -14,11 +14,11 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use loom_auth::{validate_username, Action, UserId, ACCOUNT_DELETION_GRACE_DAYS};
-use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
 use uuid::Uuid;
+
+pub use loom_server_api::users::*;
 
 use crate::{
 	abac_middleware::{build_subject_attrs, check_authorization, user_resource},
@@ -26,74 +26,6 @@ use crate::{
 	auth_middleware::RequireAuth,
 	i18n::{resolve_user_locale, t},
 };
-
-/// A user profile in API responses.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct UserProfileResponse {
-	pub id: String,
-	pub display_name: String,
-	pub email: Option<String>,
-	pub avatar_url: Option<String>,
-}
-
-/// Extended user profile for the current user.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct CurrentUserProfileResponse {
-	pub id: String,
-	pub display_name: String,
-	pub username: Option<String>,
-	pub primary_email: Option<String>,
-	pub avatar_url: Option<String>,
-	pub email_visible: bool,
-	pub created_at: DateTime<Utc>,
-	pub updated_at: DateTime<Utc>,
-}
-
-/// Request to update user profile.
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct UpdateUserProfileRequest {
-	pub display_name: Option<String>,
-	pub username: Option<String>,
-	pub avatar_url: Option<String>,
-	pub email_visible: Option<bool>,
-}
-
-/// Success response for user operations.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct UserSuccessResponse {
-	pub message: String,
-}
-
-/// Error response for user operations.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct UserErrorResponse {
-	pub error: String,
-	pub message: String,
-}
-
-/// Response for account deletion request.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct AccountDeletionResponse {
-	pub message: String,
-	pub deletion_scheduled_at: DateTime<Utc>,
-	pub grace_period_days: i32,
-}
-
-/// A linked identity (OAuth provider) for a user.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct IdentityResponse {
-	pub id: String,
-	pub provider: String,
-	pub email: String,
-	pub email_verified: bool,
-	pub created_at: DateTime<Utc>,
-}
-
-/// Response containing all linked identities for a user.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ListIdentitiesResponse {
-	pub identities: Vec<IdentityResponse>,
-}
 
 fn parse_user_id(id: &str, locale: &str) -> Result<UserId, UserErrorResponse> {
 	Uuid::parse_str(id)

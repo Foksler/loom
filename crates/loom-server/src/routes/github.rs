@@ -14,82 +14,14 @@ use loom_github_app::{
 	AppInfoResponse, CodeSearchRequest, CodeSearchResponse, GithubAppError,
 	InstallationStatusResponse,
 };
-use serde::{Deserialize, Serialize};
-use utoipa::{IntoParams, ToSchema};
+
+pub use loom_server_api::github::*;
 
 use crate::{
 	api::AppState,
 	db::{GithubInstallation, GithubRepo},
 	error::ServerError,
 };
-
-/// Query parameters for GitHub installation lookup by repo.
-#[derive(Debug, Deserialize, IntoParams)]
-pub struct GithubInstallationByRepoQuery {
-	pub owner: String,
-	pub repo: String,
-}
-
-/// Request body for GitHub code search proxy.
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct GithubSearchCodeRequest {
-	pub owner: String,
-	pub repo: String,
-	pub query: String,
-	#[serde(default = "default_github_per_page")]
-	pub per_page: u32,
-	#[serde(default = "default_github_page")]
-	pub page: u32,
-}
-
-fn default_github_per_page() -> u32 {
-	30
-}
-
-fn default_github_page() -> u32 {
-	1
-}
-
-/// Request body for GitHub repo info proxy.
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct GithubRepoInfoRequest {
-	pub owner: String,
-	pub repo: String,
-}
-
-/// Request body for GitHub file contents proxy.
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct GithubFileContentsRequest {
-	pub owner: String,
-	pub repo: String,
-	pub path: String,
-	#[serde(rename = "ref")]
-	pub git_ref: Option<String>,
-}
-
-/// Simplified repository info response.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct GithubRepoInfoResponse {
-	pub id: i64,
-	pub full_name: String,
-	pub description: Option<String>,
-	pub private: bool,
-	pub default_branch: String,
-	pub language: Option<String>,
-	pub stargazers_count: u32,
-	pub html_url: String,
-}
-
-/// Simplified file contents response.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct GithubFileContentsResponse {
-	pub name: String,
-	pub path: String,
-	pub sha: String,
-	pub size: u64,
-	pub encoding: String,
-	pub content: String,
-}
 
 #[utoipa::path(
     get,

@@ -157,7 +157,7 @@ fn matches_pattern(branch: &str, pattern: &str) -> bool {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use loom_secret::SecretString;
+	use loom_common_secret::SecretString;
 	use proptest::prelude::*;
 	use std::process::Command;
 	use tempfile::TempDir;

@@ -18,111 +18,25 @@ use axum::{
 	response::{IntoResponse, Redirect},
 	Json,
 };
-use chrono::{DateTime, Utc};
-use loom_llm_anthropic::{
-	exchange_code, AccountDetails as PoolAccountDetails, AccountHealthStatus as PoolAccountHealthStatus,
-	OAuthCredentials, Pkce, CLIENT_ID, SCOPES,
-};
-use loom_secret::SecretString;
-use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
+use loom_server_llm_anthropic::{exchange_code, OAuthCredentials, Pkce, CLIENT_ID, SCOPES};
+use loom_common_secret::SecretString;
 use url::{form_urlencoded, Url};
 
-fn url_encode(input: &str) -> String {
-	form_urlencoded::byte_serialize(input.as_bytes()).collect()
-}
+pub use loom_server_api::admin::{
+	AccountDetailsResponse, AccountsSummary, AccountStatus, AdminErrorResponse,
+	AnthropicAccountsResponse, AnthropicOAuthCallbackQuery as OAuthCallbackQuery,
+	InitiateOAuthRequest, InitiateOAuthResponse, RemoveAccountResponse,
+};
 
 use crate::{
 	api::AppState,
 	auth_middleware::RequireAuth,
 	i18n::{resolve_user_locale, t},
 	oauth_state::generate_state,
-	routes::admin::AdminErrorResponse,
 };
 
-/// Account status for API responses.
-#[derive(Debug, Clone, Serialize, ToSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum AccountStatus {
-	Available,
-	CoolingDown,
-	Disabled,
-}
-
-impl From<PoolAccountHealthStatus> for AccountStatus {
-	fn from(status: PoolAccountHealthStatus) -> Self {
-		match status {
-			PoolAccountHealthStatus::Available => AccountStatus::Available,
-			PoolAccountHealthStatus::CoolingDown => AccountStatus::CoolingDown,
-			PoolAccountHealthStatus::Disabled => AccountStatus::Disabled,
-		}
-	}
-}
-
-/// Details of an Anthropic OAuth account.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct AccountDetailsResponse {
-	pub id: String,
-	pub status: AccountStatus,
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub cooldown_remaining_secs: Option<u64>,
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub last_error: Option<String>,
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub expires_at: Option<DateTime<Utc>>,
-}
-
-impl From<PoolAccountDetails> for AccountDetailsResponse {
-	fn from(details: PoolAccountDetails) -> Self {
-		Self {
-			id: details.id,
-			status: details.status.into(),
-			cooldown_remaining_secs: details.cooldown_remaining_secs,
-			last_error: details.last_error,
-			expires_at: details.expires_at,
-		}
-	}
-}
-
-/// Summary of account pool status.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct AccountsSummary {
-	pub total: usize,
-	pub available: usize,
-	pub cooling_down: usize,
-	pub disabled: usize,
-}
-
-/// Response for listing Anthropic accounts.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct AnthropicAccountsResponse {
-	pub accounts: Vec<AccountDetailsResponse>,
-	pub summary: AccountsSummary,
-}
-
-/// Request to initiate OAuth flow.
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct InitiateOAuthRequest {
-	pub redirect_after: Option<String>,
-}
-
-/// Response for initiating OAuth flow.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct InitiateOAuthResponse {
-	pub redirect_url: String,
-}
-
-/// Response for removing an account.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct RemoveAccountResponse {
-	pub removed: String,
-}
-
-/// Query parameters for OAuth callback.
-#[derive(Debug, Deserialize)]
-pub struct OAuthCallbackQuery {
-	pub code: String,
-	pub state: String,
+fn url_encode(input: &str) -> String {
+	form_urlencoded::byte_serialize(input.as_bytes()).collect()
 }
 
 const ANTHROPIC_ADMIN_PROVIDER: &str = "anthropic-admin";
@@ -392,8 +306,8 @@ pub async fn oauth_callback(
 	};
 
 	let (access, refresh, expires) = match exchange_result {
-		loom_llm_anthropic::ExchangeResult::Success { access, refresh, expires } => (access, refresh, expires),
-		loom_llm_anthropic::ExchangeResult::Failed { error } => {
+		loom_server_llm_anthropic::ExchangeResult::Success { access, refresh, expires } => (access, refresh, expires),
+		loom_server_llm_anthropic::ExchangeResult::Failed { error } => {
 			tracing::error!(error = %error, "OAuth token exchange failed");
 			return Redirect::to(&format!("/admin/anthropic-accounts?error={}", url_encode(&error))).into_response();
 		}

@@ -33,12 +33,12 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use loom_auth::{Action, ApiKeyScope, AuditEventType, AuditLogEntry, OrgId, Visibility};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sha2::{Digest, Sha256};
-use utoipa::ToSchema;
+
+pub use loom_server_api::api_keys::*;
 
 use crate::{
 	abac_middleware::{build_subject_attrs, org_resource},
@@ -48,140 +48,10 @@ use crate::{
 	i18n::{resolve_user_locale, t},
 };
 
-/// Hash a token using SHA-256 and return the hex-encoded result.
 fn hash_token(token: &str) -> String {
 	let mut hasher = Sha256::new();
 	hasher.update(token.as_bytes());
 	hex::encode(hasher.finalize())
-}
-
-/// API key scope for request/response types.
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum ApiKeyScopeApi {
-	/// Read thread data.
-	ThreadsRead,
-	/// Create and update threads.
-	ThreadsWrite,
-	/// Delete threads.
-	ThreadsDelete,
-	/// Use LLM services.
-	LlmUse,
-	/// Execute tools.
-	ToolsUse,
-}
-
-impl From<ApiKeyScopeApi> for ApiKeyScope {
-	fn from(scope: ApiKeyScopeApi) -> Self {
-		match scope {
-			ApiKeyScopeApi::ThreadsRead => ApiKeyScope::ThreadsRead,
-			ApiKeyScopeApi::ThreadsWrite => ApiKeyScope::ThreadsWrite,
-			ApiKeyScopeApi::ThreadsDelete => ApiKeyScope::ThreadsDelete,
-			ApiKeyScopeApi::LlmUse => ApiKeyScope::LlmUse,
-			ApiKeyScopeApi::ToolsUse => ApiKeyScope::ToolsUse,
-		}
-	}
-}
-
-impl From<ApiKeyScope> for ApiKeyScopeApi {
-	fn from(scope: ApiKeyScope) -> Self {
-		match scope {
-			ApiKeyScope::ThreadsRead => ApiKeyScopeApi::ThreadsRead,
-			ApiKeyScope::ThreadsWrite => ApiKeyScopeApi::ThreadsWrite,
-			ApiKeyScope::ThreadsDelete => ApiKeyScopeApi::ThreadsDelete,
-			ApiKeyScope::LlmUse => ApiKeyScopeApi::LlmUse,
-			ApiKeyScope::ToolsUse => ApiKeyScopeApi::ToolsUse,
-		}
-	}
-}
-
-/// An API key in API responses (without the secret key).
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ApiKeyResponse {
-	/// Unique identifier for the API key.
-	pub id: String,
-	/// Human-readable name for the key.
-	pub name: String,
-	/// Scopes granted to this key.
-	pub scopes: Vec<ApiKeyScopeApi>,
-	/// User ID who created the key.
-	pub created_by: String,
-	/// When the key was created.
-	pub created_at: DateTime<Utc>,
-	/// When the key was last used.
-	pub last_used_at: Option<DateTime<Utc>>,
-	/// When the key was revoked (None if active).
-	pub revoked_at: Option<DateTime<Utc>>,
-}
-
-/// Response for creating a new API key.
-///
-/// # Security
-///
-/// The `key` field contains the plaintext API key value. This is the **only time**
-/// the key will be shown - store it securely immediately!
-#[derive(Debug, Serialize, ToSchema)]
-pub struct CreateApiKeyResponse {
-	/// Unique identifier for the API key.
-	pub id: String,
-	/// The actual API key value (only shown once!).
-	pub key: String,
-	/// Human-readable name for the key.
-	pub name: String,
-	/// Scopes granted to this key.
-	pub scopes: Vec<ApiKeyScopeApi>,
-	/// When the key was created.
-	pub created_at: DateTime<Utc>,
-}
-
-/// Response for listing API keys.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ListApiKeysResponse {
-	pub api_keys: Vec<ApiKeyResponse>,
-}
-
-/// Request to create an API key.
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct CreateApiKeyRequest {
-	/// Human-readable name for the key.
-	pub name: String,
-	/// Scopes to grant to this key.
-	pub scopes: Vec<ApiKeyScopeApi>,
-}
-
-/// API key usage log entry.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ApiKeyUsageResponse {
-	/// Unique identifier for this usage record.
-	pub id: String,
-	/// When the request was made.
-	pub timestamp: DateTime<Utc>,
-	/// Client IP address (if available).
-	pub ip_address: Option<String>,
-	/// API endpoint accessed.
-	pub endpoint: String,
-	/// HTTP method used.
-	pub method: String,
-}
-
-/// Response for API key usage logs.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ApiKeyUsageListResponse {
-	pub usage: Vec<ApiKeyUsageResponse>,
-	pub total: i64,
-}
-
-/// Success response for API key operations.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ApiKeySuccessResponse {
-	pub message: String,
-}
-
-/// Error response for API key operations.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ApiKeyErrorResponse {
-	pub error: String,
-	pub message: String,
 }
 
 /// List all API keys for an organization.

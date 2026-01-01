@@ -9,65 +9,20 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use chrono::{DateTime, Utc};
 use loom_auth::types::{OrgId, OrgRole};
 use loom_scm::{OwnerType, RepoStore};
-use loom_scm_mirror::{CreatePushMirror, PushMirror, PushMirrorStore};
-use serde::{Deserialize, Serialize};
+use loom_scm_mirror::{CreatePushMirror, PushMirrorStore};
 use url::Url;
-use utoipa::ToSchema;
 use uuid::Uuid;
+
+pub use loom_server_api::mirrors::*;
+pub use loom_server_api::repos::RepoErrorResponse;
 
 use crate::{
 	api::AppState,
 	auth_middleware::RequireAuth,
 	i18n::{resolve_user_locale, t},
 };
-
-use super::repos::RepoErrorResponse;
-
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct CreateMirrorRequest {
-	pub remote_url: String,
-	pub credential_key: Option<String>,
-	pub enabled: Option<bool>,
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct MirrorResponse {
-	pub id: Uuid,
-	pub repo_id: Uuid,
-	pub remote_url: String,
-	pub enabled: bool,
-	pub last_pushed_at: Option<DateTime<Utc>>,
-	pub last_error: Option<String>,
-	pub created_at: DateTime<Utc>,
-}
-
-impl From<PushMirror> for MirrorResponse {
-	fn from(m: PushMirror) -> Self {
-		Self {
-			id: m.id,
-			repo_id: m.repo_id,
-			remote_url: m.remote_url,
-			enabled: m.enabled,
-			last_pushed_at: m.last_pushed_at,
-			last_error: m.last_error,
-			created_at: m.created_at,
-		}
-	}
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ListMirrorsResponse {
-	pub mirrors: Vec<MirrorResponse>,
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct SyncResponse {
-	pub message: String,
-	pub queued: bool,
-}
 
 fn validate_mirror_url(url_str: &str, locale: &str) -> Option<String> {
 	if url_str.is_empty() {

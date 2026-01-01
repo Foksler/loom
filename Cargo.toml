@@ -11,7 +11,7 @@ members = [
 	"crates/loom-auth-google",
 	"crates/loom-auth-magiclink",
 	"crates/loom-auth-okta",
-	"crates/loom-auto-commit",
+	"crates/loom-cli-auto-commit",
 	"crates/loom-cli",
 	"crates/loom-config",
 	"crates/loom-config-common",
@@ -21,24 +21,26 @@ members = [
 	"crates/loom-github-app",
 	"crates/loom-google-cse",
 	"crates/loom-http",
-	"crates/loom-llm-anthropic",
-	"crates/loom-llm-openai",
-	"crates/loom-llm-proxy",
-	"crates/loom-llm-service",
-	"crates/loom-llm-vertex",
-	"crates/loom-secret",
+	"crates/loom-server-llm-anthropic",
+	"crates/loom-server-llm-openai",
+	"crates/loom-server-llm-proxy",
+	"crates/loom-server-llm-service",
+	"crates/loom-server-llm-vertex",
+	"crates/loom-common-secret",
 	"crates/loom-server",
 	"crates/loom-thread",
 	"crates/loom-tools",
 	"crates/loom-version",
-	"crates/loom-k8s",
+	"crates/loom-server-k8s",
 	"crates/loom-weaver",
 	"crates/loom-smtp",
 	"crates/loom-i18n",
 	"crates/loom-geoip",
-	"crates/loom-jobs",
+	"crates/loom-server-jobs",
 	"crates/loom-scm",
 	"crates/loom-scm-mirror",
+	"crates/loom-db",
+	"crates/loom-server-api",
 ]
 
 [workspace.package]
@@ -129,8 +131,33 @@ utoipa = { version = "5", features = ["axum_extras", "uuid", "chrono"] }
 loom-auth-devicecode = { path = "crates/loom-auth-devicecode" }
 loom-auth-magiclink = { path = "crates/loom-auth-magiclink" }
 loom-config-common = { path = "crates/loom-config-common" }
-loom-secret = { path = "crates/loom-secret" }
+loom-common-secret = { path = "crates/loom-common-secret" }
 loom-version = { path = "crates/loom-version" }
-loom-k8s = { path = "crates/loom-k8s" }
+loom-server-k8s = { path = "crates/loom-server-k8s" }
 loom-geoip = { path = "crates/loom-geoip" }
-loom-jobs = { path = "crates/loom-jobs" }
+loom-server-jobs = { path = "crates/loom-server-jobs" }
+
+# Build profile optimizations for faster development builds
+[profile.dev]
+debug = 1                    # Reduced debug info (vs default 2)
+split-debuginfo = "unpacked" # Faster linking with separate debug files
+incremental = true           # Enable incremental compilation (default, explicit)
+
+[profile.dev.package.loom-server]
+codegen-units = 256          # More parallelism for the largest crate
+
+[profile.dev.package.loom-server-api]
+codegen-units = 128
+
+# Fast profile for git hooks and quick iteration
+[profile.dev-fast]
+inherits = "dev"
+debug = 0                    # No debug info for fastest builds
+codegen-units = 512          # Maximum parallelism
+incremental = true
+
+# Release profile optimizations
+[profile.release]
+lto = "thin"                 # Faster than full LTO, still good optimization
+codegen-units = 16
+strip = "debuginfo"

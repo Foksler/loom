@@ -4,7 +4,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use loom_jobs::{Job, JobContext, JobError, JobOutput};
+use loom_server_jobs::{Job, JobContext, JobError, JobOutput};
 use loom_weaver::Provisioner;
 use tracing::instrument;
 

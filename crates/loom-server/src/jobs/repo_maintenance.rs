@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use async_trait::async_trait;
-use loom_jobs::{Job, JobContext, JobError, JobOutput};
+use loom_server_jobs::{Job, JobContext, JobError, JobOutput};
 use loom_scm::MaintenanceTask;
 use sqlx::SqlitePool;
 use tracing::instrument;

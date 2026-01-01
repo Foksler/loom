@@ -9,94 +9,19 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use chrono::{DateTime, Utc};
 use loom_auth::types::{OrgId, OrgRole};
-use loom_scm::{OwnerType, PayloadFormat, RepoStore, Webhook, WebhookOwnerType, WebhookStore};
-use loom_secret::SecretString;
-use serde::{Deserialize, Serialize};
+use loom_scm::{OwnerType, RepoStore, Webhook, WebhookOwnerType, WebhookStore};
+use loom_common_secret::SecretString;
 use url::Url;
-use utoipa::ToSchema;
 use uuid::Uuid;
+
+pub use loom_server_api::webhooks::*;
 
 use crate::{
 	api::AppState,
 	auth_middleware::RequireAuth,
 	i18n::{resolve_user_locale, t, t_fmt},
 };
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "kebab-case")]
-pub enum PayloadFormatApi {
-	GitHubCompat,
-	#[default]
-	LoomV1,
-}
-
-impl From<PayloadFormat> for PayloadFormatApi {
-	fn from(v: PayloadFormat) -> Self {
-		match v {
-			PayloadFormat::GitHubCompat => PayloadFormatApi::GitHubCompat,
-			PayloadFormat::LoomV1 => PayloadFormatApi::LoomV1,
-		}
-	}
-}
-
-impl From<PayloadFormatApi> for PayloadFormat {
-	fn from(v: PayloadFormatApi) -> Self {
-		match v {
-			PayloadFormatApi::GitHubCompat => PayloadFormat::GitHubCompat,
-			PayloadFormatApi::LoomV1 => PayloadFormat::LoomV1,
-		}
-	}
-}
-
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct CreateWebhookRequest {
-	pub url: String,
-	pub secret: String,
-	#[serde(default)]
-	pub payload_format: PayloadFormatApi,
-	pub events: Vec<String>,
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct WebhookResponse {
-	pub id: Uuid,
-	pub url: String,
-	pub payload_format: PayloadFormatApi,
-	pub events: Vec<String>,
-	pub enabled: bool,
-	pub created_at: DateTime<Utc>,
-}
-
-impl From<Webhook> for WebhookResponse {
-	fn from(w: Webhook) -> Self {
-		Self {
-			id: w.id,
-			url: w.url,
-			payload_format: w.payload_format.into(),
-			events: w.events,
-			enabled: w.enabled,
-			created_at: w.created_at,
-		}
-	}
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ListWebhooksResponse {
-	pub webhooks: Vec<WebhookResponse>,
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct WebhookSuccessResponse {
-	pub message: String,
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct WebhookErrorResponse {
-	pub error: String,
-	pub message: String,
-}
 
 const VALID_EVENTS: &[&str] = &["push", "repo.created", "repo.deleted"];
 

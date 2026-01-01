@@ -18,7 +18,7 @@ pub struct ThreadSyncClient {
 	base_url: Url,
 	http: reqwest::Client,
 	retry_config: loom_http::RetryConfig,
-	auth_token: Option<loom_secret::SecretString>,
+	auth_token: Option<loom_common_secret::SecretString>,
 }
 
 impl ThreadSyncClient {
@@ -31,7 +31,7 @@ impl ThreadSyncClient {
 		}
 	}
 
-	pub fn with_auth_token(mut self, token: loom_secret::SecretString) -> Self {
+	pub fn with_auth_token(mut self, token: loom_common_secret::SecretString) -> Self {
 		self.auth_token = Some(token);
 		self
 	}

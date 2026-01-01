@@ -3,101 +3,20 @@
 
 //! SQLite database operations for thread persistence.
 //!
-//! This module provides repository patterns for database access:
-//! - [`UserRepository`] - User and identity management
-//! - [`SessionRepository`] - Authentication sessions and tokens
-//! - [`OrgRepository`] - Organization and membership management
-//! - [`TeamRepository`] - Team management within organizations
-//! - [`ApiKeyRepository`] - API key management
-//! - [`AuditRepository`] - Security audit logging
-//! - [`ThreadRepository`] - Thread/conversation persistence
-//! - [`ShareRepository`] - Share links and support access
+//! This module re-exports repositories from loom-db and provides
+//! server-specific migrations.
 
-pub mod api_key;
-mod audit;
-mod org;
-mod session;
-mod share;
-pub mod team;
-mod thread;
-mod user;
+pub mod cse;
 
-use serde::{Deserialize, Serialize};
-use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePool, SqliteSynchronous};
-use std::str::FromStr;
+use sqlx::sqlite::SqlitePool;
 
 use crate::error::ServerError;
 
-pub use api_key::ApiKeyRepository;
-pub use audit::AuditRepository;
-pub use org::OrgRepository;
-pub use session::SessionRepository;
-pub use share::ShareRepository;
-pub use team::TeamRepository;
-pub use thread::ThreadRepository;
-pub use user::UserRepository;
-
-/// GitHub App installation info stored in the database.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GithubInstallation {
-	pub installation_id: i64,
-	pub account_id: i64,
-	pub account_login: String,
-	pub account_type: String,
-	pub app_slug: Option<String>,
-	pub repositories_selection: String,
-	pub suspended_at: Option<String>,
-	pub created_at: String,
-	pub updated_at: String,
-}
-
-/// GitHub repository linked to an installation.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GithubRepo {
-	pub repository_id: i64,
-	pub owner: String,
-	pub name: String,
-	pub full_name: String,
-	pub private: bool,
-	pub default_branch: Option<String>,
-}
-
-/// Installation info with minimal fields for lookups.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GithubInstallationInfo {
-	pub installation_id: i64,
-	pub account_login: String,
-	pub account_type: String,
-	pub repositories_selection: String,
-}
-
-/// A search result hit with relevance score.
-#[derive(Debug, Clone)]
-pub struct ThreadSearchHit {
-	pub summary: loom_thread::ThreadSummary,
-	pub score: f64,
-}
-
-/// Create a SqlitePool with WAL mode and common settings.
-///
-/// # Arguments
-/// * `database_url` - SQLite connection string (e.g., "sqlite:./loom.db")
-///
-/// # Errors
-/// Returns `ServerError::Internal` if the URL is invalid or connection fails.
-#[tracing::instrument(skip(database_url))]
-pub async fn create_pool(database_url: &str) -> Result<SqlitePool, ServerError> {
-	let options = SqliteConnectOptions::from_str(database_url)
-		.map_err(|e| ServerError::Internal(format!("Invalid database URL: {e}")))?
-		.journal_mode(SqliteJournalMode::Wal)
-		.synchronous(SqliteSynchronous::Normal)
-		.create_if_missing(true);
-
-	let pool = SqlitePool::connect_with(options).await?;
-
-	tracing::debug!("database pool created");
-	Ok(pool)
-}
+pub use loom_db::{
+	ApiKeyRepository, AuditRepository, DbError, GithubInstallation, GithubInstallationInfo,
+	GithubRepo, OrgRepository, SessionRepository, ShareRepository, TeamRepository,
+	ThreadRepository, ThreadSearchHit, UserRepository, create_pool,
+};
 
 /// Run all database migrations (001-023).
 ///

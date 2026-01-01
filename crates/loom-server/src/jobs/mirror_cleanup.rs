@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use async_trait::async_trait;
-use loom_jobs::{Job, JobContext, JobError, JobOutput};
+use loom_server_jobs::{Job, JobContext, JobError, JobOutput};
 use loom_scm_mirror::ExternalMirrorStore;
 use tracing::instrument;
 

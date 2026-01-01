@@ -19,12 +19,14 @@ path = "src/lib.rs"
 
 [dependencies]
 futures = { workspace = true }
-loom-jobs = { path = "../loom-jobs" }
+loom-db = { path = "../loom-db" }
+loom-server-jobs = { path = "../loom-server-jobs" }
 loom-weaver = { path = "../loom-weaver" }
 loom-core = { path = "../loom-core" }
-loom-k8s = { path = "../loom-k8s" }
-loom-secret = { path = "../loom-secret" }
+loom-server-k8s = { path = "../loom-server-k8s" }
+loom-common-secret = { path = "../loom-common-secret" }
 loom-auth = { path = "../loom-auth" }
+loom-server-api = { path = "../loom-server-api", features = ["openapi"] }
 loom-auth-devicecode = { path = "../loom-auth-devicecode" }
 loom-auth-github = { path = "../loom-auth-github" }
 loom-auth-google = { path = "../loom-auth-google" }
@@ -38,8 +40,8 @@ loom-scm = { path = "../loom-scm" }
 loom-scm-mirror = { path = "../loom-scm-mirror" }
 gix = { version = "0.68", default-features = false, features = ["revision"] }
 loom-google-cse = { path = "../loom-google-cse", features = ["openapi"] }
-loom-llm-anthropic = { path = "../loom-llm-anthropic" }
-loom-llm-service = { path = "../loom-llm-service" }
+loom-server-llm-anthropic = { path = "../loom-server-llm-anthropic" }
+loom-server-llm-service = { path = "../loom-server-llm-service" }
 loom-thread = { path = "../loom-thread", features = ["openapi"] }
 url = "2"
 loom-version = { path = "../loom-version", features = ["serde", "utoipa"] }

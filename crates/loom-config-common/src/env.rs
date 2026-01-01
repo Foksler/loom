@@ -10,7 +10,7 @@
 use std::path::PathBuf;
 use std::{env, fs};
 
-use loom_secret::Secret;
+use loom_common_secret::Secret;
 use thiserror::Error;
 
 /// Errors that can occur when loading secrets from environment variables.

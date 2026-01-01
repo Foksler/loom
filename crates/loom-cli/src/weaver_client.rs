@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use futures::{SinkExt, StreamExt};
-use loom_secret::SecretString;
+use loom_common_secret::SecretString;
 use serde::{Deserialize, Serialize};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_tungstenite::{

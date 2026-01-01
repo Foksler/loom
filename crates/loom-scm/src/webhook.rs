@@ -3,7 +3,7 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use loom_secret::SecretString;
+use loom_common_secret::SecretString;
 use serde::{Deserialize, Serialize};
 use sqlx::{Row, SqlitePool};
 use uuid::Uuid;

@@ -16,7 +16,7 @@ keyring = ["dep:keyring"]
 [dependencies]
 keyring = { version = "3", optional = true }
 async-trait = { workspace = true }
-loom-secret = { path = "../loom-secret" }
+loom-common-secret = { path = "../loom-common-secret" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

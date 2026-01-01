@@ -5,34 +5,10 @@
 
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use loom_google_cse::{CseError, CseRequest};
-use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
 
-use crate::{api::AppState, error::ServerError};
+pub use loom_server_api::cse::*;
 
-/// Request body for CSE proxy endpoint.
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct CseProxyRequest {
-	pub query: String,
-	pub max_results: Option<u32>,
-}
-
-/// Response for CSE proxy endpoint.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct CseProxyResponse {
-	pub query: String,
-	pub results: Vec<CseProxyResultItem>,
-}
-
-/// Single result item in CSE proxy response.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct CseProxyResultItem {
-	pub title: String,
-	pub url: String,
-	pub snippet: String,
-	pub display_link: Option<String>,
-	pub rank: u32,
-}
+use crate::{api::AppState, db::cse::CseCacheExt, error::ServerError};
 
 #[utoipa::path(
     post,

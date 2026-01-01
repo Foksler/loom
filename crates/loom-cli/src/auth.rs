@@ -10,7 +10,7 @@ use serde::Deserialize;
 use tracing::{debug, info, instrument, warn};
 
 use loom_credentials::{CredentialStore, CredentialValue, KeyringThenFileStore};
-use loom_secret::SecretString;
+use loom_common_secret::SecretString;
 
 use crate::locale::get_locale;
 

@@ -9,78 +9,13 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use loom_thread::{Thread, ThreadId, ThreadSummary, ThreadVisibility};
-use serde::{Deserialize, Serialize};
-use utoipa::{IntoParams, ToSchema};
+pub use loom_server_api::threads::{
+	ListParams, ListResponse, SearchParams, SearchResponse, SearchResponseHit,
+	UpdateVisibilityRequest,
+};
+use loom_thread::{Thread, ThreadId};
 
 use crate::{api::AppState, error::ServerError};
-
-/// Query parameters for listing threads.
-#[derive(Debug, Deserialize, IntoParams)]
-pub struct ListParams {
-	/// Filter by workspace root.
-	pub workspace: Option<String>,
-	/// Maximum number of results (default: 50).
-	#[serde(default = "default_limit")]
-	pub limit: u32,
-	/// Pagination offset (default: 0).
-	#[serde(default)]
-	pub offset: u32,
-}
-
-fn default_limit() -> u32 {
-	50
-}
-
-fn default_search_limit() -> u32 {
-	50
-}
-
-/// Query parameters for search endpoint
-#[derive(Debug, Deserialize, IntoParams)]
-pub struct SearchParams {
-	/// Search query
-	pub q: String,
-	/// Optional workspace filter
-	pub workspace: Option<String>,
-	/// Maximum results (default: 50)
-	#[serde(default = "default_search_limit")]
-	pub limit: u32,
-	/// Pagination offset (default: 0)
-	#[serde(default)]
-	pub offset: u32,
-}
-
-/// Search response
-#[derive(Debug, Serialize, ToSchema)]
-pub struct SearchResponse {
-	pub hits: Vec<SearchResponseHit>,
-	pub limit: u32,
-	pub offset: u32,
-}
-
-/// Single search hit in the response
-#[derive(Debug, Serialize, ToSchema)]
-pub struct SearchResponseHit {
-	#[serde(flatten)]
-	pub summary: ThreadSummary,
-	pub score: f64,
-}
-
-/// Request body for updating thread visibility.
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct UpdateVisibilityRequest {
-	pub visibility: ThreadVisibility,
-}
-
-/// Response for list endpoint.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ListResponse {
-	pub threads: Vec<ThreadSummary>,
-	pub total: u64,
-	pub limit: u32,
-	pub offset: u32,
-}
 
 /// PUT /api/threads/{id} - Create or update a thread.
 ///

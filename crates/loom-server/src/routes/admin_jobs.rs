@@ -20,8 +20,9 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use serde::{Deserialize, Serialize};
-use utoipa::{IntoParams, ToSchema};
+use loom_server_jobs::TriggerSource;
+
+pub use loom_server_api::jobs::*;
 
 use crate::{
 	api::AppState,
@@ -29,97 +30,6 @@ use crate::{
 	i18n::{resolve_user_locale, t},
 	routes::admin::AdminErrorResponse,
 };
-use loom_jobs::{HealthState, TriggerSource};
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct JobInfo {
-	pub id: String,
-	pub name: String,
-	pub description: String,
-	pub job_type: String,
-	pub interval_secs: Option<i64>,
-	pub enabled: bool,
-	pub status: JobHealthState,
-	pub last_run: Option<LastRunInfo>,
-	pub consecutive_failures: u32,
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct LastRunInfo {
-	pub run_id: String,
-	pub status: String,
-	pub started_at: String,
-	pub completed_at: Option<String>,
-	pub duration_ms: Option<i64>,
-	pub error: Option<String>,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, ToSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum JobHealthState {
-	Healthy,
-	Degraded,
-	Unhealthy,
-}
-
-impl From<HealthState> for JobHealthState {
-	fn from(state: HealthState) -> Self {
-		match state {
-			HealthState::Healthy => JobHealthState::Healthy,
-			HealthState::Degraded => JobHealthState::Degraded,
-			HealthState::Unhealthy => JobHealthState::Unhealthy,
-		}
-	}
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ListJobsResponse {
-	pub jobs: Vec<JobInfo>,
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct TriggerJobResponse {
-	pub run_id: String,
-	pub message: String,
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct JobSuccessResponse {
-	pub message: String,
-}
-
-#[derive(Debug, Deserialize, IntoParams)]
-pub struct HistoryQuery {
-	#[serde(default = "default_limit")]
-	pub limit: u32,
-	#[serde(default)]
-	pub offset: u32,
-}
-
-fn default_limit() -> u32 {
-	50
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct JobHistoryResponse {
-	pub runs: Vec<JobRunInfo>,
-	pub total: u32,
-	pub limit: u32,
-	pub offset: u32,
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct JobRunInfo {
-	pub id: String,
-	pub status: String,
-	pub started_at: String,
-	pub completed_at: Option<String>,
-	pub duration_ms: Option<i64>,
-	pub error_message: Option<String>,
-	pub retry_count: u32,
-	pub triggered_by: String,
-	pub metadata: Option<serde_json::Value>,
-}
 
 /// List all registered jobs with their status.
 ///

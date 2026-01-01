@@ -12,8 +12,8 @@ use utoipa::ToSchema;
 
 use loom_weaver::Provisioner;
 use loom_github_app::{GithubAppClient, GithubAppError};
-use loom_jobs::JobScheduler;
-use loom_llm_service::LlmService;
+use loom_server_jobs::JobScheduler;
+use loom_server_llm_service::LlmService;
 use loom_smtp::SmtpClient;
 
 use crate::db::ThreadRepository;
@@ -299,10 +299,10 @@ pub async fn check_llm_providers(llm_service: Option<&LlmService>) -> LlmProvide
 			if service.has_anthropic() {
 				let anthropic_health = service.anthropic_health().await;
 				let (status, mode, pool) = match anthropic_health {
-					Some(loom_llm_service::AnthropicHealthInfo::ApiKey { .. }) => {
+					Some(loom_server_llm_service::AnthropicHealthInfo::ApiKey { .. }) => {
 						(HealthStatus::Healthy, Some("api_key".to_string()), None)
 					}
-					Some(loom_llm_service::AnthropicHealthInfo::Pool(pool_status)) => {
+					Some(loom_server_llm_service::AnthropicHealthInfo::Pool(pool_status)) => {
 						let status = if pool_status.accounts_available == pool_status.accounts_total {
 							HealthStatus::Healthy
 						} else if pool_status.accounts_available > 0 {
@@ -322,13 +322,13 @@ pub async fn check_llm_providers(llm_service: Option<&LlmService>) -> LlmProvide
 								.map(|a| AnthropicAccountHealth {
 									id: a.id,
 									status: match a.status {
-										loom_llm_service::AccountHealthStatus::Available => {
+										loom_server_llm_service::AccountHealthStatus::Available => {
 											AnthropicAccountStatus::Available
 										}
-										loom_llm_service::AccountHealthStatus::CoolingDown => {
+										loom_server_llm_service::AccountHealthStatus::CoolingDown => {
 											AnthropicAccountStatus::CoolingDown
 										}
-										loom_llm_service::AccountHealthStatus::Disabled => {
+										loom_server_llm_service::AccountHealthStatus::Disabled => {
 											AnthropicAccountStatus::Disabled
 										}
 									},
@@ -630,14 +630,14 @@ pub async fn check_jobs(scheduler: Option<&Arc<JobScheduler>>) -> Option<JobsHea
 	let jobs_failing: Vec<String> = health
 		.jobs
 		.iter()
-		.filter(|j| matches!(j.status, loom_jobs::HealthState::Unhealthy))
+		.filter(|j| matches!(j.status, loom_server_jobs::HealthState::Unhealthy))
 		.map(|j| j.job_id.clone())
 		.collect();
 
 	let status = match health.status {
-		loom_jobs::HealthState::Healthy => HealthStatus::Healthy,
-		loom_jobs::HealthState::Degraded => HealthStatus::Degraded,
-		loom_jobs::HealthState::Unhealthy => HealthStatus::Unhealthy,
+		loom_server_jobs::HealthState::Healthy => HealthStatus::Healthy,
+		loom_server_jobs::HealthState::Degraded => HealthStatus::Degraded,
+		loom_server_jobs::HealthState::Unhealthy => HealthStatus::Unhealthy,
 	};
 
 	Some(JobsHealth {
@@ -646,7 +646,7 @@ pub async fn check_jobs(scheduler: Option<&Arc<JobScheduler>>) -> Option<JobsHea
 		jobs_healthy: health
 			.jobs
 			.iter()
-			.filter(|j| matches!(j.status, loom_jobs::HealthState::Healthy))
+			.filter(|j| matches!(j.status, loom_server_jobs::HealthState::Healthy))
 			.count(),
 		jobs_failing: jobs_failing.len(),
 		failing_jobs: if jobs_failing.is_empty() {

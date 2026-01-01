@@ -17,111 +17,14 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use chrono::{DateTime, Utc};
 use loom_auth::types::{OrgId, OrgRole, UserId};
 use loom_scm::{validate_repo_name, GitRepository, OwnerType, RepoRole, RepoStore, RepoTeamAccessStore, Repository, Visibility};
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use utoipa::ToSchema;
 use uuid::Uuid;
 
+pub use loom_server_api::repos::*;
+
 use crate::{api::AppState, auth_middleware::RequireAuth, i18n::{resolve_user_locale, t}};
-
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "lowercase")]
-pub enum OwnerTypeApi {
-	User,
-	Org,
-}
-
-impl From<OwnerType> for OwnerTypeApi {
-	fn from(v: OwnerType) -> Self {
-		match v {
-			OwnerType::User => OwnerTypeApi::User,
-			OwnerType::Org => OwnerTypeApi::Org,
-		}
-	}
-}
-
-impl From<OwnerTypeApi> for OwnerType {
-	fn from(v: OwnerTypeApi) -> Self {
-		match v {
-			OwnerTypeApi::User => OwnerType::User,
-			OwnerTypeApi::Org => OwnerType::Org,
-		}
-	}
-}
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "lowercase")]
-pub enum VisibilityApi {
-	#[default]
-	Private,
-	Public,
-}
-
-impl From<Visibility> for VisibilityApi {
-	fn from(v: Visibility) -> Self {
-		match v {
-			Visibility::Private => VisibilityApi::Private,
-			Visibility::Public => VisibilityApi::Public,
-		}
-	}
-}
-
-impl From<VisibilityApi> for Visibility {
-	fn from(v: VisibilityApi) -> Self {
-		match v {
-			VisibilityApi::Private => Visibility::Private,
-			VisibilityApi::Public => Visibility::Public,
-		}
-	}
-}
-
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct CreateRepoRequest {
-	pub owner_type: OwnerTypeApi,
-	pub owner_id: Uuid,
-	pub name: String,
-	#[serde(default)]
-	pub visibility: VisibilityApi,
-}
-
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct UpdateRepoRequest {
-	pub name: Option<String>,
-	pub visibility: Option<VisibilityApi>,
-	pub default_branch: Option<String>,
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct RepoResponse {
-	pub id: Uuid,
-	pub owner_type: OwnerTypeApi,
-	pub owner_id: Uuid,
-	pub name: String,
-	pub visibility: VisibilityApi,
-	pub default_branch: String,
-	pub clone_url: String,
-	pub created_at: DateTime<Utc>,
-	pub updated_at: DateTime<Utc>,
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ListReposResponse {
-	pub repos: Vec<RepoResponse>,
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct RepoSuccessResponse {
-	pub message: String,
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct RepoErrorResponse {
-	pub error: String,
-	pub message: String,
-}
 
 fn get_repos_base_dir() -> PathBuf {
 	std::env::var("LOOM_DATA_DIR")
@@ -140,19 +43,17 @@ fn build_clone_url(base_url: &str, owner_name: &str, repo_name: &str) -> String 
 	format!("{}/git/{}/{}.git", base_url.trim_end_matches('/'), owner_name, repo_name)
 }
 
-impl RepoResponse {
-	fn from_repo(repo: Repository, clone_url: String) -> Self {
-		Self {
-			id: repo.id,
-			owner_type: repo.owner_type.into(),
-			owner_id: repo.owner_id,
-			name: repo.name,
-			visibility: repo.visibility.into(),
-			default_branch: repo.default_branch,
-			clone_url,
-			created_at: repo.created_at,
-			updated_at: repo.updated_at,
-		}
+fn repo_to_response(repo: Repository, clone_url: String) -> RepoResponse {
+	RepoResponse {
+		id: repo.id,
+		owner_type: repo.owner_type.into(),
+		owner_id: repo.owner_id,
+		name: repo.name,
+		visibility: repo.visibility.into(),
+		default_branch: repo.default_branch,
+		clone_url,
+		created_at: repo.created_at,
+		updated_at: repo.updated_at,
 	}
 }
 
@@ -366,7 +267,7 @@ pub async fn create_repo(
 
 	(
 		StatusCode::CREATED,
-		Json(RepoResponse::from_repo(created_repo, clone_url)),
+		Json(repo_to_response(created_repo, clone_url)),
 	)
 		.into_response()
 }
@@ -474,7 +375,7 @@ pub async fn get_repo(
 	let clone_url = build_clone_url(&state.base_url, &owner_name, &repo.name);
 	let _ = locale;
 
-	(StatusCode::OK, Json(RepoResponse::from_repo(repo, clone_url))).into_response()
+	(StatusCode::OK, Json(repo_to_response(repo, clone_url))).into_response()
 }
 
 #[utoipa::path(
@@ -639,7 +540,7 @@ pub async fn update_repo(
 	let clone_url = build_clone_url(&state.base_url, &owner_name, &updated_repo.name);
 	let _ = locale;
 
-	(StatusCode::OK, Json(RepoResponse::from_repo(updated_repo, clone_url))).into_response()
+	(StatusCode::OK, Json(repo_to_response(updated_repo, clone_url))).into_response()
 }
 
 #[utoipa::path(
@@ -828,7 +729,7 @@ pub async fn list_user_repos(
 		.filter(|r| r.visibility == Visibility::Public || is_owner)
 		.map(|r| {
 			let clone_url = build_clone_url(&state.base_url, owner_name, &r.name);
-			RepoResponse::from_repo(r, clone_url)
+			repo_to_response(r, clone_url)
 		})
 		.collect();
 
@@ -921,56 +822,11 @@ pub async fn list_org_repos(
 		.filter(|r| r.visibility == Visibility::Public || is_member)
 		.map(|r| {
 			let clone_url = build_clone_url(&state.base_url, &org.slug, &r.name);
-			RepoResponse::from_repo(r, clone_url)
+			repo_to_response(r, clone_url)
 		})
 		.collect();
 
 	(StatusCode::OK, Json(ListReposResponse { repos: visible_repos })).into_response()
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "lowercase")]
-pub enum RepoRoleApi {
-	Read,
-	Write,
-	Admin,
-}
-
-impl From<RepoRole> for RepoRoleApi {
-	fn from(v: RepoRole) -> Self {
-		match v {
-			RepoRole::Read => RepoRoleApi::Read,
-			RepoRole::Write => RepoRoleApi::Write,
-			RepoRole::Admin => RepoRoleApi::Admin,
-		}
-	}
-}
-
-impl From<RepoRoleApi> for RepoRole {
-	fn from(v: RepoRoleApi) -> Self {
-		match v {
-			RepoRoleApi::Read => RepoRole::Read,
-			RepoRoleApi::Write => RepoRole::Write,
-			RepoRoleApi::Admin => RepoRole::Admin,
-		}
-	}
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct RepoTeamAccessResponse {
-	pub team_id: Uuid,
-	pub role: RepoRoleApi,
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ListRepoTeamAccessResponse {
-	pub teams: Vec<RepoTeamAccessResponse>,
-}
-
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct GrantTeamAccessRequest {
-	pub team_id: Uuid,
-	pub role: RepoRoleApi,
 }
 
 async fn check_repo_admin_access(

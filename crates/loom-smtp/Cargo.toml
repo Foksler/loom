@@ -16,7 +16,7 @@ tokio = { workspace = true, features = ["rt"] }
 thiserror.workspace = true
 tracing.workspace = true
 serde = { workspace = true, features = ["derive"] }
-loom-secret.workspace = true
+loom-common-secret.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true

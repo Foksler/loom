@@ -33,126 +33,17 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use chrono::{DateTime, Utc};
 use loom_auth::{AuditEventType, AuditLogEntry, UserId};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
-use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
+pub use loom_server_api::admin::{
+	AdminErrorResponse, AdminSuccessResponse, AdminUserResponse, AuditLogEntryResponse,
+	ImpersonateRequest, ImpersonateResponse, ListAuditLogsParams, ListAuditLogsResponse,
+	ListUsersParams, ListUsersResponse, UpdateRolesRequest,
+};
+
 use crate::{api::AppState, auth_middleware::RequireAuth, i18n::{resolve_user_locale, t}};
-
-/// A user in admin API responses.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct AdminUserResponse {
-	pub id: String,
-	pub display_name: String,
-	pub primary_email: Option<String>,
-	pub avatar_url: Option<String>,
-	pub is_system_admin: bool,
-	pub is_support: bool,
-	pub is_auditor: bool,
-	pub created_at: DateTime<Utc>,
-	pub updated_at: DateTime<Utc>,
-	pub deleted_at: Option<DateTime<Utc>>,
-}
-
-/// Paginated list of users.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ListUsersResponse {
-	pub users: Vec<AdminUserResponse>,
-	pub total: i64,
-	pub limit: i32,
-	pub offset: i32,
-}
-
-/// Query parameters for listing users.
-#[derive(Debug, Deserialize, IntoParams)]
-pub struct ListUsersParams {
-	#[serde(default = "default_limit")]
-	pub limit: i32,
-	#[serde(default)]
-	pub offset: i32,
-	pub search: Option<String>,
-}
-
-fn default_limit() -> i32 {
-	50
-}
-
-/// Request to update a user's global roles.
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct UpdateRolesRequest {
-	pub is_system_admin: Option<bool>,
-	pub is_support: Option<bool>,
-	pub is_auditor: Option<bool>,
-}
-
-/// Request to start impersonation.
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct ImpersonateRequest {
-	pub reason: String,
-}
-
-/// Response for impersonation start.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ImpersonateResponse {
-	pub session_id: String,
-	pub message: String,
-}
-
-/// An audit log entry.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct AuditLogEntryResponse {
-	pub id: String,
-	pub timestamp: DateTime<Utc>,
-	pub event_type: String,
-	pub actor_user_id: Option<String>,
-	pub impersonating_user_id: Option<String>,
-	pub resource_type: Option<String>,
-	pub resource_id: Option<String>,
-	pub action: String,
-	pub ip_address: Option<String>,
-	pub user_agent: Option<String>,
-	pub details: Option<serde_json::Value>,
-}
-
-/// Paginated list of audit logs.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ListAuditLogsResponse {
-	pub logs: Vec<AuditLogEntryResponse>,
-	pub total: i64,
-	pub limit: i32,
-	pub offset: i32,
-}
-
-/// Query parameters for listing audit logs.
-#[derive(Debug, Deserialize, IntoParams)]
-pub struct ListAuditLogsParams {
-	pub event_type: Option<String>,
-	pub actor_id: Option<String>,
-	pub resource_type: Option<String>,
-	pub resource_id: Option<String>,
-	pub from: Option<DateTime<Utc>>,
-	pub to: Option<DateTime<Utc>>,
-	#[serde(default = "default_limit")]
-	pub limit: i32,
-	#[serde(default)]
-	pub offset: i32,
-}
-
-/// Success response for admin operations.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct AdminSuccessResponse {
-	pub message: String,
-}
-
-/// Error response for admin operations.
-#[derive(Debug, Serialize, ToSchema)]
-pub struct AdminErrorResponse {
-	pub error: String,
-	pub message: String,
-}
 
 fn parse_user_id(id: &str, locale: &str) -> Result<UserId, AdminErrorResponse> {
 	Uuid::parse_str(id).map(UserId::new).map_err(|_| AdminErrorResponse {

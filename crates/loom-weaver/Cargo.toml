@@ -26,5 +26,5 @@ hmac.workspace = true
 reqwest.workspace = true
 sha2.workspace = true
 
-loom-k8s.workspace = true
-loom-secret.workspace = true
+loom-server-k8s.workspace = true
+loom-common-secret.workspace = true

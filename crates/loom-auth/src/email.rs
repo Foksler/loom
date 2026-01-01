@@ -8,7 +8,7 @@
 //! notifications, organization invitations, and account deletion warnings.
 
 use crate::AuthError;
-use loom_secret::SecretString;
+use loom_common_secret::SecretString;
 use serde::{Deserialize, Serialize};
 
 /// TLS mode for SMTP connections.

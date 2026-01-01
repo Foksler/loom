@@ -17,7 +17,7 @@
 //!
 //! ```rust,no_run
 //! use loom_credentials::{CredentialStore, FileCredentialStore, CredentialValue};
-//! use loom_secret::SecretString;
+//! use loom_common_secret::SecretString;
 //!
 //! # tokio_test::block_on(async {
 //! let store = FileCredentialStore::new("~/.config/loom/credentials.json");

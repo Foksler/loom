@@ -14,10 +14,10 @@ use loom_auth_google::{GoogleOAuthClient, GoogleOAuthConfig};
 use loom_auth_okta::{OktaOAuthClient, OktaOAuthConfig};
 use loom_geoip::GeoIpService;
 use loom_github_app::{GithubAppClient, GithubAppConfig};
-use loom_jobs::{JobRepository, JobScheduler};
+use loom_server_jobs::{JobRepository, JobScheduler};
 use loom_google_cse::CseClient;
-use loom_k8s::KubeClient;
-use loom_llm_service::LlmService;
+use loom_server_k8s::KubeClient;
+use loom_server_llm_service::LlmService;
 use loom_smtp::SmtpClient;
 use loom_weaver::{Provisioner, WeaverConfig, WebhookConfig, WebhookDispatcher};
 use std::sync::Arc;
@@ -353,7 +353,7 @@ fn initialize_smtp_client(config: &ServerConfig) -> Option<Arc<SmtpClient>> {
 		host,
 		port: config.smtp_port,
 		username: config.smtp_username.clone(),
-		password: config.smtp_password.clone().map(loom_secret::SecretString::new),
+		password: config.smtp_password.clone().map(loom_common_secret::SecretString::new),
 		from_address,
 		from_name: config.smtp_from_name.clone(),
 		use_tls: config.smtp_use_tls,
@@ -958,8 +958,8 @@ mod tests {
 		let dir = tempdir().unwrap();
 		let db_path = dir.path().join("test.db");
 		let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
-		let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
-		let pool = repo.pool().clone();
+		let pool = crate::db::create_pool(&db_url).await.unwrap();
+		let repo = Arc::new(ThreadRepository::new(pool.clone()));
 		let config = ServerConfig::default();
 		let mut state = create_app_state(pool, repo, &config).await;
 		// Override auth config for testing
@@ -1487,8 +1487,8 @@ mod tests {
 		let dir = tempdir().unwrap();
 		let db_path = dir.path().join("test.db");
 		let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
-		let repo = Arc::new(ThreadRepository::new(&db_url).await.unwrap());
-		let pool = repo.pool().clone();
+		let pool = crate::db::create_pool(&db_url).await.unwrap();
+		let repo = Arc::new(ThreadRepository::new(pool.clone()));
 		let config = ServerConfig::default();
 		let mut state = create_app_state(pool, repo, &config).await;
 

@@ -42,7 +42,7 @@ rand.workspace = true
 hex.workspace = true
 
 # Secrets
-loom-secret.workspace = true
+loom-common-secret.workspace = true
 zeroize.workspace = true
 
 # Magic link auth

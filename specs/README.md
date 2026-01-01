@@ -78,6 +78,12 @@ Design documentation for Loom, an AI-powered coding agent in Rust.
 | [weaver-provisioner.md](./weaver-provisioner.md) | [loom-weaver](../crates/loom-weaver/), [loom-k8s](../crates/loom-k8s/) | K8s pod provisioning |
 | [weaver-cli.md](./weaver-cli.md) | [loom-cli](../crates/loom-cli/) | CLI for weaver management |
 
+## Build & Performance
+
+| Spec | Code | Purpose |
+|------|------|---------|
+| [server-split.md](./server-split.md) | [loom-db](../crates/loom-db/), [loom-server-api](../crates/loom-server-api/) | Server crate splitting for faster builds |
+
 ## Web, Distribution & Other
 
 | Spec | Code | Purpose |

@@ -30,9 +30,6 @@ pub mod server_query;
 pub mod typed_router;
 pub mod websocket;
 
-#[cfg(test)]
-mod tests;
-
 pub use api::{create_app_state, create_router, AppState};
 pub use api_docs::ApiDoc;
 pub use config::ServerConfig;

@@ -4,7 +4,7 @@
 //! SMTP email client for Loom.
 //!
 //! This crate provides a simple async SMTP client for sending emails with both
-//! HTML and plain text bodies. It integrates with [`loom_secret`] to ensure
+//! HTML and plain text bodies. It integrates with [`loom_common_secret`] to ensure
 //! passwords are never logged.
 //!
 //! # Features
@@ -19,7 +19,7 @@
 //!
 //! ```no_run
 //! use loom_smtp::{SmtpClient, SmtpConfig};
-//! use loom_secret::SecretString;
+//! use loom_common_secret::SecretString;
 //!
 //! # async fn example() -> Result<(), loom_smtp::SmtpError> {
 //! let config = SmtpConfig {
@@ -48,7 +48,7 @@ use lettre::{
     transport::smtp::authentication::Credentials,
     AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor,
 };
-use loom_secret::SecretString;
+use loom_common_secret::SecretString;
 use serde::{Deserialize, Serialize};
 use std::env;
 
@@ -95,7 +95,7 @@ pub enum SmtpError {
 ///
 /// ```
 /// use loom_smtp::SmtpConfig;
-/// use loom_secret::SecretString;
+/// use loom_common_secret::SecretString;
 ///
 /// let config = SmtpConfig {
 ///     host: "smtp.example.com".to_string(),

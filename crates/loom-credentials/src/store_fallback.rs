@@ -68,7 +68,7 @@ impl CredentialStore for KeyringThenFileStore {
 mod tests {
 	use super::*;
 	use crate::store::FileCredentialStore;
-	use loom_secret::SecretString;
+	use loom_common_secret::SecretString;
 
 	#[tokio::test]
 	async fn test_file_fallback_roundtrip() {

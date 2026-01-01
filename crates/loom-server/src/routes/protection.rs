@@ -16,61 +16,14 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use chrono::{DateTime, Utc};
 use loom_auth::types::{OrgId, OrgRole};
 use loom_scm::{BranchProtectionRule, OwnerType, ProtectionStore, RepoStore};
-use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
 use uuid::Uuid;
 
+pub use loom_server_api::protection::*;
+pub use loom_server_api::repos::RepoErrorResponse;
+
 use crate::{api::AppState, auth_middleware::RequireAuth, i18n::{resolve_user_locale, t}};
-
-use super::repos::RepoErrorResponse;
-
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct CreateProtectionRuleRequest {
-	pub pattern: String,
-	#[serde(default = "default_true")]
-	pub block_direct_push: bool,
-	#[serde(default = "default_true")]
-	pub block_force_push: bool,
-	#[serde(default = "default_true")]
-	pub block_deletion: bool,
-}
-
-fn default_true() -> bool {
-	true
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ProtectionRuleResponse {
-	pub id: Uuid,
-	pub repo_id: Uuid,
-	pub pattern: String,
-	pub block_direct_push: bool,
-	pub block_force_push: bool,
-	pub block_deletion: bool,
-	pub created_at: DateTime<Utc>,
-}
-
-impl From<BranchProtectionRule> for ProtectionRuleResponse {
-	fn from(rule: BranchProtectionRule) -> Self {
-		Self {
-			id: rule.id,
-			repo_id: rule.repo_id,
-			pattern: rule.pattern,
-			block_direct_push: rule.block_direct_push,
-			block_force_push: rule.block_force_push,
-			block_deletion: rule.block_deletion,
-			created_at: rule.created_at,
-		}
-	}
-}
-
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ListProtectionRulesResponse {
-	pub rules: Vec<ProtectionRuleResponse>,
-}
 
 async fn check_repo_admin(
 	repo_id: Uuid,

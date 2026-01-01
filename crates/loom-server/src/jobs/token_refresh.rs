@@ -4,8 +4,8 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use loom_jobs::{Job, JobContext, JobError, JobOutput};
-use loom_llm_service::LlmService;
+use loom_server_jobs::{Job, JobContext, JobError, JobOutput};
+use loom_server_llm_service::LlmService;
 use tracing::instrument;
 
 pub struct TokenRefreshJob {
