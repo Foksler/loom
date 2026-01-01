@@ -55,6 +55,12 @@ Design documentation for Loom, an AI-powered coding agent in Rust.
 | [acp-system.md](./acp-system.md) | [loom-acp](../crates/loom-acp/) | Agent Client Protocol for editors |
 | [vscode-extension.md](./vscode-extension.md) | [ide/vscode](../ide/vscode/) | VS Code extension via ACP |
 
+## SCM (Git Hosting)
+
+| Spec | Code | Purpose |
+|------|------|---------|
+| [scm-system.md](./scm-system.md) | loom-scm (planned) | Git hosting via HTTPS, gitoxide, mirroring, webhooks |
+
 ## Git & Search
 
 | Spec | Code | Purpose |
