@@ -135,6 +135,21 @@ in
             proxyPass = cfg.serverUrl;
           };
 
+          # SCM Git HTTP protocol - clone/fetch/push
+          "^~ /git/" = {
+            proxyPass = cfg.serverUrl;
+            extraConfig = ''
+              proxy_read_timeout 3600;
+              proxy_buffering off;
+              client_max_body_size 0;
+            '';
+          };
+
+          # SCM Web UI - repo browsing
+          "^~ /repos/" = {
+            proxyPass = cfg.serverUrl;
+          };
+
           # Static assets with caching
           "~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$" = {
             root = "${cfg.package}/share/loom-web";
