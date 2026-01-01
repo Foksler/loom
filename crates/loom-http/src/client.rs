@@ -3,7 +3,7 @@
 
 //! Shared HTTP client with consistent User-Agent header.
 
-use loom_version::BuildInfo;
+use loom_common_version::BuildInfo;
 use reqwest::{Client, ClientBuilder};
 use std::time::Duration;
 

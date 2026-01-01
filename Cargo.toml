@@ -30,16 +30,16 @@ members = [
 	"crates/loom-server",
 	"crates/loom-thread",
 	"crates/loom-tools",
-	"crates/loom-version",
+	"crates/loom-common-version",
 	"crates/loom-server-k8s",
-	"crates/loom-weaver",
-	"crates/loom-smtp",
-	"crates/loom-i18n",
-	"crates/loom-geoip",
+	"crates/loom-server-weaver",
+	"crates/loom-server-smtp",
+	"crates/loom-common-i18n",
+	"crates/loom-server-geoip",
 	"crates/loom-server-jobs",
 	"crates/loom-scm",
 	"crates/loom-scm-mirror",
-	"crates/loom-db",
+	"crates/loom-server-db",
 	"crates/loom-server-api",
 ]
 
@@ -132,9 +132,9 @@ loom-auth-devicecode = { path = "crates/loom-auth-devicecode" }
 loom-auth-magiclink = { path = "crates/loom-auth-magiclink" }
 loom-config-common = { path = "crates/loom-config-common" }
 loom-common-secret = { path = "crates/loom-common-secret" }
-loom-version = { path = "crates/loom-version" }
+loom-common-version = { path = "crates/loom-common-version" }
 loom-server-k8s = { path = "crates/loom-server-k8s" }
-loom-geoip = { path = "crates/loom-geoip" }
+loom-server-geoip = { path = "crates/loom-server-geoip" }
 loom-server-jobs = { path = "crates/loom-server-jobs" }
 
 # Build profile optimizations for faster development builds

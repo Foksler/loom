@@ -68,7 +68,7 @@ pub enum ServerError {
 
 	/// Weaver provisioner error.
 	#[error("Provisioner error: {0}")]
-	Provisioner(#[from] loom_weaver::ProvisionerError),
+	Provisioner(#[from] loom_server_weaver::ProvisionerError),
 }
 
 /// Error response body.
@@ -227,7 +227,7 @@ impl IntoResponse for ServerError {
 				},
 			),
 			ServerError::Provisioner(e) => {
-				use loom_weaver::ProvisionerError;
+				use loom_server_weaver::ProvisionerError;
 				match e {
 					ProvisionerError::WeaverNotFound { id } => (
 						StatusCode::NOT_FOUND,

@@ -3,7 +3,7 @@
 
 //! Build information and version utilities.
 
-pub use loom_version::BuildInfo;
+pub use loom_common_version::BuildInfo;
 
 /// Get the current build information.
 pub fn build_info() -> BuildInfo {

@@ -2,21 +2,23 @@
 # SPDX-License-Identifier: Proprietary
 
 [package]
-name = "loom-i18n"
+name = "loom-server-geoip"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Internationalization support for Loom using gettext"
+description = "GeoIP lookup service for Loom using MaxMind databases"
 
 [dependencies]
-gettext = "0.4"
-once_cell = "1"
+maxminddb = "0.24"
 thiserror.workspace = true
 tracing.workspace = true
+serde = { workspace = true, features = ["derive"] }
+
+[lints.clippy]
+all = "warn"
 
 [dev-dependencies]
 proptest.workspace = true
-
-[build-dependencies]
+tempfile.workspace = true

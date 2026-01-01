@@ -18,8 +18,8 @@ use loom_auth::middleware::CurrentUser;
 /// * `current_user` - The authenticated user
 /// * `default_locale` - Server's default locale
 pub fn resolve_user_locale<'a>(current_user: &'a CurrentUser, default_locale: &'a str) -> &'a str {
-	loom_i18n::resolve_locale(current_user.user.locale.as_deref(), default_locale)
+	loom_common_i18n::resolve_locale(current_user.user.locale.as_deref(), default_locale)
 }
 
 // Re-export commonly used i18n functions for convenience
-pub use loom_i18n::{is_rtl, t, t_fmt};
+pub use loom_common_i18n::{is_rtl, t, t_fmt};

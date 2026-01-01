@@ -12,7 +12,7 @@ use sqlx::sqlite::SqlitePool;
 
 use crate::error::ServerError;
 
-pub use loom_db::{
+pub use loom_server_db::{
 	ApiKeyRepository, AuditRepository, DbError, GithubInstallation, GithubInstallationInfo,
 	GithubRepo, OrgRepository, SessionRepository, ShareRepository, TeamRepository,
 	ThreadRepository, ThreadSearchHit, UserRepository, create_pool,

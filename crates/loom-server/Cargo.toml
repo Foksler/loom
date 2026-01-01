@@ -19,9 +19,9 @@ path = "src/lib.rs"
 
 [dependencies]
 futures = { workspace = true }
-loom-db = { path = "../loom-db" }
+loom-server-db = { path = "../loom-server-db" }
 loom-server-jobs = { path = "../loom-server-jobs" }
-loom-weaver = { path = "../loom-weaver" }
+loom-server-weaver = { path = "../loom-server-weaver" }
 loom-core = { path = "../loom-core" }
 loom-server-k8s = { path = "../loom-server-k8s" }
 loom-common-secret = { path = "../loom-common-secret" }
@@ -32,9 +32,9 @@ loom-auth-github = { path = "../loom-auth-github" }
 loom-auth-google = { path = "../loom-auth-google" }
 loom-auth-magiclink = { path = "../loom-auth-magiclink" }
 loom-auth-okta = { path = "../loom-auth-okta" }
-loom-smtp = { path = "../loom-smtp" }
-loom-i18n = { path = "../loom-i18n" }
-loom-geoip = { path = "../loom-geoip" }
+loom-server-smtp = { path = "../loom-server-smtp" }
+loom-common-i18n = { path = "../loom-common-i18n" }
+loom-server-geoip = { path = "../loom-server-geoip" }
 loom-github-app = { path = "../loom-github-app", features = ["openapi"] }
 loom-scm = { path = "../loom-scm" }
 loom-scm-mirror = { path = "../loom-scm-mirror" }
@@ -44,7 +44,7 @@ loom-server-llm-anthropic = { path = "../loom-server-llm-anthropic" }
 loom-server-llm-service = { path = "../loom-server-llm-service" }
 loom-thread = { path = "../loom-thread", features = ["openapi"] }
 url = "2"
-loom-version = { path = "../loom-version", features = ["serde", "utoipa"] }
+loom-common-version = { path = "../loom-common-version", features = ["serde", "utoipa"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 tokio-stream = "0.1"
 

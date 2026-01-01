@@ -429,12 +429,12 @@ async fn run_repl(
 	let mut reader = BufReader::new(stdin);
 	let mut stdout = io::stdout();
 
-	println!("{}", loom_i18n::t(get_locale(), "client.repl.welcome"));
+	println!("{}", loom_common_i18n::t(get_locale(), "client.repl.welcome"));
 	println!(
 		"{}",
-		loom_i18n::t_fmt(get_locale(), "client.repl.thread_id", &[("id", &thread.id.to_string())])
+		loom_common_i18n::t_fmt(get_locale(), "client.repl.thread_id", &[("id", &thread.id.to_string())])
 	);
-	println!("{}\n", loom_i18n::t(get_locale(), "client.repl.instructions"));
+	println!("{}\n", loom_common_i18n::t(get_locale(), "client.repl.instructions"));
 
 	let mut messages: Vec<Message> = Vec::new();
 
@@ -455,7 +455,7 @@ async fn run_repl(
 					if let Err(e) = thread_store.save(thread).await {
 						warn!(error = %e, "failed to save thread on shutdown");
 					}
-					println!("{}", loom_i18n::t(get_locale(), "client.repl.interrupted"));
+					println!("{}", loom_common_i18n::t(get_locale(), "client.repl.interrupted"));
 					break;
 				}
 			}
@@ -637,7 +637,7 @@ async fn run_repl(
 								error!(error = %e, "failed to start LLM request");
 								eprintln!(
 									"{}",
-									loom_i18n::t_fmt(get_locale(), "client.repl.error", &[("error", &e.to_string())])
+									loom_common_i18n::t_fmt(get_locale(), "client.repl.error", &[("error", &e.to_string())])
 								);
 							}
 						}
@@ -843,14 +843,14 @@ fn print_search_results(results: &[serde_json::Value], query: &str) {
 	if results.is_empty() {
 		println!(
 			"{}",
-			loom_i18n::t_fmt(get_locale(), "client.search.no_results", &[("query", query)])
+			loom_common_i18n::t_fmt(get_locale(), "client.search.no_results", &[("query", query)])
 		);
 		return;
 	}
 
 	println!(
 		"{}\n",
-		loom_i18n::t_fmt(
+		loom_common_i18n::t_fmt(
 			get_locale(),
 			"client.search.results_header",
 			&[("query", query), ("count", &results.len().to_string())]
@@ -892,14 +892,14 @@ fn print_local_search_results(results: &[loom_thread::ThreadSummary], query: &st
 	if results.is_empty() {
 		println!(
 			"{}",
-			loom_i18n::t_fmt(get_locale(), "client.search.local_no_results", &[("query", query)])
+			loom_common_i18n::t_fmt(get_locale(), "client.search.local_no_results", &[("query", query)])
 		);
 		return;
 	}
 
 	println!(
 		"{}\n",
-		loom_i18n::t_fmt(
+		loom_common_i18n::t_fmt(
 			get_locale(),
 			"client.search.local_results_header",
 			&[("query", query), ("count", &results.len().to_string())]
@@ -933,7 +933,7 @@ fn create_new_thread(config: &loom_config::LoomConfig, args: &Args) -> Result<Th
 	let mut thread = Thread::new();
 	thread.workspace_root = Some(workspace.display().to_string());
 	thread.cwd = Some(std::env::current_dir()?.display().to_string());
-	thread.loom_version = Some(loom_version::loom_version().to_string());
+	thread.loom_version = Some(loom_common_version::loom_version().to_string());
 	thread.provider = Some(args.provider.clone());
 	thread.model = None;
 
@@ -998,7 +998,7 @@ async fn main() -> Result<()> {
 				.context("failed to list threads")?;
 
 			if threads.is_empty() {
-				println!("{}", loom_i18n::t(get_locale(), "client.threads.no_threads"));
+				println!("{}", loom_common_i18n::t(get_locale(), "client.threads.no_threads"));
 			} else {
 				println!(
 					"{:<42} {:<30} {:>6} {:<20}",
@@ -1054,10 +1054,10 @@ async fn main() -> Result<()> {
 			thread.is_private = true;
 			thread.visibility = ThreadVisibility::Private;
 			info!(thread_id = %thread.id, "created new private (local-only) thread");
-			println!("{}", loom_i18n::t(get_locale(), "client.threads.private_session"));
+			println!("{}", loom_common_i18n::t(get_locale(), "client.threads.private_session"));
 			println!(
 				"{}",
-				loom_i18n::t_fmt(get_locale(), "client.repl.thread_id", &[("id", &thread.id.to_string())])
+				loom_common_i18n::t_fmt(get_locale(), "client.repl.thread_id", &[("id", &thread.id.to_string())])
 			);
 			start_repl_session(&config, &args, thread_store, thread).await
 		}
@@ -1121,7 +1121,7 @@ async fn main() -> Result<()> {
 
 				println!(
 					"{}",
-					loom_i18n::t_fmt(
+					loom_common_i18n::t_fmt(
 						get_locale(),
 						"client.threads.shared_support",
 						&[("id", &updated.id.to_string())]
@@ -1144,7 +1144,7 @@ async fn main() -> Result<()> {
 
 				println!(
 					"{}",
-					loom_i18n::t_fmt(
+					loom_common_i18n::t_fmt(
 						get_locale(),
 						"client.threads.visibility_changed",
 						&[
@@ -1330,16 +1330,16 @@ async fn run_weaver_new(
 		lifetime_hours: ttl,
 	};
 
-	println!("{}", loom_i18n::t(get_locale(), "client.weaver.creating"));
+	println!("{}", loom_common_i18n::t(get_locale(), "client.weaver.creating"));
 	let weaver = client.create_weaver(&request).await?;
 
 	println!(
 		"{}",
-		loom_i18n::t_fmt(get_locale(), "client.weaver.created_id", &[("id", &weaver.id)])
+		loom_common_i18n::t_fmt(get_locale(), "client.weaver.created_id", &[("id", &weaver.id)])
 	);
 	println!(
 		"{}",
-		loom_i18n::t_fmt(
+		loom_common_i18n::t_fmt(
 			get_locale(),
 			"client.weaver.created_image",
 			&[("image", &weaver.image.clone().unwrap_or_default())]
@@ -1347,7 +1347,7 @@ async fn run_weaver_new(
 	);
 	println!(
 		"{}",
-		loom_i18n::t_fmt(
+		loom_common_i18n::t_fmt(
 			get_locale(),
 			"client.weaver.created_ttl",
 			&[("hours", &weaver.lifetime_hours.unwrap_or(4).to_string())]
@@ -1355,16 +1355,16 @@ async fn run_weaver_new(
 	);
 	println!();
 
-	println!("{}", loom_i18n::t(get_locale(), "client.weaver.attaching"));
+	println!("{}", loom_common_i18n::t(get_locale(), "client.weaver.attaching"));
 	client.attach_terminal(&weaver.id).await?;
 
 	println!(
 		"\n{}",
-		loom_i18n::t_fmt(get_locale(), "client.weaver.detached", &[("id", &weaver.id)])
+		loom_common_i18n::t_fmt(get_locale(), "client.weaver.detached", &[("id", &weaver.id)])
 	);
 	println!(
 		"{}",
-		loom_i18n::t_fmt(get_locale(), "client.weaver.reattach_hint", &[("id", &weaver.id)])
+		loom_common_i18n::t_fmt(get_locale(), "client.weaver.reattach_hint", &[("id", &weaver.id)])
 	);
 
 	Ok(())
@@ -1380,7 +1380,7 @@ async fn run_weaver_ps(server_url: &str, token: Option<loom_common_secret::Secre
 	if json {
 		println!("{}", serde_json::to_string_pretty(&list.weavers)?);
 	} else if list.weavers.is_empty() {
-		println!("{}", loom_i18n::t(get_locale(), "client.weaver.no_weavers"));
+		println!("{}", loom_common_i18n::t(get_locale(), "client.weaver.no_weavers"));
 	} else {
 		println!(
 			"{:<40} {:<30} {:<10} {:<8} {:<8}",
@@ -1420,10 +1420,10 @@ async fn run_weaver_delete(server_url: &str, token: Option<loom_common_secret::S
 
 	println!(
 		"{}",
-		loom_i18n::t_fmt(get_locale(), "client.weaver.deleting", &[("id", weaver_id)])
+		loom_common_i18n::t_fmt(get_locale(), "client.weaver.deleting", &[("id", weaver_id)])
 	);
 	client.delete_weaver(weaver_id).await?;
-	println!("{}", loom_i18n::t(get_locale(), "client.weaver.deleted"));
+	println!("{}", loom_common_i18n::t(get_locale(), "client.weaver.deleted"));
 
 	Ok(())
 }
@@ -1436,17 +1436,17 @@ async fn run_weaver_attach(server_url: &str, token: Option<loom_common_secret::S
 
 	println!(
 		"{}",
-		loom_i18n::t_fmt(get_locale(), "client.weaver.attach_prefix", &[("id", weaver_id)])
+		loom_common_i18n::t_fmt(get_locale(), "client.weaver.attach_prefix", &[("id", weaver_id)])
 	);
 	client.attach_terminal(weaver_id).await?;
 
 	println!(
 		"\n{}",
-		loom_i18n::t_fmt(get_locale(), "client.weaver.detached", &[("id", weaver_id)])
+		loom_common_i18n::t_fmt(get_locale(), "client.weaver.detached", &[("id", weaver_id)])
 	);
 	println!(
 		"{}",
-		loom_i18n::t_fmt(get_locale(), "client.weaver.reattach_hint", &[("id", weaver_id)])
+		loom_common_i18n::t_fmt(get_locale(), "client.weaver.reattach_hint", &[("id", weaver_id)])
 	);
 
 	Ok(())

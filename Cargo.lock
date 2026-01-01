@@ -3143,8 +3143,8 @@ dependencies = [
  "http",
  "loom-auth-devicecode",
  "loom-auth-magiclink",
+ "loom-common-i18n",
  "loom-common-secret",
- "loom-i18n",
  "proptest",
  "rand 0.8.5",
  "serde",
@@ -3255,17 +3255,17 @@ dependencies = [
  "humantime",
  "loom-acp",
  "loom-cli-auto-commit",
+ "loom-common-i18n",
  "loom-common-secret",
+ "loom-common-version",
  "loom-config",
  "loom-core",
  "loom-credentials",
  "loom-git",
  "loom-http",
- "loom-i18n",
  "loom-server-llm-proxy",
  "loom-thread",
  "loom-tools",
- "loom-version",
  "proptest",
  "reqwest",
  "self-replace",
@@ -3299,6 +3299,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-common-i18n"
+version = "0.1.0"
+dependencies = [
+ "gettext",
+ "once_cell",
+ "proptest",
+ "thiserror 1.0.69",
+ "tracing",
+]
+
+[[package]]
 name = "loom-common-secret"
 version = "0.1.0"
 dependencies = [
@@ -3308,6 +3319,15 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "zeroize",
+]
+
+[[package]]
+name = "loom-common-version"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "shadow-rs",
+ "utoipa",
 ]
 
 [[package]]
@@ -3373,39 +3393,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "loom-db"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "loom-auth",
- "loom-common-secret",
- "loom-thread",
- "proptest",
- "serde",
- "serde_json",
- "sha2",
- "sqlx",
- "tempfile",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "loom-geoip"
-version = "0.1.0"
-dependencies = [
- "maxminddb",
- "proptest",
- "serde",
- "tempfile",
- "thiserror 1.0.69",
- "tracing",
-]
-
-[[package]]
 name = "loom-git"
 version = "0.1.0"
 dependencies = [
@@ -3464,21 +3451,10 @@ name = "loom-http"
 version = "0.1.0"
 dependencies = [
  "fastrand",
- "loom-version",
+ "loom-common-version",
  "reqwest",
  "tokio",
  "tokio-test",
- "tracing",
-]
-
-[[package]]
-name = "loom-i18n"
-version = "0.1.0"
-dependencies = [
- "gettext",
- "once_cell",
- "proptest",
- "thiserror 1.0.69",
  "tracing",
 ]
 
@@ -3551,24 +3527,24 @@ dependencies = [
  "loom-auth-google",
  "loom-auth-magiclink",
  "loom-auth-okta",
+ "loom-common-i18n",
  "loom-common-secret",
+ "loom-common-version",
  "loom-core",
- "loom-db",
- "loom-geoip",
  "loom-github-app",
  "loom-google-cse",
- "loom-i18n",
  "loom-scm",
  "loom-scm-mirror",
  "loom-server-api",
+ "loom-server-db",
+ "loom-server-geoip",
  "loom-server-jobs",
  "loom-server-k8s",
  "loom-server-llm-anthropic",
  "loom-server-llm-service",
- "loom-smtp",
+ "loom-server-smtp",
+ "loom-server-weaver",
  "loom-thread",
- "loom-version",
- "loom-weaver",
  "pin-project-lite",
  "prometheus",
  "proptest",
@@ -3600,19 +3576,19 @@ dependencies = [
  "axum",
  "chrono",
  "loom-auth",
+ "loom-common-i18n",
  "loom-common-secret",
- "loom-db",
+ "loom-common-version",
  "loom-github-app",
  "loom-google-cse",
- "loom-i18n",
  "loom-scm",
  "loom-scm-mirror",
+ "loom-server-db",
  "loom-server-jobs",
  "loom-server-llm-anthropic",
- "loom-smtp",
+ "loom-server-smtp",
+ "loom-server-weaver",
  "loom-thread",
- "loom-version",
- "loom-weaver",
  "proptest",
  "serde",
  "serde_json",
@@ -3623,6 +3599,39 @@ dependencies = [
  "url",
  "utoipa",
  "uuid",
+]
+
+[[package]]
+name = "loom-server-db"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "loom-auth",
+ "loom-common-secret",
+ "loom-thread",
+ "proptest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sqlx",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "loom-server-geoip"
+version = "0.1.0"
+dependencies = [
+ "maxminddb",
+ "proptest",
+ "serde",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tracing",
 ]
 
 [[package]]
@@ -3764,7 +3773,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "loom-smtp"
+name = "loom-server-smtp"
 version = "0.1.0"
 dependencies = [
  "lettre",
@@ -3775,6 +3784,27 @@ dependencies = [
  "tokio",
  "tokio-test",
  "tracing",
+]
+
+[[package]]
+name = "loom-server-weaver"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "hex",
+ "hmac",
+ "k8s-openapi",
+ "loom-common-secret",
+ "loom-server-k8s",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "uuid7",
 ]
 
 [[package]]
@@ -3818,36 +3848,6 @@ dependencies = [
  "tokio",
  "tokio-test",
  "tracing",
-]
-
-[[package]]
-name = "loom-version"
-version = "0.1.0"
-dependencies = [
- "serde",
- "shadow-rs",
- "utoipa",
-]
-
-[[package]]
-name = "loom-weaver"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "chrono",
- "hex",
- "hmac",
- "k8s-openapi",
- "loom-common-secret",
- "loom-server-k8s",
- "reqwest",
- "serde",
- "serde_json",
- "sha2",
- "thiserror 1.0.69",
- "tokio",
- "tracing",
- "uuid7",
 ]
 
 [[package]]

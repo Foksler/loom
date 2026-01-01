@@ -7,7 +7,7 @@
 //! including IP address, user agent, and geolocation via MaxMind GeoIP lookup.
 
 use axum::http::HeaderMap;
-use loom_geoip::GeoIpService;
+use loom_server_geoip::GeoIpService;
 use std::net::IpAddr;
 use std::sync::Arc;
 

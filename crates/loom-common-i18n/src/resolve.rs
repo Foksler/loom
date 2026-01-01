@@ -24,7 +24,7 @@ use crate::locale::{is_supported, DEFAULT_LOCALE};
 /// # Example
 ///
 /// ```
-/// use loom_i18n::resolve_locale;
+/// use loom_common_i18n::resolve_locale;
 ///
 /// // User preference takes priority
 /// assert_eq!(resolve_locale(Some("es"), "en"), "es");

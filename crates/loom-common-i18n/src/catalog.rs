@@ -159,7 +159,7 @@ static CATALOGS: Lazy<HashMap<&'static str, Catalog>> = Lazy::new(|| {
 /// # Example
 ///
 /// ```
-/// use loom_i18n::t;
+/// use loom_common_i18n::t;
 ///
 /// let subject = t("es", "server.email.magic_link.subject");
 /// ```
@@ -200,7 +200,7 @@ pub fn t(locale: &str, msgid: &str) -> String {
 /// # Example
 ///
 /// ```
-/// use loom_i18n::t_fmt;
+/// use loom_common_i18n::t_fmt;
 ///
 /// let body = t_fmt("es", "server.email.invitation.subject", &[
 ///     ("org_name", "Acme Corp"),

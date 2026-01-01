@@ -21,7 +21,7 @@ fn detect_locale() -> Option<String> {
 		.next()?
 		.to_lowercase();
 
-	if loom_i18n::is_supported(&lang_code) {
+	if loom_common_i18n::is_supported(&lang_code) {
 		Some(lang_code)
 	} else {
 		Some("en".to_string())
@@ -35,7 +35,7 @@ mod tests {
 	#[test]
 	fn test_get_locale_returns_valid() {
 		let locale = get_locale();
-		assert!(loom_i18n::is_supported(locale));
+		assert!(loom_common_i18n::is_supported(locale));
 	}
 
 	#[test]

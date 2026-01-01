@@ -85,7 +85,7 @@ pub async fn login(server_url: &str) -> Result<()> {
 
 	eprintln!(
 		"\n{}\n",
-		loom_i18n::t_fmt(
+		loom_common_i18n::t_fmt(
 			get_locale(),
 			"client.auth.visit_url",
 			&[("url", &start.verification_url), ("code", &start.user_code)]
@@ -94,7 +94,7 @@ pub async fn login(server_url: &str) -> Result<()> {
 
 	if let Err(e) = webbrowser::open(&start.verification_url) {
 		debug!(error = %e, "failed to open browser");
-		eprintln!("{}", loom_i18n::t(get_locale(), "client.auth.browser_failed"));
+		eprintln!("{}", loom_common_i18n::t(get_locale(), "client.auth.browser_failed"));
 	}
 
 	let poll_url = format!("{base}/api/auth/device/poll");
@@ -102,18 +102,18 @@ pub async fn login(server_url: &str) -> Result<()> {
 	let poll_interval = Duration::from_secs(1);
 	let started = Instant::now();
 
-	eprint!("{}", loom_i18n::t(get_locale(), "client.auth.waiting"));
+	eprint!("{}", loom_common_i18n::t(get_locale(), "client.auth.waiting"));
 	io::stderr().flush().ok();
 
 	loop {
 		if started.elapsed() > timeout {
-			eprintln!("\n{}", loom_i18n::t(get_locale(), "client.auth.timed_out"));
+			eprintln!("\n{}", loom_common_i18n::t(get_locale(), "client.auth.timed_out"));
 			return Err(anyhow!("device code expired"));
 		}
 
 		tokio::select! {
 			_ = tokio::signal::ctrl_c() => {
-				eprintln!("\n{}", loom_i18n::t(get_locale(), "client.auth.cancelled"));
+				eprintln!("\n{}", loom_common_i18n::t(get_locale(), "client.auth.cancelled"));
 				return Err(anyhow!("login cancelled by user"));
 			}
 			_ = tokio::time::sleep(poll_interval) => {}
@@ -164,12 +164,12 @@ pub async fn login(server_url: &str) -> Result<()> {
 				info!("login successful");
 				eprintln!(
 					"{}",
-					loom_i18n::t_fmt(get_locale(), "client.auth.login_success", &[("server", server_url)])
+					loom_common_i18n::t_fmt(get_locale(), "client.auth.login_success", &[("server", server_url)])
 				);
 				return Ok(());
 			}
 			DevicePollResponse::Expired => {
-				eprintln!("\n{}", loom_i18n::t(get_locale(), "client.auth.device_expired"));
+				eprintln!("\n{}", loom_common_i18n::t(get_locale(), "client.auth.device_expired"));
 				return Err(anyhow!("device code expired"));
 			}
 		}
@@ -202,7 +202,7 @@ pub async fn logout(server_url: &str) -> Result<()> {
 	info!("logout complete");
 	eprintln!(
 		"{}",
-		loom_i18n::t_fmt(get_locale(), "client.auth.logged_out", &[("server", server_url)])
+		loom_common_i18n::t_fmt(get_locale(), "client.auth.logged_out", &[("server", server_url)])
 	);
 	Ok(())
 }

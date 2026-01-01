@@ -49,7 +49,7 @@ zeroize.workspace = true
 loom-auth-magiclink.workspace = true
 
 # Internationalization
-loom-i18n = { path = "../loom-i18n" }
+loom-common-i18n = { path = "../loom-common-i18n" }
 
 # Device code auth
 loom-auth-devicecode.workspace = true

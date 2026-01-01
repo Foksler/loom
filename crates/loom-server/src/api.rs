@@ -12,14 +12,14 @@ use crate::{
 use loom_auth_github::{GitHubOAuthClient, GitHubOAuthConfig};
 use loom_auth_google::{GoogleOAuthClient, GoogleOAuthConfig};
 use loom_auth_okta::{OktaOAuthClient, OktaOAuthConfig};
-use loom_geoip::GeoIpService;
+use loom_server_geoip::GeoIpService;
 use loom_github_app::{GithubAppClient, GithubAppConfig};
 use loom_server_jobs::{JobRepository, JobScheduler};
 use loom_google_cse::CseClient;
 use loom_server_k8s::KubeClient;
 use loom_server_llm_service::LlmService;
-use loom_smtp::SmtpClient;
-use loom_weaver::{Provisioner, WeaverConfig, WebhookConfig, WebhookDispatcher};
+use loom_server_smtp::SmtpClient;
+use loom_server_weaver::{Provisioner, WeaverConfig, WebhookConfig, WebhookDispatcher};
 use std::sync::Arc;
 use tower_http::services::{ServeDir, ServeFile};
 use utoipa::OpenApi;
@@ -349,7 +349,7 @@ fn initialize_smtp_client(config: &ServerConfig) -> Option<Arc<SmtpClient>> {
 		}
 	};
 
-	let smtp_config = loom_smtp::SmtpConfig {
+	let smtp_config = loom_server_smtp::SmtpConfig {
 		host,
 		port: config.smtp_port,
 		username: config.smtp_username.clone(),

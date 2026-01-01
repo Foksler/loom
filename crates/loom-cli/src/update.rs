@@ -22,7 +22,7 @@ pub fn get_update_base_url() -> Result<Url> {
 	}
 	anyhow::bail!(
 		"{}",
-		loom_i18n::t(get_locale(), "client.update.error.env_not_set")
+		loom_common_i18n::t(get_locale(), "client.update.error.env_not_set")
 	)
 }
 
@@ -54,7 +54,7 @@ pub fn verify_download(downloaded_bytes: &[u8], expected_sha: &str) -> Result<()
 	if downloaded_bytes.is_empty() {
 		anyhow::bail!(
 			"{}",
-			loom_i18n::t(get_locale(), "client.update.error.empty_binary")
+			loom_common_i18n::t(get_locale(), "client.update.error.empty_binary")
 		);
 	}
 
@@ -62,7 +62,7 @@ pub fn verify_download(downloaded_bytes: &[u8], expected_sha: &str) -> Result<()
 	if downloaded_sha != expected_sha {
 		anyhow::bail!(
 			"{}",
-			loom_i18n::t_fmt(
+			loom_common_i18n::t_fmt(
 				get_locale(),
 				"client.update.error.sha_mismatch",
 				&[
@@ -89,7 +89,7 @@ pub async fn run_update() -> Result<()> {
 
 	println!(
 		"{}",
-		loom_i18n::t_fmt(
+		loom_common_i18n::t_fmt(
 			get_locale(),
 			"client.update.current_version",
 			&[("version", build_info.version)]
@@ -97,9 +97,9 @@ pub async fn run_update() -> Result<()> {
 	);
 	println!(
 		"{}",
-		loom_i18n::t_fmt(get_locale(), "client.update.platform", &[("platform", platform)])
+		loom_common_i18n::t_fmt(get_locale(), "client.update.platform", &[("platform", platform)])
 	);
-	println!("{}", loom_i18n::t(get_locale(), "client.update.checking"));
+	println!("{}", loom_common_i18n::t(get_locale(), "client.update.checking"));
 
 	let current_exe = std::env::current_exe().context("failed to get current executable path")?;
 	debug!(path = %current_exe.display(), "current executable");
@@ -122,7 +122,7 @@ pub async fn run_update() -> Result<()> {
 		warn!(status = %status, "failed to check for updates");
 		anyhow::bail!(
 			"{}",
-			loom_i18n::t_fmt(
+			loom_common_i18n::t_fmt(
 				get_locale(),
 				"client.update.error.check_failed",
 				&[("status", &status.to_string())]
@@ -142,7 +142,7 @@ pub async fn run_update() -> Result<()> {
 		info!(sha = %current_sha, "already up to date");
 		println!(
 			"{}",
-			loom_i18n::t_fmt(
+			loom_common_i18n::t_fmt(
 				get_locale(),
 				"client.update.up_to_date",
 				&[("sha", &current_sha[..12])]
@@ -158,7 +158,7 @@ pub async fn run_update() -> Result<()> {
 	);
 	println!(
 		"{}",
-		loom_i18n::t_fmt(
+		loom_common_i18n::t_fmt(
 			get_locale(),
 			"client.update.available",
 			&[("current", &current_sha[..12]), ("remote", &remote_sha[..12])]
@@ -166,7 +166,7 @@ pub async fn run_update() -> Result<()> {
 	);
 	println!(
 		"{}",
-		loom_i18n::t_fmt(
+		loom_common_i18n::t_fmt(
 			get_locale(),
 			"client.update.downloading",
 			&[("url", bin_url.as_str())]
@@ -200,7 +200,7 @@ pub async fn run_update() -> Result<()> {
 	info!(bytes = bytes.len(), "download verified");
 	println!(
 		"{}",
-		loom_i18n::t_fmt(
+		loom_common_i18n::t_fmt(
 			get_locale(),
 			"client.update.downloaded",
 			&[("bytes", &bytes.len().to_string())]
@@ -227,7 +227,7 @@ pub async fn run_update() -> Result<()> {
 	let _ = std::fs::remove_file(&tmp_path);
 
 	info!("update complete");
-	println!("{}", loom_i18n::t(get_locale(), "client.update.complete"));
+	println!("{}", loom_common_i18n::t(get_locale(), "client.update.complete"));
 
 	Ok(())
 }

@@ -10,11 +10,11 @@ use std::time::Duration;
 use tokio::time::{timeout, Instant};
 use utoipa::ToSchema;
 
-use loom_weaver::Provisioner;
+use loom_server_weaver::Provisioner;
 use loom_github_app::{GithubAppClient, GithubAppError};
 use loom_server_jobs::JobScheduler;
 use loom_server_llm_service::LlmService;
-use loom_smtp::SmtpClient;
+use loom_server_smtp::SmtpClient;
 
 use crate::db::ThreadRepository;
 
@@ -192,7 +192,7 @@ pub struct HealthResponse {
 	pub status: HealthStatus,
 	pub timestamp: String,
 	pub duration_ms: u64,
-	pub version: loom_version::HealthVersionInfo,
+	pub version: loom_common_version::HealthVersionInfo,
 	pub components: HealthComponents,
 }
 
@@ -569,7 +569,7 @@ pub async fn check_smtp(client: Option<&Arc<SmtpClient>>) -> SmtpHealth {
 }
 
 /// Check GeoIP service health by validating database accessibility.
-pub fn check_geoip(service: Option<&Arc<loom_geoip::GeoIpService>>) -> GeoIpHealth {
+pub fn check_geoip(service: Option<&Arc<loom_server_geoip::GeoIpService>>) -> GeoIpHealth {
 	use tokio::time::Instant;
 
 	let start = Instant::now();

@@ -21,7 +21,7 @@ use futures::{
 	SinkExt,
 };
 use loom_auth::CurrentUser;
-use loom_weaver::{CreateWeaverRequest, LogStreamOptions, ResourceSpec, Weaver, WeaverId};
+use loom_server_weaver::{CreateWeaverRequest, LogStreamOptions, ResourceSpec, Weaver, WeaverId};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 pub use loom_server_api::weaver::*;
@@ -507,7 +507,7 @@ pub async fn attach_weaver(
 
 async fn handle_attach_websocket(
 	socket: WebSocket,
-	provisioner: std::sync::Arc<loom_weaver::Provisioner>,
+	provisioner: std::sync::Arc<loom_server_weaver::Provisioner>,
 	weaver_id: WeaverId,
 	read_only: bool,
 	locale: String,
@@ -521,7 +521,7 @@ async fn handle_attach_websocket(
 
 async fn handle_attach_websocket_inner(
 	mut socket: WebSocket,
-	provisioner: std::sync::Arc<loom_weaver::Provisioner>,
+	provisioner: std::sync::Arc<loom_server_weaver::Provisioner>,
 	weaver_id: WeaverId,
 	read_only: bool,
 	locale: &str,
@@ -535,7 +535,7 @@ async fn handle_attach_websocket_inner(
 			return Err(Box::new(e));
 		}
 	};
-	let loom_weaver::AttachedProcess { stdin, stdout } = attached;
+	let loom_server_weaver::AttachedProcess { stdin, stdout } = attached;
 
 	let (mut ws_sender, mut ws_receiver) = socket.split();
 	let mut stdin = stdin;

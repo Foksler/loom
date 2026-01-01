@@ -18,7 +18,7 @@
 //! # Example
 //!
 //! ```
-//! use loom_i18n::{t, t_fmt, is_rtl, resolve_locale};
+//! use loom_common_i18n::{t, t_fmt, is_rtl, resolve_locale};
 //!
 //! // Simple translation
 //! let subject = t("es", "server.email.magic_link.subject");

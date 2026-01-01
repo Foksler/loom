@@ -232,7 +232,7 @@ pub async fn request_magic_link(
 
 	let locale = state.default_locale.as_str();
 	let (html_body, text_body) = render_magic_link_email(&verification_url, locale);
-	let subject = loom_i18n::t(locale, "server.email.magic_link.subject");
+	let subject = loom_common_i18n::t(locale, "server.email.magic_link.subject");
 
 	if let Err(e) = smtp_client
 		.send_email(&email, &subject, &html_body, &text_body)
@@ -248,7 +248,7 @@ pub async fn request_magic_link(
 
 /// Render the magic link email content.
 fn render_magic_link_email(verification_url: &str, locale: &str) -> (String, String) {
-	use loom_i18n::{is_rtl, t, t_fmt};
+	use loom_common_i18n::{is_rtl, t, t_fmt};
 
 	let subject = t(locale, "server.email.magic_link.subject");
 	let body = t(locale, "server.email.magic_link.body");
@@ -1404,20 +1404,20 @@ pub async fn device_page(
 	State(state): State<AppState>,
 ) -> impl IntoResponse {
 	let locale = resolve_locale_from_headers(&headers, &state.default_locale);
-	let dir = if loom_i18n::is_rtl(locale) { "rtl" } else { "ltr" };
+	let dir = if loom_common_i18n::is_rtl(locale) { "rtl" } else { "ltr" };
 
-	let title = loom_i18n::t(locale, "server.auth.device.title");
-	let heading = loom_i18n::t(locale, "server.auth.device.heading");
-	let subtitle = loom_i18n::t(locale, "server.auth.device.subtitle");
-	let code_label = loom_i18n::t(locale, "server.auth.device.code_label");
-	let submit = loom_i18n::t(locale, "server.auth.device.submit");
-	let authorizing = loom_i18n::t(locale, "server.auth.device.authorizing");
-	let authorized = loom_i18n::t(locale, "server.auth.device.authorized");
-	let expiry_help = loom_i18n::t(locale, "server.auth.device.expiry_help");
-	let success_msg = loom_i18n::t(locale, "server.auth.device.success");
-	let invalid_format = loom_i18n::t(locale, "server.auth.device.invalid_format");
-	let error_msg = loom_i18n::t(locale, "server.auth.device.error");
-	let auth_failed = loom_i18n::t(locale, "server.auth.device.auth_failed");
+	let title = loom_common_i18n::t(locale, "server.auth.device.title");
+	let heading = loom_common_i18n::t(locale, "server.auth.device.heading");
+	let subtitle = loom_common_i18n::t(locale, "server.auth.device.subtitle");
+	let code_label = loom_common_i18n::t(locale, "server.auth.device.code_label");
+	let submit = loom_common_i18n::t(locale, "server.auth.device.submit");
+	let authorizing = loom_common_i18n::t(locale, "server.auth.device.authorizing");
+	let authorized = loom_common_i18n::t(locale, "server.auth.device.authorized");
+	let expiry_help = loom_common_i18n::t(locale, "server.auth.device.expiry_help");
+	let success_msg = loom_common_i18n::t(locale, "server.auth.device.success");
+	let invalid_format = loom_common_i18n::t(locale, "server.auth.device.invalid_format");
+	let error_msg = loom_common_i18n::t(locale, "server.auth.device.error");
+	let auth_failed = loom_common_i18n::t(locale, "server.auth.device.auth_failed");
 
 	let html = format!(
 		r#"<!DOCTYPE html>
@@ -1581,7 +1581,7 @@ fn resolve_locale_from_headers<'a>(headers: &HeaderMap, default_locale: &'a str)
 		for part in accept_lang.split(',') {
 			let lang = part.split(';').next().unwrap_or("").trim();
 			let lang_base = lang.split('-').next().unwrap_or(lang);
-			if loom_i18n::is_supported(lang_base) {
+			if loom_common_i18n::is_supported(lang_base) {
 				return match lang_base {
 					"en" => "en",
 					"es" => "es",

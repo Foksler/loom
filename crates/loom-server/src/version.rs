@@ -3,7 +3,7 @@
 
 //! Build information and version utilities for loom-server.
 
-pub use loom_version::BuildInfo;
+pub use loom_common_version::BuildInfo;
 
 /// Get the current build information.
 #[allow(dead_code)]

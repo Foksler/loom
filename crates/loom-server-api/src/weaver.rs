@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 
 use chrono::{DateTime, Utc};
-use loom_weaver::{Weaver, WeaverStatus};
+use loom_server_weaver::{Weaver, WeaverStatus};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "openapi")]

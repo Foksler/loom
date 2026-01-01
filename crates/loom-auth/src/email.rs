@@ -184,7 +184,7 @@ pub enum EmailTemplate {
 /// * `template` - The email template with variable data
 /// * `locale` - The locale code (e.g., "en", "es", "ar")
 pub fn render_email(template: &EmailTemplate, locale: &str) -> (String, String) {
-    use loom_i18n::{t, t_fmt};
+    use loom_common_i18n::{t, t_fmt};
 
     match template {
         EmailTemplate::MagicLink {

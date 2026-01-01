@@ -363,9 +363,9 @@ pub async fn request_account_deletion(
 
 	if let Some(smtp) = &state.smtp_client {
 		if let Some(email) = &current_user.user.primary_email {
-			use loom_i18n::{is_rtl, t, t_fmt};
+			use loom_common_i18n::{is_rtl, t, t_fmt};
 
-			let locale = loom_i18n::resolve_locale(
+			let locale = loom_common_i18n::resolve_locale(
 				current_user.user.locale.as_deref(),
 				&state.default_locale,
 			);

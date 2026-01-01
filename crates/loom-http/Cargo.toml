@@ -11,7 +11,7 @@ description = "Shared HTTP client and retry utilities for Loom"
 
 [dependencies]
 fastrand = { workspace = true }
-loom-version = { path = "../loom-version" }
+loom-common-version = { path = "../loom-common-version" }
 reqwest = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }

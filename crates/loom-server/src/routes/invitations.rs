@@ -393,7 +393,7 @@ pub async fn create_invitation(
 			inviter_name: current_user.user.display_name.clone(),
 			token: token.clone(),
 		};
-		let email_locale = loom_i18n::resolve_locale(
+		let email_locale = loom_common_i18n::resolve_locale(
 			current_user.user.locale.as_deref(),
 			&state.default_locale,
 		);

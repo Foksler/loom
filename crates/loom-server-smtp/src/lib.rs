@@ -18,10 +18,10 @@
 //! # Example
 //!
 //! ```no_run
-//! use loom_smtp::{SmtpClient, SmtpConfig};
+//! use loom_server_smtp::{SmtpClient, SmtpConfig};
 //! use loom_common_secret::SecretString;
 //!
-//! # async fn example() -> Result<(), loom_smtp::SmtpError> {
+//! # async fn example() -> Result<(), loom_server_smtp::SmtpError> {
 //! let config = SmtpConfig {
 //!     host: "smtp.example.com".to_string(),
 //!     port: 587,
@@ -94,7 +94,7 @@ pub enum SmtpError {
 /// # Example
 ///
 /// ```
-/// use loom_smtp::SmtpConfig;
+/// use loom_server_smtp::SmtpConfig;
 /// use loom_common_secret::SecretString;
 ///
 /// let config = SmtpConfig {
@@ -157,7 +157,7 @@ impl SmtpConfig {
     /// # Example
     ///
     /// ```no_run
-    /// use loom_smtp::SmtpConfig;
+    /// use loom_server_smtp::SmtpConfig;
     ///
     /// std::env::set_var("LOOM_SERVER_SMTP_HOST", "smtp.example.com");
     /// std::env::set_var("LOOM_SERVER_SMTP_FROM_ADDRESS", "noreply@example.com");
@@ -207,9 +207,9 @@ impl SmtpConfig {
 /// # Example
 ///
 /// ```no_run
-/// use loom_smtp::{SmtpClient, SmtpConfig};
+/// use loom_server_smtp::{SmtpClient, SmtpConfig};
 ///
-/// # async fn example() -> Result<(), loom_smtp::SmtpError> {
+/// # async fn example() -> Result<(), loom_server_smtp::SmtpError> {
 /// let config = SmtpConfig::from_env()?;
 /// let client = SmtpClient::new(config)?;
 ///
@@ -318,8 +318,8 @@ impl SmtpClient {
     /// # Example
     ///
     /// ```no_run
-    /// # use loom_smtp::{SmtpClient, SmtpConfig};
-    /// # async fn example(client: SmtpClient) -> Result<(), loom_smtp::SmtpError> {
+    /// # use loom_server_smtp::{SmtpClient, SmtpConfig};
+    /// # async fn example(client: SmtpClient) -> Result<(), loom_server_smtp::SmtpError> {
     /// client.send_email(
     ///     "user@example.com",
     ///     "Password Reset",
@@ -395,7 +395,7 @@ impl SmtpClient {
 /// # Example
 ///
 /// ```
-/// use loom_smtp::is_valid_email;
+/// use loom_server_smtp::is_valid_email;
 ///
 /// assert!(is_valid_email("user@example.com"));
 /// assert!(is_valid_email("User Name <user@example.com>"));

@@ -10,7 +10,7 @@
 //! # Usage
 //!
 //! ```ignore
-//! use loom_geoip::GeoIpService;
+//! use loom_server_geoip::GeoIpService;
 //! use std::net::IpAddr;
 //!
 //! let service = GeoIpService::from_env()?;
