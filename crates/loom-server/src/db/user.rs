@@ -98,6 +98,38 @@ impl UserRepository {
 		row.map(|r| self.row_to_user(&r)).transpose()
 	}
 
+	/// Get a user by their display name.
+	///
+	/// # Arguments
+	/// * `display_name` - The display name to search for (exact match)
+	///
+	/// # Returns
+	/// `None` if no user exists with this display name or if the user is soft-deleted.
+	#[tracing::instrument(skip(self))]
+	pub async fn get_user_by_display_name(
+		&self,
+		display_name: &str,
+	) -> Result<Option<User>, ServerError> {
+		let row = sqlx::query(
+			r#"
+			SELECT id, display_name, primary_email, avatar_url,
+				   email_visible, is_system_admin, is_support, is_auditor,
+				   created_at, updated_at, deleted_at, locale
+			FROM users
+			WHERE display_name = ? AND deleted_at IS NULL
+			"#,
+		)
+		.bind(display_name)
+		.fetch_optional(&self.pool)
+		.await?;
+
+		let result = row.map(|r| self.row_to_user(&r)).transpose()?;
+		if let Some(ref user) = result {
+			tracing::debug!(user_id = %user.id, "user found by display_name");
+		}
+		Ok(result)
+	}
+
 	/// Get a user by their primary email address.
 	///
 	/// # Arguments

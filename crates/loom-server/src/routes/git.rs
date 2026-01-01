@@ -25,7 +25,9 @@ use axum::{
 	response::{IntoResponse, Response},
 	routing::{get, post},
 };
-use loom_auth::middleware::CurrentUser;
+use base64::Engine;
+use loom_auth::middleware::{identify_bearer_token, BearerTokenType, CurrentUser};
+use sha2::{Digest, Sha256};
 use loom_auth::types::{OrgId, OrgRole};
 use loom_scm::{
 	check_push_allowed, OwnerType, ProtectionStore, PushCheck, RepoRole, RepoStore,
@@ -51,6 +53,70 @@ async fn update_mirror_access_time(state: &AppState, repo_id: uuid::Uuid) {
 				);
 			}
 		}
+	}
+}
+
+async fn extract_basic_auth_user(headers: &HeaderMap, state: &AppState) -> Option<CurrentUser> {
+	let auth_header = headers.get(header::AUTHORIZATION)?.to_str().ok()?;
+
+	if !auth_header.starts_with("Basic ") {
+		return None;
+	}
+
+	let encoded = auth_header.strip_prefix("Basic ")?;
+	let decoded = base64::engine::general_purpose::STANDARD
+		.decode(encoded)
+		.ok()?;
+	let credentials = String::from_utf8(decoded).ok()?;
+
+	let (_, password) = credentials.split_once(':')?;
+
+	match identify_bearer_token(password) {
+		BearerTokenType::AccessToken => {
+			let mut hasher = Sha256::new();
+			hasher.update(password.as_bytes());
+			let token_hash = hex::encode(hasher.finalize());
+
+			let session = state
+				.session_repo
+				.get_session_by_token_hash(&token_hash)
+				.await
+				.ok()??;
+
+			if session.expires_at < chrono::Utc::now() {
+				return None;
+			}
+
+			let user = state
+				.user_repo
+				.get_user_by_id(&session.user_id)
+				.await
+				.ok()??;
+			Some(CurrentUser::from_access_token(user))
+		}
+		BearerTokenType::ApiKey => {
+			let mut hasher = Sha256::new();
+			hasher.update(password.as_bytes());
+			let key_hash = hex::encode(hasher.finalize());
+
+			let api_key = state
+				.api_key_repo
+				.get_api_key_by_hash(&key_hash)
+				.await
+				.ok()??;
+
+			if api_key.revoked_at.is_some() {
+				return None;
+			}
+
+			let user = state
+				.user_repo
+				.get_user_by_id(&api_key.created_by)
+				.await
+				.ok()??;
+			Some(CurrentUser::from_api_key(user, api_key.id.into()))
+		}
+		BearerTokenType::Unknown => None,
 	}
 }
 
@@ -178,6 +244,16 @@ async fn resolve_repo(
 	if let Some(org) = state.org_repo.get_org_by_slug(owner).await? {
 		if let Some(scm_repo) = scm_store
 			.get_by_owner_and_name(loom_scm::OwnerType::Org, org.id.into(), repo_name)
+			.await
+			.map_err(|e| ServerError::Internal(e.to_string()))?
+		{
+			return Ok(scm_repo);
+		}
+	}
+
+	if let Ok(Some(user)) = state.user_repo.get_user_by_display_name(owner).await {
+		if let Some(scm_repo) = scm_store
+			.get_by_owner_and_name(loom_scm::OwnerType::User, user.id.into_inner(), repo_name)
 			.await
 			.map_err(|e| ServerError::Internal(e.to_string()))?
 		{
@@ -614,14 +690,20 @@ async fn create_on_demand_mirror(
 	Ok(repo)
 }
 
-#[instrument(skip(state), fields(owner = %owner, repo = %repo))]
+#[instrument(skip(state, headers), fields(owner = %owner, repo = %repo))]
 pub async fn info_refs(
 	Path((owner, repo)): Path<(String, String)>,
 	Query(params): Query<InfoRefsParams>,
 	OptionalAuth(auth): OptionalAuth,
 	State(state): State<AppState>,
+	headers: HeaderMap,
 ) -> Result<Response, ServerError> {
-	let locale = auth
+	let effective_user = match auth {
+		Some(user) => Some(user),
+		None => extract_basic_auth_user(&headers, &state).await,
+	};
+
+	let locale = effective_user
 		.as_ref()
 		.and_then(|u| u.user.locale.as_deref())
 		.unwrap_or(&state.default_locale);
@@ -663,10 +745,10 @@ pub async fn info_refs(
 
 	match service {
 		GitService::UploadPack => {
-			check_read_access(&scm_repo, auth.as_ref(), &state, locale).await?;
+			check_read_access(&scm_repo, effective_user.as_ref(), &state, locale).await?;
 		}
 		GitService::ReceivePack => {
-			check_write_access(&scm_repo, auth.as_ref(), &state, locale).await?;
+			check_write_access(&scm_repo, effective_user.as_ref(), &state, locale).await?;
 		}
 	}
 
@@ -690,7 +772,7 @@ pub async fn info_refs(
 		.into_response())
 }
 
-#[instrument(skip(state, body), fields(owner = %owner, repo = %repo))]
+#[instrument(skip(state, body, headers), fields(owner = %owner, repo = %repo))]
 pub async fn upload_pack(
 	Path((owner, repo)): Path<(String, String)>,
 	OptionalAuth(auth): OptionalAuth,
@@ -698,7 +780,12 @@ pub async fn upload_pack(
 	headers: HeaderMap,
 	body: Bytes,
 ) -> Result<Response, ServerError> {
-	let locale = auth
+	let effective_user = match auth {
+		Some(user) => Some(user),
+		None => extract_basic_auth_user(&headers, &state).await,
+	};
+
+	let locale = effective_user
 		.as_ref()
 		.and_then(|u| u.user.locale.as_deref())
 		.unwrap_or(&state.default_locale);
@@ -732,7 +819,7 @@ pub async fn upload_pack(
 		return Err(ServerError::NotFound(t(locale, "server.api.scm.repo_not_found").to_string()));
 	}
 
-	check_read_access(&scm_repo, auth.as_ref(), &state, locale).await?;
+	check_read_access(&scm_repo, effective_user.as_ref(), &state, locale).await?;
 
 	update_mirror_access_time(&state, scm_repo.id).await;
 
@@ -752,7 +839,7 @@ pub async fn upload_pack(
 		.into_response())
 }
 
-#[instrument(skip(state, body), fields(owner = %owner, repo = %repo))]
+#[instrument(skip(state, body, headers), fields(owner = %owner, repo = %repo))]
 pub async fn receive_pack(
 	Path((owner, repo)): Path<(String, String)>,
 	OptionalAuth(auth): OptionalAuth,
@@ -760,7 +847,12 @@ pub async fn receive_pack(
 	headers: HeaderMap,
 	body: Bytes,
 ) -> Result<Response, ServerError> {
-	let locale = auth
+	let effective_user = match auth {
+		Some(user) => Some(user),
+		None => extract_basic_auth_user(&headers, &state).await,
+	};
+
+	let locale = effective_user
 		.as_ref()
 		.and_then(|u| u.user.locale.as_deref())
 		.unwrap_or(&state.default_locale);
@@ -783,9 +875,9 @@ pub async fn receive_pack(
 		return Err(ServerError::NotFound(t(locale, "server.api.scm.repo_not_found").to_string()));
 	}
 
-	check_write_access(&scm_repo, auth.as_ref(), &state, locale).await?;
+	check_write_access(&scm_repo, effective_user.as_ref(), &state, locale).await?;
 
-	let user = auth
+	let user = effective_user
 		.as_ref()
 		.ok_or_else(|| ServerError::Unauthorized(t(locale, "server.api.scm.git.auth_required").to_string()))?;
 
@@ -878,7 +970,7 @@ async fn git_wildcard_handler(
 		let query = query.ok_or_else(|| {
 			ServerError::BadRequest("Missing service parameter".to_string())
 		})?;
-		info_refs(Path((owner, repo)), query, auth, state).await
+		info_refs(Path((owner, repo)), query, auth, state, headers).await
 	} else if path.ends_with("/git-upload-pack") {
 		upload_pack(Path((owner, repo)), auth, state, headers, body).await
 	} else if path.ends_with("/git-receive-pack") {

@@ -51,6 +51,9 @@ hex = "0.4"
 hmac = "0.12"
 sha2 = "0.10"
 
+# Base64 decoding for git HTTP Basic auth
+base64 = "0.22"
+
 # Web framework
 axum = { version = "0.8", features = ["macros", "ws"] }
 tower = "0.5"
