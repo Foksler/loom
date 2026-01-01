@@ -512,6 +512,12 @@ in
 
     users.groups.loom-server = { };
 
+    # Create SCM repos directory
+    systemd.tmpfiles.rules = [
+      "d /var/lib/loom 0755 root root -"
+      "d /var/lib/loom/repos 0755 loom-server loom-server -"
+    ];
+
     systemd.services.loom-server = {
       description = "Loom Server - HTTP server for Loom AI coding assistant";
       after = [ "network-online.target" ];
@@ -654,6 +660,7 @@ in
         NoNewPrivileges = true;
         ProtectSystem = "strict";
         ProtectHome = true;
+        ReadWritePaths = [ "/var/lib/loom" ];
         PrivateTmp = true;
         PrivateDevices = true;
         ProtectKernelTunables = true;
