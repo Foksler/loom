@@ -1,6 +1,6 @@
 # Job Scheduler System Specification
 
-**Status:** Draft  
+**Status:** Implemented  
 **Version:** 1.0  
 **Last Updated:** 2026-01-01
 
@@ -694,57 +694,57 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### New Crate: loom-jobs
 
-- [ ] Create `crates/loom-jobs/` crate
-- [ ] Define `Job` trait and types
-- [ ] Implement `JobScheduler`
-- [ ] Implement `JobRepository` (SQLite)
-- [ ] Add retry logic with exponential backoff
-- [ ] Add shutdown signaling
+- [x] Create `crates/loom-jobs/` crate
+- [x] Define `Job` trait and types
+- [x] Implement `JobScheduler`
+- [x] Implement `JobRepository` (SQLite)
+- [x] Add retry logic with exponential backoff
+- [x] Add shutdown signaling
 
 ### Database Migrations
 
-- [ ] Add `job_definitions` table
-- [ ] Add `job_runs` table
-- [ ] Add indexes for job_runs queries
+- [x] Add `job_definitions` table
+- [x] Add `job_runs` table
+- [x] Add indexes for job_runs queries
 
 ### Job Implementations
 
-- [ ] `WeaverCleanupJob` - migrate from current implementation
-- [ ] `TokenRefreshJob` - migrate from AnthropicPool
-- [ ] `SessionCleanupJob` - new
-- [ ] `OAuthStateCleanupJob` - new
-- [ ] `JobHistoryCleanupJob` - new (prune runs > 90 days)
+- [x] `WeaverCleanupJob` - migrate from current implementation
+- [x] `TokenRefreshJob` - migrate from AnthropicPool
+- [x] `SessionCleanupJob` - new
+- [x] `OAuthStateCleanupJob` - new
+- [x] `JobHistoryCleanupJob` - new (prune runs > 90 days)
 
 ### loom-server Integration
 
-- [ ] Initialize `JobScheduler` in `main.rs`
-- [ ] Register all jobs on startup
-- [ ] Integrate shutdown in signal handler
-- [ ] Add admin routes for job management
+- [x] Initialize `JobScheduler` in `main.rs`
+- [x] Register all jobs on startup
+- [x] Integrate shutdown in signal handler
+- [x] Add admin routes for job management
 
 ### Alert System
 
 - [ ] Create `AlertService` using loom-smtp
 - [ ] Implement job failure alert template
-- [ ] Add alert configuration to ServerConfig
+- [x] Add alert configuration to ServerConfig
 
 ### Health Integration
 
-- [ ] Add `JobHealthStatus` to health endpoint
-- [ ] Implement health status aggregation
+- [x] Add `JobHealthStatus` to health endpoint
+- [x] Implement health status aggregation
 
 ### Admin UI (loom-web)
 
-- [ ] Create `/admin/jobs` page
-- [ ] Job list with status badges
-- [ ] "Run Now" button per job
-- [ ] Job history modal
-- [ ] Cancel running job button
+- [x] Create `/admin/jobs` page
+- [x] Job list with status badges
+- [x] "Run Now" button per job
+- [x] Job history modal
+- [x] Cancel running job button
 
 ### NixOS Module
 
-- [ ] Add job alert configuration options
-- [ ] Add alert recipient email configuration
+- [x] Add job alert configuration options
+- [x] Add alert recipient email configuration
 
 ---
 
