@@ -835,11 +835,75 @@ pub async fn receive_pack(
 		.into_response())
 }
 
+fn parse_mirror_git_path(path: &str) -> Option<(String, String)> {
+	let path = path.strip_prefix('/').unwrap_or(path);
+
+	let suffix_patterns = ["/info/refs", "/git-upload-pack", "/git-receive-pack"];
+	for suffix in suffix_patterns {
+		if let Some(repo_path) = path.strip_suffix(suffix) {
+			if let Some(last_slash) = repo_path.rfind('/') {
+				let platform_and_owner = &repo_path[..last_slash];
+				let repo = &repo_path[last_slash + 1..];
+				if !platform_and_owner.is_empty() && !repo.is_empty() {
+					let owner = format!("mirrors/{}", platform_and_owner);
+					return Some((owner, repo.to_string()));
+				}
+			}
+		}
+	}
+	None
+}
+
+async fn git_wildcard_handler(
+	axum::extract::Path(path): axum::extract::Path<String>,
+	_method: axum::http::Method,
+	query: Option<Query<InfoRefsParams>>,
+	auth: OptionalAuth,
+	state: State<AppState>,
+	headers: HeaderMap,
+	body: Bytes,
+) -> Result<Response, ServerError> {
+	let (owner, repo) = parse_mirror_git_path(&path).ok_or_else(|| {
+		ServerError::BadRequest("Invalid git path".to_string())
+	})?;
+
+	if path.ends_with("/info/refs") {
+		let query = query.ok_or_else(|| {
+			ServerError::BadRequest("Missing service parameter".to_string())
+		})?;
+		info_refs(Path((owner, repo)), query, auth, state).await
+	} else if path.ends_with("/git-upload-pack") {
+		upload_pack(Path((owner, repo)), auth, state, headers, body).await
+	} else if path.ends_with("/git-receive-pack") {
+		receive_pack(Path((owner, repo)), auth, state, headers, body).await
+	} else {
+		Err(ServerError::NotFound("Unknown git endpoint".to_string()))
+	}
+}
+
 pub fn router() -> crate::OptionalAuthRouter {
 	crate::OptionalAuthRouter::new()
 		.route("/git/{owner}/{repo}/info/refs", get(info_refs))
 		.route("/git/{owner}/{repo}/git-upload-pack", post(upload_pack))
 		.route("/git/{owner}/{repo}/git-receive-pack", post(receive_pack))
+		.route(
+			"/git/mirrors/{*path}",
+			get(|path, query, auth, state, headers, body| {
+				git_wildcard_handler(path, axum::http::Method::GET, Some(query), auth, state, headers, body)
+			})
+			.post(|path, auth, state, headers, body: Bytes| async move {
+				git_wildcard_handler(
+					path,
+					axum::http::Method::POST,
+					None,
+					auth,
+					state,
+					headers,
+					body,
+				)
+				.await
+			}),
+		)
 }
 
 #[cfg(test)]
@@ -982,6 +1046,49 @@ mod tests {
 		assert!(is_mirror_path("mirrors/gitlab/owner"));
 		assert!(!is_mirror_path("org/owner"));
 		assert!(!is_mirror_path("user"));
+	}
+
+	#[test]
+	fn test_parse_mirror_git_path_info_refs() {
+		let result = parse_mirror_git_path("github/torvalds/linux.git/info/refs");
+		assert!(result.is_some());
+		let (owner, repo) = result.unwrap();
+		assert_eq!(owner, "mirrors/github/torvalds");
+		assert_eq!(repo, "linux.git");
+	}
+
+	#[test]
+	fn test_parse_mirror_git_path_upload_pack() {
+		let result = parse_mirror_git_path("github/torvalds/linux.git/git-upload-pack");
+		assert!(result.is_some());
+		let (owner, repo) = result.unwrap();
+		assert_eq!(owner, "mirrors/github/torvalds");
+		assert_eq!(repo, "linux.git");
+	}
+
+	#[test]
+	fn test_parse_mirror_git_path_receive_pack() {
+		let result = parse_mirror_git_path("gitlab/gitlab-org/gitlab/git-receive-pack");
+		assert!(result.is_some());
+		let (owner, repo) = result.unwrap();
+		assert_eq!(owner, "mirrors/gitlab/gitlab-org");
+		assert_eq!(repo, "gitlab");
+	}
+
+	#[test]
+	fn test_parse_mirror_git_path_with_leading_slash() {
+		let result = parse_mirror_git_path("/github/rust-lang/rust.git/info/refs");
+		assert!(result.is_some());
+		let (owner, repo) = result.unwrap();
+		assert_eq!(owner, "mirrors/github/rust-lang");
+		assert_eq!(repo, "rust.git");
+	}
+
+	#[test]
+	fn test_parse_mirror_git_path_invalid() {
+		assert!(parse_mirror_git_path("github/torvalds").is_none());
+		assert!(parse_mirror_git_path("").is_none());
+		assert!(parse_mirror_git_path("github/torvalds/linux.git").is_none());
 	}
 
 	#[test]

@@ -99,7 +99,7 @@ pub async fn create_pool(database_url: &str) -> Result<SqlitePool, ServerError> 
 	Ok(pool)
 }
 
-/// Run all database migrations (001-018).
+/// Run all database migrations (001-022).
 ///
 /// # Arguments
 /// * `pool` - SQLite connection pool
@@ -300,6 +300,46 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ServerError> {
 
 	let m18 = include_str!("../../migrations/018_scm_maintenance.sql");
 	for stmt in m18.split(';').filter(|s| !s.trim().is_empty()) {
+		if let Err(e) = sqlx::query(stmt).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists") && !msg.contains("duplicate column") {
+				return Err(e.into());
+			}
+		}
+	}
+
+	let m19 = include_str!("../../migrations/019_jobs.sql");
+	for stmt in m19.split(';').filter(|s| !s.trim().is_empty()) {
+		if let Err(e) = sqlx::query(stmt).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists") && !msg.contains("duplicate column") {
+				return Err(e.into());
+			}
+		}
+	}
+
+	let m20 = include_str!("../../migrations/020_scm_repos.sql");
+	for stmt in m20.split(';').filter(|s| !s.trim().is_empty()) {
+		if let Err(e) = sqlx::query(stmt).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists") && !msg.contains("duplicate column") {
+				return Err(e.into());
+			}
+		}
+	}
+
+	let m21 = include_str!("../../migrations/021_scm_webhooks.sql");
+	for stmt in m21.split(';').filter(|s| !s.trim().is_empty()) {
+		if let Err(e) = sqlx::query(stmt).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists") && !msg.contains("duplicate column") {
+				return Err(e.into());
+			}
+		}
+	}
+
+	let m22 = include_str!("../../migrations/022_scm_mirrors.sql");
+	for stmt in m22.split(';').filter(|s| !s.trim().is_empty()) {
 		if let Err(e) = sqlx::query(stmt).execute(pool).await {
 			let msg = e.to_string();
 			if !msg.contains("already exists") && !msg.contains("duplicate column") {

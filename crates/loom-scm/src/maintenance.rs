@@ -460,26 +460,8 @@ impl MaintenanceJobStore for SqliteMaintenanceJobStore {
 	}
 }
 
-pub const MAINTENANCE_MIGRATIONS: &str = r#"
-CREATE TABLE IF NOT EXISTS repo_maintenance_jobs (
-    id TEXT PRIMARY KEY NOT NULL,
-    repo_id TEXT REFERENCES repos(id) ON DELETE CASCADE,
-    task TEXT NOT NULL CHECK (task IN ('gc', 'prune', 'repack', 'fsck', 'all')),
-    status TEXT NOT NULL CHECK (status IN ('pending', 'running', 'success', 'failed')),
-    started_at TEXT,
-    finished_at TEXT,
-    error TEXT,
-    created_at TEXT NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_repo_maintenance_jobs_repo ON repo_maintenance_jobs (repo_id);
-CREATE INDEX IF NOT EXISTS idx_repo_maintenance_jobs_status ON repo_maintenance_jobs (status, created_at);
-"#;
-
-pub async fn run_maintenance_migrations(pool: &SqlitePool) -> Result<()> {
-	sqlx::raw_sql(MAINTENANCE_MIGRATIONS).execute(pool).await?;
-	Ok(())
-}
+// Note: Maintenance migrations are now managed by loom-server in:
+// - migrations/018_scm_maintenance.sql (repo_maintenance_jobs)
 
 #[cfg(test)]
 mod tests {

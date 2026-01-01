@@ -19,7 +19,6 @@ pub use protection::{
 	SqliteProtectionStore,
 };
 pub use repo::{validate_repo_name, RepoStore, RepoTeamAccessStore, SqliteRepoStore, SqliteRepoTeamAccessStore};
-pub use schema::{run_migrations, MIGRATIONS};
 pub use types::{
 	BranchProtectionRule, OwnerType, RepoRole, RepoTeamAccess, Repository, Visibility,
 };
@@ -28,7 +27,6 @@ pub use webhook::{
 	WebhookDelivery, WebhookOwnerType, WebhookStore,
 };
 pub use maintenance::{
-	run_maintenance, run_global_sweep, run_maintenance_migrations, MaintenanceJob,
-	MaintenanceJobStatus, MaintenanceJobStore, MaintenanceResult, MaintenanceTask,
-	RepoMaintenanceResult, SqliteMaintenanceJobStore, MAINTENANCE_MIGRATIONS,
+	run_maintenance, run_global_sweep, MaintenanceJob, MaintenanceJobStatus, MaintenanceJobStore,
+	MaintenanceResult, MaintenanceTask, RepoMaintenanceResult, SqliteMaintenanceJobStore,
 };

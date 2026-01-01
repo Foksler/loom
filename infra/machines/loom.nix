@@ -273,14 +273,11 @@
     enable = true;
     weaverImage = pkgs.weaver-image;
     weaverImageTag = "weaver:latest";
-    # Server image only built/loaded when pushServer is enabled
-    # serverImage = pkgs.loom-server-image;
-    # serverImageTag = "loom:latest";
 
     ghcr = {
       enable = true;
       pushWeaver = true;
-      pushServer = false;  # Disabled by default
+      pushServer = false;
       username = "ghuntley";
       repository = "ghuntley/loom";
       tokenFile = config.sops.secrets.ghcr-token.path;

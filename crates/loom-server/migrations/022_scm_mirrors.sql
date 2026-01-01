@@ -1,17 +1,9 @@
-// Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights
-// reserved. SPDX-License-Identifier: Proprietary
+-- Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+-- SPDX-License-Identifier: Proprietary
 
-//! Database schema for SCM mirror tables.
-//!
-//! Note: Migrations are now managed by loom-server in:
-//! - migrations/022_scm_mirrors.sql (repo_mirrors, mirror_branch_rules, external_mirrors)
+-- Migration: SCM repository mirrors
+-- Created: 2025
 
-#[cfg(test)]
-use sqlx::SqlitePool;
-
-#[cfg(test)]
-pub(crate) async fn run_test_migrations(pool: &SqlitePool) -> crate::Result<()> {
-	let sql = r#"
 CREATE TABLE IF NOT EXISTS repo_mirrors (
     id TEXT PRIMARY KEY NOT NULL,
     repo_id TEXT NOT NULL,
@@ -46,7 +38,3 @@ CREATE TABLE IF NOT EXISTS external_mirrors (
 
 CREATE INDEX IF NOT EXISTS idx_external_mirrors_repo_id ON external_mirrors (repo_id);
 CREATE INDEX IF NOT EXISTS idx_external_mirrors_last_accessed ON external_mirrors (last_accessed_at);
-"#;
-	sqlx::raw_sql(sql).execute(pool).await?;
-	Ok(())
-}

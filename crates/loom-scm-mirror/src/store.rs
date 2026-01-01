@@ -236,7 +236,7 @@ mod tests {
 
 	async fn create_test_pool() -> SqlitePool {
 		let pool = SqlitePool::connect(":memory:").await.unwrap();
-		crate::schema::run_migrations(&pool).await.unwrap();
+		crate::schema::run_test_migrations(&pool).await.unwrap();
 		pool
 	}
 
@@ -592,7 +592,7 @@ mod external_mirror_tests {
 
 	async fn create_test_pool() -> SqlitePool {
 		let pool = SqlitePool::connect(":memory:").await.unwrap();
-		crate::schema::run_migrations(&pool).await.unwrap();
+		crate::schema::run_test_migrations(&pool).await.unwrap();
 		pool
 	}
 
