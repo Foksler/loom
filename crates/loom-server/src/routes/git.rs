@@ -42,6 +42,18 @@ use tracing::{info, instrument, warn};
 
 use crate::{api::AppState, auth_middleware::OptionalAuth, error::ServerError, i18n::t};
 
+fn git_unauthorized_response(message: &str) -> Response {
+	(
+		StatusCode::UNAUTHORIZED,
+		[(header::WWW_AUTHENTICATE, "Basic realm=\"git\"")],
+		axum::Json(serde_json::json!({
+			"error": "unauthorized",
+			"message": message
+		})),
+	)
+		.into_response()
+}
+
 async fn update_mirror_access_time(state: &AppState, repo_id: uuid::Uuid) {
 	if let Some(store) = &state.external_mirror_store {
 		if let Ok(Some(mirror)) = store.get_by_repo_id(repo_id).await {
@@ -741,10 +753,20 @@ pub async fn info_refs(
 
 	match service {
 		GitService::UploadPack => {
-			check_read_access(&scm_repo, effective_user.as_ref(), &state, locale).await?;
+			if let Err(e) = check_read_access(&scm_repo, effective_user.as_ref(), &state, locale).await {
+				return match e {
+					ServerError::Unauthorized(msg) => Ok(git_unauthorized_response(&msg)),
+					other => Err(other),
+				};
+			}
 		}
 		GitService::ReceivePack => {
-			check_write_access(&scm_repo, effective_user.as_ref(), &state, locale).await?;
+			if let Err(e) = check_write_access(&scm_repo, effective_user.as_ref(), &state, locale).await {
+				return match e {
+					ServerError::Unauthorized(msg) => Ok(git_unauthorized_response(&msg)),
+					other => Err(other),
+				};
+			}
 		}
 	}
 
@@ -815,7 +837,12 @@ pub async fn upload_pack(
 		return Err(ServerError::NotFound(t(locale, "server.api.scm.repo_not_found").to_string()));
 	}
 
-	check_read_access(&scm_repo, effective_user.as_ref(), &state, locale).await?;
+	if let Err(e) = check_read_access(&scm_repo, effective_user.as_ref(), &state, locale).await {
+		return match e {
+			ServerError::Unauthorized(msg) => Ok(git_unauthorized_response(&msg)),
+			other => Err(other),
+		};
+	}
 
 	update_mirror_access_time(&state, scm_repo.id).await;
 
@@ -871,11 +898,17 @@ pub async fn receive_pack(
 		return Err(ServerError::NotFound(t(locale, "server.api.scm.repo_not_found").to_string()));
 	}
 
-	check_write_access(&scm_repo, effective_user.as_ref(), &state, locale).await?;
+	if let Err(e) = check_write_access(&scm_repo, effective_user.as_ref(), &state, locale).await {
+		return match e {
+			ServerError::Unauthorized(msg) => Ok(git_unauthorized_response(&msg)),
+			other => Err(other),
+		};
+	}
 
-	let user = effective_user
-		.as_ref()
-		.ok_or_else(|| ServerError::Unauthorized(t(locale, "server.api.scm.git.auth_required").to_string()))?;
+	let user = match effective_user.as_ref() {
+		Some(u) => u,
+		None => return Ok(git_unauthorized_response(&t(locale, "server.api.scm.git.auth_required"))),
+	};
 
 	if let Some(protection_store) = state.scm_protection_store.as_ref() {
 		let rules = protection_store
