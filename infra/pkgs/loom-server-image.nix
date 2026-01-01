@@ -15,7 +15,7 @@
 , writeTextDir
 , symlinkJoin
 , loom-server
-, loom-cli-binaries
+, loom-server-binaries
 , cacert
 , coreutils
 , bashInteractive
@@ -45,7 +45,7 @@ let
   # CLI binaries directory for self-update distribution
   binDir = symlinkJoin {
     name = "loom-bin-dir";
-    paths = [ loom-cli-binaries ];
+    paths = [ loom-server-binaries ];
   };
 in
 dockerTools.buildImage {

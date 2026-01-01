@@ -42,6 +42,18 @@ in
     ghcr = {
       enable = mkEnableOption "Push images to GitHub Container Registry";
 
+      pushWeaver = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Push weaver image to GHCR (when ghcr.enable is true).";
+      };
+
+      pushServer = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Push server image to GHCR (when ghcr.enable is true).";
+      };
+
       username = mkOption {
         type = types.str;
         default = "ghuntley";
@@ -104,7 +116,7 @@ in
           exit 1
         fi
 
-        ${optionalString (cfg.ghcr.enable && cfg.ghcr.tokenFile != null) ''
+        ${optionalString (cfg.ghcr.enable && cfg.ghcr.pushWeaver && cfg.ghcr.tokenFile != null) ''
           echo "Pushing weaver image to ghcr.io/${cfg.ghcr.repository}..."
           
           # Login to ghcr.io
@@ -165,7 +177,7 @@ in
           exit 1
         fi
 
-        ${optionalString (cfg.ghcr.enable && cfg.ghcr.tokenFile != null) ''
+        ${optionalString (cfg.ghcr.enable && cfg.ghcr.pushServer && cfg.ghcr.tokenFile != null) ''
           echo "Pushing server image to ghcr.io/${cfg.ghcr.repository}..."
           
           # Login to ghcr.io

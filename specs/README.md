@@ -59,7 +59,7 @@ Design documentation for Loom, an AI-powered coding agent in Rust.
 
 | Spec | Code | Purpose |
 |------|------|---------|
-| [scm-system.md](./scm-system.md) | loom-scm (planned) | Git hosting via HTTPS, gitoxide, mirroring, webhooks |
+| [scm-system.md](./scm-system.md) | [loom-scm](../crates/loom-scm/), [loom-scm-mirror](../crates/loom-scm-mirror/) | Git hosting, mirroring, webhooks, branch protection |
 
 ## Git & Search
 

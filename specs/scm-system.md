@@ -10,9 +10,34 @@ Git hosting for Loom, enabling weavers to clone/push repositories and users to b
 ## Overview
 
 - **Protocol**: HTTPS only (no SSH)
-- **Implementation**: Pure Rust via [gitoxide](https://github.com/Byron/gitoxide)
+- **Implementation**: Pure Rust via [gitoxide](https://github.com/Byron/gitoxide) + git CLI for unsupported operations
 - **Storage**: Local filesystem with UUID-based paths
 - **Authentication**: Existing Loom auth, session tokens via credential helper
+
+## Implementation Status
+
+| Feature | Status | Crate |
+|---------|--------|-------|
+| Repository CRUD | ✅ Implemented | loom-scm, loom-server |
+| Git HTTP Protocol | ✅ Implemented | loom-server (git CLI for protocol) |
+| Branch Protection | ✅ Implemented | loom-scm |
+| Webhooks | ✅ Implemented | loom-scm |
+| Push Mirroring | ✅ Implemented | loom-scm-mirror |
+| Pull Mirroring | ✅ Implemented | loom-scm-mirror |
+| On-demand Mirroring | ✅ Implemented | loom-server |
+| Team-based Access | ✅ Implemented | loom-scm |
+| Web UI | ✅ Implemented | loom-web |
+| Credential Helper | ✅ Implemented | loom-cli |
+
+### Gitoxide Usage
+
+| Operation | Implementation |
+|-----------|---------------|
+| Clone/Fetch | gitoxide (gix) |
+| Merge-base | gitoxide (gix) |
+| Push | git CLI (gix push not implemented) |
+| upload-pack/receive-pack | git CLI (gix server protocol not supported) |
+| gc/prune/fsck/repack | git CLI (gix maintenance not implemented) |
 
 ## Repository Ownership
 
@@ -230,6 +255,42 @@ external_mirrors table:
 - On weaver launch (if stale or missing)
 - Periodic refresh (e.g., hourly for active mirrors)
 
+### On-Demand Mirroring
+
+When a client clones a mirror URL that doesn't exist:
+
+1. Detect mirror path pattern (`mirrors/{platform}/{owner}/{repo}`)
+2. Verify remote repository exists via API
+3. Create repository and external_mirror entries
+4. Clone from GitHub/GitLab using gitoxide
+5. Serve the cloned data to the waiting client
+
+```
+GET /git/mirrors/github/torvalds/linux.git/info/refs
+  → Mirror doesn't exist
+  → Check github.com/torvalds/linux exists (API call)
+  → Create repo in 'mirrors' org
+  → Clone via gitoxide
+  → Return refs to client
+```
+
+### Mirror Sync with Force-Push Recovery
+
+When fetching updates:
+1. Attempt `gix fetch`
+2. If divergence detected (force-push upstream):
+   - Delete local repository
+   - Re-clone fresh
+3. Update `last_synced_at`
+
+### Mirror Cleanup Safety
+
+Before deleting a stale mirror:
+1. Check if remote still exists (GitHub/GitLab API)
+2. If remote gone (404): delete local mirror
+3. If remote exists: keep mirror, just mark stale
+4. Log cleanup decisions for audit
+
 ## Webhooks
 
 ### Configuration
@@ -390,15 +451,19 @@ Scheduled job to delete unused external mirrors:
 ```
 crates/
 ├── loom-scm/              # Core SCM logic
-│   ├── repo.rs            # Repository CRUD
+│   ├── types.rs           # Repository, RepoRole, Visibility
+│   ├── repo.rs            # Repository CRUD, name validation
 │   ├── git.rs             # gitoxide wrapper
-│   ├── auth.rs            # Git HTTP auth
-│   ├── hooks.rs           # Post-receive hooks
-│   └── maintenance.rs     # gc, prune, fsck
+│   ├── protection.rs      # Branch protection rules
+│   ├── webhook.rs         # Webhook types and delivery
+│   ├── maintenance.rs     # gc, prune, fsck jobs
+│   └── schema.rs          # SQLite migrations
 ├── loom-scm-mirror/       # Mirroring logic
-│   ├── push.rs            # Push to external
-│   ├── pull.rs            # Pull from GitHub/GitLab
-│   └── cleanup.rs         # Stale mirror cleanup
+│   ├── types.rs           # PushMirror, ExternalMirror
+│   ├── pull.rs            # Pull from GitHub/GitLab (gitoxide)
+│   ├── push.rs            # Push to external (git CLI)
+│   ├── cleanup.rs         # Stale mirror cleanup
+│   └── store.rs           # Mirror stores
 └── loom-cli/
     └── credential_helper.rs  # Git credential helper
 ```
@@ -431,6 +496,14 @@ GET    /api/v1/repos/{id}/mirrors        # List push mirrors
 POST   /api/v1/repos/{id}/mirrors        # Create push mirror
 DELETE /api/v1/repos/{id}/mirrors/{mid}  # Delete push mirror
 POST   /api/v1/repos/{id}/mirrors/{mid}/sync  # Trigger sync
+```
+
+### Team Access
+
+```
+GET    /api/v1/repos/{id}/teams                # List teams with access
+POST   /api/v1/repos/{id}/teams                # Grant team access
+DELETE /api/v1/repos/{id}/teams/{tid}          # Revoke team access
 ```
 
 ### Webhooks
@@ -468,11 +541,49 @@ enum ScmEvent {
 }
 ```
 
-## Security Considerations
+## Security
+
+### Repository Name Validation
+
+Names must match: `^[a-zA-Z0-9][a-zA-Z0-9._-]*$`
+- 1-100 characters
+- Cannot start with `.` or `-`
+- Cannot contain `..` (path traversal)
+- Cannot contain `/`, `\`, or shell metacharacters
+
+### Webhook Security
+
+- Secrets stored as `SecretString` (auto-redacted in logs)
+- HMAC-SHA256 signature verification
+- SSRF protection: blocks localhost, private IPs, link-local, cloud metadata
+
+### RBAC
+
+Role hierarchy: `Admin >= Write >= Read`
+
+Access resolution:
+1. Check direct ownership (user owns repo)
+2. Check org membership role (Owner/Admin → repo Admin)
+3. Check team-based access (highest role from any team)
+4. Return highest effective role
+
+### Authorization Checks
+
+| Endpoint | Required Role |
+|----------|--------------|
+| Clone (public) | None |
+| Clone (private) | Read |
+| Push | Write |
+| Branch protection | Admin |
+| Webhooks | Admin |
+| Repo settings | Admin |
+| Maintenance | Admin |
+| Team access | Admin |
+
+### Additional Security Measures
 
 - All git operations over HTTPS with TLS
 - Credentials never logged (use `loom-secret`)
-- HMAC verification for webhooks
 - Rate limiting on git operations (future consideration)
 - Audit log for admin actions (delete, protection changes)
 

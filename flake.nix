@@ -24,13 +24,16 @@
     let
       system = "x86_64-linux";
       fenixPkgs = fenix.packages.${system};
-      overlay = import ./infra/pkgs { fenix = fenixPkgs; };
+      # Overlay with cross-compilation support (for packages output)
+      overlayWithCross = import ./infra/pkgs { fenix = fenixPkgs; };
+      # Overlay without cross-compilation (for NixOS system - faster builds)
+      overlayNoCross = import ./infra/pkgs { fenix = null; };
       toolsOverlay = import ./tools/pkgs;
       mkSystem = modules: nixpkgs.lib.nixosSystem {
         inherit system;
         modules = modules ++ [
           ({ config, pkgs, ... }: {
-            nixpkgs.overlays = [ overlay toolsOverlay ];
+            nixpkgs.overlays = [ overlayNoCross toolsOverlay ];
           })
         ];
       };
@@ -49,14 +52,14 @@
           pkgs = import nixpkgs {
             inherit system;
             config = { allowUnfree = true; };
-            overlays = [ overlay ];
+            overlays = [ overlayWithCross ];
           };
           pkgsWithTools = pkgs.extend toolsOverlay;
         in
         {
           inherit (pkgs) smtprelay loom-server loom-cli loom-cli-linux loom-web;
           inherit (pkgs) loom-cli-windows loom-cli-macos loom-cli-linux-aarch64 loom-cli-windows-aarch64;
-          inherit (pkgs) loom-cli-binaries weaver-image loom-server-image;
+          inherit (pkgs) loom-weaver-binaries loom-server-binaries weaver-image loom-server-image;
           inherit (pkgsWithTools) license;
         };
     };

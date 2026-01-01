@@ -175,7 +175,7 @@
     port = 8080;
     databasePath = "/var/lib/loom-server/loom.db";
     logLevel = "trace";
-    binDir = pkgs.loom-cli-binaries;
+    binDir = pkgs.loom-server-binaries;
     baseUrl = "https://loom.ghuntley.com";
 
     anthropic = {
@@ -273,11 +273,14 @@
     enable = true;
     weaverImage = pkgs.weaver-image;
     weaverImageTag = "weaver:latest";
-    serverImage = pkgs.loom-server-image;
-    serverImageTag = "loom:latest";
+    # Server image only built/loaded when pushServer is enabled
+    # serverImage = pkgs.loom-server-image;
+    # serverImageTag = "loom:latest";
 
     ghcr = {
       enable = true;
+      pushWeaver = true;
+      pushServer = false;  # Disabled by default
       username = "ghuntley";
       repository = "ghuntley/loom";
       tokenFile = config.sops.secrets.ghcr-token.path;

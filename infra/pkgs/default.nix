@@ -31,14 +31,19 @@ in
   
   inherit loom-cli-windows loom-cli-macos loom-cli-linux-aarch64 loom-cli-windows-aarch64;
   
-  # Only build x86_64 Linux for now - cross-compilation for other platforms
-  # requires additional setup (fenix toolchains, SDKs, etc.)
-  loom-cli-binaries = final.callPackage ./loom-cli-binaries.nix {
+  # Weaver binaries - Linux x86_64 only (for weaver containers)
+  loom-weaver-binaries = final.callPackage ./loom-weaver-binaries.nix {
     loom-cli-linux = final.loom-cli-linux;
-    loom-cli-windows = null;
-    loom-cli-macos = null;
-    loom-cli-linux-aarch64 = null;
-    loom-cli-windows-aarch64 = null;
+  };
+
+  # Server binaries - all platforms for self-update distribution
+  # Cross-compilation requires fenix toolchains and SDKs
+  loom-server-binaries = final.callPackage ./loom-server-binaries.nix {
+    loom-cli-linux = final.loom-cli-linux;
+    loom-cli-windows = loom-cli-windows;
+    loom-cli-macos = loom-cli-macos;
+    loom-cli-linux-aarch64 = loom-cli-linux-aarch64;
+    loom-cli-windows-aarch64 = loom-cli-windows-aarch64;
   };
 
   weaver-image = final.callPackage ./weaver-image.nix {
@@ -47,6 +52,6 @@ in
 
   loom-server-image = final.callPackage ./loom-server-image.nix {
     loom-server = final.loom-server;
-    loom-cli-binaries = final.loom-cli-binaries;
+    loom-server-binaries = final.loom-server-binaries;
   };
 }

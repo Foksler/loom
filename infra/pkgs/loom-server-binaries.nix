@@ -1,7 +1,7 @@
 # Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 # SPDX-License-Identifier: Proprietary
 
-# Creates a directory structure with CLI binaries for distribution.
+# Creates a directory structure with CLI binaries for all platforms.
 # The server serves these at /bin/{platform} for self-update functionality.
 #
 # Supported platforms:
@@ -25,7 +25,7 @@
 }:
 
 stdenv.mkDerivation {
-  pname = "loom-cli-binaries";
+  pname = "loom-server-binaries";
   version = loom-cli-linux.version;
 
   dontUnpack = true;
