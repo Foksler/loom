@@ -72,6 +72,7 @@ in
         REPO_URL="${cfg.repository}"
         BRANCH="${cfg.branch}"
         FLAKE_ATTR="${cfg.flakeAttr}"
+        DEPLOYED_REV_FILE="/var/lib/nixos-auto-update/deployed-revision"
 
         # Use flock to prevent concurrent updates - exit silently if already running
         exec 200>"$LOCK_FILE"
@@ -81,6 +82,9 @@ in
         fi
 
         echo "[$(date -Iseconds)] Starting nixos-auto-update..."
+
+        # Ensure state directory exists
+        mkdir -p "$(dirname "$DEPLOYED_REV_FILE")"
 
         # Clone or update repository
         clone_repo() {
@@ -109,17 +113,26 @@ in
           else
             LOCAL_REV=$(git rev-parse HEAD)
             REMOTE_REV=$(git rev-parse "origin/$BRANCH")
+            DEPLOYED_REV=""
+            if [ -f "$DEPLOYED_REV_FILE" ]; then
+              DEPLOYED_REV=$(cat "$DEPLOYED_REV_FILE")
+            fi
             
-            if [ "$LOCAL_REV" = "$REMOTE_REV" ]; then
+            # Skip only if local matches remote AND we've successfully deployed this revision
+            if [ "$LOCAL_REV" = "$REMOTE_REV" ] && [ "$LOCAL_REV" = "$DEPLOYED_REV" ]; then
               echo "Already up to date at $LOCAL_REV"
               exit 0
             fi
             
-            echo "Updating from $LOCAL_REV to $REMOTE_REV"
-            # Try reset; if it fails, delete and re-clone
-            if ! git reset --hard "origin/$BRANCH"; then
-              echo "Reset failed, deleting cache and re-cloning..."
-              clone_repo
+            if [ "$LOCAL_REV" = "$REMOTE_REV" ]; then
+              echo "Retrying failed deployment for $LOCAL_REV"
+            else
+              echo "Updating from $LOCAL_REV to $REMOTE_REV"
+              # Try reset; if it fails, delete and re-clone
+              if ! git reset --hard "origin/$BRANCH"; then
+                echo "Reset failed, deleting cache and re-cloning..."
+                clone_repo
+              fi
             fi
           fi
         fi
@@ -130,6 +143,9 @@ in
 
         echo "Activating flake..."
         nixos-rebuild switch --flake ".#$FLAKE_ATTR"
+
+        # Record successful deployment
+        echo "$CURRENT_REV" > "$DEPLOYED_REV_FILE"
 
         echo "[$(date -Iseconds)] Auto-update complete"
       '';
