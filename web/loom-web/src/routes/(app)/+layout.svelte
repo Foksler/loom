@@ -86,6 +86,9 @@
 							<a href="/admin/anthropic-accounts" class="text-sm text-warning hover:text-warning/80">
 								{i18n._('admin.anthropic.title')}
 							</a>
+							<a href="/admin/jobs" class="text-sm text-warning hover:text-warning/80">
+								{i18n._('nav.jobs')}
+							</a>
 						{/if}
 					</nav>
 				</div>

@@ -7,6 +7,8 @@ export const messages = {
 	// Navigation
 	'nav.threads': 'スレッド',
 	'nav.settings': '設定',
+	'nav.admin': '管理',
+	'nav.jobs': 'ジョブ',
 
 	// Thread actions
 	'thread.new': '新規スレッド',

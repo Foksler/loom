@@ -7,6 +7,8 @@ export const messages = {
 	// Navigation
 	'nav.threads': 'Trådar',
 	'nav.settings': 'Inställningar',
+	'nav.admin': 'Admin',
+	'nav.jobs': 'Jobb',
 
 	// Thread actions
 	'thread.new': 'Ny tråd',

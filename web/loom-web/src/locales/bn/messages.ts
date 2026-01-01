@@ -7,6 +7,8 @@ export const messages = {
 	// Navigation
 	'nav.threads': 'থ্রেডগুলি',
 	'nav.settings': 'সেটিংস',
+	'nav.admin': 'অ্যাডমিন',
+	'nav.jobs': 'কাজ',
 
 	// Thread actions
 	'thread.new': 'নতুন থ্রেড',

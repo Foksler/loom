@@ -14,6 +14,7 @@ use loom_auth_google::{GoogleOAuthClient, GoogleOAuthConfig};
 use loom_auth_okta::{OktaOAuthClient, OktaOAuthConfig};
 use loom_geoip::GeoIpService;
 use loom_github_app::{GithubAppClient, GithubAppConfig};
+use loom_jobs::{JobRepository, JobScheduler};
 use loom_google_cse::CseClient;
 use loom_k8s::KubeClient;
 use loom_llm_service::LlmService;
@@ -67,9 +68,11 @@ pub struct AppState {
 	pub github_oauth: Option<Arc<GitHubOAuthClient>>,
 	pub google_oauth: Option<Arc<GoogleOAuthClient>>,
 	pub okta_oauth: Option<Arc<OktaOAuthClient>>,
-	pub oauth_state_store: OAuthStateStore,
+	pub oauth_state_store: Arc<OAuthStateStore>,
 	pub default_locale: String,
 	pub geoip_service: Option<Arc<GeoIpService>>,
+	pub job_scheduler: Option<Arc<JobScheduler>>,
+	pub job_repository: Option<Arc<JobRepository>>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -146,7 +149,7 @@ pub async fn create_app_state(
 	let github_oauth = initialize_github_oauth();
 	let google_oauth = initialize_google_oauth();
 	let okta_oauth = initialize_okta_oauth();
-	let oauth_state_store = OAuthStateStore::new();
+	let oauth_state_store = Arc::new(OAuthStateStore::new());
 
 	// Initialize GeoIP service
 	let geoip_service = GeoIpService::try_from_env().map(Arc::new);
@@ -199,6 +202,8 @@ pub async fn create_app_state(
 		oauth_state_store,
 		default_locale: config.default_locale.clone(),
 		geoip_service,
+		job_scheduler: None,
+		job_repository: None,
 	}
 }
 
@@ -416,6 +421,25 @@ fn admin_routes(state: AppState) -> Router<AppState> {
 		.route(
 			"/anthropic/accounts/{id}",
 			delete(routes::admin_anthropic::remove_account),
+		)
+		// Job scheduler management
+		.route("/jobs", get(routes::admin_jobs::list_jobs))
+		.route("/jobs/{job_id}/run", post(routes::admin_jobs::trigger_job))
+		.route(
+			"/jobs/{job_id}/cancel",
+			post(routes::admin_jobs::cancel_job),
+		)
+		.route(
+			"/jobs/{job_id}/history",
+			get(routes::admin_jobs::job_history),
+		)
+		.route(
+			"/jobs/{job_id}/enable",
+			post(routes::admin_jobs::enable_job),
+		)
+		.route(
+			"/jobs/{job_id}/disable",
+			post(routes::admin_jobs::disable_job),
 		)
 		.route_layer(RequireRole::admin().with_audit(state.audit_repo.clone()))
 		.layer(from_fn_with_state(state.clone(), require_auth_layer))

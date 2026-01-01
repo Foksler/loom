@@ -7,6 +7,8 @@ export const messages = {
 	// Navigation
 	'nav.threads': 'שרשורים',
 	'nav.settings': 'הגדרות',
+	'nav.admin': 'ניהול',
+	'nav.jobs': 'משימות',
 
 	// Thread actions
 	'thread.new': 'שרשור חדש',

@@ -12,6 +12,7 @@ use utoipa::ToSchema;
 
 use loom_weaver::Provisioner;
 use loom_github_app::{GithubAppClient, GithubAppError};
+use loom_jobs::JobScheduler;
 use loom_llm_service::LlmService;
 use loom_smtp::SmtpClient;
 
@@ -158,6 +159,17 @@ pub struct GeoIpHealth {
 	pub error: Option<String>,
 }
 
+/// Jobs scheduler component health.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct JobsHealth {
+	pub status: HealthStatus,
+	pub jobs_total: usize,
+	pub jobs_healthy: usize,
+	pub jobs_failing: usize,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub failing_jobs: Option<Vec<String>>,
+}
+
 /// All health check components.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct HealthComponents {
@@ -170,6 +182,8 @@ pub struct HealthComponents {
 	pub kubernetes: Option<KubernetesHealth>,
 	pub smtp: SmtpHealth,
 	pub geoip: GeoIpHealth,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub jobs: Option<JobsHealth>,
 }
 
 /// Complete health check response.
@@ -607,6 +621,42 @@ pub fn check_geoip(service: Option<&Arc<loom_geoip::GeoIpService>>) -> GeoIpHeal
 	}
 }
 
+/// Check jobs scheduler health.
+pub async fn check_jobs(scheduler: Option<&Arc<JobScheduler>>) -> Option<JobsHealth> {
+	let scheduler = scheduler?;
+
+	let health = scheduler.health_status().await;
+
+	let jobs_failing: Vec<String> = health
+		.jobs
+		.iter()
+		.filter(|j| matches!(j.status, loom_jobs::HealthState::Unhealthy))
+		.map(|j| j.job_id.clone())
+		.collect();
+
+	let status = match health.status {
+		loom_jobs::HealthState::Healthy => HealthStatus::Healthy,
+		loom_jobs::HealthState::Degraded => HealthStatus::Degraded,
+		loom_jobs::HealthState::Unhealthy => HealthStatus::Unhealthy,
+	};
+
+	Some(JobsHealth {
+		status,
+		jobs_total: health.jobs.len(),
+		jobs_healthy: health
+			.jobs
+			.iter()
+			.filter(|j| matches!(j.status, loom_jobs::HealthState::Healthy))
+			.count(),
+		jobs_failing: jobs_failing.len(),
+		failing_jobs: if jobs_failing.is_empty() {
+			None
+		} else {
+			Some(jobs_failing)
+		},
+	})
+}
+
 /// Aggregate component statuses into overall status.
 pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
 	let mut statuses = vec![
@@ -620,6 +670,10 @@ pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
 
 	if let Some(ref k8s) = components.kubernetes {
 		statuses.push(k8s.status);
+	}
+
+	if let Some(ref jobs) = components.jobs {
+		statuses.push(jobs.status);
 	}
 
 	if statuses

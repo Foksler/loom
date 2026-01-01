@@ -847,3 +847,55 @@ msgstr "تم حذف weaver."
 #: CLI: Weaver - Attach prefix
 msgid "client.weaver.attach_prefix"
 msgstr "[جارٍ الاتصال بـ weaver {id}]"
+
+# ============================================================================
+# Jobs: Scheduler
+# ============================================================================
+
+#: Jobs: Email Alert - Subject
+msgid "server.jobs.alert.subject"
+msgstr "[Loom] فشل المهمة: {job_name}"
+
+#: Jobs: Email Alert - Body intro
+msgid "server.jobs.alert.body"
+msgstr "فشلت المهمة \"{job_name}\" {consecutive_failures} مرات متتالية."
+
+#: Jobs: Email Alert - Job ID
+msgid "server.jobs.alert.job_id"
+msgstr "معرف المهمة: {job_id}"
+
+#: Jobs: Email Alert - Last error
+msgid "server.jobs.alert.last_error"
+msgstr "آخر خطأ: {error_message}"
+
+#: Jobs: Email Alert - Last run
+msgid "server.jobs.alert.last_run"
+msgstr "آخر تشغيل: {last_run_at}"
+
+#: Jobs: Email Alert - View history link
+msgid "server.jobs.alert.view_history"
+msgstr "عرض سجل المهمة: {url}"
+
+#: Jobs: API - Job not found
+msgid "server.jobs.error.not_found"
+msgstr "المهمة غير موجودة: {job_id}"
+
+#: Jobs: API - Scheduler not configured
+msgid "server.jobs.error.not_configured"
+msgstr "جدولة المهام غير مكونة"
+
+#: Jobs: API - Job triggered
+msgid "server.jobs.success.triggered"
+msgstr "تم تشغيل المهمة {job_id} بنجاح"
+
+#: Jobs: API - Job cancelled
+msgid "server.jobs.success.cancelled"
+msgstr "تم إلغاء المهمة {job_id}"
+
+#: Jobs: API - Job enabled
+msgid "server.jobs.success.enabled"
+msgstr "تم تفعيل المهمة {job_id}"
+
+#: Jobs: API - Job disabled
+msgid "server.jobs.success.disabled"
+msgstr "تم تعطيل المهمة {job_id}"

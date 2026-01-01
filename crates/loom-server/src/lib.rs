@@ -10,6 +10,7 @@ pub mod abac_middleware;
 pub mod auth_middleware;
 pub mod client_info;
 pub mod i18n;
+pub mod jobs;
 pub mod weaver_metrics;
 pub mod api;
 pub mod api_docs;

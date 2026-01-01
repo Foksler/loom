@@ -422,6 +422,38 @@ in
       };
     };
 
+    jobs = {
+      alertEnabled = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Enable email alerts for job failures";
+      };
+
+      alertRecipients = mkOption {
+        type = types.listOf types.str;
+        default = [];
+        description = "Email recipients for job failure alerts";
+      };
+
+      historyRetentionDays = mkOption {
+        type = types.int;
+        default = 90;
+        description = "Number of days to retain job run history";
+      };
+
+      sessionCleanupIntervalSecs = mkOption {
+        type = types.int;
+        default = 3600;
+        description = "Interval in seconds between session cleanup runs";
+      };
+
+      oauthStateCleanupIntervalSecs = mkOption {
+        type = types.int;
+        default = 900;
+        description = "Interval in seconds between OAuth state cleanup runs";
+      };
+    };
+
     extraEnvironment = mkOption {
       type = types.attrsOf types.str;
       default = { };
@@ -560,6 +592,13 @@ in
         (mkIf (cfg.smtp.enable && cfg.smtp.username != null) {
           LOOM_SERVER_SMTP_USERNAME = cfg.smtp.username;
         })
+        {
+          LOOM_SERVER_JOB_ALERT_ENABLED = if cfg.jobs.alertEnabled then "true" else "false";
+          LOOM_SERVER_JOB_ALERT_RECIPIENTS = lib.concatStringsSep "," cfg.jobs.alertRecipients;
+          LOOM_SERVER_JOB_HISTORY_RETENTION_DAYS = toString cfg.jobs.historyRetentionDays;
+          LOOM_SERVER_SESSION_CLEANUP_INTERVAL_SECS = toString cfg.jobs.sessionCleanupIntervalSecs;
+          LOOM_SERVER_OAUTH_STATE_CLEANUP_INTERVAL_SECS = toString cfg.jobs.oauthStateCleanupIntervalSecs;
+        }
         cfg.extraEnvironment
       ];
 

@@ -919,3 +919,55 @@ msgstr "Weaver deleted."
 #: CLI: Weaver - Attach prefix
 msgid "client.weaver.attach_prefix"
 msgstr "[attaching to weaver {id}]"
+
+# ============================================================================
+# Jobs: Scheduler
+# ============================================================================
+
+#: Jobs: Email Alert - Subject
+msgid "server.jobs.alert.subject"
+msgstr "[Loom] Job Failed: {job_name}"
+
+#: Jobs: Email Alert - Body intro
+msgid "server.jobs.alert.body"
+msgstr "The job \"{job_name}\" has failed {consecutive_failures} times in a row."
+
+#: Jobs: Email Alert - Job ID
+msgid "server.jobs.alert.job_id"
+msgstr "Job ID: {job_id}"
+
+#: Jobs: Email Alert - Last error
+msgid "server.jobs.alert.last_error"
+msgstr "Last Error: {error_message}"
+
+#: Jobs: Email Alert - Last run
+msgid "server.jobs.alert.last_run"
+msgstr "Last Run: {last_run_at}"
+
+#: Jobs: Email Alert - View history link
+msgid "server.jobs.alert.view_history"
+msgstr "View job history: {url}"
+
+#: Jobs: API - Job not found
+msgid "server.jobs.error.not_found"
+msgstr "Job not found: {job_id}"
+
+#: Jobs: API - Scheduler not configured
+msgid "server.jobs.error.not_configured"
+msgstr "Job scheduler not configured"
+
+#: Jobs: API - Job triggered
+msgid "server.jobs.success.triggered"
+msgstr "Job {job_id} triggered successfully"
+
+#: Jobs: API - Job cancelled
+msgid "server.jobs.success.cancelled"
+msgstr "Job {job_id} cancelled"
+
+#: Jobs: API - Job enabled
+msgid "server.jobs.success.enabled"
+msgstr "Job {job_id} enabled"
+
+#: Jobs: API - Job disabled
+msgid "server.jobs.success.disabled"
+msgstr "Job {job_id} disabled"

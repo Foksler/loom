@@ -7,6 +7,8 @@ export const messages = {
 	// Navigation
 	'nav.threads': '스레드',
 	'nav.settings': '설정',
+	'nav.admin': '관리',
+	'nav.jobs': '작업',
 
 	// Thread actions
 	'thread.new': '새 스레드',

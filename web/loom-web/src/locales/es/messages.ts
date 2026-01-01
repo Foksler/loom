@@ -7,6 +7,8 @@ export const messages = {
 	// Navigation
 	'nav.threads': 'Hilos',
 	'nav.settings': 'Configuración',
+	'nav.admin': 'Admin',
+	'nav.jobs': 'Trabajos',
 
 	// Thread actions
 	'thread.new': 'Nuevo hilo',
@@ -276,4 +278,51 @@ export const messages = {
 	'weavers.terminal.pending': 'El weaver está iniciando...',
 	'weavers.terminal.pendingHint': 'El terminal estará disponible cuando el weaver esté ejecutándose',
 	'weavers.terminal.notRunning': 'El weaver no está ejecutándose (estado: {status})',
+
+	// Jobs - Admin page
+	'jobs.title': 'Tareas en Segundo Plano',
+	'jobs.description': 'Monitorear y gestionar tareas programadas en segundo plano',
+	'jobs.loading': 'Cargando tareas...',
+	'jobs.runNow': 'Ejecutar Ahora',
+	'jobs.running': 'Ejecutando...',
+	'jobs.history': 'Historial',
+	'jobs.hideHistory': 'Ocultar Historial',
+	'jobs.viewHistory': 'Ver Historial',
+	'jobs.noJobs': 'No hay tareas en segundo plano configuradas',
+	'jobs.never': 'Nunca ejecutado',
+	'jobs.lastRun': 'Última ejecución',
+	'jobs.duration': 'Duración',
+	'jobs.interval': 'Intervalo',
+	'jobs.type': 'Tipo',
+	'jobs.failures': '{count} fallos consecutivos',
+
+	// Jobs - Status
+	'jobs.status.healthy': 'Saludable',
+	'jobs.status.degraded': 'Degradado',
+	'jobs.status.unhealthy': 'No saludable',
+	'jobs.status.succeeded': 'Exitoso',
+	'jobs.status.failed': 'Fallido',
+	'jobs.status.running': 'Ejecutando',
+	'jobs.status.cancelled': 'Cancelado',
+
+	// Jobs - Trigger sources
+	'jobs.trigger.schedule': 'Programado',
+	'jobs.trigger.manual': 'Manual',
+	'jobs.trigger.retry': 'Reintento',
+
+	// Jobs - History
+	'jobs.history.title': 'Historial de Ejecuciones',
+	'jobs.history.status': 'Estado',
+	'jobs.history.started': 'Iniciado',
+	'jobs.history.duration': 'Duración',
+	'jobs.history.trigger': 'Disparador',
+	'jobs.history.details': 'Detalles',
+	'jobs.history.loadMore': 'Cargar Más',
+	'jobs.history.noRuns': 'No hay historial de ejecuciones disponible',
+
+	// Jobs - Time formatting
+	'jobs.time.justNow': 'ahora mismo',
+	'jobs.time.minutesAgo': 'hace {count} min',
+	'jobs.time.hoursAgo': 'hace {count} horas',
+	'jobs.time.daysAgo': 'hace {count} días',
 };

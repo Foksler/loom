@@ -7,6 +7,8 @@ export const messages = {
 	// Navigation
 	'nav.threads': 'Thread',
 	'nav.settings': 'Pengaturan',
+	'nav.admin': 'Admin',
+	'nav.jobs': 'Pekerjaan',
 
 	// Thread actions
 	'thread.new': 'Thread Baru',

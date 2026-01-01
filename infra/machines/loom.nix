@@ -216,6 +216,14 @@
       imagePullSecrets = [ "ghcr-secret" ];
     };
 
+    jobs = {
+      alertEnabled = true;
+      alertRecipients = [ "ghuntley@ghuntley.com" ];
+      historyRetentionDays = 30;
+      sessionCleanupIntervalSecs = 3600;
+      oauthStateCleanupIntervalSecs = 900;
+    };
+
     geoip = {
       enable = true;
     };

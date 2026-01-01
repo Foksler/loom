@@ -9,6 +9,7 @@ export const messages = {
 	'nav.weavers': 'Weavers',
 	'nav.settings': 'Settings',
 	'nav.admin': 'Admin',
+	'nav.jobs': 'Jobs',
 
 	// Thread actions
 	'thread.new': 'New Thread',
@@ -310,4 +311,51 @@ export const messages = {
 	'weavers.terminal.pending': 'Weaver is starting...',
 	'weavers.terminal.pendingHint': 'The terminal will be available once the weaver is running',
 	'weavers.terminal.notRunning': 'Weaver is not running (status: {status})',
+
+	// Jobs - Admin page
+	'jobs.title': 'Background Jobs',
+	'jobs.description': 'Monitor and manage scheduled background jobs',
+	'jobs.loading': 'Loading jobs...',
+	'jobs.runNow': 'Run Now',
+	'jobs.running': 'Running...',
+	'jobs.history': 'History',
+	'jobs.hideHistory': 'Hide History',
+	'jobs.viewHistory': 'View History',
+	'jobs.noJobs': 'No background jobs configured',
+	'jobs.never': 'Never run',
+	'jobs.lastRun': 'Last run',
+	'jobs.duration': 'Duration',
+	'jobs.interval': 'Interval',
+	'jobs.type': 'Type',
+	'jobs.failures': '{count} consecutive failures',
+
+	// Jobs - Status
+	'jobs.status.healthy': 'Healthy',
+	'jobs.status.degraded': 'Degraded',
+	'jobs.status.unhealthy': 'Unhealthy',
+	'jobs.status.succeeded': 'Succeeded',
+	'jobs.status.failed': 'Failed',
+	'jobs.status.running': 'Running',
+	'jobs.status.cancelled': 'Cancelled',
+
+	// Jobs - Trigger sources
+	'jobs.trigger.schedule': 'Schedule',
+	'jobs.trigger.manual': 'Manual',
+	'jobs.trigger.retry': 'Retry',
+
+	// Jobs - History
+	'jobs.history.title': 'Run History',
+	'jobs.history.status': 'Status',
+	'jobs.history.started': 'Started',
+	'jobs.history.duration': 'Duration',
+	'jobs.history.trigger': 'Trigger',
+	'jobs.history.details': 'Details',
+	'jobs.history.loadMore': 'Load More',
+	'jobs.history.noRuns': 'No run history available',
+
+	// Jobs - Time formatting
+	'jobs.time.justNow': 'just now',
+	'jobs.time.minutesAgo': '{count} min ago',
+	'jobs.time.hoursAgo': '{count} hours ago',
+	'jobs.time.daysAgo': '{count} days ago',
 };

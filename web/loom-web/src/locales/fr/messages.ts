@@ -7,6 +7,8 @@ export const messages = {
 	// Navigation
 	'nav.threads': 'Fils',
 	'nav.settings': 'Paramètres',
+	'nav.admin': 'Admin',
+	'nav.jobs': 'Tâches',
 
 	// Thread actions
 	'thread.new': 'Nouveau fil',

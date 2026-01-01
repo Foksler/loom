@@ -5,6 +5,7 @@
 
 pub mod admin;
 pub mod admin_anthropic;
+pub mod admin_jobs;
 pub mod api_keys;
 pub mod auth;
 pub mod bin;
@@ -91,6 +92,12 @@ pub use admin::{
 pub use admin_anthropic::{
 	AccountDetailsResponse, AccountStatus, AccountsSummary, AnthropicAccountsResponse,
 	InitiateOAuthRequest, InitiateOAuthResponse, RemoveAccountResponse,
+};
+
+// Re-export admin_jobs types
+pub use admin_jobs::{
+	JobHealthState, JobHistoryResponse, JobInfo, JobRunInfo, JobSuccessResponse,
+	LastRunInfo as JobLastRunInfo, ListJobsResponse, TriggerJobResponse,
 };
 
 // Re-export invitation types

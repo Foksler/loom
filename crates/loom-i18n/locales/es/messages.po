@@ -847,3 +847,55 @@ msgstr "Weaver eliminado."
 #: CLI: Weaver - Attach prefix
 msgid "client.weaver.attach_prefix"
 msgstr "[conectando al weaver {id}]"
+
+# ============================================================================
+# Jobs: Scheduler
+# ============================================================================
+
+#: Jobs: Email Alert - Subject
+msgid "server.jobs.alert.subject"
+msgstr "[Loom] Trabajo fallido: {job_name}"
+
+#: Jobs: Email Alert - Body intro
+msgid "server.jobs.alert.body"
+msgstr "El trabajo \"{job_name}\" ha fallado {consecutive_failures} veces consecutivas."
+
+#: Jobs: Email Alert - Job ID
+msgid "server.jobs.alert.job_id"
+msgstr "ID del trabajo: {job_id}"
+
+#: Jobs: Email Alert - Last error
+msgid "server.jobs.alert.last_error"
+msgstr "Último error: {error_message}"
+
+#: Jobs: Email Alert - Last run
+msgid "server.jobs.alert.last_run"
+msgstr "Última ejecución: {last_run_at}"
+
+#: Jobs: Email Alert - View history link
+msgid "server.jobs.alert.view_history"
+msgstr "Ver historial del trabajo: {url}"
+
+#: Jobs: API - Job not found
+msgid "server.jobs.error.not_found"
+msgstr "Trabajo no encontrado: {job_id}"
+
+#: Jobs: API - Scheduler not configured
+msgid "server.jobs.error.not_configured"
+msgstr "Programador de trabajos no configurado"
+
+#: Jobs: API - Job triggered
+msgid "server.jobs.success.triggered"
+msgstr "Trabajo {job_id} ejecutado exitosamente"
+
+#: Jobs: API - Job cancelled
+msgid "server.jobs.success.cancelled"
+msgstr "Trabajo {job_id} cancelado"
+
+#: Jobs: API - Job enabled
+msgid "server.jobs.success.enabled"
+msgstr "Trabajo {job_id} habilitado"
+
+#: Jobs: API - Job disabled
+msgid "server.jobs.success.disabled"
+msgstr "Trabajo {job_id} deshabilitado"

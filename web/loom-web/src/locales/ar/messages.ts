@@ -7,6 +7,8 @@ export const messages = {
 	// Navigation
 	'nav.threads': 'المحادثات',
 	'nav.settings': 'الإعدادات',
+	'nav.admin': 'الإدارة',
+	'nav.jobs': 'المهام',
 
 	// Thread actions
 	'thread.new': 'محادثة جديدة',
@@ -276,4 +278,51 @@ export const messages = {
 	'weavers.terminal.pending': 'الحائك قيد البدء...',
 	'weavers.terminal.pendingHint': 'سيكون الطرفية متاحة عندما يعمل الحائك',
 	'weavers.terminal.notRunning': 'الحائك لا يعمل (الحالة: {status})',
+
+	// Jobs - Admin page
+	'jobs.title': 'المهام الخلفية',
+	'jobs.description': 'مراقبة وإدارة المهام المجدولة في الخلفية',
+	'jobs.loading': 'جاري تحميل المهام...',
+	'jobs.runNow': 'تشغيل الآن',
+	'jobs.running': 'قيد التشغيل...',
+	'jobs.history': 'السجل',
+	'jobs.hideHistory': 'إخفاء السجل',
+	'jobs.viewHistory': 'عرض السجل',
+	'jobs.noJobs': 'لا توجد مهام خلفية مهيأة',
+	'jobs.never': 'لم يتم التشغيل مطلقاً',
+	'jobs.lastRun': 'آخر تشغيل',
+	'jobs.duration': 'المدة',
+	'jobs.interval': 'الفاصل الزمني',
+	'jobs.type': 'النوع',
+	'jobs.failures': '{count} فشل متتالي',
+
+	// Jobs - Status
+	'jobs.status.healthy': 'سليم',
+	'jobs.status.degraded': 'متدهور',
+	'jobs.status.unhealthy': 'غير سليم',
+	'jobs.status.succeeded': 'نجح',
+	'jobs.status.failed': 'فشل',
+	'jobs.status.running': 'قيد التشغيل',
+	'jobs.status.cancelled': 'ملغى',
+
+	// Jobs - Trigger sources
+	'jobs.trigger.schedule': 'مجدول',
+	'jobs.trigger.manual': 'يدوي',
+	'jobs.trigger.retry': 'إعادة المحاولة',
+
+	// Jobs - History
+	'jobs.history.title': 'سجل التشغيل',
+	'jobs.history.status': 'الحالة',
+	'jobs.history.started': 'بدأ',
+	'jobs.history.duration': 'المدة',
+	'jobs.history.trigger': 'المشغّل',
+	'jobs.history.details': 'التفاصيل',
+	'jobs.history.loadMore': 'تحميل المزيد',
+	'jobs.history.noRuns': 'لا يوجد سجل تشغيل متاح',
+
+	// Jobs - Time formatting
+	'jobs.time.justNow': 'الآن',
+	'jobs.time.minutesAgo': 'منذ {count} دقيقة',
+	'jobs.time.hoursAgo': 'منذ {count} ساعات',
+	'jobs.time.daysAgo': 'منذ {count} أيام',
 };

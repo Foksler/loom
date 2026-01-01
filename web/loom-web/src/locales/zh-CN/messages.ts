@@ -7,6 +7,8 @@ export const messages = {
 	// Navigation
 	'nav.threads': '会话',
 	'nav.settings': '设置',
+	'nav.admin': '管理',
+	'nav.jobs': '作业',
 
 	// Thread actions
 	'thread.new': '新建会话',

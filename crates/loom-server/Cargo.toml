@@ -19,6 +19,7 @@ path = "src/lib.rs"
 
 [dependencies]
 futures = { workspace = true }
+loom-jobs = { path = "../loom-jobs" }
 loom-weaver = { path = "../loom-weaver" }
 loom-core = { path = "../loom-core" }
 loom-k8s = { path = "../loom-k8s" }

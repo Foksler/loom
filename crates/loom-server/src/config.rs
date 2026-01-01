@@ -55,6 +55,16 @@ pub struct ServerConfig {
 	/// Default locale for emails and API responses.
 	/// Used when user has no preference set.
 	pub default_locale: String,
+	/// Enable email alerts for job failures.
+	pub job_alert_enabled: bool,
+	/// Comma-separated list of email recipients for job alerts.
+	pub job_alert_recipients: Vec<String>,
+	/// Number of days to retain job run history.
+	pub job_history_retention_days: u32,
+	/// Session cleanup interval in seconds.
+	pub session_cleanup_interval_secs: u64,
+	/// OAuth state cleanup interval in seconds.
+	pub oauth_state_cleanup_interval_secs: u64,
 }
 
 impl ServerConfig {
@@ -77,6 +87,11 @@ impl ServerConfig {
 	/// - `LOOM_SERVER_WEAVER_WEBHOOKS`: Webhooks JSON (default: [])
 	/// - `LOOM_SERVER_WEAVER_IMAGE_PULL_SECRETS`: Comma-separated secret names (default: "")
 	/// - `LOOM_SERVER_DEFAULT_LOCALE`: Default locale for emails (default: en)
+	/// - `LOOM_SERVER_JOB_ALERT_ENABLED`: Enable job failure alerts (default: false)
+	/// - `LOOM_SERVER_JOB_ALERT_RECIPIENTS`: Comma-separated alert recipients (default: "")
+	/// - `LOOM_SERVER_JOB_HISTORY_RETENTION_DAYS`: Job history retention days (default: 90)
+	/// - `LOOM_SERVER_SESSION_CLEANUP_INTERVAL_SECS`: Session cleanup interval (default: 3600)
+	/// - `LOOM_SERVER_OAUTH_STATE_CLEANUP_INTERVAL_SECS`: OAuth state cleanup interval (default: 900)
 	pub fn from_env() -> Result<Self, ConfigError> {
 		let host = env::var("LOOM_SERVER_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
 
@@ -88,8 +103,8 @@ impl ServerConfig {
 		let database_url =
 			env::var("LOOM_SERVER_DATABASE_URL").unwrap_or_else(|_| "sqlite:./loom.db".to_string());
 
-		let base_url = env::var("LOOM_SERVER_BASE_URL")
-			.unwrap_or_else(|_| format!("http://localhost:{port}"));
+		let base_url =
+			env::var("LOOM_SERVER_BASE_URL").unwrap_or_else(|_| format!("http://localhost:{port}"));
 
 		let log_level = env::var("LOOM_SERVER_LOG_LEVEL")
 			.unwrap_or_else(|_| "info,tower_http::trace=debug".to_string());
@@ -106,7 +121,9 @@ impl ServerConfig {
 		let weaver_cleanup_interval_secs = env::var("LOOM_SERVER_WEAVER_CLEANUP_INTERVAL_SECS")
 			.unwrap_or_else(|_| "1800".to_string())
 			.parse::<u64>()
-			.map_err(|e| ConfigError::InvalidValue("weaver_cleanup_interval_secs".into(), e.to_string()))?;
+			.map_err(|e| {
+				ConfigError::InvalidValue("weaver_cleanup_interval_secs".into(), e.to_string())
+			})?;
 
 		let weaver_default_ttl_hours = env::var("LOOM_SERVER_WEAVER_DEFAULT_TTL_HOURS")
 			.unwrap_or_else(|_| "4".to_string())
@@ -155,6 +172,37 @@ impl ServerConfig {
 		let default_locale =
 			env::var("LOOM_SERVER_DEFAULT_LOCALE").unwrap_or_else(|_| "en".to_string());
 
+		let job_alert_enabled = env::var("LOOM_SERVER_JOB_ALERT_ENABLED")
+			.map(|v| v.eq_ignore_ascii_case("true") || v == "1")
+			.unwrap_or(false);
+
+		let job_alert_recipients = env::var("LOOM_SERVER_JOB_ALERT_RECIPIENTS")
+			.unwrap_or_default()
+			.split(',')
+			.map(|s| s.trim().to_string())
+			.filter(|s| !s.is_empty())
+			.collect();
+
+		let job_history_retention_days = env::var("LOOM_SERVER_JOB_HISTORY_RETENTION_DAYS")
+			.unwrap_or_else(|_| "90".to_string())
+			.parse::<u32>()
+			.map_err(|e| ConfigError::InvalidValue("job_history_retention_days".into(), e.to_string()))?;
+
+		let session_cleanup_interval_secs = env::var("LOOM_SERVER_SESSION_CLEANUP_INTERVAL_SECS")
+			.unwrap_or_else(|_| "3600".to_string())
+			.parse::<u64>()
+			.map_err(|e| {
+				ConfigError::InvalidValue("session_cleanup_interval_secs".into(), e.to_string())
+			})?;
+
+		let oauth_state_cleanup_interval_secs =
+			env::var("LOOM_SERVER_OAUTH_STATE_CLEANUP_INTERVAL_SECS")
+				.unwrap_or_else(|_| "900".to_string())
+				.parse::<u64>()
+				.map_err(|e| {
+					ConfigError::InvalidValue("oauth_state_cleanup_interval_secs".into(), e.to_string())
+				})?;
+
 		Ok(Self {
 			host,
 			port,
@@ -179,6 +227,11 @@ impl ServerConfig {
 			smtp_from_name,
 			smtp_use_tls,
 			default_locale,
+			job_alert_enabled,
+			job_alert_recipients,
+			job_history_retention_days,
+			session_cleanup_interval_secs,
+			oauth_state_cleanup_interval_secs,
 		})
 	}
 
@@ -214,6 +267,11 @@ impl Default for ServerConfig {
 			smtp_from_name: "Loom".to_string(),
 			smtp_use_tls: true,
 			default_locale: "en".to_string(),
+			job_alert_enabled: false,
+			job_alert_recipients: Vec::new(),
+			job_history_retention_days: 90,
+			session_cleanup_interval_secs: 3600,
+			oauth_state_cleanup_interval_secs: 900,
 		}
 	}
 }

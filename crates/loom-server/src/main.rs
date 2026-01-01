@@ -4,9 +4,10 @@
 //! Loom thread persistence server binary.
 
 use clap::{Parser, Subcommand};
+use loom_jobs::{JobRepository, JobScheduler};
 use loom_server::{create_app_state, create_router, ServerConfig, ThreadRepository};
 use std::sync::Arc;
-use tokio::task::JoinHandle;
+use std::time::Duration;
 use tower_http::{
 	cors::{Any, CorsLayer},
 	trace::TraceLayer,
@@ -72,25 +73,77 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	// Create application state and router with middleware
 	let pool = repo.pool().clone();
-	let state = create_app_state(pool, repo, &config).await;
+	let mut state = create_app_state(pool.clone(), repo, &config).await;
 
-	// Weaver provisioner startup lifecycle
-	let cleanup_task: Option<JoinHandle<()>> = if let Some(ref provisioner) = state.provisioner {
-		// Validate namespace exists (fail if not)
+	// Weaver provisioner startup lifecycle - validate namespace
+	if let Some(ref provisioner) = state.provisioner {
 		if let Err(e) = provisioner.validate_namespace().await {
 			tracing::error!(error = %e, "Weaver provisioner namespace validation failed");
 			tracing::warn!("Continuing without weaver provisioning support");
-			None
-		} else {
-			// Spawn cleanup background task
-			let provisioner = Arc::clone(provisioner);
-			Some(tokio::spawn(async move {
-				loom_weaver::start_cleanup_task(provisioner).await;
-			}))
 		}
-	} else {
-		None
-	};
+	}
+
+	// Create job repository and scheduler
+	let job_repo = Arc::new(JobRepository::new(pool.clone()));
+	let mut scheduler = JobScheduler::new(Arc::clone(&job_repo));
+
+	// Register weaver cleanup job if provisioner is enabled
+	if let Some(ref provisioner) = state.provisioner {
+		use loom_server::jobs::WeaverCleanupJob;
+		scheduler.register_periodic(
+			Arc::new(WeaverCleanupJob::new(Arc::clone(provisioner))),
+			Duration::from_secs(config.weaver_cleanup_interval_secs),
+		);
+	}
+
+	// Register session cleanup job
+	{
+		use loom_server::jobs::SessionCleanupJob;
+		scheduler.register_periodic(
+			Arc::new(SessionCleanupJob::new(pool.clone())),
+			Duration::from_secs(config.session_cleanup_interval_secs),
+		);
+	}
+
+	// Register OAuth state cleanup job
+	{
+		use loom_server::jobs::OAuthStateCleanupJob;
+		scheduler.register_periodic(
+			Arc::new(OAuthStateCleanupJob::new(Arc::clone(&state.oauth_state_store))),
+			Duration::from_secs(config.oauth_state_cleanup_interval_secs),
+		);
+	}
+
+	// Register job history cleanup job
+	{
+		use loom_server::jobs::JobHistoryCleanupJob;
+		scheduler.register_periodic(
+			Arc::new(JobHistoryCleanupJob::new(Arc::clone(&job_repo), config.job_history_retention_days)),
+			Duration::from_secs(24 * 60 * 60), // Daily
+		);
+	}
+
+	// Register token refresh job if LLM service has OAuth pool
+	if let Some(ref llm_service) = state.llm_service {
+		if llm_service.is_anthropic_oauth_pool() {
+			use loom_server::jobs::TokenRefreshJob;
+			scheduler.register_periodic(
+				Arc::new(TokenRefreshJob::new(Arc::clone(llm_service))),
+				Duration::from_secs(300), // 5 minutes
+			);
+		}
+	}
+
+	let scheduler = Arc::new(scheduler);
+
+	// Update state with scheduler and repository
+	state.job_scheduler = Some(Arc::clone(&scheduler));
+	state.job_repository = Some(Arc::clone(&job_repo));
+
+	// Start job scheduler
+	if let Err(e) = scheduler.start().await {
+		tracing::error!(error = %e, "Failed to start job scheduler");
+	}
 
 	let app = create_router(state)
 		.layer(TraceLayer::new_for_http())
@@ -116,13 +169,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		}
 		_ = tokio::signal::ctrl_c() => {
 			tracing::info!("Received shutdown signal");
+			tracing::info!("Shutting down job scheduler...");
+			scheduler.shutdown().await;
 		}
-	}
-
-	// Cancel cleanup task on shutdown
-	if let Some(task) = cleanup_task {
-		tracing::info!("Cancelling cleanup task");
-		task.abort();
 	}
 
 	tracing::info!("Server shutdown complete");

@@ -36,6 +36,7 @@ members = [
 	"crates/loom-smtp",
 	"crates/loom-i18n",
 	"crates/loom-geoip",
+	"crates/loom-jobs",
 ]
 
 [workspace.package]
@@ -130,3 +131,4 @@ loom-secret = { path = "crates/loom-secret" }
 loom-version = { path = "crates/loom-version" }
 loom-k8s = { path = "crates/loom-k8s" }
 loom-geoip = { path = "crates/loom-geoip" }
+loom-jobs = { path = "crates/loom-jobs" }

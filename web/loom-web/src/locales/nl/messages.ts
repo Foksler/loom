@@ -7,6 +7,8 @@ export const messages = {
 	// Navigation
 	'nav.threads': 'Threads',
 	'nav.settings': 'Instellingen',
+	'nav.admin': 'Admin',
+	'nav.jobs': 'Taken',
 
 	// Thread actions
 	'thread.new': 'Nieuwe thread',

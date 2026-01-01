@@ -7,6 +7,8 @@ export const messages = {
 	// Navigation
 	'nav.threads': 'Νήματα',
 	'nav.settings': 'Ρυθμίσεις',
+	'nav.admin': 'Διαχείριση',
+	'nav.jobs': 'Εργασίες',
 
 	// Thread actions
 	'thread.new': 'Νέο Νήμα',
