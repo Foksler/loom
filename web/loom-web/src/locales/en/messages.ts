@@ -109,6 +109,13 @@ export const messages = {
 	// Settings - Profile
 	'settings.profile.title': 'Profile Settings',
 	'settings.profile.displayName': 'Display Name',
+	'settings.profile.username': 'Username',
+	'settings.profile.usernamePlaceholder': 'Enter username',
+	'settings.profile.usernameHint': 'Your username is used for git repository URLs',
+	'settings.profile.usernameInvalid': 'Username can only contain letters, numbers, and underscores',
+	'settings.profile.usernameTaken': 'This username is already taken',
+	'settings.profile.usernameTooShort': 'Username must be at least 3 characters',
+	'settings.profile.usernameTooLong': 'Username must be at most 39 characters',
 	'settings.profile.email': 'Email',
 	'settings.profile.emailHint': 'Email cannot be changed here',
 	'settings.profile.locale': 'Language',

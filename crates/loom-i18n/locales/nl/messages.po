@@ -228,6 +228,30 @@ msgstr "Identiteit niet gevonden"
 msgid "server.api.user.cannot_unlink_last_identity"
 msgstr "Kan laatste identiteit niet ontkoppelen"
 
+#: API: User - Username updated
+msgid "server.api.user.username_updated"
+msgstr "Gebruikersnaam succesvol bijgewerkt"
+
+#: API: User - Username invalid
+msgid "server.api.user.username_invalid"
+msgstr "Ongeldig gebruikersnaamformaat"
+
+#: API: User - Username taken
+msgid "server.api.user.username_taken"
+msgstr "Deze gebruikersnaam is al in gebruik"
+
+#: API: User - Username too short
+msgid "server.api.user.username_too_short"
+msgstr "Gebruikersnaam moet minimaal 3 tekens bevatten"
+
+#: API: User - Username too long
+msgid "server.api.user.username_too_long"
+msgstr "Gebruikersnaam mag maximaal 39 tekens bevatten"
+
+#: API: User - Username reserved
+msgid "server.api.user.username_reserved"
+msgstr "Deze gebruikersnaam is gereserveerd en kan niet worden gebruikt"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================
@@ -251,6 +275,10 @@ msgstr "Slug mag alleen kleine letters, cijfers en koppeltekens bevatten"
 #: API: Org - Slug exists
 msgid "server.api.org.slug_exists"
 msgstr "Er bestaat al een organisatie met deze slug"
+
+#: API: Org - Slug reserved
+msgid "server.api.org.slug_reserved"
+msgstr "This organization slug is reserved"
 
 #: API: Org - Invalid role
 msgid "server.api.org.invalid_role"

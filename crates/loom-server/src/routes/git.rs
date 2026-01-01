@@ -251,7 +251,7 @@ async fn resolve_repo(
 		}
 	}
 
-	if let Ok(Some(user)) = state.user_repo.get_user_by_display_name(owner).await {
+	if let Ok(Some(user)) = state.user_repo.get_user_by_username(owner).await {
 		if let Some(scm_repo) = scm_store
 			.get_by_owner_and_name(loom_scm::OwnerType::User, user.id.into_inner(), repo_name)
 			.await

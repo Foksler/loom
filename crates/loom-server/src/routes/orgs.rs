@@ -17,6 +17,7 @@ use axum::{
 };
 use chrono::{DateTime, Utc};
 use loom_auth::{
+	is_username_reserved,
 	org::{OrgVisibility, Organization},
 	types::{OrgId, OrgRole, UserId},
 	Action, Visibility,
@@ -332,6 +333,17 @@ pub async fn create_org(
 		return (StatusCode::BAD_REQUEST, Json(e)).into_response();
 	}
 
+	if is_username_reserved(&payload.slug) {
+		return (
+			StatusCode::BAD_REQUEST,
+			Json(OrgErrorResponse {
+				error: "slug_reserved".to_string(),
+				message: t(locale, "server.api.org.slug_reserved").to_string(),
+			}),
+		)
+			.into_response();
+	}
+
 	match state.org_repo.get_org_by_slug(&payload.slug).await {
 		Ok(Some(_)) => {
 			return (
@@ -588,6 +600,17 @@ pub async fn update_org(
 		if new_slug != &org.slug {
 			if let Err(e) = validate_slug(new_slug, locale) {
 				return (StatusCode::BAD_REQUEST, Json(e)).into_response();
+			}
+
+			if is_username_reserved(new_slug) {
+				return (
+					StatusCode::BAD_REQUEST,
+					Json(OrgErrorResponse {
+						error: "slug_reserved".to_string(),
+						message: t(locale, "server.api.org.slug_reserved").to_string(),
+					}),
+				)
+					.into_response();
 			}
 
 			match state.org_repo.get_org_by_slug(new_slug).await {

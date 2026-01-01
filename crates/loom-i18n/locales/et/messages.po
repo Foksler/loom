@@ -228,6 +228,30 @@ msgstr "Identiteeti ei leitud"
 msgid "server.api.user.cannot_unlink_last_identity"
 msgstr "Viimast identiteeti ei saa lahti ühendada"
 
+#: API: User - Username updated
+msgid "server.api.user.username_updated"
+msgstr "Kasutajanimi edukalt uuendatud"
+
+#: API: User - Username invalid
+msgid "server.api.user.username_invalid"
+msgstr "Vigane kasutajanime vorming"
+
+#: API: User - Username taken
+msgid "server.api.user.username_taken"
+msgstr "See kasutajanimi on juba võetud"
+
+#: API: User - Username too short
+msgid "server.api.user.username_too_short"
+msgstr "Kasutajanimi peab olema vähemalt 3 tähemärki"
+
+#: API: User - Username too long
+msgid "server.api.user.username_too_long"
+msgstr "Kasutajanimi võib olla kuni 39 tähemärki"
+
+#: API: User - Username reserved
+msgid "server.api.user.username_reserved"
+msgstr "See kasutajanimi on reserveeritud ja seda ei saa kasutada"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================
@@ -251,6 +275,10 @@ msgstr "Lühinimi tohib sisaldada ainult väiketähti, numbreid ja sidekriipse"
 #: API: Org - Slug exists
 msgid "server.api.org.slug_exists"
 msgstr "Selle lühinimega organisatsioon on juba olemas"
+
+#: API: Org - Slug reserved
+msgid "server.api.org.slug_reserved"
+msgstr "This organization slug is reserved"
 
 #: API: Org - Invalid role
 msgid "server.api.org.invalid_role"

@@ -228,6 +228,30 @@ msgstr "ID를 찾을 수 없습니다"
 msgid "server.api.user.cannot_unlink_last_identity"
 msgstr "마지막 ID는 연결 해제할 수 없습니다"
 
+#: API: User - Username updated
+msgid "server.api.user.username_updated"
+msgstr "사용자 이름이 성공적으로 업데이트되었습니다"
+
+#: API: User - Username invalid
+msgid "server.api.user.username_invalid"
+msgstr "잘못된 사용자 이름 형식입니다"
+
+#: API: User - Username taken
+msgid "server.api.user.username_taken"
+msgstr "이미 사용 중인 사용자 이름입니다"
+
+#: API: User - Username too short
+msgid "server.api.user.username_too_short"
+msgstr "사용자 이름은 3자 이상이어야 합니다"
+
+#: API: User - Username too long
+msgid "server.api.user.username_too_long"
+msgstr "사용자 이름은 39자 이하여야 합니다"
+
+#: API: User - Username reserved
+msgid "server.api.user.username_reserved"
+msgstr "이 사용자 이름은 예약되어 있어 사용할 수 없습니다"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================
@@ -251,6 +275,10 @@ msgstr "슬러그는 소문자 영숫자와 하이픈만 포함할 수 있습니
 #: API: Org - Slug exists
 msgid "server.api.org.slug_exists"
 msgstr "이 슬러그를 사용하는 조직이 이미 존재합니다"
+
+#: API: Org - Slug reserved
+msgid "server.api.org.slug_reserved"
+msgstr "This organization slug is reserved"
 
 #: API: Org - Invalid role
 msgid "server.api.org.invalid_role"

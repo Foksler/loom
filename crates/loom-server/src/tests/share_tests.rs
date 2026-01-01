@@ -61,6 +61,7 @@ async fn create_test_user_with_session(
 	let user = User {
 		id: UserId::generate(),
 		display_name: email.to_string(),
+		username: None,
 		primary_email: Some(email.to_string()),
 		avatar_url: None,
 		email_visible: false,

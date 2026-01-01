@@ -228,6 +228,30 @@ msgstr "Identità non trovata"
 msgid "server.api.user.cannot_unlink_last_identity"
 msgstr "Impossibile scollegare l'ultima identità"
 
+#: API: User - Username updated
+msgid "server.api.user.username_updated"
+msgstr "Nome utente aggiornato con successo"
+
+#: API: User - Username invalid
+msgid "server.api.user.username_invalid"
+msgstr "Formato del nome utente non valido"
+
+#: API: User - Username taken
+msgid "server.api.user.username_taken"
+msgstr "Questo nome utente è già in uso"
+
+#: API: User - Username too short
+msgid "server.api.user.username_too_short"
+msgstr "Il nome utente deve contenere almeno 3 caratteri"
+
+#: API: User - Username too long
+msgid "server.api.user.username_too_long"
+msgstr "Il nome utente deve contenere al massimo 39 caratteri"
+
+#: API: User - Username reserved
+msgid "server.api.user.username_reserved"
+msgstr "Questo nome utente è riservato e non può essere utilizzato"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================
@@ -251,6 +275,10 @@ msgstr "Lo slug deve contenere solo caratteri alfanumerici minuscoli e trattini"
 #: API: Org - Slug exists
 msgid "server.api.org.slug_exists"
 msgstr "Esiste già un'organizzazione con questo slug"
+
+#: API: Org - Slug reserved
+msgid "server.api.org.slug_reserved"
+msgstr "This organization slug is reserved"
 
 #: API: Org - Invalid role
 msgid "server.api.org.invalid_role"

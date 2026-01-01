@@ -228,6 +228,30 @@ msgstr "Identity not found"
 msgid "server.api.user.cannot_unlink_last_identity"
 msgstr "Cannot unlink last identity"
 
+#: API: User - Username updated
+msgid "server.api.user.username_updated"
+msgstr "Username updated successfully"
+
+#: API: User - Username invalid
+msgid "server.api.user.username_invalid"
+msgstr "Invalid username format"
+
+#: API: User - Username taken
+msgid "server.api.user.username_taken"
+msgstr "Username is already taken"
+
+#: API: User - Username too short
+msgid "server.api.user.username_too_short"
+msgstr "Username must be at least 3 characters"
+
+#: API: User - Username too long
+msgid "server.api.user.username_too_long"
+msgstr "Username must be at most 39 characters"
+
+#: API: User - Username reserved
+msgid "server.api.user.username_reserved"
+msgstr "This username is reserved and cannot be used"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================
@@ -251,6 +275,10 @@ msgstr "Slug must contain only lowercase alphanumeric characters and hyphens"
 #: API: Org - Slug exists
 msgid "server.api.org.slug_exists"
 msgstr "An organization with this slug already exists"
+
+#: API: Org - Slug reserved
+msgid "server.api.org.slug_reserved"
+msgstr "This organization slug is reserved"
 
 #: API: Org - Invalid role
 msgid "server.api.org.invalid_role"

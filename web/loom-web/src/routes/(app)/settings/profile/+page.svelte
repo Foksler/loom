@@ -9,10 +9,12 @@
 	import { authStore } from '$lib/auth';
 	import { Card, Button, Input } from '$lib/ui';
 
-	const parentData = $derived($page.data as { user: import('$lib/api/types').CurrentUser });
+	const parentData = $derived($page.data as { user: import('$lib/api/types').CurrentUser & { username?: string } });
 	const user = $derived(parentData.user);
 
 	let displayName = $state(user?.display_name ?? '');
+	let username = $state(user?.username ?? '');
+	let usernameError = $state<string | null>(null);
 	let selectedLocale = $state<Locale>((user?.locale as Locale) ?? 'en');
 	let saving = $state(false);
 	let successMessage = $state<string | null>(null);
@@ -21,13 +23,37 @@
 	$effect(() => {
 		if (user) {
 			displayName = user.display_name ?? '';
+			username = user.username ?? '';
 			selectedLocale = (user.locale as Locale) ?? 'en';
 		}
 	});
 
+	function validateUsername(value: string): string | null {
+		if (value.length > 0 && value.length < 3) {
+			return i18n._('settings.profile.usernameTooShort');
+		}
+		if (value.length > 39) {
+			return i18n._('settings.profile.usernameTooLong');
+		}
+		if (value && !/^[a-zA-Z0-9_]+$/.test(value)) {
+			return i18n._('settings.profile.usernameInvalid');
+		}
+		return null;
+	}
+
+	function handleUsernameInput(event: Event) {
+		const target = event.target as HTMLInputElement;
+		username = target.value;
+		usernameError = validateUsername(username);
+	}
+
 	const client = getApiClient();
 
 	async function handleSave() {
+		if (usernameError) {
+			return;
+		}
+
 		saving = true;
 		successMessage = null;
 		errorMessage = null;
@@ -35,13 +61,18 @@
 		try {
 			const updatedUser = await client.updateProfile({
 				display_name: displayName,
+				username: username || undefined,
 				locale: selectedLocale,
 			});
 			authStore.loginSuccess(updatedUser);
 			setLocale(selectedLocale);
 			successMessage = i18n._('settings.profile.saved');
 		} catch (e) {
-			errorMessage = e instanceof Error ? e.message : i18n._('settings.profile.error');
+			if (e instanceof Error && e.message.includes('taken')) {
+				usernameError = i18n._('settings.profile.usernameTaken');
+			} else {
+				errorMessage = e instanceof Error ? e.message : i18n._('settings.profile.error');
+			}
 		} finally {
 			saving = false;
 		}
@@ -68,6 +99,19 @@
 				label={i18n._('settings.profile.displayName')}
 				bind:value={displayName}
 			/>
+
+			<Input
+				label={i18n._('settings.profile.username')}
+				placeholder={i18n._('settings.profile.usernamePlaceholder')}
+				value={username}
+				oninput={handleUsernameInput}
+				error={usernameError ?? undefined}
+			/>
+			{#if !usernameError}
+				<p class="-mt-4 text-sm text-fg-muted">
+					{i18n._('settings.profile.usernameHint')}
+				</p>
+			{/if}
 
 			<div class="w-full">
 				<label for="email" class="block text-sm font-medium text-fg mb-1.5">
@@ -116,7 +160,7 @@
 			{/if}
 
 			<div class="flex justify-end">
-				<Button type="submit" disabled={saving} loading={saving}>
+				<Button type="submit" disabled={saving || !!usernameError} loading={saving}>
 					{saving ? i18n._('settings.profile.saving') : i18n._('settings.profile.save')}
 				</Button>
 			</div>

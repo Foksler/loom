@@ -228,6 +228,30 @@ msgstr "Η ταυτότητα δεν βρέθηκε"
 msgid "server.api.user.cannot_unlink_last_identity"
 msgstr "Δεν είναι δυνατή η αποσύνδεση της τελευταίας ταυτότητας"
 
+#: API: User - Username updated
+msgid "server.api.user.username_updated"
+msgstr "Το όνομα χρήστη ενημερώθηκε επιτυχώς"
+
+#: API: User - Username invalid
+msgid "server.api.user.username_invalid"
+msgstr "Μη έγκυρη μορφή ονόματος χρήστη"
+
+#: API: User - Username taken
+msgid "server.api.user.username_taken"
+msgstr "Αυτό το όνομα χρήστη χρησιμοποιείται ήδη"
+
+#: API: User - Username too short
+msgid "server.api.user.username_too_short"
+msgstr "Το όνομα χρήστη πρέπει να έχει τουλάχιστον 3 χαρακτήρες"
+
+#: API: User - Username too long
+msgid "server.api.user.username_too_long"
+msgstr "Το όνομα χρήστη πρέπει να έχει το πολύ 39 χαρακτήρες"
+
+#: API: User - Username reserved
+msgid "server.api.user.username_reserved"
+msgstr "Αυτό το όνομα χρήστη είναι δεσμευμένο και δεν μπορεί να χρησιμοποιηθεί"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================
@@ -251,6 +275,10 @@ msgstr "Το slug πρέπει να περιέχει μόνο πεζούς αλ�
 #: API: Org - Slug exists
 msgid "server.api.org.slug_exists"
 msgstr "Υπάρχει ήδη οργανισμός με αυτό το slug"
+
+#: API: Org - Slug reserved
+msgid "server.api.org.slug_reserved"
+msgstr "This organization slug is reserved"
 
 #: API: Org - Invalid role
 msgid "server.api.org.invalid_role"

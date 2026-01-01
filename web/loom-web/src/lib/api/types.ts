@@ -292,6 +292,7 @@ export interface SessionListResponse {
 
 export interface UpdateProfileRequest {
 	display_name?: string;
+	username?: string;
 	locale?: string;
 }
 

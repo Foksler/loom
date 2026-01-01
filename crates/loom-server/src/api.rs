@@ -248,9 +248,11 @@ pub async fn create_or_get_dev_user(
 
 	// Create new dev user with full privileges
 	let now = chrono::Utc::now();
+	let username = user_repo.generate_unique_username(display_name).await?;
 	let user = loom_auth::User {
 		id: loom_auth::UserId::generate(),
 		display_name: display_name.to_string(),
+		username: Some(username),
 		primary_email: Some(email.to_string()),
 		avatar_url: None,
 		email_visible: true,

@@ -48,14 +48,15 @@ impl UserRepository {
 		sqlx::query(
 			r#"
 			INSERT INTO users (
-				id, display_name, primary_email, avatar_url,
+				id, display_name, username, primary_email, avatar_url,
 				email_visible, is_system_admin, is_support, is_auditor,
 				created_at, updated_at, deleted_at, locale
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			"#,
 		)
 		.bind(user.id.to_string())
 		.bind(&user.display_name)
+		.bind(&user.username)
 		.bind(&user.primary_email)
 		.bind(&user.avatar_url)
 		.bind(user.email_visible as i32)
@@ -84,7 +85,7 @@ impl UserRepository {
 	pub async fn get_user_by_id(&self, id: &UserId) -> Result<Option<User>, ServerError> {
 		let row = sqlx::query(
 			r#"
-			SELECT id, display_name, primary_email, avatar_url,
+			SELECT id, display_name, username, primary_email, avatar_url,
 				   email_visible, is_system_admin, is_support, is_auditor,
 				   created_at, updated_at, deleted_at, locale
 			FROM users
@@ -112,7 +113,7 @@ impl UserRepository {
 	) -> Result<Option<User>, ServerError> {
 		let row = sqlx::query(
 			r#"
-			SELECT id, display_name, primary_email, avatar_url,
+			SELECT id, display_name, username, primary_email, avatar_url,
 				   email_visible, is_system_admin, is_support, is_auditor,
 				   created_at, updated_at, deleted_at, locale
 			FROM users
@@ -141,7 +142,7 @@ impl UserRepository {
 	pub async fn get_user_by_email(&self, email: &str) -> Result<Option<User>, ServerError> {
 		let row = sqlx::query(
 			r#"
-			SELECT id, display_name, primary_email, avatar_url,
+			SELECT id, display_name, username, primary_email, avatar_url,
 				   email_visible, is_system_admin, is_support, is_auditor,
 				   created_at, updated_at, deleted_at, locale
 			FROM users
@@ -173,6 +174,7 @@ impl UserRepository {
 			r#"
 			UPDATE users SET
 				display_name = ?,
+				username = ?,
 				primary_email = ?,
 				avatar_url = ?,
 				email_visible = ?,
@@ -186,6 +188,7 @@ impl UserRepository {
 			"#,
 		)
 		.bind(&user.display_name)
+		.bind(&user.username)
 		.bind(&user.primary_email)
 		.bind(&user.avatar_url)
 		.bind(user.email_visible as i32)
@@ -263,6 +266,89 @@ impl UserRepository {
 		Ok(())
 	}
 
+	/// Get a user by their username (case-insensitive).
+	#[tracing::instrument(skip(self))]
+	pub async fn get_user_by_username(
+		&self,
+		username: &str,
+	) -> Result<Option<User>, ServerError> {
+		let row = sqlx::query(
+			r#"
+			SELECT id, display_name, username, primary_email, avatar_url,
+				   email_visible, is_system_admin, is_support, is_auditor,
+				   created_at, updated_at, deleted_at, locale
+			FROM users
+			WHERE LOWER(username) = LOWER(?) AND deleted_at IS NULL
+			"#,
+		)
+		.bind(username)
+		.fetch_optional(&self.pool)
+		.await?;
+
+		let result = row.map(|r| self.row_to_user(&r)).transpose()?;
+		if let Some(ref user) = result {
+			tracing::debug!(user_id = %user.id, "user found by username");
+		}
+		Ok(result)
+	}
+
+	/// Check if a username is available (case-insensitive).
+	#[tracing::instrument(skip(self))]
+	pub async fn is_username_available(&self, username: &str) -> Result<bool, ServerError> {
+		let count: (i64,) =
+			sqlx::query_as("SELECT COUNT(*) FROM users WHERE LOWER(username) = LOWER(?)")
+				.bind(username)
+				.fetch_one(&self.pool)
+				.await?;
+
+		Ok(count.0 == 0)
+	}
+
+	/// Generate a unique username from a base, adding numeric suffix if needed.
+	#[tracing::instrument(skip(self))]
+	pub async fn generate_unique_username(&self, base: &str) -> Result<String, ServerError> {
+		use loom_auth::generate_username_base;
+
+		let sanitized = generate_username_base(base);
+
+		if self.is_username_available(&sanitized).await? {
+			return Ok(sanitized);
+		}
+
+		for i in 1..1000 {
+			let candidate = format!("{}{}", sanitized, i);
+			if candidate.len() <= 39 && self.is_username_available(&candidate).await? {
+				return Ok(candidate);
+			}
+		}
+
+		let uuid_suffix = Uuid::new_v4().to_string().replace("-", "");
+		Ok(format!(
+			"{}_{}",
+			&sanitized[..sanitized.len().min(20)],
+			&uuid_suffix[..8]
+		))
+	}
+
+	/// Update a user's username.
+	#[tracing::instrument(skip(self), fields(user_id = %user_id))]
+	pub async fn update_username(
+		&self,
+		user_id: &UserId,
+		username: &str,
+	) -> Result<(), ServerError> {
+		let now = Utc::now().to_rfc3339();
+		sqlx::query("UPDATE users SET username = ?, updated_at = ? WHERE id = ?")
+			.bind(username)
+			.bind(&now)
+			.bind(user_id.to_string())
+			.execute(&self.pool)
+			.await?;
+
+		tracing::debug!(user_id = %user_id, "user username updated");
+		Ok(())
+	}
+
 	/// List users with pagination and optional search.
 	///
 	/// # Arguments
@@ -283,7 +369,7 @@ impl UserRepository {
 			let pattern = format!("%{search_term}%");
 			let rows = sqlx::query(
 				r#"
-				SELECT id, display_name, primary_email, avatar_url,
+				SELECT id, display_name, username, primary_email, avatar_url,
 					   email_visible, is_system_admin, is_support, is_auditor,
 					   created_at, updated_at, deleted_at, locale
 				FROM users
@@ -320,7 +406,7 @@ impl UserRepository {
 		} else {
 			let rows = sqlx::query(
 				r#"
-				SELECT id, display_name, primary_email, avatar_url,
+				SELECT id, display_name, username, primary_email, avatar_url,
 					   email_visible, is_system_admin, is_support, is_auditor,
 					   created_at, updated_at, deleted_at, locale
 				FROM users
@@ -473,22 +559,34 @@ impl UserRepository {
 	/// * `email` - The user's email address
 	/// * `display_name` - Display name for new users
 	/// * `avatar_url` - Optional avatar URL for new users
-	#[tracing::instrument(skip(self, email, display_name, avatar_url))]
+	/// * `preferred_username` - Optional preferred username (e.g., GitHub login)
+	#[tracing::instrument(skip(self, email, display_name, avatar_url, preferred_username))]
 	pub async fn find_or_create_user_by_email(
 		&self,
 		email: &str,
 		display_name: &str,
 		avatar_url: Option<&str>,
+		preferred_username: Option<&str>,
 	) -> Result<User, ServerError> {
-		if let Some(user) = self.get_user_by_email(email).await? {
+		if let Some(mut user) = self.get_user_by_email(email).await? {
 			tracing::debug!(user_id = %user.id, "found existing user by email");
+			if user.username.is_none() {
+				let username_base = preferred_username.unwrap_or(display_name);
+				let username = self.generate_unique_username(username_base).await?;
+				self.update_username(&user.id, &username).await?;
+				user.username = Some(username);
+				tracing::debug!(user_id = %user.id, "set username for existing user");
+			}
 			return Ok(user);
 		}
 
 		let now = Utc::now();
+		let username_base = preferred_username.unwrap_or(display_name);
+		let username = self.generate_unique_username(username_base).await?;
 		let user = User {
 			id: UserId::generate(),
 			display_name: display_name.to_string(),
+			username: Some(username),
 			primary_email: Some(email.to_string()),
 			avatar_url: avatar_url.map(|s| s.to_string()),
 			email_visible: true,
@@ -570,6 +668,7 @@ impl UserRepository {
 		Ok(User {
 			id: UserId::new(id),
 			display_name: row.get("display_name"),
+			username: row.get("username"),
 			primary_email: row.get("primary_email"),
 			avatar_url: row.get("avatar_url"),
 			email_visible: email_visible != 0,

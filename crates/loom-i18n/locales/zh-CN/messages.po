@@ -228,6 +228,30 @@ msgstr "未找到身份"
 msgid "server.api.user.cannot_unlink_last_identity"
 msgstr "无法解除最后一个身份的关联"
 
+#: API: User - Username updated
+msgid "server.api.user.username_updated"
+msgstr "用户名更新成功"
+
+#: API: User - Username invalid
+msgid "server.api.user.username_invalid"
+msgstr "用户名格式无效"
+
+#: API: User - Username taken
+msgid "server.api.user.username_taken"
+msgstr "用户名已被使用"
+
+#: API: User - Username too short
+msgid "server.api.user.username_too_short"
+msgstr "用户名至少需要3个字符"
+
+#: API: User - Username too long
+msgid "server.api.user.username_too_long"
+msgstr "用户名最多39个字符"
+
+#: API: User - Username reserved
+msgid "server.api.user.username_reserved"
+msgstr "此用户名已被保留，无法使用"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================
@@ -251,6 +275,10 @@ msgstr "标识符只能包含小写字母、数字和连字符"
 #: API: Org - Slug exists
 msgid "server.api.org.slug_exists"
 msgstr "具有此标识符的组织已存在"
+
+#: API: Org - Slug reserved
+msgid "server.api.org.slug_reserved"
+msgstr "This organization slug is reserved"
 
 #: API: Org - Invalid role
 msgid "server.api.org.invalid_role"

@@ -228,6 +228,30 @@ msgstr "IDが見つかりません"
 msgid "server.api.user.cannot_unlink_last_identity"
 msgstr "最後のIDの連携を解除することはできません"
 
+#: API: User - Username updated
+msgid "server.api.user.username_updated"
+msgstr "ユーザー名が正常に更新されました"
+
+#: API: User - Username invalid
+msgid "server.api.user.username_invalid"
+msgstr "ユーザー名の形式が無効です"
+
+#: API: User - Username taken
+msgid "server.api.user.username_taken"
+msgstr "このユーザー名は既に使用されています"
+
+#: API: User - Username too short
+msgid "server.api.user.username_too_short"
+msgstr "ユーザー名は3文字以上である必要があります"
+
+#: API: User - Username too long
+msgid "server.api.user.username_too_long"
+msgstr "ユーザー名は39文字以下である必要があります"
+
+#: API: User - Username reserved
+msgid "server.api.user.username_reserved"
+msgstr "このユーザー名は予約されており、使用できません"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================
@@ -251,6 +275,10 @@ msgstr "スラッグには小文字の英数字とハイフンのみを使用で
 #: API: Org - Slug exists
 msgid "server.api.org.slug_exists"
 msgstr "このスラッグの組織はすでに存在します"
+
+#: API: Org - Slug reserved
+msgid "server.api.org.slug_reserved"
+msgstr "This organization slug is reserved"
 
 #: API: Org - Invalid role
 msgid "server.api.org.invalid_role"

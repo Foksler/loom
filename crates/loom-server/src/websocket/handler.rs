@@ -571,6 +571,7 @@ mod tests {
 		let user = User {
 			id: UserId::generate(),
 			display_name: "Test User".to_string(),
+			username: None,
 			primary_email: None,
 			avatar_url: None,
 			email_visible: true,

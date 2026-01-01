@@ -443,7 +443,7 @@ impl OrgRepository {
 			r#"
 			SELECT 
 				m.org_id, m.user_id, m.role, m.created_at,
-				u.id as u_id, u.display_name, u.primary_email, u.avatar_url,
+				u.id as u_id, u.display_name, u.username, u.primary_email, u.avatar_url,
 				u.email_visible, u.is_system_admin, u.is_support, u.is_auditor,
 				u.created_at as u_created_at, u.updated_at as u_updated_at, u.deleted_at as u_deleted_at,
 				u.locale
@@ -777,7 +777,7 @@ impl OrgRepository {
 			r#"
 			SELECT 
 				jr.id as jr_id, jr.org_id, jr.user_id, jr.created_at, jr.handled_at, jr.handled_by, jr.approved,
-				u.id as u_id, u.display_name, u.primary_email, u.avatar_url,
+				u.id as u_id, u.display_name, u.username, u.primary_email, u.avatar_url,
 				u.email_visible, u.is_system_admin, u.is_support, u.is_auditor,
 				u.created_at as u_created_at, u.updated_at as u_updated_at, u.deleted_at as u_deleted_at,
 				u.locale
@@ -1010,6 +1010,7 @@ impl OrgRepository {
 		Ok(User {
 			id: UserId::new(id),
 			display_name: row.get("display_name"),
+			username: row.get("username"),
 			primary_email: row.get("primary_email"),
 			avatar_url: row.get("avatar_url"),
 			email_visible: email_visible != 0,

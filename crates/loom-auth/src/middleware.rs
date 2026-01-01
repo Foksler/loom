@@ -358,6 +358,7 @@ mod tests {
             User {
                 id: UserId::generate(),
                 display_name: "Test User".to_string(),
+                username: None,
                 primary_email: Some("test@example.com".to_string()),
                 avatar_url: None,
                 email_visible: true,
@@ -463,6 +464,7 @@ mod tests {
             User {
                 id: UserId::generate(),
                 display_name: "Test User".to_string(),
+                username: None,
                 primary_email: Some("test@example.com".to_string()),
                 avatar_url: None,
                 email_visible: true,

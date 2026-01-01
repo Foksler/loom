@@ -228,6 +228,30 @@ msgstr "Identitas tidak ditemukan"
 msgid "server.api.user.cannot_unlink_last_identity"
 msgstr "Tidak dapat memutus identitas terakhir"
 
+#: API: User - Username updated
+msgid "server.api.user.username_updated"
+msgstr "Nama pengguna berhasil diperbarui"
+
+#: API: User - Username invalid
+msgid "server.api.user.username_invalid"
+msgstr "Format nama pengguna tidak valid"
+
+#: API: User - Username taken
+msgid "server.api.user.username_taken"
+msgstr "Nama pengguna sudah digunakan"
+
+#: API: User - Username too short
+msgid "server.api.user.username_too_short"
+msgstr "Nama pengguna minimal 3 karakter"
+
+#: API: User - Username too long
+msgid "server.api.user.username_too_long"
+msgstr "Nama pengguna maksimal 39 karakter"
+
+#: API: User - Username reserved
+msgid "server.api.user.username_reserved"
+msgstr "Nama pengguna ini sudah dipesan dan tidak dapat digunakan"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================
@@ -251,6 +275,10 @@ msgstr "Slug hanya boleh berisi karakter alfanumerik huruf kecil dan tanda hubun
 #: API: Org - Slug exists
 msgid "server.api.org.slug_exists"
 msgstr "Organisasi dengan slug ini sudah ada"
+
+#: API: Org - Slug reserved
+msgid "server.api.org.slug_reserved"
+msgstr "This organization slug is reserved"
 
 #: API: Org - Invalid role
 msgid "server.api.org.invalid_role"

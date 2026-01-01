@@ -228,6 +228,30 @@ msgstr "আইডেন্টিটি পাওয়া যায়নি"
 msgid "server.api.user.cannot_unlink_last_identity"
 msgstr "শেষ আইডেন্টিটি আনলিংক করা যাবে না"
 
+#: API: User - Username updated
+msgid "server.api.user.username_updated"
+msgstr "ব্যবহারকারীর নাম সফলভাবে আপডেট হয়েছে"
+
+#: API: User - Username invalid
+msgid "server.api.user.username_invalid"
+msgstr "ব্যবহারকারীর নামের ফরম্যাট অবৈধ"
+
+#: API: User - Username taken
+msgid "server.api.user.username_taken"
+msgstr "এই ব্যবহারকারীর নাম ইতিমধ্যে ব্যবহৃত হচ্ছে"
+
+#: API: User - Username too short
+msgid "server.api.user.username_too_short"
+msgstr "ব্যবহারকারীর নাম কমপক্ষে ৩ অক্ষরের হতে হবে"
+
+#: API: User - Username too long
+msgid "server.api.user.username_too_long"
+msgstr "ব্যবহারকারীর নাম সর্বাধিক ৩৯ অক্ষরের হতে হবে"
+
+#: API: User - Username reserved
+msgid "server.api.user.username_reserved"
+msgstr "এই ব্যবহারকারীর নাম সংরক্ষিত এবং ব্যবহার করা যাবে না"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================
@@ -251,6 +275,10 @@ msgstr "স্লাগে শুধুমাত্র ছোট হাতের
 #: API: Org - Slug exists
 msgid "server.api.org.slug_exists"
 msgstr "এই স্লাগ সহ একটি সংস্থা ইতিমধ্যে বিদ্যমান"
+
+#: API: Org - Slug reserved
+msgid "server.api.org.slug_reserved"
+msgstr "This organization slug is reserved"
 
 #: API: Org - Invalid role
 msgid "server.api.org.invalid_role"

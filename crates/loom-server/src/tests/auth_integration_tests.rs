@@ -635,6 +635,7 @@ fn create_test_user(email: &str) -> User {
 	User {
 		id: UserId::generate(),
 		display_name: "Test User".to_string(),
+		username: None,
 		primary_email: Some(email.to_string()),
 		avatar_url: None,
 		email_visible: false,

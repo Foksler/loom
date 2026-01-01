@@ -217,7 +217,8 @@ pub async fn create_repo(
 				)
 					.into_response();
 			}
-			owner_name = current_user.user.display_name.clone();
+			owner_name = current_user.user.username.clone()
+				.unwrap_or_else(|| current_user.user.display_name.clone());
 		}
 		OwnerType::Org => {
 			let org_id = OrgId::new(payload.owner_id);
@@ -458,7 +459,7 @@ pub async fn get_repo(
 	let owner_name = match repo.owner_type {
 		OwnerType::User => {
 			match state.user_repo.get_user_by_id(&UserId::new(repo.owner_id)).await {
-				Ok(Some(u)) => u.display_name,
+				Ok(Some(u)) => u.username.unwrap_or(u.display_name),
 				_ => "unknown".to_string(),
 			}
 		}
@@ -617,7 +618,7 @@ pub async fn update_repo(
 	let owner_name = match updated_repo.owner_type {
 		OwnerType::User => {
 			match state.user_repo.get_user_by_id(&UserId::new(updated_repo.owner_id)).await {
-				Ok(Some(u)) => u.display_name,
+				Ok(Some(u)) => u.username.unwrap_or(u.display_name),
 				_ => "unknown".to_string(),
 			}
 		}
@@ -821,11 +822,12 @@ pub async fn list_user_repos(
 	};
 
 	let is_owner = id == current_user.user.id.into_inner();
+	let owner_name = target_user.username.as_ref().unwrap_or(&target_user.display_name);
 	let visible_repos: Vec<_> = repos
 		.into_iter()
 		.filter(|r| r.visibility == Visibility::Public || is_owner)
 		.map(|r| {
-			let clone_url = build_clone_url(&state.base_url, &target_user.display_name, &r.name);
+			let clone_url = build_clone_url(&state.base_url, owner_name, &r.name);
 			RepoResponse::from_repo(r, clone_url)
 		})
 		.collect();

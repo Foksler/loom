@@ -104,7 +104,7 @@ pub use share_link::{
 pub use support_access::{SupportAccess, SUPPORT_ACCESS_DAYS};
 pub use team::{Team, TeamMembership};
 pub use types::*;
-pub use user::{Identity, Provider, User, UserProfile};
+pub use user::{generate_username_base, is_username_reserved, validate_username, Identity, Provider, User, UserProfile, RESERVED_USERNAMES};
 pub use websocket::{
     auth_timeout, close_code_for_error, close_codes, WsAuthContext, WsAuthError, WsAuthMessage,
     WsAuthMethod, WsAuthResponse, WsAuthState, WS_AUTH_TIMEOUT_SECS,

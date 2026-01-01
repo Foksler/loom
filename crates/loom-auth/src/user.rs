@@ -14,6 +14,47 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::{GlobalRole, IdentityId, UserId};
 
+/// Reserved usernames that cannot be used.
+/// These are reserved for system use, common services, or could cause confusion.
+pub const RESERVED_USERNAMES: &[&str] = &[
+    // System/admin
+    "root", "admin", "administrator", "sudo", "system", "sysadmin",
+    "postmaster", "webmaster", "hostmaster", "abuse", "security",
+    "support", "help", "info", "contact", "noreply", "no-reply",
+    // Git/version control
+    "git", "jj", "svn", "hg", "mercurial", "cvs",
+    "github", "gitlab", "bitbucket", "gitea", "forgejo", "sourcehut",
+    // Loom-specific
+    "loom", "weaver", "weavers", "thread", "threads", "cannon",
+    "mirrors", "mirror", "api", "oauth", "auth", "login", "logout",
+    "signup", "register", "settings", "profile", "account",
+    // Web/static assets
+    "static", "assets", "images", "img", "css", "js", "fonts",
+    "public", "private", "uploads", "downloads", "files",
+    "favicon", "robots", "sitemap", "manifest",
+    // Social/services
+    "discord", "slack", "twitter", "x", "instagram", "facebook",
+    "linkedin", "youtube", "tiktok", "reddit", "chat", "status",
+    // Common paths
+    "www", "web", "app", "apps", "home", "index", "default",
+    "new", "edit", "delete", "create", "update", "search",
+    "explore", "discover", "trending", "popular", "featured",
+    // Organizations/teams
+    "org", "orgs", "organization", "organizations",
+    "team", "teams", "group", "groups", "enterprise",
+    // Misc reserved
+    "null", "undefined", "none", "anonymous", "guest", "user", "users",
+    "test", "testing", "demo", "example", "sample",
+    "blog", "news", "docs", "documentation", "wiki", "forum",
+    "pricing", "about", "terms", "privacy", "legal", "dmca",
+];
+
+/// Check if a username is reserved.
+pub fn is_username_reserved(username: &str) -> bool {
+    let lower = username.to_lowercase();
+    RESERVED_USERNAMES.iter().any(|&reserved| reserved == lower)
+}
+
 /// A user in the system.
 ///
 /// Users can authenticate via multiple identity providers and may have
@@ -33,6 +74,9 @@ pub struct User {
 
     /// Display name shown in the UI.
     pub display_name: String,
+
+    /// Unique username for git URLs, profile URLs, etc.
+    pub username: Option<String>,
 
     /// Primary email address for notifications.
     /// Users may have multiple emails via different identities,
@@ -206,6 +250,71 @@ impl std::fmt::Display for Provider {
     }
 }
 
+/// Validates a username.
+/// Rules:
+/// - 3-39 characters
+/// - Alphanumeric and underscores only
+/// - Cannot start with underscore
+/// - Cannot be all numeric
+/// - Cannot be a reserved username
+pub fn validate_username(username: &str) -> Result<(), &'static str> {
+    if username.len() < 3 {
+        return Err("Username must be at least 3 characters");
+    }
+    if username.len() > 39 {
+        return Err("Username must be at most 39 characters");
+    }
+    if !username.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+        return Err("Username can only contain letters, numbers, and underscores");
+    }
+    if username.starts_with('_') {
+        return Err("Username cannot start with underscore");
+    }
+    if username.chars().all(|c| c.is_ascii_digit()) {
+        return Err("Username cannot be all numbers");
+    }
+    if is_username_reserved(username) {
+        return Err("This username is reserved");
+    }
+    Ok(())
+}
+
+/// Generates a username from a display name or email.
+/// Sanitizes to alphanumeric + underscore, lowercases.
+pub fn generate_username_base(source: &str) -> String {
+    let base = if let Some(at_pos) = source.find('@') {
+        &source[..at_pos]
+    } else {
+        source
+    };
+
+    let sanitized: String = base
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() {
+                c.to_ascii_lowercase()
+            } else {
+                '_'
+            }
+        })
+        .collect();
+
+    let collapsed: String = sanitized
+        .trim_start_matches('_')
+        .split('_')
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>()
+        .join("_");
+
+    if collapsed.len() < 3 {
+        format!("user_{}", collapsed)
+    } else if collapsed.len() > 39 {
+        collapsed[..39].to_string()
+    } else {
+        collapsed
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -214,6 +323,7 @@ mod tests {
         User {
             id: UserId::generate(),
             display_name: "Test User".to_string(),
+            username: None,
             primary_email: Some("test@example.com".to_string()),
             avatar_url: Some("https://example.com/avatar.png".to_string()),
             email_visible: true,
@@ -409,6 +519,143 @@ mod tests {
             let json = serde_json::to_string(&profile).unwrap();
             assert!(json.contains("\"display_name\":\"Test User\""));
             assert!(json.contains("\"email\":\"test@example.com\""));
+        }
+    }
+
+    mod validate_username {
+        use super::*;
+
+        #[test]
+        fn test_validate_username_valid() {
+            assert!(validate_username("alice").is_ok());
+            assert!(validate_username("bob123").is_ok());
+            assert!(validate_username("user_name").is_ok());
+            assert!(validate_username("a1b").is_ok());
+        }
+
+        #[test]
+        fn test_validate_username_too_short() {
+            assert!(validate_username("ab").is_err());
+            assert!(validate_username("a").is_err());
+            assert!(validate_username("").is_err());
+        }
+
+        #[test]
+        fn test_validate_username_too_long() {
+            let long = "a".repeat(40);
+            assert!(validate_username(&long).is_err());
+        }
+
+        #[test]
+        fn test_validate_username_invalid_chars() {
+            assert!(validate_username("user@name").is_err());
+            assert!(validate_username("user.name").is_err());
+            assert!(validate_username("user-name").is_err());
+            assert!(validate_username("user name").is_err());
+        }
+
+        #[test]
+        fn test_validate_username_starts_with_underscore() {
+            assert!(validate_username("_username").is_err());
+        }
+
+        #[test]
+        fn test_validate_username_all_numbers() {
+            assert!(validate_username("12345").is_err());
+            assert!(validate_username("123").is_err());
+        }
+
+        #[test]
+        fn test_validate_username_reserved() {
+            assert!(validate_username("root").is_err());
+            assert!(validate_username("admin").is_err());
+            assert!(validate_username("github").is_err());
+        }
+    }
+
+    mod reserved_usernames {
+        use super::*;
+
+        #[test]
+        fn test_reserved_usernames() {
+            assert!(is_username_reserved("root"));
+            assert!(is_username_reserved("ROOT")); // case insensitive
+            assert!(is_username_reserved("admin"));
+            assert!(is_username_reserved("github"));
+            assert!(is_username_reserved("loom"));
+            assert!(!is_username_reserved("alice"));
+            assert!(!is_username_reserved("bob123"));
+        }
+    }
+
+    mod generate_username {
+        use super::*;
+
+        #[test]
+        fn test_generate_username_from_email() {
+            assert_eq!(generate_username_base("alice@example.com"), "alice");
+            assert_eq!(generate_username_base("bob.smith@gmail.com"), "bob_smith");
+        }
+
+        #[test]
+        fn test_generate_username_from_name() {
+            assert_eq!(generate_username_base("Alice Smith"), "alice_smith");
+            assert_eq!(generate_username_base("Bob"), "bob");
+        }
+
+        #[test]
+        fn test_generate_username_special_chars() {
+            assert_eq!(generate_username_base("user@#$%name"), "user");
+        }
+
+        #[test]
+        fn test_generate_username_long_input() {
+            let long = "a".repeat(50);
+            let result = generate_username_base(&long);
+            assert!(result.len() <= 39);
+        }
+    }
+
+    mod username_proptests {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn prop_valid_username_format(
+                prefix in "[a-z][a-z0-9_]{2,20}"
+            ) {
+                prop_assert!(validate_username(&prefix).is_ok());
+            }
+
+            #[test]
+            fn prop_generated_username_is_valid(
+                input in "[a-zA-Z0-9@._\\- ]{1,50}"
+            ) {
+                let generated = generate_username_base(&input);
+                prop_assert!(generated.len() >= 3);
+                prop_assert!(generated.len() <= 39);
+                prop_assert!(generated.chars().all(|c| c.is_ascii_alphanumeric() || c == '_'));
+            }
+
+            #[test]
+            fn prop_username_length_bounds(
+                len in 0usize..100
+            ) {
+                let username: String = "a".repeat(len);
+                if len >= 3 && len <= 39 {
+                    let _ = validate_username(&username);
+                } else {
+                    prop_assert!(validate_username(&username).is_err());
+                }
+            }
+
+            #[test]
+            fn prop_reserved_usernames_rejected(
+                reserved in proptest::sample::select(RESERVED_USERNAMES.to_vec())
+            ) {
+                prop_assert!(validate_username(reserved).is_err());
+            }
         }
     }
 }

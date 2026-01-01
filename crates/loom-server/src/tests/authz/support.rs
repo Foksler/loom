@@ -290,6 +290,7 @@ async fn create_test_user_internal(
 	let user = User {
 		id: UserId::generate(),
 		display_name: display_name.to_string(),
+		username: None,
 		primary_email: Some(email.to_string()),
 		avatar_url: None,
 		email_visible: true,

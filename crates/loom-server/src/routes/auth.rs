@@ -902,6 +902,8 @@ pub async fn callback_github(
 		.name
 		.unwrap_or_else(|| github_user.login.clone());
 
+	let preferred_username = github_user.login.clone();
+
 	complete_oauth_login(
 		&state,
 		&email,
@@ -910,6 +912,7 @@ pub async fn callback_github(
 		"github",
 		client_info,
 		state_entry.redirect_url,
+		Some(&preferred_username),
 	)
 	.await
 }
@@ -1052,6 +1055,7 @@ pub async fn callback_google(
 		"google",
 		client_info,
 		state_entry.redirect_url,
+		None,
 	)
 	.await
 }
@@ -1184,10 +1188,21 @@ pub async fn callback_okta(
 
 	let display_name = okta_user.name.unwrap_or_else(|| okta_user.email.clone());
 
-	complete_oauth_login(&state, &okta_user.email, &display_name, None, "okta", client_info, state_entry.redirect_url).await
+	complete_oauth_login(
+		&state,
+		&okta_user.email,
+		&display_name,
+		None,
+		"okta",
+		client_info,
+		state_entry.redirect_url,
+		okta_user.preferred_username.as_deref(),
+	)
+	.await
 }
 
 /// Complete OAuth login by finding/creating user and creating session.
+#[allow(clippy::too_many_arguments)]
 async fn complete_oauth_login(
 	state: &AppState,
 	email: &str,
@@ -1196,11 +1211,12 @@ async fn complete_oauth_login(
 	provider: &str,
 	client_info: ClientInfo,
 	redirect_url: Option<String>,
+	preferred_username: Option<&str>,
 ) -> axum::response::Response {
 	let locale = state.default_locale.as_str();
 	let user = match state
 		.user_repo
-		.find_or_create_user_by_email(email, display_name, avatar_url.as_deref())
+		.find_or_create_user_by_email(email, display_name, avatar_url.as_deref(), preferred_username)
 		.await
 	{
 		Ok(user) => user,
@@ -1365,7 +1381,7 @@ pub async fn verify_magic_link(
 	// Find or create user by email
 	let user = match state
 		.user_repo
-		.find_or_create_user_by_email(&email, &email, None)
+		.find_or_create_user_by_email(&email, &email, None, None)
 		.await
 	{
 		Ok(user) => user,

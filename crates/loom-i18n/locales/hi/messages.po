@@ -228,6 +228,30 @@ msgstr "पहचान नहीं मिली"
 msgid "server.api.user.cannot_unlink_last_identity"
 msgstr "अंतिम पहचान को अनलिंक नहीं किया जा सकता"
 
+#: API: User - Username updated
+msgid "server.api.user.username_updated"
+msgstr "उपयोगकर्ता नाम सफलतापूर्वक अपडेट किया गया"
+
+#: API: User - Username invalid
+msgid "server.api.user.username_invalid"
+msgstr "उपयोगकर्ता नाम का प्रारूप अमान्य है"
+
+#: API: User - Username taken
+msgid "server.api.user.username_taken"
+msgstr "यह उपयोगकर्ता नाम पहले से उपयोग में है"
+
+#: API: User - Username too short
+msgid "server.api.user.username_too_short"
+msgstr "उपयोगकर्ता नाम कम से कम 3 अक्षरों का होना चाहिए"
+
+#: API: User - Username too long
+msgid "server.api.user.username_too_long"
+msgstr "उपयोगकर्ता नाम अधिकतम 39 अक्षरों का होना चाहिए"
+
+#: API: User - Username reserved
+msgid "server.api.user.username_reserved"
+msgstr "यह उपयोगकर्ता नाम आरक्षित है और इसका उपयोग नहीं किया जा सकता"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================
@@ -251,6 +275,10 @@ msgstr "स्लग में केवल लोअरकेस अल्फ�
 #: API: Org - Slug exists
 msgid "server.api.org.slug_exists"
 msgstr "इस स्लग के साथ एक संगठन पहले से मौजूद है"
+
+#: API: Org - Slug reserved
+msgid "server.api.org.slug_reserved"
+msgstr "This organization slug is reserved"
 
 #: API: Org - Invalid role
 msgid "server.api.org.invalid_role"

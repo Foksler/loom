@@ -228,6 +228,30 @@ msgstr "Привязка не найдена"
 msgid "server.api.user.cannot_unlink_last_identity"
 msgstr "Невозможно удалить последнюю привязку"
 
+#: API: User - Username updated
+msgid "server.api.user.username_updated"
+msgstr "Имя пользователя успешно обновлено"
+
+#: API: User - Username invalid
+msgid "server.api.user.username_invalid"
+msgstr "Неверный формат имени пользователя"
+
+#: API: User - Username taken
+msgid "server.api.user.username_taken"
+msgstr "Это имя пользователя уже занято"
+
+#: API: User - Username too short
+msgid "server.api.user.username_too_short"
+msgstr "Имя пользователя должно содержать минимум 3 символа"
+
+#: API: User - Username too long
+msgid "server.api.user.username_too_long"
+msgstr "Имя пользователя должно содержать максимум 39 символов"
+
+#: API: User - Username reserved
+msgid "server.api.user.username_reserved"
+msgstr "Это имя пользователя зарезервировано и не может быть использовано"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================
@@ -251,6 +275,10 @@ msgstr "Slug может содержать только строчные бук�
 #: API: Org - Slug exists
 msgid "server.api.org.slug_exists"
 msgstr "Организация с таким slug уже существует"
+
+#: API: Org - Slug reserved
+msgid "server.api.org.slug_reserved"
+msgstr "This organization slug is reserved"
 
 #: API: Org - Invalid role
 msgid "server.api.org.invalid_role"

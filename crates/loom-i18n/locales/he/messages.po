@@ -228,6 +228,30 @@ msgstr "הזהות לא נמצאה"
 msgid "server.api.user.cannot_unlink_last_identity"
 msgstr "לא ניתן לנתק את הזהות האחרונה"
 
+#: API: User - Username updated
+msgid "server.api.user.username_updated"
+msgstr "שם המשתמש עודכן בהצלחה"
+
+#: API: User - Username invalid
+msgid "server.api.user.username_invalid"
+msgstr "פורמט שם משתמש לא חוקי"
+
+#: API: User - Username taken
+msgid "server.api.user.username_taken"
+msgstr "שם המשתמש כבר תפוס"
+
+#: API: User - Username too short
+msgid "server.api.user.username_too_short"
+msgstr "שם המשתמש חייב להכיל לפחות 3 תווים"
+
+#: API: User - Username too long
+msgid "server.api.user.username_too_long"
+msgstr "שם המשתמש יכול להכיל עד 39 תווים"
+
+#: API: User - Username reserved
+msgid "server.api.user.username_reserved"
+msgstr "שם משתמש זה שמור ולא ניתן להשתמש בו"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================
@@ -251,6 +275,10 @@ msgstr "הכינוי חייב להכיל רק אותיות קטנות באנגל
 #: API: Org - Slug exists
 msgid "server.api.org.slug_exists"
 msgstr "כבר קיים ארגון עם כינוי זה"
+
+#: API: Org - Slug reserved
+msgid "server.api.org.slug_reserved"
+msgstr "This organization slug is reserved"
 
 #: API: Org - Invalid role
 msgid "server.api.org.invalid_role"

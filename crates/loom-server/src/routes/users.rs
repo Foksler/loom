@@ -15,7 +15,7 @@ use axum::{
 	Json,
 };
 use chrono::{DateTime, Utc};
-use loom_auth::{Action, UserId, ACCOUNT_DELETION_GRACE_DAYS};
+use loom_auth::{validate_username, Action, UserId, ACCOUNT_DELETION_GRACE_DAYS};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -52,6 +52,7 @@ pub struct CurrentUserProfileResponse {
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct UpdateUserProfileRequest {
 	pub display_name: Option<String>,
+	pub username: Option<String>,
 	pub avatar_url: Option<String>,
 	pub email_visible: Option<bool>,
 }
@@ -254,6 +255,62 @@ pub async fn update_current_user(
 				.into_response();
 		}
 		user.display_name = display_name;
+	}
+
+	if let Some(ref username) = payload.username {
+		if let Err(e) = validate_username(username) {
+			let msg_key = if e.contains("at least 3") {
+				"server.api.user.username_too_short"
+			} else if e.contains("at most 39") {
+				"server.api.user.username_too_long"
+			} else if e.contains("reserved") {
+				"server.api.user.username_reserved"
+			} else {
+				"server.api.user.username_invalid"
+			};
+			return (
+				StatusCode::BAD_REQUEST,
+				Json(UserErrorResponse {
+					error: "bad_request".to_string(),
+					message: t(locale, msg_key).to_string(),
+				}),
+			)
+				.into_response();
+		}
+
+		let is_same_username = user
+			.username
+			.as_ref()
+			.map(|u| u.eq_ignore_ascii_case(username))
+			.unwrap_or(false);
+
+		if !is_same_username {
+			match state.user_repo.is_username_available(username).await {
+				Ok(true) => {}
+				Ok(false) => {
+					return (
+						StatusCode::CONFLICT,
+						Json(UserErrorResponse {
+							error: "conflict".to_string(),
+							message: t(locale, "server.api.user.username_taken").to_string(),
+						}),
+					)
+						.into_response();
+				}
+				Err(e) => {
+					tracing::error!(error = %e, %user_id, "Failed to check username availability");
+					return (
+						StatusCode::INTERNAL_SERVER_ERROR,
+						Json(UserErrorResponse {
+							error: "internal_error".to_string(),
+							message: t(locale, "server.api.error.internal").to_string(),
+						}),
+					)
+						.into_response();
+				}
+			}
+		}
+		user.username = Some(username.clone());
 	}
 
 	if let Some(avatar_url) = payload.avatar_url {
