@@ -14,17 +14,17 @@ use super::{
 	ThreadSearchHit,
 };
 
-/// Get or create a repo entry in the repos table, returning its id.
+/// Get or create a repo entry in the thread_repos table, returning its id.
 async fn get_or_create_repo_id(pool: &SqlitePool, slug: &str) -> Result<Option<i64>, ServerError> {
 	let now = chrono::Utc::now().to_rfc3339();
 
-	sqlx::query("INSERT OR IGNORE INTO repos (slug, created_at) VALUES(?, ?)")
+	sqlx::query("INSERT OR IGNORE INTO thread_repos (slug, created_at) VALUES(?, ?)")
 		.bind(slug)
 		.bind(&now)
 		.execute(pool)
 		.await?;
 
-	let result: Option<(i64,)> = sqlx::query_as("SELECT id FROM repos WHERE slug = ?")
+	let result: Option<(i64,)> = sqlx::query_as("SELECT id FROM thread_repos WHERE slug = ?")
 		.bind(slug)
 		.fetch_optional(pool)
 		.await?;

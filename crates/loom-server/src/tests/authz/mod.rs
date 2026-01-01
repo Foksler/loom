@@ -4,6 +4,7 @@
 pub mod support;
 
 mod admin;
+mod authz_git_tests;
 mod orgs;
 mod threads;
 mod users;

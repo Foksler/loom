@@ -157,6 +157,52 @@ fn matches_pattern(branch: &str, pattern: &str) -> bool {
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use loom_secret::SecretString;
+	use proptest::prelude::*;
+	use std::process::Command;
+	use tempfile::TempDir;
+
+	proptest! {
+		/// **Property: Exact match is reflexive**
+		/// Any branch must match itself as a pattern.
+		#[test]
+		fn prop_exact_match_reflexive(branch in "[a-zA-Z][a-zA-Z0-9_-]{0,30}") {
+			prop_assert!(matches_pattern(&branch, &branch));
+		}
+
+		/// **Property: Wildcard matches everything**
+		/// The pattern "*" must match any valid branch name.
+		#[test]
+		fn prop_wildcard_matches_all(branch in "[a-zA-Z][a-zA-Z0-9_/-]{0,50}") {
+			prop_assert!(matches_pattern(&branch, "*"));
+		}
+
+		/// **Property: Prefix pattern matches correctly**
+		/// A branch "prefix/suffix" must match pattern "prefix/*".
+		#[test]
+		fn prop_prefix_pattern_matches(
+			prefix in "[a-zA-Z][a-zA-Z0-9_-]{0,15}",
+			suffix in "[a-zA-Z0-9_-]{1,20}"
+		) {
+			let branch = format!("{}/{}", prefix, suffix);
+			let pattern = format!("{}/*", prefix);
+			prop_assert!(matches_pattern(&branch, &pattern));
+		}
+
+		/// **Property: Non-matching prefix rejected**
+		/// A branch with different prefix must not match a prefix/* pattern.
+		#[test]
+		fn prop_different_prefix_rejected(
+			prefix1 in "[a-z]{3,10}",
+			prefix2 in "[A-Z]{3,10}",
+			suffix in "[a-zA-Z0-9]{1,10}"
+		) {
+			// Use different cases to ensure prefixes differ
+			let branch = format!("{}/{}", prefix1, suffix);
+			let pattern = format!("{}/*", prefix2);
+			prop_assert!(!matches_pattern(&branch, &pattern));
+		}
+	}
 
 	#[test]
 	fn test_matches_pattern_exact() {
@@ -175,5 +221,65 @@ mod tests {
 	fn test_matches_pattern_all() {
 		assert!(matches_pattern("any-branch", "*"));
 		assert!(matches_pattern("feature/foo", "*"));
+	}
+
+	#[test]
+	fn test_build_authenticated_url_api_key_https() {
+		let creds = CredentialValue::ApiKey {
+			key: SecretString::new("mytoken".to_string()),
+		};
+		let result = build_authenticated_url("https://github.com/test/repo.git", &creds).unwrap();
+		assert_eq!(result, "https://git:mytoken@github.com/test/repo.git");
+	}
+
+	#[test]
+	fn test_build_authenticated_url_oauth_http() {
+		let creds = CredentialValue::OAuth {
+			access: SecretString::new("oauthtoken".to_string()),
+			refresh: SecretString::new("refreshtoken".to_string()),
+			expires: 0,
+		};
+		let result = build_authenticated_url("http://host/path.git", &creds).unwrap();
+		assert_eq!(result, "http://oauth2:oauthtoken@host/path.git");
+	}
+
+	#[test]
+	fn test_build_authenticated_url_invalid_scheme() {
+		let creds = CredentialValue::ApiKey {
+			key: SecretString::new("token".to_string()),
+		};
+		let result = build_authenticated_url("ssh://host/repo.git", &creds);
+		assert!(result.is_err());
+		let err = result.unwrap_err();
+		assert!(matches!(err, MirrorError::InvalidUrl(_)));
+		assert!(err.to_string().contains("unsupported"));
+	}
+
+	#[test]
+	fn test_list_branches_returns_branches() {
+		let temp_dir = TempDir::new().unwrap();
+		let repo_path = temp_dir.path();
+
+		Command::new("git")
+			.args(["init", "--bare"])
+			.current_dir(repo_path)
+			.output()
+			.expect("git init failed");
+
+		std::fs::create_dir_all(repo_path.join("refs/heads")).unwrap();
+
+		let dummy_sha = "0000000000000000000000000000000000000001";
+		std::fs::write(repo_path.join("refs/heads/main"), format!("{}\n", dummy_sha)).unwrap();
+		std::fs::write(
+			repo_path.join("refs/heads/feature-branch"),
+			format!("{}\n", dummy_sha),
+		)
+		.unwrap();
+
+		let branches = list_branches(repo_path).unwrap();
+
+		assert!(branches.contains(&"main".to_string()));
+		assert!(branches.contains(&"feature-branch".to_string()));
+		assert_eq!(branches.len(), 2);
 	}
 }

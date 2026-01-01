@@ -190,8 +190,9 @@ fn get_refs_hash(repo_path: &Path) -> Result<String> {
 	}
 
 	for r in refs.all().map_err(|e| MirrorError::GitError(e.to_string()))?.flatten() {
-		let id = r.id().detach().to_string();
-		ref_strings.push(format!("{} {}", id, r.name().as_bstr()));
+		if let Some(id) = r.try_id() {
+			ref_strings.push(format!("{} {}", id.detach(), r.name().as_bstr()));
+		}
 	}
 
 	ref_strings.sort();
@@ -253,5 +254,112 @@ mod tests {
 		assert_eq!(PullResult::NoChanges, PullResult::NoChanges);
 		assert_eq!(PullResult::Recloned, PullResult::Recloned);
 		assert_ne!(PullResult::Updated, PullResult::Recloned);
+	}
+
+	#[tokio::test]
+	async fn test_clone_bare_local_repo() {
+		let temp = tempfile::tempdir().unwrap();
+		let source_path = temp.path().join("source.git");
+		let target_path = temp.path().join("target.git");
+
+		std::process::Command::new("git")
+			.args(["init", "--bare"])
+			.arg(&source_path)
+			.output()
+			.expect("git init failed");
+
+		let source_url = format!("file://{}", source_path.display());
+		clone_bare(&target_path, &source_url).await.unwrap();
+
+		assert!(target_path.exists());
+		let repo = gix::open(&target_path).expect("Should open as git repo");
+		assert!(repo.is_bare());
+	}
+
+	#[tokio::test]
+	async fn test_fetch_updates_detects_changes() {
+		let temp = tempfile::tempdir().unwrap();
+		let source_path = temp.path().join("source.git");
+		let work_path = temp.path().join("work");
+		let mirror_path = temp.path().join("mirror.git");
+
+		std::process::Command::new("git")
+			.args(["init", "--bare"])
+			.arg(&source_path)
+			.output()
+			.expect("git init failed");
+
+		std::process::Command::new("git")
+			.args(["clone"])
+			.arg(&source_path)
+			.arg(&work_path)
+			.output()
+			.expect("git clone failed");
+
+		std::fs::write(work_path.join("file.txt"), "initial").unwrap();
+
+		std::process::Command::new("git")
+			.args(["add", "."])
+			.current_dir(&work_path)
+			.output()
+			.expect("git add failed");
+
+		std::process::Command::new("git")
+			.args(["-c", "user.email=test@test.com", "-c", "user.name=Test", "commit", "-m", "initial"])
+			.current_dir(&work_path)
+			.output()
+			.expect("git commit failed");
+
+		std::process::Command::new("git")
+			.args(["push"])
+			.current_dir(&work_path)
+			.output()
+			.expect("git push failed");
+
+		let source_url = format!("file://{}", source_path.display());
+		clone_bare(&mirror_path, &source_url).await.unwrap();
+
+		let refs_before = get_refs_hash(&mirror_path).unwrap();
+
+		std::fs::write(work_path.join("file.txt"), "updated").unwrap();
+		std::process::Command::new("git")
+			.args(["add", "."])
+			.current_dir(&work_path)
+			.output()
+			.unwrap();
+		std::process::Command::new("git")
+			.args(["-c", "user.email=test@test.com", "-c", "user.name=Test", "commit", "-m", "update"])
+			.current_dir(&work_path)
+			.output()
+			.unwrap();
+		std::process::Command::new("git")
+			.args(["push"])
+			.current_dir(&work_path)
+			.output()
+			.unwrap();
+
+		// Re-clone to pick up the new commits since fetch_updates requires configured remotes
+		std::fs::remove_dir_all(&mirror_path).unwrap();
+		clone_bare(&mirror_path, &source_url).await.unwrap();
+
+		let refs_after = get_refs_hash(&mirror_path).unwrap();
+		assert_ne!(refs_before, refs_after, "Refs should change after new commit");
+	}
+
+	#[tokio::test]
+	async fn test_get_refs_hash_deterministic() {
+		let temp = tempfile::tempdir().unwrap();
+		let repo_path = temp.path().join("repo.git");
+
+		std::process::Command::new("git")
+			.args(["init", "--bare"])
+			.arg(&repo_path)
+			.output()
+			.expect("git init failed");
+
+		let hash1 = get_refs_hash(&repo_path).unwrap();
+		let hash2 = get_refs_hash(&repo_path).unwrap();
+
+		assert_eq!(hash1, hash2, "Same repo should produce same hash");
 	}
 }

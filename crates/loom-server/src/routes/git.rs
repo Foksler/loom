@@ -1106,4 +1106,70 @@ mod tests {
 		assert!(path.to_string_lossy().contains("12345678-1234-1234-1234-123456789012"));
 		assert!(path.to_string_lossy().ends_with("git"));
 	}
+
+	use proptest::prelude::*;
+
+	proptest! {
+		/// **Property: Valid mirror paths parse successfully**
+		/// A properly constructed mirror path should always parse correctly.
+		#[test]
+		fn prop_valid_mirror_path_parses(
+			platform in prop_oneof!["github", "gitlab"],
+			owner in "[a-zA-Z][a-zA-Z0-9_-]{2,20}",
+			repo in "[a-zA-Z][a-zA-Z0-9_-]{2,20}"
+		) {
+			let owner_path = format!("mirrors/{}/{}", platform, owner);
+			let repo_name = format!("{}.git", repo);
+
+			let result = parse_mirror_path(&owner_path, &repo_name);
+			prop_assert!(result.is_some(), "Valid path should parse: {}/{}", owner_path, repo_name);
+
+			let info = result.unwrap();
+			prop_assert_eq!(info.external_owner, owner);
+			prop_assert_eq!(info.external_repo, repo);
+		}
+
+		/// **Property: Invalid prefix never parses as mirror**
+		/// Paths not starting with "mirrors/" should return None.
+		#[test]
+		fn prop_non_mirror_prefix_fails(
+			prefix in "[a-z]{3,10}",
+			platform in "[a-z]{3,10}",
+			owner in "[a-zA-Z0-9]{3,10}"
+		) {
+			prop_assume!(prefix != "mirrors");
+			let owner_path = format!("{}/{}/{}", prefix, platform, owner);
+			let result = parse_mirror_path(&owner_path, "repo.git");
+			prop_assert!(result.is_none());
+		}
+
+		/// **Property: is_mirror_path consistent with parse_mirror_path**
+		/// If is_mirror_path returns true, parse should have a chance to succeed.
+		#[test]
+		fn prop_is_mirror_path_consistency(
+			platform in prop_oneof!["github", "gitlab"],
+			owner in "[a-zA-Z][a-zA-Z0-9]{2,15}"
+		) {
+			let owner_path = format!("mirrors/{}/{}", platform, owner);
+			prop_assert!(is_mirror_path(&owner_path));
+		}
+
+		/// **Property: parse_mirror_git_path extracts owner and repo**
+		/// Valid git paths should parse to correct owner and repo components.
+		#[test]
+		fn prop_mirror_git_path_roundtrip(
+			platform in prop_oneof!["github", "gitlab"],
+			owner in "[a-zA-Z][a-zA-Z0-9]{2,15}",
+			repo in "[a-zA-Z][a-zA-Z0-9]{2,15}",
+			suffix in prop_oneof!["/info/refs", "/git-upload-pack", "/git-receive-pack"]
+		) {
+			let path = format!("{}/{}/{}.git{}", platform, owner, repo, suffix);
+			let result = parse_mirror_git_path(&path);
+			prop_assert!(result.is_some(), "Path should parse: {}", path);
+
+			let (parsed_owner, parsed_repo) = result.unwrap();
+			prop_assert!(parsed_owner.contains(&owner));
+			prop_assert!(parsed_repo.contains(&repo));
+		}
+	}
 }

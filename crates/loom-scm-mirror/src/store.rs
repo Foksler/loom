@@ -321,6 +321,150 @@ mod tests {
 		let result = store.delete(Uuid::new_v4()).await;
 		assert!(matches!(result, Err(MirrorError::NotFound)));
 	}
+
+	/// Verifies that list_by_repo returns mirrors ordered by created_at descending (newest first).
+	#[tokio::test]
+	async fn test_list_by_repo_ordered_by_created_at_desc() {
+		let pool = create_test_pool().await;
+		let store = SqlitePushMirrorStore::new(pool);
+
+		let repo_id = Uuid::new_v4();
+
+		let mirror1 = store
+			.create(&CreatePushMirror {
+				repo_id,
+				remote_url: "https://github.com/test/first.git".to_string(),
+				credential_key: "key1".to_string(),
+				enabled: true,
+			})
+			.await
+			.unwrap();
+
+		tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+
+		let mirror2 = store
+			.create(&CreatePushMirror {
+				repo_id,
+				remote_url: "https://github.com/test/second.git".to_string(),
+				credential_key: "key2".to_string(),
+				enabled: true,
+			})
+			.await
+			.unwrap();
+
+		tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+
+		let mirror3 = store
+			.create(&CreatePushMirror {
+				repo_id,
+				remote_url: "https://github.com/test/third.git".to_string(),
+				credential_key: "key3".to_string(),
+				enabled: true,
+			})
+			.await
+			.unwrap();
+
+		let mirrors = store.list_by_repo(repo_id).await.unwrap();
+		assert_eq!(mirrors.len(), 3);
+		assert_eq!(mirrors[0].id, mirror3.id);
+		assert_eq!(mirrors[1].id, mirror2.id);
+		assert_eq!(mirrors[2].id, mirror1.id);
+	}
+
+	/// Verifies that update_push_result correctly updates last_pushed_at and last_error fields.
+	#[tokio::test]
+	async fn test_update_push_result_updates_fields() {
+		let pool = create_test_pool().await;
+		let store = SqlitePushMirrorStore::new(pool);
+
+		let created = store
+			.create(&CreatePushMirror {
+				repo_id: Uuid::new_v4(),
+				remote_url: "https://github.com/test/repo.git".to_string(),
+				credential_key: "key".to_string(),
+				enabled: true,
+			})
+			.await
+			.unwrap();
+
+		assert!(created.last_pushed_at.is_none());
+		assert!(created.last_error.is_none());
+
+		let pushed_at = Utc::now();
+		let error_msg = Some("connection refused".to_string());
+		store
+			.update_push_result(created.id, pushed_at, error_msg.clone())
+			.await
+			.unwrap();
+
+		let fetched = store.get_by_id(created.id).await.unwrap().unwrap();
+		assert!(fetched.last_pushed_at.is_some());
+		assert_eq!(fetched.last_error, error_msg);
+
+		let pushed_at2 = Utc::now();
+		store
+			.update_push_result(created.id, pushed_at2, None)
+			.await
+			.unwrap();
+
+		let fetched2 = store.get_by_id(created.id).await.unwrap().unwrap();
+		assert!(fetched2.last_pushed_at.is_some());
+		assert!(fetched2.last_error.is_none());
+	}
+
+	/// Verifies that update_push_result returns NotFound for a non-existent mirror.
+	#[tokio::test]
+	async fn test_update_push_result_missing_returns_not_found() {
+		let pool = create_test_pool().await;
+		let store = SqlitePushMirrorStore::new(pool);
+
+		let result = store.update_push_result(Uuid::new_v4(), Utc::now(), None).await;
+		assert!(matches!(result, Err(MirrorError::NotFound)));
+	}
+
+	/// Verifies that list_branch_rules returns inserted rules correctly.
+	#[tokio::test]
+	async fn test_list_branch_rules_returns_rules() {
+		let pool = create_test_pool().await;
+		let store = SqlitePushMirrorStore::new(pool.clone());
+
+		let created = store
+			.create(&CreatePushMirror {
+				repo_id: Uuid::new_v4(),
+				remote_url: "https://github.com/test/repo.git".to_string(),
+				credential_key: "key".to_string(),
+				enabled: true,
+			})
+			.await
+			.unwrap();
+
+		let mirror_id_str = created.id.to_string();
+		sqlx::query("INSERT INTO mirror_branch_rules (mirror_id, pattern, enabled) VALUES (?, ?, ?)")
+			.bind(&mirror_id_str)
+			.bind("main")
+			.bind(1)
+			.execute(&pool)
+			.await
+			.unwrap();
+
+		sqlx::query("INSERT INTO mirror_branch_rules (mirror_id, pattern, enabled) VALUES (?, ?, ?)")
+			.bind(&mirror_id_str)
+			.bind("release/*")
+			.bind(0)
+			.execute(&pool)
+			.await
+			.unwrap();
+
+		let rules = store.list_branch_rules(created.id).await.unwrap();
+		assert_eq!(rules.len(), 2);
+
+		let main_rule = rules.iter().find(|r| r.pattern == "main").unwrap();
+		assert!(main_rule.enabled);
+		assert_eq!(main_rule.mirror_id, created.id);
+
+		let release_rule = rules.iter().find(|r| r.pattern == "release/*").unwrap();
+		assert!(!release_rule.enabled);
+	}
 }
 
 pub struct SqliteExternalMirrorStore {
@@ -726,5 +870,48 @@ mod external_mirror_tests {
 
 		let fetched = store.get_by_id(created.id).await.unwrap();
 		assert!(fetched.is_none());
+	}
+
+	/// Verifies that update_last_synced correctly updates the last_synced_at field.
+	#[tokio::test]
+	async fn test_update_last_synced() {
+		let pool = create_test_pool().await;
+		let store = SqliteExternalMirrorStore::new(pool);
+
+		let create = CreateExternalMirror {
+			platform: Platform::GitHub,
+			external_owner: "owner".to_string(),
+			external_repo: "repo".to_string(),
+			repo_id: Uuid::new_v4(),
+		};
+
+		let created = store.create(&create).await.unwrap();
+		assert!(created.last_synced_at.is_none());
+
+		let sync_time = Utc::now();
+		store.update_last_synced(created.id, sync_time).await.unwrap();
+
+		let fetched = store.get_by_id(created.id).await.unwrap().unwrap();
+		assert!(fetched.last_synced_at.is_some());
+	}
+
+	/// Verifies that update_last_accessed returns NotFound for a non-existent mirror.
+	#[tokio::test]
+	async fn test_update_last_accessed_not_found() {
+		let pool = create_test_pool().await;
+		let store = SqliteExternalMirrorStore::new(pool);
+
+		let result = store.update_last_accessed(Uuid::new_v4(), Utc::now()).await;
+		assert!(matches!(result, Err(MirrorError::NotFound)));
+	}
+
+	/// Verifies that update_last_synced returns NotFound for a non-existent mirror.
+	#[tokio::test]
+	async fn test_update_last_synced_not_found() {
+		let pool = create_test_pool().await;
+		let store = SqliteExternalMirrorStore::new(pool);
+
+		let result = store.update_last_synced(Uuid::new_v4(), Utc::now()).await;
+		assert!(matches!(result, Err(MirrorError::NotFound)));
 	}
 }
