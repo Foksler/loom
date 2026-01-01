@@ -7,6 +7,8 @@
 , openssl
 , sqlite
 , gettext
+, git
+, makeWrapper
 }:
 
 rustPlatform.buildRustPackage rec {
@@ -22,6 +24,7 @@ rustPlatform.buildRustPackage rec {
   nativeBuildInputs = [
     pkg-config
     gettext
+    makeWrapper
   ];
 
   buildInputs = [
@@ -33,6 +36,11 @@ rustPlatform.buildRustPackage rec {
 
   # Skip tests during build (can be run separately)
   doCheck = false;
+
+  postInstall = ''
+    wrapProgram $out/bin/loom-server \
+      --prefix PATH : ${lib.makeBinPath [ git ]}
+  '';
 
   meta = with lib; {
     description = "Loom thread persistence server - HTTP server for Loom AI coding assistant";
