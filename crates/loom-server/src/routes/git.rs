@@ -81,6 +81,13 @@ impl GitService {
 		}
 	}
 
+	fn as_git_subcommand(&self) -> &'static str {
+		match self {
+			GitService::UploadPack => "upload-pack",
+			GitService::ReceivePack => "receive-pack",
+		}
+	}
+
 	fn content_type(&self) -> &'static str {
 		match self {
 			GitService::UploadPack => "application/x-git-upload-pack-advertisement",
@@ -423,7 +430,7 @@ async fn run_git_command(
 	advertise: bool,
 ) -> Result<Vec<u8>, ServerError> {
 	let mut cmd = Command::new("git");
-	cmd.arg(service.as_str());
+	cmd.arg(service.as_git_subcommand());
 
 	if advertise {
 		cmd.arg("--advertise-refs");
