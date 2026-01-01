@@ -134,11 +134,9 @@ fn list_branches(repo_path: &Path) -> Result<Vec<String>> {
 		.map_err(|e| MirrorError::GitError(format!("Failed to list branches: {}", e)))?;
 
 	let mut result = Vec::new();
-	for r in branches {
-		if let Ok(reference) = r {
-			let name = reference.name().shorten().to_string();
-			result.push(name);
-		}
+	for reference in branches.flatten() {
+		let name = reference.name().shorten().to_string();
+		result.push(name);
 	}
 
 	Ok(result)

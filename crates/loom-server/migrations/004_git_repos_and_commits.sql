@@ -1,17 +1,17 @@
 -- Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 -- SPDX-License-Identifier: Proprietary
 
--- First-class repository table for deduplication and analytics
-CREATE TABLE IF NOT EXISTS repos (
+-- Thread repository table for tracking which git repo a thread was made in
+CREATE TABLE IF NOT EXISTS thread_repos (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     slug        TEXT NOT NULL UNIQUE,
     created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
-CREATE INDEX IF NOT EXISTS idx_repos_slug ON repos(slug);
+CREATE INDEX IF NOT EXISTS idx_thread_repos_slug ON thread_repos(slug);
 
 -- Add foreign key and extended git fields to threads
-ALTER TABLE threads ADD COLUMN repo_id INTEGER REFERENCES repos(id);
+ALTER TABLE threads ADD COLUMN repo_id INTEGER REFERENCES thread_repos(id);
 ALTER TABLE threads ADD COLUMN git_initial_branch TEXT;
 ALTER TABLE threads ADD COLUMN git_initial_commit_sha TEXT;
 ALTER TABLE threads ADD COLUMN git_current_commit_sha TEXT;
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS thread_commits (
 
     UNIQUE (thread_id, commit_sha),
     FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE,
-    FOREIGN KEY (repo_id)   REFERENCES repos(id)   ON DELETE CASCADE
+    FOREIGN KEY (repo_id)   REFERENCES thread_repos(id)   ON DELETE CASCADE
 );
 
 -- Indexes for threads table

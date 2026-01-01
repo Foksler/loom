@@ -189,11 +189,9 @@ fn get_refs_hash(repo_path: &Path) -> Result<String> {
 		ref_strings.push(format!("HEAD {}", head));
 	}
 
-	for reference in refs.all().map_err(|e| MirrorError::GitError(e.to_string()))? {
-		if let Ok(r) = reference {
-			let id = r.id().detach().to_string();
-			ref_strings.push(format!("{} {}", id, r.name().as_bstr()));
-		}
+	for r in refs.all().map_err(|e| MirrorError::GitError(e.to_string()))?.flatten() {
+		let id = r.id().detach().to_string();
+		ref_strings.push(format!("{} {}", id, r.name().as_bstr()));
 	}
 
 	ref_strings.sort();

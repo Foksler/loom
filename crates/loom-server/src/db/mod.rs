@@ -139,7 +139,7 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ServerError> {
 			let msg = e.to_string();
 			if !msg.contains("duplicate column")
 				&& !msg.contains("already exists")
-				&& !msg.contains("table repos already exists")
+				&& !msg.contains("table thread_repos already exists")
 				&& !msg.contains("table thread_commits already exists")
 			{
 				return Err(e.into());

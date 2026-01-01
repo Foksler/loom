@@ -239,14 +239,13 @@ async fn check_repo_write(
 		OwnerType::User => repo.owner_id == current_user.user.id.into_inner(),
 		OwnerType::Org => {
 			let org_id = OrgId::new(repo.owner_id);
-			match state
-				.org_repo
-				.get_membership(&org_id, &current_user.user.id)
-				.await
-			{
-				Ok(Some(_)) => true,
-				_ => false,
-			}
+			matches!(
+				state
+					.org_repo
+					.get_membership(&org_id, &current_user.user.id)
+					.await,
+				Ok(Some(_))
+			)
 		}
 	};
 

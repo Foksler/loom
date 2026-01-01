@@ -140,7 +140,7 @@ fn parse_mirror_path(owner: &str, repo_name: &str) -> Option<MirrorInfo> {
 		return None;
 	}
 
-	let platform = Platform::from_str(parts[1])?;
+	let platform = Platform::parse(parts[1])?;
 	let external_owner = parts[2].to_string();
 	let external_repo = repo_name.to_string();
 

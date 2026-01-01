@@ -52,17 +52,12 @@ impl From<OwnerTypeApi> for OwnerType {
 	}
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum VisibilityApi {
+	#[default]
 	Private,
 	Public,
-}
-
-impl Default for VisibilityApi {
-	fn default() -> Self {
-		VisibilityApi::Private
-	}
 }
 
 impl From<Visibility> for VisibilityApi {

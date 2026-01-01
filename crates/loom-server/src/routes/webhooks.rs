@@ -24,17 +24,12 @@ use crate::{
 	i18n::{resolve_user_locale, t, t_fmt},
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "kebab-case")]
 pub enum PayloadFormatApi {
 	GitHubCompat,
+	#[default]
 	LoomV1,
-}
-
-impl Default for PayloadFormatApi {
-	fn default() -> Self {
-		PayloadFormatApi::LoomV1
-	}
 }
 
 impl From<PayloadFormat> for PayloadFormatApi {

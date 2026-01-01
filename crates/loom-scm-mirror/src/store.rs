@@ -95,7 +95,7 @@ impl PushMirrorStore for SqlitePushMirrorStore {
 		.fetch_optional(&self.pool)
 		.await?;
 
-		row.map(|r| row_to_push_mirror(r)).transpose()
+		row.map(row_to_push_mirror).transpose()
 	}
 
 	async fn list_by_repo(&self, repo_id: Uuid) -> Result<Vec<PushMirror>> {
@@ -376,6 +376,7 @@ impl SqliteExternalMirrorStore {
 	) -> Result<Option<ExternalMirror>> {
 		let platform_str = platform.as_str();
 
+		#[allow(clippy::type_complexity)]
 		let row: Option<(
 			String,
 			String,
@@ -398,7 +399,7 @@ impl SqliteExternalMirrorStore {
 		.fetch_optional(&self.pool)
 		.await?;
 
-		row.map(|r| row_to_external_mirror(r)).transpose()
+		row.map(row_to_external_mirror).transpose()
 	}
 }
 
@@ -427,7 +428,7 @@ impl ExternalMirrorStore for SqliteExternalMirrorStore {
 		.fetch_optional(&self.pool)
 		.await?;
 
-		row.map(|r| row_to_external_mirror(r)).transpose()
+		row.map(row_to_external_mirror).transpose()
 	}
 
 	async fn get_by_repo_id(&self, repo_id: Uuid) -> Result<Option<ExternalMirror>> {
@@ -453,7 +454,7 @@ impl ExternalMirrorStore for SqliteExternalMirrorStore {
 		.fetch_optional(&self.pool)
 		.await?;
 
-		row.map(|r| row_to_external_mirror(r)).transpose()
+		row.map(row_to_external_mirror).transpose()
 	}
 
 	async fn find_stale(&self, stale_threshold: DateTime<Utc>) -> Result<Vec<ExternalMirror>> {
@@ -562,7 +563,7 @@ fn row_to_external_mirror(
 	Ok(ExternalMirror {
 		id: Uuid::parse_str(&id)
 			.map_err(|e| MirrorError::Database(sqlx::Error::Decode(Box::new(e))))?,
-		platform: Platform::from_str(&platform).ok_or_else(|| {
+		platform: Platform::parse(&platform).ok_or_else(|| {
 			MirrorError::Database(sqlx::Error::Decode(Box::new(std::io::Error::new(
 				std::io::ErrorKind::InvalidData,
 				format!("Invalid platform: {}", platform),

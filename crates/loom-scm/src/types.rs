@@ -77,13 +77,12 @@ impl RepoRole {
 	}
 
 	pub fn has_permission_of(&self, other: &RepoRole) -> bool {
-		match (self, other) {
-			(RepoRole::Admin, _) => true,
-			(RepoRole::Write, RepoRole::Read) => true,
-			(RepoRole::Write, RepoRole::Write) => true,
-			(RepoRole::Read, RepoRole::Read) => true,
-			_ => false,
-		}
+		matches!(
+			(self, other),
+			(RepoRole::Admin, _)
+				| (RepoRole::Write, RepoRole::Read | RepoRole::Write)
+				| (RepoRole::Read, RepoRole::Read)
+		)
 	}
 }
 
