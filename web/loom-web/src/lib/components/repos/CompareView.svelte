@@ -4,6 +4,7 @@
 -->
 <script lang="ts">
 	import type { CompareResult } from '$lib/api/repos';
+	import { i18n } from '$lib/i18n';
 	import CommitList from './CommitList.svelte';
 
 	interface Props {
@@ -106,12 +107,12 @@
 		<div class="flex items-center gap-4 mt-3 text-sm text-fg-muted">
 			{#if result.ahead_by > 0}
 				<span>
-					<strong class="text-success">{result.ahead_by}</strong> commit{result.ahead_by !== 1 ? 's' : ''} ahead
+					<strong class="text-success">{result.ahead_by}</strong> {result.ahead_by !== 1 ? i18n._('client.repos.compare.commits') : i18n._('client.repos.compare.commit')} {i18n._('client.repos.compare.ahead')}
 				</span>
 			{/if}
 			{#if result.behind_by > 0}
 				<span>
-					<strong class="text-error">{result.behind_by}</strong> commit{result.behind_by !== 1 ? 's' : ''} behind
+					<strong class="text-error">{result.behind_by}</strong> {result.behind_by !== 1 ? i18n._('client.repos.compare.commits') : i18n._('client.repos.compare.commit')} {i18n._('client.repos.compare.behind')}
 				</span>
 			{/if}
 		</div>
@@ -119,14 +120,14 @@
 
 	{#if result.commits.length > 0}
 		<div>
-			<h3 class="text-lg font-medium text-fg mb-3">Commits</h3>
+			<h3 class="text-lg font-medium text-fg mb-3">{i18n._('client.repos.compare.commits_heading')}</h3>
 			<CommitList commits={result.commits} {owner} {repo} />
 		</div>
 	{/if}
 
 	<div class="flex items-center gap-4 text-sm">
 		<span class="text-fg-muted">
-			Showing <strong class="text-fg">{parsedDiff.length}</strong> changed file{parsedDiff.length !== 1 ? 's' : ''}
+			{i18n._('client.repos.diff.showing')} <strong class="text-fg">{parsedDiff.length}</strong> {parsedDiff.length !== 1 ? i18n._('client.repos.diff.changed_files') : i18n._('client.repos.diff.changed_file')}
 		</span>
 		<span class="text-success">+{totalAdditions}</span>
 		<span class="text-error">-{totalDeletions}</span>
@@ -171,7 +172,7 @@
 
 	{#if parsedDiff.length === 0 && result.commits.length === 0}
 		<div class="text-center text-fg-muted py-8">
-			These branches are identical
+			{i18n._('client.repos.compare.identical')}
 		</div>
 	{/if}
 </div>

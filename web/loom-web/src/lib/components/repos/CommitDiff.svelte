@@ -4,6 +4,7 @@
 -->
 <script lang="ts">
 	import type { CommitWithDiff } from '$lib/api/repos';
+	import { i18n } from '$lib/i18n';
 
 	interface Props {
 		commit: CommitWithDiff;
@@ -132,7 +133,7 @@
 			<code class="font-mono text-xs bg-bg px-2 py-1 rounded">{commit.sha}</code>
 			{#if commit.parent_shas.length > 0}
 				<span class="text-fg-muted">
-					Parent{commit.parent_shas.length > 1 ? 's' : ''}:
+					{commit.parent_shas.length > 1 ? i18n._('client.repos.diff.parents') : i18n._('client.repos.diff.parent')}:
 					{#each commit.parent_shas as parent, i}
 						<a href="/repos/{owner}/{repo}/commit/{parent}" class="font-mono text-accent hover:underline">
 							{parent.slice(0, 7)}
@@ -145,7 +146,7 @@
 
 	<div class="flex items-center gap-4 text-sm">
 		<span class="text-fg-muted">
-			Showing <strong class="text-fg">{parsedDiff.length}</strong> changed file{parsedDiff.length !== 1 ? 's' : ''}
+			{i18n._('client.repos.diff.showing')} <strong class="text-fg">{parsedDiff.length}</strong> {parsedDiff.length !== 1 ? i18n._('client.repos.diff.changed_files') : i18n._('client.repos.diff.changed_file')}
 		</span>
 		<span class="text-success">+{totalAdditions}</span>
 		<span class="text-error">-{totalDeletions}</span>

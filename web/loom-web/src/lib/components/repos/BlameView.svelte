@@ -4,6 +4,7 @@
 -->
 <script lang="ts">
 	import type { BlameLine } from '$lib/api/repos';
+	import { i18n } from '$lib/i18n';
 
 	interface Props {
 		blameLines: BlameLine[];
@@ -54,10 +55,10 @@
 		const diff = now.getTime() - date.getTime();
 
 		const days = Math.floor(diff / 86400000);
-		if (days < 1) return 'today';
-		if (days < 30) return `${days}d ago`;
-		if (days < 365) return `${Math.floor(days / 30)}mo ago`;
-		return `${Math.floor(days / 365)}y ago`;
+		if (days < 1) return i18n._('client.repos.blame.today');
+		if (days < 30) return i18n._('client.repos.blame.days_ago', { count: days });
+		if (days < 365) return i18n._('client.repos.blame.months_ago', { count: Math.floor(days / 30) });
+		return i18n._('client.repos.blame.years_ago', { count: Math.floor(days / 365) });
 	}
 
 	const colors = [
@@ -76,7 +77,7 @@
 <div class="border border-border rounded-lg overflow-hidden">
 	<div class="flex items-center justify-between px-4 py-2 bg-bg-muted border-b border-border">
 		<span class="text-sm font-medium text-fg">{fileName}</span>
-		<span class="text-xs text-fg-muted">{blameLines.length} lines</span>
+		<span class="text-xs text-fg-muted">{blameLines.length} {i18n._('client.repos.blame.lines')}</span>
 	</div>
 
 	<div class="overflow-x-auto">
@@ -120,7 +121,7 @@
 
 	{#if blameLines.length === 0}
 		<div class="px-4 py-8 text-center text-fg-muted">
-			No blame information available
+			{i18n._('client.repos.blame.empty')}
 		</div>
 	{/if}
 </div>

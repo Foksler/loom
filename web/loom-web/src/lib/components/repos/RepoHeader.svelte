@@ -4,6 +4,7 @@
 -->
 <script lang="ts">
 	import type { Repository } from '$lib/api/repos';
+	import { i18n } from '$lib/i18n';
 	import { Badge, Button } from '$lib/ui';
 
 	interface Props {
@@ -38,7 +39,7 @@
 					{repo.visibility}
 				</Badge>
 				<span class="text-sm text-fg-muted">
-					Default branch: <code class="font-mono text-xs bg-bg-muted px-1 py-0.5 rounded">{repo.default_branch}</code>
+					{i18n.t('client.repos.header.default_branch')}: <code class="font-mono text-xs bg-bg-muted px-1 py-0.5 rounded">{repo.default_branch}</code>
 				</span>
 			</div>
 		</div>
@@ -49,12 +50,12 @@
 			<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
 			</svg>
-			Clone
+			{i18n.t('client.repos.header.clone')}
 		</Button>
 
 		{#if showCloneUrl}
 			<div class="absolute right-0 mt-2 p-3 bg-bg border border-border rounded-lg shadow-lg z-10 w-80">
-				<div class="text-sm font-medium text-fg mb-2">Clone with HTTPS</div>
+				<div class="text-sm font-medium text-fg mb-2">{i18n.t('client.repos.header.clone_https')}</div>
 				<div class="flex gap-2">
 					<input
 						type="text"
@@ -63,7 +64,7 @@
 						class="flex-1 text-sm font-mono bg-bg-muted border border-border rounded px-2 py-1"
 					/>
 					<Button variant="secondary" size="sm" onclick={copyCloneUrl}>
-						{copied ? 'Copied!' : 'Copy'}
+						{copied ? i18n.t('client.repos.header.copied') : i18n.t('client.repos.header.copy')}
 					</Button>
 				</div>
 			</div>

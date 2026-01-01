@@ -4,6 +4,7 @@
 -->
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { i18n } from '$lib/i18n';
 
 	interface Props {
 		owner: string;
@@ -18,25 +19,25 @@
 
 	const tabs = $derived([
 		{
-			label: 'Code',
+			label: i18n.t('client.repos.nav.code'),
 			href: `${basePath}/tree/${defaultBranch}`,
 			icon: 'code',
 			active: currentPath.includes('/tree/') || currentPath.includes('/blob/'),
 		},
 		{
-			label: 'Commits',
+			label: i18n.t('client.repos.nav.commits'),
 			href: `${basePath}/commits/${defaultBranch}`,
 			icon: 'history',
 			active: currentPath.includes('/commits/') || currentPath.includes('/commit/'),
 		},
 		{
-			label: 'Branches',
+			label: i18n.t('client.repos.nav.branches'),
 			href: `${basePath}/branches`,
 			icon: 'branch',
 			active: currentPath.includes('/branches'),
 		},
 		{
-			label: 'Settings',
+			label: i18n.t('client.repos.nav.settings'),
 			href: `${basePath}/settings`,
 			icon: 'settings',
 			active: currentPath.includes('/settings'),

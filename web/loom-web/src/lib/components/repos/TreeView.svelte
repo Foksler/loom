@@ -4,6 +4,7 @@
 -->
 <script lang="ts">
 	import type { TreeEntry } from '$lib/api/repos';
+	import { i18n } from '$lib/i18n';
 
 	interface Props {
 		entries: TreeEntry[];
@@ -143,7 +144,7 @@
 
 	{#if sortedEntries.length === 0}
 		<div class="px-4 py-8 text-center text-fg-muted">
-			This directory is empty
+			{i18n.t('client.repos.tree.empty')}
 		</div>
 	{/if}
 </div>

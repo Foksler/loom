@@ -36,7 +36,7 @@ use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
 use tracing::instrument;
 
-use crate::{api::AppState, auth_middleware::OptionalAuth, error::ServerError};
+use crate::{api::AppState, auth_middleware::OptionalAuth, error::ServerError, i18n::t};
 
 #[derive(Debug, Deserialize)]
 pub struct InfoRefsParams {
@@ -100,13 +100,14 @@ async fn resolve_repo(
 	owner: &str,
 	repo_name: &str,
 	state: &AppState,
+	locale: &str,
 ) -> Result<Repository, ServerError> {
 	let repo_name = repo_name.strip_suffix(".git").unwrap_or(repo_name);
 
 	let scm_store = state
 		.scm_repo_store
 		.as_ref()
-		.ok_or_else(|| ServerError::Internal("SCM not configured".to_string()))?;
+		.ok_or_else(|| ServerError::Internal(t(locale, "server.api.scm.not_configured").to_string()))?;
 
 	if let Some(org) = state.org_repo.get_org_by_slug(owner).await? {
 		if let Some(scm_repo) = scm_store
@@ -118,10 +119,10 @@ async fn resolve_repo(
 		}
 	}
 
-	Err(ServerError::NotFound(format!("{owner}/{repo_name}")))
+	Err(ServerError::NotFound(t(locale, "server.api.scm.repo_not_found").to_string()))
 }
 
-fn check_read_access(repo: &Repository, user: Option<&CurrentUser>) -> Result<(), ServerError> {
+fn check_read_access(repo: &Repository, user: Option<&CurrentUser>, locale: &str) -> Result<(), ServerError> {
 	match repo.visibility {
 		Visibility::Public => Ok(()),
 		Visibility::Private => {
@@ -129,19 +130,19 @@ fn check_read_access(repo: &Repository, user: Option<&CurrentUser>) -> Result<()
 				Ok(())
 			} else {
 				Err(ServerError::Unauthorized(
-					"Authentication required for private repository".to_string(),
+					t(locale, "server.api.scm.git.auth_required_private").to_string(),
 				))
 			}
 		}
 	}
 }
 
-fn check_write_access(user: Option<&CurrentUser>) -> Result<(), ServerError> {
+fn check_write_access(user: Option<&CurrentUser>, locale: &str) -> Result<(), ServerError> {
 	if user.is_some() {
 		Ok(())
 	} else {
 		Err(ServerError::Unauthorized(
-			"Authentication required for push".to_string(),
+			t(locale, "server.api.scm.git.auth_required_push").to_string(),
 		))
 	}
 }
@@ -307,23 +308,28 @@ pub async fn info_refs(
 	OptionalAuth(auth): OptionalAuth,
 	State(state): State<AppState>,
 ) -> Result<Response, ServerError> {
+	let locale = auth
+		.as_ref()
+		.and_then(|u| u.user.locale.as_deref())
+		.unwrap_or(&state.default_locale);
+
 	let service = GitService::from_str(&params.service).ok_or_else(|| {
 		ServerError::BadRequest(format!("Invalid service: {}", params.service))
 	})?;
 
-	let scm_repo = resolve_repo(&owner, &repo, &state).await?;
+	let scm_repo = resolve_repo(&owner, &repo, &state, locale).await?;
 	let repo_path = get_repo_path(&scm_repo);
 
 	if !repo_path.exists() {
-		return Err(ServerError::NotFound(format!("{owner}/{repo}")));
+		return Err(ServerError::NotFound(t(locale, "server.api.scm.repo_not_found").to_string()));
 	}
 
 	match service {
 		GitService::UploadPack => {
-			check_read_access(&scm_repo, auth.as_ref())?;
+			check_read_access(&scm_repo, auth.as_ref(), locale)?;
 		}
 		GitService::ReceivePack => {
-			check_write_access(auth.as_ref())?;
+			check_write_access(auth.as_ref(), locale)?;
 		}
 	}
 
@@ -353,6 +359,11 @@ pub async fn upload_pack(
 	headers: HeaderMap,
 	body: Bytes,
 ) -> Result<Response, ServerError> {
+	let locale = auth
+		.as_ref()
+		.and_then(|u| u.user.locale.as_deref())
+		.unwrap_or(&state.default_locale);
+
 	let content_type = headers
 		.get(header::CONTENT_TYPE)
 		.and_then(|v| v.to_str().ok())
@@ -364,14 +375,14 @@ pub async fn upload_pack(
 		)));
 	}
 
-	let scm_repo = resolve_repo(&owner, &repo, &state).await?;
+	let scm_repo = resolve_repo(&owner, &repo, &state, locale).await?;
 	let repo_path = get_repo_path(&scm_repo);
 
 	if !repo_path.exists() {
-		return Err(ServerError::NotFound(format!("{owner}/{repo}")));
+		return Err(ServerError::NotFound(t(locale, "server.api.scm.repo_not_found").to_string()));
 	}
 
-	check_read_access(&scm_repo, auth.as_ref())?;
+	check_read_access(&scm_repo, auth.as_ref(), locale)?;
 
 	let output = run_git_command(&repo_path, GitService::UploadPack, &body, false).await?;
 
@@ -397,7 +408,12 @@ pub async fn receive_pack(
 	headers: HeaderMap,
 	body: Bytes,
 ) -> Result<Response, ServerError> {
-	check_write_access(auth.as_ref())?;
+	let locale = auth
+		.as_ref()
+		.and_then(|u| u.user.locale.as_deref())
+		.unwrap_or(&state.default_locale);
+
+	check_write_access(auth.as_ref(), locale)?;
 
 	let content_type = headers
 		.get(header::CONTENT_TYPE)
@@ -410,22 +426,22 @@ pub async fn receive_pack(
 		)));
 	}
 
-	let scm_repo = resolve_repo(&owner, &repo, &state).await?;
+	let scm_repo = resolve_repo(&owner, &repo, &state, locale).await?;
 	let repo_path = get_repo_path(&scm_repo);
 
 	if !repo_path.exists() {
-		return Err(ServerError::NotFound(format!("{owner}/{repo}")));
+		return Err(ServerError::NotFound(t(locale, "server.api.scm.repo_not_found").to_string()));
 	}
 
 	let user = auth
 		.as_ref()
-		.ok_or_else(|| ServerError::Unauthorized("Authentication required".to_string()))?;
+		.ok_or_else(|| ServerError::Unauthorized(t(locale, "server.api.scm.git.auth_required").to_string()))?;
 
 	if let Some(protection_store) = state.scm_protection_store.as_ref() {
 		let rules = protection_store
 			.list_by_repo(scm_repo.id)
 			.await
-			.map_err(|e| ServerError::Internal(format!("Failed to load protection rules: {e}")))?;
+			.map_err(|e| ServerError::Internal(format!("{}: {e}", t(locale, "server.api.scm.protection.failed_to_load"))))?;
 
 		if !rules.is_empty() {
 			let user_is_admin = check_user_is_repo_admin(&scm_repo, user, &state).await;

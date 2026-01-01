@@ -14,7 +14,11 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::{api::AppState, auth_middleware::RequireAuth};
+use crate::{
+	api::AppState,
+	auth_middleware::RequireAuth,
+	i18n::{resolve_user_locale, t, t_fmt},
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "kebab-case")]
@@ -97,31 +101,31 @@ pub struct WebhookErrorResponse {
 
 const VALID_EVENTS: &[&str] = &["push", "repo.created", "repo.deleted"];
 
-fn validate_events(events: &[String]) -> Option<String> {
+fn validate_events(events: &[String], locale: &str) -> Option<String> {
 	if events.is_empty() {
-		return Some("At least one event is required".to_string());
+		return Some(t(locale, "server.api.scm.webhook.events_required").to_string());
 	}
 	for event in events {
 		if !VALID_EVENTS.contains(&event.as_str()) {
-			return Some(format!(
-				"Invalid event '{}'. Valid events: {}",
-				event,
-				VALID_EVENTS.join(", ")
+			return Some(t_fmt(
+				locale,
+				"server.api.scm.webhook.invalid_event",
+				&[("event", event), ("valid_events", &VALID_EVENTS.join(", "))],
 			));
 		}
 	}
 	None
 }
 
-fn validate_url(url: &str) -> Option<String> {
+fn validate_url(url: &str, locale: &str) -> Option<String> {
 	if url.is_empty() {
-		return Some("URL is required".to_string());
+		return Some(t(locale, "server.api.scm.webhook.url_required").to_string());
 	}
 	if !url.starts_with("https://") && !url.starts_with("http://") {
-		return Some("URL must start with http:// or https://".to_string());
+		return Some(t(locale, "server.api.scm.webhook.url_invalid_protocol").to_string());
 	}
 	if url.len() > 2048 {
-		return Some("URL must be less than 2048 characters".to_string());
+		return Some(t(locale, "server.api.scm.webhook.url_too_long").to_string());
 	}
 	None
 }
@@ -130,13 +134,14 @@ async fn check_repo_admin(
 	repo_id: Uuid,
 	current_user: &loom_auth::middleware::CurrentUser,
 	state: &AppState,
+	locale: &str,
 ) -> Result<(), (StatusCode, Json<WebhookErrorResponse>)> {
 	let scm_store = state.scm_repo_store.as_ref().ok_or_else(|| {
 		(
 			StatusCode::INTERNAL_SERVER_ERROR,
 			Json(WebhookErrorResponse {
 				error: "not_configured".to_string(),
-				message: "SCM not configured".to_string(),
+				message: t(locale, "server.api.error.not_configured").to_string(),
 			}),
 		)
 	})?;
@@ -147,7 +152,7 @@ async fn check_repo_admin(
 			StatusCode::INTERNAL_SERVER_ERROR,
 			Json(WebhookErrorResponse {
 				error: "internal_error".to_string(),
-				message: "Internal server error".to_string(),
+				message: t(locale, "server.api.error.internal").to_string(),
 			}),
 		)
 	})?;
@@ -157,7 +162,7 @@ async fn check_repo_admin(
 			StatusCode::NOT_FOUND,
 			Json(WebhookErrorResponse {
 				error: "not_found".to_string(),
-				message: "Repository not found".to_string(),
+				message: t(locale, "server.api.scm.repo.not_found").to_string(),
 			}),
 		)
 	})?;
@@ -182,7 +187,7 @@ async fn check_repo_admin(
 			StatusCode::FORBIDDEN,
 			Json(WebhookErrorResponse {
 				error: "forbidden".to_string(),
-				message: "Admin access required".to_string(),
+				message: t(locale, "server.api.scm.webhook.admin_required").to_string(),
 			}),
 		));
 	}
@@ -194,6 +199,7 @@ async fn check_org_admin(
 	org_id: Uuid,
 	current_user: &loom_auth::middleware::CurrentUser,
 	state: &AppState,
+	locale: &str,
 ) -> Result<(), (StatusCode, Json<WebhookErrorResponse>)> {
 	let org_id_typed = OrgId::new(org_id);
 
@@ -203,7 +209,7 @@ async fn check_org_admin(
 			StatusCode::INTERNAL_SERVER_ERROR,
 			Json(WebhookErrorResponse {
 				error: "internal_error".to_string(),
-				message: "Internal server error".to_string(),
+				message: t(locale, "server.api.error.internal").to_string(),
 			}),
 		)
 	})?;
@@ -213,7 +219,7 @@ async fn check_org_admin(
 			StatusCode::NOT_FOUND,
 			Json(WebhookErrorResponse {
 				error: "not_found".to_string(),
-				message: "Organization not found".to_string(),
+				message: t(locale, "server.api.org.not_found").to_string(),
 			}),
 		));
 	}
@@ -228,7 +234,7 @@ async fn check_org_admin(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(WebhookErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Internal server error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
 				}),
 			)
 		})?;
@@ -243,7 +249,7 @@ async fn check_org_admin(
 			StatusCode::FORBIDDEN,
 			Json(WebhookErrorResponse {
 				error: "forbidden".to_string(),
-				message: "Admin access required".to_string(),
+				message: t(locale, "server.api.scm.webhook.admin_required").to_string(),
 			}),
 		));
 	}
@@ -271,7 +277,9 @@ pub async fn list_repo_webhooks(
 	State(state): State<AppState>,
 	Path(id): Path<Uuid>,
 ) -> impl IntoResponse {
-	if let Err(e) = check_repo_admin(id, &current_user, &state).await {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	if let Err(e) = check_repo_admin(id, &current_user, &state, locale).await {
 		return e.into_response();
 	}
 
@@ -282,7 +290,7 @@ pub async fn list_repo_webhooks(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(WebhookErrorResponse {
 					error: "not_configured".to_string(),
-					message: "SCM not configured".to_string(),
+					message: t(locale, "server.api.error.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -302,7 +310,7 @@ pub async fn list_repo_webhooks(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(WebhookErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Failed to list webhooks".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
 				}),
 			)
 				.into_response()
@@ -333,11 +341,13 @@ pub async fn create_repo_webhook(
 	Path(id): Path<Uuid>,
 	Json(payload): Json<CreateWebhookRequest>,
 ) -> impl IntoResponse {
-	if let Err(e) = check_repo_admin(id, &current_user, &state).await {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	if let Err(e) = check_repo_admin(id, &current_user, &state, locale).await {
 		return e.into_response();
 	}
 
-	if let Some(error) = validate_url(&payload.url) {
+	if let Some(error) = validate_url(&payload.url, locale) {
 		return (
 			StatusCode::BAD_REQUEST,
 			Json(WebhookErrorResponse {
@@ -348,7 +358,7 @@ pub async fn create_repo_webhook(
 			.into_response();
 	}
 
-	if let Some(error) = validate_events(&payload.events) {
+	if let Some(error) = validate_events(&payload.events, locale) {
 		return (
 			StatusCode::BAD_REQUEST,
 			Json(WebhookErrorResponse {
@@ -364,7 +374,7 @@ pub async fn create_repo_webhook(
 			StatusCode::BAD_REQUEST,
 			Json(WebhookErrorResponse {
 				error: "invalid_secret".to_string(),
-				message: "Secret is required".to_string(),
+				message: t(locale, "server.api.scm.webhook.secret_required").to_string(),
 			}),
 		)
 			.into_response();
@@ -377,7 +387,7 @@ pub async fn create_repo_webhook(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(WebhookErrorResponse {
 					error: "not_configured".to_string(),
-					message: "SCM not configured".to_string(),
+					message: t(locale, "server.api.error.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -410,7 +420,7 @@ pub async fn create_repo_webhook(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(WebhookErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Failed to create webhook".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
 				}),
 			)
 				.into_response()
@@ -439,7 +449,9 @@ pub async fn delete_repo_webhook(
 	State(state): State<AppState>,
 	Path((id, wid)): Path<(Uuid, Uuid)>,
 ) -> impl IntoResponse {
-	if let Err(e) = check_repo_admin(id, &current_user, &state).await {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	if let Err(e) = check_repo_admin(id, &current_user, &state, locale).await {
 		return e.into_response();
 	}
 
@@ -450,7 +462,7 @@ pub async fn delete_repo_webhook(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(WebhookErrorResponse {
 					error: "not_configured".to_string(),
-					message: "SCM not configured".to_string(),
+					message: t(locale, "server.api.error.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -464,7 +476,7 @@ pub async fn delete_repo_webhook(
 				StatusCode::NOT_FOUND,
 				Json(WebhookErrorResponse {
 					error: "not_found".to_string(),
-					message: "Webhook not found".to_string(),
+					message: t(locale, "server.api.scm.webhook.not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -475,7 +487,7 @@ pub async fn delete_repo_webhook(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(WebhookErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Internal server error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
 				}),
 			)
 				.into_response();
@@ -487,7 +499,7 @@ pub async fn delete_repo_webhook(
 			StatusCode::NOT_FOUND,
 			Json(WebhookErrorResponse {
 				error: "not_found".to_string(),
-				message: "Webhook not found".to_string(),
+				message: t(locale, "server.api.scm.webhook.not_found").to_string(),
 			}),
 		)
 			.into_response();
@@ -507,7 +519,7 @@ pub async fn delete_repo_webhook(
 			StatusCode::NOT_FOUND,
 			Json(WebhookErrorResponse {
 				error: "not_found".to_string(),
-				message: "Webhook not found".to_string(),
+				message: t(locale, "server.api.scm.webhook.not_found").to_string(),
 			}),
 		)
 			.into_response(),
@@ -517,7 +529,7 @@ pub async fn delete_repo_webhook(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(WebhookErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Failed to delete webhook".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
 				}),
 			)
 				.into_response()
@@ -545,7 +557,9 @@ pub async fn list_org_webhooks(
 	State(state): State<AppState>,
 	Path(id): Path<Uuid>,
 ) -> impl IntoResponse {
-	if let Err(e) = check_org_admin(id, &current_user, &state).await {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	if let Err(e) = check_org_admin(id, &current_user, &state, locale).await {
 		return e.into_response();
 	}
 
@@ -556,7 +570,7 @@ pub async fn list_org_webhooks(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(WebhookErrorResponse {
 					error: "not_configured".to_string(),
-					message: "SCM not configured".to_string(),
+					message: t(locale, "server.api.error.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -576,7 +590,7 @@ pub async fn list_org_webhooks(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(WebhookErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Failed to list webhooks".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
 				}),
 			)
 				.into_response()
@@ -607,11 +621,13 @@ pub async fn create_org_webhook(
 	Path(id): Path<Uuid>,
 	Json(payload): Json<CreateWebhookRequest>,
 ) -> impl IntoResponse {
-	if let Err(e) = check_org_admin(id, &current_user, &state).await {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	if let Err(e) = check_org_admin(id, &current_user, &state, locale).await {
 		return e.into_response();
 	}
 
-	if let Some(error) = validate_url(&payload.url) {
+	if let Some(error) = validate_url(&payload.url, locale) {
 		return (
 			StatusCode::BAD_REQUEST,
 			Json(WebhookErrorResponse {
@@ -622,7 +638,7 @@ pub async fn create_org_webhook(
 			.into_response();
 	}
 
-	if let Some(error) = validate_events(&payload.events) {
+	if let Some(error) = validate_events(&payload.events, locale) {
 		return (
 			StatusCode::BAD_REQUEST,
 			Json(WebhookErrorResponse {
@@ -638,7 +654,7 @@ pub async fn create_org_webhook(
 			StatusCode::BAD_REQUEST,
 			Json(WebhookErrorResponse {
 				error: "invalid_secret".to_string(),
-				message: "Secret is required".to_string(),
+				message: t(locale, "server.api.scm.webhook.secret_required").to_string(),
 			}),
 		)
 			.into_response();
@@ -651,7 +667,7 @@ pub async fn create_org_webhook(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(WebhookErrorResponse {
 					error: "not_configured".to_string(),
-					message: "SCM not configured".to_string(),
+					message: t(locale, "server.api.error.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -684,7 +700,7 @@ pub async fn create_org_webhook(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(WebhookErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Failed to create webhook".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
 				}),
 			)
 				.into_response()
@@ -713,7 +729,9 @@ pub async fn delete_org_webhook(
 	State(state): State<AppState>,
 	Path((id, wid)): Path<(Uuid, Uuid)>,
 ) -> impl IntoResponse {
-	if let Err(e) = check_org_admin(id, &current_user, &state).await {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	if let Err(e) = check_org_admin(id, &current_user, &state, locale).await {
 		return e.into_response();
 	}
 
@@ -724,7 +742,7 @@ pub async fn delete_org_webhook(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(WebhookErrorResponse {
 					error: "not_configured".to_string(),
-					message: "SCM not configured".to_string(),
+					message: t(locale, "server.api.error.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -738,7 +756,7 @@ pub async fn delete_org_webhook(
 				StatusCode::NOT_FOUND,
 				Json(WebhookErrorResponse {
 					error: "not_found".to_string(),
-					message: "Webhook not found".to_string(),
+					message: t(locale, "server.api.scm.webhook.not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -749,7 +767,7 @@ pub async fn delete_org_webhook(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(WebhookErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Internal server error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
 				}),
 			)
 				.into_response();
@@ -761,7 +779,7 @@ pub async fn delete_org_webhook(
 			StatusCode::NOT_FOUND,
 			Json(WebhookErrorResponse {
 				error: "not_found".to_string(),
-				message: "Webhook not found".to_string(),
+				message: t(locale, "server.api.scm.webhook.not_found").to_string(),
 			}),
 		)
 			.into_response();
@@ -781,7 +799,7 @@ pub async fn delete_org_webhook(
 			StatusCode::NOT_FOUND,
 			Json(WebhookErrorResponse {
 				error: "not_found".to_string(),
-				message: "Webhook not found".to_string(),
+				message: t(locale, "server.api.scm.webhook.not_found").to_string(),
 			}),
 		)
 			.into_response(),
@@ -791,7 +809,7 @@ pub async fn delete_org_webhook(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(WebhookErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Failed to delete webhook".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
 				}),
 			)
 				.into_response()

@@ -3,6 +3,7 @@
   SPDX-License-Identifier: Proprietary
 -->
 <script lang="ts">
+	import { i18n } from '$lib/i18n';
 	import { Button } from '$lib/ui';
 
 	interface Props {
@@ -91,21 +92,21 @@
 	<div class="flex items-center justify-between px-4 py-2 bg-bg-muted border-b border-border">
 		<div class="flex items-center gap-4">
 			<span class="text-sm font-medium text-fg">{fileName}</span>
-			<span class="text-xs text-fg-muted">{lines.length} lines</span>
+			<span class="text-xs text-fg-muted">{lines.length} {i18n.t('client.repos.blob.lines')}</span>
 			{#if !isImage && !isBinary}
-				<span class="text-xs text-fg-muted">({new Blob([content]).size} bytes)</span>
+				<span class="text-xs text-fg-muted">({new Blob([content]).size} {i18n.t('client.repos.blob.bytes')})</span>
 			{/if}
 		</div>
 		<div class="flex items-center gap-2">
 			<a href="{basePath}/blame/{currentRef}/{path}">
-				<Button variant="ghost" size="sm">Blame</Button>
+				<Button variant="ghost" size="sm">{i18n.t('client.repos.blob.blame')}</Button>
 			</a>
 			{#if !isImage && !isBinary}
 				<Button variant="ghost" size="sm" onclick={copyContent}>
-					{copied ? 'Copied!' : 'Copy'}
+					{copied ? i18n.t('client.repos.blob.copied') : i18n.t('client.repos.blob.copy')}
 				</Button>
 			{/if}
-			<Button variant="ghost" size="sm">Raw</Button>
+			<Button variant="ghost" size="sm">{i18n.t('client.repos.blob.raw')}</Button>
 		</div>
 	</div>
 
@@ -115,7 +116,7 @@
 		</div>
 	{:else if isBinary}
 		<div class="flex items-center justify-center p-8 bg-bg text-fg-muted">
-			Binary file not shown
+			{i18n.t('client.repos.blob.binary_not_shown')}
 		</div>
 	{:else}
 		<div class="overflow-x-auto">

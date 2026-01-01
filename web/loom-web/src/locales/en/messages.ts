@@ -358,4 +358,69 @@ export const messages = {
 	'jobs.time.minutesAgo': '{count} min ago',
 	'jobs.time.hoursAgo': '{count} hours ago',
 	'jobs.time.daysAgo': '{count} days ago',
+
+	// Repos - Header
+	'client.repos.header.clone': 'Clone',
+	'client.repos.header.clone_https': 'Clone with HTTPS',
+	'client.repos.header.copied': 'Copied!',
+	'client.repos.header.copy': 'Copy',
+	'client.repos.header.default_branch': 'Default branch',
+
+	// Repos - Navigation
+	'client.repos.nav.code': 'Code',
+	'client.repos.nav.commits': 'Commits',
+	'client.repos.nav.branches': 'Branches',
+	'client.repos.nav.settings': 'Settings',
+
+	// Repos - Tree view
+	'client.repos.tree.empty': 'This directory is empty',
+
+	// Repos - Blob view
+	'client.repos.blob.lines': 'lines',
+	'client.repos.blob.bytes': 'bytes',
+	'client.repos.blob.blame': 'Blame',
+	'client.repos.blob.copy': 'Copy',
+	'client.repos.blob.copied': 'Copied!',
+	'client.repos.blob.raw': 'Raw',
+	'client.repos.blob.binary_not_shown': 'Binary file not shown',
+
+	// Repos - Weaver
+	'client.repos.weaver.open': 'Open in Weaver',
+	'client.repos.weaver.create_failed': 'Failed to create weaver',
+
+	// Repos - Branch selector
+	'client.repos.branch.find': 'Find a branch...',
+	'client.repos.branch.not_found': 'No branches found',
+	'client.repos.branch.default': 'default',
+
+	// Repos - Commits
+	'client.repos.commits.minutes_ago': '{count} minutes ago',
+	'client.repos.commits.hours_ago': '{count} hours ago',
+	'client.repos.commits.days_ago': '{count} days ago',
+	'client.repos.commits.committed': 'committed',
+	'client.repos.commits.copy_sha': 'Copy SHA',
+	'client.repos.commits.empty': 'No commits found',
+
+	// Repos - Diff
+	'client.repos.diff.parent': 'Parent',
+	'client.repos.diff.parents': 'Parents',
+	'client.repos.diff.showing': 'Showing',
+	'client.repos.diff.changed_file': 'changed file',
+	'client.repos.diff.changed_files': 'changed files',
+
+	// Repos - Blame
+	'client.repos.blame.lines': 'lines',
+	'client.repos.blame.today': 'today',
+	'client.repos.blame.days_ago': '{count}d ago',
+	'client.repos.blame.months_ago': '{count}mo ago',
+	'client.repos.blame.years_ago': '{count}y ago',
+	'client.repos.blame.empty': 'No blame information available',
+
+	// Repos - Compare
+	'client.repos.compare.ahead': 'ahead',
+	'client.repos.compare.behind': 'behind',
+	'client.repos.compare.commit': 'commit',
+	'client.repos.compare.commits': 'commits',
+	'client.repos.compare.commits_heading': 'Commits',
+	'client.repos.compare.identical': 'These branches are identical',
 };

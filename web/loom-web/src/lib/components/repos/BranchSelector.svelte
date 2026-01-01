@@ -4,6 +4,7 @@
 -->
 <script lang="ts">
 	import type { Branch } from '$lib/api/repos';
+	import { i18n } from '$lib/i18n';
 
 	interface Props {
 		branches: Branch[];
@@ -47,14 +48,14 @@
 			<div class="p-2 border-b border-border">
 				<input
 					type="text"
-					placeholder="Find a branch..."
+					placeholder={i18n.t('client.repos.branch.find')}
 					bind:value={search}
 					class="w-full px-2 py-1.5 text-sm bg-bg-muted border border-border rounded focus:outline-none focus:ring-2 focus:ring-accent"
 				/>
 			</div>
 			<div class="max-h-64 overflow-y-auto py-1">
 				{#if filteredBranches.length === 0}
-					<div class="px-3 py-2 text-sm text-fg-muted">No branches found</div>
+					<div class="px-3 py-2 text-sm text-fg-muted">{i18n.t('client.repos.branch.not_found')}</div>
 				{:else}
 					{#each filteredBranches as branch}
 						<button
@@ -67,7 +68,7 @@
 							</svg>
 							<span class="font-mono truncate">{branch.name}</span>
 							{#if branch.is_default}
-								<span class="ml-auto text-xs text-fg-muted bg-bg-subtle px-1.5 py-0.5 rounded">default</span>
+								<span class="ml-auto text-xs text-fg-muted bg-bg-subtle px-1.5 py-0.5 rounded">{i18n.t('client.repos.branch.default')}</span>
 							{/if}
 							{#if branch.name === currentRef}
 								<svg class="w-4 h-4 text-accent ml-auto flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">

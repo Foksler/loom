@@ -21,7 +21,7 @@ use uuid::Uuid;
 use crate::{
 	api::AppState,
 	auth_middleware::RequireAuth,
-	i18n::{resolve_user_locale, t},
+	i18n::{resolve_user_locale, t, t_fmt},
 	routes::admin::AdminErrorResponse,
 };
 use loom_scm::{MaintenanceJob, MaintenanceJobStatus, MaintenanceJobStore, MaintenanceTask, RepoStore};
@@ -191,7 +191,7 @@ pub async fn trigger_repo_maintenance(
 				StatusCode::NOT_IMPLEMENTED,
 				Json(MaintenanceErrorResponse {
 					error: "not_implemented".to_string(),
-					message: "Maintenance not configured".to_string(),
+					message: t(locale, "server.api.scm.maintenance.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -205,7 +205,7 @@ pub async fn trigger_repo_maintenance(
 				StatusCode::NOT_IMPLEMENTED,
 				Json(MaintenanceErrorResponse {
 					error: "not_implemented".to_string(),
-					message: "SCM not configured".to_string(),
+					message: t(locale, "server.api.error.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -219,7 +219,7 @@ pub async fn trigger_repo_maintenance(
 				StatusCode::NOT_FOUND,
 				Json(MaintenanceErrorResponse {
 					error: "not_found".to_string(),
-					message: "Repository not found".to_string(),
+					message: t(locale, "server.api.scm.repo.not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -254,9 +254,10 @@ pub async fn trigger_repo_maintenance(
 				StatusCode::ACCEPTED,
 				Json(TriggerMaintenanceResponse {
 					job_id: created_job.id.to_string(),
-					message: format!(
-						"Maintenance task '{}' queued for repository",
-						task.as_str()
+					message: t_fmt(
+						locale,
+						"server.api.scm.maintenance.job_queued",
+						&[("task", task.as_str())],
 					),
 				}),
 			)
@@ -319,7 +320,7 @@ pub async fn trigger_global_sweep(
 				StatusCode::NOT_IMPLEMENTED,
 				Json(AdminErrorResponse {
 					error: "not_implemented".to_string(),
-					message: "Maintenance not configured".to_string(),
+					message: t(locale, "server.api.scm.maintenance.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -343,9 +344,10 @@ pub async fn trigger_global_sweep(
 				StatusCode::ACCEPTED,
 				Json(TriggerMaintenanceResponse {
 					job_id: created_job.id.to_string(),
-					message: format!(
-						"Global maintenance sweep '{}' queued",
-						task.as_str()
+					message: t_fmt(
+						locale,
+						"server.api.scm.maintenance.sweep_queued",
+						&[("task", task.as_str())],
 					),
 				}),
 			)
@@ -397,7 +399,7 @@ pub async fn list_repo_maintenance_jobs(
 				StatusCode::NOT_IMPLEMENTED,
 				Json(MaintenanceErrorResponse {
 					error: "not_implemented".to_string(),
-					message: "Maintenance not configured".to_string(),
+					message: t(locale, "server.api.scm.maintenance.not_configured").to_string(),
 				}),
 			)
 				.into_response();

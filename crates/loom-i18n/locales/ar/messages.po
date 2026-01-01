@@ -899,3 +899,63 @@ msgstr "تم تفعيل المهمة {job_id}"
 #: Jobs: API - Job disabled
 msgid "server.jobs.success.disabled"
 msgstr "تم تعطيل المهمة {job_id}"
+
+# ============================================================================
+# SCM: Repository API responses
+# ============================================================================
+
+#: API: SCM Repo - Not found
+msgid "server.api.scm.repo.not_found"
+msgstr "المستودع غير موجود"
+
+# ============================================================================
+# SCM: Webhook API responses
+# ============================================================================
+
+#: API: SCM Webhook - Not found
+msgid "server.api.scm.webhook.not_found"
+msgstr "الويب هوك غير موجود"
+
+#: API: SCM Webhook - Admin required
+msgid "server.api.scm.webhook.admin_required"
+msgstr "مطلوب صلاحية المسؤول"
+
+#: API: SCM Webhook - URL required
+msgid "server.api.scm.webhook.url_required"
+msgstr "الرابط مطلوب"
+
+#: API: SCM Webhook - URL invalid protocol
+msgid "server.api.scm.webhook.url_invalid_protocol"
+msgstr "يجب أن يبدأ الرابط بـ http:// أو https://"
+
+#: API: SCM Webhook - URL too long
+msgid "server.api.scm.webhook.url_too_long"
+msgstr "يجب أن يكون الرابط أقل من 2048 حرفاً"
+
+#: API: SCM Webhook - Events required
+msgid "server.api.scm.webhook.events_required"
+msgstr "مطلوب حدث واحد على الأقل"
+
+#: API: SCM Webhook - Invalid event
+msgid "server.api.scm.webhook.invalid_event"
+msgstr "حدث غير صالح '{event}'. الأحداث الصالحة: {valid_events}"
+
+#: API: SCM Webhook - Secret required
+msgid "server.api.scm.webhook.secret_required"
+msgstr "المفتاح السري مطلوب"
+
+# ============================================================================
+# SCM: Maintenance API responses
+# ============================================================================
+
+#: API: SCM Maintenance - Not configured
+msgid "server.api.scm.maintenance.not_configured"
+msgstr "الصيانة غير مُعدة"
+
+#: API: SCM Maintenance - Job queued for repository
+msgid "server.api.scm.maintenance.job_queued"
+msgstr "تم وضع مهمة الصيانة '{task}' في قائمة الانتظار للمستودع"
+
+#: API: SCM Maintenance - Global sweep queued
+msgid "server.api.scm.maintenance.sweep_queued"
+msgstr "تم وضع عملية المسح الشاملة '{task}' في قائمة الانتظار"

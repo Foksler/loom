@@ -6,6 +6,7 @@
 	import { getReposClient, type Repository } from '$lib/api/repos';
 	import { getApiClient } from '$lib/api/client';
 	import { Card, Badge, Button, Input } from '$lib/ui';
+	import { i18n } from '$lib/i18n';
 
 	let repos = $state<Repository[]>([]);
 	let loading = $state(true);
@@ -52,24 +53,24 @@
 </script>
 
 <svelte:head>
-	<title>Repositories - Loom</title>
+	<title>{i18n._('client.repos.list.title')} - Loom</title>
 </svelte:head>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 	<div class="flex items-center justify-between mb-6">
-		<h1 class="text-2xl font-bold text-fg">Repositories</h1>
+		<h1 class="text-2xl font-bold text-fg">{i18n._('client.repos.list.title')}</h1>
 		<Button variant="primary">
 			<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
 			</svg>
-			New repository
+			{i18n._('client.repos.list.new')}
 		</Button>
 	</div>
 
 	<div class="mb-6">
 		<Input
 			type="search"
-			placeholder="Find a repository..."
+			placeholder={i18n._('client.repos.list.search_placeholder')}
 			bind:value={searchQuery}
 		/>
 	</div>
@@ -90,7 +91,7 @@
 			<div class="text-center py-8">
 				<p class="text-error mb-4">{error}</p>
 				<Button variant="secondary" onclick={loadRepos}>
-					Try again
+					{i18n._('client.repos.list.try_again')}
 				</Button>
 			</div>
 		</Card>
@@ -98,14 +99,14 @@
 		<Card>
 			<div class="text-center py-8">
 				{#if searchQuery}
-					<p class="text-fg-muted">No repositories match your search</p>
+					<p class="text-fg-muted">{i18n._('client.repos.list.no_match')}</p>
 				{:else}
 					<svg class="w-16 h-16 mx-auto text-fg-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
 					</svg>
-					<p class="text-fg-muted mb-4">You don't have any repositories yet</p>
+					<p class="text-fg-muted mb-4">{i18n._('client.repos.list.empty')}</p>
 					<Button variant="primary">
-						Create your first repository
+						{i18n._('client.repos.list.create_first')}
 					</Button>
 				{/if}
 			</div>
@@ -129,10 +130,10 @@
 							</div>
 							<div class="flex items-center gap-4 text-sm text-fg-muted">
 								<span>
-									Default branch:
+									{i18n._('client.repos.list.default_branch')}
 									<code class="font-mono text-xs bg-bg-muted px-1 py-0.5 rounded">{repo.default_branch}</code>
 								</span>
-								<span>Updated {formatDate(repo.updated_at)}</span>
+								<span>{i18n._('client.repos.list.updated')} {formatDate(repo.updated_at)}</span>
 							</div>
 						</div>
 					</div>

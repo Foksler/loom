@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::{api::AppState, auth_middleware::RequireAuth};
+use crate::{api::AppState, auth_middleware::RequireAuth, i18n::{resolve_user_locale, t}};
 
 use super::repos::RepoErrorResponse;
 
@@ -76,13 +76,14 @@ async fn check_repo_admin(
 	repo_id: Uuid,
 	current_user: &loom_auth::middleware::CurrentUser,
 	state: &AppState,
+	locale: &str,
 ) -> Result<(), (StatusCode, Json<RepoErrorResponse>)> {
 	let scm_store = state.scm_repo_store.as_ref().ok_or_else(|| {
 		(
 			StatusCode::INTERNAL_SERVER_ERROR,
 			Json(RepoErrorResponse {
 				error: "not_configured".to_string(),
-				message: "SCM not configured".to_string(),
+				message: t(locale, "server.api.scm.not_configured").to_string(),
 			}),
 		)
 	})?;
@@ -93,7 +94,7 @@ async fn check_repo_admin(
 			StatusCode::INTERNAL_SERVER_ERROR,
 			Json(RepoErrorResponse {
 				error: "internal_error".to_string(),
-				message: "Internal server error".to_string(),
+				message: t(locale, "server.api.scm.internal_error").to_string(),
 			}),
 		)
 	})?;
@@ -103,7 +104,7 @@ async fn check_repo_admin(
 			StatusCode::NOT_FOUND,
 			Json(RepoErrorResponse {
 				error: "not_found".to_string(),
-				message: "Repository not found".to_string(),
+				message: t(locale, "server.api.scm.repo_not_found").to_string(),
 			}),
 		)
 	})?;
@@ -128,7 +129,7 @@ async fn check_repo_admin(
 			StatusCode::FORBIDDEN,
 			Json(RepoErrorResponse {
 				error: "forbidden".to_string(),
-				message: "Admin access required".to_string(),
+				message: t(locale, "server.api.scm.admin_required").to_string(),
 			}),
 		));
 	}
@@ -156,7 +157,9 @@ pub async fn list_protection_rules(
 	State(state): State<AppState>,
 	Path(id): Path<Uuid>,
 ) -> impl IntoResponse {
-	if let Err(e) = check_repo_admin(id, &current_user, &state).await {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	if let Err(e) = check_repo_admin(id, &current_user, &state, locale).await {
 		return e.into_response();
 	}
 
@@ -167,7 +170,7 @@ pub async fn list_protection_rules(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "not_configured".to_string(),
-					message: "SCM not configured".to_string(),
+					message: t(locale, "server.api.scm.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -187,7 +190,7 @@ pub async fn list_protection_rules(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Failed to list protection rules".to_string(),
+					message: t(locale, "server.api.scm.protection.failed_to_list").to_string(),
 				}),
 			)
 				.into_response()
@@ -219,7 +222,9 @@ pub async fn create_protection_rule(
 	Path(id): Path<Uuid>,
 	Json(payload): Json<CreateProtectionRuleRequest>,
 ) -> impl IntoResponse {
-	if let Err(e) = check_repo_admin(id, &current_user, &state).await {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	if let Err(e) = check_repo_admin(id, &current_user, &state, locale).await {
 		return e.into_response();
 	}
 
@@ -228,7 +233,7 @@ pub async fn create_protection_rule(
 			StatusCode::BAD_REQUEST,
 			Json(RepoErrorResponse {
 				error: "invalid_pattern".to_string(),
-				message: "Pattern must be between 1 and 256 characters".to_string(),
+				message: t(locale, "server.api.scm.protection.invalid_pattern").to_string(),
 			}),
 		)
 			.into_response();
@@ -241,7 +246,7 @@ pub async fn create_protection_rule(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "not_configured".to_string(),
-					message: "SCM not configured".to_string(),
+					message: t(locale, "server.api.scm.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -268,7 +273,7 @@ pub async fn create_protection_rule(
 			StatusCode::CONFLICT,
 			Json(RepoErrorResponse {
 				error: "already_exists".to_string(),
-				message: "A protection rule with this pattern already exists".to_string(),
+				message: t(locale, "server.api.scm.protection.already_exists").to_string(),
 			}),
 		)
 			.into_response(),
@@ -278,7 +283,7 @@ pub async fn create_protection_rule(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Failed to create protection rule".to_string(),
+					message: t(locale, "server.api.scm.protection.failed_to_create").to_string(),
 				}),
 			)
 				.into_response()
@@ -307,7 +312,9 @@ pub async fn delete_protection_rule(
 	State(state): State<AppState>,
 	Path((id, rule_id)): Path<(Uuid, Uuid)>,
 ) -> impl IntoResponse {
-	if let Err(e) = check_repo_admin(id, &current_user, &state).await {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	if let Err(e) = check_repo_admin(id, &current_user, &state, locale).await {
 		return e.into_response();
 	}
 
@@ -318,7 +325,7 @@ pub async fn delete_protection_rule(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "not_configured".to_string(),
-					message: "SCM not configured".to_string(),
+					message: t(locale, "server.api.scm.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -332,7 +339,7 @@ pub async fn delete_protection_rule(
 				StatusCode::NOT_FOUND,
 				Json(RepoErrorResponse {
 					error: "not_found".to_string(),
-					message: "Protection rule not found".to_string(),
+					message: t(locale, "server.api.scm.protection.rule_not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -343,7 +350,7 @@ pub async fn delete_protection_rule(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Internal server error".to_string(),
+					message: t(locale, "server.api.scm.internal_error").to_string(),
 				}),
 			)
 				.into_response();
@@ -355,7 +362,7 @@ pub async fn delete_protection_rule(
 			StatusCode::NOT_FOUND,
 			Json(RepoErrorResponse {
 				error: "not_found".to_string(),
-				message: "Protection rule not found".to_string(),
+				message: t(locale, "server.api.scm.protection.rule_not_found").to_string(),
 			}),
 		)
 			.into_response();
@@ -375,7 +382,7 @@ pub async fn delete_protection_rule(
 			StatusCode::NOT_FOUND,
 			Json(RepoErrorResponse {
 				error: "not_found".to_string(),
-				message: "Protection rule not found".to_string(),
+				message: t(locale, "server.api.scm.protection.rule_not_found").to_string(),
 			}),
 		)
 			.into_response(),
@@ -385,7 +392,7 @@ pub async fn delete_protection_rule(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Failed to delete protection rule".to_string(),
+					message: t(locale, "server.api.scm.protection.failed_to_delete").to_string(),
 				}),
 			)
 				.into_response()

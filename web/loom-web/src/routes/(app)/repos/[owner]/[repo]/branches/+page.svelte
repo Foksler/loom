@@ -5,6 +5,7 @@
 <script lang="ts">
 	import type { Repository, Branch } from '$lib/api/repos';
 	import { Badge, Button } from '$lib/ui';
+	import { i18n } from '$lib/i18n';
 
 	interface Props {
 		data: {
@@ -33,7 +34,7 @@
 <div class="space-y-4">
 	<div class="flex items-center justify-between">
 		<h2 class="text-lg font-medium text-fg">
-			<strong class="text-fg">{data.branches.length}</strong> branches
+			<strong class="text-fg">{data.branches.length}</strong> {i18n._('client.repos.branches.title')}
 		</h2>
 	</div>
 
@@ -48,7 +49,7 @@
 						{branch.name}
 					</a>
 					{#if branch.is_default}
-						<Badge variant="accent" size="sm">default</Badge>
+						<Badge variant="accent" size="sm">{i18n._('client.repos.branches.default')}</Badge>
 					{/if}
 				</div>
 
@@ -59,7 +60,7 @@
 
 					{#if !branch.is_default}
 						<a href="{basePath}/compare/{data.repo.default_branch}...{branch.name}">
-							<Button variant="ghost" size="sm">Compare</Button>
+							<Button variant="ghost" size="sm">{i18n._('client.repos.branches.compare')}</Button>
 						</a>
 					{/if}
 				</div>
@@ -68,7 +69,7 @@
 
 		{#if data.branches.length === 0}
 			<div class="px-4 py-8 text-center text-fg-muted">
-				No branches found
+				{i18n._('client.repos.branches.empty')}
 			</div>
 		{/if}
 	</div>

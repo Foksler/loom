@@ -4,6 +4,7 @@
 -->
 <script lang="ts">
 	import type { CommitInfo } from '$lib/api/repos';
+	import { i18n } from '$lib/i18n';
 
 	interface Props {
 		commits: CommitInfo[];
@@ -21,13 +22,13 @@
 		const diff = now.getTime() - date.getTime();
 
 		const minutes = Math.floor(diff / 60000);
-		if (minutes < 60) return `${minutes} minutes ago`;
+		if (minutes < 60) return i18n._('client.repos.commits.minutes_ago', { count: minutes });
 
 		const hours = Math.floor(diff / 3600000);
-		if (hours < 24) return `${hours} hours ago`;
+		if (hours < 24) return i18n._('client.repos.commits.hours_ago', { count: hours });
 
 		const days = Math.floor(diff / 86400000);
-		if (days < 30) return `${days} days ago`;
+		if (days < 30) return i18n._('client.repos.commits.days_ago', { count: days });
 
 		return date.toLocaleDateString('en-US', {
 			year: 'numeric',
@@ -79,7 +80,7 @@
 
 				<div class="flex items-center gap-2 mt-1 text-sm text-fg-muted">
 					<span class="font-medium text-fg">{commit.author_name}</span>
-					<span>committed</span>
+					<span>{i18n._('client.repos.commits.committed')}</span>
 					<span title={commit.author_date}>{formatDate(commit.author_date)}</span>
 				</div>
 			</div>
@@ -96,7 +97,7 @@
 					type="button"
 					onclick={() => navigator.clipboard.writeText(commit.sha)}
 					class="p-1 hover:bg-bg-subtle rounded"
-					title="Copy SHA"
+					title={i18n._('client.repos.commits.copy_sha')}
 				>
 					<svg class="w-4 h-4 text-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -108,7 +109,7 @@
 
 	{#if commits.length === 0}
 		<div class="px-4 py-8 text-center text-fg-muted">
-			No commits found
+			{i18n._('client.repos.commits.empty')}
 		</div>
 	{/if}
 </div>

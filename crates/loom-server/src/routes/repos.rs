@@ -25,7 +25,7 @@ use std::path::PathBuf;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::{api::AppState, auth_middleware::RequireAuth, i18n::resolve_user_locale};
+use crate::{api::AppState, auth_middleware::RequireAuth, i18n::{resolve_user_locale, t}};
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "lowercase")]
@@ -189,7 +189,7 @@ pub async fn create_repo(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "not_configured".to_string(),
-					message: "SCM not configured".to_string(),
+					message: t(locale, "server.api.scm.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -201,7 +201,7 @@ pub async fn create_repo(
 			StatusCode::BAD_REQUEST,
 			Json(RepoErrorResponse {
 				error: "invalid_name".to_string(),
-				message: "Repository name must be between 1 and 100 characters".to_string(),
+				message: t(locale, "server.api.scm.invalid_repo_name").to_string(),
 			}),
 		)
 			.into_response();
@@ -217,7 +217,7 @@ pub async fn create_repo(
 					StatusCode::FORBIDDEN,
 					Json(RepoErrorResponse {
 						error: "forbidden".to_string(),
-						message: "Cannot create repository for another user".to_string(),
+						message: t(locale, "server.api.scm.cannot_create_for_other_user").to_string(),
 					}),
 				)
 					.into_response();
@@ -237,7 +237,7 @@ pub async fn create_repo(
 						StatusCode::FORBIDDEN,
 						Json(RepoErrorResponse {
 							error: "forbidden".to_string(),
-							message: "Not a member of this organization".to_string(),
+							message: t(locale, "server.api.scm.not_org_member").to_string(),
 						}),
 					)
 						.into_response();
@@ -248,7 +248,7 @@ pub async fn create_repo(
 						StatusCode::INTERNAL_SERVER_ERROR,
 						Json(RepoErrorResponse {
 							error: "internal_error".to_string(),
-							message: "Internal server error".to_string(),
+							message: t(locale, "server.api.scm.internal_error").to_string(),
 						}),
 					)
 						.into_response();
@@ -260,7 +260,7 @@ pub async fn create_repo(
 					StatusCode::FORBIDDEN,
 					Json(RepoErrorResponse {
 						error: "forbidden".to_string(),
-						message: "Must be org owner or admin to create repositories".to_string(),
+						message: t(locale, "server.api.scm.org_admin_required").to_string(),
 					}),
 				)
 					.into_response();
@@ -273,7 +273,7 @@ pub async fn create_repo(
 						StatusCode::NOT_FOUND,
 						Json(RepoErrorResponse {
 							error: "not_found".to_string(),
-							message: "Organization not found".to_string(),
+							message: t(locale, "server.api.scm.org_not_found").to_string(),
 						}),
 					)
 						.into_response();
@@ -284,7 +284,7 @@ pub async fn create_repo(
 						StatusCode::INTERNAL_SERVER_ERROR,
 						Json(RepoErrorResponse {
 							error: "internal_error".to_string(),
-							message: "Internal server error".to_string(),
+							message: t(locale, "server.api.scm.internal_error").to_string(),
 						}),
 					)
 						.into_response();
@@ -308,7 +308,7 @@ pub async fn create_repo(
 				StatusCode::CONFLICT,
 				Json(RepoErrorResponse {
 					error: "already_exists".to_string(),
-					message: "A repository with this name already exists".to_string(),
+					message: t(locale, "server.api.scm.repo_already_exists").to_string(),
 				}),
 			)
 				.into_response();
@@ -319,7 +319,7 @@ pub async fn create_repo(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Failed to create repository".to_string(),
+					message: t(locale, "server.api.scm.failed_to_create_repo").to_string(),
 				}),
 			)
 				.into_response();
@@ -334,7 +334,7 @@ pub async fn create_repo(
 			StatusCode::INTERNAL_SERVER_ERROR,
 			Json(RepoErrorResponse {
 				error: "internal_error".to_string(),
-				message: "Failed to initialize repository on disk".to_string(),
+				message: t(locale, "server.api.scm.failed_to_init_repo_disk").to_string(),
 			}),
 		)
 			.into_response();
@@ -347,7 +347,7 @@ pub async fn create_repo(
 			StatusCode::INTERNAL_SERVER_ERROR,
 			Json(RepoErrorResponse {
 				error: "internal_error".to_string(),
-				message: "Failed to initialize git repository".to_string(),
+				message: t(locale, "server.api.scm.failed_to_init_git_repo").to_string(),
 			}),
 		)
 			.into_response();
@@ -404,7 +404,7 @@ pub async fn get_repo(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "not_configured".to_string(),
-					message: "SCM not configured".to_string(),
+					message: t(locale, "server.api.scm.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -418,7 +418,7 @@ pub async fn get_repo(
 				StatusCode::NOT_FOUND,
 				Json(RepoErrorResponse {
 					error: "not_found".to_string(),
-					message: "Repository not found".to_string(),
+					message: t(locale, "server.api.scm.repo_not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -429,7 +429,7 @@ pub async fn get_repo(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Internal server error".to_string(),
+					message: t(locale, "server.api.scm.internal_error").to_string(),
 				}),
 			)
 				.into_response();
@@ -453,7 +453,7 @@ pub async fn get_repo(
 				StatusCode::FORBIDDEN,
 				Json(RepoErrorResponse {
 					error: "forbidden".to_string(),
-					message: "Access denied".to_string(),
+					message: t(locale, "server.api.scm.access_denied").to_string(),
 				}),
 			)
 				.into_response();
@@ -513,7 +513,7 @@ pub async fn update_repo(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "not_configured".to_string(),
-					message: "SCM not configured".to_string(),
+					message: t(locale, "server.api.scm.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -527,7 +527,7 @@ pub async fn update_repo(
 				StatusCode::NOT_FOUND,
 				Json(RepoErrorResponse {
 					error: "not_found".to_string(),
-					message: "Repository not found".to_string(),
+					message: t(locale, "server.api.scm.repo_not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -538,7 +538,7 @@ pub async fn update_repo(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Internal server error".to_string(),
+					message: t(locale, "server.api.scm.internal_error").to_string(),
 				}),
 			)
 				.into_response();
@@ -561,7 +561,7 @@ pub async fn update_repo(
 			StatusCode::FORBIDDEN,
 			Json(RepoErrorResponse {
 				error: "forbidden".to_string(),
-				message: "Admin access required".to_string(),
+				message: t(locale, "server.api.scm.admin_required").to_string(),
 			}),
 		)
 			.into_response();
@@ -573,7 +573,7 @@ pub async fn update_repo(
 				StatusCode::BAD_REQUEST,
 				Json(RepoErrorResponse {
 					error: "invalid_name".to_string(),
-					message: "Repository name must be between 1 and 100 characters".to_string(),
+					message: t(locale, "server.api.scm.invalid_repo_name").to_string(),
 				}),
 			)
 				.into_response();
@@ -591,7 +591,7 @@ pub async fn update_repo(
 				StatusCode::BAD_REQUEST,
 				Json(RepoErrorResponse {
 					error: "invalid_branch".to_string(),
-					message: "Default branch cannot be empty".to_string(),
+					message: t(locale, "server.api.scm.invalid_default_branch").to_string(),
 				}),
 			)
 				.into_response();
@@ -612,7 +612,7 @@ pub async fn update_repo(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Failed to update repository".to_string(),
+					message: t(locale, "server.api.scm.failed_to_update_repo").to_string(),
 				}),
 			)
 				.into_response();
@@ -666,6 +666,8 @@ pub async fn delete_repo(
 	State(state): State<AppState>,
 	Path(id): Path<Uuid>,
 ) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
 	let scm_store = match state.scm_repo_store.as_ref() {
 		Some(store) => store,
 		None => {
@@ -673,7 +675,7 @@ pub async fn delete_repo(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "not_configured".to_string(),
-					message: "SCM not configured".to_string(),
+					message: t(locale, "server.api.scm.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -687,7 +689,7 @@ pub async fn delete_repo(
 				StatusCode::NOT_FOUND,
 				Json(RepoErrorResponse {
 					error: "not_found".to_string(),
-					message: "Repository not found".to_string(),
+					message: t(locale, "server.api.scm.repo_not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -698,7 +700,7 @@ pub async fn delete_repo(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Internal server error".to_string(),
+					message: t(locale, "server.api.scm.internal_error").to_string(),
 				}),
 			)
 				.into_response();
@@ -721,7 +723,7 @@ pub async fn delete_repo(
 			StatusCode::FORBIDDEN,
 			Json(RepoErrorResponse {
 				error: "forbidden".to_string(),
-				message: "Admin access required".to_string(),
+				message: t(locale, "server.api.scm.admin_required").to_string(),
 			}),
 		)
 			.into_response();
@@ -733,7 +735,7 @@ pub async fn delete_repo(
 			StatusCode::INTERNAL_SERVER_ERROR,
 			Json(RepoErrorResponse {
 				error: "internal_error".to_string(),
-				message: "Failed to delete repository".to_string(),
+				message: t(locale, "server.api.scm.failed_to_delete_repo").to_string(),
 			}),
 		)
 			.into_response();
@@ -767,6 +769,8 @@ pub async fn list_user_repos(
 	State(state): State<AppState>,
 	Path(id): Path<Uuid>,
 ) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
 	let scm_store = match state.scm_repo_store.as_ref() {
 		Some(store) => store,
 		None => {
@@ -774,7 +778,7 @@ pub async fn list_user_repos(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "not_configured".to_string(),
-					message: "SCM not configured".to_string(),
+					message: t(locale, "server.api.scm.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -788,7 +792,7 @@ pub async fn list_user_repos(
 				StatusCode::NOT_FOUND,
 				Json(RepoErrorResponse {
 					error: "not_found".to_string(),
-					message: "User not found".to_string(),
+					message: t(locale, "server.api.scm.user_not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -799,7 +803,7 @@ pub async fn list_user_repos(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Internal server error".to_string(),
+					message: t(locale, "server.api.scm.internal_error").to_string(),
 				}),
 			)
 				.into_response();
@@ -814,7 +818,7 @@ pub async fn list_user_repos(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Failed to list repositories".to_string(),
+					message: t(locale, "server.api.scm.failed_to_list_repos").to_string(),
 				}),
 			)
 				.into_response();
@@ -853,6 +857,8 @@ pub async fn list_org_repos(
 	State(state): State<AppState>,
 	Path(id): Path<Uuid>,
 ) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
 	let scm_store = match state.scm_repo_store.as_ref() {
 		Some(store) => store,
 		None => {
@@ -860,7 +866,7 @@ pub async fn list_org_repos(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "not_configured".to_string(),
-					message: "SCM not configured".to_string(),
+					message: t(locale, "server.api.scm.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -875,7 +881,7 @@ pub async fn list_org_repos(
 				StatusCode::NOT_FOUND,
 				Json(RepoErrorResponse {
 					error: "not_found".to_string(),
-					message: "Organization not found".to_string(),
+					message: t(locale, "server.api.scm.org_not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -886,7 +892,7 @@ pub async fn list_org_repos(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Internal server error".to_string(),
+					message: t(locale, "server.api.scm.internal_error").to_string(),
 				}),
 			)
 				.into_response();
@@ -906,7 +912,7 @@ pub async fn list_org_repos(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(RepoErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Failed to list repositories".to_string(),
+					message: t(locale, "server.api.scm.failed_to_list_repos").to_string(),
 				}),
 			)
 				.into_response();

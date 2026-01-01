@@ -971,3 +971,187 @@ msgstr "Job {job_id} enabled"
 #: Jobs: API - Job disabled
 msgid "server.jobs.success.disabled"
 msgstr "Job {job_id} disabled"
+
+# ============================================================================
+# SCM: Repository API responses
+# ============================================================================
+
+#: API: SCM Repo - Not found
+msgid "server.api.scm.repo.not_found"
+msgstr "Repository not found"
+
+#: API: SCM - Not configured
+msgid "server.api.scm.not_configured"
+msgstr "SCM not configured"
+
+#: API: SCM - Internal error
+msgid "server.api.scm.internal_error"
+msgstr "Internal server error"
+
+#: API: SCM - Repository not found
+msgid "server.api.scm.repo_not_found"
+msgstr "Repository not found"
+
+#: API: SCM - Invalid repository name
+msgid "server.api.scm.invalid_repo_name"
+msgstr "Repository name must be between 1 and 100 characters"
+
+#: API: SCM - Cannot create for other user
+msgid "server.api.scm.cannot_create_for_other_user"
+msgstr "Cannot create repository for another user"
+
+#: API: SCM - Not org member
+msgid "server.api.scm.not_org_member"
+msgstr "Not a member of this organization"
+
+#: API: SCM - Org admin required
+msgid "server.api.scm.org_admin_required"
+msgstr "Must be org owner or admin to create repositories"
+
+#: API: SCM - Organization not found
+msgid "server.api.scm.org_not_found"
+msgstr "Organization not found"
+
+#: API: SCM - Repository already exists
+msgid "server.api.scm.repo_already_exists"
+msgstr "A repository with this name already exists"
+
+#: API: SCM - Failed to create repository
+msgid "server.api.scm.failed_to_create_repo"
+msgstr "Failed to create repository"
+
+#: API: SCM - Failed to initialize repo on disk
+msgid "server.api.scm.failed_to_init_repo_disk"
+msgstr "Failed to initialize repository on disk"
+
+#: API: SCM - Failed to initialize git repo
+msgid "server.api.scm.failed_to_init_git_repo"
+msgstr "Failed to initialize git repository"
+
+#: API: SCM - Access denied
+msgid "server.api.scm.access_denied"
+msgstr "Access denied"
+
+#: API: SCM - Admin required
+msgid "server.api.scm.admin_required"
+msgstr "Admin access required"
+
+#: API: SCM - Invalid default branch
+msgid "server.api.scm.invalid_default_branch"
+msgstr "Default branch cannot be empty"
+
+#: API: SCM - Failed to update repository
+msgid "server.api.scm.failed_to_update_repo"
+msgstr "Failed to update repository"
+
+#: API: SCM - Failed to delete repository
+msgid "server.api.scm.failed_to_delete_repo"
+msgstr "Failed to delete repository"
+
+#: API: SCM - User not found
+msgid "server.api.scm.user_not_found"
+msgstr "User not found"
+
+#: API: SCM - Failed to list repositories
+msgid "server.api.scm.failed_to_list_repos"
+msgstr "Failed to list repositories"
+
+# ============================================================================
+# SCM: Git API responses
+# ============================================================================
+
+#: API: SCM Git - Auth required for private repo
+msgid "server.api.scm.git.auth_required_private"
+msgstr "Authentication required for private repository"
+
+#: API: SCM Git - Auth required for push
+msgid "server.api.scm.git.auth_required_push"
+msgstr "Authentication required for push"
+
+#: API: SCM Git - Auth required
+msgid "server.api.scm.git.auth_required"
+msgstr "Authentication required"
+
+# ============================================================================
+# SCM: Protection API responses
+# ============================================================================
+
+#: API: SCM Protection - Failed to load rules
+msgid "server.api.scm.protection.failed_to_load"
+msgstr "Failed to load protection rules"
+
+#: API: SCM Protection - Failed to list rules
+msgid "server.api.scm.protection.failed_to_list"
+msgstr "Failed to list protection rules"
+
+#: API: SCM Protection - Invalid pattern
+msgid "server.api.scm.protection.invalid_pattern"
+msgstr "Pattern must be between 1 and 256 characters"
+
+#: API: SCM Protection - Rule already exists
+msgid "server.api.scm.protection.already_exists"
+msgstr "A protection rule with this pattern already exists"
+
+#: API: SCM Protection - Failed to create rule
+msgid "server.api.scm.protection.failed_to_create"
+msgstr "Failed to create protection rule"
+
+#: API: SCM Protection - Rule not found
+msgid "server.api.scm.protection.rule_not_found"
+msgstr "Protection rule not found"
+
+#: API: SCM Protection - Failed to delete rule
+msgid "server.api.scm.protection.failed_to_delete"
+msgstr "Failed to delete protection rule"
+
+# ============================================================================
+# SCM: Webhook API responses
+# ============================================================================
+
+#: API: SCM Webhook - Not found
+msgid "server.api.scm.webhook.not_found"
+msgstr "Webhook not found"
+
+#: API: SCM Webhook - Admin required
+msgid "server.api.scm.webhook.admin_required"
+msgstr "Admin access required"
+
+#: API: SCM Webhook - URL required
+msgid "server.api.scm.webhook.url_required"
+msgstr "URL is required"
+
+#: API: SCM Webhook - URL invalid protocol
+msgid "server.api.scm.webhook.url_invalid_protocol"
+msgstr "URL must start with http:// or https://"
+
+#: API: SCM Webhook - URL too long
+msgid "server.api.scm.webhook.url_too_long"
+msgstr "URL must be less than 2048 characters"
+
+#: API: SCM Webhook - Events required
+msgid "server.api.scm.webhook.events_required"
+msgstr "At least one event is required"
+
+#: API: SCM Webhook - Invalid event
+msgid "server.api.scm.webhook.invalid_event"
+msgstr "Invalid event '{event}'. Valid events: {valid_events}"
+
+#: API: SCM Webhook - Secret required
+msgid "server.api.scm.webhook.secret_required"
+msgstr "Secret is required"
+
+# ============================================================================
+# SCM: Maintenance API responses
+# ============================================================================
+
+#: API: SCM Maintenance - Not configured
+msgid "server.api.scm.maintenance.not_configured"
+msgstr "Maintenance not configured"
+
+#: API: SCM Maintenance - Job queued for repository
+msgid "server.api.scm.maintenance.job_queued"
+msgstr "Maintenance task '{task}' queued for repository"
+
+#: API: SCM Maintenance - Global sweep queued
+msgid "server.api.scm.maintenance.sweep_queued"
+msgstr "Global maintenance sweep '{task}' queued"
