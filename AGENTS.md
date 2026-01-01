@@ -26,6 +26,15 @@ Deployments happen automatically via `git push` to the `trunk` branch. The produ
 - **View logs:** `journalctl -u nixos-auto-update.service -f` (follow) or `-n 100` (last 100 lines)
 - **Service state:** `activating` = deploying, `active (exited)` = completed successfully
 
+## Database Migrations
+
+**All database migrations go in `crates/loom-server/migrations/`** as numbered SQL files.
+
+- **Convention:** `NNN_description.sql` (e.g., `020_scm_repos.sql`)
+- **DO NOT** put inline SQL migrations in other crates (loom-scm, loom-thread, etc.)
+- Migrations run automatically on server startup via `db/mod.rs`
+- Check existing migrations for the next available number before creating new ones
+
 ## Local Testing
 Before deploying, test changes locally to verify behavior:
 
