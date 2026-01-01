@@ -44,4 +44,9 @@ in
   weaver-image = final.callPackage ./weaver-image.nix {
     loom-cli = final.loom-cli;
   };
+
+  loom-server-image = final.callPackage ./loom-server-image.nix {
+    loom-server = final.loom-server;
+    loom-cli-binaries = final.loom-cli-binaries;
+  };
 }

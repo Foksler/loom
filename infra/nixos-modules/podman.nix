@@ -27,8 +27,20 @@ in
       description = "Tag to apply to the weaver image after loading.";
     };
 
+    serverImage = mkOption {
+      type = types.nullOr types.package;
+      default = null;
+      description = "Loom server Docker image package to load.";
+    };
+
+    serverImageTag = mkOption {
+      type = types.str;
+      default = "loom:latest";
+      description = "Tag to apply to the server image after loading.";
+    };
+
     ghcr = {
-      enable = mkEnableOption "Push weaver image to GitHub Container Registry";
+      enable = mkEnableOption "Push images to GitHub Container Registry";
 
       username = mkOption {
         type = types.str;
@@ -101,6 +113,67 @@ in
           
           # Tag for ghcr.io
           GHCR_TAG="ghcr.io/${cfg.ghcr.repository}/weaver:latest"
+          podman tag "$IMAGE_ID" "$GHCR_TAG"
+          
+          # Push to ghcr.io
+          podman push "$GHCR_TAG"
+          
+          echo "Successfully pushed to $GHCR_TAG"
+          
+          # Logout
+          podman logout ghcr.io || true
+        ''}
+      '';
+
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+      };
+    };
+
+    # Load server image after podman is ready
+    systemd.services.loom-server-image = mkIf (cfg.serverImage != null) {
+      description = "Load Loom Server Docker image into Podman";
+      after = [ "podman.service" "podman.socket" ];
+      wants = [ "podman.socket" ];
+      wantedBy = [ "multi-user.target" ];
+
+      path = [ pkgs.podman ];
+
+      script = ''
+        set -euo pipefail
+
+        echo "Loading server image from ${cfg.serverImage}..."
+        
+        # Load the image from the nix store
+        podman load < ${cfg.serverImage}
+        
+        # Get the image ID that was just loaded
+        # The nix-built image is named "loom-server:latest"
+        IMAGE_ID=$(podman images --format "{{.ID}}" --filter "reference=loom-server:latest" | head -1)
+        
+        if [ -n "$IMAGE_ID" ]; then
+          echo "Tagging image $IMAGE_ID as ${cfg.serverImageTag}"
+          podman tag "$IMAGE_ID" "${cfg.serverImageTag}"
+          echo "Server image loaded and tagged successfully"
+          
+          # List the images for verification
+          podman images | grep -E "loom-server|loom:latest" || true
+        else
+          echo "Warning: Could not find loaded image"
+          podman images
+          exit 1
+        fi
+
+        ${optionalString (cfg.ghcr.enable && cfg.ghcr.tokenFile != null) ''
+          echo "Pushing server image to ghcr.io/${cfg.ghcr.repository}..."
+          
+          # Login to ghcr.io
+          GITHUB_TOKEN=$(cat ${cfg.ghcr.tokenFile})
+          echo "$GITHUB_TOKEN" | podman login ghcr.io -u ${cfg.ghcr.username} --password-stdin
+          
+          # Tag for ghcr.io
+          GHCR_TAG="ghcr.io/${cfg.ghcr.repository}/loom:latest"
           podman tag "$IMAGE_ID" "$GHCR_TAG"
           
           # Push to ghcr.io

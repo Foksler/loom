@@ -268,11 +268,13 @@
     useTLS = true;
   };
 
-  # Podman container runtime with weaver image
+  # Podman container runtime with weaver and server images
   services.loom-podman = {
     enable = true;
     weaverImage = pkgs.weaver-image;
     weaverImageTag = "weaver:latest";
+    serverImage = pkgs.loom-server-image;
+    serverImageTag = "loom:latest";
 
     ghcr = {
       enable = true;
@@ -282,3 +284,4 @@
     };
   };
 }
+
