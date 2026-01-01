@@ -77,19 +77,15 @@ async fn extract_basic_auth_user(headers: &HeaderMap, state: &AppState) -> Optio
 			hasher.update(password.as_bytes());
 			let token_hash = hex::encode(hasher.finalize());
 
-			let session = state
+			let (_token_id, user_id) = state
 				.session_repo
-				.get_session_by_token_hash(&token_hash)
+				.get_access_token_by_hash(&token_hash)
 				.await
 				.ok()??;
 
-			if session.expires_at < chrono::Utc::now() {
-				return None;
-			}
-
 			let user = state
 				.user_repo
-				.get_user_by_id(&session.user_id)
+				.get_user_by_id(&user_id)
 				.await
 				.ok()??;
 			Some(CurrentUser::from_access_token(user))
