@@ -73,6 +73,10 @@ pub struct AppState {
 	pub geoip_service: Option<Arc<GeoIpService>>,
 	pub job_scheduler: Option<Arc<JobScheduler>>,
 	pub job_repository: Option<Arc<JobRepository>>,
+	pub scm_repo_store: Option<Arc<loom_scm::SqliteRepoStore>>,
+	pub scm_protection_store: Option<Arc<loom_scm::SqliteProtectionStore>>,
+	pub scm_webhook_store: Option<Arc<loom_scm::SqliteWebhookStore>>,
+	pub scm_maintenance_store: Option<Arc<loom_scm::SqliteMaintenanceJobStore>>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -88,7 +92,11 @@ pub async fn create_app_state(
 	let team_repo = Arc::new(TeamRepository::new(pool.clone()));
 	let api_key_repo = Arc::new(ApiKeyRepository::new(pool.clone()));
 	let audit_repo = Arc::new(AuditRepository::new(pool.clone()));
-	let share_repo = Arc::new(ShareRepository::new(pool));
+	let share_repo = Arc::new(ShareRepository::new(pool.clone()));
+	let scm_repo_store = Arc::new(loom_scm::SqliteRepoStore::new(pool.clone()));
+	let scm_protection_store = Arc::new(loom_scm::SqliteProtectionStore::new(pool.clone()));
+	let scm_webhook_store = Arc::new(loom_scm::SqliteWebhookStore::new(pool.clone()));
+	let scm_maintenance_store = Arc::new(loom_scm::SqliteMaintenanceJobStore::new(pool));
 	let auth_config = loom_auth::middleware::AuthConfig::from_env();
 	let cse_client = match (
 		std::env::var("LOOM_SERVER_GOOGLE_CSE_API_KEY"),
@@ -204,6 +212,10 @@ pub async fn create_app_state(
 		geoip_service,
 		job_scheduler: None,
 		job_repository: None,
+		scm_repo_store: Some(scm_repo_store),
+		scm_protection_store: Some(scm_protection_store),
+		scm_webhook_store: Some(scm_webhook_store),
+		scm_maintenance_store: Some(scm_maintenance_store),
 	}
 }
 
@@ -673,6 +685,79 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/users/me/restore",
 			post(routes::users::restore_account),
 		)
+		// User identity routes
+		.route(
+			"/api/users/me/identities",
+			get(routes::users::list_identities),
+		)
+		.route(
+			"/api/users/me/identities/{id}",
+			delete(routes::users::unlink_identity),
+		)
+		// Repository routes
+		.route("/api/v1/repos", post(routes::repos::create_repo))
+		.route("/api/v1/repos/{id}", get(routes::repos::get_repo))
+		.route("/api/v1/repos/{id}", patch(routes::repos::update_repo))
+		.route("/api/v1/repos/{id}", delete(routes::repos::delete_repo))
+		.route(
+			"/api/v1/users/{id}/repos",
+			get(routes::repos::list_user_repos),
+		)
+		.route(
+			"/api/v1/orgs/{id}/repos",
+			get(routes::repos::list_org_repos),
+		)
+		// Branch protection routes
+		.route(
+			"/api/v1/repos/{id}/protection",
+			get(routes::protection::list_protection_rules),
+		)
+		.route(
+			"/api/v1/repos/{id}/protection",
+			post(routes::protection::create_protection_rule),
+		)
+		.route(
+			"/api/v1/repos/{id}/protection/{rule_id}",
+			delete(routes::protection::delete_protection_rule),
+		)
+		// Webhook routes
+		.route(
+			"/api/v1/repos/{id}/webhooks",
+			get(routes::webhooks::list_repo_webhooks),
+		)
+		.route(
+			"/api/v1/repos/{id}/webhooks",
+			post(routes::webhooks::create_repo_webhook),
+		)
+		.route(
+			"/api/v1/repos/{id}/webhooks/{wid}",
+			delete(routes::webhooks::delete_repo_webhook),
+		)
+		.route(
+			"/api/v1/orgs/{id}/webhooks",
+			get(routes::webhooks::list_org_webhooks),
+		)
+		.route(
+			"/api/v1/orgs/{id}/webhooks",
+			post(routes::webhooks::create_org_webhook),
+		)
+		.route(
+			"/api/v1/orgs/{id}/webhooks/{wid}",
+			delete(routes::webhooks::delete_org_webhook),
+		)
+		// Maintenance routes
+		.route(
+			"/api/v1/repos/{id}/maintenance",
+			post(routes::maintenance::trigger_repo_maintenance),
+		)
+		.route(
+			"/api/v1/repos/{id}/maintenance/jobs",
+			get(routes::maintenance::list_repo_maintenance_jobs),
+		)
+		.route(
+			"/api/v1/admin/maintenance/sweep",
+			post(routes::maintenance::trigger_global_sweep),
+		)
 		// CSE proxy route
 		.route("/proxy/cse", post(routes::cse::proxy_cse))
 		// GitHub App endpoints (authenticated)
@@ -765,10 +850,15 @@ pub fn create_router(state: AppState) -> Router {
 	// Build the authenticated router with auth middleware
 	let authed = authed.build(state.clone());
 
+	// Git routes use optional auth (public repos allow anonymous access)
+	let git_routes = routes::git::router().build(state.clone());
+
 	// Merge public and authenticated routes
 	let mut router = Router::new()
 		.merge(public)
 		.merge(authed)
+		// Git HTTP smart protocol endpoints (optional auth)
+		.merge(git_routes)
 		// Admin routes (nested with role-based authorization layer, built on raw Router)
 		.nest("/api/admin", admin_routes(state.clone()))
 		// WebSocket endpoint - no auth middleware (uses first-message auth)

@@ -1,0 +1,926 @@
+// Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights
+// reserved. SPDX-License-Identifier: Proprietary
+
+//! Repository management HTTP handlers.
+//!
+//! Implements repository endpoints per the scm-system.md specification:
+//! - Create repository
+//! - Get repository by ID
+//! - Update repository
+//! - Soft delete repository
+//! - List user's repositories
+//! - List organization's repositories
+
+use axum::{
+	extract::{Path, State},
+	http::StatusCode,
+	response::IntoResponse,
+	Json,
+};
+use chrono::{DateTime, Utc};
+use loom_auth::types::{OrgId, OrgRole, UserId};
+use loom_scm::{GitRepository, OwnerType, RepoStore, Repository, Visibility};
+use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+use utoipa::ToSchema;
+use uuid::Uuid;
+
+use crate::{api::AppState, auth_middleware::RequireAuth, i18n::resolve_user_locale};
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum OwnerTypeApi {
+	User,
+	Org,
+}
+
+impl From<OwnerType> for OwnerTypeApi {
+	fn from(v: OwnerType) -> Self {
+		match v {
+			OwnerType::User => OwnerTypeApi::User,
+			OwnerType::Org => OwnerTypeApi::Org,
+		}
+	}
+}
+
+impl From<OwnerTypeApi> for OwnerType {
+	fn from(v: OwnerTypeApi) -> Self {
+		match v {
+			OwnerTypeApi::User => OwnerType::User,
+			OwnerTypeApi::Org => OwnerType::Org,
+		}
+	}
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum VisibilityApi {
+	Private,
+	Public,
+}
+
+impl Default for VisibilityApi {
+	fn default() -> Self {
+		VisibilityApi::Private
+	}
+}
+
+impl From<Visibility> for VisibilityApi {
+	fn from(v: Visibility) -> Self {
+		match v {
+			Visibility::Private => VisibilityApi::Private,
+			Visibility::Public => VisibilityApi::Public,
+		}
+	}
+}
+
+impl From<VisibilityApi> for Visibility {
+	fn from(v: VisibilityApi) -> Self {
+		match v {
+			VisibilityApi::Private => Visibility::Private,
+			VisibilityApi::Public => Visibility::Public,
+		}
+	}
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct CreateRepoRequest {
+	pub owner_type: OwnerTypeApi,
+	pub owner_id: Uuid,
+	pub name: String,
+	#[serde(default)]
+	pub visibility: VisibilityApi,
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct UpdateRepoRequest {
+	pub name: Option<String>,
+	pub visibility: Option<VisibilityApi>,
+	pub default_branch: Option<String>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct RepoResponse {
+	pub id: Uuid,
+	pub owner_type: OwnerTypeApi,
+	pub owner_id: Uuid,
+	pub name: String,
+	pub visibility: VisibilityApi,
+	pub default_branch: String,
+	pub clone_url: String,
+	pub created_at: DateTime<Utc>,
+	pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ListReposResponse {
+	pub repos: Vec<RepoResponse>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct RepoSuccessResponse {
+	pub message: String,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct RepoErrorResponse {
+	pub error: String,
+	pub message: String,
+}
+
+fn get_repos_base_dir() -> PathBuf {
+	std::env::var("LOOM_DATA_DIR")
+		.map(PathBuf::from)
+		.unwrap_or_else(|_| PathBuf::from("/var/lib/loom"))
+		.join("repos")
+}
+
+fn get_repo_disk_path(repo_id: Uuid) -> PathBuf {
+	let id_str = repo_id.to_string();
+	let shard = &id_str[..2];
+	get_repos_base_dir().join(shard).join(&id_str).join("git")
+}
+
+fn build_clone_url(base_url: &str, owner_name: &str, repo_name: &str) -> String {
+	format!("{}/git/{}/{}.git", base_url.trim_end_matches('/'), owner_name, repo_name)
+}
+
+impl RepoResponse {
+	fn from_repo(repo: Repository, clone_url: String) -> Self {
+		Self {
+			id: repo.id,
+			owner_type: repo.owner_type.into(),
+			owner_id: repo.owner_id,
+			name: repo.name,
+			visibility: repo.visibility.into(),
+			default_branch: repo.default_branch,
+			clone_url,
+			created_at: repo.created_at,
+			updated_at: repo.updated_at,
+		}
+	}
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/repos",
+    request_body = CreateRepoRequest,
+    responses(
+        (status = 201, description = "Repository created", body = RepoResponse),
+        (status = 400, description = "Invalid request", body = RepoErrorResponse),
+        (status = 401, description = "Not authenticated", body = RepoErrorResponse),
+        (status = 403, description = "Not authorized", body = RepoErrorResponse),
+        (status = 409, description = "Repository already exists", body = RepoErrorResponse)
+    ),
+    tag = "repos"
+)]
+#[tracing::instrument(skip(state, payload))]
+pub async fn create_repo(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Json(payload): Json<CreateRepoRequest>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	let scm_store = match state.scm_repo_store.as_ref() {
+		Some(store) => store,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "not_configured".to_string(),
+					message: "SCM not configured".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	if payload.name.is_empty() || payload.name.len() > 100 {
+		return (
+			StatusCode::BAD_REQUEST,
+			Json(RepoErrorResponse {
+				error: "invalid_name".to_string(),
+				message: "Repository name must be between 1 and 100 characters".to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	let owner_type: OwnerType = payload.owner_type.clone().into();
+	let owner_name: String;
+
+	match owner_type {
+		OwnerType::User => {
+			if payload.owner_id != current_user.user.id.into_inner() {
+				return (
+					StatusCode::FORBIDDEN,
+					Json(RepoErrorResponse {
+						error: "forbidden".to_string(),
+						message: "Cannot create repository for another user".to_string(),
+					}),
+				)
+					.into_response();
+			}
+			owner_name = current_user.user.display_name.clone();
+		}
+		OwnerType::Org => {
+			let org_id = OrgId::new(payload.owner_id);
+			let membership = match state
+				.org_repo
+				.get_membership(&org_id, &current_user.user.id)
+				.await
+			{
+				Ok(Some(m)) => m,
+				Ok(None) => {
+					return (
+						StatusCode::FORBIDDEN,
+						Json(RepoErrorResponse {
+							error: "forbidden".to_string(),
+							message: "Not a member of this organization".to_string(),
+						}),
+					)
+						.into_response();
+				}
+				Err(e) => {
+					tracing::error!(error = %e, "Failed to check org membership");
+					return (
+						StatusCode::INTERNAL_SERVER_ERROR,
+						Json(RepoErrorResponse {
+							error: "internal_error".to_string(),
+							message: "Internal server error".to_string(),
+						}),
+					)
+						.into_response();
+				}
+			};
+
+			if membership.role != OrgRole::Owner && membership.role != OrgRole::Admin {
+				return (
+					StatusCode::FORBIDDEN,
+					Json(RepoErrorResponse {
+						error: "forbidden".to_string(),
+						message: "Must be org owner or admin to create repositories".to_string(),
+					}),
+				)
+					.into_response();
+			}
+
+			let org = match state.org_repo.get_org_by_id(&org_id).await {
+				Ok(Some(o)) => o,
+				Ok(None) => {
+					return (
+						StatusCode::NOT_FOUND,
+						Json(RepoErrorResponse {
+							error: "not_found".to_string(),
+							message: "Organization not found".to_string(),
+						}),
+					)
+						.into_response();
+				}
+				Err(e) => {
+					tracing::error!(error = %e, "Failed to get organization");
+					return (
+						StatusCode::INTERNAL_SERVER_ERROR,
+						Json(RepoErrorResponse {
+							error: "internal_error".to_string(),
+							message: "Internal server error".to_string(),
+						}),
+					)
+						.into_response();
+				}
+			};
+			owner_name = org.slug;
+		}
+	}
+
+	let repo = Repository::new(
+		owner_type,
+		payload.owner_id,
+		payload.name.clone(),
+		payload.visibility.into(),
+	);
+
+	let created_repo = match scm_store.create(&repo).await {
+		Ok(r) => r,
+		Err(loom_scm::ScmError::AlreadyExists) => {
+			return (
+				StatusCode::CONFLICT,
+				Json(RepoErrorResponse {
+					error: "already_exists".to_string(),
+					message: "A repository with this name already exists".to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to create repository");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Failed to create repository".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let git_path = get_repo_disk_path(created_repo.id);
+	if let Err(e) = std::fs::create_dir_all(git_path.parent().unwrap()) {
+		tracing::error!(error = %e, "Failed to create repo directory");
+		let _ = scm_store.hard_delete(created_repo.id).await;
+		return (
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(RepoErrorResponse {
+				error: "internal_error".to_string(),
+				message: "Failed to initialize repository on disk".to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	if let Err(e) = GitRepository::init_bare(&git_path) {
+		tracing::error!(error = %e, "Failed to init bare git repo");
+		let _ = scm_store.hard_delete(created_repo.id).await;
+		return (
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(RepoErrorResponse {
+				error: "internal_error".to_string(),
+				message: "Failed to initialize git repository".to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	if let Ok(git_repo) = GitRepository::open(&git_path) {
+		let _ = git_repo.set_default_branch(&created_repo.default_branch);
+	}
+
+	tracing::info!(
+		repo_id = %created_repo.id,
+		name = %created_repo.name,
+		owner_type = ?created_repo.owner_type,
+		created_by = %current_user.user.id,
+		"Repository created"
+	);
+
+	let clone_url = build_clone_url(&state.base_url, &owner_name, &created_repo.name);
+	let _ = locale;
+
+	(
+		StatusCode::CREATED,
+		Json(RepoResponse::from_repo(created_repo, clone_url)),
+	)
+		.into_response()
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/repos/{id}",
+    params(
+        ("id" = Uuid, Path, description = "Repository ID")
+    ),
+    responses(
+        (status = 200, description = "Repository details", body = RepoResponse),
+        (status = 401, description = "Not authenticated", body = RepoErrorResponse),
+        (status = 403, description = "Not authorized", body = RepoErrorResponse),
+        (status = 404, description = "Repository not found", body = RepoErrorResponse)
+    ),
+    tag = "repos"
+)]
+#[tracing::instrument(skip(state), fields(%id))]
+pub async fn get_repo(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(id): Path<Uuid>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	let scm_store = match state.scm_repo_store.as_ref() {
+		Some(store) => store,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "not_configured".to_string(),
+					message: "SCM not configured".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let repo = match scm_store.get_by_id(id).await {
+		Ok(Some(r)) => r,
+		Ok(None) => {
+			return (
+				StatusCode::NOT_FOUND,
+				Json(RepoErrorResponse {
+					error: "not_found".to_string(),
+					message: "Repository not found".to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get repository");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Internal server error".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	if repo.visibility == Visibility::Private {
+		let has_access = match repo.owner_type {
+			OwnerType::User => repo.owner_id == current_user.user.id.into_inner(),
+			OwnerType::Org => {
+				let org_id = OrgId::new(repo.owner_id);
+				matches!(
+					state.org_repo.get_membership(&org_id, &current_user.user.id).await,
+					Ok(Some(_))
+				)
+			}
+		};
+
+		if !has_access {
+			return (
+				StatusCode::FORBIDDEN,
+				Json(RepoErrorResponse {
+					error: "forbidden".to_string(),
+					message: "Access denied".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	}
+
+	let owner_name = match repo.owner_type {
+		OwnerType::User => {
+			match state.user_repo.get_user_by_id(&UserId::new(repo.owner_id)).await {
+				Ok(Some(u)) => u.display_name,
+				_ => "unknown".to_string(),
+			}
+		}
+		OwnerType::Org => {
+			match state.org_repo.get_org_by_id(&OrgId::new(repo.owner_id)).await {
+				Ok(Some(o)) => o.slug,
+				_ => "unknown".to_string(),
+			}
+		}
+	};
+
+	let clone_url = build_clone_url(&state.base_url, &owner_name, &repo.name);
+	let _ = locale;
+
+	(StatusCode::OK, Json(RepoResponse::from_repo(repo, clone_url))).into_response()
+}
+
+#[utoipa::path(
+    patch,
+    path = "/api/v1/repos/{id}",
+    params(
+        ("id" = Uuid, Path, description = "Repository ID")
+    ),
+    request_body = UpdateRepoRequest,
+    responses(
+        (status = 200, description = "Repository updated", body = RepoResponse),
+        (status = 400, description = "Invalid request", body = RepoErrorResponse),
+        (status = 401, description = "Not authenticated", body = RepoErrorResponse),
+        (status = 403, description = "Not authorized", body = RepoErrorResponse),
+        (status = 404, description = "Repository not found", body = RepoErrorResponse)
+    ),
+    tag = "repos"
+)]
+#[tracing::instrument(skip(state, payload), fields(%id))]
+pub async fn update_repo(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(id): Path<Uuid>,
+	Json(payload): Json<UpdateRepoRequest>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	let scm_store = match state.scm_repo_store.as_ref() {
+		Some(store) => store,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "not_configured".to_string(),
+					message: "SCM not configured".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let mut repo = match scm_store.get_by_id(id).await {
+		Ok(Some(r)) => r,
+		Ok(None) => {
+			return (
+				StatusCode::NOT_FOUND,
+				Json(RepoErrorResponse {
+					error: "not_found".to_string(),
+					message: "Repository not found".to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get repository");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Internal server error".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let is_admin = match repo.owner_type {
+		OwnerType::User => repo.owner_id == current_user.user.id.into_inner(),
+		OwnerType::Org => {
+			let org_id = OrgId::new(repo.owner_id);
+			match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+				Ok(Some(m)) => m.role == OrgRole::Owner || m.role == OrgRole::Admin,
+				_ => false,
+			}
+		}
+	};
+
+	if !is_admin {
+		return (
+			StatusCode::FORBIDDEN,
+			Json(RepoErrorResponse {
+				error: "forbidden".to_string(),
+				message: "Admin access required".to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	if let Some(name) = payload.name {
+		if name.is_empty() || name.len() > 100 {
+			return (
+				StatusCode::BAD_REQUEST,
+				Json(RepoErrorResponse {
+					error: "invalid_name".to_string(),
+					message: "Repository name must be between 1 and 100 characters".to_string(),
+				}),
+			)
+				.into_response();
+		}
+		repo.name = name;
+	}
+
+	if let Some(visibility) = payload.visibility {
+		repo.visibility = visibility.into();
+	}
+
+	if let Some(default_branch) = payload.default_branch {
+		if default_branch.is_empty() {
+			return (
+				StatusCode::BAD_REQUEST,
+				Json(RepoErrorResponse {
+					error: "invalid_branch".to_string(),
+					message: "Default branch cannot be empty".to_string(),
+				}),
+			)
+				.into_response();
+		}
+		repo.default_branch = default_branch.clone();
+
+		let git_path = get_repo_disk_path(repo.id);
+		if let Ok(git_repo) = GitRepository::open(&git_path) {
+			let _ = git_repo.set_default_branch(&default_branch);
+		}
+	}
+
+	let updated_repo = match scm_store.update(&repo).await {
+		Ok(r) => r,
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to update repository");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Failed to update repository".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let owner_name = match updated_repo.owner_type {
+		OwnerType::User => {
+			match state.user_repo.get_user_by_id(&UserId::new(updated_repo.owner_id)).await {
+				Ok(Some(u)) => u.display_name,
+				_ => "unknown".to_string(),
+			}
+		}
+		OwnerType::Org => {
+			match state.org_repo.get_org_by_id(&OrgId::new(updated_repo.owner_id)).await {
+				Ok(Some(o)) => o.slug,
+				_ => "unknown".to_string(),
+			}
+		}
+	};
+
+	tracing::info!(
+		repo_id = %updated_repo.id,
+		updated_by = %current_user.user.id,
+		"Repository updated"
+	);
+
+	let clone_url = build_clone_url(&state.base_url, &owner_name, &updated_repo.name);
+	let _ = locale;
+
+	(StatusCode::OK, Json(RepoResponse::from_repo(updated_repo, clone_url))).into_response()
+}
+
+#[utoipa::path(
+    delete,
+    path = "/api/v1/repos/{id}",
+    params(
+        ("id" = Uuid, Path, description = "Repository ID")
+    ),
+    responses(
+        (status = 204, description = "Repository deleted"),
+        (status = 401, description = "Not authenticated", body = RepoErrorResponse),
+        (status = 403, description = "Not authorized", body = RepoErrorResponse),
+        (status = 404, description = "Repository not found", body = RepoErrorResponse)
+    ),
+    tag = "repos"
+)]
+#[tracing::instrument(skip(state), fields(%id))]
+pub async fn delete_repo(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(id): Path<Uuid>,
+) -> impl IntoResponse {
+	let scm_store = match state.scm_repo_store.as_ref() {
+		Some(store) => store,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "not_configured".to_string(),
+					message: "SCM not configured".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let repo = match scm_store.get_by_id(id).await {
+		Ok(Some(r)) => r,
+		Ok(None) => {
+			return (
+				StatusCode::NOT_FOUND,
+				Json(RepoErrorResponse {
+					error: "not_found".to_string(),
+					message: "Repository not found".to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get repository");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Internal server error".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let is_admin = match repo.owner_type {
+		OwnerType::User => repo.owner_id == current_user.user.id.into_inner(),
+		OwnerType::Org => {
+			let org_id = OrgId::new(repo.owner_id);
+			match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+				Ok(Some(m)) => m.role == OrgRole::Owner || m.role == OrgRole::Admin,
+				_ => false,
+			}
+		}
+	};
+
+	if !is_admin {
+		return (
+			StatusCode::FORBIDDEN,
+			Json(RepoErrorResponse {
+				error: "forbidden".to_string(),
+				message: "Admin access required".to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	if let Err(e) = scm_store.soft_delete(id).await {
+		tracing::error!(error = %e, "Failed to delete repository");
+		return (
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(RepoErrorResponse {
+				error: "internal_error".to_string(),
+				message: "Failed to delete repository".to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	tracing::info!(
+		repo_id = %id,
+		deleted_by = %current_user.user.id,
+		"Repository soft deleted"
+	);
+
+	StatusCode::NO_CONTENT.into_response()
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/users/{id}/repos",
+    params(
+        ("id" = Uuid, Path, description = "User ID")
+    ),
+    responses(
+        (status = 200, description = "List of user's repositories", body = ListReposResponse),
+        (status = 401, description = "Not authenticated", body = RepoErrorResponse),
+        (status = 404, description = "User not found", body = RepoErrorResponse)
+    ),
+    tag = "repos"
+)]
+#[tracing::instrument(skip(state), fields(user_id = %id))]
+pub async fn list_user_repos(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(id): Path<Uuid>,
+) -> impl IntoResponse {
+	let scm_store = match state.scm_repo_store.as_ref() {
+		Some(store) => store,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "not_configured".to_string(),
+					message: "SCM not configured".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let target_user = match state.user_repo.get_user_by_id(&UserId::new(id)).await {
+		Ok(Some(u)) => u,
+		Ok(None) => {
+			return (
+				StatusCode::NOT_FOUND,
+				Json(RepoErrorResponse {
+					error: "not_found".to_string(),
+					message: "User not found".to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get user");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Internal server error".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let repos = match scm_store.list_by_owner(OwnerType::User, id).await {
+		Ok(r) => r,
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to list repositories");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Failed to list repositories".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let is_owner = id == current_user.user.id.into_inner();
+	let visible_repos: Vec<_> = repos
+		.into_iter()
+		.filter(|r| r.visibility == Visibility::Public || is_owner)
+		.map(|r| {
+			let clone_url = build_clone_url(&state.base_url, &target_user.display_name, &r.name);
+			RepoResponse::from_repo(r, clone_url)
+		})
+		.collect();
+
+	(StatusCode::OK, Json(ListReposResponse { repos: visible_repos })).into_response()
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/orgs/{id}/repos",
+    params(
+        ("id" = Uuid, Path, description = "Organization ID")
+    ),
+    responses(
+        (status = 200, description = "List of organization's repositories", body = ListReposResponse),
+        (status = 401, description = "Not authenticated", body = RepoErrorResponse),
+        (status = 404, description = "Organization not found", body = RepoErrorResponse)
+    ),
+    tag = "repos"
+)]
+#[tracing::instrument(skip(state), fields(org_id = %id))]
+pub async fn list_org_repos(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(id): Path<Uuid>,
+) -> impl IntoResponse {
+	let scm_store = match state.scm_repo_store.as_ref() {
+		Some(store) => store,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "not_configured".to_string(),
+					message: "SCM not configured".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let org_id = OrgId::new(id);
+	let org = match state.org_repo.get_org_by_id(&org_id).await {
+		Ok(Some(o)) => o,
+		Ok(None) => {
+			return (
+				StatusCode::NOT_FOUND,
+				Json(RepoErrorResponse {
+					error: "not_found".to_string(),
+					message: "Organization not found".to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get organization");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Internal server error".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let is_member = matches!(
+		state.org_repo.get_membership(&org_id, &current_user.user.id).await,
+		Ok(Some(_))
+	);
+
+	let repos = match scm_store.list_by_owner(OwnerType::Org, id).await {
+		Ok(r) => r,
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to list repositories");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Failed to list repositories".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let visible_repos: Vec<_> = repos
+		.into_iter()
+		.filter(|r| r.visibility == Visibility::Public || is_member)
+		.map(|r| {
+			let clone_url = build_clone_url(&state.base_url, &org.slug, &r.name);
+			RepoResponse::from_repo(r, clone_url)
+		})
+		.collect();
+
+	(StatusCode::OK, Json(ListReposResponse { repos: visible_repos })).into_response()
+}

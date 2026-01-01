@@ -58,6 +58,7 @@ use loom_tools::{
 use url::Url;
 
 mod auth;
+mod credential_helper;
 mod locale;
 mod update;
 mod version;
@@ -208,6 +209,12 @@ enum Command {
 		#[command(subcommand)]
 		command: WeaverCommand,
 	},
+	/// Git credential helper for Loom SCM authentication
+	///
+	/// Configure git to use this helper:
+	///   git config --global credential.https://loom.ghuntley.com.helper 'loom credential-helper'
+	#[command(name = "credential-helper")]
+	CredentialHelper(credential_helper::CredentialHelperArgs),
 }
 
 impl From<&Args> for CliOverrides {
@@ -940,6 +947,10 @@ fn create_new_thread(config: &loom_config::LoomConfig, args: &Args) -> Result<Th
 async fn main() -> Result<()> {
 	let args = Args::parse();
 
+	if let Some(Command::CredentialHelper(cred_args)) = &args.command {
+		return credential_helper::run(cred_args.clone()).await;
+	}
+
 	let cli_overrides = CliOverrides::from(&args);
 	let config = load_config_with_cli(cli_overrides).context("failed to load configuration")?;
 
@@ -1149,6 +1160,7 @@ async fn main() -> Result<()> {
 			Ok(())
 		}
 		Some(Command::AcpAgent) => run_acp_agent(&config, &args, thread_store).await,
+		Some(Command::CredentialHelper(_)) => unreachable!("handled early in main"),
 		Some(Command::New {
 			image,
 			repo,

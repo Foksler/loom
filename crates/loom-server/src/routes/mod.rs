@@ -11,16 +11,21 @@ pub mod auth;
 pub mod bin;
 pub mod cse;
 pub mod debug;
+pub mod git;
 pub mod github;
 pub mod health;
 pub mod invitations;
+pub mod maintenance;
 pub mod orgs;
+pub mod protection;
 pub mod sessions;
 pub mod share;
 pub mod teams;
 pub mod threads;
+pub mod repos;
 pub mod users;
 pub mod weaver;
+pub mod webhooks;
 
 // Re-export commonly used types
 pub use auth::{
@@ -106,4 +111,28 @@ pub use invitations::{
 	CreateInvitationResponse, InvitationErrorResponse, InvitationResponse,
 	InvitationSuccessResponse, JoinRequestResponse, ListInvitationsResponse,
 	ListJoinRequestsResponse,
+};
+
+// Re-export repo types
+pub use repos::{
+	CreateRepoRequest, ListReposResponse, OwnerTypeApi, RepoErrorResponse, RepoResponse,
+	RepoSuccessResponse, UpdateRepoRequest, VisibilityApi,
+};
+
+// Re-export protection types
+pub use protection::{
+	CreateProtectionRuleRequest, ListProtectionRulesResponse, ProtectionRuleResponse,
+};
+
+// Re-export maintenance types
+pub use maintenance::{
+	ListMaintenanceJobsResponse, MaintenanceErrorResponse, MaintenanceJobResponse,
+	MaintenanceJobStatusApi, MaintenanceTaskApi, TriggerGlobalSweepRequest,
+	TriggerMaintenanceRequest, TriggerMaintenanceResponse,
+};
+
+// Re-export webhook types
+pub use webhooks::{
+	CreateWebhookRequest, ListWebhooksResponse, PayloadFormatApi, WebhookErrorResponse,
+	WebhookResponse, WebhookSuccessResponse,
 };

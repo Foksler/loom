@@ -37,6 +37,8 @@ members = [
 	"crates/loom-i18n",
 	"crates/loom-geoip",
 	"crates/loom-jobs",
+	"crates/loom-scm",
+	"crates/loom-scm-mirror",
 ]
 
 [workspace.package]

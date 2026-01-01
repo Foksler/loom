@@ -34,6 +34,8 @@ loom-smtp = { path = "../loom-smtp" }
 loom-i18n = { path = "../loom-i18n" }
 loom-geoip = { path = "../loom-geoip" }
 loom-github-app = { path = "../loom-github-app", features = ["openapi"] }
+loom-scm = { path = "../loom-scm" }
+loom-scm-mirror = { path = "../loom-scm-mirror" }
 loom-google-cse = { path = "../loom-google-cse", features = ["openapi"] }
 loom-llm-anthropic = { path = "../loom-llm-anthropic" }
 loom-llm-service = { path = "../loom-llm-service" }

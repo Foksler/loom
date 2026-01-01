@@ -99,7 +99,7 @@ pub async fn create_pool(database_url: &str) -> Result<SqlitePool, ServerError> 
 	Ok(pool)
 }
 
-/// Run all database migrations (001-014).
+/// Run all database migrations (001-018).
 ///
 /// # Arguments
 /// * `pool` - SQLite connection pool
@@ -290,6 +290,16 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ServerError> {
 
 	let m17 = include_str!("../../migrations/017_fix_sessions_token_hash.sql");
 	for stmt in m17.split(';').filter(|s| !s.trim().is_empty()) {
+		if let Err(e) = sqlx::query(stmt).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists") && !msg.contains("duplicate column") {
+				return Err(e.into());
+			}
+		}
+	}
+
+	let m18 = include_str!("../../migrations/018_scm_maintenance.sql");
+	for stmt in m18.split(';').filter(|s| !s.trim().is_empty()) {
 		if let Err(e) = sqlx::query(stmt).execute(pool).await {
 			let msg = e.to_string();
 			if !msg.contains("already exists") && !msg.contains("duplicate column") {
