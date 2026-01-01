@@ -2,12 +2,21 @@
 // reserved. SPDX-License-Identifier: Proprietary
 
 use std::path::Path;
-use std::process::Command;
+use std::sync::atomic::AtomicBool;
 
-use tracing::{debug, error, info, instrument};
+use gix::progress::Discard;
+use tracing::{debug, error, info, instrument, warn};
 
 use crate::error::{MirrorError, Result};
 use crate::types::Platform;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PullResult {
+	Updated,
+	NoChanges,
+	Recloned,
+	Error(String),
+}
 
 pub fn get_clone_url(platform: Platform, owner: &str, repo: &str) -> String {
 	match platform {
@@ -39,50 +48,60 @@ async fn clone_bare(target_path: &Path, clone_url: &str) -> Result<()> {
 		std::fs::create_dir_all(parent)?;
 	}
 
-	let output = Command::new("git")
-		.args(["clone", "--bare", "--mirror", clone_url])
-		.arg(target_path)
-		.output()?;
+	let url = clone_url.to_string();
+	let path = target_path.to_path_buf();
 
-	if !output.status.success() {
-		let stderr = String::from_utf8_lossy(&output.stderr);
-		error!(error = %stderr, "Git clone failed");
-		return Err(MirrorError::GitError(stderr.to_string()));
-	}
+	tokio::task::spawn_blocking(move || {
+		let interrupt = AtomicBool::new(false);
+		let url = gix::url::parse(url.as_str().into())
+			.map_err(|e| MirrorError::GitError(format!("Invalid URL: {}", e)))?;
 
-	debug!("Clone completed successfully");
-	Ok(())
+		let mut prepare = gix::prepare_clone_bare(url, &path)
+			.map_err(|e| MirrorError::GitError(format!("Clone prepare failed: {}", e)))?;
+
+		prepare
+			.fetch_only(Discard, &interrupt)
+			.map_err(|e| MirrorError::GitError(format!("Clone fetch failed: {}", e)))?;
+
+		debug!("Clone completed successfully");
+		Ok(())
+	})
+	.await
+	.map_err(|e| MirrorError::GitError(format!("Task join error: {}", e)))?
 }
 
 async fn fetch_updates(target_path: &Path, clone_url: &str) -> Result<()> {
 	info!(url = %clone_url, path = ?target_path, "Fetching updates");
 
-	let output = Command::new("git")
-		.args(["remote", "set-url", "origin", clone_url])
-		.current_dir(target_path)
-		.output()?;
+	let url = clone_url.to_string();
+	let path = target_path.to_path_buf();
 
-	if !output.status.success() {
-		let stderr = String::from_utf8_lossy(&output.stderr);
-		return Err(MirrorError::GitError(format!(
-			"Failed to set remote URL: {}",
-			stderr
-		)));
-	}
+	tokio::task::spawn_blocking(move || {
+		let repo = gix::open(&path)
+			.map_err(|e| MirrorError::GitError(format!("Failed to open repo: {}", e)))?;
 
-	let output = Command::new("git")
-		.args(["fetch", "--prune", "origin", "+refs/*:refs/*"])
-		.current_dir(target_path)
-		.output()?;
+		let remote_url = gix::url::parse(url.as_str().into())
+			.map_err(|e| MirrorError::GitError(format!("Invalid URL: {}", e)))?;
 
-	if !output.status.success() {
-		let stderr = String::from_utf8_lossy(&output.stderr);
-		error!(error = %stderr, "Git fetch failed");
-		return Err(MirrorError::GitError(stderr.to_string()));
-	}
+		let remote = repo
+			.remote_at(remote_url)
+			.map_err(|e| MirrorError::GitError(format!("Failed to create remote: {}", e)))?;
 
-	debug!("Fetch completed successfully");
-	Ok(())
+		let interrupt = AtomicBool::new(false);
+
+		remote
+			.connect(gix::remote::Direction::Fetch)
+			.map_err(|e| MirrorError::GitError(format!("Failed to connect: {}", e)))?
+			.prepare_fetch(Discard, Default::default())
+			.map_err(|e| MirrorError::GitError(format!("Failed to prepare fetch: {}", e)))?
+			.receive(Discard, &interrupt)
+			.map_err(|e| MirrorError::GitError(format!("Fetch failed: {}", e)))?;
+
+		debug!("Fetch completed successfully");
+		Ok(())
+	})
+	.await
+	.map_err(|e| MirrorError::GitError(format!("Task join error: {}", e)))?
 }
 
 pub async fn check_repo_exists(platform: Platform, owner: &str, repo: &str) -> Result<bool> {
@@ -100,6 +119,87 @@ pub async fn check_repo_exists(platform: Platform, owner: &str, repo: &str) -> R
 	Ok(response.status().is_success())
 }
 
+fn is_divergence_error(msg: &str) -> bool {
+	let lower = msg.to_lowercase();
+	lower.contains("refusing to fetch into branch")
+		|| lower.contains("non-fast-forward")
+		|| lower.contains("cannot lock ref")
+		|| lower.contains("! [rejected]")
+		|| lower.contains("diverged")
+		|| lower.contains("error: cannot lock ref")
+		|| lower.contains("unable to update local ref")
+}
+
+#[instrument(fields(platform = ?platform, owner = %owner, repo = %repo))]
+pub async fn pull_mirror_with_recovery(
+	platform: Platform,
+	owner: &str,
+	repo: &str,
+	target_path: &Path,
+) -> Result<PullResult> {
+	let clone_url = get_clone_url(platform, owner, repo);
+
+	if !target_path.exists() {
+		clone_bare(target_path, &clone_url).await?;
+		return Ok(PullResult::Updated);
+	}
+
+	let before_refs = get_refs_hash(target_path)?;
+
+	match fetch_updates(target_path, &clone_url).await {
+		Ok(()) => {
+			let after_refs = get_refs_hash(target_path)?;
+			if before_refs != after_refs {
+				Ok(PullResult::Updated)
+			} else {
+				Ok(PullResult::NoChanges)
+			}
+		}
+		Err(MirrorError::GitError(ref msg)) if is_divergence_error(msg) => {
+			warn!(
+				path = ?target_path,
+				error = %msg,
+				"Detected divergence, deleting and re-cloning"
+			);
+
+			if let Err(e) = std::fs::remove_dir_all(target_path) {
+				error!(path = ?target_path, error = %e, "Failed to remove diverged repo");
+				return Ok(PullResult::Error(format!("Failed to remove diverged repo: {}", e)));
+			}
+
+			clone_bare(target_path, &clone_url).await?;
+			info!(path = ?target_path, "Re-cloned after divergence");
+			Ok(PullResult::Recloned)
+		}
+		Err(e) => Ok(PullResult::Error(e.to_string())),
+	}
+}
+
+fn get_refs_hash(repo_path: &Path) -> Result<String> {
+	let repo = gix::open(repo_path)
+		.map_err(|e| MirrorError::GitError(format!("Failed to open repo: {}", e)))?;
+
+	let refs = repo
+		.references()
+		.map_err(|e| MirrorError::GitError(format!("Failed to get refs: {}", e)))?;
+
+	let mut ref_strings = Vec::new();
+
+	if let Ok(head) = repo.head_id() {
+		ref_strings.push(format!("HEAD {}", head));
+	}
+
+	for reference in refs.all().map_err(|e| MirrorError::GitError(e.to_string()))? {
+		if let Ok(r) = reference {
+			let id = r.id().detach().to_string();
+			ref_strings.push(format!("{} {}", id, r.name().as_bstr()));
+		}
+	}
+
+	ref_strings.sort();
+	Ok(ref_strings.join("\n"))
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -114,5 +214,46 @@ mod tests {
 	fn test_get_clone_url_gitlab() {
 		let url = get_clone_url(Platform::GitLab, "gitlab-org", "gitlab");
 		assert_eq!(url, "https://gitlab.com/gitlab-org/gitlab.git");
+	}
+
+	#[test]
+	fn test_is_divergence_error_non_fast_forward() {
+		assert!(is_divergence_error("error: cannot fast-forward, non-fast-forward update"));
+		assert!(is_divergence_error(" ! [rejected]        main -> main (non-fast-forward)"));
+	}
+
+	#[test]
+	fn test_is_divergence_error_refusing_to_fetch() {
+		assert!(is_divergence_error("refusing to fetch into branch 'refs/heads/main'"));
+	}
+
+	#[test]
+	fn test_is_divergence_error_cannot_lock() {
+		assert!(is_divergence_error("error: cannot lock ref 'refs/heads/main'"));
+	}
+
+	#[test]
+	fn test_is_divergence_error_unable_to_update() {
+		assert!(is_divergence_error("error: unable to update local ref 'refs/heads/main'"));
+	}
+
+	#[test]
+	fn test_is_divergence_error_diverged() {
+		assert!(is_divergence_error("Your branch has diverged from 'origin/main'"));
+	}
+
+	#[test]
+	fn test_is_divergence_error_normal_errors() {
+		assert!(!is_divergence_error("fatal: repository not found"));
+		assert!(!is_divergence_error("error: could not read Username"));
+		assert!(!is_divergence_error("fatal: Authentication failed"));
+	}
+
+	#[test]
+	fn test_pull_result_variants() {
+		assert_eq!(PullResult::Updated, PullResult::Updated);
+		assert_eq!(PullResult::NoChanges, PullResult::NoChanges);
+		assert_eq!(PullResult::Recloned, PullResult::Recloned);
+		assert_ne!(PullResult::Updated, PullResult::Recloned);
 	}
 }

@@ -75,6 +75,16 @@ impl RepoRole {
 			RepoRole::Admin => "admin",
 		}
 	}
+
+	pub fn has_permission_of(&self, other: &RepoRole) -> bool {
+		match (self, other) {
+			(RepoRole::Admin, _) => true,
+			(RepoRole::Write, RepoRole::Read) => true,
+			(RepoRole::Write, RepoRole::Write) => true,
+			(RepoRole::Read, RepoRole::Read) => true,
+			_ => false,
+		}
+	}
 }
 
 impl std::str::FromStr for RepoRole {
@@ -149,4 +159,22 @@ pub struct RepoTeamAccess {
 	pub repo_id: Uuid,
 	pub team_id: Uuid,
 	pub role: RepoRole,
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_role_hierarchy() {
+		assert!(RepoRole::Admin.has_permission_of(&RepoRole::Read));
+		assert!(RepoRole::Admin.has_permission_of(&RepoRole::Write));
+		assert!(RepoRole::Admin.has_permission_of(&RepoRole::Admin));
+		assert!(RepoRole::Write.has_permission_of(&RepoRole::Read));
+		assert!(RepoRole::Write.has_permission_of(&RepoRole::Write));
+		assert!(!RepoRole::Write.has_permission_of(&RepoRole::Admin));
+		assert!(RepoRole::Read.has_permission_of(&RepoRole::Read));
+		assert!(!RepoRole::Read.has_permission_of(&RepoRole::Write));
+		assert!(!RepoRole::Read.has_permission_of(&RepoRole::Admin));
+	}
 }

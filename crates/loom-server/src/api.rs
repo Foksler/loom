@@ -77,6 +77,9 @@ pub struct AppState {
 	pub scm_protection_store: Option<Arc<loom_scm::SqliteProtectionStore>>,
 	pub scm_webhook_store: Option<Arc<loom_scm::SqliteWebhookStore>>,
 	pub scm_maintenance_store: Option<Arc<loom_scm::SqliteMaintenanceJobStore>>,
+	pub scm_team_access_store: Option<Arc<loom_scm::SqliteRepoTeamAccessStore>>,
+	pub push_mirror_store: Option<Arc<loom_scm_mirror::SqlitePushMirrorStore>>,
+	pub external_mirror_store: Option<Arc<loom_scm_mirror::SqliteExternalMirrorStore>>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -96,7 +99,10 @@ pub async fn create_app_state(
 	let scm_repo_store = Arc::new(loom_scm::SqliteRepoStore::new(pool.clone()));
 	let scm_protection_store = Arc::new(loom_scm::SqliteProtectionStore::new(pool.clone()));
 	let scm_webhook_store = Arc::new(loom_scm::SqliteWebhookStore::new(pool.clone()));
-	let scm_maintenance_store = Arc::new(loom_scm::SqliteMaintenanceJobStore::new(pool));
+	let scm_maintenance_store = Arc::new(loom_scm::SqliteMaintenanceJobStore::new(pool.clone()));
+	let scm_team_access_store = Arc::new(loom_scm::SqliteRepoTeamAccessStore::new(pool.clone()));
+	let push_mirror_store = Arc::new(loom_scm_mirror::SqlitePushMirrorStore::new(pool.clone()));
+	let external_mirror_store = Arc::new(loom_scm_mirror::SqliteExternalMirrorStore::new(pool));
 	let auth_config = loom_auth::middleware::AuthConfig::from_env();
 	let cse_client = match (
 		std::env::var("LOOM_SERVER_GOOGLE_CSE_API_KEY"),
@@ -216,6 +222,9 @@ pub async fn create_app_state(
 		scm_protection_store: Some(scm_protection_store),
 		scm_webhook_store: Some(scm_webhook_store),
 		scm_maintenance_store: Some(scm_maintenance_store),
+		scm_team_access_store: Some(scm_team_access_store),
+		push_mirror_store: Some(push_mirror_store),
+		external_mirror_store: Some(external_mirror_store),
 	}
 }
 
@@ -707,6 +716,19 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/v1/orgs/{id}/repos",
 			get(routes::repos::list_org_repos),
 		)
+		// Team access routes
+		.route(
+			"/api/v1/repos/{id}/teams",
+			get(routes::repos::list_repo_team_access),
+		)
+		.route(
+			"/api/v1/repos/{id}/teams",
+			post(routes::repos::grant_repo_team_access),
+		)
+		.route(
+			"/api/v1/repos/{id}/teams/{tid}",
+			delete(routes::repos::revoke_repo_team_access),
+		)
 		// Branch protection routes
 		.route(
 			"/api/v1/repos/{id}/protection",
@@ -744,6 +766,23 @@ pub fn create_router(state: AppState) -> Router {
 		.route(
 			"/api/v1/orgs/{id}/webhooks/{wid}",
 			delete(routes::webhooks::delete_org_webhook),
+		)
+		// Mirror routes
+		.route(
+			"/api/v1/repos/{id}/mirrors",
+			get(routes::mirrors::list_mirrors),
+		)
+		.route(
+			"/api/v1/repos/{id}/mirrors",
+			post(routes::mirrors::create_mirror),
+		)
+		.route(
+			"/api/v1/repos/{id}/mirrors/{mirror_id}",
+			delete(routes::mirrors::delete_mirror),
+		)
+		.route(
+			"/api/v1/repos/{id}/mirrors/{mirror_id}/sync",
+			post(routes::mirrors::trigger_sync),
 		)
 		// Maintenance routes
 		.route(

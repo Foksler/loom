@@ -18,7 +18,7 @@ pub use protection::{
 	check_push_allowed, matches_pattern, ProtectionStore, ProtectionViolation, PushCheck,
 	SqliteProtectionStore,
 };
-pub use repo::{RepoStore, SqliteRepoStore};
+pub use repo::{validate_repo_name, RepoStore, RepoTeamAccessStore, SqliteRepoStore, SqliteRepoTeamAccessStore};
 pub use schema::{run_migrations, MIGRATIONS};
 pub use types::{
 	BranchProtectionRule, OwnerType, RepoRole, RepoTeamAccess, Repository, Visibility,

@@ -45,7 +45,9 @@ use utoipa::OpenApi;
         (name = "users", description = "User profile management"),
         (name = "weavers", description = "Weaver provisioning and management"),
         (name = "api-keys", description = "API key management for organizations"),
-        (name = "admin", description = "System administration endpoints (system_admin only)")
+        (name = "admin", description = "System administration endpoints (system_admin only)"),
+        (name = "repos", description = "Repository management"),
+        (name = "mirrors", description = "Push mirror management for repositories")
     ),
     paths(
         // Thread endpoints
@@ -129,6 +131,11 @@ use utoipa::OpenApi;
         crate::routes::weaver::delete_weaver,
         crate::routes::weaver::stream_logs,
         crate::routes::weaver::trigger_cleanup,
+        // Mirror endpoints
+        crate::routes::mirrors::list_mirrors,
+        crate::routes::mirrors::create_mirror,
+        crate::routes::mirrors::delete_mirror,
+        crate::routes::mirrors::trigger_sync,
     ),
     components(
         schemas(
@@ -260,6 +267,11 @@ use utoipa::OpenApi;
             crate::routes::weaver::ListWeaversApiResponse,
             crate::routes::weaver::CleanupApiResponse,
             crate::routes::weaver::ResourceSpecApi,
+            // Mirror types
+            crate::routes::mirrors::CreateMirrorRequest,
+            crate::routes::mirrors::MirrorResponse,
+            crate::routes::mirrors::ListMirrorsResponse,
+            crate::routes::mirrors::SyncResponse,
         )
     )
 )]

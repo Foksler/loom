@@ -1,6 +1,8 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights
 // reserved. SPDX-License-Identifier: Proprietary
 
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+
 use axum::{
 	extract::{Path, State},
 	http::StatusCode,
@@ -10,7 +12,9 @@ use axum::{
 use chrono::{DateTime, Utc};
 use loom_auth::types::{OrgId, OrgRole};
 use loom_scm::{OwnerType, PayloadFormat, RepoStore, Webhook, WebhookOwnerType, WebhookStore};
+use loom_secret::SecretString;
 use serde::{Deserialize, Serialize};
+use url::Url;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -117,17 +121,68 @@ fn validate_events(events: &[String], locale: &str) -> Option<String> {
 	None
 }
 
-fn validate_url(url: &str, locale: &str) -> Option<String> {
-	if url.is_empty() {
+fn validate_url(url_str: &str, locale: &str) -> Option<String> {
+	if url_str.is_empty() {
 		return Some(t(locale, "server.api.scm.webhook.url_required").to_string());
 	}
-	if !url.starts_with("https://") && !url.starts_with("http://") {
+	if !url_str.starts_with("https://") && !url_str.starts_with("http://") {
 		return Some(t(locale, "server.api.scm.webhook.url_invalid_protocol").to_string());
 	}
-	if url.len() > 2048 {
+	if url_str.len() > 2048 {
 		return Some(t(locale, "server.api.scm.webhook.url_too_long").to_string());
 	}
+
+	let url = match Url::parse(url_str) {
+		Ok(u) => u,
+		Err(_) => return Some(t(locale, "server.api.scm.webhook.url_invalid").to_string()),
+	};
+
+	let host = match url.host_str() {
+		Some(h) => h,
+		None => return Some(t(locale, "server.api.scm.webhook.url_invalid").to_string()),
+	};
+
+	if host == "localhost" || host == "127.0.0.1" || host == "::1" || host == "[::1]" {
+		return Some(t(locale, "server.api.scm.webhook.url_localhost_blocked").to_string());
+	}
+
+	if let Ok(ip) = host.parse::<IpAddr>() {
+		if is_private_or_reserved(&ip) {
+			return Some(t(locale, "server.api.scm.webhook.url_private_ip_blocked").to_string());
+		}
+	}
+
+	if host.starts_with('[') && host.ends_with(']') {
+		if let Ok(ip) = host[1..host.len() - 1].parse::<Ipv6Addr>() {
+			if is_private_or_reserved(&IpAddr::V6(ip)) {
+				return Some(t(locale, "server.api.scm.webhook.url_private_ip_blocked").to_string());
+			}
+		}
+	}
+
 	None
+}
+
+fn is_private_or_reserved(ip: &IpAddr) -> bool {
+	match ip {
+		IpAddr::V4(ipv4) => is_private_or_reserved_v4(ipv4),
+		IpAddr::V6(ipv6) => is_private_or_reserved_v6(ipv6),
+	}
+}
+
+fn is_private_or_reserved_v4(ipv4: &Ipv4Addr) -> bool {
+	ipv4.is_loopback()              // 127.0.0.0/8
+		|| ipv4.is_private()            // 10/8, 172.16/12, 192.168/16
+		|| ipv4.is_link_local()         // 169.254.0.0/16 (includes cloud metadata 169.254.169.254)
+		|| ipv4.is_broadcast()          // 255.255.255.255
+		|| ipv4.is_unspecified()        // 0.0.0.0
+}
+
+fn is_private_or_reserved_v6(ipv6: &Ipv6Addr) -> bool {
+	ipv6.is_loopback()              // ::1
+		|| ipv6.is_unspecified()        // ::
+		|| ipv6.segments()[0] == 0xfe80 // Link-local (fe80::/10)
+		|| ipv6.segments()[0] & 0xfe00 == 0xfc00 // Unique local (fc00::/7)
 }
 
 async fn check_repo_admin(
@@ -398,7 +453,7 @@ pub async fn create_repo_webhook(
 		WebhookOwnerType::Repo,
 		id,
 		payload.url,
-		payload.secret,
+		SecretString::new(payload.secret),
 		payload.payload_format.into(),
 		payload.events,
 	);
@@ -678,7 +733,7 @@ pub async fn create_org_webhook(
 		WebhookOwnerType::Org,
 		id,
 		payload.url,
-		payload.secret,
+		SecretString::new(payload.secret),
 		payload.payload_format.into(),
 		payload.events,
 	);
@@ -814,5 +869,99 @@ pub async fn delete_org_webhook(
 			)
 				.into_response()
 		}
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_ssrf_protection_blocks_localhost() {
+		assert!(validate_url("http://localhost/hook", "en").is_some());
+		assert!(validate_url("http://127.0.0.1/hook", "en").is_some());
+		assert!(validate_url("https://localhost:8080/hook", "en").is_some());
+		assert!(validate_url("http://127.0.0.1:3000/hook", "en").is_some());
+	}
+
+	#[test]
+	fn test_ssrf_protection_blocks_ipv6_localhost() {
+		assert!(validate_url("http://[::1]/hook", "en").is_some());
+		assert!(validate_url("https://[::1]:8080/hook", "en").is_some());
+	}
+
+	#[test]
+	fn test_ssrf_protection_blocks_private_ipv4() {
+		assert!(validate_url("http://10.0.0.1/hook", "en").is_some());
+		assert!(validate_url("http://10.255.255.255/hook", "en").is_some());
+		assert!(validate_url("http://172.16.0.1/hook", "en").is_some());
+		assert!(validate_url("http://172.31.255.255/hook", "en").is_some());
+		assert!(validate_url("http://192.168.1.1/hook", "en").is_some());
+		assert!(validate_url("http://192.168.0.1/hook", "en").is_some());
+	}
+
+	#[test]
+	fn test_ssrf_protection_blocks_link_local() {
+		assert!(validate_url("http://169.254.1.1/hook", "en").is_some());
+		assert!(validate_url("http://169.254.169.254/metadata", "en").is_some());
+	}
+
+	#[test]
+	fn test_ssrf_protection_blocks_special_addresses() {
+		assert!(validate_url("http://0.0.0.0/hook", "en").is_some());
+		assert!(validate_url("http://255.255.255.255/hook", "en").is_some());
+	}
+
+	#[test]
+	fn test_ssrf_protection_blocks_private_ipv6() {
+		assert!(validate_url("http://[fe80::1]/hook", "en").is_some());
+		assert!(validate_url("http://[fc00::1]/hook", "en").is_some());
+		assert!(validate_url("http://[fd00::1]/hook", "en").is_some());
+	}
+
+	#[test]
+	fn test_ssrf_protection_allows_public_urls() {
+		assert!(validate_url("https://example.com/hook", "en").is_none());
+		assert!(validate_url("https://api.github.com/webhook", "en").is_none());
+		assert!(validate_url("http://webhook.site/abc123", "en").is_none());
+		assert!(validate_url("https://8.8.8.8/hook", "en").is_none());
+	}
+
+	#[test]
+	fn test_validate_url_rejects_invalid_protocol() {
+		assert!(validate_url("ftp://example.com/hook", "en").is_some());
+		assert!(validate_url("file:///etc/passwd", "en").is_some());
+	}
+
+	#[test]
+	fn test_validate_url_rejects_empty() {
+		assert!(validate_url("", "en").is_some());
+	}
+
+	#[test]
+	fn test_is_private_or_reserved_v4() {
+		assert!(is_private_or_reserved_v4(&"127.0.0.1".parse().unwrap()));
+		assert!(is_private_or_reserved_v4(&"10.0.0.1".parse().unwrap()));
+		assert!(is_private_or_reserved_v4(&"172.16.0.1".parse().unwrap()));
+		assert!(is_private_or_reserved_v4(&"192.168.1.1".parse().unwrap()));
+		assert!(is_private_or_reserved_v4(&"169.254.169.254".parse().unwrap()));
+		assert!(is_private_or_reserved_v4(&"0.0.0.0".parse().unwrap()));
+
+		assert!(!is_private_or_reserved_v4(&"8.8.8.8".parse().unwrap()));
+		assert!(!is_private_or_reserved_v4(&"1.1.1.1".parse().unwrap()));
+		assert!(!is_private_or_reserved_v4(&"172.32.0.1".parse().unwrap()));
+	}
+
+	#[test]
+	fn test_is_private_or_reserved_v6() {
+		assert!(is_private_or_reserved_v6(&"::1".parse().unwrap()));
+		assert!(is_private_or_reserved_v6(&"::".parse().unwrap()));
+		assert!(is_private_or_reserved_v6(&"fe80::1".parse().unwrap()));
+		assert!(is_private_or_reserved_v6(&"fc00::1".parse().unwrap()));
+		assert!(is_private_or_reserved_v6(&"fd00::1".parse().unwrap()));
+
+		assert!(!is_private_or_reserved_v6(
+			&"2001:4860:4860::8888".parse().unwrap()
+		));
 	}
 }

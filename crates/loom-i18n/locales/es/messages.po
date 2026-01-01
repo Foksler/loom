@@ -1000,6 +1000,14 @@ msgstr "Se requiere autenticación para push"
 msgid "server.api.scm.git.auth_required"
 msgstr "Se requiere autenticación"
 
+#: API: SCM Git - Access denied
+msgid "server.api.scm.git.access_denied"
+msgstr "Acceso denegado al repositorio"
+
+#: API: SCM Git - Write access denied
+msgid "server.api.scm.git.write_access_denied"
+msgstr "Acceso de escritura denegado al repositorio"
+
 # ============================================================================
 # SCM: Protection API responses
 # ============================================================================
@@ -1068,6 +1076,18 @@ msgstr "Evento inválido '{event}'. Eventos válidos: {valid_events}"
 msgid "server.api.scm.webhook.secret_required"
 msgstr "El secreto es obligatorio"
 
+#: API: SCM Webhook - URL invalid
+msgid "server.api.scm.webhook.url_invalid"
+msgstr "Formato de URL inválido"
+
+#: API: SCM Webhook - Localhost blocked
+msgid "server.api.scm.webhook.url_localhost_blocked"
+msgstr "No se permiten URLs de localhost"
+
+#: API: SCM Webhook - Private IP blocked
+msgid "server.api.scm.webhook.url_private_ip_blocked"
+msgstr "No se permiten direcciones IP privadas o internas"
+
 # ============================================================================
 # SCM: Maintenance API responses
 # ============================================================================
@@ -1083,3 +1103,67 @@ msgstr "Tarea de mantenimiento '{task}' en cola para el repositorio"
 #: API: SCM Maintenance - Global sweep queued
 msgid "server.api.scm.maintenance.sweep_queued"
 msgstr "Barrido global de mantenimiento '{task}' en cola"
+
+# ============================================================================
+# SCM: Mirror API responses
+# ============================================================================
+
+#: API: SCM Mirror - URL required
+msgid "server.api.scm.mirror.url_required"
+msgstr "La URL del espejo es requerida"
+
+#: API: SCM Mirror - URL invalid protocol
+msgid "server.api.scm.mirror.url_invalid_protocol"
+msgstr "La URL del espejo debe comenzar con http:// o https://"
+
+#: API: SCM Mirror - URL too long
+msgid "server.api.scm.mirror.url_too_long"
+msgstr "La URL del espejo debe tener menos de 2048 caracteres"
+
+#: API: SCM Mirror - URL invalid
+msgid "server.api.scm.mirror.url_invalid"
+msgstr "Formato de URL del espejo inválido"
+
+#: API: SCM Mirror - Localhost blocked
+msgid "server.api.scm.mirror.url_localhost_blocked"
+msgstr "Las URLs de localhost no están permitidas para espejos"
+
+#: API: SCM Mirror - Private IP blocked
+msgid "server.api.scm.mirror.url_private_ip_blocked"
+msgstr "Las direcciones IP privadas o internas no están permitidas para espejos"
+
+#: API: SCM Mirror - Not found
+msgid "server.api.scm.mirror.not_found"
+msgstr "Espejo no encontrado"
+
+#: API: SCM Mirror - Disabled
+msgid "server.api.scm.mirror.disabled"
+msgstr "El espejo está deshabilitado"
+
+#: API: SCM Mirror - Sync queued
+msgid "server.api.scm.mirror.sync_queued"
+msgstr "La sincronización del espejo ha sido encolada"
+
+#: API: SCM Mirror - Failed to delete
+msgid "server.api.scm.mirror.failed_to_delete"
+msgstr "Error al eliminar el espejo"
+
+#: API: SCM Mirror - Invalid path format
+msgid "server.api.scm.mirror.invalid_path"
+msgstr "Formato de ruta de espejo inválido. Esperado: mirrors/{platform}/{owner}/{repo}"
+
+#: API: SCM Mirror - Push not allowed
+msgid "server.api.scm.mirror.push_not_allowed"
+msgstr "No se permite push a repositorios espejo"
+
+#: API: SCM Mirror - Remote repository not found
+msgid "server.api.scm.mirror.remote_not_found"
+msgstr "Repositorio remoto no encontrado"
+
+#: API: SCM Mirror - Mirrors org not found
+msgid "server.api.scm.mirror.mirrors_org_not_found"
+msgstr "Organización de espejos no configurada. Por favor cree una organización llamada 'mirrors'."
+
+#: API: SCM Mirror - Clone failed
+msgid "server.api.scm.mirror.clone_failed"
+msgstr "Error al clonar el repositorio remoto"

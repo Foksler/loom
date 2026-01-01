@@ -224,6 +224,10 @@ impl GitRepository {
 		}
 	}
 
+	// NOTE: gc, prune, fsck use git subprocess because gitoxide doesn't yet support these
+	// maintenance operations. See: https://github.com/GitoxideLabs/gitoxide/blob/main/crate-status.md
+	// Track progress at: https://github.com/GitoxideLabs/gitoxide/issues/307
+
 	#[instrument(skip(self))]
 	pub fn gc(&self) -> Result<()> {
 		let output = std::process::Command::new("git")

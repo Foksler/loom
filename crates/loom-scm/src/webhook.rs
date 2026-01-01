@@ -3,6 +3,7 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use loom_secret::SecretString;
 use serde::{Deserialize, Serialize};
 use sqlx::{Row, SqlitePool};
 use uuid::Uuid;
@@ -94,17 +95,48 @@ impl std::str::FromStr for DeliveryStatus {
 	}
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Webhook {
 	pub id: Uuid,
 	pub owner_type: WebhookOwnerType,
 	pub owner_id: Uuid,
 	pub url: String,
-	pub secret: String,
+	pub secret: SecretString,
 	pub payload_format: PayloadFormat,
 	pub events: Vec<String>,
 	pub enabled: bool,
 	pub created_at: DateTime<Utc>,
+}
+
+impl std::fmt::Debug for Webhook {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("Webhook")
+			.field("id", &self.id)
+			.field("owner_type", &self.owner_type)
+			.field("owner_id", &self.owner_id)
+			.field("url", &self.url)
+			.field("secret", &"[REDACTED]")
+			.field("payload_format", &self.payload_format)
+			.field("events", &self.events)
+			.field("enabled", &self.enabled)
+			.field("created_at", &self.created_at)
+			.finish()
+	}
+}
+
+impl Clone for Webhook {
+	fn clone(&self) -> Self {
+		Self {
+			id: self.id,
+			owner_type: self.owner_type,
+			owner_id: self.owner_id,
+			url: self.url.clone(),
+			secret: SecretString::new(self.secret.expose().clone()),
+			payload_format: self.payload_format,
+			events: self.events.clone(),
+			enabled: self.enabled,
+			created_at: self.created_at,
+		}
+	}
 }
 
 impl Webhook {
@@ -112,7 +144,7 @@ impl Webhook {
 		owner_type: WebhookOwnerType,
 		owner_id: Uuid,
 		url: String,
-		secret: String,
+		secret: SecretString,
 		payload_format: PayloadFormat,
 		events: Vec<String>,
 	) -> Self {
@@ -206,7 +238,7 @@ impl SqliteWebhookStore {
 			owner_id: Uuid::parse_str(&owner_id_str)
 				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
 			url: row.get("url"),
-			secret: row.get("secret"),
+			secret: SecretString::new(row.get("secret")),
 			payload_format: payload_format_str.parse::<PayloadFormat>().map_err(|_| {
 				ScmError::Database(sqlx::Error::Decode(
 					format!("invalid payload_format: {}", payload_format_str).into(),
@@ -273,7 +305,7 @@ impl WebhookStore for SqliteWebhookStore {
 		.bind(webhook.owner_type.as_str())
 		.bind(webhook.owner_id.to_string())
 		.bind(&webhook.url)
-		.bind(&webhook.secret)
+		.bind(webhook.secret.expose())
 		.bind(webhook.payload_format.as_str())
 		.bind(&events_json)
 		.bind(webhook.enabled as i32)
@@ -667,7 +699,7 @@ pub mod delivery {
 		client: &reqwest::Client,
 	) -> std::result::Result<DeliveryResult, reqwest::Error> {
 		let body = serde_json::to_vec(&payload).unwrap_or_default();
-		let signature = sign_payload(&webhook.secret, &body);
+		let signature = sign_payload(webhook.secret.expose(), &body);
 
 		let response = client
 			.post(&webhook.url)
@@ -731,7 +763,7 @@ mod tests {
 			WebhookOwnerType::Repo,
 			Uuid::new_v4(),
 			"https://example.com/webhook".to_string(),
-			"secret".to_string(),
+			SecretString::new("secret".to_string()),
 			PayloadFormat::LoomV1,
 			vec!["push".to_string(), "repo.created".to_string()],
 		);
@@ -746,5 +778,34 @@ mod tests {
 		let signature = delivery::sign_payload("secret", b"test body");
 		assert!(signature.starts_with("sha256="));
 		assert_eq!(signature.len(), 71); // "sha256=" (7) + 64 hex chars
+	}
+
+	#[test]
+	fn test_webhook_secret_not_in_debug() {
+		let webhook = Webhook::new(
+			WebhookOwnerType::Repo,
+			Uuid::new_v4(),
+			"https://example.com/webhook".to_string(),
+			SecretString::new("super-secret-value".to_string()),
+			PayloadFormat::LoomV1,
+			vec!["push".to_string()],
+		);
+		let debug_output = format!("{:?}", webhook);
+		assert!(
+			!debug_output.contains("super-secret-value"),
+			"Debug output should not contain the secret"
+		);
+		assert!(
+			debug_output.contains("[REDACTED]"),
+			"Debug output should contain [REDACTED]"
+		);
+	}
+
+	#[test]
+	fn test_sign_payload_with_secret_string() {
+		let secret = SecretString::new("my-webhook-secret".to_string());
+		let signature = delivery::sign_payload(secret.expose(), b"test body");
+		assert!(signature.starts_with("sha256="));
+		assert_eq!(signature.len(), 71);
 	}
 }

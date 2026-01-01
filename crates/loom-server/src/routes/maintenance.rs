@@ -24,7 +24,8 @@ use crate::{
 	i18n::{resolve_user_locale, t, t_fmt},
 	routes::admin::AdminErrorResponse,
 };
-use loom_scm::{MaintenanceJob, MaintenanceJobStatus, MaintenanceJobStore, MaintenanceTask, RepoStore};
+use loom_auth::types::{OrgId, OrgRole};
+use loom_scm::{MaintenanceJob, MaintenanceJobStatus, MaintenanceJobStore, MaintenanceTask, OwnerType, RepoStore, Repository, Visibility};
 
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct TriggerMaintenanceRequest {
@@ -156,6 +157,74 @@ fn default_stagger_ms() -> u64 {
 	1000
 }
 
+async fn check_repo_admin(
+	repo: &Repository,
+	current_user: &loom_auth::middleware::CurrentUser,
+	state: &AppState,
+	locale: &str,
+) -> Result<(), (StatusCode, Json<MaintenanceErrorResponse>)> {
+	let is_admin = match repo.owner_type {
+		OwnerType::User => repo.owner_id == current_user.user.id.into_inner(),
+		OwnerType::Org => {
+			let org_id = OrgId::new(repo.owner_id);
+			match state
+				.org_repo
+				.get_membership(&org_id, &current_user.user.id)
+				.await
+			{
+				Ok(Some(m)) => m.role == OrgRole::Owner || m.role == OrgRole::Admin,
+				_ => false,
+			}
+		}
+	};
+
+	if !is_admin {
+		return Err((
+			StatusCode::FORBIDDEN,
+			Json(MaintenanceErrorResponse {
+				error: "forbidden".to_string(),
+				message: t(locale, "server.api.scm.admin_required").to_string(),
+			}),
+		));
+	}
+
+	Ok(())
+}
+
+async fn check_repo_access(
+	repo: &Repository,
+	current_user: &loom_auth::middleware::CurrentUser,
+	state: &AppState,
+	locale: &str,
+) -> Result<(), (StatusCode, Json<MaintenanceErrorResponse>)> {
+	if repo.visibility == Visibility::Public {
+		return Ok(());
+	}
+
+	let has_access = match repo.owner_type {
+		OwnerType::User => repo.owner_id == current_user.user.id.into_inner(),
+		OwnerType::Org => {
+			let org_id = OrgId::new(repo.owner_id);
+			matches!(
+				state.org_repo.get_membership(&org_id, &current_user.user.id).await,
+				Ok(Some(_))
+			)
+		}
+	};
+
+	if !has_access {
+		return Err((
+			StatusCode::FORBIDDEN,
+			Json(MaintenanceErrorResponse {
+				error: "forbidden".to_string(),
+				message: t(locale, "server.api.scm.access_denied").to_string(),
+			}),
+		));
+	}
+
+	Ok(())
+}
+
 /// Trigger maintenance for a repository.
 ///
 /// # Authorization
@@ -212,7 +281,7 @@ pub async fn trigger_repo_maintenance(
 		}
 	};
 
-	let _repo = match repo_store.get_by_id(repo_id).await {
+	let repo = match repo_store.get_by_id(repo_id).await {
 		Ok(Some(r)) => r,
 		Ok(None) => {
 			return (
@@ -236,6 +305,10 @@ pub async fn trigger_repo_maintenance(
 				.into_response();
 		}
 	};
+
+	if let Err(e) = check_repo_admin(&repo, &current_user, &state, locale).await {
+		return e.into_response();
+	}
 
 	let task: MaintenanceTask = request.task.into();
 	let job = MaintenanceJob::new(Some(repo_id), task);
@@ -406,6 +479,49 @@ pub async fn list_repo_maintenance_jobs(
 		}
 	};
 
+	let repo_store = match &state.scm_repo_store {
+		Some(s) => s,
+		None => {
+			return (
+				StatusCode::NOT_IMPLEMENTED,
+				Json(MaintenanceErrorResponse {
+					error: "not_implemented".to_string(),
+					message: t(locale, "server.api.error.not_configured").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let repo = match repo_store.get_by_id(repo_id).await {
+		Ok(Some(r)) => r,
+		Ok(None) => {
+			return (
+				StatusCode::NOT_FOUND,
+				Json(MaintenanceErrorResponse {
+					error: "not_found".to_string(),
+					message: t(locale, "server.api.scm.repo.not_found").to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get repository");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(MaintenanceErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	if let Err(e) = check_repo_access(&repo, &current_user, &state, locale).await {
+		return e.into_response();
+	}
+
 	match maintenance_store.list_by_repo(repo_id, query.limit).await {
 		Ok(jobs) => {
 			let job_responses: Vec<MaintenanceJobResponse> =
@@ -435,5 +551,102 @@ pub async fn list_repo_maintenance_jobs(
 			)
 				.into_response()
 		}
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use loom_scm::Repository;
+	use uuid::Uuid;
+
+	fn make_user_repo(owner_id: Uuid) -> Repository {
+		Repository {
+			id: Uuid::new_v4(),
+			owner_type: OwnerType::User,
+			owner_id,
+			name: "test-repo".to_string(),
+			visibility: Visibility::Private,
+			default_branch: "main".to_string(),
+			created_at: chrono::Utc::now(),
+			updated_at: chrono::Utc::now(),
+			deleted_at: None,
+		}
+	}
+
+	fn make_org_repo(org_id: Uuid) -> Repository {
+		Repository {
+			id: Uuid::new_v4(),
+			owner_type: OwnerType::Org,
+			owner_id: org_id,
+			name: "org-repo".to_string(),
+			visibility: Visibility::Private,
+			default_branch: "main".to_string(),
+			created_at: chrono::Utc::now(),
+			updated_at: chrono::Utc::now(),
+			deleted_at: None,
+		}
+	}
+
+	fn make_public_repo() -> Repository {
+		Repository {
+			id: Uuid::new_v4(),
+			owner_type: OwnerType::User,
+			owner_id: Uuid::new_v4(),
+			name: "public-repo".to_string(),
+			visibility: Visibility::Public,
+			default_branch: "main".to_string(),
+			created_at: chrono::Utc::now(),
+			updated_at: chrono::Utc::now(),
+			deleted_at: None,
+		}
+	}
+
+	#[test]
+	fn test_user_is_admin_of_own_repo() {
+		let user_id = Uuid::new_v4();
+		let repo = make_user_repo(user_id);
+		let is_owner = repo.owner_type == OwnerType::User && repo.owner_id == user_id;
+		assert!(is_owner, "User should be admin of their own repo");
+	}
+
+	#[test]
+	fn test_user_is_not_admin_of_other_user_repo() {
+		let owner_id = Uuid::new_v4();
+		let other_user_id = Uuid::new_v4();
+		let repo = make_user_repo(owner_id);
+		let is_owner = repo.owner_type == OwnerType::User && repo.owner_id == other_user_id;
+		assert!(!is_owner, "User should not be admin of another user's repo");
+	}
+
+	#[test]
+	fn test_public_repo_allows_access() {
+		let repo = make_public_repo();
+		assert_eq!(repo.visibility, Visibility::Public, "Public repo should be accessible");
+	}
+
+	#[test]
+	fn test_private_repo_requires_membership() {
+		let org_id = Uuid::new_v4();
+		let repo = make_org_repo(org_id);
+		assert_eq!(repo.visibility, Visibility::Private, "Private repo requires membership check");
+		assert_eq!(repo.owner_type, OwnerType::Org, "Org repo ownership check");
+	}
+
+	#[test]
+	fn test_maintenance_task_conversion() {
+		assert!(matches!(MaintenanceTaskApi::Gc.into(), MaintenanceTask::Gc));
+		assert!(matches!(MaintenanceTaskApi::Prune.into(), MaintenanceTask::Prune));
+		assert!(matches!(MaintenanceTaskApi::Repack.into(), MaintenanceTask::Repack));
+		assert!(matches!(MaintenanceTaskApi::Fsck.into(), MaintenanceTask::Fsck));
+		assert!(matches!(MaintenanceTaskApi::All.into(), MaintenanceTask::All));
+	}
+
+	#[test]
+	fn test_maintenance_status_conversion() {
+		assert!(matches!(MaintenanceJobStatus::Pending.into(), MaintenanceJobStatusApi::Pending));
+		assert!(matches!(MaintenanceJobStatus::Running.into(), MaintenanceJobStatusApi::Running));
+		assert!(matches!(MaintenanceJobStatus::Success.into(), MaintenanceJobStatusApi::Success));
+		assert!(matches!(MaintenanceJobStatus::Failed.into(), MaintenanceJobStatusApi::Failed));
 	}
 }

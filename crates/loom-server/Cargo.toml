@@ -36,6 +36,7 @@ loom-geoip = { path = "../loom-geoip" }
 loom-github-app = { path = "../loom-github-app", features = ["openapi"] }
 loom-scm = { path = "../loom-scm" }
 loom-scm-mirror = { path = "../loom-scm-mirror" }
+gix = { version = "0.68", default-features = false, features = ["revision"] }
 loom-google-cse = { path = "../loom-google-cse", features = ["openapi"] }
 loom-llm-anthropic = { path = "../loom-llm-anthropic" }
 loom-llm-service = { path = "../loom-llm-service" }

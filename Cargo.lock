@@ -1984,12 +1984,15 @@ version = "0.31.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "61e1ddc474405a68d2ce8485705dd72fe6ce959f2f5fe718601ead5da2c8f9e7"
 dependencies = [
+ "bitflags",
  "bstr",
  "gix-commitgraph",
  "gix-date",
  "gix-hash",
+ "gix-hashtable",
  "gix-object",
  "gix-revwalk",
+ "gix-trace",
  "thiserror 2.0.17",
 ]
 
@@ -3601,6 +3604,7 @@ dependencies = [
  "gix",
  "hex",
  "hmac",
+ "loom-secret",
  "proptest",
  "reqwest",
  "serde",
@@ -3621,6 +3625,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "chrono",
+ "gix",
  "loom-credentials",
  "loom-http",
  "loom-scm",
@@ -3660,6 +3665,7 @@ dependencies = [
  "criterion",
  "dotenvy",
  "futures",
+ "gix",
  "hex",
  "hmac",
  "humantime",

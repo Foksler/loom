@@ -944,6 +944,18 @@ msgstr "حدث غير صالح '{event}'. الأحداث الصالحة: {valid_
 msgid "server.api.scm.webhook.secret_required"
 msgstr "المفتاح السري مطلوب"
 
+#: API: SCM Webhook - URL invalid
+msgid "server.api.scm.webhook.url_invalid"
+msgstr "صيغة الرابط غير صالحة"
+
+#: API: SCM Webhook - Localhost blocked
+msgid "server.api.scm.webhook.url_localhost_blocked"
+msgstr "روابط المضيف المحلي غير مسموح بها"
+
+#: API: SCM Webhook - Private IP blocked
+msgid "server.api.scm.webhook.url_private_ip_blocked"
+msgstr "عناوين IP الخاصة أو الداخلية غير مسموح بها"
+
 # ============================================================================
 # SCM: Maintenance API responses
 # ============================================================================
@@ -959,3 +971,67 @@ msgstr "تم وضع مهمة الصيانة '{task}' في قائمة الانت�
 #: API: SCM Maintenance - Global sweep queued
 msgid "server.api.scm.maintenance.sweep_queued"
 msgstr "تم وضع عملية المسح الشاملة '{task}' في قائمة الانتظار"
+
+# ============================================================================
+# SCM: Mirror API responses
+# ============================================================================
+
+#: API: SCM Mirror - URL required
+msgid "server.api.scm.mirror.url_required"
+msgstr "عنوان URL للمرآة مطلوب"
+
+#: API: SCM Mirror - URL invalid protocol
+msgid "server.api.scm.mirror.url_invalid_protocol"
+msgstr "يجب أن يبدأ عنوان URL للمرآة بـ http:// أو https://"
+
+#: API: SCM Mirror - URL too long
+msgid "server.api.scm.mirror.url_too_long"
+msgstr "يجب أن يكون عنوان URL للمرآة أقل من 2048 حرفًا"
+
+#: API: SCM Mirror - URL invalid
+msgid "server.api.scm.mirror.url_invalid"
+msgstr "تنسيق عنوان URL للمرآة غير صالح"
+
+#: API: SCM Mirror - Localhost blocked
+msgid "server.api.scm.mirror.url_localhost_blocked"
+msgstr "عناوين localhost غير مسموح بها للمرايا"
+
+#: API: SCM Mirror - Private IP blocked
+msgid "server.api.scm.mirror.url_private_ip_blocked"
+msgstr "عناوين IP الخاصة أو الداخلية غير مسموح بها للمرايا"
+
+#: API: SCM Mirror - Not found
+msgid "server.api.scm.mirror.not_found"
+msgstr "المرآة غير موجودة"
+
+#: API: SCM Mirror - Disabled
+msgid "server.api.scm.mirror.disabled"
+msgstr "المرآة معطلة"
+
+#: API: SCM Mirror - Sync queued
+msgid "server.api.scm.mirror.sync_queued"
+msgstr "تم وضع مزامنة المرآة في قائمة الانتظار"
+
+#: API: SCM Mirror - Failed to delete
+msgid "server.api.scm.mirror.failed_to_delete"
+msgstr "فشل في حذف المرآة"
+
+#: API: SCM Mirror - Invalid path format
+msgid "server.api.scm.mirror.invalid_path"
+msgstr "تنسيق مسار المرآة غير صالح. المتوقع: mirrors/{platform}/{owner}/{repo}"
+
+#: API: SCM Mirror - Push not allowed
+msgid "server.api.scm.mirror.push_not_allowed"
+msgstr "الدفع غير مسموح به لمستودعات المرآة"
+
+#: API: SCM Mirror - Remote repository not found
+msgid "server.api.scm.mirror.remote_not_found"
+msgstr "المستودع البعيد غير موجود"
+
+#: API: SCM Mirror - Mirrors org not found
+msgid "server.api.scm.mirror.mirrors_org_not_found"
+msgstr "منظمة المرايا غير مُعدة. يرجى إنشاء منظمة باسم 'mirrors'."
+
+#: API: SCM Mirror - Clone failed
+msgid "server.api.scm.mirror.clone_failed"
+msgstr "فشل في استنساخ المستودع البعيد"

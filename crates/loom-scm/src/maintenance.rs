@@ -182,6 +182,9 @@ pub fn run_maintenance(repo_path: &Path, task: MaintenanceTask) -> Result<Mainte
 	}
 }
 
+// NOTE: repack uses git subprocess because gitoxide doesn't yet support
+// pack maintenance operations. See: https://github.com/GitoxideLabs/gitoxide/blob/main/crate-status.md
+// Track progress at: https://github.com/GitoxideLabs/gitoxide/issues/307
 fn run_repack(repo_path: &Path) -> Result<()> {
 	let output = std::process::Command::new("git")
 		.args(["repack", "-a", "-d"])

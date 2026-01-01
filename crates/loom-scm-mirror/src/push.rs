@@ -1,6 +1,10 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights
 // reserved. SPDX-License-Identifier: Proprietary
 
+// NOTE: Push operations use git subprocess because gitoxide doesn't yet support push.
+// See: https://github.com/GitoxideLabs/gitoxide/blob/main/crate-status.md
+// Track progress at: https://github.com/GitoxideLabs/gitoxide/issues/307
+
 use std::path::Path;
 use std::process::Command;
 
@@ -118,19 +122,26 @@ async fn push_matching_refs(
 }
 
 fn list_branches(repo_path: &Path) -> Result<Vec<String>> {
-	let output = Command::new("git")
-		.args(["branch", "--format=%(refname:short)"])
-		.current_dir(repo_path)
-		.output()?;
+	let repo = gix::open(repo_path)
+		.map_err(|e| MirrorError::GitError(format!("Failed to open repo: {}", e)))?;
 
-	if !output.status.success() {
-		let stderr = String::from_utf8_lossy(&output.stderr);
-		return Err(MirrorError::GitError(stderr.to_string()));
+	let refs = repo
+		.references()
+		.map_err(|e| MirrorError::GitError(format!("Failed to get refs: {}", e)))?;
+
+	let branches = refs
+		.prefixed("refs/heads/")
+		.map_err(|e| MirrorError::GitError(format!("Failed to list branches: {}", e)))?;
+
+	let mut result = Vec::new();
+	for r in branches {
+		if let Ok(reference) = r {
+			let name = reference.name().shorten().to_string();
+			result.push(name);
+		}
 	}
 
-	let stdout = String::from_utf8_lossy(&output.stdout);
-	let branches = stdout.lines().map(|s| s.trim().to_string()).collect();
-	Ok(branches)
+	Ok(result)
 }
 
 fn matches_pattern(branch: &str, pattern: &str) -> bool {

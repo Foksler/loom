@@ -19,7 +19,7 @@ use axum::{
 };
 use chrono::{DateTime, Utc};
 use loom_auth::types::{OrgId, OrgRole, UserId};
-use loom_scm::{GitRepository, OwnerType, RepoStore, Repository, Visibility};
+use loom_scm::{validate_repo_name, GitRepository, OwnerType, RepoRole, RepoStore, RepoTeamAccessStore, Repository, Visibility};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use utoipa::ToSchema;
@@ -196,12 +196,12 @@ pub async fn create_repo(
 		}
 	};
 
-	if payload.name.is_empty() || payload.name.len() > 100 {
+	if let Err(e) = validate_repo_name(&payload.name) {
 		return (
 			StatusCode::BAD_REQUEST,
 			Json(RepoErrorResponse {
 				error: "invalid_name".to_string(),
-				message: t(locale, "server.api.scm.invalid_repo_name").to_string(),
+				message: e.to_string(),
 			}),
 		)
 			.into_response();
@@ -929,4 +929,415 @@ pub async fn list_org_repos(
 		.collect();
 
 	(StatusCode::OK, Json(ListReposResponse { repos: visible_repos })).into_response()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum RepoRoleApi {
+	Read,
+	Write,
+	Admin,
+}
+
+impl From<RepoRole> for RepoRoleApi {
+	fn from(v: RepoRole) -> Self {
+		match v {
+			RepoRole::Read => RepoRoleApi::Read,
+			RepoRole::Write => RepoRoleApi::Write,
+			RepoRole::Admin => RepoRoleApi::Admin,
+		}
+	}
+}
+
+impl From<RepoRoleApi> for RepoRole {
+	fn from(v: RepoRoleApi) -> Self {
+		match v {
+			RepoRoleApi::Read => RepoRole::Read,
+			RepoRoleApi::Write => RepoRole::Write,
+			RepoRoleApi::Admin => RepoRole::Admin,
+		}
+	}
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct RepoTeamAccessResponse {
+	pub team_id: Uuid,
+	pub role: RepoRoleApi,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ListRepoTeamAccessResponse {
+	pub teams: Vec<RepoTeamAccessResponse>,
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct GrantTeamAccessRequest {
+	pub team_id: Uuid,
+	pub role: RepoRoleApi,
+}
+
+async fn check_repo_admin_access(
+	current_user: &loom_auth::middleware::CurrentUser,
+	repo: &Repository,
+	state: &AppState,
+	locale: &str,
+) -> Result<(), (StatusCode, Json<RepoErrorResponse>)> {
+	let is_admin = match repo.owner_type {
+		OwnerType::User => repo.owner_id == current_user.user.id.into_inner(),
+		OwnerType::Org => {
+			let org_id = OrgId::new(repo.owner_id);
+			match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+				Ok(Some(m)) => m.role == OrgRole::Owner || m.role == OrgRole::Admin,
+				_ => false,
+			}
+		}
+	};
+
+	if !is_admin {
+		if let Some(store) = &state.scm_team_access_store {
+			if let Ok(Some(role)) = store.get_user_role_via_teams(current_user.user.id.into_inner(), repo.id).await {
+				if role == RepoRole::Admin {
+					return Ok(());
+				}
+			}
+		}
+		return Err((
+			StatusCode::FORBIDDEN,
+			Json(RepoErrorResponse {
+				error: "forbidden".to_string(),
+				message: t(locale, "server.api.scm.admin_required").to_string(),
+			}),
+		));
+	}
+
+	Ok(())
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/repos/{id}/teams",
+    params(
+        ("id" = Uuid, Path, description = "Repository ID")
+    ),
+    responses(
+        (status = 200, description = "List of teams with access", body = ListRepoTeamAccessResponse),
+        (status = 401, description = "Not authenticated", body = RepoErrorResponse),
+        (status = 403, description = "Not authorized", body = RepoErrorResponse),
+        (status = 404, description = "Repository not found", body = RepoErrorResponse)
+    ),
+    tag = "repos"
+)]
+#[tracing::instrument(skip(state), fields(repo_id = %id))]
+pub async fn list_repo_team_access(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(id): Path<Uuid>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	let scm_store = match state.scm_repo_store.as_ref() {
+		Some(store) => store,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "not_configured".to_string(),
+					message: t(locale, "server.api.scm.not_configured").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let team_access_store = match state.scm_team_access_store.as_ref() {
+		Some(store) => store,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "not_configured".to_string(),
+					message: t(locale, "server.api.scm.not_configured").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let repo = match scm_store.get_by_id(id).await {
+		Ok(Some(r)) => r,
+		Ok(None) => {
+			return (
+				StatusCode::NOT_FOUND,
+				Json(RepoErrorResponse {
+					error: "not_found".to_string(),
+					message: t(locale, "server.api.scm.repo_not_found").to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get repository");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.scm.internal_error").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	if let Err(resp) = check_repo_admin_access(&current_user, &repo, &state, locale).await {
+		return resp.into_response();
+	}
+
+	match team_access_store.list_repo_team_access(id).await {
+		Ok(access_list) => {
+			let teams = access_list
+				.into_iter()
+				.map(|a| RepoTeamAccessResponse {
+					team_id: a.team_id,
+					role: a.role.into(),
+				})
+				.collect();
+			(StatusCode::OK, Json(ListRepoTeamAccessResponse { teams })).into_response()
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to list repo team access");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.scm.internal_error").to_string(),
+				}),
+			)
+				.into_response()
+		}
+	}
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/repos/{id}/teams",
+    params(
+        ("id" = Uuid, Path, description = "Repository ID")
+    ),
+    request_body = GrantTeamAccessRequest,
+    responses(
+        (status = 200, description = "Team access granted", body = RepoSuccessResponse),
+        (status = 401, description = "Not authenticated", body = RepoErrorResponse),
+        (status = 403, description = "Not authorized", body = RepoErrorResponse),
+        (status = 404, description = "Repository not found", body = RepoErrorResponse)
+    ),
+    tag = "repos"
+)]
+#[tracing::instrument(skip(state, payload), fields(repo_id = %id))]
+pub async fn grant_repo_team_access(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(id): Path<Uuid>,
+	Json(payload): Json<GrantTeamAccessRequest>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	let scm_store = match state.scm_repo_store.as_ref() {
+		Some(store) => store,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "not_configured".to_string(),
+					message: t(locale, "server.api.scm.not_configured").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let team_access_store = match state.scm_team_access_store.as_ref() {
+		Some(store) => store,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "not_configured".to_string(),
+					message: t(locale, "server.api.scm.not_configured").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let repo = match scm_store.get_by_id(id).await {
+		Ok(Some(r)) => r,
+		Ok(None) => {
+			return (
+				StatusCode::NOT_FOUND,
+				Json(RepoErrorResponse {
+					error: "not_found".to_string(),
+					message: t(locale, "server.api.scm.repo_not_found").to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get repository");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.scm.internal_error").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	if let Err(resp) = check_repo_admin_access(&current_user, &repo, &state, locale).await {
+		return resp.into_response();
+	}
+
+	let role: RepoRole = payload.role.into();
+	match team_access_store.grant_team_access(id, payload.team_id, role).await {
+		Ok(()) => {
+			tracing::info!(
+				repo_id = %id,
+				team_id = %payload.team_id,
+				role = %role.as_str(),
+				granted_by = %current_user.user.id,
+				"Team access granted to repository"
+			);
+			(
+				StatusCode::OK,
+				Json(RepoSuccessResponse {
+					message: "Team access granted".to_string(),
+				}),
+			)
+				.into_response()
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to grant team access");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.scm.internal_error").to_string(),
+				}),
+			)
+				.into_response()
+		}
+	}
+}
+
+#[utoipa::path(
+    delete,
+    path = "/api/v1/repos/{id}/teams/{tid}",
+    params(
+        ("id" = Uuid, Path, description = "Repository ID"),
+        ("tid" = Uuid, Path, description = "Team ID")
+    ),
+    responses(
+        (status = 204, description = "Team access revoked"),
+        (status = 401, description = "Not authenticated", body = RepoErrorResponse),
+        (status = 403, description = "Not authorized", body = RepoErrorResponse),
+        (status = 404, description = "Repository or team access not found", body = RepoErrorResponse)
+    ),
+    tag = "repos"
+)]
+#[tracing::instrument(skip(state), fields(repo_id = %id, team_id = %tid))]
+pub async fn revoke_repo_team_access(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path((id, tid)): Path<(Uuid, Uuid)>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	let scm_store = match state.scm_repo_store.as_ref() {
+		Some(store) => store,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "not_configured".to_string(),
+					message: t(locale, "server.api.scm.not_configured").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let team_access_store = match state.scm_team_access_store.as_ref() {
+		Some(store) => store,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "not_configured".to_string(),
+					message: t(locale, "server.api.scm.not_configured").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let repo = match scm_store.get_by_id(id).await {
+		Ok(Some(r)) => r,
+		Ok(None) => {
+			return (
+				StatusCode::NOT_FOUND,
+				Json(RepoErrorResponse {
+					error: "not_found".to_string(),
+					message: t(locale, "server.api.scm.repo_not_found").to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get repository");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.scm.internal_error").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	if let Err(resp) = check_repo_admin_access(&current_user, &repo, &state, locale).await {
+		return resp.into_response();
+	}
+
+	match team_access_store.revoke_team_access(id, tid).await {
+		Ok(()) => {
+			tracing::info!(
+				repo_id = %id,
+				team_id = %tid,
+				revoked_by = %current_user.user.id,
+				"Team access revoked from repository"
+			);
+			StatusCode::NO_CONTENT.into_response()
+		}
+		Err(loom_scm::ScmError::NotFound) => (
+			StatusCode::NOT_FOUND,
+			Json(RepoErrorResponse {
+				error: "not_found".to_string(),
+				message: "Team access not found".to_string(),
+			}),
+		)
+			.into_response(),
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to revoke team access");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.scm.internal_error").to_string(),
+				}),
+			)
+				.into_response()
+		}
+	}
 }

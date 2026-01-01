@@ -16,6 +16,7 @@ pub mod github;
 pub mod health;
 pub mod invitations;
 pub mod maintenance;
+pub mod mirrors;
 pub mod orgs;
 pub mod protection;
 pub mod sessions;
@@ -115,8 +116,9 @@ pub use invitations::{
 
 // Re-export repo types
 pub use repos::{
-	CreateRepoRequest, ListReposResponse, OwnerTypeApi, RepoErrorResponse, RepoResponse,
-	RepoSuccessResponse, UpdateRepoRequest, VisibilityApi,
+	CreateRepoRequest, GrantTeamAccessRequest, ListRepoTeamAccessResponse, ListReposResponse,
+	OwnerTypeApi, RepoErrorResponse, RepoResponse, RepoRoleApi, RepoSuccessResponse,
+	RepoTeamAccessResponse, UpdateRepoRequest, VisibilityApi,
 };
 
 // Re-export protection types
@@ -135,4 +137,9 @@ pub use maintenance::{
 pub use webhooks::{
 	CreateWebhookRequest, ListWebhooksResponse, PayloadFormatApi, WebhookErrorResponse,
 	WebhookResponse, WebhookSuccessResponse,
+};
+
+// Re-export mirror types
+pub use mirrors::{
+	CreateMirrorRequest, ListMirrorsResponse, MirrorResponse, SyncResponse,
 };

@@ -16,6 +16,7 @@ loom-secret = { path = "../loom-secret" }
 
 async-trait = { workspace = true }
 chrono = { workspace = true }
+gix = { version = "0.68", default-features = false, features = ["blocking-network-client"] }
 reqwest = { workspace = true }
 serde = { workspace = true }
 sqlx = { workspace = true }
