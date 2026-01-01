@@ -48,6 +48,7 @@ pub struct AuthProvidersResponse {
 pub struct CurrentUserResponse {
 	pub id: String,
 	pub display_name: String,
+	pub username: Option<String>,
 	pub email: Option<String>,
 	pub avatar_url: Option<String>,
 }
@@ -165,6 +166,7 @@ pub async fn get_current_user(RequireAuth(current_user): RequireAuth) -> impl In
 	Json(CurrentUserResponse {
 		id: current_user.user.id.to_string(),
 		display_name: current_user.user.display_name.clone(),
+		username: current_user.user.username.clone(),
 		email: current_user.user.primary_email.clone(),
 		avatar_url: current_user.user.avatar_url.clone(),
 	})

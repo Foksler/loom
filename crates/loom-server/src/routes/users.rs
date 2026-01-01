@@ -41,6 +41,7 @@ pub struct UserProfileResponse {
 pub struct CurrentUserProfileResponse {
 	pub id: String,
 	pub display_name: String,
+	pub username: Option<String>,
 	pub primary_email: Option<String>,
 	pub avatar_url: Option<String>,
 	pub email_visible: bool,
@@ -346,6 +347,7 @@ pub async fn update_current_user(
 		Json(CurrentUserProfileResponse {
 			id: user.id.to_string(),
 			display_name: user.display_name,
+			username: user.username,
 			primary_email: user.primary_email,
 			avatar_url: user.avatar_url,
 			email_visible: user.email_visible,
