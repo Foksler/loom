@@ -3,6 +3,7 @@
 
 //! LLM service implementation.
 
+use std::env;
 use std::sync::Arc;
 
 use loom_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
@@ -12,7 +13,9 @@ use loom_llm_anthropic::{
 	AnthropicClient, AnthropicConfig, AnthropicPool, AnthropicPoolConfig, MemoryCredentialStore,
 };
 
-pub use loom_llm_anthropic::{AccountHealthInfo, AccountHealthStatus, PoolStatus};
+pub use loom_llm_anthropic::{
+	AccountDetails, AccountHealthInfo, AccountHealthStatus, OAuthCredentials, PoolStatus,
+};
 use loom_llm_openai::OpenAIClient;
 use loom_llm_vertex::VertexClient;
 use tracing::{debug, info, instrument};
@@ -65,11 +68,12 @@ impl AnthropicClientWrapper {
 /// This service holds clients for multiple LLM providers (Anthropic, OpenAI,
 /// Vertex) and provides provider-specific methods for making completion
 /// requests.
-#[derive(Clone)]
 pub struct LlmService {
 	anthropic_client: Option<AnthropicClientWrapper>,
 	openai_client: Option<Arc<OpenAIClient>>,
 	vertex_client: Option<Arc<VertexClient>>,
+	#[allow(dead_code)] // Stored for future graceful shutdown
+	refresh_task_handle: Option<tokio::task::JoinHandle<()>>,
 }
 
 impl LlmService {
@@ -110,20 +114,22 @@ impl LlmService {
 					"Creating Anthropic OAuth pool"
 				);
 
-				let pool = AnthropicPool::new(
-					credential_file,
-					provider_ids.clone(),
-					config.anthropic_model.clone(),
-					pool_config,
-				)
-				.await
-				.map_err(|e| LlmServiceError::Config(format!("Failed to create OAuth pool: {e}")))?;
+				let pool = Arc::new(
+					AnthropicPool::new(
+						credential_file,
+						provider_ids.clone(),
+						config.anthropic_model.clone(),
+						pool_config,
+					)
+					.await
+					.map_err(|e| LlmServiceError::Config(format!("Failed to create OAuth pool: {e}")))?,
+				);
 
 				info!(
 					account_count = provider_ids.len(),
 					"Anthropic OAuth pool initialized"
 				);
-				Some(AnthropicClientWrapper::Pool(Arc::new(pool)))
+				Some(AnthropicClientWrapper::Pool(pool))
 			}
 			None => {
 				debug!("Anthropic auth not configured");
@@ -176,6 +182,31 @@ impl LlmService {
 			));
 		}
 
+		let refresh_task_handle =
+			if let Some(AnthropicClientWrapper::Pool(ref pool)) = anthropic_client {
+				let refresh_interval_secs: u64 = env::var("LOOM_SERVER_ANTHROPIC_REFRESH_INTERVAL_SECS")
+					.ok()
+					.and_then(|s| s.parse().ok())
+					.unwrap_or(300);
+				let refresh_threshold_secs: u64 =
+					env::var("LOOM_SERVER_ANTHROPIC_REFRESH_THRESHOLD_SECS")
+						.ok()
+						.and_then(|s| s.parse().ok())
+						.unwrap_or(900);
+
+				let handle = Arc::clone(pool).spawn_refresh_task(
+					Duration::from_secs(refresh_interval_secs),
+					Duration::from_secs(refresh_threshold_secs),
+				);
+				info!(
+					refresh_interval_secs,
+					refresh_threshold_secs, "Started Anthropic OAuth token refresh task"
+				);
+				Some(handle)
+			} else {
+				None
+			};
+
 		info!(
 			anthropic = anthropic_client.is_some(),
 			openai = openai_client.is_some(),
@@ -187,6 +218,7 @@ impl LlmService {
 			anthropic_client,
 			openai_client,
 			vertex_client,
+			refresh_task_handle,
 		})
 	}
 
@@ -220,6 +252,56 @@ impl LlmService {
 				Some(AnthropicHealthInfo::Pool(pool.pool_status().await))
 			}
 			None => None,
+		}
+	}
+
+	/// Returns whether Anthropic is configured in OAuth pool mode.
+	pub fn is_anthropic_oauth_pool(&self) -> bool {
+		matches!(&self.anthropic_client, Some(AnthropicClientWrapper::Pool(_)))
+	}
+
+	/// Add an Anthropic OAuth account to the pool.
+	pub async fn add_anthropic_account(
+		&self,
+		account_id: String,
+		credentials: OAuthCredentials,
+	) -> Result<(), LlmServiceError> {
+		match &self.anthropic_client {
+			Some(AnthropicClientWrapper::Pool(pool)) => pool
+				.add_account(account_id, credentials)
+				.await
+				.map_err(|e| LlmServiceError::Config(format!("Failed to add account: {e}"))),
+			Some(AnthropicClientWrapper::ApiKey(_)) => Err(LlmServiceError::Config(
+				"Cannot add accounts: Anthropic is configured with API key, not OAuth pool".to_string(),
+			)),
+			None => Err(LlmServiceError::ProviderNotConfigured(
+				"Anthropic provider not configured".to_string(),
+			)),
+		}
+	}
+
+	/// Remove an Anthropic OAuth account from the pool.
+	pub async fn remove_anthropic_account(&self, account_id: &str) -> Result<(), LlmServiceError> {
+		match &self.anthropic_client {
+			Some(AnthropicClientWrapper::Pool(pool)) => pool
+				.remove_account(account_id)
+				.await
+				.map_err(|e| LlmServiceError::Config(format!("Failed to remove account: {e}"))),
+			Some(AnthropicClientWrapper::ApiKey(_)) => Err(LlmServiceError::Config(
+				"Cannot remove accounts: Anthropic is configured with API key, not OAuth pool"
+					.to_string(),
+			)),
+			None => Err(LlmServiceError::ProviderNotConfigured(
+				"Anthropic provider not configured".to_string(),
+			)),
+		}
+	}
+
+	/// Get detailed account info for admin API.
+	pub async fn anthropic_account_details(&self) -> Option<Vec<AccountDetails>> {
+		match &self.anthropic_client {
+			Some(AnthropicClientWrapper::Pool(pool)) => Some(pool.account_details().await),
+			_ => None,
 		}
 	}
 

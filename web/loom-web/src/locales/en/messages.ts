@@ -255,6 +255,19 @@ export const messages = {
 	'admin.impersonation.banner': 'Admin {admin} impersonating {user}',
 	'admin.impersonation.stop': 'Stop Impersonating',
 
+	// Admin - Anthropic Accounts
+	'admin.anthropic.title': 'Claude Max Accounts',
+	'admin.anthropic.add_account': 'Add Account',
+	'admin.anthropic.remove': 'Remove',
+	'admin.anthropic.remove_confirm': 'Remove this account from the pool?',
+	'admin.anthropic.status.available': 'Available',
+	'admin.anthropic.status.cooling_down': 'Cooling Down',
+	'admin.anthropic.status.disabled': 'Disabled',
+	'admin.anthropic.cooldown_remaining': '{time} remaining',
+	'admin.anthropic.expires_at': 'Token expires: {time}',
+	'admin.anthropic.no_accounts': 'No accounts configured. Add a Claude Max account to get started.',
+	'admin.anthropic.not_configured': 'Anthropic OAuth pool is not configured on this server.',
+
 	// Weavers
 	'weavers.title': 'Weavers',
 	'weavers.description': 'Manage ephemeral development environments',

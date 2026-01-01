@@ -34,8 +34,10 @@ loom-i18n = { path = "../loom-i18n" }
 loom-geoip = { path = "../loom-geoip" }
 loom-github-app = { path = "../loom-github-app", features = ["openapi"] }
 loom-google-cse = { path = "../loom-google-cse", features = ["openapi"] }
+loom-llm-anthropic = { path = "../loom-llm-anthropic" }
 loom-llm-service = { path = "../loom-llm-service" }
 loom-thread = { path = "../loom-thread", features = ["openapi"] }
+url = "2"
 loom-version = { path = "../loom-version", features = ["serde", "utoipa"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 tokio-stream = "0.1"

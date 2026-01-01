@@ -26,8 +26,8 @@ mod types;
 
 pub use client::{is_permanent_auth_message, is_quota_message, AnthropicClient};
 pub use pool::{
-	AccountHealthInfo, AccountHealthStatus, AccountSelectionStrategy, AnthropicPool,
-	AnthropicPoolConfig, PoolStatus,
+	AccountDetails, AccountHealthInfo, AccountHealthStatus, AccountSelectionStrategy,
+	AnthropicPool, AnthropicPoolConfig, PoolStatus,
 };
 pub use types::*;
 

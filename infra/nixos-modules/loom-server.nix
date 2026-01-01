@@ -90,6 +90,34 @@ in
         default = "claude-sonnet-4-20250514";
         description = "Anthropic model to use.";
       };
+
+      oauthCredentialFile = mkOption {
+        type = types.path;
+        default = "/var/lib/loom-server/anthropic-credentials.json";
+        description = "Path to OAuth credential store JSON file for Claude Max accounts.";
+      };
+
+      oauthEnabled = mkOption {
+        type = types.bool;
+        default = false;
+        description = ''
+          Enable OAuth pool mode for Claude Max subscriptions.
+          When enabled, accounts are managed via the admin web UI.
+          Mutually exclusive with apiKeyFile.
+        '';
+      };
+
+      refreshIntervalSecs = mkOption {
+        type = types.int;
+        default = 300;
+        description = "Interval in seconds between proactive token refresh checks.";
+      };
+
+      refreshThresholdSecs = mkOption {
+        type = types.int;
+        default = 900;
+        description = "Refresh tokens when they expire within this many seconds.";
+      };
     };
 
     openai = {
@@ -404,8 +432,12 @@ in
   config = mkIf cfg.enable {
     assertions = [
       {
-        assertion = cfg.anthropic.enable -> cfg.anthropic.apiKeyFile != null;
-        message = "services.loom-server.anthropic.apiKeyFile must be set when Anthropic is enabled.";
+        assertion = cfg.anthropic.enable -> (cfg.anthropic.oauthEnabled || cfg.anthropic.apiKeyFile != null);
+        message = "services.loom-server.anthropic: either oauthEnabled or apiKeyFile must be set when Anthropic is enabled.";
+      }
+      {
+        assertion = !(cfg.anthropic.enable && cfg.anthropic.oauthEnabled && cfg.anthropic.apiKeyFile != null);
+        message = "services.loom-server.anthropic: oauthEnabled and apiKeyFile are mutually exclusive.";
       }
       {
         assertion = cfg.openai.enable -> cfg.openai.apiKeyFile != null;
@@ -467,6 +499,12 @@ in
         })
         (mkIf cfg.anthropic.enable {
           LOOM_SERVER_ANTHROPIC_MODEL = cfg.anthropic.model;
+        })
+        (mkIf (cfg.anthropic.enable && cfg.anthropic.oauthEnabled) {
+          LOOM_SERVER_ANTHROPIC_OAUTH_ENABLED = "true";
+          LOOM_SERVER_ANTHROPIC_OAUTH_CREDENTIAL_FILE = cfg.anthropic.oauthCredentialFile;
+          LOOM_SERVER_ANTHROPIC_REFRESH_INTERVAL_SECS = toString cfg.anthropic.refreshIntervalSecs;
+          LOOM_SERVER_ANTHROPIC_REFRESH_THRESHOLD_SECS = toString cfg.anthropic.refreshThresholdSecs;
         })
         (mkIf cfg.openai.enable {
           LOOM_SERVER_OPENAI_MODEL = cfg.openai.model;

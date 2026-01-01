@@ -80,11 +80,6 @@
   };
 
   # Loom server secrets
-  sops.secrets.loom-anthropic-api-key = {
-    owner = "loom-server";
-    mode = "0400";
-  };
-
   sops.secrets.loom-openai-api-key = {
     owner = "loom-server";
     mode = "0400";
@@ -185,7 +180,7 @@
 
     anthropic = {
       enable = true;
-      apiKeyFile = config.sops.secrets.loom-anthropic-api-key.path;
+      oauthEnabled = true;
       model = "claude-sonnet-4-20250514";
     };
 

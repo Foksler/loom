@@ -404,6 +404,19 @@ fn admin_routes(state: AppState) -> Router<AppState> {
 			post(routes::admin::stop_impersonation),
 		)
 		.route("/audit-logs", get(routes::admin::list_audit_logs))
+		// Anthropic OAuth pool management
+		.route(
+			"/anthropic/accounts",
+			get(routes::admin_anthropic::list_accounts),
+		)
+		.route(
+			"/anthropic/accounts",
+			post(routes::admin_anthropic::initiate_oauth),
+		)
+		.route(
+			"/anthropic/accounts/{id}",
+			delete(routes::admin_anthropic::remove_account),
+		)
 		.route_layer(RequireRole::admin().with_audit(state.audit_repo.clone()))
 		.layer(from_fn_with_state(state.clone(), require_auth_layer))
 		.layer(from_fn_with_state(state, auth_layer))
@@ -459,6 +472,11 @@ pub fn create_router(state: AppState) -> Router {
 		.route(
 			"/api/github/webhook",
 			post(routes::github::github_webhook),
+		)
+		// Anthropic OAuth callback (public - redirected from claude.ai)
+		.route(
+			"/api/admin/anthropic/callback",
+			get(routes::admin_anthropic::oauth_callback),
 		)
 		.build();
 

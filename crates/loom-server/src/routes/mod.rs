@@ -4,6 +4,7 @@
 //! HTTP route handlers organized by concern.
 
 pub mod admin;
+pub mod admin_anthropic;
 pub mod api_keys;
 pub mod auth;
 pub mod bin;
@@ -84,6 +85,12 @@ pub use admin::{
 	AdminErrorResponse, AdminSuccessResponse, AdminUserResponse, AuditLogEntryResponse,
 	ImpersonateRequest, ImpersonateResponse, ListAuditLogsResponse, ListUsersResponse,
 	UpdateRolesRequest,
+};
+
+// Re-export admin_anthropic types
+pub use admin_anthropic::{
+	AccountDetailsResponse, AccountStatus, AccountsSummary, AnthropicAccountsResponse,
+	InitiateOAuthRequest, InitiateOAuthResponse, RemoveAccountResponse,
 };
 
 // Re-export invitation types

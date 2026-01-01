@@ -6,16 +6,17 @@
 //! This module provides pooling of multiple Claude Pro/Max OAuth subscriptions
 //! with automatic failover when an account hits its usage quota.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
+use chrono::{DateTime, TimeZone, Utc};
 use loom_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
 use loom_credentials::{CredentialStore, CredentialValue, FileCredentialStore};
 
 use serde::Serialize;
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, RwLock};
 use tracing::{debug, error, info, warn};
 
 use crate::auth::{AnthropicAuth, OAuthClient, OAuthCredentials};
@@ -72,6 +73,19 @@ pub struct AccountHealthInfo {
     pub last_error: Option<String>,
 }
 
+/// Extended account info for admin API.
+#[derive(Debug, Clone, Serialize)]
+pub struct AccountDetails {
+    pub id: String,
+    pub status: AccountHealthStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cooldown_remaining_secs: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_error: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<DateTime<Utc>>,
+}
+
 /// Account health status for serialization.
 #[derive(Debug, Clone, Copy, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -111,6 +125,7 @@ impl Default for AccountRuntime {
 struct AccountEntry {
     id: String,
     client: AnthropicClient<FileCredentialStore>,
+    oauth_client: OAuthClient<FileCredentialStore>,
 }
 
 impl std::fmt::Debug for AccountEntry {
@@ -133,16 +148,20 @@ struct PoolState {
 /// Manages multiple Claude Pro/Max subscriptions and automatically
 /// fails over to the next available account when one hits its quota.
 pub struct AnthropicPool {
-    accounts: Vec<AccountEntry>,
+    accounts: RwLock<Vec<AccountEntry>>,
     state: Mutex<PoolState>,
     config: AnthropicPoolConfig,
+    credential_file: PathBuf,
+    model: String,
+    store: Arc<FileCredentialStore>,
 }
 
 impl std::fmt::Debug for AnthropicPool {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("AnthropicPool")
-            .field("accounts", &self.accounts)
             .field("config", &self.config)
+            .field("credential_file", &self.credential_file)
+            .field("model", &self.model)
             .finish()
     }
 }
@@ -159,7 +178,8 @@ impl AnthropicPool {
         model: Option<String>,
         config: AnthropicPoolConfig,
     ) -> Result<Self, LlmError> {
-        let store = Arc::new(FileCredentialStore::new(credential_file.as_ref()));
+        let credential_file = credential_file.as_ref().to_path_buf();
+        let store = Arc::new(FileCredentialStore::new(&credential_file));
         let model = model.unwrap_or_else(|| "claude-sonnet-4-20250514".to_string());
 
         let mut accounts = Vec::new();
@@ -173,15 +193,16 @@ impl AnthropicPool {
                 })) => {
                     let creds = OAuthCredentials::new(refresh, access, expires);
                     let oauth_client = OAuthClient::new(provider_id.clone(), creds, Arc::clone(&store));
-                    let auth = AnthropicAuth::OAuth { client: oauth_client };
-                    let config = AnthropicConfig::new_with_auth(auth).with_model(model.clone());
+                    let auth = AnthropicAuth::OAuth { client: oauth_client.clone() };
+                    let anthropic_config = AnthropicConfig::new_with_auth(auth).with_model(model.clone());
 
-                    match AnthropicClient::new_with_store(config) {
+                    match AnthropicClient::new_with_store(anthropic_config) {
                         Ok(client) => {
                             info!(provider = %provider_id, "Loaded OAuth account");
                             accounts.push(AccountEntry {
                                 id: provider_id.clone(),
                                 client,
+                                oauth_client,
                             });
                         }
                         Err(e) => {
@@ -220,9 +241,232 @@ impl AnthropicPool {
         );
 
         Ok(Self {
-            accounts,
+            accounts: RwLock::new(accounts),
             state: Mutex::new(state),
             config,
+            credential_file,
+            model,
+            store,
+        })
+    }
+
+    /// Create an empty pool for dynamic account addition.
+    pub fn empty(
+        credential_file: impl AsRef<Path>,
+        model: Option<String>,
+        config: AnthropicPoolConfig,
+    ) -> Self {
+        let credential_file = credential_file.as_ref().to_path_buf();
+        let store = Arc::new(FileCredentialStore::new(&credential_file));
+        let model = model.unwrap_or_else(|| "claude-sonnet-4-20250514".to_string());
+
+        let state = PoolState {
+            runtimes: Vec::new(),
+            next_index: 0,
+        };
+
+        info!("Created empty AnthropicPool for dynamic account management");
+
+        Self {
+            accounts: RwLock::new(Vec::new()),
+            state: Mutex::new(state),
+            config,
+            credential_file,
+            model,
+            store,
+        }
+    }
+
+    /// Add an account dynamically.
+    pub async fn add_account(
+        &self,
+        account_id: String,
+        credentials: OAuthCredentials,
+    ) -> Result<(), LlmError> {
+        let stored_creds = CredentialValue::OAuth {
+            refresh: credentials.refresh.clone(),
+            access: credentials.access.clone(),
+            expires: credentials.expires,
+        };
+        self.store
+            .save(&account_id, &stored_creds)
+            .await
+            .map_err(|e| LlmError::Api(format!("Failed to persist credentials: {e}")))?;
+
+        let oauth_client = OAuthClient::new(account_id.clone(), credentials, Arc::clone(&self.store));
+        let auth = AnthropicAuth::OAuth { client: oauth_client.clone() };
+        let anthropic_config = AnthropicConfig::new_with_auth(auth).with_model(self.model.clone());
+
+        let client = AnthropicClient::new_with_store(anthropic_config)?;
+
+        {
+            let mut accounts = self.accounts.write().await;
+            accounts.push(AccountEntry {
+                id: account_id.clone(),
+                client,
+                oauth_client,
+            });
+        }
+
+        {
+            let mut state = self.state.lock().await;
+            state.runtimes.push(AccountRuntime::default());
+        }
+
+        info!(account_id = %account_id, "Added account to pool");
+        Ok(())
+    }
+
+    /// Remove an account from the pool.
+    pub async fn remove_account(&self, account_id: &str) -> Result<(), LlmError> {
+        let index = {
+            let accounts = self.accounts.read().await;
+            accounts.iter().position(|a| a.id == account_id)
+        };
+
+        let Some(index) = index else {
+            return Err(LlmError::Api(format!("Account not found: {account_id}")));
+        };
+
+        {
+            let mut accounts = self.accounts.write().await;
+            accounts.remove(index);
+        }
+
+        {
+            let mut state = self.state.lock().await;
+            if index < state.runtimes.len() {
+                state.runtimes.remove(index);
+            }
+            if state.next_index >= state.runtimes.len() && !state.runtimes.is_empty() {
+                state.next_index = 0;
+            }
+        }
+
+        self.store
+            .delete(account_id)
+            .await
+            .map_err(|e| LlmError::Api(format!("Failed to delete credentials: {e}")))?;
+
+        info!(account_id = %account_id, "Removed account from pool");
+        Ok(())
+    }
+
+    /// Get list of account IDs.
+    pub async fn account_ids(&self) -> Vec<String> {
+        let accounts = self.accounts.read().await;
+        accounts.iter().map(|a| a.id.clone()).collect()
+    }
+
+    /// Get detailed account info including token expiration.
+    pub async fn account_details(&self) -> Vec<AccountDetails> {
+        let accounts = self.accounts.read().await;
+        let state = self.state.lock().await;
+        let now = Instant::now();
+
+        let mut details = Vec::with_capacity(accounts.len());
+
+        for (entry, runtime) in accounts.iter().zip(state.runtimes.iter()) {
+            let (status, cooldown_remaining_secs) = match runtime.status {
+                AccountStatus::Available => (AccountHealthStatus::Available, None),
+                AccountStatus::CoolingDown { until } => {
+                    let remaining = if until > now {
+                        until.duration_since(now).as_secs()
+                    } else {
+                        0
+                    };
+                    (AccountHealthStatus::CoolingDown, Some(remaining))
+                }
+                AccountStatus::Disabled => (AccountHealthStatus::Disabled, None),
+            };
+
+            let creds = entry.oauth_client.current_credentials().await;
+            let expires_at = if creds.expires > 0 {
+                Utc.timestamp_millis_opt(creds.expires as i64).single()
+            } else {
+                None
+            };
+
+            details.push(AccountDetails {
+                id: entry.id.clone(),
+                status,
+                cooldown_remaining_secs,
+                last_error: runtime.last_error.clone(),
+                expires_at,
+            });
+        }
+
+        details
+    }
+
+    /// Spawn background token refresh task.
+    pub fn spawn_refresh_task(
+        self: Arc<Self>,
+        interval: Duration,
+        threshold: Duration,
+    ) -> tokio::task::JoinHandle<()> {
+        tokio::spawn(async move {
+            let mut ticker = tokio::time::interval(interval);
+            ticker.tick().await;
+
+            loop {
+                ticker.tick().await;
+                debug!("Running proactive token refresh check");
+
+                let account_ids: Vec<String> = {
+                    let accounts = self.accounts.read().await;
+                    accounts.iter().map(|a| a.id.clone()).collect()
+                };
+
+                for account_id in account_ids {
+                    let should_refresh = {
+                        let accounts = self.accounts.read().await;
+                        if let Some(entry) = accounts.iter().find(|a| a.id == account_id) {
+                            let creds = entry.oauth_client.current_credentials().await;
+                            let now_ms = std::time::SystemTime::now()
+                                .duration_since(std::time::UNIX_EPOCH)
+                                .unwrap()
+                                .as_millis() as u64;
+                            let threshold_ms = threshold.as_millis() as u64;
+                            creds.expires < now_ms + threshold_ms
+                        } else {
+                            false
+                        }
+                    };
+
+                    if should_refresh {
+                        debug!(account_id = %account_id, "Token expires within threshold, refreshing");
+
+                        let result = {
+                            let accounts = self.accounts.read().await;
+                            if let Some(entry) = accounts.iter().find(|a| a.id == account_id) {
+                                Some(entry.oauth_client.get_access_token().await)
+                            } else {
+                                None
+                            }
+                        };
+
+                        if let Some(Err(e)) = result {
+                            warn!(account_id = %account_id, error = %e, "Token refresh failed, disabling account");
+
+                            let index = {
+                                let accounts = self.accounts.read().await;
+                                accounts.iter().position(|a| a.id == account_id)
+                            };
+
+                            if let Some(index) = index {
+                                let mut state = self.state.lock().await;
+                                if index < state.runtimes.len() {
+                                    state.runtimes[index].status = AccountStatus::Disabled;
+                                    state.runtimes[index].last_error = Some(format!("Token refresh failed: {e}"));
+                                }
+                            }
+                        } else {
+                            debug!(account_id = %account_id, "Token refreshed successfully");
+                        }
+                    }
+                }
+            }
         })
     }
 
@@ -231,11 +475,11 @@ impl AnthropicPool {
     /// Refreshes cooling accounts whose cooldown has expired.
     /// Returns None if all accounts are exhausted.
     async fn select_account_index(&self) -> Option<usize> {
+        let accounts = self.accounts.read().await;
         let mut state = self.state.lock().await;
-        let n = self.accounts.len();
+        let n = accounts.len();
         let now = Instant::now();
 
-        // Refresh any expired cooldowns
         for runtime in &mut state.runtimes {
             if let AccountStatus::CoolingDown { until } = runtime.status {
                 if now >= until {
@@ -253,7 +497,7 @@ impl AnthropicPool {
                     let idx = (start + i) % n;
                     if state.runtimes[idx].status == AccountStatus::Available {
                         state.next_index = (idx + 1) % n;
-                        debug!(account_id = %self.accounts[idx].id, index = idx, "Selected account (round-robin)");
+                        debug!(account_id = %accounts[idx].id, index = idx, "Selected account (round-robin)");
                         return Some(idx);
                     }
                 }
@@ -262,7 +506,7 @@ impl AnthropicPool {
             AccountSelectionStrategy::FirstAvailable => {
                 for (idx, runtime) in state.runtimes.iter().enumerate() {
                     if runtime.status == AccountStatus::Available {
-                        debug!(account_id = %self.accounts[idx].id, index = idx, "Selected account (first-available)");
+                        debug!(account_id = %accounts[idx].id, index = idx, "Selected account (first-available)");
                         return Some(idx);
                     }
                 }
@@ -271,26 +515,28 @@ impl AnthropicPool {
         }
     }
 
-    /// Mark an account as cooling down due to quota exhaustion.
     async fn mark_cooling(&self, index: usize, error_msg: &str) {
+        let accounts = self.accounts.read().await;
         let mut state = self.state.lock().await;
         let until = Instant::now() + self.config.cooldown;
         state.runtimes[index].status = AccountStatus::CoolingDown { until };
         state.runtimes[index].last_error = Some(error_msg.to_string());
+        let account_id = accounts.get(index).map(|a| a.id.as_str()).unwrap_or("unknown");
         info!(
-            account_id = %self.accounts[index].id,
+            account_id = %account_id,
             cooldown_secs = self.config.cooldown.as_secs(),
             "Account marked as cooling down"
         );
     }
 
-    /// Mark an account as permanently disabled.
     async fn mark_disabled(&self, index: usize, error_msg: &str) {
+        let accounts = self.accounts.read().await;
         let mut state = self.state.lock().await;
         state.runtimes[index].status = AccountStatus::Disabled;
         state.runtimes[index].last_error = Some(error_msg.to_string());
+        let account_id = accounts.get(index).map(|a| a.id.as_str()).unwrap_or("unknown");
         error!(
-            account_id = %self.accounts[index].id,
+            account_id = %account_id,
             error = %error_msg,
             "Account permanently disabled"
         );
@@ -298,15 +544,16 @@ impl AnthropicPool {
 
     /// Get current pool status for health reporting.
     pub async fn pool_status(&self) -> PoolStatus {
+        let accounts = self.accounts.read().await;
         let state = self.state.lock().await;
         let now = Instant::now();
 
         let mut accounts_available = 0;
         let mut accounts_cooling = 0;
         let mut accounts_disabled = 0;
-        let mut accounts = Vec::with_capacity(self.accounts.len());
+        let mut account_list = Vec::with_capacity(accounts.len());
 
-        for (entry, runtime) in self.accounts.iter().zip(state.runtimes.iter()) {
+        for (entry, runtime) in accounts.iter().zip(state.runtimes.iter()) {
             let (status, cooldown_remaining_secs) = match runtime.status {
                 AccountStatus::Available => {
                     accounts_available += 1;
@@ -327,7 +574,7 @@ impl AnthropicPool {
                 }
             };
 
-            accounts.push(AccountHealthInfo {
+            account_list.push(AccountHealthInfo {
                 id: entry.id.clone(),
                 status,
                 cooldown_remaining_secs,
@@ -336,11 +583,11 @@ impl AnthropicPool {
         }
 
         PoolStatus {
-            accounts_total: self.accounts.len(),
+            accounts_total: accounts.len(),
             accounts_available,
             accounts_cooling,
             accounts_disabled,
-            accounts,
+            accounts: account_list,
         }
     }
 }
@@ -355,13 +602,17 @@ impl LlmClient for AnthropicPool {
             .await
             .ok_or(LlmError::RateLimited { retry_after_secs: None })?;
 
-        let account = &self.accounts[index];
+        let accounts = self.accounts.read().await;
+        let account = accounts.get(index).ok_or_else(|| {
+            LlmError::Api("Account index out of bounds".to_string())
+        })?;
         debug!(account_id = %account.id, "Attempting completion with account");
 
-        match account.client.complete(request).await {
+        match account.client.complete(request.clone()).await {
             Ok(response) => Ok(response),
             Err(e) => {
                 let error_msg = e.to_string();
+                drop(accounts);
                 if is_quota_message(&error_msg) {
                     self.mark_cooling(index, &error_msg).await;
                 } else if is_permanent_auth_message(&error_msg) {
@@ -378,13 +629,17 @@ impl LlmClient for AnthropicPool {
             .await
             .ok_or(LlmError::RateLimited { retry_after_secs: None })?;
 
-        let account = &self.accounts[index];
+        let accounts = self.accounts.read().await;
+        let account = accounts.get(index).ok_or_else(|| {
+            LlmError::Api("Account index out of bounds".to_string())
+        })?;
         debug!(account_id = %account.id, "Attempting streaming completion with account");
 
-        match account.client.complete_streaming(request).await {
+        match account.client.complete_streaming(request.clone()).await {
             Ok(stream) => Ok(stream),
             Err(e) => {
                 let error_msg = e.to_string();
+                drop(accounts);
                 if is_quota_message(&error_msg) {
                     self.mark_cooling(index, &error_msg).await;
                 } else if is_permanent_auth_message(&error_msg) {
