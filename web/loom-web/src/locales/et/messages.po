@@ -1,0 +1,996 @@
+# Translation catalog for Loom Web
+# Language: et
+#
+msgid ""
+msgstr ""
+"Language: et\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: nav.threads
+msgid "nav.threads"
+msgstr "Lõimed"
+
+#: nav.settings
+msgid "nav.settings"
+msgstr "Seaded"
+
+#: nav.admin
+msgid "nav.admin"
+msgstr "Admin"
+
+#: nav.jobs
+msgid "nav.jobs"
+msgstr "Tööd"
+
+#: thread.new
+msgid "thread.new"
+msgstr "Uus lõim"
+
+#: thread.delete
+msgid "thread.delete"
+msgstr "Kustuta"
+
+#: thread.search
+msgid "thread.search"
+msgstr "Otsi lõime..."
+
+#: thread.noThreads
+msgid "thread.noThreads"
+msgstr "Lõime pole veel"
+
+#: thread.loadError
+msgid "thread.loadError"
+msgstr "Lõimede laadimine ebaõnnestus"
+
+#: state.waiting_for_user_input
+msgid "state.waiting_for_user_input"
+msgstr "Ootan sisendit"
+
+#: state.calling_llm
+msgid "state.calling_llm"
+msgstr "Pärin LLM-i"
+
+#: state.processing_llm_response
+msgid "state.processing_llm_response"
+msgstr "Töötlen vastust"
+
+#: state.executing_tools
+msgid "state.executing_tools"
+msgstr "Käivitan tööriistu"
+
+#: state.post_tools_hook
+msgid "state.post_tools_hook"
+msgstr "Järeltöötlus"
+
+#: state.error
+msgid "state.error"
+msgstr "Viga"
+
+#: state.shutting_down
+msgid "state.shutting_down"
+msgstr "Sulgemine"
+
+#: tool.pending
+msgid "tool.pending"
+msgstr "Ootel"
+
+#: tool.running
+msgid "tool.running"
+msgstr "Töötab"
+
+#: tool.completed
+msgid "tool.completed"
+msgstr "Lõpetatud"
+
+#: tool.failed
+msgid "tool.failed"
+msgstr "Ebaõnnestus"
+
+#: connection.connected
+msgid "connection.connected"
+msgstr "Ühendatud"
+
+#: connection.disconnected
+msgid "connection.disconnected"
+msgstr "Ühendus puudub"
+
+#: connection.connecting
+msgid "connection.connecting"
+msgstr "Ühendan..."
+
+#: connection.reconnecting
+msgid "connection.reconnecting"
+msgstr "Taasühendan..."
+
+#: connection.error
+msgid "connection.error"
+msgstr "Ühenduse viga"
+
+#: connection.clickToReconnect
+msgid "connection.clickToReconnect"
+msgstr "Klõpsa taasühendamiseks"
+
+#: connection.attempt
+msgid "connection.attempt"
+msgstr "Katse {count}"
+
+#: message.placeholder
+msgid "message.placeholder"
+msgstr "Kirjuta sõnum..."
+
+#: message.send
+msgid "message.send"
+msgstr "Saada"
+
+#: auth.signOut
+msgid "auth.signOut"
+msgstr "Logi välja"
+
+#: auth.dashboard.welcome
+msgid "auth.dashboard.welcome"
+msgstr "Tere tulemast,"
+
+#: auth.dashboard.protectedPage
+msgid "auth.dashboard.protectedPage"
+msgstr "See on kaitstud leht. Selle nägemiseks pead olema sisse logitud."
+
+#: general.loading
+msgid "general.loading"
+msgstr "Laadimine..."
+
+#: general.error
+msgid "general.error"
+msgstr "Tekkis viga"
+
+#: general.retry
+msgid "general.retry"
+msgstr "Proovi uuesti"
+
+#: general.cancel
+msgid "general.cancel"
+msgstr "Tühista"
+
+#: general.save
+msgid "general.save"
+msgstr "Salvesta"
+
+#: general.close
+msgid "general.close"
+msgstr "Sulge"
+
+#: auth.login.title
+msgid "auth.login.title"
+msgstr "Logi Loomi sisse"
+
+#: auth.login.subtitle
+msgid "auth.login.subtitle"
+msgstr "Vali eelistatud sisselogimisviis"
+
+#: auth.login.github
+msgid "auth.login.github"
+msgstr "Jätka GitHubiga"
+
+#: auth.login.google
+msgid "auth.login.google"
+msgstr "Jätka Google\\"
+
+#: auth.login.or
+msgid "auth.login.or"
+msgstr "või"
+
+#: auth.login.emailLabel
+msgid "auth.login.emailLabel"
+msgstr "E-posti aadress"
+
+#: auth.login.emailPlaceholder
+msgid "auth.login.emailPlaceholder"
+msgstr "sina@näide.ee"
+
+#: auth.login.sendMagicLink
+msgid "auth.login.sendMagicLink"
+msgstr "Saada maagiline link"
+
+#: auth.login.sending
+msgid "auth.login.sending"
+msgstr "Saadan..."
+
+#: auth.login.checkEmail
+msgid "auth.login.checkEmail"
+msgstr "Kontrolli oma e-posti"
+
+#: auth.login.magicLinkSent
+msgid "auth.login.magicLinkSent"
+msgstr "Saatsime sisselogimislingi aadressile"
+
+#: auth.login.useDifferentEmail
+msgid "auth.login.useDifferentEmail"
+msgstr "Kasuta teist e-posti"
+
+#: auth.login.error
+msgid "auth.login.error"
+msgstr "Maagilise lingi saatmine ebaõnnestus. Palun proovi uuesti."
+
+#: auth.device.title
+msgid "auth.device.title"
+msgstr "Autoriseeri CLI"
+
+#: auth.device.subtitle
+msgid "auth.device.subtitle"
+msgstr "Sisesta terminalis kuvatud kood, et siduda CLI oma kontoga"
+
+#: auth.device.inputLabel
+msgid "auth.device.inputLabel"
+msgstr "Sisesta kood"
+
+#: auth.device.placeholder
+msgid "auth.device.placeholder"
+msgstr "XXX-XXX-XXX"
+
+#: auth.device.authorize
+msgid "auth.device.authorize"
+msgstr "Autoriseeri"
+
+#: auth.device.authorizing
+msgid "auth.device.authorizing"
+msgstr "Autoriseerin..."
+
+#: auth.device.success
+msgid "auth.device.success"
+msgstr "Autoriseeritud!"
+
+#: auth.device.successMessage
+msgid "auth.device.successMessage"
+msgstr "Võid selle lehe sulgeda ja naasta terminali."
+
+#: auth.device.error
+msgid "auth.device.error"
+msgstr "Vigane või aegunud kood. Palun kontrolli terminali ja proovi uuesti."
+
+#: auth.device.noCode
+msgid "auth.device.noCode"
+msgstr "Pole koodi? Käivita"
+
+#: auth.device.cliCommand
+msgid "auth.device.cliCommand"
+msgstr "loom login"
+
+#: auth.device.inTerminal
+msgid "auth.device.inTerminal"
+msgstr "terminalis."
+
+#: settings.sessions.title
+msgid "settings.sessions.title"
+msgstr "Aktiivsed seansid"
+
+#: settings.sessions.description
+msgid "settings.sessions.description"
+msgstr "Halda oma aktiivseid seansse eri seadmetes"
+
+#: settings.sessions.current
+msgid "settings.sessions.current"
+msgstr "Praegune seanss"
+
+#: settings.sessions.lastUsed
+msgid "settings.sessions.lastUsed"
+msgstr "Viimati kasutatud"
+
+#: settings.sessions.createdAt
+msgid "settings.sessions.createdAt"
+msgstr "Loodud"
+
+#: settings.sessions.revoke
+msgid "settings.sessions.revoke"
+msgstr "Tühista"
+
+#: settings.sessions.revokeConfirm
+msgid "settings.sessions.revokeConfirm"
+msgstr "Kas oled kindel, et soovid selle seansi tühistada?"
+
+#: settings.sessions.noSessions
+msgid "settings.sessions.noSessions"
+msgstr "Aktiivseid seansse pole"
+
+#: settings.sessions.web
+msgid "settings.sessions.web"
+msgstr "Veeb"
+
+#: settings.sessions.cli
+msgid "settings.sessions.cli"
+msgstr "CLI"
+
+#: settings.sessions.vscode
+msgid "settings.sessions.vscode"
+msgstr "VS Code"
+
+#: settings.nav.sessions
+msgid "settings.nav.sessions"
+msgstr "Seansid"
+
+#: settings.nav.profile
+msgid "settings.nav.profile"
+msgstr "Profiil"
+
+#: settings.nav.orgs
+msgid "settings.nav.orgs"
+msgstr "Organisatsioonid"
+
+#: settings.profile.title
+msgid "settings.profile.title"
+msgstr "Profiili seaded"
+
+#: settings.profile.displayName
+msgid "settings.profile.displayName"
+msgstr "Kuvatav nimi"
+
+#: settings.profile.email
+msgid "settings.profile.email"
+msgstr "E-post"
+
+#: settings.profile.emailHint
+msgid "settings.profile.emailHint"
+msgstr "E-posti ei saa siin muuta"
+
+#: settings.profile.locale
+msgid "settings.profile.locale"
+msgstr "Keel"
+
+#: settings.profile.save
+msgid "settings.profile.save"
+msgstr "Salvesta muudatused"
+
+#: settings.profile.saving
+msgid "settings.profile.saving"
+msgstr "Salvestan..."
+
+#: settings.profile.saved
+msgid "settings.profile.saved"
+msgstr "Profiil edukalt uuendatud"
+
+#: settings.profile.error
+msgid "settings.profile.error"
+msgstr "Profiili uuendamine ebaõnnestus"
+
+#: orgs.title
+msgid "orgs.title"
+msgstr "Organisatsioonid"
+
+#: orgs.description
+msgid "orgs.description"
+msgstr "Halda oma organisatsioone ja meeskondi"
+
+#: orgs.create
+msgid "orgs.create"
+msgstr "Loo organisatsioon"
+
+#: orgs.createTitle
+msgid "orgs.createTitle"
+msgstr "Loo uus organisatsioon"
+
+#: orgs.name
+msgid "orgs.name"
+msgstr "Organisatsiooni nimi"
+
+#: orgs.slug
+msgid "orgs.slug"
+msgstr "URL-i lühend"
+
+#: orgs.slugHint
+msgid "orgs.slugHint"
+msgstr "Kasutatakse URL-ides, ainult väiketähed ja sidekriipsud"
+
+#: orgs.visibility
+msgid "orgs.visibility"
+msgstr "Nähtavus"
+
+#: orgs.visibilityPublic
+msgid "orgs.visibilityPublic"
+msgstr "Avalik"
+
+#: orgs.visibilityPrivate
+msgid "orgs.visibilityPrivate"
+msgstr "Privaatne"
+
+#: orgs.joinPolicy
+msgid "orgs.joinPolicy"
+msgstr "Liitumispoliitika"
+
+#: orgs.joinPolicyOpen
+msgid "orgs.joinPolicyOpen"
+msgstr "Avatud"
+
+#: orgs.joinPolicyRequest
+msgid "orgs.joinPolicyRequest"
+msgstr "Liitumistaotlus"
+
+#: orgs.joinPolicyInvite
+msgid "orgs.joinPolicyInvite"
+msgstr "Ainult kutsega"
+
+#: orgs.members
+msgid "orgs.members"
+msgstr "Liikmed"
+
+#: orgs.teams
+msgid "orgs.teams"
+msgstr "Meeskonnad"
+
+#: orgs.apiKeys
+msgid "orgs.apiKeys"
+msgstr "API võtmed"
+
+#: orgs.settings
+msgid "orgs.settings"
+msgstr "Seaded"
+
+#: orgs.noOrgs
+msgid "orgs.noOrgs"
+msgstr "Organisatsioone pole veel"
+
+#: orgs.delete
+msgid "orgs.delete"
+msgstr "Kustuta organisatsioon"
+
+#: orgs.deleteConfirm
+msgid "orgs.deleteConfirm"
+msgstr "Kas oled kindel, et soovid selle organisatsiooni kustutada?"
+
+#: settings.orgs.title
+msgid "settings.orgs.title"
+msgstr "Organisatsioonid"
+
+#: settings.orgs.description
+msgid "settings.orgs.description"
+msgstr "Halda oma organisatsioone ja meeskonnaliikmesusi"
+
+#: settings.orgs.create
+msgid "settings.orgs.create"
+msgstr "Loo organisatsioon"
+
+#: settings.orgs.noOrgs
+msgid "settings.orgs.noOrgs"
+msgstr "Organisatsioone pole veel"
+
+#: settings.orgs.loadError
+msgid "settings.orgs.loadError"
+msgstr "Organisatsioonide laadimine ebaõnnestus"
+
+#: settings.orgs.personal
+msgid "settings.orgs.personal"
+msgstr "Isiklik"
+
+#: settings.orgs.slug
+msgid "settings.orgs.slug"
+msgstr "Lühend"
+
+#: settings.orgs.member
+msgid "settings.orgs.member"
+msgstr "liige"
+
+#: settings.orgs.members
+msgid "settings.orgs.members"
+msgstr "liiget"
+
+#: settings.orgs.visibility.public
+msgid "settings.orgs.visibility.public"
+msgstr "Avalik"
+
+#: settings.orgs.visibility.unlisted
+msgid "settings.orgs.visibility.unlisted"
+msgstr "Peidetud"
+
+#: settings.orgs.visibility.private
+msgid "settings.orgs.visibility.private"
+msgstr "Privaatne"
+
+#: settings.orgs.new.title
+msgid "settings.orgs.new.title"
+msgstr "Loo organisatsioon"
+
+#: settings.orgs.new.name
+msgid "settings.orgs.new.name"
+msgstr "Organisatsiooni nimi"
+
+#: settings.orgs.new.namePlaceholder
+msgid "settings.orgs.new.namePlaceholder"
+msgstr "Minu organisatsioon"
+
+#: settings.orgs.new.slug
+msgid "settings.orgs.new.slug"
+msgstr "Lühend"
+
+#: settings.orgs.new.slugPlaceholder
+msgid "settings.orgs.new.slugPlaceholder"
+msgstr "minu-organisatsioon"
+
+#: settings.orgs.new.slugHint
+msgid "settings.orgs.new.slugHint"
+msgstr "URL-i sobiv tunnus (väiketähed, numbrid ja sidekriipsud)"
+
+#: settings.orgs.new.visibility
+msgid "settings.orgs.new.visibility"
+msgstr "Nähtavus"
+
+#: settings.orgs.new.create
+msgid "settings.orgs.new.create"
+msgstr "Loo organisatsioon"
+
+#: settings.orgs.new.creating
+msgid "settings.orgs.new.creating"
+msgstr "Loon..."
+
+#: settings.orgs.new.error
+msgid "settings.orgs.new.error"
+msgstr "Organisatsiooni loomine ebaõnnestus"
+
+#: settings.orgs.new.requiredFields
+msgid "settings.orgs.new.requiredFields"
+msgstr "Nimi ja lühend on kohustuslikud"
+
+#: members.title
+msgid "members.title"
+msgstr "Liikmed"
+
+#: members.add
+msgid "members.add"
+msgstr "Lisa liige"
+
+#: members.remove
+msgid "members.remove"
+msgstr "Eemalda"
+
+#: members.removeConfirm
+msgid "members.removeConfirm"
+msgstr "Kas oled kindel, et soovid selle liikme eemaldada?"
+
+#: members.role
+msgid "members.role"
+msgstr "Roll"
+
+#: members.roleOwner
+msgid "members.roleOwner"
+msgstr "Omanik"
+
+#: members.roleAdmin
+msgid "members.roleAdmin"
+msgstr "Admin"
+
+#: members.roleMember
+msgid "members.roleMember"
+msgstr "Liige"
+
+#: members.changeRole
+msgid "members.changeRole"
+msgstr "Muuda rolli"
+
+#: members.noMembers
+msgid "members.noMembers"
+msgstr "Liikmeid pole veel"
+
+#: teams.title
+msgid "teams.title"
+msgstr "Meeskonnad"
+
+#: teams.create
+msgid "teams.create"
+msgstr "Loo meeskond"
+
+#: teams.createTitle
+msgid "teams.createTitle"
+msgstr "Loo uus meeskond"
+
+#: teams.name
+msgid "teams.name"
+msgstr "Meeskonna nimi"
+
+#: teams.slug
+msgid "teams.slug"
+msgstr "URL-i lühend"
+
+#: teams.members
+msgid "teams.members"
+msgstr "Meeskonna liikmed"
+
+#: teams.addMember
+msgid "teams.addMember"
+msgstr "Lisa liige"
+
+#: teams.removeMember
+msgid "teams.removeMember"
+msgstr "Eemalda"
+
+#: teams.removeMemberConfirm
+msgid "teams.removeMemberConfirm"
+msgstr "Kas oled kindel, et soovid selle liikme meeskonnast eemaldada?"
+
+#: teams.noTeams
+msgid "teams.noTeams"
+msgstr "Meeskondi pole veel"
+
+#: teams.noMembers
+msgid "teams.noMembers"
+msgstr "Meeskonnas pole liikmeid"
+
+#: teams.delete
+msgid "teams.delete"
+msgstr "Kustuta meeskond"
+
+#: teams.deleteConfirm
+msgid "teams.deleteConfirm"
+msgstr "Kas oled kindel, et soovid selle meeskonna kustutada?"
+
+#: teams.roleMaintainer
+msgid "teams.roleMaintainer"
+msgstr "Haldaja"
+
+#: teams.roleMember
+msgid "teams.roleMember"
+msgstr "Liige"
+
+#: teams.role.maintainer
+msgid "teams.role.maintainer"
+msgstr "Haldaja"
+
+#: teams.role.member
+msgid "teams.role.member"
+msgstr "Liige"
+
+#: teams.backToOrg
+msgid "teams.backToOrg"
+msgstr "Tagasi organisatsiooni"
+
+#: teams.changeRole
+msgid "teams.changeRole"
+msgstr "Muuda rolli"
+
+#: teams.settings
+msgid "teams.settings"
+msgstr "Meeskonna seaded"
+
+#: teams.teamName
+msgid "teams.teamName"
+msgstr "Meeskonna nimi"
+
+#: teams.save
+msgid "teams.save"
+msgstr "Salvesta muudatused"
+
+#: teams.saving
+msgid "teams.saving"
+msgstr "Salvestan..."
+
+#: teams.saved
+msgid "teams.saved"
+msgstr "Meeskond edukalt uuendatud"
+
+#: teams.deleteTeam
+msgid "teams.deleteTeam"
+msgstr "Kustuta meeskond"
+
+#: teams.deleteTeamConfirm
+msgid "teams.deleteTeamConfirm"
+msgstr "Kas oled kindel, et soovid selle meeskonna kustutada? Seda toimingut ei saa tagasi võtta."
+
+#: teams.deleteTeamWarning
+msgid "teams.deleteTeamWarning"
+msgstr "See kustutab meeskonna jäädavalt ja eemaldab kõik liikmed."
+
+#: teams.deleting
+msgid "teams.deleting"
+msgstr "Kustutan..."
+
+#: teams.selectMember
+msgid "teams.selectMember"
+msgstr "Vali lisatav liige"
+
+#: teams.selectRole
+msgid "teams.selectRole"
+msgstr "Vali roll"
+
+#: teams.adding
+msgid "teams.adding"
+msgstr "Lisan..."
+
+#: teams.add
+msgid "teams.add"
+msgstr "Lisa"
+
+#: teams.noAvailableMembers
+msgid "teams.noAvailableMembers"
+msgstr "Lisatavaid organisatsiooni liikmeid pole"
+
+#: apiKeys.title
+msgid "apiKeys.title"
+msgstr "API võtmed"
+
+#: apiKeys.description
+msgid "apiKeys.description"
+msgstr "Halda API võtmeid programmiliseks ligipääsuks"
+
+#: apiKeys.create
+msgid "apiKeys.create"
+msgstr "Loo API võti"
+
+#: apiKeys.createTitle
+msgid "apiKeys.createTitle"
+msgstr "Loo uus API võti"
+
+#: apiKeys.name
+msgid "apiKeys.name"
+msgstr "Võtme nimi"
+
+#: apiKeys.nameHint
+msgid "apiKeys.nameHint"
+msgstr "Kirjeldav nimi sellele võtmele"
+
+#: apiKeys.scopes
+msgid "apiKeys.scopes"
+msgstr "Õigused"
+
+#: apiKeys.scopesHint
+msgid "apiKeys.scopesHint"
+msgstr "Vali selle võtme õigused"
+
+#: apiKeys.scopeThreadsRead
+msgid "apiKeys.scopeThreadsRead"
+msgstr "Loe lõime"
+
+#: apiKeys.scopeThreadsWrite
+msgid "apiKeys.scopeThreadsWrite"
+msgstr "Kirjuta lõime"
+
+#: apiKeys.scopeLlmUse
+msgid "apiKeys.scopeLlmUse"
+msgstr "Kasuta LLM-i"
+
+#: apiKeys.prefix
+msgid "apiKeys.prefix"
+msgstr "Võtme prefiks"
+
+#: apiKeys.createdAt
+msgid "apiKeys.createdAt"
+msgstr "Loodud"
+
+#: apiKeys.lastUsed
+msgid "apiKeys.lastUsed"
+msgstr "Viimati kasutatud"
+
+#: apiKeys.never
+msgid "apiKeys.never"
+msgstr "Mitte kunagi"
+
+#: apiKeys.revoke
+msgid "apiKeys.revoke"
+msgstr "Tühista"
+
+#: apiKeys.revokeConfirm
+msgid "apiKeys.revokeConfirm"
+msgstr "Kas oled kindel, et soovid selle API võtme tühistada?"
+
+#: apiKeys.noKeys
+msgid "apiKeys.noKeys"
+msgstr "API võtmeid pole veel"
+
+#: apiKeys.copyWarning
+msgid "apiKeys.copyWarning"
+msgstr "Kopeeri see võti kohe. Hiljem seda enam näha ei saa."
+
+#: apiKeys.copied
+msgid "apiKeys.copied"
+msgstr "Kopeeritud lõikelauale"
+
+#: general.search
+msgid "general.search"
+msgstr "Search"
+
+#: general.previous
+msgid "general.previous"
+msgstr "Previous"
+
+#: general.next
+msgid "general.next"
+msgstr "Next"
+
+#: general.done
+msgid "general.done"
+msgstr "Done"
+
+#: general.refresh
+msgid "general.refresh"
+msgstr "Refresh"
+
+#: admin.users.title
+msgid "admin.users.title"
+msgstr "User Management"
+
+#: admin.users.description
+msgid "admin.users.description"
+msgstr "View and manage users across the platform"
+
+#: admin.users.searchPlaceholder
+msgid "admin.users.searchPlaceholder"
+msgstr "Search by name or email..."
+
+#: admin.users.empty
+msgid "admin.users.empty"
+msgstr "No users found"
+
+#: admin.users.created
+msgid "admin.users.created"
+msgstr "Created"
+
+#: admin.users.lastLogin
+msgid "admin.users.lastLogin"
+msgstr "Last login"
+
+#: admin.users.impersonate
+msgid "admin.users.impersonate"
+msgstr "Impersonate"
+
+#: admin.impersonation.banner
+msgid "admin.impersonation.banner"
+msgstr "Admin {admin} impersonating {user}"
+
+#: admin.impersonation.stop
+msgid "admin.impersonation.stop"
+msgstr "Stop Impersonating"
+
+#: nav.weavers
+msgid "nav.weavers"
+msgstr "Weavers"
+
+#: weavers.title
+msgid "weavers.title"
+msgstr "Weavers"
+
+#: weavers.description
+msgid "weavers.description"
+msgstr "Manage ephemeral development environments"
+
+#: weavers.create
+msgid "weavers.create"
+msgstr "Create Weaver"
+
+#: weavers.createFirst
+msgid "weavers.createFirst"
+msgstr "Create your first weaver"
+
+#: weavers.createTitle
+msgid "weavers.createTitle"
+msgstr "Create New Weaver"
+
+#: weavers.empty
+msgid "weavers.empty"
+msgstr "No weavers running"
+
+#: weavers.delete
+msgid "weavers.delete"
+msgstr "Delete"
+
+#: weavers.deleteConfirm
+msgid "weavers.deleteConfirm"
+msgstr "Are you sure you want to delete this weaver?"
+
+#: weavers.image
+msgid "weavers.image"
+msgstr "Image"
+
+#: weavers.imageName
+msgid "weavers.imageName"
+msgstr "Container Image"
+
+#: weavers.created
+msgid "weavers.created"
+msgstr "Created"
+
+#: weavers.age
+msgid "weavers.age"
+msgstr "Age"
+
+#: weavers.lifetime
+msgid "weavers.lifetime"
+msgstr "Lifetime"
+
+#: weavers.lifetimeLabel
+msgid "weavers.lifetimeLabel"
+msgstr "Lifetime (TTL)"
+
+#: weavers.workdir
+msgid "weavers.workdir"
+msgstr "Working Directory"
+
+#: weavers.hour
+msgid "weavers.hour"
+msgstr "hour"
+
+#: weavers.hours
+msgid "weavers.hours"
+msgstr "hours"
+
+#: weavers.attach
+msgid "weavers.attach"
+msgstr "Attach"
+
+#: weavers.backToList
+msgid "weavers.backToList"
+msgstr "Back to Weavers"
+
+#: weavers.notFound
+msgid "weavers.notFound"
+msgstr "Weaver not found"
+
+#: weavers.logs
+msgid "weavers.logs"
+msgstr "Logs"
+
+#: weavers.logsTitle
+msgid "weavers.logsTitle"
+msgstr "Weaver Logs"
+
+#: weavers.logsConnecting
+msgid "weavers.logsConnecting"
+msgstr "Connecting to log stream..."
+
+#: weavers.logsNoData
+msgid "weavers.logsNoData"
+msgstr "No logs available yet"
+
+#: weavers.logsError
+msgid "weavers.logsError"
+msgstr "Failed to connect to log stream"
+
+#: weavers.logsClosed
+msgid "weavers.logsClosed"
+msgstr "Log stream closed"
+
+#: weavers.creatingTitle
+msgid "weavers.creatingTitle"
+msgstr "Creating Weaver"
+
+#: weavers.creatingProgress
+msgid "weavers.creatingProgress"
+msgstr "Provisioning your weaver environment..."
+
+#: weavers.creatingWait
+msgid "weavers.creatingWait"
+msgstr "Waiting for weaver to become ready. You will be redirected automatically."
+
+#: weavers.createFailed
+msgid "weavers.createFailed"
+msgstr "Weaver creation failed"
+
+#: weavers.createTimeout
+msgid "weavers.createTimeout"
+msgstr "Weaver creation timed out"
+
+#: weavers.terminal.connected
+msgid "weavers.terminal.connected"
+msgstr "Connected"
+
+#: weavers.terminal.connecting
+msgid "weavers.terminal.connecting"
+msgstr "Connecting..."
+
+#: weavers.terminal.disconnected
+msgid "weavers.terminal.disconnected"
+msgstr "Disconnected"
+
+#: weavers.terminal.error
+msgid "weavers.terminal.error"
+msgstr "Connection error"
+
+#: weavers.terminal.reconnect
+msgid "weavers.terminal.reconnect"
+msgstr "Reconnect"
+
+#: weavers.terminal.pending
+msgid "weavers.terminal.pending"
+msgstr "Weaver is starting..."
+
+#: weavers.terminal.pendingHint
+msgid "weavers.terminal.pendingHint"
+msgstr "The terminal will be available once the weaver is running"
+
+#: weavers.terminal.notRunning
+msgid "weavers.terminal.notRunning"
+msgstr "Weaver is not running (status: {status})"

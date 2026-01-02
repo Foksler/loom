@@ -1,0 +1,996 @@
+# Translation catalog for Loom Web
+# Language: el
+#
+msgid ""
+msgstr ""
+"Language: el\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: nav.threads
+msgid "nav.threads"
+msgstr "Νήματα"
+
+#: nav.settings
+msgid "nav.settings"
+msgstr "Ρυθμίσεις"
+
+#: nav.admin
+msgid "nav.admin"
+msgstr "Διαχείριση"
+
+#: nav.jobs
+msgid "nav.jobs"
+msgstr "Εργασίες"
+
+#: thread.new
+msgid "thread.new"
+msgstr "Νέο Νήμα"
+
+#: thread.delete
+msgid "thread.delete"
+msgstr "Διαγραφή"
+
+#: thread.search
+msgid "thread.search"
+msgstr "Αναζήτηση νημάτων..."
+
+#: thread.noThreads
+msgid "thread.noThreads"
+msgstr "Δεν υπάρχουν νήματα ακόμα"
+
+#: thread.loadError
+msgid "thread.loadError"
+msgstr "Αποτυχία φόρτωσης νημάτων"
+
+#: state.waiting_for_user_input
+msgid "state.waiting_for_user_input"
+msgstr "Αναμονή για είσοδο"
+
+#: state.calling_llm
+msgid "state.calling_llm"
+msgstr "Κλήση LLM"
+
+#: state.processing_llm_response
+msgid "state.processing_llm_response"
+msgstr "Επεξεργασία απόκρισης"
+
+#: state.executing_tools
+msgid "state.executing_tools"
+msgstr "Εκτέλεση εργαλείων"
+
+#: state.post_tools_hook
+msgid "state.post_tools_hook"
+msgstr "Μετα-επεξεργασία"
+
+#: state.error
+msgid "state.error"
+msgstr "Σφάλμα"
+
+#: state.shutting_down
+msgid "state.shutting_down"
+msgstr "Τερματισμός"
+
+#: tool.pending
+msgid "tool.pending"
+msgstr "Σε αναμονή"
+
+#: tool.running
+msgid "tool.running"
+msgstr "Εκτελείται"
+
+#: tool.completed
+msgid "tool.completed"
+msgstr "Ολοκληρώθηκε"
+
+#: tool.failed
+msgid "tool.failed"
+msgstr "Απέτυχε"
+
+#: connection.connected
+msgid "connection.connected"
+msgstr "Συνδεδεμένο"
+
+#: connection.disconnected
+msgid "connection.disconnected"
+msgstr "Αποσυνδεδεμένο"
+
+#: connection.connecting
+msgid "connection.connecting"
+msgstr "Σύνδεση..."
+
+#: connection.reconnecting
+msgid "connection.reconnecting"
+msgstr "Επανασύνδεση..."
+
+#: connection.error
+msgid "connection.error"
+msgstr "Σφάλμα σύνδεσης"
+
+#: connection.clickToReconnect
+msgid "connection.clickToReconnect"
+msgstr "Κάντε κλικ για επανασύνδεση"
+
+#: connection.attempt
+msgid "connection.attempt"
+msgstr "Προσπάθεια {count}"
+
+#: message.placeholder
+msgid "message.placeholder"
+msgstr "Πληκτρολογήστε ένα μήνυμα..."
+
+#: message.send
+msgid "message.send"
+msgstr "Αποστολή"
+
+#: auth.signOut
+msgid "auth.signOut"
+msgstr "Αποσύνδεση"
+
+#: auth.dashboard.welcome
+msgid "auth.dashboard.welcome"
+msgstr "Καλώς ήρθατε,"
+
+#: auth.dashboard.protectedPage
+msgid "auth.dashboard.protectedPage"
+msgstr "Αυτή είναι μια προστατευμένη σελίδα. Πρέπει να είστε συνδεδεμένοι για να τη δείτε."
+
+#: general.loading
+msgid "general.loading"
+msgstr "Φόρτωση..."
+
+#: general.error
+msgid "general.error"
+msgstr "Παρουσιάστηκε σφάλμα"
+
+#: general.retry
+msgid "general.retry"
+msgstr "Επανάληψη"
+
+#: general.cancel
+msgid "general.cancel"
+msgstr "Ακύρωση"
+
+#: general.save
+msgid "general.save"
+msgstr "Αποθήκευση"
+
+#: general.close
+msgid "general.close"
+msgstr "Κλείσιμο"
+
+#: auth.login.title
+msgid "auth.login.title"
+msgstr "Σύνδεση στο Loom"
+
+#: auth.login.subtitle
+msgid "auth.login.subtitle"
+msgstr "Επιλέξτε τη μέθοδο σύνδεσής σας"
+
+#: auth.login.github
+msgid "auth.login.github"
+msgstr "Συνέχεια με GitHub"
+
+#: auth.login.google
+msgid "auth.login.google"
+msgstr "Συνέχεια με Google"
+
+#: auth.login.or
+msgid "auth.login.or"
+msgstr "ή"
+
+#: auth.login.emailLabel
+msgid "auth.login.emailLabel"
+msgstr "Διεύθυνση email"
+
+#: auth.login.emailPlaceholder
+msgid "auth.login.emailPlaceholder"
+msgstr "you@example.com"
+
+#: auth.login.sendMagicLink
+msgid "auth.login.sendMagicLink"
+msgstr "Αποστολή magic link"
+
+#: auth.login.sending
+msgid "auth.login.sending"
+msgstr "Αποστολή..."
+
+#: auth.login.checkEmail
+msgid "auth.login.checkEmail"
+msgstr "Ελέγξτε το email σας"
+
+#: auth.login.magicLinkSent
+msgid "auth.login.magicLinkSent"
+msgstr "Στείλαμε έναν σύνδεσμο σύνδεσης στο"
+
+#: auth.login.useDifferentEmail
+msgid "auth.login.useDifferentEmail"
+msgstr "Χρήση διαφορετικού email"
+
+#: auth.login.error
+msgid "auth.login.error"
+msgstr "Αδυναμία αποστολής magic link. Παρακαλώ δοκιμάστε ξανά."
+
+#: auth.device.title
+msgid "auth.device.title"
+msgstr "Εξουσιοδότηση CLI"
+
+#: auth.device.subtitle
+msgid "auth.device.subtitle"
+msgstr "Εισάγετε τον κωδικό που εμφανίζεται στο τερματικό σας για να συνδέσετε το CLI με τον λογαριασμό σας"
+
+#: auth.device.inputLabel
+msgid "auth.device.inputLabel"
+msgstr "Εισάγετε τον κωδικό σας"
+
+#: auth.device.placeholder
+msgid "auth.device.placeholder"
+msgstr "XXX-XXX-XXX"
+
+#: auth.device.authorize
+msgid "auth.device.authorize"
+msgstr "Εξουσιοδότηση"
+
+#: auth.device.authorizing
+msgid "auth.device.authorizing"
+msgstr "Εξουσιοδότηση..."
+
+#: auth.device.success
+msgid "auth.device.success"
+msgstr "Εξουσιοδοτήθηκε!"
+
+#: auth.device.successMessage
+msgid "auth.device.successMessage"
+msgstr "Μπορείτε τώρα να κλείσετε αυτή τη σελίδα και να επιστρέψετε στο τερματικό σας."
+
+#: auth.device.error
+msgid "auth.device.error"
+msgstr "Μη έγκυρος ή ληγμένος κωδικός. Παρακαλώ ελέγξτε το τερματικό σας και δοκιμάστε ξανά."
+
+#: auth.device.noCode
+msgid "auth.device.noCode"
+msgstr "Δεν έχετε κωδικό; Εκτελέστε"
+
+#: auth.device.cliCommand
+msgid "auth.device.cliCommand"
+msgstr "loom login"
+
+#: auth.device.inTerminal
+msgid "auth.device.inTerminal"
+msgstr "στο τερματικό σας."
+
+#: settings.sessions.title
+msgid "settings.sessions.title"
+msgstr "Ενεργές Συνεδρίες"
+
+#: settings.sessions.description
+msgid "settings.sessions.description"
+msgstr "Διαχειριστείτε τις ενεργές συνεδρίες σας σε όλες τις συσκευές"
+
+#: settings.sessions.current
+msgid "settings.sessions.current"
+msgstr "Τρέχουσα συνεδρία"
+
+#: settings.sessions.lastUsed
+msgid "settings.sessions.lastUsed"
+msgstr "Τελευταία χρήση"
+
+#: settings.sessions.createdAt
+msgid "settings.sessions.createdAt"
+msgstr "Δημιουργήθηκε"
+
+#: settings.sessions.revoke
+msgid "settings.sessions.revoke"
+msgstr "Ανάκληση"
+
+#: settings.sessions.revokeConfirm
+msgid "settings.sessions.revokeConfirm"
+msgstr "Είστε βέβαιοι ότι θέλετε να ανακαλέσετε αυτή τη συνεδρία;"
+
+#: settings.sessions.noSessions
+msgid "settings.sessions.noSessions"
+msgstr "Δεν υπάρχουν ενεργές συνεδρίες"
+
+#: settings.sessions.web
+msgid "settings.sessions.web"
+msgstr "Web"
+
+#: settings.sessions.cli
+msgid "settings.sessions.cli"
+msgstr "CLI"
+
+#: settings.sessions.vscode
+msgid "settings.sessions.vscode"
+msgstr "VS Code"
+
+#: settings.nav.sessions
+msgid "settings.nav.sessions"
+msgstr "Συνεδρίες"
+
+#: settings.nav.profile
+msgid "settings.nav.profile"
+msgstr "Προφίλ"
+
+#: settings.nav.orgs
+msgid "settings.nav.orgs"
+msgstr "Οργανισμοί"
+
+#: settings.profile.title
+msgid "settings.profile.title"
+msgstr "Ρυθμίσεις Προφίλ"
+
+#: settings.profile.displayName
+msgid "settings.profile.displayName"
+msgstr "Εμφανιζόμενο Όνομα"
+
+#: settings.profile.email
+msgid "settings.profile.email"
+msgstr "Email"
+
+#: settings.profile.emailHint
+msgid "settings.profile.emailHint"
+msgstr "Το email δεν μπορεί να αλλάξει εδώ"
+
+#: settings.profile.locale
+msgid "settings.profile.locale"
+msgstr "Γλώσσα"
+
+#: settings.profile.save
+msgid "settings.profile.save"
+msgstr "Αποθήκευση Αλλαγών"
+
+#: settings.profile.saving
+msgid "settings.profile.saving"
+msgstr "Αποθήκευση..."
+
+#: settings.profile.saved
+msgid "settings.profile.saved"
+msgstr "Το προφίλ ενημερώθηκε επιτυχώς"
+
+#: settings.profile.error
+msgid "settings.profile.error"
+msgstr "Αποτυχία ενημέρωσης προφίλ"
+
+#: orgs.title
+msgid "orgs.title"
+msgstr "Οργανισμοί"
+
+#: orgs.description
+msgid "orgs.description"
+msgstr "Διαχειριστείτε τους οργανισμούς και τις ομάδες σας"
+
+#: orgs.create
+msgid "orgs.create"
+msgstr "Δημιουργία Οργανισμού"
+
+#: orgs.createTitle
+msgid "orgs.createTitle"
+msgstr "Δημιουργία Νέου Οργανισμού"
+
+#: orgs.name
+msgid "orgs.name"
+msgstr "Όνομα Οργανισμού"
+
+#: orgs.slug
+msgid "orgs.slug"
+msgstr "URL Slug"
+
+#: orgs.slugHint
+msgid "orgs.slugHint"
+msgstr "Χρησιμοποιείται σε URLs, μόνο πεζά γράμματα και παύλες"
+
+#: orgs.visibility
+msgid "orgs.visibility"
+msgstr "Ορατότητα"
+
+#: orgs.visibilityPublic
+msgid "orgs.visibilityPublic"
+msgstr "Δημόσιο"
+
+#: orgs.visibilityPrivate
+msgid "orgs.visibilityPrivate"
+msgstr "Ιδιωτικό"
+
+#: orgs.joinPolicy
+msgid "orgs.joinPolicy"
+msgstr "Πολιτική Συμμετοχής"
+
+#: orgs.joinPolicyOpen
+msgid "orgs.joinPolicyOpen"
+msgstr "Ανοιχτή"
+
+#: orgs.joinPolicyRequest
+msgid "orgs.joinPolicyRequest"
+msgstr "Αίτηση Συμμετοχής"
+
+#: orgs.joinPolicyInvite
+msgid "orgs.joinPolicyInvite"
+msgstr "Μόνο με Πρόσκληση"
+
+#: orgs.members
+msgid "orgs.members"
+msgstr "Μέλη"
+
+#: orgs.teams
+msgid "orgs.teams"
+msgstr "Ομάδες"
+
+#: orgs.apiKeys
+msgid "orgs.apiKeys"
+msgstr "Κλειδιά API"
+
+#: orgs.settings
+msgid "orgs.settings"
+msgstr "Ρυθμίσεις"
+
+#: orgs.noOrgs
+msgid "orgs.noOrgs"
+msgstr "Δεν υπάρχουν οργανισμοί ακόμα"
+
+#: orgs.delete
+msgid "orgs.delete"
+msgstr "Διαγραφή Οργανισμού"
+
+#: orgs.deleteConfirm
+msgid "orgs.deleteConfirm"
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτόν τον οργανισμό;"
+
+#: settings.orgs.title
+msgid "settings.orgs.title"
+msgstr "Οργανισμοί"
+
+#: settings.orgs.description
+msgid "settings.orgs.description"
+msgstr "Διαχειριστείτε τους οργανισμούς και τις ιδιότητες μέλους σας"
+
+#: settings.orgs.create
+msgid "settings.orgs.create"
+msgstr "Δημιουργία Οργανισμού"
+
+#: settings.orgs.noOrgs
+msgid "settings.orgs.noOrgs"
+msgstr "Δεν υπάρχουν οργανισμοί ακόμα"
+
+#: settings.orgs.loadError
+msgid "settings.orgs.loadError"
+msgstr "Αποτυχία φόρτωσης οργανισμών"
+
+#: settings.orgs.personal
+msgid "settings.orgs.personal"
+msgstr "Προσωπικό"
+
+#: settings.orgs.slug
+msgid "settings.orgs.slug"
+msgstr "Slug"
+
+#: settings.orgs.member
+msgid "settings.orgs.member"
+msgstr "μέλος"
+
+#: settings.orgs.members
+msgid "settings.orgs.members"
+msgstr "μέλη"
+
+#: settings.orgs.visibility.public
+msgid "settings.orgs.visibility.public"
+msgstr "Δημόσιο"
+
+#: settings.orgs.visibility.unlisted
+msgid "settings.orgs.visibility.unlisted"
+msgstr "Μη καταχωρημένο"
+
+#: settings.orgs.visibility.private
+msgid "settings.orgs.visibility.private"
+msgstr "Ιδιωτικό"
+
+#: settings.orgs.new.title
+msgid "settings.orgs.new.title"
+msgstr "Δημιουργία Οργανισμού"
+
+#: settings.orgs.new.name
+msgid "settings.orgs.new.name"
+msgstr "Όνομα Οργανισμού"
+
+#: settings.orgs.new.namePlaceholder
+msgid "settings.orgs.new.namePlaceholder"
+msgstr "Ο Οργανισμός μου"
+
+#: settings.orgs.new.slug
+msgid "settings.orgs.new.slug"
+msgstr "Slug"
+
+#: settings.orgs.new.slugPlaceholder
+msgid "settings.orgs.new.slugPlaceholder"
+msgstr "o-organismos-mou"
+
+#: settings.orgs.new.slugHint
+msgid "settings.orgs.new.slugHint"
+msgstr "Αναγνωριστικό φιλικό προς URL (πεζά γράμματα, αριθμοί και παύλες)"
+
+#: settings.orgs.new.visibility
+msgid "settings.orgs.new.visibility"
+msgstr "Ορατότητα"
+
+#: settings.orgs.new.create
+msgid "settings.orgs.new.create"
+msgstr "Δημιουργία Οργανισμού"
+
+#: settings.orgs.new.creating
+msgid "settings.orgs.new.creating"
+msgstr "Δημιουργία..."
+
+#: settings.orgs.new.error
+msgid "settings.orgs.new.error"
+msgstr "Αποτυχία δημιουργίας οργανισμού"
+
+#: settings.orgs.new.requiredFields
+msgid "settings.orgs.new.requiredFields"
+msgstr "Το όνομα και το slug είναι υποχρεωτικά"
+
+#: members.title
+msgid "members.title"
+msgstr "Μέλη"
+
+#: members.add
+msgid "members.add"
+msgstr "Προσθήκη Μέλους"
+
+#: members.remove
+msgid "members.remove"
+msgstr "Αφαίρεση"
+
+#: members.removeConfirm
+msgid "members.removeConfirm"
+msgstr "Είστε βέβαιοι ότι θέλετε να αφαιρέσετε αυτό το μέλος;"
+
+#: members.role
+msgid "members.role"
+msgstr "Ρόλος"
+
+#: members.roleOwner
+msgid "members.roleOwner"
+msgstr "Ιδιοκτήτης"
+
+#: members.roleAdmin
+msgid "members.roleAdmin"
+msgstr "Διαχειριστής"
+
+#: members.roleMember
+msgid "members.roleMember"
+msgstr "Μέλος"
+
+#: members.changeRole
+msgid "members.changeRole"
+msgstr "Αλλαγή Ρόλου"
+
+#: members.noMembers
+msgid "members.noMembers"
+msgstr "Δεν υπάρχουν μέλη ακόμα"
+
+#: teams.title
+msgid "teams.title"
+msgstr "Ομάδες"
+
+#: teams.create
+msgid "teams.create"
+msgstr "Δημιουργία Ομάδας"
+
+#: teams.createTitle
+msgid "teams.createTitle"
+msgstr "Δημιουργία Νέας Ομάδας"
+
+#: teams.name
+msgid "teams.name"
+msgstr "Όνομα Ομάδας"
+
+#: teams.slug
+msgid "teams.slug"
+msgstr "URL Slug"
+
+#: teams.members
+msgid "teams.members"
+msgstr "Μέλη Ομάδας"
+
+#: teams.addMember
+msgid "teams.addMember"
+msgstr "Προσθήκη Μέλους"
+
+#: teams.removeMember
+msgid "teams.removeMember"
+msgstr "Αφαίρεση"
+
+#: teams.removeMemberConfirm
+msgid "teams.removeMemberConfirm"
+msgstr "Είστε βέβαιοι ότι θέλετε να αφαιρέσετε αυτό το μέλος από την ομάδα;"
+
+#: teams.noTeams
+msgid "teams.noTeams"
+msgstr "Δεν υπάρχουν ομάδες ακόμα"
+
+#: teams.noMembers
+msgid "teams.noMembers"
+msgstr "Δεν υπάρχουν μέλη σε αυτή την ομάδα"
+
+#: teams.delete
+msgid "teams.delete"
+msgstr "Διαγραφή Ομάδας"
+
+#: teams.deleteConfirm
+msgid "teams.deleteConfirm"
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτή την ομάδα;"
+
+#: teams.roleMaintainer
+msgid "teams.roleMaintainer"
+msgstr "Συντηρητής"
+
+#: teams.roleMember
+msgid "teams.roleMember"
+msgstr "Μέλος"
+
+#: teams.role.maintainer
+msgid "teams.role.maintainer"
+msgstr "Συντηρητής"
+
+#: teams.role.member
+msgid "teams.role.member"
+msgstr "Μέλος"
+
+#: teams.backToOrg
+msgid "teams.backToOrg"
+msgstr "Επιστροφή στον οργανισμό"
+
+#: teams.changeRole
+msgid "teams.changeRole"
+msgstr "Αλλαγή ρόλου"
+
+#: teams.settings
+msgid "teams.settings"
+msgstr "Ρυθμίσεις Ομάδας"
+
+#: teams.teamName
+msgid "teams.teamName"
+msgstr "Όνομα Ομάδας"
+
+#: teams.save
+msgid "teams.save"
+msgstr "Αποθήκευση Αλλαγών"
+
+#: teams.saving
+msgid "teams.saving"
+msgstr "Αποθήκευση..."
+
+#: teams.saved
+msgid "teams.saved"
+msgstr "Η ομάδα ενημερώθηκε επιτυχώς"
+
+#: teams.deleteTeam
+msgid "teams.deleteTeam"
+msgstr "Διαγραφή Ομάδας"
+
+#: teams.deleteTeamConfirm
+msgid "teams.deleteTeamConfirm"
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτή την ομάδα; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
+
+#: teams.deleteTeamWarning
+msgid "teams.deleteTeamWarning"
+msgstr "Αυτό θα διαγράψει μόνιμα την ομάδα και θα αφαιρέσει όλα τα μέλη."
+
+#: teams.deleting
+msgid "teams.deleting"
+msgstr "Διαγραφή..."
+
+#: teams.selectMember
+msgid "teams.selectMember"
+msgstr "Επιλέξτε ένα μέλος για προσθήκη"
+
+#: teams.selectRole
+msgid "teams.selectRole"
+msgstr "Επιλέξτε ρόλο"
+
+#: teams.adding
+msgid "teams.adding"
+msgstr "Προσθήκη..."
+
+#: teams.add
+msgid "teams.add"
+msgstr "Προσθήκη"
+
+#: teams.noAvailableMembers
+msgid "teams.noAvailableMembers"
+msgstr "Δεν υπάρχουν διαθέσιμα μέλη οργανισμού για προσθήκη"
+
+#: apiKeys.title
+msgid "apiKeys.title"
+msgstr "Κλειδιά API"
+
+#: apiKeys.description
+msgid "apiKeys.description"
+msgstr "Διαχειριστείτε τα κλειδιά API για προγραμματιστική πρόσβαση"
+
+#: apiKeys.create
+msgid "apiKeys.create"
+msgstr "Δημιουργία Κλειδιού API"
+
+#: apiKeys.createTitle
+msgid "apiKeys.createTitle"
+msgstr "Δημιουργία Νέου Κλειδιού API"
+
+#: apiKeys.name
+msgid "apiKeys.name"
+msgstr "Όνομα Κλειδιού"
+
+#: apiKeys.nameHint
+msgid "apiKeys.nameHint"
+msgstr "Ένα περιγραφικό όνομα για αυτό το κλειδί"
+
+#: apiKeys.scopes
+msgid "apiKeys.scopes"
+msgstr "Δικαιώματα"
+
+#: apiKeys.scopesHint
+msgid "apiKeys.scopesHint"
+msgstr "Επιλέξτε τα δικαιώματα για αυτό το κλειδί"
+
+#: apiKeys.scopeThreadsRead
+msgid "apiKeys.scopeThreadsRead"
+msgstr "Ανάγνωση Νημάτων"
+
+#: apiKeys.scopeThreadsWrite
+msgid "apiKeys.scopeThreadsWrite"
+msgstr "Εγγραφή Νημάτων"
+
+#: apiKeys.scopeLlmUse
+msgid "apiKeys.scopeLlmUse"
+msgstr "Χρήση LLM"
+
+#: apiKeys.prefix
+msgid "apiKeys.prefix"
+msgstr "Πρόθεμα Κλειδιού"
+
+#: apiKeys.createdAt
+msgid "apiKeys.createdAt"
+msgstr "Δημιουργήθηκε"
+
+#: apiKeys.lastUsed
+msgid "apiKeys.lastUsed"
+msgstr "Τελευταία Χρήση"
+
+#: apiKeys.never
+msgid "apiKeys.never"
+msgstr "Ποτέ"
+
+#: apiKeys.revoke
+msgid "apiKeys.revoke"
+msgstr "Ανάκληση"
+
+#: apiKeys.revokeConfirm
+msgid "apiKeys.revokeConfirm"
+msgstr "Είστε βέβαιοι ότι θέλετε να ανακαλέσετε αυτό το κλειδί API;"
+
+#: apiKeys.noKeys
+msgid "apiKeys.noKeys"
+msgstr "Δεν υπάρχουν κλειδιά API ακόμα"
+
+#: apiKeys.copyWarning
+msgid "apiKeys.copyWarning"
+msgstr "Αντιγράψτε αυτό το κλειδί τώρα. Δεν θα μπορείτε να το δείτε ξανά."
+
+#: apiKeys.copied
+msgid "apiKeys.copied"
+msgstr "Αντιγράφηκε στο πρόχειρο"
+
+#: general.search
+msgid "general.search"
+msgstr "Search"
+
+#: general.previous
+msgid "general.previous"
+msgstr "Previous"
+
+#: general.next
+msgid "general.next"
+msgstr "Next"
+
+#: general.done
+msgid "general.done"
+msgstr "Done"
+
+#: general.refresh
+msgid "general.refresh"
+msgstr "Refresh"
+
+#: admin.users.title
+msgid "admin.users.title"
+msgstr "User Management"
+
+#: admin.users.description
+msgid "admin.users.description"
+msgstr "View and manage users across the platform"
+
+#: admin.users.searchPlaceholder
+msgid "admin.users.searchPlaceholder"
+msgstr "Search by name or email..."
+
+#: admin.users.empty
+msgid "admin.users.empty"
+msgstr "No users found"
+
+#: admin.users.created
+msgid "admin.users.created"
+msgstr "Created"
+
+#: admin.users.lastLogin
+msgid "admin.users.lastLogin"
+msgstr "Last login"
+
+#: admin.users.impersonate
+msgid "admin.users.impersonate"
+msgstr "Impersonate"
+
+#: admin.impersonation.banner
+msgid "admin.impersonation.banner"
+msgstr "Admin {admin} impersonating {user}"
+
+#: admin.impersonation.stop
+msgid "admin.impersonation.stop"
+msgstr "Stop Impersonating"
+
+#: nav.weavers
+msgid "nav.weavers"
+msgstr "Weavers"
+
+#: weavers.title
+msgid "weavers.title"
+msgstr "Weavers"
+
+#: weavers.description
+msgid "weavers.description"
+msgstr "Manage ephemeral development environments"
+
+#: weavers.create
+msgid "weavers.create"
+msgstr "Create Weaver"
+
+#: weavers.createFirst
+msgid "weavers.createFirst"
+msgstr "Create your first weaver"
+
+#: weavers.createTitle
+msgid "weavers.createTitle"
+msgstr "Create New Weaver"
+
+#: weavers.empty
+msgid "weavers.empty"
+msgstr "No weavers running"
+
+#: weavers.delete
+msgid "weavers.delete"
+msgstr "Delete"
+
+#: weavers.deleteConfirm
+msgid "weavers.deleteConfirm"
+msgstr "Are you sure you want to delete this weaver?"
+
+#: weavers.image
+msgid "weavers.image"
+msgstr "Image"
+
+#: weavers.imageName
+msgid "weavers.imageName"
+msgstr "Container Image"
+
+#: weavers.created
+msgid "weavers.created"
+msgstr "Created"
+
+#: weavers.age
+msgid "weavers.age"
+msgstr "Age"
+
+#: weavers.lifetime
+msgid "weavers.lifetime"
+msgstr "Lifetime"
+
+#: weavers.lifetimeLabel
+msgid "weavers.lifetimeLabel"
+msgstr "Lifetime (TTL)"
+
+#: weavers.workdir
+msgid "weavers.workdir"
+msgstr "Working Directory"
+
+#: weavers.hour
+msgid "weavers.hour"
+msgstr "hour"
+
+#: weavers.hours
+msgid "weavers.hours"
+msgstr "hours"
+
+#: weavers.attach
+msgid "weavers.attach"
+msgstr "Attach"
+
+#: weavers.backToList
+msgid "weavers.backToList"
+msgstr "Back to Weavers"
+
+#: weavers.notFound
+msgid "weavers.notFound"
+msgstr "Weaver not found"
+
+#: weavers.logs
+msgid "weavers.logs"
+msgstr "Logs"
+
+#: weavers.logsTitle
+msgid "weavers.logsTitle"
+msgstr "Weaver Logs"
+
+#: weavers.logsConnecting
+msgid "weavers.logsConnecting"
+msgstr "Connecting to log stream..."
+
+#: weavers.logsNoData
+msgid "weavers.logsNoData"
+msgstr "No logs available yet"
+
+#: weavers.logsError
+msgid "weavers.logsError"
+msgstr "Failed to connect to log stream"
+
+#: weavers.logsClosed
+msgid "weavers.logsClosed"
+msgstr "Log stream closed"
+
+#: weavers.creatingTitle
+msgid "weavers.creatingTitle"
+msgstr "Creating Weaver"
+
+#: weavers.creatingProgress
+msgid "weavers.creatingProgress"
+msgstr "Provisioning your weaver environment..."
+
+#: weavers.creatingWait
+msgid "weavers.creatingWait"
+msgstr "Waiting for weaver to become ready. You will be redirected automatically."
+
+#: weavers.createFailed
+msgid "weavers.createFailed"
+msgstr "Weaver creation failed"
+
+#: weavers.createTimeout
+msgid "weavers.createTimeout"
+msgstr "Weaver creation timed out"
+
+#: weavers.terminal.connected
+msgid "weavers.terminal.connected"
+msgstr "Connected"
+
+#: weavers.terminal.connecting
+msgid "weavers.terminal.connecting"
+msgstr "Connecting..."
+
+#: weavers.terminal.disconnected
+msgid "weavers.terminal.disconnected"
+msgstr "Disconnected"
+
+#: weavers.terminal.error
+msgid "weavers.terminal.error"
+msgstr "Connection error"
+
+#: weavers.terminal.reconnect
+msgid "weavers.terminal.reconnect"
+msgstr "Reconnect"
+
+#: weavers.terminal.pending
+msgid "weavers.terminal.pending"
+msgstr "Weaver is starting..."
+
+#: weavers.terminal.pendingHint
+msgid "weavers.terminal.pendingHint"
+msgstr "The terminal will be available once the weaver is running"
+
+#: weavers.terminal.notRunning
+msgid "weavers.terminal.notRunning"
+msgstr "Weaver is not running (status: {status})"

@@ -26,6 +26,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   buildPhase = ''
     runHook preBuild
+    pnpm run lingui:compile
     pnpm run build
     runHook postBuild
   '';

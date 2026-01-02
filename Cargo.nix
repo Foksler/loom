@@ -41,6 +41,7 @@ args@{
     "loom-server-weaver/default"
     "loom-server-k8s/default"
     "loom-server-geoip/default"
+    "loom-server-logs/default"
   ],
   rustPackages,
   buildRustPackages,
@@ -61,7 +62,7 @@ args@{
   cargoConfig ? {},
 }:
 let
-  nixifiedLockHash = "485b53af103fb0a0d1b13105062a51c3b12d439efe2b8490971fb120fab77443";
+  nixifiedLockHash = "b2e28bbf3164a20ac39510f2a809259a5bf909812426555895333023feb9fb6a";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -129,6 +130,7 @@ in
     loom-server-weaver = rustPackages.unknown.loom-server-weaver."0.1.0";
     loom-server-k8s = rustPackages.unknown.loom-server-k8s."0.1.0";
     loom-server-geoip = rustPackages.unknown.loom-server-geoip."0.1.0";
+    loom-server-logs = rustPackages.unknown.loom-server-logs."0.1.0";
   };
   "registry+https://github.com/rust-lang/crates.io-index".adler2."2.0.1" = overridableMkRustCrate (profileName: rec {
     name = "adler2";
@@ -4682,6 +4684,7 @@ in
       loom_server_k8s = (rustPackages."unknown".loom-server-k8s."0.1.0" { inherit profileName; }).out;
       loom_server_llm_anthropic = (rustPackages."unknown".loom-server-llm-anthropic."0.1.0" { inherit profileName; }).out;
       loom_server_llm_service = (rustPackages."unknown".loom-server-llm-service."0.1.0" { inherit profileName; }).out;
+      loom_server_logs = (rustPackages."unknown".loom-server-logs."0.1.0" { inherit profileName; }).out;
       loom_server_scm = (rustPackages."unknown".loom-server-scm."0.1.0" { inherit profileName; }).out;
       loom_server_scm_mirror = (rustPackages."unknown".loom-server-scm-mirror."0.1.0" { inherit profileName; }).out;
       loom_server_smtp = (rustPackages."unknown".loom-server-smtp."0.1.0" { inherit profileName; }).out;
@@ -5167,6 +5170,26 @@ in
     devDependencies = {
       proptest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proptest."1.9.0" { inherit profileName; }).out;
       tokio_test = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio-test."0.4.4" { inherit profileName; }).out;
+    };
+  });
+  
+  "unknown".loom-server-logs."0.1.0" = overridableMkRustCrate (profileName: rec {
+    name = "loom-server-logs";
+    version = "0.1.0";
+    registry = "unknown";
+    src = fetchCrateLocal workspaceSrc;
+    dependencies = {
+      chrono = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".chrono."0.4.42" { inherit profileName; }).out;
+      parking_lot = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".parking_lot."0.12.5" { inherit profileName; }).out;
+      serde = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.228" { inherit profileName; }).out;
+      tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.48.0" { inherit profileName; }).out;
+      tracing = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tracing."0.1.44" { inherit profileName; }).out;
+      tracing_subscriber = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tracing-subscriber."0.3.22" { inherit profileName; }).out;
+      utoipa = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".utoipa."5.4.0" { inherit profileName; }).out;
+    };
+    devDependencies = {
+      proptest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proptest."1.9.0" { inherit profileName; }).out;
+      tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.48.0" { inherit profileName; }).out;
     };
   });
   
@@ -8185,12 +8208,15 @@ in
     features = builtins.concatLists [
       [ "default" ]
       [ "fs" ]
+      [ "sync" ]
       [ "time" ]
+      [ "tokio-util" ]
     ];
     dependencies = {
       futures_core = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".futures-core."0.3.31" { inherit profileName; }).out;
       pin_project_lite = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".pin-project-lite."0.2.16" { inherit profileName; }).out;
       tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.48.0" { inherit profileName; }).out;
+      tokio_util = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio-util."0.7.17" { inherit profileName; }).out;
     };
   });
   

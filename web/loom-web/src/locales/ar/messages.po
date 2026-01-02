@@ -1,0 +1,1064 @@
+# Translation catalog for Loom Web
+# Language: ar
+#
+msgid ""
+msgstr ""
+"Language: ar\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: nav.threads
+msgid "nav.threads"
+msgstr "المحادثات"
+
+#: nav.settings
+msgid "nav.settings"
+msgstr "الإعدادات"
+
+#: nav.admin
+msgid "nav.admin"
+msgstr "الإدارة"
+
+#: nav.jobs
+msgid "nav.jobs"
+msgstr "المهام"
+
+#: thread.new
+msgid "thread.new"
+msgstr "محادثة جديدة"
+
+#: thread.delete
+msgid "thread.delete"
+msgstr "حذف"
+
+#: thread.search
+msgid "thread.search"
+msgstr "البحث في المحادثات..."
+
+#: thread.noThreads
+msgid "thread.noThreads"
+msgstr "لا توجد محادثات بعد"
+
+#: thread.loadError
+msgid "thread.loadError"
+msgstr "فشل تحميل المحادثات"
+
+#: state.waiting_for_user_input
+msgid "state.waiting_for_user_input"
+msgstr "في انتظار الإدخال"
+
+#: state.calling_llm
+msgid "state.calling_llm"
+msgstr "جارٍ الاتصال بالنموذج"
+
+#: state.processing_llm_response
+msgid "state.processing_llm_response"
+msgstr "جارٍ معالجة الرد"
+
+#: state.executing_tools
+msgid "state.executing_tools"
+msgstr "جارٍ تنفيذ الأدوات"
+
+#: state.post_tools_hook
+msgid "state.post_tools_hook"
+msgstr "المعالجة اللاحقة"
+
+#: state.error
+msgid "state.error"
+msgstr "خطأ"
+
+#: state.shutting_down
+msgid "state.shutting_down"
+msgstr "جارٍ الإيقاف"
+
+#: tool.pending
+msgid "tool.pending"
+msgstr "قيد الانتظار"
+
+#: tool.running
+msgid "tool.running"
+msgstr "قيد التشغيل"
+
+#: tool.completed
+msgid "tool.completed"
+msgstr "مكتمل"
+
+#: tool.failed
+msgid "tool.failed"
+msgstr "فشل"
+
+#: connection.connected
+msgid "connection.connected"
+msgstr "متصل"
+
+#: connection.disconnected
+msgid "connection.disconnected"
+msgstr "غير متصل"
+
+#: connection.connecting
+msgid "connection.connecting"
+msgstr "جارٍ الاتصال..."
+
+#: connection.reconnecting
+msgid "connection.reconnecting"
+msgstr "جارٍ إعادة الاتصال..."
+
+#: connection.error
+msgid "connection.error"
+msgstr "خطأ في الاتصال"
+
+#: connection.clickToReconnect
+msgid "connection.clickToReconnect"
+msgstr "انقر لإعادة الاتصال"
+
+#: connection.attempt
+msgid "connection.attempt"
+msgstr "المحاولة {count}"
+
+#: message.placeholder
+msgid "message.placeholder"
+msgstr "اكتب رسالة..."
+
+#: message.send
+msgid "message.send"
+msgstr "إرسال"
+
+#: auth.signOut
+msgid "auth.signOut"
+msgstr "تسجيل الخروج"
+
+#: auth.dashboard.welcome
+msgid "auth.dashboard.welcome"
+msgstr "مرحباً،"
+
+#: auth.dashboard.protectedPage
+msgid "auth.dashboard.protectedPage"
+msgstr "هذه صفحة محمية. يجب تسجيل الدخول لرؤيتها."
+
+#: general.loading
+msgid "general.loading"
+msgstr "جارٍ التحميل..."
+
+#: general.error
+msgid "general.error"
+msgstr "حدث خطأ"
+
+#: general.retry
+msgid "general.retry"
+msgstr "إعادة المحاولة"
+
+#: general.cancel
+msgid "general.cancel"
+msgstr "إلغاء"
+
+#: general.save
+msgid "general.save"
+msgstr "حفظ"
+
+#: general.close
+msgid "general.close"
+msgstr "إغلاق"
+
+#: auth.login.title
+msgid "auth.login.title"
+msgstr "تسجيل الدخول إلى Loom"
+
+#: auth.login.subtitle
+msgid "auth.login.subtitle"
+msgstr "اختر طريقة تسجيل الدخول المفضلة"
+
+#: auth.login.github
+msgid "auth.login.github"
+msgstr "المتابعة مع GitHub"
+
+#: auth.login.google
+msgid "auth.login.google"
+msgstr "المتابعة مع Google"
+
+#: auth.login.or
+msgid "auth.login.or"
+msgstr "أو"
+
+#: auth.login.emailLabel
+msgid "auth.login.emailLabel"
+msgstr "البريد الإلكتروني"
+
+#: auth.login.emailPlaceholder
+msgid "auth.login.emailPlaceholder"
+msgstr "you@example.com"
+
+#: auth.login.sendMagicLink
+msgid "auth.login.sendMagicLink"
+msgstr "إرسال رابط سحري"
+
+#: auth.login.sending
+msgid "auth.login.sending"
+msgstr "جارٍ الإرسال..."
+
+#: auth.login.checkEmail
+msgid "auth.login.checkEmail"
+msgstr "تحقق من بريدك الإلكتروني"
+
+#: auth.login.magicLinkSent
+msgid "auth.login.magicLinkSent"
+msgstr "أرسلنا رابط تسجيل الدخول إلى"
+
+#: auth.login.useDifferentEmail
+msgid "auth.login.useDifferentEmail"
+msgstr "استخدم بريدًا إلكترونيًا مختلفًا"
+
+#: auth.login.error
+msgid "auth.login.error"
+msgstr "تعذر إرسال الرابط السحري. يرجى المحاولة مرة أخرى."
+
+#: auth.device.title
+msgid "auth.device.title"
+msgstr "تفويض CLI"
+
+#: auth.device.subtitle
+msgid "auth.device.subtitle"
+msgstr "أدخل الرمز المعروض في الطرفية لربط CLI بحسابك"
+
+#: auth.device.inputLabel
+msgid "auth.device.inputLabel"
+msgstr "أدخل الرمز"
+
+#: auth.device.placeholder
+msgid "auth.device.placeholder"
+msgstr "XXX-XXX-XXX"
+
+#: auth.device.authorize
+msgid "auth.device.authorize"
+msgstr "تفويض"
+
+#: auth.device.authorizing
+msgid "auth.device.authorizing"
+msgstr "جارٍ التفويض..."
+
+#: auth.device.success
+msgid "auth.device.success"
+msgstr "تم التفويض!"
+
+#: auth.device.successMessage
+msgid "auth.device.successMessage"
+msgstr "يمكنك الآن إغلاق هذه الصفحة والعودة إلى الطرفية."
+
+#: auth.device.error
+msgid "auth.device.error"
+msgstr "رمز غير صالح أو منتهي الصلاحية. يرجى التحقق من الطرفية والمحاولة مرة أخرى."
+
+#: auth.device.noCode
+msgid "auth.device.noCode"
+msgstr "ليس لديك رمز؟ شغّل"
+
+#: auth.device.cliCommand
+msgid "auth.device.cliCommand"
+msgstr "loom login"
+
+#: auth.device.inTerminal
+msgid "auth.device.inTerminal"
+msgstr "في الطرفية."
+
+#: settings.sessions.title
+msgid "settings.sessions.title"
+msgstr "الجلسات النشطة"
+
+#: settings.sessions.description
+msgid "settings.sessions.description"
+msgstr "إدارة جلساتك النشطة عبر الأجهزة"
+
+#: settings.sessions.current
+msgid "settings.sessions.current"
+msgstr "الجلسة الحالية"
+
+#: settings.sessions.lastUsed
+msgid "settings.sessions.lastUsed"
+msgstr "آخر استخدام"
+
+#: settings.sessions.createdAt
+msgid "settings.sessions.createdAt"
+msgstr "تاريخ الإنشاء"
+
+#: settings.sessions.revoke
+msgid "settings.sessions.revoke"
+msgstr "إلغاء"
+
+#: settings.sessions.revokeConfirm
+msgid "settings.sessions.revokeConfirm"
+msgstr "هل أنت متأكد من أنك تريد إلغاء هذه الجلسة؟"
+
+#: settings.sessions.noSessions
+msgid "settings.sessions.noSessions"
+msgstr "لا توجد جلسات نشطة"
+
+#: settings.sessions.web
+msgid "settings.sessions.web"
+msgstr "ويب"
+
+#: settings.sessions.cli
+msgid "settings.sessions.cli"
+msgstr "CLI"
+
+#: settings.sessions.vscode
+msgid "settings.sessions.vscode"
+msgstr "VS Code"
+
+#: settings.nav.sessions
+msgid "settings.nav.sessions"
+msgstr "الجلسات"
+
+#: settings.nav.profile
+msgid "settings.nav.profile"
+msgstr "الملف الشخصي"
+
+#: settings.nav.orgs
+msgid "settings.nav.orgs"
+msgstr "المنظمات"
+
+#: settings.profile.title
+msgid "settings.profile.title"
+msgstr "إعدادات الملف الشخصي"
+
+#: settings.profile.displayName
+msgid "settings.profile.displayName"
+msgstr "الاسم المعروض"
+
+#: settings.profile.email
+msgid "settings.profile.email"
+msgstr "البريد الإلكتروني"
+
+#: settings.profile.emailHint
+msgid "settings.profile.emailHint"
+msgstr "لا يمكن تغيير البريد الإلكتروني هنا"
+
+#: settings.profile.locale
+msgid "settings.profile.locale"
+msgstr "اللغة"
+
+#: settings.profile.save
+msgid "settings.profile.save"
+msgstr "حفظ التغييرات"
+
+#: settings.profile.saving
+msgid "settings.profile.saving"
+msgstr "جارٍ الحفظ..."
+
+#: settings.profile.saved
+msgid "settings.profile.saved"
+msgstr "تم تحديث الملف الشخصي بنجاح"
+
+#: settings.profile.error
+msgid "settings.profile.error"
+msgstr "فشل تحديث الملف الشخصي"
+
+#: orgs.title
+msgid "orgs.title"
+msgstr "المنظمات"
+
+#: orgs.description
+msgid "orgs.description"
+msgstr "إدارة منظماتك وفرقك"
+
+#: orgs.create
+msgid "orgs.create"
+msgstr "إنشاء منظمة"
+
+#: orgs.createTitle
+msgid "orgs.createTitle"
+msgstr "إنشاء منظمة جديدة"
+
+#: orgs.name
+msgid "orgs.name"
+msgstr "اسم المنظمة"
+
+#: orgs.slug
+msgid "orgs.slug"
+msgstr "معرف الرابط"
+
+#: orgs.slugHint
+msgid "orgs.slugHint"
+msgstr "يُستخدم في الروابط، أحرف صغيرة وشرطات فقط"
+
+#: orgs.visibility
+msgid "orgs.visibility"
+msgstr "الظهور"
+
+#: orgs.visibilityPublic
+msgid "orgs.visibilityPublic"
+msgstr "عامة"
+
+#: orgs.visibilityPrivate
+msgid "orgs.visibilityPrivate"
+msgstr "خاصة"
+
+#: orgs.joinPolicy
+msgid "orgs.joinPolicy"
+msgstr "سياسة الانضمام"
+
+#: orgs.joinPolicyOpen
+msgid "orgs.joinPolicyOpen"
+msgstr "مفتوحة"
+
+#: orgs.joinPolicyRequest
+msgid "orgs.joinPolicyRequest"
+msgstr "طلب الانضمام"
+
+#: orgs.joinPolicyInvite
+msgid "orgs.joinPolicyInvite"
+msgstr "بدعوة فقط"
+
+#: orgs.members
+msgid "orgs.members"
+msgstr "الأعضاء"
+
+#: orgs.teams
+msgid "orgs.teams"
+msgstr "الفرق"
+
+#: orgs.apiKeys
+msgid "orgs.apiKeys"
+msgstr "مفاتيح API"
+
+#: orgs.settings
+msgid "orgs.settings"
+msgstr "الإعدادات"
+
+#: orgs.noOrgs
+msgid "orgs.noOrgs"
+msgstr "لا توجد منظمات بعد"
+
+#: orgs.delete
+msgid "orgs.delete"
+msgstr "حذف المنظمة"
+
+#: orgs.deleteConfirm
+msgid "orgs.deleteConfirm"
+msgstr "هل أنت متأكد من حذف هذه المنظمة؟"
+
+#: settings.orgs.title
+msgid "settings.orgs.title"
+msgstr "المنظمات"
+
+#: settings.orgs.description
+msgid "settings.orgs.description"
+msgstr "إدارة منظماتك وعضويات الفريق"
+
+#: settings.orgs.create
+msgid "settings.orgs.create"
+msgstr "إنشاء منظمة"
+
+#: settings.orgs.noOrgs
+msgid "settings.orgs.noOrgs"
+msgstr "لا توجد منظمات بعد"
+
+#: settings.orgs.loadError
+msgid "settings.orgs.loadError"
+msgstr "فشل تحميل المنظمات"
+
+#: settings.orgs.personal
+msgid "settings.orgs.personal"
+msgstr "شخصية"
+
+#: settings.orgs.slug
+msgid "settings.orgs.slug"
+msgstr "المعرف"
+
+#: settings.orgs.member
+msgid "settings.orgs.member"
+msgstr "عضو"
+
+#: settings.orgs.members
+msgid "settings.orgs.members"
+msgstr "أعضاء"
+
+#: settings.orgs.visibility.public
+msgid "settings.orgs.visibility.public"
+msgstr "عامة"
+
+#: settings.orgs.visibility.unlisted
+msgid "settings.orgs.visibility.unlisted"
+msgstr "غير مدرجة"
+
+#: settings.orgs.visibility.private
+msgid "settings.orgs.visibility.private"
+msgstr "خاصة"
+
+#: settings.orgs.new.title
+msgid "settings.orgs.new.title"
+msgstr "إنشاء منظمة"
+
+#: settings.orgs.new.name
+msgid "settings.orgs.new.name"
+msgstr "اسم المنظمة"
+
+#: settings.orgs.new.namePlaceholder
+msgid "settings.orgs.new.namePlaceholder"
+msgstr "منظمتي"
+
+#: settings.orgs.new.slug
+msgid "settings.orgs.new.slug"
+msgstr "المعرف"
+
+#: settings.orgs.new.slugPlaceholder
+msgid "settings.orgs.new.slugPlaceholder"
+msgstr "my-organization"
+
+#: settings.orgs.new.slugHint
+msgid "settings.orgs.new.slugHint"
+msgstr "معرف آمن للرابط (أحرف صغيرة وأرقام وشرطات)"
+
+#: settings.orgs.new.visibility
+msgid "settings.orgs.new.visibility"
+msgstr "الظهور"
+
+#: settings.orgs.new.create
+msgid "settings.orgs.new.create"
+msgstr "إنشاء منظمة"
+
+#: settings.orgs.new.creating
+msgid "settings.orgs.new.creating"
+msgstr "جارٍ الإنشاء..."
+
+#: settings.orgs.new.error
+msgid "settings.orgs.new.error"
+msgstr "فشل إنشاء المنظمة"
+
+#: settings.orgs.new.requiredFields
+msgid "settings.orgs.new.requiredFields"
+msgstr "الاسم والمعرف مطلوبان"
+
+#: members.title
+msgid "members.title"
+msgstr "الأعضاء"
+
+#: members.add
+msgid "members.add"
+msgstr "إضافة عضو"
+
+#: members.remove
+msgid "members.remove"
+msgstr "إزالة"
+
+#: members.removeConfirm
+msgid "members.removeConfirm"
+msgstr "هل أنت متأكد من إزالة هذا العضو؟"
+
+#: members.role
+msgid "members.role"
+msgstr "الدور"
+
+#: members.roleOwner
+msgid "members.roleOwner"
+msgstr "مالك"
+
+#: members.roleAdmin
+msgid "members.roleAdmin"
+msgstr "مسؤول"
+
+#: members.roleMember
+msgid "members.roleMember"
+msgstr "عضو"
+
+#: members.changeRole
+msgid "members.changeRole"
+msgstr "تغيير الدور"
+
+#: members.noMembers
+msgid "members.noMembers"
+msgstr "لا يوجد أعضاء بعد"
+
+#: teams.title
+msgid "teams.title"
+msgstr "الفرق"
+
+#: teams.create
+msgid "teams.create"
+msgstr "إنشاء فريق"
+
+#: teams.createTitle
+msgid "teams.createTitle"
+msgstr "إنشاء فريق جديد"
+
+#: teams.name
+msgid "teams.name"
+msgstr "اسم الفريق"
+
+#: teams.slug
+msgid "teams.slug"
+msgstr "معرف الرابط"
+
+#: teams.members
+msgid "teams.members"
+msgstr "أعضاء الفريق"
+
+#: teams.addMember
+msgid "teams.addMember"
+msgstr "إضافة عضو"
+
+#: teams.removeMember
+msgid "teams.removeMember"
+msgstr "إزالة من الفريق"
+
+#: teams.noTeams
+msgid "teams.noTeams"
+msgstr "لا توجد فرق بعد"
+
+#: teams.delete
+msgid "teams.delete"
+msgstr "حذف الفريق"
+
+#: teams.deleteConfirm
+msgid "teams.deleteConfirm"
+msgstr "هل أنت متأكد من حذف هذا الفريق؟"
+
+#: teams.roleMaintainer
+msgid "teams.roleMaintainer"
+msgstr "مشرف"
+
+#: teams.roleMember
+msgid "teams.roleMember"
+msgstr "عضو"
+
+#: apiKeys.title
+msgid "apiKeys.title"
+msgstr "مفاتيح API"
+
+#: apiKeys.description
+msgid "apiKeys.description"
+msgstr "إدارة مفاتيح API للوصول البرمجي"
+
+#: apiKeys.create
+msgid "apiKeys.create"
+msgstr "إنشاء مفتاح API"
+
+#: apiKeys.createTitle
+msgid "apiKeys.createTitle"
+msgstr "إنشاء مفتاح API جديد"
+
+#: apiKeys.name
+msgid "apiKeys.name"
+msgstr "اسم المفتاح"
+
+#: apiKeys.nameHint
+msgid "apiKeys.nameHint"
+msgstr "اسم وصفي لهذا المفتاح"
+
+#: apiKeys.scopes
+msgid "apiKeys.scopes"
+msgstr "الصلاحيات"
+
+#: apiKeys.scopesHint
+msgid "apiKeys.scopesHint"
+msgstr "اختر الصلاحيات لهذا المفتاح"
+
+#: apiKeys.scopeThreadsRead
+msgid "apiKeys.scopeThreadsRead"
+msgstr "قراءة المحادثات"
+
+#: apiKeys.scopeThreadsWrite
+msgid "apiKeys.scopeThreadsWrite"
+msgstr "كتابة المحادثات"
+
+#: apiKeys.scopeLlmUse
+msgid "apiKeys.scopeLlmUse"
+msgstr "استخدام LLM"
+
+#: apiKeys.prefix
+msgid "apiKeys.prefix"
+msgstr "بادئة المفتاح"
+
+#: apiKeys.createdAt
+msgid "apiKeys.createdAt"
+msgstr "تاريخ الإنشاء"
+
+#: apiKeys.lastUsed
+msgid "apiKeys.lastUsed"
+msgstr "آخر استخدام"
+
+#: apiKeys.never
+msgid "apiKeys.never"
+msgstr "أبداً"
+
+#: apiKeys.revoke
+msgid "apiKeys.revoke"
+msgstr "إلغاء"
+
+#: apiKeys.revokeConfirm
+msgid "apiKeys.revokeConfirm"
+msgstr "هل أنت متأكد من إلغاء مفتاح API هذا؟"
+
+#: apiKeys.noKeys
+msgid "apiKeys.noKeys"
+msgstr "لا توجد مفاتيح API بعد"
+
+#: apiKeys.copyWarning
+msgid "apiKeys.copyWarning"
+msgstr "انسخ هذا المفتاح الآن. لن تتمكن من رؤيته مرة أخرى."
+
+#: apiKeys.copied
+msgid "apiKeys.copied"
+msgstr "تم النسخ إلى الحافظة"
+
+#: general.search
+msgid "general.search"
+msgstr "بحث"
+
+#: general.previous
+msgid "general.previous"
+msgstr "السابق"
+
+#: general.next
+msgid "general.next"
+msgstr "التالي"
+
+#: general.done
+msgid "general.done"
+msgstr "تم"
+
+#: general.refresh
+msgid "general.refresh"
+msgstr "تحديث"
+
+#: admin.users.title
+msgid "admin.users.title"
+msgstr "إدارة المستخدمين"
+
+#: admin.users.description
+msgid "admin.users.description"
+msgstr "عرض وإدارة المستخدمين عبر المنصة"
+
+#: admin.users.searchPlaceholder
+msgid "admin.users.searchPlaceholder"
+msgstr "البحث بالاسم أو البريد الإلكتروني..."
+
+#: admin.users.empty
+msgid "admin.users.empty"
+msgstr "لم يتم العثور على مستخدمين"
+
+#: admin.users.created
+msgid "admin.users.created"
+msgstr "تم الإنشاء"
+
+#: admin.users.lastLogin
+msgid "admin.users.lastLogin"
+msgstr "آخر تسجيل دخول"
+
+#: admin.users.impersonate
+msgid "admin.users.impersonate"
+msgstr "انتحال الشخصية"
+
+#: admin.impersonation.banner
+msgid "admin.impersonation.banner"
+msgstr "المسؤول {admin} ينتحل شخصية {user}"
+
+#: admin.impersonation.stop
+msgid "admin.impersonation.stop"
+msgstr "إيقاف الانتحال"
+
+#: nav.weavers
+msgid "nav.weavers"
+msgstr "الحائكون"
+
+#: weavers.title
+msgid "weavers.title"
+msgstr "الحائكون"
+
+#: weavers.description
+msgid "weavers.description"
+msgstr "إدارة بيئات التطوير المؤقتة"
+
+#: weavers.create
+msgid "weavers.create"
+msgstr "إنشاء حائك"
+
+#: weavers.createFirst
+msgid "weavers.createFirst"
+msgstr "أنشئ حائكك الأول"
+
+#: weavers.createTitle
+msgid "weavers.createTitle"
+msgstr "إنشاء حائك جديد"
+
+#: weavers.empty
+msgid "weavers.empty"
+msgstr "لا يوجد حائكون قيد التشغيل"
+
+#: weavers.delete
+msgid "weavers.delete"
+msgstr "حذف"
+
+#: weavers.deleteConfirm
+msgid "weavers.deleteConfirm"
+msgstr "هل أنت متأكد أنك تريد حذف هذا الحائك؟"
+
+#: weavers.image
+msgid "weavers.image"
+msgstr "الصورة"
+
+#: weavers.imageName
+msgid "weavers.imageName"
+msgstr "صورة الحاوية"
+
+#: weavers.created
+msgid "weavers.created"
+msgstr "تم الإنشاء"
+
+#: weavers.age
+msgid "weavers.age"
+msgstr "العمر"
+
+#: weavers.lifetime
+msgid "weavers.lifetime"
+msgstr "مدة الحياة"
+
+#: weavers.lifetimeLabel
+msgid "weavers.lifetimeLabel"
+msgstr "مدة الحياة (TTL)"
+
+#: weavers.workdir
+msgid "weavers.workdir"
+msgstr "دليل العمل"
+
+#: weavers.hour
+msgid "weavers.hour"
+msgstr "ساعة"
+
+#: weavers.hours
+msgid "weavers.hours"
+msgstr "ساعات"
+
+#: weavers.attach
+msgid "weavers.attach"
+msgstr "اتصال"
+
+#: weavers.backToList
+msgid "weavers.backToList"
+msgstr "العودة إلى الحائكين"
+
+#: weavers.notFound
+msgid "weavers.notFound"
+msgstr "الحائك غير موجود"
+
+#: weavers.logs
+msgid "weavers.logs"
+msgstr "السجلات"
+
+#: weavers.logsTitle
+msgid "weavers.logsTitle"
+msgstr "سجلات الحائك"
+
+#: weavers.logsConnecting
+msgid "weavers.logsConnecting"
+msgstr "جاري الاتصال بتدفق السجلات..."
+
+#: weavers.logsNoData
+msgid "weavers.logsNoData"
+msgstr "لا توجد سجلات متاحة بعد"
+
+#: weavers.logsError
+msgid "weavers.logsError"
+msgstr "فشل الاتصال بتدفق السجلات"
+
+#: weavers.logsClosed
+msgid "weavers.logsClosed"
+msgstr "تم إغلاق تدفق السجلات"
+
+#: weavers.creatingTitle
+msgid "weavers.creatingTitle"
+msgstr "جاري إنشاء الحائك"
+
+#: weavers.creatingProgress
+msgid "weavers.creatingProgress"
+msgstr "جاري تجهيز بيئة الحائك الخاصة بك..."
+
+#: weavers.creatingWait
+msgid "weavers.creatingWait"
+msgstr "في انتظار أن يصبح الحائك جاهزاً. سيتم إعادة توجيهك تلقائياً."
+
+#: weavers.createFailed
+msgid "weavers.createFailed"
+msgstr "فشل إنشاء الحائك"
+
+#: weavers.createTimeout
+msgid "weavers.createTimeout"
+msgstr "انتهت مهلة إنشاء الحائك"
+
+#: weavers.terminal.connected
+msgid "weavers.terminal.connected"
+msgstr "متصل"
+
+#: weavers.terminal.connecting
+msgid "weavers.terminal.connecting"
+msgstr "جاري الاتصال..."
+
+#: weavers.terminal.disconnected
+msgid "weavers.terminal.disconnected"
+msgstr "غير متصل"
+
+#: weavers.terminal.error
+msgid "weavers.terminal.error"
+msgstr "خطأ في الاتصال"
+
+#: weavers.terminal.reconnect
+msgid "weavers.terminal.reconnect"
+msgstr "إعادة الاتصال"
+
+#: weavers.terminal.pending
+msgid "weavers.terminal.pending"
+msgstr "الحائك قيد البدء..."
+
+#: weavers.terminal.pendingHint
+msgid "weavers.terminal.pendingHint"
+msgstr "سيكون الطرفية متاحة عندما يعمل الحائك"
+
+#: weavers.terminal.notRunning
+msgid "weavers.terminal.notRunning"
+msgstr "الحائك لا يعمل (الحالة: {status})"
+
+#: jobs.title
+msgid "jobs.title"
+msgstr "المهام الخلفية"
+
+#: jobs.description
+msgid "jobs.description"
+msgstr "مراقبة وإدارة المهام المجدولة في الخلفية"
+
+#: jobs.loading
+msgid "jobs.loading"
+msgstr "جاري تحميل المهام..."
+
+#: jobs.runNow
+msgid "jobs.runNow"
+msgstr "تشغيل الآن"
+
+#: jobs.running
+msgid "jobs.running"
+msgstr "قيد التشغيل..."
+
+#: jobs.history
+msgid "jobs.history"
+msgstr "السجل"
+
+#: jobs.hideHistory
+msgid "jobs.hideHistory"
+msgstr "إخفاء السجل"
+
+#: jobs.viewHistory
+msgid "jobs.viewHistory"
+msgstr "عرض السجل"
+
+#: jobs.noJobs
+msgid "jobs.noJobs"
+msgstr "لا توجد مهام خلفية مهيأة"
+
+#: jobs.never
+msgid "jobs.never"
+msgstr "لم يتم التشغيل مطلقاً"
+
+#: jobs.lastRun
+msgid "jobs.lastRun"
+msgstr "آخر تشغيل"
+
+#: jobs.duration
+msgid "jobs.duration"
+msgstr "المدة"
+
+#: jobs.interval
+msgid "jobs.interval"
+msgstr "الفاصل الزمني"
+
+#: jobs.type
+msgid "jobs.type"
+msgstr "النوع"
+
+#: jobs.failures
+msgid "jobs.failures"
+msgstr "{count} فشل متتالي"
+
+#: jobs.status.healthy
+msgid "jobs.status.healthy"
+msgstr "سليم"
+
+#: jobs.status.degraded
+msgid "jobs.status.degraded"
+msgstr "متدهور"
+
+#: jobs.status.unhealthy
+msgid "jobs.status.unhealthy"
+msgstr "غير سليم"
+
+#: jobs.status.succeeded
+msgid "jobs.status.succeeded"
+msgstr "نجح"
+
+#: jobs.status.failed
+msgid "jobs.status.failed"
+msgstr "فشل"
+
+#: jobs.status.running
+msgid "jobs.status.running"
+msgstr "قيد التشغيل"
+
+#: jobs.status.cancelled
+msgid "jobs.status.cancelled"
+msgstr "ملغى"
+
+#: jobs.trigger.schedule
+msgid "jobs.trigger.schedule"
+msgstr "مجدول"
+
+#: jobs.trigger.manual
+msgid "jobs.trigger.manual"
+msgstr "يدوي"
+
+#: jobs.trigger.retry
+msgid "jobs.trigger.retry"
+msgstr "إعادة المحاولة"
+
+#: jobs.history.title
+msgid "jobs.history.title"
+msgstr "سجل التشغيل"
+
+#: jobs.history.status
+msgid "jobs.history.status"
+msgstr "الحالة"
+
+#: jobs.history.started
+msgid "jobs.history.started"
+msgstr "بدأ"
+
+#: jobs.history.duration
+msgid "jobs.history.duration"
+msgstr "المدة"
+
+#: jobs.history.trigger
+msgid "jobs.history.trigger"
+msgstr "المشغّل"
+
+#: jobs.history.details
+msgid "jobs.history.details"
+msgstr "التفاصيل"
+
+#: jobs.history.loadMore
+msgid "jobs.history.loadMore"
+msgstr "تحميل المزيد"
+
+#: jobs.history.noRuns
+msgid "jobs.history.noRuns"
+msgstr "لا يوجد سجل تشغيل متاح"
+
+#: jobs.time.justNow
+msgid "jobs.time.justNow"
+msgstr "الآن"
+
+#: jobs.time.minutesAgo
+msgid "jobs.time.minutesAgo"
+msgstr "منذ {count} دقيقة"
+
+#: jobs.time.hoursAgo
+msgid "jobs.time.hoursAgo"
+msgstr "منذ {count} ساعات"
+
+#: jobs.time.daysAgo
+msgid "jobs.time.daysAgo"
+msgstr "منذ {count} أيام"

@@ -1,0 +1,996 @@
+# Translation catalog for Loom Web
+# Language: id
+#
+msgid ""
+msgstr ""
+"Language: id\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: nav.threads
+msgid "nav.threads"
+msgstr "Thread"
+
+#: nav.settings
+msgid "nav.settings"
+msgstr "Pengaturan"
+
+#: nav.admin
+msgid "nav.admin"
+msgstr "Admin"
+
+#: nav.jobs
+msgid "nav.jobs"
+msgstr "Pekerjaan"
+
+#: thread.new
+msgid "thread.new"
+msgstr "Thread Baru"
+
+#: thread.delete
+msgid "thread.delete"
+msgstr "Hapus"
+
+#: thread.search
+msgid "thread.search"
+msgstr "Cari thread..."
+
+#: thread.noThreads
+msgid "thread.noThreads"
+msgstr "Belum ada thread"
+
+#: thread.loadError
+msgid "thread.loadError"
+msgstr "Gagal memuat thread"
+
+#: state.waiting_for_user_input
+msgid "state.waiting_for_user_input"
+msgstr "Menunggu input"
+
+#: state.calling_llm
+msgid "state.calling_llm"
+msgstr "Memanggil LLM"
+
+#: state.processing_llm_response
+msgid "state.processing_llm_response"
+msgstr "Memproses respons"
+
+#: state.executing_tools
+msgid "state.executing_tools"
+msgstr "Menjalankan tools"
+
+#: state.post_tools_hook
+msgid "state.post_tools_hook"
+msgstr "Pasca-pemrosesan"
+
+#: state.error
+msgid "state.error"
+msgstr "Kesalahan"
+
+#: state.shutting_down
+msgid "state.shutting_down"
+msgstr "Mematikan"
+
+#: tool.pending
+msgid "tool.pending"
+msgstr "Menunggu"
+
+#: tool.running
+msgid "tool.running"
+msgstr "Berjalan"
+
+#: tool.completed
+msgid "tool.completed"
+msgstr "Selesai"
+
+#: tool.failed
+msgid "tool.failed"
+msgstr "Gagal"
+
+#: connection.connected
+msgid "connection.connected"
+msgstr "Terhubung"
+
+#: connection.disconnected
+msgid "connection.disconnected"
+msgstr "Terputus"
+
+#: connection.connecting
+msgid "connection.connecting"
+msgstr "Menghubungkan..."
+
+#: connection.reconnecting
+msgid "connection.reconnecting"
+msgstr "Menghubungkan ulang..."
+
+#: connection.error
+msgid "connection.error"
+msgstr "Kesalahan koneksi"
+
+#: connection.clickToReconnect
+msgid "connection.clickToReconnect"
+msgstr "Klik untuk menghubungkan ulang"
+
+#: connection.attempt
+msgid "connection.attempt"
+msgstr "Percobaan {count}"
+
+#: message.placeholder
+msgid "message.placeholder"
+msgstr "Ketik pesan..."
+
+#: message.send
+msgid "message.send"
+msgstr "Kirim"
+
+#: auth.signOut
+msgid "auth.signOut"
+msgstr "Keluar"
+
+#: auth.dashboard.welcome
+msgid "auth.dashboard.welcome"
+msgstr "Selamat datang,"
+
+#: auth.dashboard.protectedPage
+msgid "auth.dashboard.protectedPage"
+msgstr "Ini adalah halaman terlindungi. Anda harus masuk untuk melihat ini."
+
+#: general.loading
+msgid "general.loading"
+msgstr "Memuat..."
+
+#: general.error
+msgid "general.error"
+msgstr "Terjadi kesalahan"
+
+#: general.retry
+msgid "general.retry"
+msgstr "Coba lagi"
+
+#: general.cancel
+msgid "general.cancel"
+msgstr "Batal"
+
+#: general.save
+msgid "general.save"
+msgstr "Simpan"
+
+#: general.close
+msgid "general.close"
+msgstr "Tutup"
+
+#: auth.login.title
+msgid "auth.login.title"
+msgstr "Masuk ke Loom"
+
+#: auth.login.subtitle
+msgid "auth.login.subtitle"
+msgstr "Pilih metode masuk yang Anda inginkan"
+
+#: auth.login.github
+msgid "auth.login.github"
+msgstr "Lanjutkan dengan GitHub"
+
+#: auth.login.google
+msgid "auth.login.google"
+msgstr "Lanjutkan dengan Google"
+
+#: auth.login.or
+msgid "auth.login.or"
+msgstr "atau"
+
+#: auth.login.emailLabel
+msgid "auth.login.emailLabel"
+msgstr "Alamat email"
+
+#: auth.login.emailPlaceholder
+msgid "auth.login.emailPlaceholder"
+msgstr "anda@contoh.com"
+
+#: auth.login.sendMagicLink
+msgid "auth.login.sendMagicLink"
+msgstr "Kirim tautan ajaib"
+
+#: auth.login.sending
+msgid "auth.login.sending"
+msgstr "Mengirim..."
+
+#: auth.login.checkEmail
+msgid "auth.login.checkEmail"
+msgstr "Periksa email Anda"
+
+#: auth.login.magicLinkSent
+msgid "auth.login.magicLinkSent"
+msgstr "Kami mengirim tautan masuk ke"
+
+#: auth.login.useDifferentEmail
+msgid "auth.login.useDifferentEmail"
+msgstr "Gunakan email lain"
+
+#: auth.login.error
+msgid "auth.login.error"
+msgstr "Tidak dapat mengirim tautan ajaib. Silakan coba lagi."
+
+#: auth.device.title
+msgid "auth.device.title"
+msgstr "Otorisasi CLI"
+
+#: auth.device.subtitle
+msgid "auth.device.subtitle"
+msgstr "Masukkan kode yang ditampilkan di terminal Anda untuk menghubungkan CLI dengan akun Anda"
+
+#: auth.device.inputLabel
+msgid "auth.device.inputLabel"
+msgstr "Masukkan kode Anda"
+
+#: auth.device.placeholder
+msgid "auth.device.placeholder"
+msgstr "XXX-XXX-XXX"
+
+#: auth.device.authorize
+msgid "auth.device.authorize"
+msgstr "Otorisasi"
+
+#: auth.device.authorizing
+msgid "auth.device.authorizing"
+msgstr "Mengotorisasi..."
+
+#: auth.device.success
+msgid "auth.device.success"
+msgstr "Terotorisasi!"
+
+#: auth.device.successMessage
+msgid "auth.device.successMessage"
+msgstr "Anda sekarang dapat menutup halaman ini dan kembali ke terminal Anda."
+
+#: auth.device.error
+msgid "auth.device.error"
+msgstr "Kode tidak valid atau kedaluwarsa. Silakan periksa terminal Anda dan coba lagi."
+
+#: auth.device.noCode
+msgid "auth.device.noCode"
+msgstr "Tidak punya kode? Jalankan"
+
+#: auth.device.cliCommand
+msgid "auth.device.cliCommand"
+msgstr "loom login"
+
+#: auth.device.inTerminal
+msgid "auth.device.inTerminal"
+msgstr "di terminal Anda."
+
+#: settings.sessions.title
+msgid "settings.sessions.title"
+msgstr "Sesi Aktif"
+
+#: settings.sessions.description
+msgid "settings.sessions.description"
+msgstr "Kelola sesi aktif Anda di berbagai perangkat"
+
+#: settings.sessions.current
+msgid "settings.sessions.current"
+msgstr "Sesi saat ini"
+
+#: settings.sessions.lastUsed
+msgid "settings.sessions.lastUsed"
+msgstr "Terakhir digunakan"
+
+#: settings.sessions.createdAt
+msgid "settings.sessions.createdAt"
+msgstr "Dibuat"
+
+#: settings.sessions.revoke
+msgid "settings.sessions.revoke"
+msgstr "Cabut"
+
+#: settings.sessions.revokeConfirm
+msgid "settings.sessions.revokeConfirm"
+msgstr "Apakah Anda yakin ingin mencabut sesi ini?"
+
+#: settings.sessions.noSessions
+msgid "settings.sessions.noSessions"
+msgstr "Tidak ada sesi aktif"
+
+#: settings.sessions.web
+msgid "settings.sessions.web"
+msgstr "Web"
+
+#: settings.sessions.cli
+msgid "settings.sessions.cli"
+msgstr "CLI"
+
+#: settings.sessions.vscode
+msgid "settings.sessions.vscode"
+msgstr "VS Code"
+
+#: settings.nav.sessions
+msgid "settings.nav.sessions"
+msgstr "Sesi"
+
+#: settings.nav.profile
+msgid "settings.nav.profile"
+msgstr "Profil"
+
+#: settings.nav.orgs
+msgid "settings.nav.orgs"
+msgstr "Organisasi"
+
+#: settings.profile.title
+msgid "settings.profile.title"
+msgstr "Pengaturan Profil"
+
+#: settings.profile.displayName
+msgid "settings.profile.displayName"
+msgstr "Nama Tampilan"
+
+#: settings.profile.email
+msgid "settings.profile.email"
+msgstr "Email"
+
+#: settings.profile.emailHint
+msgid "settings.profile.emailHint"
+msgstr "Email tidak dapat diubah di sini"
+
+#: settings.profile.locale
+msgid "settings.profile.locale"
+msgstr "Bahasa"
+
+#: settings.profile.save
+msgid "settings.profile.save"
+msgstr "Simpan Perubahan"
+
+#: settings.profile.saving
+msgid "settings.profile.saving"
+msgstr "Menyimpan..."
+
+#: settings.profile.saved
+msgid "settings.profile.saved"
+msgstr "Profil berhasil diperbarui"
+
+#: settings.profile.error
+msgid "settings.profile.error"
+msgstr "Gagal memperbarui profil"
+
+#: orgs.title
+msgid "orgs.title"
+msgstr "Organisasi"
+
+#: orgs.description
+msgid "orgs.description"
+msgstr "Kelola organisasi dan tim Anda"
+
+#: orgs.create
+msgid "orgs.create"
+msgstr "Buat Organisasi"
+
+#: orgs.createTitle
+msgid "orgs.createTitle"
+msgstr "Buat Organisasi Baru"
+
+#: orgs.name
+msgid "orgs.name"
+msgstr "Nama Organisasi"
+
+#: orgs.slug
+msgid "orgs.slug"
+msgstr "Slug URL"
+
+#: orgs.slugHint
+msgid "orgs.slugHint"
+msgstr "Digunakan dalam URL, hanya huruf kecil dan tanda hubung"
+
+#: orgs.visibility
+msgid "orgs.visibility"
+msgstr "Visibilitas"
+
+#: orgs.visibilityPublic
+msgid "orgs.visibilityPublic"
+msgstr "Publik"
+
+#: orgs.visibilityPrivate
+msgid "orgs.visibilityPrivate"
+msgstr "Privat"
+
+#: orgs.joinPolicy
+msgid "orgs.joinPolicy"
+msgstr "Kebijakan Bergabung"
+
+#: orgs.joinPolicyOpen
+msgid "orgs.joinPolicyOpen"
+msgstr "Terbuka"
+
+#: orgs.joinPolicyRequest
+msgid "orgs.joinPolicyRequest"
+msgstr "Minta Bergabung"
+
+#: orgs.joinPolicyInvite
+msgid "orgs.joinPolicyInvite"
+msgstr "Hanya Undangan"
+
+#: orgs.members
+msgid "orgs.members"
+msgstr "Anggota"
+
+#: orgs.teams
+msgid "orgs.teams"
+msgstr "Tim"
+
+#: orgs.apiKeys
+msgid "orgs.apiKeys"
+msgstr "Kunci API"
+
+#: orgs.settings
+msgid "orgs.settings"
+msgstr "Pengaturan"
+
+#: orgs.noOrgs
+msgid "orgs.noOrgs"
+msgstr "Belum ada organisasi"
+
+#: orgs.delete
+msgid "orgs.delete"
+msgstr "Hapus Organisasi"
+
+#: orgs.deleteConfirm
+msgid "orgs.deleteConfirm"
+msgstr "Apakah Anda yakin ingin menghapus organisasi ini?"
+
+#: settings.orgs.title
+msgid "settings.orgs.title"
+msgstr "Organisasi"
+
+#: settings.orgs.description
+msgid "settings.orgs.description"
+msgstr "Kelola organisasi dan keanggotaan tim Anda"
+
+#: settings.orgs.create
+msgid "settings.orgs.create"
+msgstr "Buat Organisasi"
+
+#: settings.orgs.noOrgs
+msgid "settings.orgs.noOrgs"
+msgstr "Belum ada organisasi"
+
+#: settings.orgs.loadError
+msgid "settings.orgs.loadError"
+msgstr "Gagal memuat organisasi"
+
+#: settings.orgs.personal
+msgid "settings.orgs.personal"
+msgstr "Personal"
+
+#: settings.orgs.slug
+msgid "settings.orgs.slug"
+msgstr "Slug"
+
+#: settings.orgs.member
+msgid "settings.orgs.member"
+msgstr "anggota"
+
+#: settings.orgs.members
+msgid "settings.orgs.members"
+msgstr "anggota"
+
+#: settings.orgs.visibility.public
+msgid "settings.orgs.visibility.public"
+msgstr "Publik"
+
+#: settings.orgs.visibility.unlisted
+msgid "settings.orgs.visibility.unlisted"
+msgstr "Tidak Terdaftar"
+
+#: settings.orgs.visibility.private
+msgid "settings.orgs.visibility.private"
+msgstr "Privat"
+
+#: settings.orgs.new.title
+msgid "settings.orgs.new.title"
+msgstr "Buat Organisasi"
+
+#: settings.orgs.new.name
+msgid "settings.orgs.new.name"
+msgstr "Nama Organisasi"
+
+#: settings.orgs.new.namePlaceholder
+msgid "settings.orgs.new.namePlaceholder"
+msgstr "Organisasi Saya"
+
+#: settings.orgs.new.slug
+msgid "settings.orgs.new.slug"
+msgstr "Slug"
+
+#: settings.orgs.new.slugPlaceholder
+msgid "settings.orgs.new.slugPlaceholder"
+msgstr "organisasi-saya"
+
+#: settings.orgs.new.slugHint
+msgid "settings.orgs.new.slugHint"
+msgstr "Pengenal aman URL (huruf kecil, angka, dan tanda hubung)"
+
+#: settings.orgs.new.visibility
+msgid "settings.orgs.new.visibility"
+msgstr "Visibilitas"
+
+#: settings.orgs.new.create
+msgid "settings.orgs.new.create"
+msgstr "Buat Organisasi"
+
+#: settings.orgs.new.creating
+msgid "settings.orgs.new.creating"
+msgstr "Membuat..."
+
+#: settings.orgs.new.error
+msgid "settings.orgs.new.error"
+msgstr "Gagal membuat organisasi"
+
+#: settings.orgs.new.requiredFields
+msgid "settings.orgs.new.requiredFields"
+msgstr "Nama dan slug wajib diisi"
+
+#: members.title
+msgid "members.title"
+msgstr "Anggota"
+
+#: members.add
+msgid "members.add"
+msgstr "Tambah Anggota"
+
+#: members.remove
+msgid "members.remove"
+msgstr "Hapus"
+
+#: members.removeConfirm
+msgid "members.removeConfirm"
+msgstr "Apakah Anda yakin ingin menghapus anggota ini?"
+
+#: members.role
+msgid "members.role"
+msgstr "Peran"
+
+#: members.roleOwner
+msgid "members.roleOwner"
+msgstr "Pemilik"
+
+#: members.roleAdmin
+msgid "members.roleAdmin"
+msgstr "Admin"
+
+#: members.roleMember
+msgid "members.roleMember"
+msgstr "Anggota"
+
+#: members.changeRole
+msgid "members.changeRole"
+msgstr "Ubah Peran"
+
+#: members.noMembers
+msgid "members.noMembers"
+msgstr "Belum ada anggota"
+
+#: teams.title
+msgid "teams.title"
+msgstr "Tim"
+
+#: teams.create
+msgid "teams.create"
+msgstr "Buat Tim"
+
+#: teams.createTitle
+msgid "teams.createTitle"
+msgstr "Buat Tim Baru"
+
+#: teams.name
+msgid "teams.name"
+msgstr "Nama Tim"
+
+#: teams.slug
+msgid "teams.slug"
+msgstr "Slug URL"
+
+#: teams.members
+msgid "teams.members"
+msgstr "Anggota Tim"
+
+#: teams.addMember
+msgid "teams.addMember"
+msgstr "Tambah Anggota"
+
+#: teams.removeMember
+msgid "teams.removeMember"
+msgstr "Hapus"
+
+#: teams.removeMemberConfirm
+msgid "teams.removeMemberConfirm"
+msgstr "Apakah Anda yakin ingin menghapus anggota ini dari tim?"
+
+#: teams.noTeams
+msgid "teams.noTeams"
+msgstr "Belum ada tim"
+
+#: teams.noMembers
+msgid "teams.noMembers"
+msgstr "Tidak ada anggota di tim ini"
+
+#: teams.delete
+msgid "teams.delete"
+msgstr "Hapus Tim"
+
+#: teams.deleteConfirm
+msgid "teams.deleteConfirm"
+msgstr "Apakah Anda yakin ingin menghapus tim ini?"
+
+#: teams.roleMaintainer
+msgid "teams.roleMaintainer"
+msgstr "Pengelola"
+
+#: teams.roleMember
+msgid "teams.roleMember"
+msgstr "Anggota"
+
+#: teams.role.maintainer
+msgid "teams.role.maintainer"
+msgstr "Pengelola"
+
+#: teams.role.member
+msgid "teams.role.member"
+msgstr "Anggota"
+
+#: teams.backToOrg
+msgid "teams.backToOrg"
+msgstr "Kembali ke organisasi"
+
+#: teams.changeRole
+msgid "teams.changeRole"
+msgstr "Ubah peran"
+
+#: teams.settings
+msgid "teams.settings"
+msgstr "Pengaturan Tim"
+
+#: teams.teamName
+msgid "teams.teamName"
+msgstr "Nama Tim"
+
+#: teams.save
+msgid "teams.save"
+msgstr "Simpan Perubahan"
+
+#: teams.saving
+msgid "teams.saving"
+msgstr "Menyimpan..."
+
+#: teams.saved
+msgid "teams.saved"
+msgstr "Tim berhasil diperbarui"
+
+#: teams.deleteTeam
+msgid "teams.deleteTeam"
+msgstr "Hapus Tim"
+
+#: teams.deleteTeamConfirm
+msgid "teams.deleteTeamConfirm"
+msgstr "Apakah Anda yakin ingin menghapus tim ini? Tindakan ini tidak dapat dibatalkan."
+
+#: teams.deleteTeamWarning
+msgid "teams.deleteTeamWarning"
+msgstr "Ini akan menghapus tim secara permanen dan menghapus semua anggota."
+
+#: teams.deleting
+msgid "teams.deleting"
+msgstr "Menghapus..."
+
+#: teams.selectMember
+msgid "teams.selectMember"
+msgstr "Pilih anggota untuk ditambahkan"
+
+#: teams.selectRole
+msgid "teams.selectRole"
+msgstr "Pilih peran"
+
+#: teams.adding
+msgid "teams.adding"
+msgstr "Menambahkan..."
+
+#: teams.add
+msgid "teams.add"
+msgstr "Tambah"
+
+#: teams.noAvailableMembers
+msgid "teams.noAvailableMembers"
+msgstr "Tidak ada anggota organisasi yang tersedia untuk ditambahkan"
+
+#: apiKeys.title
+msgid "apiKeys.title"
+msgstr "Kunci API"
+
+#: apiKeys.description
+msgid "apiKeys.description"
+msgstr "Kelola kunci API untuk akses programatik"
+
+#: apiKeys.create
+msgid "apiKeys.create"
+msgstr "Buat Kunci API"
+
+#: apiKeys.createTitle
+msgid "apiKeys.createTitle"
+msgstr "Buat Kunci API Baru"
+
+#: apiKeys.name
+msgid "apiKeys.name"
+msgstr "Nama Kunci"
+
+#: apiKeys.nameHint
+msgid "apiKeys.nameHint"
+msgstr "Nama deskriptif untuk kunci ini"
+
+#: apiKeys.scopes
+msgid "apiKeys.scopes"
+msgstr "Lingkup"
+
+#: apiKeys.scopesHint
+msgid "apiKeys.scopesHint"
+msgstr "Pilih izin untuk kunci ini"
+
+#: apiKeys.scopeThreadsRead
+msgid "apiKeys.scopeThreadsRead"
+msgstr "Baca Thread"
+
+#: apiKeys.scopeThreadsWrite
+msgid "apiKeys.scopeThreadsWrite"
+msgstr "Tulis Thread"
+
+#: apiKeys.scopeLlmUse
+msgid "apiKeys.scopeLlmUse"
+msgstr "Gunakan LLM"
+
+#: apiKeys.prefix
+msgid "apiKeys.prefix"
+msgstr "Awalan Kunci"
+
+#: apiKeys.createdAt
+msgid "apiKeys.createdAt"
+msgstr "Dibuat"
+
+#: apiKeys.lastUsed
+msgid "apiKeys.lastUsed"
+msgstr "Terakhir Digunakan"
+
+#: apiKeys.never
+msgid "apiKeys.never"
+msgstr "Tidak pernah"
+
+#: apiKeys.revoke
+msgid "apiKeys.revoke"
+msgstr "Cabut"
+
+#: apiKeys.revokeConfirm
+msgid "apiKeys.revokeConfirm"
+msgstr "Apakah Anda yakin ingin mencabut kunci API ini?"
+
+#: apiKeys.noKeys
+msgid "apiKeys.noKeys"
+msgstr "Belum ada kunci API"
+
+#: apiKeys.copyWarning
+msgid "apiKeys.copyWarning"
+msgstr "Salin kunci ini sekarang. Anda tidak akan bisa melihatnya lagi."
+
+#: apiKeys.copied
+msgid "apiKeys.copied"
+msgstr "Disalin ke clipboard"
+
+#: general.search
+msgid "general.search"
+msgstr "Search"
+
+#: general.previous
+msgid "general.previous"
+msgstr "Previous"
+
+#: general.next
+msgid "general.next"
+msgstr "Next"
+
+#: general.done
+msgid "general.done"
+msgstr "Done"
+
+#: general.refresh
+msgid "general.refresh"
+msgstr "Refresh"
+
+#: admin.users.title
+msgid "admin.users.title"
+msgstr "User Management"
+
+#: admin.users.description
+msgid "admin.users.description"
+msgstr "View and manage users across the platform"
+
+#: admin.users.searchPlaceholder
+msgid "admin.users.searchPlaceholder"
+msgstr "Search by name or email..."
+
+#: admin.users.empty
+msgid "admin.users.empty"
+msgstr "No users found"
+
+#: admin.users.created
+msgid "admin.users.created"
+msgstr "Created"
+
+#: admin.users.lastLogin
+msgid "admin.users.lastLogin"
+msgstr "Last login"
+
+#: admin.users.impersonate
+msgid "admin.users.impersonate"
+msgstr "Impersonate"
+
+#: admin.impersonation.banner
+msgid "admin.impersonation.banner"
+msgstr "Admin {admin} impersonating {user}"
+
+#: admin.impersonation.stop
+msgid "admin.impersonation.stop"
+msgstr "Stop Impersonating"
+
+#: nav.weavers
+msgid "nav.weavers"
+msgstr "Weavers"
+
+#: weavers.title
+msgid "weavers.title"
+msgstr "Weavers"
+
+#: weavers.description
+msgid "weavers.description"
+msgstr "Manage ephemeral development environments"
+
+#: weavers.create
+msgid "weavers.create"
+msgstr "Create Weaver"
+
+#: weavers.createFirst
+msgid "weavers.createFirst"
+msgstr "Create your first weaver"
+
+#: weavers.createTitle
+msgid "weavers.createTitle"
+msgstr "Create New Weaver"
+
+#: weavers.empty
+msgid "weavers.empty"
+msgstr "No weavers running"
+
+#: weavers.delete
+msgid "weavers.delete"
+msgstr "Delete"
+
+#: weavers.deleteConfirm
+msgid "weavers.deleteConfirm"
+msgstr "Are you sure you want to delete this weaver?"
+
+#: weavers.image
+msgid "weavers.image"
+msgstr "Image"
+
+#: weavers.imageName
+msgid "weavers.imageName"
+msgstr "Container Image"
+
+#: weavers.created
+msgid "weavers.created"
+msgstr "Created"
+
+#: weavers.age
+msgid "weavers.age"
+msgstr "Age"
+
+#: weavers.lifetime
+msgid "weavers.lifetime"
+msgstr "Lifetime"
+
+#: weavers.lifetimeLabel
+msgid "weavers.lifetimeLabel"
+msgstr "Lifetime (TTL)"
+
+#: weavers.workdir
+msgid "weavers.workdir"
+msgstr "Working Directory"
+
+#: weavers.hour
+msgid "weavers.hour"
+msgstr "hour"
+
+#: weavers.hours
+msgid "weavers.hours"
+msgstr "hours"
+
+#: weavers.attach
+msgid "weavers.attach"
+msgstr "Attach"
+
+#: weavers.backToList
+msgid "weavers.backToList"
+msgstr "Back to Weavers"
+
+#: weavers.notFound
+msgid "weavers.notFound"
+msgstr "Weaver not found"
+
+#: weavers.logs
+msgid "weavers.logs"
+msgstr "Logs"
+
+#: weavers.logsTitle
+msgid "weavers.logsTitle"
+msgstr "Weaver Logs"
+
+#: weavers.logsConnecting
+msgid "weavers.logsConnecting"
+msgstr "Connecting to log stream..."
+
+#: weavers.logsNoData
+msgid "weavers.logsNoData"
+msgstr "No logs available yet"
+
+#: weavers.logsError
+msgid "weavers.logsError"
+msgstr "Failed to connect to log stream"
+
+#: weavers.logsClosed
+msgid "weavers.logsClosed"
+msgstr "Log stream closed"
+
+#: weavers.creatingTitle
+msgid "weavers.creatingTitle"
+msgstr "Creating Weaver"
+
+#: weavers.creatingProgress
+msgid "weavers.creatingProgress"
+msgstr "Provisioning your weaver environment..."
+
+#: weavers.creatingWait
+msgid "weavers.creatingWait"
+msgstr "Waiting for weaver to become ready. You will be redirected automatically."
+
+#: weavers.createFailed
+msgid "weavers.createFailed"
+msgstr "Weaver creation failed"
+
+#: weavers.createTimeout
+msgid "weavers.createTimeout"
+msgstr "Weaver creation timed out"
+
+#: weavers.terminal.connected
+msgid "weavers.terminal.connected"
+msgstr "Connected"
+
+#: weavers.terminal.connecting
+msgid "weavers.terminal.connecting"
+msgstr "Connecting..."
+
+#: weavers.terminal.disconnected
+msgid "weavers.terminal.disconnected"
+msgstr "Disconnected"
+
+#: weavers.terminal.error
+msgid "weavers.terminal.error"
+msgstr "Connection error"
+
+#: weavers.terminal.reconnect
+msgid "weavers.terminal.reconnect"
+msgstr "Reconnect"
+
+#: weavers.terminal.pending
+msgid "weavers.terminal.pending"
+msgstr "Weaver is starting..."
+
+#: weavers.terminal.pendingHint
+msgid "weavers.terminal.pendingHint"
+msgstr "The terminal will be available once the weaver is running"
+
+#: weavers.terminal.notRunning
+msgid "weavers.terminal.notRunning"
+msgstr "Weaver is not running (status: {status})"

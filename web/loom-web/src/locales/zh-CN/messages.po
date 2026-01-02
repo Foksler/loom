@@ -1,0 +1,996 @@
+# Translation catalog for Loom Web
+# Language: zh-CN
+#
+msgid ""
+msgstr ""
+"Language: zh-CN\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: nav.threads
+msgid "nav.threads"
+msgstr "会话"
+
+#: nav.settings
+msgid "nav.settings"
+msgstr "设置"
+
+#: nav.admin
+msgid "nav.admin"
+msgstr "管理"
+
+#: nav.jobs
+msgid "nav.jobs"
+msgstr "作业"
+
+#: thread.new
+msgid "thread.new"
+msgstr "新建会话"
+
+#: thread.delete
+msgid "thread.delete"
+msgstr "删除"
+
+#: thread.search
+msgid "thread.search"
+msgstr "搜索会话..."
+
+#: thread.noThreads
+msgid "thread.noThreads"
+msgstr "暂无会话"
+
+#: thread.loadError
+msgid "thread.loadError"
+msgstr "加载会话失败"
+
+#: state.waiting_for_user_input
+msgid "state.waiting_for_user_input"
+msgstr "等待输入"
+
+#: state.calling_llm
+msgid "state.calling_llm"
+msgstr "调用 LLM"
+
+#: state.processing_llm_response
+msgid "state.processing_llm_response"
+msgstr "处理响应"
+
+#: state.executing_tools
+msgid "state.executing_tools"
+msgstr "执行工具"
+
+#: state.post_tools_hook
+msgid "state.post_tools_hook"
+msgstr "后处理"
+
+#: state.error
+msgid "state.error"
+msgstr "错误"
+
+#: state.shutting_down
+msgid "state.shutting_down"
+msgstr "正在关闭"
+
+#: tool.pending
+msgid "tool.pending"
+msgstr "待处理"
+
+#: tool.running
+msgid "tool.running"
+msgstr "运行中"
+
+#: tool.completed
+msgid "tool.completed"
+msgstr "已完成"
+
+#: tool.failed
+msgid "tool.failed"
+msgstr "失败"
+
+#: connection.connected
+msgid "connection.connected"
+msgstr "已连接"
+
+#: connection.disconnected
+msgid "connection.disconnected"
+msgstr "已断开"
+
+#: connection.connecting
+msgid "connection.connecting"
+msgstr "连接中..."
+
+#: connection.reconnecting
+msgid "connection.reconnecting"
+msgstr "重新连接中..."
+
+#: connection.error
+msgid "connection.error"
+msgstr "连接错误"
+
+#: connection.clickToReconnect
+msgid "connection.clickToReconnect"
+msgstr "点击重新连接"
+
+#: connection.attempt
+msgid "connection.attempt"
+msgstr "第 {count} 次尝试"
+
+#: message.placeholder
+msgid "message.placeholder"
+msgstr "输入消息..."
+
+#: message.send
+msgid "message.send"
+msgstr "发送"
+
+#: auth.signOut
+msgid "auth.signOut"
+msgstr "退出登录"
+
+#: auth.dashboard.welcome
+msgid "auth.dashboard.welcome"
+msgstr "欢迎，"
+
+#: auth.dashboard.protectedPage
+msgid "auth.dashboard.protectedPage"
+msgstr "这是受保护的页面。您必须登录才能查看。"
+
+#: general.loading
+msgid "general.loading"
+msgstr "加载中..."
+
+#: general.error
+msgid "general.error"
+msgstr "发生错误"
+
+#: general.retry
+msgid "general.retry"
+msgstr "重试"
+
+#: general.cancel
+msgid "general.cancel"
+msgstr "取消"
+
+#: general.save
+msgid "general.save"
+msgstr "保存"
+
+#: general.close
+msgid "general.close"
+msgstr "关闭"
+
+#: auth.login.title
+msgid "auth.login.title"
+msgstr "登录 Loom"
+
+#: auth.login.subtitle
+msgid "auth.login.subtitle"
+msgstr "选择您的登录方式"
+
+#: auth.login.github
+msgid "auth.login.github"
+msgstr "使用 GitHub 继续"
+
+#: auth.login.google
+msgid "auth.login.google"
+msgstr "使用 Google 继续"
+
+#: auth.login.or
+msgid "auth.login.or"
+msgstr "或"
+
+#: auth.login.emailLabel
+msgid "auth.login.emailLabel"
+msgstr "邮箱地址"
+
+#: auth.login.emailPlaceholder
+msgid "auth.login.emailPlaceholder"
+msgstr "you@example.com"
+
+#: auth.login.sendMagicLink
+msgid "auth.login.sendMagicLink"
+msgstr "发送魔法链接"
+
+#: auth.login.sending
+msgid "auth.login.sending"
+msgstr "发送中..."
+
+#: auth.login.checkEmail
+msgid "auth.login.checkEmail"
+msgstr "请查看您的邮箱"
+
+#: auth.login.magicLinkSent
+msgid "auth.login.magicLinkSent"
+msgstr "我们已向以下邮箱发送登录链接"
+
+#: auth.login.useDifferentEmail
+msgid "auth.login.useDifferentEmail"
+msgstr "使用其他邮箱"
+
+#: auth.login.error
+msgid "auth.login.error"
+msgstr "无法发送魔法链接，请重试。"
+
+#: auth.device.title
+msgid "auth.device.title"
+msgstr "授权 CLI"
+
+#: auth.device.subtitle
+msgid "auth.device.subtitle"
+msgstr "输入终端中显示的代码以将 CLI 与您的账户关联"
+
+#: auth.device.inputLabel
+msgid "auth.device.inputLabel"
+msgstr "输入代码"
+
+#: auth.device.placeholder
+msgid "auth.device.placeholder"
+msgstr "XXX-XXX-XXX"
+
+#: auth.device.authorize
+msgid "auth.device.authorize"
+msgstr "授权"
+
+#: auth.device.authorizing
+msgid "auth.device.authorizing"
+msgstr "授权中..."
+
+#: auth.device.success
+msgid "auth.device.success"
+msgstr "授权成功！"
+
+#: auth.device.successMessage
+msgid "auth.device.successMessage"
+msgstr "您现在可以关闭此页面并返回终端。"
+
+#: auth.device.error
+msgid "auth.device.error"
+msgstr "代码无效或已过期。请检查终端并重试。"
+
+#: auth.device.noCode
+msgid "auth.device.noCode"
+msgstr "没有代码？运行"
+
+#: auth.device.cliCommand
+msgid "auth.device.cliCommand"
+msgstr "loom login"
+
+#: auth.device.inTerminal
+msgid "auth.device.inTerminal"
+msgstr "在终端中。"
+
+#: settings.sessions.title
+msgid "settings.sessions.title"
+msgstr "活跃会话"
+
+#: settings.sessions.description
+msgid "settings.sessions.description"
+msgstr "管理您在各设备上的活跃会话"
+
+#: settings.sessions.current
+msgid "settings.sessions.current"
+msgstr "当前会话"
+
+#: settings.sessions.lastUsed
+msgid "settings.sessions.lastUsed"
+msgstr "上次使用"
+
+#: settings.sessions.createdAt
+msgid "settings.sessions.createdAt"
+msgstr "创建时间"
+
+#: settings.sessions.revoke
+msgid "settings.sessions.revoke"
+msgstr "撤销"
+
+#: settings.sessions.revokeConfirm
+msgid "settings.sessions.revokeConfirm"
+msgstr "确定要撤销此会话吗？"
+
+#: settings.sessions.noSessions
+msgid "settings.sessions.noSessions"
+msgstr "暂无活跃会话"
+
+#: settings.sessions.web
+msgid "settings.sessions.web"
+msgstr "Web"
+
+#: settings.sessions.cli
+msgid "settings.sessions.cli"
+msgstr "CLI"
+
+#: settings.sessions.vscode
+msgid "settings.sessions.vscode"
+msgstr "VS Code"
+
+#: settings.nav.sessions
+msgid "settings.nav.sessions"
+msgstr "会话"
+
+#: settings.nav.profile
+msgid "settings.nav.profile"
+msgstr "个人资料"
+
+#: settings.nav.orgs
+msgid "settings.nav.orgs"
+msgstr "组织"
+
+#: settings.profile.title
+msgid "settings.profile.title"
+msgstr "个人资料设置"
+
+#: settings.profile.displayName
+msgid "settings.profile.displayName"
+msgstr "显示名称"
+
+#: settings.profile.email
+msgid "settings.profile.email"
+msgstr "邮箱"
+
+#: settings.profile.emailHint
+msgid "settings.profile.emailHint"
+msgstr "邮箱无法在此处更改"
+
+#: settings.profile.locale
+msgid "settings.profile.locale"
+msgstr "语言"
+
+#: settings.profile.save
+msgid "settings.profile.save"
+msgstr "保存更改"
+
+#: settings.profile.saving
+msgid "settings.profile.saving"
+msgstr "保存中..."
+
+#: settings.profile.saved
+msgid "settings.profile.saved"
+msgstr "个人资料更新成功"
+
+#: settings.profile.error
+msgid "settings.profile.error"
+msgstr "更新个人资料失败"
+
+#: orgs.title
+msgid "orgs.title"
+msgstr "组织"
+
+#: orgs.description
+msgid "orgs.description"
+msgstr "管理您的组织和团队"
+
+#: orgs.create
+msgid "orgs.create"
+msgstr "创建组织"
+
+#: orgs.createTitle
+msgid "orgs.createTitle"
+msgstr "创建新组织"
+
+#: orgs.name
+msgid "orgs.name"
+msgstr "组织名称"
+
+#: orgs.slug
+msgid "orgs.slug"
+msgstr "URL 标识"
+
+#: orgs.slugHint
+msgid "orgs.slugHint"
+msgstr "用于 URL，仅限小写字母和连字符"
+
+#: orgs.visibility
+msgid "orgs.visibility"
+msgstr "可见性"
+
+#: orgs.visibilityPublic
+msgid "orgs.visibilityPublic"
+msgstr "公开"
+
+#: orgs.visibilityPrivate
+msgid "orgs.visibilityPrivate"
+msgstr "私有"
+
+#: orgs.joinPolicy
+msgid "orgs.joinPolicy"
+msgstr "加入策略"
+
+#: orgs.joinPolicyOpen
+msgid "orgs.joinPolicyOpen"
+msgstr "开放加入"
+
+#: orgs.joinPolicyRequest
+msgid "orgs.joinPolicyRequest"
+msgstr "申请加入"
+
+#: orgs.joinPolicyInvite
+msgid "orgs.joinPolicyInvite"
+msgstr "仅限邀请"
+
+#: orgs.members
+msgid "orgs.members"
+msgstr "成员"
+
+#: orgs.teams
+msgid "orgs.teams"
+msgstr "团队"
+
+#: orgs.apiKeys
+msgid "orgs.apiKeys"
+msgstr "API 密钥"
+
+#: orgs.settings
+msgid "orgs.settings"
+msgstr "设置"
+
+#: orgs.noOrgs
+msgid "orgs.noOrgs"
+msgstr "暂无组织"
+
+#: orgs.delete
+msgid "orgs.delete"
+msgstr "删除组织"
+
+#: orgs.deleteConfirm
+msgid "orgs.deleteConfirm"
+msgstr "确定要删除此组织吗？"
+
+#: settings.orgs.title
+msgid "settings.orgs.title"
+msgstr "组织"
+
+#: settings.orgs.description
+msgid "settings.orgs.description"
+msgstr "管理您的组织和团队成员资格"
+
+#: settings.orgs.create
+msgid "settings.orgs.create"
+msgstr "创建组织"
+
+#: settings.orgs.noOrgs
+msgid "settings.orgs.noOrgs"
+msgstr "暂无组织"
+
+#: settings.orgs.loadError
+msgid "settings.orgs.loadError"
+msgstr "加载组织失败"
+
+#: settings.orgs.personal
+msgid "settings.orgs.personal"
+msgstr "个人"
+
+#: settings.orgs.slug
+msgid "settings.orgs.slug"
+msgstr "标识"
+
+#: settings.orgs.member
+msgid "settings.orgs.member"
+msgstr "名成员"
+
+#: settings.orgs.members
+msgid "settings.orgs.members"
+msgstr "名成员"
+
+#: settings.orgs.visibility.public
+msgid "settings.orgs.visibility.public"
+msgstr "公开"
+
+#: settings.orgs.visibility.unlisted
+msgid "settings.orgs.visibility.unlisted"
+msgstr "不公开"
+
+#: settings.orgs.visibility.private
+msgid "settings.orgs.visibility.private"
+msgstr "私有"
+
+#: settings.orgs.new.title
+msgid "settings.orgs.new.title"
+msgstr "创建组织"
+
+#: settings.orgs.new.name
+msgid "settings.orgs.new.name"
+msgstr "组织名称"
+
+#: settings.orgs.new.namePlaceholder
+msgid "settings.orgs.new.namePlaceholder"
+msgstr "我的组织"
+
+#: settings.orgs.new.slug
+msgid "settings.orgs.new.slug"
+msgstr "标识"
+
+#: settings.orgs.new.slugPlaceholder
+msgid "settings.orgs.new.slugPlaceholder"
+msgstr "my-organization"
+
+#: settings.orgs.new.slugHint
+msgid "settings.orgs.new.slugHint"
+msgstr "URL 安全标识符（小写字母、数字和连字符）"
+
+#: settings.orgs.new.visibility
+msgid "settings.orgs.new.visibility"
+msgstr "可见性"
+
+#: settings.orgs.new.create
+msgid "settings.orgs.new.create"
+msgstr "创建组织"
+
+#: settings.orgs.new.creating
+msgid "settings.orgs.new.creating"
+msgstr "创建中..."
+
+#: settings.orgs.new.error
+msgid "settings.orgs.new.error"
+msgstr "创建组织失败"
+
+#: settings.orgs.new.requiredFields
+msgid "settings.orgs.new.requiredFields"
+msgstr "名称和标识为必填项"
+
+#: members.title
+msgid "members.title"
+msgstr "成员"
+
+#: members.add
+msgid "members.add"
+msgstr "添加成员"
+
+#: members.remove
+msgid "members.remove"
+msgstr "移除"
+
+#: members.removeConfirm
+msgid "members.removeConfirm"
+msgstr "确定要移除此成员吗？"
+
+#: members.role
+msgid "members.role"
+msgstr "角色"
+
+#: members.roleOwner
+msgid "members.roleOwner"
+msgstr "所有者"
+
+#: members.roleAdmin
+msgid "members.roleAdmin"
+msgstr "管理员"
+
+#: members.roleMember
+msgid "members.roleMember"
+msgstr "成员"
+
+#: members.changeRole
+msgid "members.changeRole"
+msgstr "更改角色"
+
+#: members.noMembers
+msgid "members.noMembers"
+msgstr "暂无成员"
+
+#: teams.title
+msgid "teams.title"
+msgstr "团队"
+
+#: teams.create
+msgid "teams.create"
+msgstr "创建团队"
+
+#: teams.createTitle
+msgid "teams.createTitle"
+msgstr "创建新团队"
+
+#: teams.name
+msgid "teams.name"
+msgstr "团队名称"
+
+#: teams.slug
+msgid "teams.slug"
+msgstr "URL 标识"
+
+#: teams.members
+msgid "teams.members"
+msgstr "团队成员"
+
+#: teams.addMember
+msgid "teams.addMember"
+msgstr "添加成员"
+
+#: teams.removeMember
+msgid "teams.removeMember"
+msgstr "移除"
+
+#: teams.removeMemberConfirm
+msgid "teams.removeMemberConfirm"
+msgstr "确定要将此成员从团队中移除吗？"
+
+#: teams.noTeams
+msgid "teams.noTeams"
+msgstr "暂无团队"
+
+#: teams.noMembers
+msgid "teams.noMembers"
+msgstr "此团队暂无成员"
+
+#: teams.delete
+msgid "teams.delete"
+msgstr "删除团队"
+
+#: teams.deleteConfirm
+msgid "teams.deleteConfirm"
+msgstr "确定要删除此团队吗？"
+
+#: teams.roleMaintainer
+msgid "teams.roleMaintainer"
+msgstr "维护者"
+
+#: teams.roleMember
+msgid "teams.roleMember"
+msgstr "成员"
+
+#: teams.role.maintainer
+msgid "teams.role.maintainer"
+msgstr "维护者"
+
+#: teams.role.member
+msgid "teams.role.member"
+msgstr "成员"
+
+#: teams.backToOrg
+msgid "teams.backToOrg"
+msgstr "返回组织"
+
+#: teams.changeRole
+msgid "teams.changeRole"
+msgstr "更改角色"
+
+#: teams.settings
+msgid "teams.settings"
+msgstr "团队设置"
+
+#: teams.teamName
+msgid "teams.teamName"
+msgstr "团队名称"
+
+#: teams.save
+msgid "teams.save"
+msgstr "保存更改"
+
+#: teams.saving
+msgid "teams.saving"
+msgstr "保存中..."
+
+#: teams.saved
+msgid "teams.saved"
+msgstr "团队更新成功"
+
+#: teams.deleteTeam
+msgid "teams.deleteTeam"
+msgstr "删除团队"
+
+#: teams.deleteTeamConfirm
+msgid "teams.deleteTeamConfirm"
+msgstr "确定要删除此团队吗？此操作无法撤销。"
+
+#: teams.deleteTeamWarning
+msgid "teams.deleteTeamWarning"
+msgstr "这将永久删除团队并移除所有成员。"
+
+#: teams.deleting
+msgid "teams.deleting"
+msgstr "删除中..."
+
+#: teams.selectMember
+msgid "teams.selectMember"
+msgstr "选择要添加的成员"
+
+#: teams.selectRole
+msgid "teams.selectRole"
+msgstr "选择角色"
+
+#: teams.adding
+msgid "teams.adding"
+msgstr "添加中..."
+
+#: teams.add
+msgid "teams.add"
+msgstr "添加"
+
+#: teams.noAvailableMembers
+msgid "teams.noAvailableMembers"
+msgstr "没有可添加的组织成员"
+
+#: apiKeys.title
+msgid "apiKeys.title"
+msgstr "API 密钥"
+
+#: apiKeys.description
+msgid "apiKeys.description"
+msgstr "管理用于程序化访问的 API 密钥"
+
+#: apiKeys.create
+msgid "apiKeys.create"
+msgstr "创建 API 密钥"
+
+#: apiKeys.createTitle
+msgid "apiKeys.createTitle"
+msgstr "创建新 API 密钥"
+
+#: apiKeys.name
+msgid "apiKeys.name"
+msgstr "密钥名称"
+
+#: apiKeys.nameHint
+msgid "apiKeys.nameHint"
+msgstr "为此密钥提供一个描述性名称"
+
+#: apiKeys.scopes
+msgid "apiKeys.scopes"
+msgstr "权限范围"
+
+#: apiKeys.scopesHint
+msgid "apiKeys.scopesHint"
+msgstr "选择此密钥的权限"
+
+#: apiKeys.scopeThreadsRead
+msgid "apiKeys.scopeThreadsRead"
+msgstr "读取会话"
+
+#: apiKeys.scopeThreadsWrite
+msgid "apiKeys.scopeThreadsWrite"
+msgstr "写入会话"
+
+#: apiKeys.scopeLlmUse
+msgid "apiKeys.scopeLlmUse"
+msgstr "使用 LLM"
+
+#: apiKeys.prefix
+msgid "apiKeys.prefix"
+msgstr "密钥前缀"
+
+#: apiKeys.createdAt
+msgid "apiKeys.createdAt"
+msgstr "创建时间"
+
+#: apiKeys.lastUsed
+msgid "apiKeys.lastUsed"
+msgstr "上次使用"
+
+#: apiKeys.never
+msgid "apiKeys.never"
+msgstr "从未使用"
+
+#: apiKeys.revoke
+msgid "apiKeys.revoke"
+msgstr "撤销"
+
+#: apiKeys.revokeConfirm
+msgid "apiKeys.revokeConfirm"
+msgstr "确定要撤销此 API 密钥吗？"
+
+#: apiKeys.noKeys
+msgid "apiKeys.noKeys"
+msgstr "暂无 API 密钥"
+
+#: apiKeys.copyWarning
+msgid "apiKeys.copyWarning"
+msgstr "请立即复制此密钥，之后将无法再次查看。"
+
+#: apiKeys.copied
+msgid "apiKeys.copied"
+msgstr "已复制到剪贴板"
+
+#: general.search
+msgid "general.search"
+msgstr "搜索"
+
+#: general.previous
+msgid "general.previous"
+msgstr "上一页"
+
+#: general.next
+msgid "general.next"
+msgstr "下一页"
+
+#: general.done
+msgid "general.done"
+msgstr "完成"
+
+#: general.refresh
+msgid "general.refresh"
+msgstr "刷新"
+
+#: admin.users.title
+msgid "admin.users.title"
+msgstr "用户管理"
+
+#: admin.users.description
+msgid "admin.users.description"
+msgstr "查看和管理平台用户"
+
+#: admin.users.searchPlaceholder
+msgid "admin.users.searchPlaceholder"
+msgstr "按名称或邮箱搜索..."
+
+#: admin.users.empty
+msgid "admin.users.empty"
+msgstr "未找到用户"
+
+#: admin.users.created
+msgid "admin.users.created"
+msgstr "创建时间"
+
+#: admin.users.lastLogin
+msgid "admin.users.lastLogin"
+msgstr "上次登录"
+
+#: admin.users.impersonate
+msgid "admin.users.impersonate"
+msgstr "模拟用户"
+
+#: admin.impersonation.banner
+msgid "admin.impersonation.banner"
+msgstr "管理员 {admin} 正在模拟 {user}"
+
+#: admin.impersonation.stop
+msgid "admin.impersonation.stop"
+msgstr "停止模拟"
+
+#: nav.weavers
+msgid "nav.weavers"
+msgstr "织机"
+
+#: weavers.title
+msgid "weavers.title"
+msgstr "织机"
+
+#: weavers.description
+msgid "weavers.description"
+msgstr "管理临时开发环境"
+
+#: weavers.create
+msgid "weavers.create"
+msgstr "创建织机"
+
+#: weavers.createFirst
+msgid "weavers.createFirst"
+msgstr "创建您的第一个织机"
+
+#: weavers.createTitle
+msgid "weavers.createTitle"
+msgstr "创建新织机"
+
+#: weavers.empty
+msgid "weavers.empty"
+msgstr "没有运行中的织机"
+
+#: weavers.delete
+msgid "weavers.delete"
+msgstr "删除"
+
+#: weavers.deleteConfirm
+msgid "weavers.deleteConfirm"
+msgstr "确定要删除此织机吗？"
+
+#: weavers.image
+msgid "weavers.image"
+msgstr "镜像"
+
+#: weavers.imageName
+msgid "weavers.imageName"
+msgstr "容器镜像"
+
+#: weavers.created
+msgid "weavers.created"
+msgstr "创建时间"
+
+#: weavers.age
+msgid "weavers.age"
+msgstr "运行时长"
+
+#: weavers.lifetime
+msgid "weavers.lifetime"
+msgstr "生命周期"
+
+#: weavers.lifetimeLabel
+msgid "weavers.lifetimeLabel"
+msgstr "生命周期 (TTL)"
+
+#: weavers.workdir
+msgid "weavers.workdir"
+msgstr "工作目录"
+
+#: weavers.hour
+msgid "weavers.hour"
+msgstr "小时"
+
+#: weavers.hours
+msgid "weavers.hours"
+msgstr "小时"
+
+#: weavers.attach
+msgid "weavers.attach"
+msgstr "连接"
+
+#: weavers.backToList
+msgid "weavers.backToList"
+msgstr "返回织机列表"
+
+#: weavers.notFound
+msgid "weavers.notFound"
+msgstr "未找到织机"
+
+#: weavers.logs
+msgid "weavers.logs"
+msgstr "日志"
+
+#: weavers.logsTitle
+msgid "weavers.logsTitle"
+msgstr "织机日志"
+
+#: weavers.logsConnecting
+msgid "weavers.logsConnecting"
+msgstr "正在连接日志流..."
+
+#: weavers.logsNoData
+msgid "weavers.logsNoData"
+msgstr "暂无日志"
+
+#: weavers.logsError
+msgid "weavers.logsError"
+msgstr "连接日志流失败"
+
+#: weavers.logsClosed
+msgid "weavers.logsClosed"
+msgstr "日志流已关闭"
+
+#: weavers.creatingTitle
+msgid "weavers.creatingTitle"
+msgstr "正在创建织机"
+
+#: weavers.creatingProgress
+msgid "weavers.creatingProgress"
+msgstr "正在配置您的织机环境..."
+
+#: weavers.creatingWait
+msgid "weavers.creatingWait"
+msgstr "等待织机就绪。您将被自动重定向。"
+
+#: weavers.createFailed
+msgid "weavers.createFailed"
+msgstr "创建织机失败"
+
+#: weavers.createTimeout
+msgid "weavers.createTimeout"
+msgstr "创建织机超时"
+
+#: weavers.terminal.connected
+msgid "weavers.terminal.connected"
+msgstr "已连接"
+
+#: weavers.terminal.connecting
+msgid "weavers.terminal.connecting"
+msgstr "连接中..."
+
+#: weavers.terminal.disconnected
+msgid "weavers.terminal.disconnected"
+msgstr "已断开"
+
+#: weavers.terminal.error
+msgid "weavers.terminal.error"
+msgstr "连接错误"
+
+#: weavers.terminal.reconnect
+msgid "weavers.terminal.reconnect"
+msgstr "重新连接"
+
+#: weavers.terminal.pending
+msgid "weavers.terminal.pending"
+msgstr "织机正在启动..."
+
+#: weavers.terminal.pendingHint
+msgid "weavers.terminal.pendingHint"
+msgstr "织机运行后终端将可用"
+
+#: weavers.terminal.notRunning
+msgid "weavers.terminal.notRunning"
+msgstr "织机未运行 (状态: {status})"

@@ -4,6 +4,13 @@
  */
 
 import { i18n } from '@lingui/core';
+import { compileMessage } from '@lingui/message-utils/compileMessage';
+
+// Enable runtime message compilation for uncompiled catalogs.
+// This is required because the message catalogs use simple string format
+// with ICU placeholders like {time}. Without this, placeholders won't be
+// interpolated in production builds.
+(i18n as unknown as { setMessagesCompiler: (fn: typeof compileMessage) => void }).setMessagesCompiler(compileMessage);
 
 export type Locale = 'en' | 'es' | 'ar' | 'fr' | 'ru' | 'ja' | 'ko' | 'pt' | 'sv' | 'nl' | 'zh-CN' | 'he' | 'it' | 'el' | 'et' | 'hi' | 'bn' | 'id';
 

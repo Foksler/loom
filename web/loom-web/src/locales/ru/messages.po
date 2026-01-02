@@ -1,0 +1,996 @@
+# Translation catalog for Loom Web
+# Language: ru
+#
+msgid ""
+msgstr ""
+"Language: ru\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: nav.threads
+msgid "nav.threads"
+msgstr "Треды"
+
+#: nav.settings
+msgid "nav.settings"
+msgstr "Настройки"
+
+#: nav.admin
+msgid "nav.admin"
+msgstr "Админ"
+
+#: nav.jobs
+msgid "nav.jobs"
+msgstr "Задания"
+
+#: thread.new
+msgid "thread.new"
+msgstr "Новый тред"
+
+#: thread.delete
+msgid "thread.delete"
+msgstr "Удалить"
+
+#: thread.search
+msgid "thread.search"
+msgstr "Поиск тредов..."
+
+#: thread.noThreads
+msgid "thread.noThreads"
+msgstr "Тредов пока нет"
+
+#: thread.loadError
+msgid "thread.loadError"
+msgstr "Не удалось загрузить треды"
+
+#: state.waiting_for_user_input
+msgid "state.waiting_for_user_input"
+msgstr "Ожидание ввода"
+
+#: state.calling_llm
+msgid "state.calling_llm"
+msgstr "Вызов LLM"
+
+#: state.processing_llm_response
+msgid "state.processing_llm_response"
+msgstr "Обработка ответа"
+
+#: state.executing_tools
+msgid "state.executing_tools"
+msgstr "Выполнение инструментов"
+
+#: state.post_tools_hook
+msgid "state.post_tools_hook"
+msgstr "Постобработка"
+
+#: state.error
+msgid "state.error"
+msgstr "Ошибка"
+
+#: state.shutting_down
+msgid "state.shutting_down"
+msgstr "Завершение работы"
+
+#: tool.pending
+msgid "tool.pending"
+msgstr "Ожидание"
+
+#: tool.running
+msgid "tool.running"
+msgstr "Выполняется"
+
+#: tool.completed
+msgid "tool.completed"
+msgstr "Завершено"
+
+#: tool.failed
+msgid "tool.failed"
+msgstr "Ошибка"
+
+#: connection.connected
+msgid "connection.connected"
+msgstr "Подключено"
+
+#: connection.disconnected
+msgid "connection.disconnected"
+msgstr "Отключено"
+
+#: connection.connecting
+msgid "connection.connecting"
+msgstr "Подключение..."
+
+#: connection.reconnecting
+msgid "connection.reconnecting"
+msgstr "Переподключение..."
+
+#: connection.error
+msgid "connection.error"
+msgstr "Ошибка соединения"
+
+#: connection.clickToReconnect
+msgid "connection.clickToReconnect"
+msgstr "Нажмите для переподключения"
+
+#: connection.attempt
+msgid "connection.attempt"
+msgstr "Попытка {count}"
+
+#: message.placeholder
+msgid "message.placeholder"
+msgstr "Введите сообщение..."
+
+#: message.send
+msgid "message.send"
+msgstr "Отправить"
+
+#: auth.signOut
+msgid "auth.signOut"
+msgstr "Выйти"
+
+#: auth.dashboard.welcome
+msgid "auth.dashboard.welcome"
+msgstr "Добро пожаловать,"
+
+#: auth.dashboard.protectedPage
+msgid "auth.dashboard.protectedPage"
+msgstr "Это защищённая страница. Для просмотра необходимо войти в систему."
+
+#: general.loading
+msgid "general.loading"
+msgstr "Загрузка..."
+
+#: general.error
+msgid "general.error"
+msgstr "Произошла ошибка"
+
+#: general.retry
+msgid "general.retry"
+msgstr "Повторить"
+
+#: general.cancel
+msgid "general.cancel"
+msgstr "Отмена"
+
+#: general.save
+msgid "general.save"
+msgstr "Сохранить"
+
+#: general.close
+msgid "general.close"
+msgstr "Закрыть"
+
+#: auth.login.title
+msgid "auth.login.title"
+msgstr "Войти в Loom"
+
+#: auth.login.subtitle
+msgid "auth.login.subtitle"
+msgstr "Выберите способ входа"
+
+#: auth.login.github
+msgid "auth.login.github"
+msgstr "Продолжить с GitHub"
+
+#: auth.login.google
+msgid "auth.login.google"
+msgstr "Продолжить с Google"
+
+#: auth.login.or
+msgid "auth.login.or"
+msgstr "или"
+
+#: auth.login.emailLabel
+msgid "auth.login.emailLabel"
+msgstr "Email"
+
+#: auth.login.emailPlaceholder
+msgid "auth.login.emailPlaceholder"
+msgstr "you@example.com"
+
+#: auth.login.sendMagicLink
+msgid "auth.login.sendMagicLink"
+msgstr "Отправить ссылку для входа"
+
+#: auth.login.sending
+msgid "auth.login.sending"
+msgstr "Отправка..."
+
+#: auth.login.checkEmail
+msgid "auth.login.checkEmail"
+msgstr "Проверьте почту"
+
+#: auth.login.magicLinkSent
+msgid "auth.login.magicLinkSent"
+msgstr "Мы отправили ссылку для входа на"
+
+#: auth.login.useDifferentEmail
+msgid "auth.login.useDifferentEmail"
+msgstr "Использовать другой email"
+
+#: auth.login.error
+msgid "auth.login.error"
+msgstr "Не удалось отправить ссылку. Попробуйте ещё раз."
+
+#: auth.device.title
+msgid "auth.device.title"
+msgstr "Авторизация CLI"
+
+#: auth.device.subtitle
+msgid "auth.device.subtitle"
+msgstr "Введите код из терминала, чтобы связать CLI с вашим аккаунтом"
+
+#: auth.device.inputLabel
+msgid "auth.device.inputLabel"
+msgstr "Введите код"
+
+#: auth.device.placeholder
+msgid "auth.device.placeholder"
+msgstr "XXX-XXX-XXX"
+
+#: auth.device.authorize
+msgid "auth.device.authorize"
+msgstr "Авторизовать"
+
+#: auth.device.authorizing
+msgid "auth.device.authorizing"
+msgstr "Авторизация..."
+
+#: auth.device.success
+msgid "auth.device.success"
+msgstr "Авторизовано!"
+
+#: auth.device.successMessage
+msgid "auth.device.successMessage"
+msgstr "Можете закрыть эту страницу и вернуться в терминал."
+
+#: auth.device.error
+msgid "auth.device.error"
+msgstr "Недействительный или истёкший код. Проверьте терминал и попробуйте снова."
+
+#: auth.device.noCode
+msgid "auth.device.noCode"
+msgstr "Нет кода? Выполните"
+
+#: auth.device.cliCommand
+msgid "auth.device.cliCommand"
+msgstr "loom login"
+
+#: auth.device.inTerminal
+msgid "auth.device.inTerminal"
+msgstr "в терминале."
+
+#: settings.sessions.title
+msgid "settings.sessions.title"
+msgstr "Активные сессии"
+
+#: settings.sessions.description
+msgid "settings.sessions.description"
+msgstr "Управление активными сессиями на разных устройствах"
+
+#: settings.sessions.current
+msgid "settings.sessions.current"
+msgstr "Текущая сессия"
+
+#: settings.sessions.lastUsed
+msgid "settings.sessions.lastUsed"
+msgstr "Последнее использование"
+
+#: settings.sessions.createdAt
+msgid "settings.sessions.createdAt"
+msgstr "Создана"
+
+#: settings.sessions.revoke
+msgid "settings.sessions.revoke"
+msgstr "Отозвать"
+
+#: settings.sessions.revokeConfirm
+msgid "settings.sessions.revokeConfirm"
+msgstr "Вы уверены, что хотите отозвать эту сессию?"
+
+#: settings.sessions.noSessions
+msgid "settings.sessions.noSessions"
+msgstr "Нет активных сессий"
+
+#: settings.sessions.web
+msgid "settings.sessions.web"
+msgstr "Веб"
+
+#: settings.sessions.cli
+msgid "settings.sessions.cli"
+msgstr "CLI"
+
+#: settings.sessions.vscode
+msgid "settings.sessions.vscode"
+msgstr "VS Code"
+
+#: settings.nav.sessions
+msgid "settings.nav.sessions"
+msgstr "Сессии"
+
+#: settings.nav.profile
+msgid "settings.nav.profile"
+msgstr "Профиль"
+
+#: settings.nav.orgs
+msgid "settings.nav.orgs"
+msgstr "Организации"
+
+#: settings.profile.title
+msgid "settings.profile.title"
+msgstr "Настройки профиля"
+
+#: settings.profile.displayName
+msgid "settings.profile.displayName"
+msgstr "Отображаемое имя"
+
+#: settings.profile.email
+msgid "settings.profile.email"
+msgstr "Email"
+
+#: settings.profile.emailHint
+msgid "settings.profile.emailHint"
+msgstr "Email нельзя изменить здесь"
+
+#: settings.profile.locale
+msgid "settings.profile.locale"
+msgstr "Язык"
+
+#: settings.profile.save
+msgid "settings.profile.save"
+msgstr "Сохранить изменения"
+
+#: settings.profile.saving
+msgid "settings.profile.saving"
+msgstr "Сохранение..."
+
+#: settings.profile.saved
+msgid "settings.profile.saved"
+msgstr "Профиль успешно обновлён"
+
+#: settings.profile.error
+msgid "settings.profile.error"
+msgstr "Не удалось обновить профиль"
+
+#: orgs.title
+msgid "orgs.title"
+msgstr "Организации"
+
+#: orgs.description
+msgid "orgs.description"
+msgstr "Управление организациями и командами"
+
+#: orgs.create
+msgid "orgs.create"
+msgstr "Создать организацию"
+
+#: orgs.createTitle
+msgid "orgs.createTitle"
+msgstr "Создание организации"
+
+#: orgs.name
+msgid "orgs.name"
+msgstr "Название организации"
+
+#: orgs.slug
+msgid "orgs.slug"
+msgstr "URL-идентификатор"
+
+#: orgs.slugHint
+msgid "orgs.slugHint"
+msgstr "Используется в URL, только строчные буквы и дефисы"
+
+#: orgs.visibility
+msgid "orgs.visibility"
+msgstr "Видимость"
+
+#: orgs.visibilityPublic
+msgid "orgs.visibilityPublic"
+msgstr "Публичная"
+
+#: orgs.visibilityPrivate
+msgid "orgs.visibilityPrivate"
+msgstr "Приватная"
+
+#: orgs.joinPolicy
+msgid "orgs.joinPolicy"
+msgstr "Политика вступления"
+
+#: orgs.joinPolicyOpen
+msgid "orgs.joinPolicyOpen"
+msgstr "Открытая"
+
+#: orgs.joinPolicyRequest
+msgid "orgs.joinPolicyRequest"
+msgstr "По заявке"
+
+#: orgs.joinPolicyInvite
+msgid "orgs.joinPolicyInvite"
+msgstr "Только по приглашению"
+
+#: orgs.members
+msgid "orgs.members"
+msgstr "Участники"
+
+#: orgs.teams
+msgid "orgs.teams"
+msgstr "Команды"
+
+#: orgs.apiKeys
+msgid "orgs.apiKeys"
+msgstr "API-ключи"
+
+#: orgs.settings
+msgid "orgs.settings"
+msgstr "Настройки"
+
+#: orgs.noOrgs
+msgid "orgs.noOrgs"
+msgstr "Организаций пока нет"
+
+#: orgs.delete
+msgid "orgs.delete"
+msgstr "Удалить организацию"
+
+#: orgs.deleteConfirm
+msgid "orgs.deleteConfirm"
+msgstr "Вы уверены, что хотите удалить эту организацию?"
+
+#: settings.orgs.title
+msgid "settings.orgs.title"
+msgstr "Организации"
+
+#: settings.orgs.description
+msgid "settings.orgs.description"
+msgstr "Управление организациями и членством в командах"
+
+#: settings.orgs.create
+msgid "settings.orgs.create"
+msgstr "Создать организацию"
+
+#: settings.orgs.noOrgs
+msgid "settings.orgs.noOrgs"
+msgstr "Организаций пока нет"
+
+#: settings.orgs.loadError
+msgid "settings.orgs.loadError"
+msgstr "Не удалось загрузить организации"
+
+#: settings.orgs.personal
+msgid "settings.orgs.personal"
+msgstr "Личная"
+
+#: settings.orgs.slug
+msgid "settings.orgs.slug"
+msgstr "Идентификатор"
+
+#: settings.orgs.member
+msgid "settings.orgs.member"
+msgstr "участник"
+
+#: settings.orgs.members
+msgid "settings.orgs.members"
+msgstr "участников"
+
+#: settings.orgs.visibility.public
+msgid "settings.orgs.visibility.public"
+msgstr "Публичная"
+
+#: settings.orgs.visibility.unlisted
+msgid "settings.orgs.visibility.unlisted"
+msgstr "Скрытая"
+
+#: settings.orgs.visibility.private
+msgid "settings.orgs.visibility.private"
+msgstr "Приватная"
+
+#: settings.orgs.new.title
+msgid "settings.orgs.new.title"
+msgstr "Создание организации"
+
+#: settings.orgs.new.name
+msgid "settings.orgs.new.name"
+msgstr "Название организации"
+
+#: settings.orgs.new.namePlaceholder
+msgid "settings.orgs.new.namePlaceholder"
+msgstr "Моя организация"
+
+#: settings.orgs.new.slug
+msgid "settings.orgs.new.slug"
+msgstr "Идентификатор"
+
+#: settings.orgs.new.slugPlaceholder
+msgid "settings.orgs.new.slugPlaceholder"
+msgstr "my-organization"
+
+#: settings.orgs.new.slugHint
+msgid "settings.orgs.new.slugHint"
+msgstr "URL-идентификатор (строчные буквы, цифры и дефисы)"
+
+#: settings.orgs.new.visibility
+msgid "settings.orgs.new.visibility"
+msgstr "Видимость"
+
+#: settings.orgs.new.create
+msgid "settings.orgs.new.create"
+msgstr "Создать организацию"
+
+#: settings.orgs.new.creating
+msgid "settings.orgs.new.creating"
+msgstr "Создание..."
+
+#: settings.orgs.new.error
+msgid "settings.orgs.new.error"
+msgstr "Не удалось создать организацию"
+
+#: settings.orgs.new.requiredFields
+msgid "settings.orgs.new.requiredFields"
+msgstr "Название и идентификатор обязательны"
+
+#: members.title
+msgid "members.title"
+msgstr "Участники"
+
+#: members.add
+msgid "members.add"
+msgstr "Добавить участника"
+
+#: members.remove
+msgid "members.remove"
+msgstr "Удалить"
+
+#: members.removeConfirm
+msgid "members.removeConfirm"
+msgstr "Вы уверены, что хотите удалить этого участника?"
+
+#: members.role
+msgid "members.role"
+msgstr "Роль"
+
+#: members.roleOwner
+msgid "members.roleOwner"
+msgstr "Владелец"
+
+#: members.roleAdmin
+msgid "members.roleAdmin"
+msgstr "Администратор"
+
+#: members.roleMember
+msgid "members.roleMember"
+msgstr "Участник"
+
+#: members.changeRole
+msgid "members.changeRole"
+msgstr "Изменить роль"
+
+#: members.noMembers
+msgid "members.noMembers"
+msgstr "Участников пока нет"
+
+#: teams.title
+msgid "teams.title"
+msgstr "Команды"
+
+#: teams.create
+msgid "teams.create"
+msgstr "Создать команду"
+
+#: teams.createTitle
+msgid "teams.createTitle"
+msgstr "Создание команды"
+
+#: teams.name
+msgid "teams.name"
+msgstr "Название команды"
+
+#: teams.slug
+msgid "teams.slug"
+msgstr "URL-идентификатор"
+
+#: teams.members
+msgid "teams.members"
+msgstr "Участники команды"
+
+#: teams.addMember
+msgid "teams.addMember"
+msgstr "Добавить участника"
+
+#: teams.removeMember
+msgid "teams.removeMember"
+msgstr "Удалить"
+
+#: teams.removeMemberConfirm
+msgid "teams.removeMemberConfirm"
+msgstr "Вы уверены, что хотите удалить этого участника из команды?"
+
+#: teams.noTeams
+msgid "teams.noTeams"
+msgstr "Команд пока нет"
+
+#: teams.noMembers
+msgid "teams.noMembers"
+msgstr "В этой команде нет участников"
+
+#: teams.delete
+msgid "teams.delete"
+msgstr "Удалить команду"
+
+#: teams.deleteConfirm
+msgid "teams.deleteConfirm"
+msgstr "Вы уверены, что хотите удалить эту команду?"
+
+#: teams.roleMaintainer
+msgid "teams.roleMaintainer"
+msgstr "Ответственный"
+
+#: teams.roleMember
+msgid "teams.roleMember"
+msgstr "Участник"
+
+#: teams.role.maintainer
+msgid "teams.role.maintainer"
+msgstr "Ответственный"
+
+#: teams.role.member
+msgid "teams.role.member"
+msgstr "Участник"
+
+#: teams.backToOrg
+msgid "teams.backToOrg"
+msgstr "Назад к организации"
+
+#: teams.changeRole
+msgid "teams.changeRole"
+msgstr "Изменить роль"
+
+#: teams.settings
+msgid "teams.settings"
+msgstr "Настройки команды"
+
+#: teams.teamName
+msgid "teams.teamName"
+msgstr "Название команды"
+
+#: teams.save
+msgid "teams.save"
+msgstr "Сохранить изменения"
+
+#: teams.saving
+msgid "teams.saving"
+msgstr "Сохранение..."
+
+#: teams.saved
+msgid "teams.saved"
+msgstr "Команда успешно обновлена"
+
+#: teams.deleteTeam
+msgid "teams.deleteTeam"
+msgstr "Удалить команду"
+
+#: teams.deleteTeamConfirm
+msgid "teams.deleteTeamConfirm"
+msgstr "Вы уверены, что хотите удалить эту команду? Это действие нельзя отменить."
+
+#: teams.deleteTeamWarning
+msgid "teams.deleteTeamWarning"
+msgstr "Команда будет удалена безвозвратно, все участники будут исключены."
+
+#: teams.deleting
+msgid "teams.deleting"
+msgstr "Удаление..."
+
+#: teams.selectMember
+msgid "teams.selectMember"
+msgstr "Выберите участника для добавления"
+
+#: teams.selectRole
+msgid "teams.selectRole"
+msgstr "Выберите роль"
+
+#: teams.adding
+msgid "teams.adding"
+msgstr "Добавление..."
+
+#: teams.add
+msgid "teams.add"
+msgstr "Добавить"
+
+#: teams.noAvailableMembers
+msgid "teams.noAvailableMembers"
+msgstr "Нет доступных участников организации для добавления"
+
+#: apiKeys.title
+msgid "apiKeys.title"
+msgstr "API-ключи"
+
+#: apiKeys.description
+msgid "apiKeys.description"
+msgstr "Управление API-ключами для программного доступа"
+
+#: apiKeys.create
+msgid "apiKeys.create"
+msgstr "Создать API-ключ"
+
+#: apiKeys.createTitle
+msgid "apiKeys.createTitle"
+msgstr "Создание API-ключа"
+
+#: apiKeys.name
+msgid "apiKeys.name"
+msgstr "Название ключа"
+
+#: apiKeys.nameHint
+msgid "apiKeys.nameHint"
+msgstr "Описательное название для этого ключа"
+
+#: apiKeys.scopes
+msgid "apiKeys.scopes"
+msgstr "Права доступа"
+
+#: apiKeys.scopesHint
+msgid "apiKeys.scopesHint"
+msgstr "Выберите разрешения для этого ключа"
+
+#: apiKeys.scopeThreadsRead
+msgid "apiKeys.scopeThreadsRead"
+msgstr "Чтение тредов"
+
+#: apiKeys.scopeThreadsWrite
+msgid "apiKeys.scopeThreadsWrite"
+msgstr "Запись тредов"
+
+#: apiKeys.scopeLlmUse
+msgid "apiKeys.scopeLlmUse"
+msgstr "Использование LLM"
+
+#: apiKeys.prefix
+msgid "apiKeys.prefix"
+msgstr "Префикс ключа"
+
+#: apiKeys.createdAt
+msgid "apiKeys.createdAt"
+msgstr "Создан"
+
+#: apiKeys.lastUsed
+msgid "apiKeys.lastUsed"
+msgstr "Последнее использование"
+
+#: apiKeys.never
+msgid "apiKeys.never"
+msgstr "Никогда"
+
+#: apiKeys.revoke
+msgid "apiKeys.revoke"
+msgstr "Отозвать"
+
+#: apiKeys.revokeConfirm
+msgid "apiKeys.revokeConfirm"
+msgstr "Вы уверены, что хотите отозвать этот API-ключ?"
+
+#: apiKeys.noKeys
+msgid "apiKeys.noKeys"
+msgstr "API-ключей пока нет"
+
+#: apiKeys.copyWarning
+msgid "apiKeys.copyWarning"
+msgstr "Скопируйте ключ сейчас. Вы не сможете увидеть его снова."
+
+#: apiKeys.copied
+msgid "apiKeys.copied"
+msgstr "Скопировано в буфер обмена"
+
+#: general.search
+msgid "general.search"
+msgstr "Search"
+
+#: general.previous
+msgid "general.previous"
+msgstr "Previous"
+
+#: general.next
+msgid "general.next"
+msgstr "Next"
+
+#: general.done
+msgid "general.done"
+msgstr "Done"
+
+#: general.refresh
+msgid "general.refresh"
+msgstr "Refresh"
+
+#: admin.users.title
+msgid "admin.users.title"
+msgstr "User Management"
+
+#: admin.users.description
+msgid "admin.users.description"
+msgstr "View and manage users across the platform"
+
+#: admin.users.searchPlaceholder
+msgid "admin.users.searchPlaceholder"
+msgstr "Search by name or email..."
+
+#: admin.users.empty
+msgid "admin.users.empty"
+msgstr "No users found"
+
+#: admin.users.created
+msgid "admin.users.created"
+msgstr "Created"
+
+#: admin.users.lastLogin
+msgid "admin.users.lastLogin"
+msgstr "Last login"
+
+#: admin.users.impersonate
+msgid "admin.users.impersonate"
+msgstr "Impersonate"
+
+#: admin.impersonation.banner
+msgid "admin.impersonation.banner"
+msgstr "Admin {admin} impersonating {user}"
+
+#: admin.impersonation.stop
+msgid "admin.impersonation.stop"
+msgstr "Stop Impersonating"
+
+#: nav.weavers
+msgid "nav.weavers"
+msgstr "Weavers"
+
+#: weavers.title
+msgid "weavers.title"
+msgstr "Weavers"
+
+#: weavers.description
+msgid "weavers.description"
+msgstr "Manage ephemeral development environments"
+
+#: weavers.create
+msgid "weavers.create"
+msgstr "Create Weaver"
+
+#: weavers.createFirst
+msgid "weavers.createFirst"
+msgstr "Create your first weaver"
+
+#: weavers.createTitle
+msgid "weavers.createTitle"
+msgstr "Create New Weaver"
+
+#: weavers.empty
+msgid "weavers.empty"
+msgstr "No weavers running"
+
+#: weavers.delete
+msgid "weavers.delete"
+msgstr "Delete"
+
+#: weavers.deleteConfirm
+msgid "weavers.deleteConfirm"
+msgstr "Are you sure you want to delete this weaver?"
+
+#: weavers.image
+msgid "weavers.image"
+msgstr "Image"
+
+#: weavers.imageName
+msgid "weavers.imageName"
+msgstr "Container Image"
+
+#: weavers.created
+msgid "weavers.created"
+msgstr "Created"
+
+#: weavers.age
+msgid "weavers.age"
+msgstr "Age"
+
+#: weavers.lifetime
+msgid "weavers.lifetime"
+msgstr "Lifetime"
+
+#: weavers.lifetimeLabel
+msgid "weavers.lifetimeLabel"
+msgstr "Lifetime (TTL)"
+
+#: weavers.workdir
+msgid "weavers.workdir"
+msgstr "Working Directory"
+
+#: weavers.hour
+msgid "weavers.hour"
+msgstr "hour"
+
+#: weavers.hours
+msgid "weavers.hours"
+msgstr "hours"
+
+#: weavers.attach
+msgid "weavers.attach"
+msgstr "Attach"
+
+#: weavers.backToList
+msgid "weavers.backToList"
+msgstr "Back to Weavers"
+
+#: weavers.notFound
+msgid "weavers.notFound"
+msgstr "Weaver not found"
+
+#: weavers.logs
+msgid "weavers.logs"
+msgstr "Logs"
+
+#: weavers.logsTitle
+msgid "weavers.logsTitle"
+msgstr "Weaver Logs"
+
+#: weavers.logsConnecting
+msgid "weavers.logsConnecting"
+msgstr "Connecting to log stream..."
+
+#: weavers.logsNoData
+msgid "weavers.logsNoData"
+msgstr "No logs available yet"
+
+#: weavers.logsError
+msgid "weavers.logsError"
+msgstr "Failed to connect to log stream"
+
+#: weavers.logsClosed
+msgid "weavers.logsClosed"
+msgstr "Log stream closed"
+
+#: weavers.creatingTitle
+msgid "weavers.creatingTitle"
+msgstr "Creating Weaver"
+
+#: weavers.creatingProgress
+msgid "weavers.creatingProgress"
+msgstr "Provisioning your weaver environment..."
+
+#: weavers.creatingWait
+msgid "weavers.creatingWait"
+msgstr "Waiting for weaver to become ready. You will be redirected automatically."
+
+#: weavers.createFailed
+msgid "weavers.createFailed"
+msgstr "Weaver creation failed"
+
+#: weavers.createTimeout
+msgid "weavers.createTimeout"
+msgstr "Weaver creation timed out"
+
+#: weavers.terminal.connected
+msgid "weavers.terminal.connected"
+msgstr "Connected"
+
+#: weavers.terminal.connecting
+msgid "weavers.terminal.connecting"
+msgstr "Connecting..."
+
+#: weavers.terminal.disconnected
+msgid "weavers.terminal.disconnected"
+msgstr "Disconnected"
+
+#: weavers.terminal.error
+msgid "weavers.terminal.error"
+msgstr "Connection error"
+
+#: weavers.terminal.reconnect
+msgid "weavers.terminal.reconnect"
+msgstr "Reconnect"
+
+#: weavers.terminal.pending
+msgid "weavers.terminal.pending"
+msgstr "Weaver is starting..."
+
+#: weavers.terminal.pendingHint
+msgid "weavers.terminal.pendingHint"
+msgstr "The terminal will be available once the weaver is running"
+
+#: weavers.terminal.notRunning
+msgid "weavers.terminal.notRunning"
+msgstr "Weaver is not running (status: {status})"

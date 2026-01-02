@@ -6,3 +6,7 @@ build
 !.env.example
 vite.config.ts.timestamp*
 storybook-static
+
+# Lingui compiled catalogs (source is .po files)
+src/locales/*/messages.ts
+src/locales/*/messages.js

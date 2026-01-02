@@ -3,13 +3,20 @@
   SPDX-License-Identifier: Proprietary
 -->
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { i18n } from '$lib/i18n';
 	import { Card, Badge } from '$lib/ui';
-	import type { HealthResponse, HealthStatus } from '$lib/api/types';
+	import type { HealthResponse, HealthStatus, LogEntry, LogLevel, ListLogsResponse } from '$lib/api/types';
 
 	let health = $state<HealthResponse | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
+
+	// Log state
+	let logs = $state<LogEntry[]>([]);
+	let logsLoading = $state(true);
+	let streaming = $state(false);
+	let eventSource: EventSource | null = null;
 
 	interface AdminSection {
 		href: string;
@@ -37,6 +44,12 @@
 			descriptionKey: 'jobs.description',
 			icon: '⚙️',
 		},
+		{
+			href: '/admin/logs',
+			titleKey: 'admin.logs.title',
+			descriptionKey: 'admin.logs.description',
+			icon: '📋',
+		},
 	];
 
 	async function loadHealth() {
@@ -51,6 +64,57 @@
 		} finally {
 			loading = false;
 		}
+	}
+
+	async function loadLogs() {
+		logsLoading = true;
+		try {
+			const res = await fetch('/api/admin/logs?limit=50', { credentials: 'include' });
+			if (!res.ok) throw new Error(`Failed to load logs: ${res.status}`);
+			const data: ListLogsResponse = await res.json();
+			logs = data.entries;
+			// Auto-start streaming after initial load
+			startStreaming();
+		} catch {
+			// Ignore log load errors on dashboard
+		} finally {
+			logsLoading = false;
+		}
+	}
+
+	function startStreaming() {
+		if (eventSource) return;
+
+		eventSource = new EventSource('/api/admin/logs/stream', { withCredentials: true });
+
+		eventSource.onmessage = (event) => {
+			try {
+				const entry: LogEntry = JSON.parse(event.data);
+				logs = [...logs, entry].slice(-100);
+				requestAnimationFrame(() => {
+					const container = document.getElementById('dashboard-log-container');
+					if (container) {
+						container.scrollTop = container.scrollHeight;
+					}
+				});
+			} catch {
+				// Ignore parse errors
+			}
+		};
+
+		eventSource.onerror = () => {
+			stopStreaming();
+		};
+
+		streaming = true;
+	}
+
+	function stopStreaming() {
+		if (eventSource) {
+			eventSource.close();
+			eventSource = null;
+		}
+		streaming = false;
 	}
 
 	function getStatusVariant(status: HealthStatus): 'success' | 'warning' | 'error' | 'muted' {
@@ -82,6 +146,32 @@
 	function formatLatency(ms: number): string {
 		if (ms < 1000) return `${ms}ms`;
 		return `${(ms / 1000).toFixed(2)}s`;
+	}
+
+	function getLevelVariant(level: LogLevel): 'muted' | 'accent' | 'success' | 'warning' | 'error' {
+		switch (level) {
+			case 'trace':
+			case 'debug':
+				return 'muted';
+			case 'info':
+				return 'accent';
+			case 'warn':
+				return 'warning';
+			case 'error':
+				return 'error';
+			default:
+				return 'muted';
+		}
+	}
+
+	function formatTimestamp(ts: string): string {
+		const date = new Date(ts);
+		return date.toLocaleTimeString('en-US', {
+			hour12: false,
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit',
+		});
 	}
 
 	interface ComponentInfo {
@@ -180,8 +270,16 @@
 
 	$effect(() => {
 		loadHealth();
+		loadLogs();
 		const interval = setInterval(loadHealth, 30000);
-		return () => clearInterval(interval);
+		return () => {
+			clearInterval(interval);
+			stopStreaming();
+		};
+	});
+
+	onDestroy(() => {
+		stopStreaming();
 	});
 </script>
 
@@ -198,7 +296,7 @@
 	<!-- Admin Sections Navigation -->
 	<div class="mb-8">
 		<h2 class="text-lg font-semibold text-fg mb-4">{i18n._('admin.dashboard.sections')}</h2>
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 			{#each adminSections as section}
 				<a href={section.href} class="block group">
 					<Card hover={true}>
@@ -219,35 +317,36 @@
 		</div>
 	</div>
 
-	<!-- Server Health -->
-	<div>
-		<div class="flex items-center justify-between mb-4">
-			<h2 class="text-lg font-semibold text-fg">{i18n._('admin.health.title')}</h2>
-			<button
-				onclick={() => loadHealth()}
-				disabled={loading}
-				class="text-sm text-accent hover:text-accent-hover disabled:opacity-50"
-			>
-				{i18n._('general.refresh')}
-			</button>
-		</div>
+	<!-- Two column layout: Health + Logs -->
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+		<!-- Server Health -->
+		<div>
+			<div class="flex items-center justify-between mb-4">
+				<h2 class="text-lg font-semibold text-fg">{i18n._('admin.health.title')}</h2>
+				<button
+					onclick={() => loadHealth()}
+					disabled={loading}
+					class="text-sm text-accent hover:text-accent-hover disabled:opacity-50"
+				>
+					{i18n._('general.refresh')}
+				</button>
+			</div>
 
-		{#if error}
-			<div class="mb-4 p-3 rounded-md bg-error/10 text-error text-sm">{error}</div>
-		{/if}
+			{#if error}
+				<div class="mb-4 p-3 rounded-md bg-error/10 text-error text-sm">{error}</div>
+			{/if}
 
-		{#if loading && !health}
-			<Card>
-				<div class="text-fg-muted text-center py-8">{i18n._('general.loading')}</div>
-			</Card>
-		{:else if health}
-			<!-- Overall Status -->
-			<div class="mb-4">
-			<Card>
-				<div class="flex items-center justify-between">
+			{#if loading && !health}
+				<Card>
+					<div class="text-fg-muted text-center py-8">{i18n._('general.loading')}</div>
+				</Card>
+			{:else if health}
+				<!-- Overall Status -->
+				<div class="mb-4">
+				<Card>
 					<div class="flex items-center gap-4">
 						<div
-							class="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold"
+							class="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold"
 							class:bg-success={health.status === 'healthy'}
 							class:bg-warning={health.status === 'degraded'}
 							class:bg-error={health.status === 'unhealthy'}
@@ -256,66 +355,87 @@
 						>
 							{getStatusIcon(health.status)}
 						</div>
-						<div>
+						<div class="flex-1">
 							<div class="flex items-center gap-2">
-								<span class="font-semibold text-fg text-lg">
-									{i18n._('admin.health.overall')}
-								</span>
 								<Badge variant={getStatusVariant(health.status)}>
 									{i18n._(`admin.health.status.${health.status}`)}
 								</Badge>
+								<span class="text-xs text-fg-muted">
+									{health.version.git_sha}
+								</span>
 							</div>
-							<div class="text-sm text-fg-muted">
-								{i18n._('admin.health.version')}: {health.version.git_sha}
-								&middot;
-								{i18n._('admin.health.response_time')}: {formatLatency(health.duration_ms)}
+							<div class="text-xs text-fg-muted mt-1">
+								{formatLatency(health.duration_ms)} &middot; {new Date(health.timestamp).toLocaleTimeString()}
 							</div>
 						</div>
 					</div>
-					<div class="text-sm text-fg-muted text-right">
-						{new Date(health.timestamp).toLocaleString()}
-					</div>
+				</Card>
 				</div>
-			</Card>
+
+				<!-- Component Grid -->
+				<div class="grid grid-cols-2 gap-2">
+					{#each getComponents() as component}
+						<Card padding="sm">
+							<div class="flex items-center gap-2">
+								<Badge variant={getStatusVariant(component.status)} size="sm">
+									{component.status.charAt(0).toUpperCase()}
+								</Badge>
+								<span class="text-sm text-fg truncate">{component.name}</span>
+							</div>
+							{#if component.error}
+								<div class="text-xs text-error mt-1 truncate" title={component.error}>
+									{component.error}
+								</div>
+							{/if}
+						</Card>
+					{/each}
+				</div>
+			{/if}
+		</div>
+
+		<!-- Live Logs -->
+		<div>
+			<div class="flex items-center justify-between mb-4">
+				<h2 class="text-lg font-semibold text-fg">
+					{i18n._('admin.logs.title')}
+					{#if streaming}
+						<span class="inline-block w-2 h-2 rounded-full bg-success animate-pulse ml-2"></span>
+					{/if}
+				</h2>
+				<a href="/admin/logs" class="text-sm text-accent hover:text-accent-hover">
+					{i18n._('admin.dashboard.view_all_logs')}
+				</a>
 			</div>
 
-			<!-- Component Grid -->
-			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-				{#each getComponents() as component}
-					<Card>
-						<div class="flex items-start justify-between gap-2">
-							<div class="min-w-0">
-								<div class="flex items-center gap-2">
-									<span class="font-medium text-fg">{component.name}</span>
-									<Badge variant={getStatusVariant(component.status)} size="sm">
-										{i18n._(`admin.health.status.${component.status}`)}
-									</Badge>
-								</div>
-								{#if component.latency !== undefined}
-									<div class="text-xs text-fg-muted mt-1">
-										{formatLatency(component.latency)}
-									</div>
-								{/if}
-								{#if component.configured !== undefined}
-									<div class="text-xs text-fg-muted mt-1">
-										{component.configured
-											? i18n._('admin.health.configured')
-											: i18n._('admin.health.not_configured')}
-									</div>
-								{/if}
-								{#if component.extra}
-									<div class="text-xs text-fg-subtle mt-1">{component.extra}</div>
-								{/if}
-								{#if component.error}
-									<div class="text-xs text-error mt-1 truncate" title={component.error}>
-										{component.error}
-									</div>
-								{/if}
+			<div
+				id="dashboard-log-container"
+				class="bg-gray-900 rounded-lg border border-border overflow-auto font-mono text-xs"
+				style="height: 400px;"
+			>
+				{#if logsLoading && logs.length === 0}
+					<div class="text-gray-400 text-center py-8">{i18n._('general.loading')}</div>
+				{:else if logs.length === 0}
+					<div class="text-gray-400 text-center py-8">{i18n._('admin.logs.no_logs')}</div>
+				{:else}
+					<div class="p-2 space-y-0.5">
+						{#each logs as log (log.id)}
+							<div class="flex gap-2 hover:bg-gray-800/50 px-1 rounded">
+								<span class="text-gray-500 shrink-0">{formatTimestamp(log.timestamp)}</span>
+								<span
+									class="shrink-0 w-12"
+									class:text-gray-500={log.level === 'trace' || log.level === 'debug'}
+									class:text-blue-400={log.level === 'info'}
+									class:text-yellow-400={log.level === 'warn'}
+									class:text-red-400={log.level === 'error'}
+								>
+									{log.level.toUpperCase().padEnd(5)}
+								</span>
+								<span class="text-gray-200 break-all">{log.message}</span>
 							</div>
-						</div>
-					</Card>
-				{/each}
+						{/each}
+					</div>
+				{/if}
 			</div>
-		{/if}
+		</div>
 	</div>
 </div>

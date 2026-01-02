@@ -1,0 +1,996 @@
+# Translation catalog for Loom Web
+# Language: bn
+#
+msgid ""
+msgstr ""
+"Language: bn\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: nav.threads
+msgid "nav.threads"
+msgstr "থ্রেডগুলি"
+
+#: nav.settings
+msgid "nav.settings"
+msgstr "সেটিংস"
+
+#: nav.admin
+msgid "nav.admin"
+msgstr "অ্যাডমিন"
+
+#: nav.jobs
+msgid "nav.jobs"
+msgstr "কাজ"
+
+#: thread.new
+msgid "thread.new"
+msgstr "নতুন থ্রেড"
+
+#: thread.delete
+msgid "thread.delete"
+msgstr "মুছুন"
+
+#: thread.search
+msgid "thread.search"
+msgstr "থ্রেড খুঁজুন..."
+
+#: thread.noThreads
+msgid "thread.noThreads"
+msgstr "এখনও কোনো থ্রেড নেই"
+
+#: thread.loadError
+msgid "thread.loadError"
+msgstr "থ্রেড লোড করা যায়নি"
+
+#: state.waiting_for_user_input
+msgid "state.waiting_for_user_input"
+msgstr "ইনপুটের জন্য অপেক্ষা করছে"
+
+#: state.calling_llm
+msgid "state.calling_llm"
+msgstr "LLM কল করছে"
+
+#: state.processing_llm_response
+msgid "state.processing_llm_response"
+msgstr "রেসপন্স প্রসেস করছে"
+
+#: state.executing_tools
+msgid "state.executing_tools"
+msgstr "টুল এক্সিকিউট করছে"
+
+#: state.post_tools_hook
+msgid "state.post_tools_hook"
+msgstr "পোস্ট-প্রসেসিং"
+
+#: state.error
+msgid "state.error"
+msgstr "ত্রুটি"
+
+#: state.shutting_down
+msgid "state.shutting_down"
+msgstr "বন্ধ হচ্ছে"
+
+#: tool.pending
+msgid "tool.pending"
+msgstr "অপেক্ষমান"
+
+#: tool.running
+msgid "tool.running"
+msgstr "চলছে"
+
+#: tool.completed
+msgid "tool.completed"
+msgstr "সম্পন্ন"
+
+#: tool.failed
+msgid "tool.failed"
+msgstr "ব্যর্থ"
+
+#: connection.connected
+msgid "connection.connected"
+msgstr "সংযুক্ত"
+
+#: connection.disconnected
+msgid "connection.disconnected"
+msgstr "বিচ্ছিন্ন"
+
+#: connection.connecting
+msgid "connection.connecting"
+msgstr "সংযোগ হচ্ছে..."
+
+#: connection.reconnecting
+msgid "connection.reconnecting"
+msgstr "পুনরায় সংযোগ হচ্ছে..."
+
+#: connection.error
+msgid "connection.error"
+msgstr "সংযোগ ত্রুটি"
+
+#: connection.clickToReconnect
+msgid "connection.clickToReconnect"
+msgstr "পুনরায় সংযোগ করতে ক্লিক করুন"
+
+#: connection.attempt
+msgid "connection.attempt"
+msgstr "প্রচেষ্টা {count}"
+
+#: message.placeholder
+msgid "message.placeholder"
+msgstr "একটি বার্তা লিখুন..."
+
+#: message.send
+msgid "message.send"
+msgstr "পাঠান"
+
+#: auth.signOut
+msgid "auth.signOut"
+msgstr "সাইন আউট করুন"
+
+#: auth.dashboard.welcome
+msgid "auth.dashboard.welcome"
+msgstr "স্বাগতম,"
+
+#: auth.dashboard.protectedPage
+msgid "auth.dashboard.protectedPage"
+msgstr "এটি একটি সুরক্ষিত পৃষ্ঠা। এটি দেখতে আপনাকে লগ ইন করতে হবে।"
+
+#: general.loading
+msgid "general.loading"
+msgstr "লোড হচ্ছে..."
+
+#: general.error
+msgid "general.error"
+msgstr "একটি ত্রুটি ঘটেছে"
+
+#: general.retry
+msgid "general.retry"
+msgstr "পুনরায় চেষ্টা করুন"
+
+#: general.cancel
+msgid "general.cancel"
+msgstr "বাতিল"
+
+#: general.save
+msgid "general.save"
+msgstr "সংরক্ষণ করুন"
+
+#: general.close
+msgid "general.close"
+msgstr "বন্ধ করুন"
+
+#: auth.login.title
+msgid "auth.login.title"
+msgstr "Loom-এ সাইন ইন করুন"
+
+#: auth.login.subtitle
+msgid "auth.login.subtitle"
+msgstr "আপনার পছন্দের সাইন-ইন পদ্ধতি বেছে নিন"
+
+#: auth.login.github
+msgid "auth.login.github"
+msgstr "GitHub দিয়ে চালিয়ে যান"
+
+#: auth.login.google
+msgid "auth.login.google"
+msgstr "Google দিয়ে চালিয়ে যান"
+
+#: auth.login.or
+msgid "auth.login.or"
+msgstr "অথবা"
+
+#: auth.login.emailLabel
+msgid "auth.login.emailLabel"
+msgstr "ইমেইল ঠিকানা"
+
+#: auth.login.emailPlaceholder
+msgid "auth.login.emailPlaceholder"
+msgstr "you@example.com"
+
+#: auth.login.sendMagicLink
+msgid "auth.login.sendMagicLink"
+msgstr "ম্যাজিক লিংক পাঠান"
+
+#: auth.login.sending
+msgid "auth.login.sending"
+msgstr "পাঠানো হচ্ছে..."
+
+#: auth.login.checkEmail
+msgid "auth.login.checkEmail"
+msgstr "আপনার ইমেইল চেক করুন"
+
+#: auth.login.magicLinkSent
+msgid "auth.login.magicLinkSent"
+msgstr "আমরা একটি সাইন-ইন লিংক পাঠিয়েছি"
+
+#: auth.login.useDifferentEmail
+msgid "auth.login.useDifferentEmail"
+msgstr "অন্য ইমেইল ব্যবহার করুন"
+
+#: auth.login.error
+msgid "auth.login.error"
+msgstr "ম্যাজিক লিংক পাঠানো যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।"
+
+#: auth.device.title
+msgid "auth.device.title"
+msgstr "CLI অনুমোদন করুন"
+
+#: auth.device.subtitle
+msgid "auth.device.subtitle"
+msgstr "আপনার CLI-কে আপনার অ্যাকাউন্টের সাথে লিংক করতে টার্মিনালে দেখানো কোডটি প্রবেশ করান"
+
+#: auth.device.inputLabel
+msgid "auth.device.inputLabel"
+msgstr "আপনার কোড প্রবেশ করান"
+
+#: auth.device.placeholder
+msgid "auth.device.placeholder"
+msgstr "XXX-XXX-XXX"
+
+#: auth.device.authorize
+msgid "auth.device.authorize"
+msgstr "অনুমোদন করুন"
+
+#: auth.device.authorizing
+msgid "auth.device.authorizing"
+msgstr "অনুমোদন হচ্ছে..."
+
+#: auth.device.success
+msgid "auth.device.success"
+msgstr "অনুমোদিত!"
+
+#: auth.device.successMessage
+msgid "auth.device.successMessage"
+msgstr "আপনি এখন এই পৃষ্ঠাটি বন্ধ করে আপনার টার্মিনালে ফিরে যেতে পারেন।"
+
+#: auth.device.error
+msgid "auth.device.error"
+msgstr "অবৈধ বা মেয়াদোত্তীর্ণ কোড। অনুগ্রহ করে আপনার টার্মিনাল চেক করে আবার চেষ্টা করুন।"
+
+#: auth.device.noCode
+msgid "auth.device.noCode"
+msgstr "কোড নেই? চালান"
+
+#: auth.device.cliCommand
+msgid "auth.device.cliCommand"
+msgstr "loom login"
+
+#: auth.device.inTerminal
+msgid "auth.device.inTerminal"
+msgstr "আপনার টার্মিনালে।"
+
+#: settings.sessions.title
+msgid "settings.sessions.title"
+msgstr "সক্রিয় সেশনসমূহ"
+
+#: settings.sessions.description
+msgid "settings.sessions.description"
+msgstr "বিভিন্ন ডিভাইসে আপনার সক্রিয় সেশনগুলি পরিচালনা করুন"
+
+#: settings.sessions.current
+msgid "settings.sessions.current"
+msgstr "বর্তমান সেশন"
+
+#: settings.sessions.lastUsed
+msgid "settings.sessions.lastUsed"
+msgstr "সর্বশেষ ব্যবহৃত"
+
+#: settings.sessions.createdAt
+msgid "settings.sessions.createdAt"
+msgstr "তৈরি হয়েছে"
+
+#: settings.sessions.revoke
+msgid "settings.sessions.revoke"
+msgstr "বাতিল করুন"
+
+#: settings.sessions.revokeConfirm
+msgid "settings.sessions.revokeConfirm"
+msgstr "আপনি কি নিশ্চিত যে এই সেশনটি বাতিল করতে চান?"
+
+#: settings.sessions.noSessions
+msgid "settings.sessions.noSessions"
+msgstr "কোনো সক্রিয় সেশন নেই"
+
+#: settings.sessions.web
+msgid "settings.sessions.web"
+msgstr "ওয়েব"
+
+#: settings.sessions.cli
+msgid "settings.sessions.cli"
+msgstr "CLI"
+
+#: settings.sessions.vscode
+msgid "settings.sessions.vscode"
+msgstr "VS Code"
+
+#: settings.nav.sessions
+msgid "settings.nav.sessions"
+msgstr "সেশনসমূহ"
+
+#: settings.nav.profile
+msgid "settings.nav.profile"
+msgstr "প্রোফাইল"
+
+#: settings.nav.orgs
+msgid "settings.nav.orgs"
+msgstr "সংস্থাসমূহ"
+
+#: settings.profile.title
+msgid "settings.profile.title"
+msgstr "প্রোফাইল সেটিংস"
+
+#: settings.profile.displayName
+msgid "settings.profile.displayName"
+msgstr "প্রদর্শন নাম"
+
+#: settings.profile.email
+msgid "settings.profile.email"
+msgstr "ইমেইল"
+
+#: settings.profile.emailHint
+msgid "settings.profile.emailHint"
+msgstr "ইমেইল এখানে পরিবর্তন করা যাবে না"
+
+#: settings.profile.locale
+msgid "settings.profile.locale"
+msgstr "ভাষা"
+
+#: settings.profile.save
+msgid "settings.profile.save"
+msgstr "পরিবর্তনগুলি সংরক্ষণ করুন"
+
+#: settings.profile.saving
+msgid "settings.profile.saving"
+msgstr "সংরক্ষণ হচ্ছে..."
+
+#: settings.profile.saved
+msgid "settings.profile.saved"
+msgstr "প্রোফাইল সফলভাবে আপডেট হয়েছে"
+
+#: settings.profile.error
+msgid "settings.profile.error"
+msgstr "প্রোফাইল আপডেট করা যায়নি"
+
+#: orgs.title
+msgid "orgs.title"
+msgstr "সংস্থাসমূহ"
+
+#: orgs.description
+msgid "orgs.description"
+msgstr "আপনার সংস্থা এবং টিমগুলি পরিচালনা করুন"
+
+#: orgs.create
+msgid "orgs.create"
+msgstr "সংস্থা তৈরি করুন"
+
+#: orgs.createTitle
+msgid "orgs.createTitle"
+msgstr "নতুন সংস্থা তৈরি করুন"
+
+#: orgs.name
+msgid "orgs.name"
+msgstr "সংস্থার নাম"
+
+#: orgs.slug
+msgid "orgs.slug"
+msgstr "URL স্লাগ"
+
+#: orgs.slugHint
+msgid "orgs.slugHint"
+msgstr "URL-এ ব্যবহৃত হয়, শুধুমাত্র ছোট হাতের অক্ষর এবং হাইফেন"
+
+#: orgs.visibility
+msgid "orgs.visibility"
+msgstr "দৃশ্যমানতা"
+
+#: orgs.visibilityPublic
+msgid "orgs.visibilityPublic"
+msgstr "সর্বজনীন"
+
+#: orgs.visibilityPrivate
+msgid "orgs.visibilityPrivate"
+msgstr "ব্যক্তিগত"
+
+#: orgs.joinPolicy
+msgid "orgs.joinPolicy"
+msgstr "যোগদান নীতি"
+
+#: orgs.joinPolicyOpen
+msgid "orgs.joinPolicyOpen"
+msgstr "উন্মুক্ত"
+
+#: orgs.joinPolicyRequest
+msgid "orgs.joinPolicyRequest"
+msgstr "যোগদানের অনুরোধ"
+
+#: orgs.joinPolicyInvite
+msgid "orgs.joinPolicyInvite"
+msgstr "শুধুমাত্র আমন্ত্রণে"
+
+#: orgs.members
+msgid "orgs.members"
+msgstr "সদস্যরা"
+
+#: orgs.teams
+msgid "orgs.teams"
+msgstr "টিমগুলি"
+
+#: orgs.apiKeys
+msgid "orgs.apiKeys"
+msgstr "API কীগুলি"
+
+#: orgs.settings
+msgid "orgs.settings"
+msgstr "সেটিংস"
+
+#: orgs.noOrgs
+msgid "orgs.noOrgs"
+msgstr "এখনও কোনো সংস্থা নেই"
+
+#: orgs.delete
+msgid "orgs.delete"
+msgstr "সংস্থা মুছুন"
+
+#: orgs.deleteConfirm
+msgid "orgs.deleteConfirm"
+msgstr "আপনি কি নিশ্চিত যে এই সংস্থাটি মুছতে চান?"
+
+#: settings.orgs.title
+msgid "settings.orgs.title"
+msgstr "সংস্থাসমূহ"
+
+#: settings.orgs.description
+msgid "settings.orgs.description"
+msgstr "আপনার সংস্থা এবং টিম সদস্যপদ পরিচালনা করুন"
+
+#: settings.orgs.create
+msgid "settings.orgs.create"
+msgstr "সংস্থা তৈরি করুন"
+
+#: settings.orgs.noOrgs
+msgid "settings.orgs.noOrgs"
+msgstr "এখনও কোনো সংস্থা নেই"
+
+#: settings.orgs.loadError
+msgid "settings.orgs.loadError"
+msgstr "সংস্থাগুলি লোড করা যায়নি"
+
+#: settings.orgs.personal
+msgid "settings.orgs.personal"
+msgstr "ব্যক্তিগত"
+
+#: settings.orgs.slug
+msgid "settings.orgs.slug"
+msgstr "স্লাগ"
+
+#: settings.orgs.member
+msgid "settings.orgs.member"
+msgstr "সদস্য"
+
+#: settings.orgs.members
+msgid "settings.orgs.members"
+msgstr "সদস্যরা"
+
+#: settings.orgs.visibility.public
+msgid "settings.orgs.visibility.public"
+msgstr "সর্বজনীন"
+
+#: settings.orgs.visibility.unlisted
+msgid "settings.orgs.visibility.unlisted"
+msgstr "তালিকাভুক্ত নয়"
+
+#: settings.orgs.visibility.private
+msgid "settings.orgs.visibility.private"
+msgstr "ব্যক্তিগত"
+
+#: settings.orgs.new.title
+msgid "settings.orgs.new.title"
+msgstr "সংস্থা তৈরি করুন"
+
+#: settings.orgs.new.name
+msgid "settings.orgs.new.name"
+msgstr "সংস্থার নাম"
+
+#: settings.orgs.new.namePlaceholder
+msgid "settings.orgs.new.namePlaceholder"
+msgstr "আমার সংস্থা"
+
+#: settings.orgs.new.slug
+msgid "settings.orgs.new.slug"
+msgstr "স্লাগ"
+
+#: settings.orgs.new.slugPlaceholder
+msgid "settings.orgs.new.slugPlaceholder"
+msgstr "my-organization"
+
+#: settings.orgs.new.slugHint
+msgid "settings.orgs.new.slugHint"
+msgstr "URL-নিরাপদ শনাক্তকারী (ছোট হাতের অক্ষর, সংখ্যা এবং হাইফেন)"
+
+#: settings.orgs.new.visibility
+msgid "settings.orgs.new.visibility"
+msgstr "দৃশ্যমানতা"
+
+#: settings.orgs.new.create
+msgid "settings.orgs.new.create"
+msgstr "সংস্থা তৈরি করুন"
+
+#: settings.orgs.new.creating
+msgid "settings.orgs.new.creating"
+msgstr "তৈরি হচ্ছে..."
+
+#: settings.orgs.new.error
+msgid "settings.orgs.new.error"
+msgstr "সংস্থা তৈরি করা যায়নি"
+
+#: settings.orgs.new.requiredFields
+msgid "settings.orgs.new.requiredFields"
+msgstr "নাম এবং স্লাগ প্রয়োজন"
+
+#: members.title
+msgid "members.title"
+msgstr "সদস্যরা"
+
+#: members.add
+msgid "members.add"
+msgstr "সদস্য যোগ করুন"
+
+#: members.remove
+msgid "members.remove"
+msgstr "সরান"
+
+#: members.removeConfirm
+msgid "members.removeConfirm"
+msgstr "আপনি কি নিশ্চিত যে এই সদস্যকে সরাতে চান?"
+
+#: members.role
+msgid "members.role"
+msgstr "ভূমিকা"
+
+#: members.roleOwner
+msgid "members.roleOwner"
+msgstr "মালিক"
+
+#: members.roleAdmin
+msgid "members.roleAdmin"
+msgstr "অ্যাডমিন"
+
+#: members.roleMember
+msgid "members.roleMember"
+msgstr "সদস্য"
+
+#: members.changeRole
+msgid "members.changeRole"
+msgstr "ভূমিকা পরিবর্তন করুন"
+
+#: members.noMembers
+msgid "members.noMembers"
+msgstr "এখনও কোনো সদস্য নেই"
+
+#: teams.title
+msgid "teams.title"
+msgstr "টিমগুলি"
+
+#: teams.create
+msgid "teams.create"
+msgstr "টিম তৈরি করুন"
+
+#: teams.createTitle
+msgid "teams.createTitle"
+msgstr "নতুন টিম তৈরি করুন"
+
+#: teams.name
+msgid "teams.name"
+msgstr "টিমের নাম"
+
+#: teams.slug
+msgid "teams.slug"
+msgstr "URL স্লাগ"
+
+#: teams.members
+msgid "teams.members"
+msgstr "টিম সদস্যরা"
+
+#: teams.addMember
+msgid "teams.addMember"
+msgstr "সদস্য যোগ করুন"
+
+#: teams.removeMember
+msgid "teams.removeMember"
+msgstr "সরান"
+
+#: teams.removeMemberConfirm
+msgid "teams.removeMemberConfirm"
+msgstr "আপনি কি নিশ্চিত যে এই সদস্যকে টিম থেকে সরাতে চান?"
+
+#: teams.noTeams
+msgid "teams.noTeams"
+msgstr "এখনও কোনো টিম নেই"
+
+#: teams.noMembers
+msgid "teams.noMembers"
+msgstr "এই টিমে কোনো সদস্য নেই"
+
+#: teams.delete
+msgid "teams.delete"
+msgstr "টিম মুছুন"
+
+#: teams.deleteConfirm
+msgid "teams.deleteConfirm"
+msgstr "আপনি কি নিশ্চিত যে এই টিমটি মুছতে চান?"
+
+#: teams.roleMaintainer
+msgid "teams.roleMaintainer"
+msgstr "রক্ষণাবেক্ষণকারী"
+
+#: teams.roleMember
+msgid "teams.roleMember"
+msgstr "সদস্য"
+
+#: teams.role.maintainer
+msgid "teams.role.maintainer"
+msgstr "রক্ষণাবেক্ষণকারী"
+
+#: teams.role.member
+msgid "teams.role.member"
+msgstr "সদস্য"
+
+#: teams.backToOrg
+msgid "teams.backToOrg"
+msgstr "সংস্থায় ফিরে যান"
+
+#: teams.changeRole
+msgid "teams.changeRole"
+msgstr "ভূমিকা পরিবর্তন করুন"
+
+#: teams.settings
+msgid "teams.settings"
+msgstr "টিম সেটিংস"
+
+#: teams.teamName
+msgid "teams.teamName"
+msgstr "টিমের নাম"
+
+#: teams.save
+msgid "teams.save"
+msgstr "পরিবর্তনগুলি সংরক্ষণ করুন"
+
+#: teams.saving
+msgid "teams.saving"
+msgstr "সংরক্ষণ হচ্ছে..."
+
+#: teams.saved
+msgid "teams.saved"
+msgstr "টিম সফলভাবে আপডেট হয়েছে"
+
+#: teams.deleteTeam
+msgid "teams.deleteTeam"
+msgstr "টিম মুছুন"
+
+#: teams.deleteTeamConfirm
+msgid "teams.deleteTeamConfirm"
+msgstr "আপনি কি নিশ্চিত যে এই টিমটি মুছতে চান? এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।"
+
+#: teams.deleteTeamWarning
+msgid "teams.deleteTeamWarning"
+msgstr "এটি স্থায়ীভাবে টিমটি মুছে দেবে এবং সমস্ত সদস্যকে সরিয়ে দেবে।"
+
+#: teams.deleting
+msgid "teams.deleting"
+msgstr "মুছে ফেলা হচ্ছে..."
+
+#: teams.selectMember
+msgid "teams.selectMember"
+msgstr "যোগ করতে একজন সদস্য নির্বাচন করুন"
+
+#: teams.selectRole
+msgid "teams.selectRole"
+msgstr "ভূমিকা নির্বাচন করুন"
+
+#: teams.adding
+msgid "teams.adding"
+msgstr "যোগ হচ্ছে..."
+
+#: teams.add
+msgid "teams.add"
+msgstr "যোগ করুন"
+
+#: teams.noAvailableMembers
+msgid "teams.noAvailableMembers"
+msgstr "যোগ করার জন্য কোনো সংস্থার সদস্য উপলব্ধ নেই"
+
+#: apiKeys.title
+msgid "apiKeys.title"
+msgstr "API কীগুলি"
+
+#: apiKeys.description
+msgid "apiKeys.description"
+msgstr "প্রোগ্রাম্যাটিক অ্যাক্সেসের জন্য API কীগুলি পরিচালনা করুন"
+
+#: apiKeys.create
+msgid "apiKeys.create"
+msgstr "API কী তৈরি করুন"
+
+#: apiKeys.createTitle
+msgid "apiKeys.createTitle"
+msgstr "নতুন API কী তৈরি করুন"
+
+#: apiKeys.name
+msgid "apiKeys.name"
+msgstr "কী-এর নাম"
+
+#: apiKeys.nameHint
+msgid "apiKeys.nameHint"
+msgstr "এই কী-এর জন্য একটি বর্ণনামূলক নাম"
+
+#: apiKeys.scopes
+msgid "apiKeys.scopes"
+msgstr "স্কোপসমূহ"
+
+#: apiKeys.scopesHint
+msgid "apiKeys.scopesHint"
+msgstr "এই কী-এর জন্য অনুমতিগুলি নির্বাচন করুন"
+
+#: apiKeys.scopeThreadsRead
+msgid "apiKeys.scopeThreadsRead"
+msgstr "থ্রেড পড়ুন"
+
+#: apiKeys.scopeThreadsWrite
+msgid "apiKeys.scopeThreadsWrite"
+msgstr "থ্রেড লিখুন"
+
+#: apiKeys.scopeLlmUse
+msgid "apiKeys.scopeLlmUse"
+msgstr "LLM ব্যবহার করুন"
+
+#: apiKeys.prefix
+msgid "apiKeys.prefix"
+msgstr "কী প্রিফিক্স"
+
+#: apiKeys.createdAt
+msgid "apiKeys.createdAt"
+msgstr "তৈরি হয়েছে"
+
+#: apiKeys.lastUsed
+msgid "apiKeys.lastUsed"
+msgstr "সর্বশেষ ব্যবহৃত"
+
+#: apiKeys.never
+msgid "apiKeys.never"
+msgstr "কখনো না"
+
+#: apiKeys.revoke
+msgid "apiKeys.revoke"
+msgstr "বাতিল করুন"
+
+#: apiKeys.revokeConfirm
+msgid "apiKeys.revokeConfirm"
+msgstr "আপনি কি নিশ্চিত যে এই API কীটি বাতিল করতে চান?"
+
+#: apiKeys.noKeys
+msgid "apiKeys.noKeys"
+msgstr "এখনও কোনো API কী নেই"
+
+#: apiKeys.copyWarning
+msgid "apiKeys.copyWarning"
+msgstr "এই কীটি এখনই কপি করুন। আপনি এটি আর দেখতে পাবেন না।"
+
+#: apiKeys.copied
+msgid "apiKeys.copied"
+msgstr "ক্লিপবোর্ডে কপি করা হয়েছে"
+
+#: general.search
+msgid "general.search"
+msgstr "Search"
+
+#: general.previous
+msgid "general.previous"
+msgstr "Previous"
+
+#: general.next
+msgid "general.next"
+msgstr "Next"
+
+#: general.done
+msgid "general.done"
+msgstr "Done"
+
+#: general.refresh
+msgid "general.refresh"
+msgstr "Refresh"
+
+#: admin.users.title
+msgid "admin.users.title"
+msgstr "User Management"
+
+#: admin.users.description
+msgid "admin.users.description"
+msgstr "View and manage users across the platform"
+
+#: admin.users.searchPlaceholder
+msgid "admin.users.searchPlaceholder"
+msgstr "Search by name or email..."
+
+#: admin.users.empty
+msgid "admin.users.empty"
+msgstr "No users found"
+
+#: admin.users.created
+msgid "admin.users.created"
+msgstr "Created"
+
+#: admin.users.lastLogin
+msgid "admin.users.lastLogin"
+msgstr "Last login"
+
+#: admin.users.impersonate
+msgid "admin.users.impersonate"
+msgstr "Impersonate"
+
+#: admin.impersonation.banner
+msgid "admin.impersonation.banner"
+msgstr "Admin {admin} impersonating {user}"
+
+#: admin.impersonation.stop
+msgid "admin.impersonation.stop"
+msgstr "Stop Impersonating"
+
+#: nav.weavers
+msgid "nav.weavers"
+msgstr "Weavers"
+
+#: weavers.title
+msgid "weavers.title"
+msgstr "Weavers"
+
+#: weavers.description
+msgid "weavers.description"
+msgstr "Manage ephemeral development environments"
+
+#: weavers.create
+msgid "weavers.create"
+msgstr "Create Weaver"
+
+#: weavers.createFirst
+msgid "weavers.createFirst"
+msgstr "Create your first weaver"
+
+#: weavers.createTitle
+msgid "weavers.createTitle"
+msgstr "Create New Weaver"
+
+#: weavers.empty
+msgid "weavers.empty"
+msgstr "No weavers running"
+
+#: weavers.delete
+msgid "weavers.delete"
+msgstr "Delete"
+
+#: weavers.deleteConfirm
+msgid "weavers.deleteConfirm"
+msgstr "Are you sure you want to delete this weaver?"
+
+#: weavers.image
+msgid "weavers.image"
+msgstr "Image"
+
+#: weavers.imageName
+msgid "weavers.imageName"
+msgstr "Container Image"
+
+#: weavers.created
+msgid "weavers.created"
+msgstr "Created"
+
+#: weavers.age
+msgid "weavers.age"
+msgstr "Age"
+
+#: weavers.lifetime
+msgid "weavers.lifetime"
+msgstr "Lifetime"
+
+#: weavers.lifetimeLabel
+msgid "weavers.lifetimeLabel"
+msgstr "Lifetime (TTL)"
+
+#: weavers.workdir
+msgid "weavers.workdir"
+msgstr "Working Directory"
+
+#: weavers.hour
+msgid "weavers.hour"
+msgstr "hour"
+
+#: weavers.hours
+msgid "weavers.hours"
+msgstr "hours"
+
+#: weavers.attach
+msgid "weavers.attach"
+msgstr "Attach"
+
+#: weavers.backToList
+msgid "weavers.backToList"
+msgstr "Back to Weavers"
+
+#: weavers.notFound
+msgid "weavers.notFound"
+msgstr "Weaver not found"
+
+#: weavers.logs
+msgid "weavers.logs"
+msgstr "Logs"
+
+#: weavers.logsTitle
+msgid "weavers.logsTitle"
+msgstr "Weaver Logs"
+
+#: weavers.logsConnecting
+msgid "weavers.logsConnecting"
+msgstr "Connecting to log stream..."
+
+#: weavers.logsNoData
+msgid "weavers.logsNoData"
+msgstr "No logs available yet"
+
+#: weavers.logsError
+msgid "weavers.logsError"
+msgstr "Failed to connect to log stream"
+
+#: weavers.logsClosed
+msgid "weavers.logsClosed"
+msgstr "Log stream closed"
+
+#: weavers.creatingTitle
+msgid "weavers.creatingTitle"
+msgstr "Creating Weaver"
+
+#: weavers.creatingProgress
+msgid "weavers.creatingProgress"
+msgstr "Provisioning your weaver environment..."
+
+#: weavers.creatingWait
+msgid "weavers.creatingWait"
+msgstr "Waiting for weaver to become ready. You will be redirected automatically."
+
+#: weavers.createFailed
+msgid "weavers.createFailed"
+msgstr "Weaver creation failed"
+
+#: weavers.createTimeout
+msgid "weavers.createTimeout"
+msgstr "Weaver creation timed out"
+
+#: weavers.terminal.connected
+msgid "weavers.terminal.connected"
+msgstr "Connected"
+
+#: weavers.terminal.connecting
+msgid "weavers.terminal.connecting"
+msgstr "Connecting..."
+
+#: weavers.terminal.disconnected
+msgid "weavers.terminal.disconnected"
+msgstr "Disconnected"
+
+#: weavers.terminal.error
+msgid "weavers.terminal.error"
+msgstr "Connection error"
+
+#: weavers.terminal.reconnect
+msgid "weavers.terminal.reconnect"
+msgstr "Reconnect"
+
+#: weavers.terminal.pending
+msgid "weavers.terminal.pending"
+msgstr "Weaver is starting..."
+
+#: weavers.terminal.pendingHint
+msgid "weavers.terminal.pendingHint"
+msgstr "The terminal will be available once the weaver is running"
+
+#: weavers.terminal.notRunning
+msgid "weavers.terminal.notRunning"
+msgstr "Weaver is not running (status: {status})"

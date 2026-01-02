@@ -1,0 +1,996 @@
+# Translation catalog for Loom Web
+# Language: sv
+#
+msgid ""
+msgstr ""
+"Language: sv\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: nav.threads
+msgid "nav.threads"
+msgstr "Trådar"
+
+#: nav.settings
+msgid "nav.settings"
+msgstr "Inställningar"
+
+#: nav.admin
+msgid "nav.admin"
+msgstr "Admin"
+
+#: nav.jobs
+msgid "nav.jobs"
+msgstr "Jobb"
+
+#: thread.new
+msgid "thread.new"
+msgstr "Ny tråd"
+
+#: thread.delete
+msgid "thread.delete"
+msgstr "Ta bort"
+
+#: thread.search
+msgid "thread.search"
+msgstr "Sök trådar..."
+
+#: thread.noThreads
+msgid "thread.noThreads"
+msgstr "Inga trådar ännu"
+
+#: thread.loadError
+msgid "thread.loadError"
+msgstr "Kunde inte ladda trådar"
+
+#: state.waiting_for_user_input
+msgid "state.waiting_for_user_input"
+msgstr "Väntar på inmatning"
+
+#: state.calling_llm
+msgid "state.calling_llm"
+msgstr "Anropar LLM"
+
+#: state.processing_llm_response
+msgid "state.processing_llm_response"
+msgstr "Bearbetar svar"
+
+#: state.executing_tools
+msgid "state.executing_tools"
+msgstr "Kör verktyg"
+
+#: state.post_tools_hook
+msgid "state.post_tools_hook"
+msgstr "Efterbehandling"
+
+#: state.error
+msgid "state.error"
+msgstr "Fel"
+
+#: state.shutting_down
+msgid "state.shutting_down"
+msgstr "Stänger av"
+
+#: tool.pending
+msgid "tool.pending"
+msgstr "Väntar"
+
+#: tool.running
+msgid "tool.running"
+msgstr "Körs"
+
+#: tool.completed
+msgid "tool.completed"
+msgstr "Slutförd"
+
+#: tool.failed
+msgid "tool.failed"
+msgstr "Misslyckades"
+
+#: connection.connected
+msgid "connection.connected"
+msgstr "Ansluten"
+
+#: connection.disconnected
+msgid "connection.disconnected"
+msgstr "Frånkopplad"
+
+#: connection.connecting
+msgid "connection.connecting"
+msgstr "Ansluter..."
+
+#: connection.reconnecting
+msgid "connection.reconnecting"
+msgstr "Återansluter..."
+
+#: connection.error
+msgid "connection.error"
+msgstr "Anslutningsfel"
+
+#: connection.clickToReconnect
+msgid "connection.clickToReconnect"
+msgstr "Klicka för att återansluta"
+
+#: connection.attempt
+msgid "connection.attempt"
+msgstr "Försök {count}"
+
+#: message.placeholder
+msgid "message.placeholder"
+msgstr "Skriv ett meddelande..."
+
+#: message.send
+msgid "message.send"
+msgstr "Skicka"
+
+#: auth.signOut
+msgid "auth.signOut"
+msgstr "Logga ut"
+
+#: auth.dashboard.welcome
+msgid "auth.dashboard.welcome"
+msgstr "Välkommen,"
+
+#: auth.dashboard.protectedPage
+msgid "auth.dashboard.protectedPage"
+msgstr "Detta är en skyddad sida. Du måste vara inloggad för att se detta."
+
+#: general.loading
+msgid "general.loading"
+msgstr "Laddar..."
+
+#: general.error
+msgid "general.error"
+msgstr "Ett fel inträffade"
+
+#: general.retry
+msgid "general.retry"
+msgstr "Försök igen"
+
+#: general.cancel
+msgid "general.cancel"
+msgstr "Avbryt"
+
+#: general.save
+msgid "general.save"
+msgstr "Spara"
+
+#: general.close
+msgid "general.close"
+msgstr "Stäng"
+
+#: auth.login.title
+msgid "auth.login.title"
+msgstr "Logga in på Loom"
+
+#: auth.login.subtitle
+msgid "auth.login.subtitle"
+msgstr "Välj din föredragna inloggningsmetod"
+
+#: auth.login.github
+msgid "auth.login.github"
+msgstr "Fortsätt med GitHub"
+
+#: auth.login.google
+msgid "auth.login.google"
+msgstr "Fortsätt med Google"
+
+#: auth.login.or
+msgid "auth.login.or"
+msgstr "eller"
+
+#: auth.login.emailLabel
+msgid "auth.login.emailLabel"
+msgstr "E-postadress"
+
+#: auth.login.emailPlaceholder
+msgid "auth.login.emailPlaceholder"
+msgstr "du@exempel.se"
+
+#: auth.login.sendMagicLink
+msgid "auth.login.sendMagicLink"
+msgstr "Skicka magisk länk"
+
+#: auth.login.sending
+msgid "auth.login.sending"
+msgstr "Skickar..."
+
+#: auth.login.checkEmail
+msgid "auth.login.checkEmail"
+msgstr "Kolla din e-post"
+
+#: auth.login.magicLinkSent
+msgid "auth.login.magicLinkSent"
+msgstr "Vi har skickat en inloggningslänk till"
+
+#: auth.login.useDifferentEmail
+msgid "auth.login.useDifferentEmail"
+msgstr "Använd en annan e-postadress"
+
+#: auth.login.error
+msgid "auth.login.error"
+msgstr "Kunde inte skicka magisk länk. Försök igen."
+
+#: auth.device.title
+msgid "auth.device.title"
+msgstr "Auktorisera CLI"
+
+#: auth.device.subtitle
+msgid "auth.device.subtitle"
+msgstr "Ange koden som visas i din terminal för att länka din CLI med ditt konto"
+
+#: auth.device.inputLabel
+msgid "auth.device.inputLabel"
+msgstr "Ange din kod"
+
+#: auth.device.placeholder
+msgid "auth.device.placeholder"
+msgstr "XXX-XXX-XXX"
+
+#: auth.device.authorize
+msgid "auth.device.authorize"
+msgstr "Auktorisera"
+
+#: auth.device.authorizing
+msgid "auth.device.authorizing"
+msgstr "Auktoriserar..."
+
+#: auth.device.success
+msgid "auth.device.success"
+msgstr "Auktoriserad!"
+
+#: auth.device.successMessage
+msgid "auth.device.successMessage"
+msgstr "Du kan nu stänga denna sida och återgå till din terminal."
+
+#: auth.device.error
+msgid "auth.device.error"
+msgstr "Ogiltig eller utgången kod. Kontrollera din terminal och försök igen."
+
+#: auth.device.noCode
+msgid "auth.device.noCode"
+msgstr "Har du ingen kod? Kör"
+
+#: auth.device.cliCommand
+msgid "auth.device.cliCommand"
+msgstr "loom login"
+
+#: auth.device.inTerminal
+msgid "auth.device.inTerminal"
+msgstr "i din terminal."
+
+#: settings.sessions.title
+msgid "settings.sessions.title"
+msgstr "Aktiva sessioner"
+
+#: settings.sessions.description
+msgid "settings.sessions.description"
+msgstr "Hantera dina aktiva sessioner på olika enheter"
+
+#: settings.sessions.current
+msgid "settings.sessions.current"
+msgstr "Nuvarande session"
+
+#: settings.sessions.lastUsed
+msgid "settings.sessions.lastUsed"
+msgstr "Senast använd"
+
+#: settings.sessions.createdAt
+msgid "settings.sessions.createdAt"
+msgstr "Skapad"
+
+#: settings.sessions.revoke
+msgid "settings.sessions.revoke"
+msgstr "Återkalla"
+
+#: settings.sessions.revokeConfirm
+msgid "settings.sessions.revokeConfirm"
+msgstr "Är du säker på att du vill återkalla denna session?"
+
+#: settings.sessions.noSessions
+msgid "settings.sessions.noSessions"
+msgstr "Inga aktiva sessioner"
+
+#: settings.sessions.web
+msgid "settings.sessions.web"
+msgstr "Webb"
+
+#: settings.sessions.cli
+msgid "settings.sessions.cli"
+msgstr "CLI"
+
+#: settings.sessions.vscode
+msgid "settings.sessions.vscode"
+msgstr "VS Code"
+
+#: settings.nav.sessions
+msgid "settings.nav.sessions"
+msgstr "Sessioner"
+
+#: settings.nav.profile
+msgid "settings.nav.profile"
+msgstr "Profil"
+
+#: settings.nav.orgs
+msgid "settings.nav.orgs"
+msgstr "Organisationer"
+
+#: settings.profile.title
+msgid "settings.profile.title"
+msgstr "Profilinställningar"
+
+#: settings.profile.displayName
+msgid "settings.profile.displayName"
+msgstr "Visningsnamn"
+
+#: settings.profile.email
+msgid "settings.profile.email"
+msgstr "E-post"
+
+#: settings.profile.emailHint
+msgid "settings.profile.emailHint"
+msgstr "E-postadressen kan inte ändras här"
+
+#: settings.profile.locale
+msgid "settings.profile.locale"
+msgstr "Språk"
+
+#: settings.profile.save
+msgid "settings.profile.save"
+msgstr "Spara ändringar"
+
+#: settings.profile.saving
+msgid "settings.profile.saving"
+msgstr "Sparar..."
+
+#: settings.profile.saved
+msgid "settings.profile.saved"
+msgstr "Profilen har uppdaterats"
+
+#: settings.profile.error
+msgid "settings.profile.error"
+msgstr "Kunde inte uppdatera profilen"
+
+#: orgs.title
+msgid "orgs.title"
+msgstr "Organisationer"
+
+#: orgs.description
+msgid "orgs.description"
+msgstr "Hantera dina organisationer och team"
+
+#: orgs.create
+msgid "orgs.create"
+msgstr "Skapa organisation"
+
+#: orgs.createTitle
+msgid "orgs.createTitle"
+msgstr "Skapa ny organisation"
+
+#: orgs.name
+msgid "orgs.name"
+msgstr "Organisationsnamn"
+
+#: orgs.slug
+msgid "orgs.slug"
+msgstr "URL-slug"
+
+#: orgs.slugHint
+msgid "orgs.slugHint"
+msgstr "Används i URL:er, endast gemener och bindestreck"
+
+#: orgs.visibility
+msgid "orgs.visibility"
+msgstr "Synlighet"
+
+#: orgs.visibilityPublic
+msgid "orgs.visibilityPublic"
+msgstr "Offentlig"
+
+#: orgs.visibilityPrivate
+msgid "orgs.visibilityPrivate"
+msgstr "Privat"
+
+#: orgs.joinPolicy
+msgid "orgs.joinPolicy"
+msgstr "Anslutningspolicy"
+
+#: orgs.joinPolicyOpen
+msgid "orgs.joinPolicyOpen"
+msgstr "Öppen"
+
+#: orgs.joinPolicyRequest
+msgid "orgs.joinPolicyRequest"
+msgstr "Begär att gå med"
+
+#: orgs.joinPolicyInvite
+msgid "orgs.joinPolicyInvite"
+msgstr "Endast inbjudan"
+
+#: orgs.members
+msgid "orgs.members"
+msgstr "Medlemmar"
+
+#: orgs.teams
+msgid "orgs.teams"
+msgstr "Team"
+
+#: orgs.apiKeys
+msgid "orgs.apiKeys"
+msgstr "API-nycklar"
+
+#: orgs.settings
+msgid "orgs.settings"
+msgstr "Inställningar"
+
+#: orgs.noOrgs
+msgid "orgs.noOrgs"
+msgstr "Inga organisationer ännu"
+
+#: orgs.delete
+msgid "orgs.delete"
+msgstr "Ta bort organisation"
+
+#: orgs.deleteConfirm
+msgid "orgs.deleteConfirm"
+msgstr "Är du säker på att du vill ta bort denna organisation?"
+
+#: settings.orgs.title
+msgid "settings.orgs.title"
+msgstr "Organisationer"
+
+#: settings.orgs.description
+msgid "settings.orgs.description"
+msgstr "Hantera dina organisationer och teammedlemskap"
+
+#: settings.orgs.create
+msgid "settings.orgs.create"
+msgstr "Skapa organisation"
+
+#: settings.orgs.noOrgs
+msgid "settings.orgs.noOrgs"
+msgstr "Inga organisationer ännu"
+
+#: settings.orgs.loadError
+msgid "settings.orgs.loadError"
+msgstr "Kunde inte ladda organisationer"
+
+#: settings.orgs.personal
+msgid "settings.orgs.personal"
+msgstr "Personlig"
+
+#: settings.orgs.slug
+msgid "settings.orgs.slug"
+msgstr "Slug"
+
+#: settings.orgs.member
+msgid "settings.orgs.member"
+msgstr "medlem"
+
+#: settings.orgs.members
+msgid "settings.orgs.members"
+msgstr "medlemmar"
+
+#: settings.orgs.visibility.public
+msgid "settings.orgs.visibility.public"
+msgstr "Offentlig"
+
+#: settings.orgs.visibility.unlisted
+msgid "settings.orgs.visibility.unlisted"
+msgstr "Olistad"
+
+#: settings.orgs.visibility.private
+msgid "settings.orgs.visibility.private"
+msgstr "Privat"
+
+#: settings.orgs.new.title
+msgid "settings.orgs.new.title"
+msgstr "Skapa organisation"
+
+#: settings.orgs.new.name
+msgid "settings.orgs.new.name"
+msgstr "Organisationsnamn"
+
+#: settings.orgs.new.namePlaceholder
+msgid "settings.orgs.new.namePlaceholder"
+msgstr "Min organisation"
+
+#: settings.orgs.new.slug
+msgid "settings.orgs.new.slug"
+msgstr "Slug"
+
+#: settings.orgs.new.slugPlaceholder
+msgid "settings.orgs.new.slugPlaceholder"
+msgstr "min-organisation"
+
+#: settings.orgs.new.slugHint
+msgid "settings.orgs.new.slugHint"
+msgstr "URL-säker identifierare (gemener, siffror och bindestreck)"
+
+#: settings.orgs.new.visibility
+msgid "settings.orgs.new.visibility"
+msgstr "Synlighet"
+
+#: settings.orgs.new.create
+msgid "settings.orgs.new.create"
+msgstr "Skapa organisation"
+
+#: settings.orgs.new.creating
+msgid "settings.orgs.new.creating"
+msgstr "Skapar..."
+
+#: settings.orgs.new.error
+msgid "settings.orgs.new.error"
+msgstr "Kunde inte skapa organisation"
+
+#: settings.orgs.new.requiredFields
+msgid "settings.orgs.new.requiredFields"
+msgstr "Namn och slug krävs"
+
+#: members.title
+msgid "members.title"
+msgstr "Medlemmar"
+
+#: members.add
+msgid "members.add"
+msgstr "Lägg till medlem"
+
+#: members.remove
+msgid "members.remove"
+msgstr "Ta bort"
+
+#: members.removeConfirm
+msgid "members.removeConfirm"
+msgstr "Är du säker på att du vill ta bort denna medlem?"
+
+#: members.role
+msgid "members.role"
+msgstr "Roll"
+
+#: members.roleOwner
+msgid "members.roleOwner"
+msgstr "Ägare"
+
+#: members.roleAdmin
+msgid "members.roleAdmin"
+msgstr "Administratör"
+
+#: members.roleMember
+msgid "members.roleMember"
+msgstr "Medlem"
+
+#: members.changeRole
+msgid "members.changeRole"
+msgstr "Ändra roll"
+
+#: members.noMembers
+msgid "members.noMembers"
+msgstr "Inga medlemmar ännu"
+
+#: teams.title
+msgid "teams.title"
+msgstr "Team"
+
+#: teams.create
+msgid "teams.create"
+msgstr "Skapa team"
+
+#: teams.createTitle
+msgid "teams.createTitle"
+msgstr "Skapa nytt team"
+
+#: teams.name
+msgid "teams.name"
+msgstr "Teamnamn"
+
+#: teams.slug
+msgid "teams.slug"
+msgstr "URL-slug"
+
+#: teams.members
+msgid "teams.members"
+msgstr "Teammedlemmar"
+
+#: teams.addMember
+msgid "teams.addMember"
+msgstr "Lägg till medlem"
+
+#: teams.removeMember
+msgid "teams.removeMember"
+msgstr "Ta bort"
+
+#: teams.removeMemberConfirm
+msgid "teams.removeMemberConfirm"
+msgstr "Är du säker på att du vill ta bort denna medlem från teamet?"
+
+#: teams.noTeams
+msgid "teams.noTeams"
+msgstr "Inga team ännu"
+
+#: teams.noMembers
+msgid "teams.noMembers"
+msgstr "Inga medlemmar i detta team"
+
+#: teams.delete
+msgid "teams.delete"
+msgstr "Ta bort team"
+
+#: teams.deleteConfirm
+msgid "teams.deleteConfirm"
+msgstr "Är du säker på att du vill ta bort detta team?"
+
+#: teams.roleMaintainer
+msgid "teams.roleMaintainer"
+msgstr "Underhållare"
+
+#: teams.roleMember
+msgid "teams.roleMember"
+msgstr "Medlem"
+
+#: teams.role.maintainer
+msgid "teams.role.maintainer"
+msgstr "Underhållare"
+
+#: teams.role.member
+msgid "teams.role.member"
+msgstr "Medlem"
+
+#: teams.backToOrg
+msgid "teams.backToOrg"
+msgstr "Tillbaka till organisation"
+
+#: teams.changeRole
+msgid "teams.changeRole"
+msgstr "Ändra roll"
+
+#: teams.settings
+msgid "teams.settings"
+msgstr "Teaminställningar"
+
+#: teams.teamName
+msgid "teams.teamName"
+msgstr "Teamnamn"
+
+#: teams.save
+msgid "teams.save"
+msgstr "Spara ändringar"
+
+#: teams.saving
+msgid "teams.saving"
+msgstr "Sparar..."
+
+#: teams.saved
+msgid "teams.saved"
+msgstr "Teamet har uppdaterats"
+
+#: teams.deleteTeam
+msgid "teams.deleteTeam"
+msgstr "Ta bort team"
+
+#: teams.deleteTeamConfirm
+msgid "teams.deleteTeamConfirm"
+msgstr "Är du säker på att du vill ta bort detta team? Denna åtgärd kan inte ångras."
+
+#: teams.deleteTeamWarning
+msgid "teams.deleteTeamWarning"
+msgstr "Detta kommer permanent ta bort teamet och ta bort alla medlemmar."
+
+#: teams.deleting
+msgid "teams.deleting"
+msgstr "Tar bort..."
+
+#: teams.selectMember
+msgid "teams.selectMember"
+msgstr "Välj en medlem att lägga till"
+
+#: teams.selectRole
+msgid "teams.selectRole"
+msgstr "Välj roll"
+
+#: teams.adding
+msgid "teams.adding"
+msgstr "Lägger till..."
+
+#: teams.add
+msgid "teams.add"
+msgstr "Lägg till"
+
+#: teams.noAvailableMembers
+msgid "teams.noAvailableMembers"
+msgstr "Inga organisationsmedlemmar tillgängliga att lägga till"
+
+#: apiKeys.title
+msgid "apiKeys.title"
+msgstr "API-nycklar"
+
+#: apiKeys.description
+msgid "apiKeys.description"
+msgstr "Hantera API-nycklar för programmatisk åtkomst"
+
+#: apiKeys.create
+msgid "apiKeys.create"
+msgstr "Skapa API-nyckel"
+
+#: apiKeys.createTitle
+msgid "apiKeys.createTitle"
+msgstr "Skapa ny API-nyckel"
+
+#: apiKeys.name
+msgid "apiKeys.name"
+msgstr "Nyckelnamn"
+
+#: apiKeys.nameHint
+msgid "apiKeys.nameHint"
+msgstr "Ett beskrivande namn för denna nyckel"
+
+#: apiKeys.scopes
+msgid "apiKeys.scopes"
+msgstr "Behörigheter"
+
+#: apiKeys.scopesHint
+msgid "apiKeys.scopesHint"
+msgstr "Välj behörigheter för denna nyckel"
+
+#: apiKeys.scopeThreadsRead
+msgid "apiKeys.scopeThreadsRead"
+msgstr "Läsa trådar"
+
+#: apiKeys.scopeThreadsWrite
+msgid "apiKeys.scopeThreadsWrite"
+msgstr "Skriva trådar"
+
+#: apiKeys.scopeLlmUse
+msgid "apiKeys.scopeLlmUse"
+msgstr "Använda LLM"
+
+#: apiKeys.prefix
+msgid "apiKeys.prefix"
+msgstr "Nyckelprefix"
+
+#: apiKeys.createdAt
+msgid "apiKeys.createdAt"
+msgstr "Skapad"
+
+#: apiKeys.lastUsed
+msgid "apiKeys.lastUsed"
+msgstr "Senast använd"
+
+#: apiKeys.never
+msgid "apiKeys.never"
+msgstr "Aldrig"
+
+#: apiKeys.revoke
+msgid "apiKeys.revoke"
+msgstr "Återkalla"
+
+#: apiKeys.revokeConfirm
+msgid "apiKeys.revokeConfirm"
+msgstr "Är du säker på att du vill återkalla denna API-nyckel?"
+
+#: apiKeys.noKeys
+msgid "apiKeys.noKeys"
+msgstr "Inga API-nycklar ännu"
+
+#: apiKeys.copyWarning
+msgid "apiKeys.copyWarning"
+msgstr "Kopiera denna nyckel nu. Du kommer inte kunna se den igen."
+
+#: apiKeys.copied
+msgid "apiKeys.copied"
+msgstr "Kopierad till urklipp"
+
+#: general.search
+msgid "general.search"
+msgstr "Search"
+
+#: general.previous
+msgid "general.previous"
+msgstr "Previous"
+
+#: general.next
+msgid "general.next"
+msgstr "Next"
+
+#: general.done
+msgid "general.done"
+msgstr "Done"
+
+#: general.refresh
+msgid "general.refresh"
+msgstr "Refresh"
+
+#: admin.users.title
+msgid "admin.users.title"
+msgstr "User Management"
+
+#: admin.users.description
+msgid "admin.users.description"
+msgstr "View and manage users across the platform"
+
+#: admin.users.searchPlaceholder
+msgid "admin.users.searchPlaceholder"
+msgstr "Search by name or email..."
+
+#: admin.users.empty
+msgid "admin.users.empty"
+msgstr "No users found"
+
+#: admin.users.created
+msgid "admin.users.created"
+msgstr "Created"
+
+#: admin.users.lastLogin
+msgid "admin.users.lastLogin"
+msgstr "Last login"
+
+#: admin.users.impersonate
+msgid "admin.users.impersonate"
+msgstr "Impersonate"
+
+#: admin.impersonation.banner
+msgid "admin.impersonation.banner"
+msgstr "Admin {admin} impersonating {user}"
+
+#: admin.impersonation.stop
+msgid "admin.impersonation.stop"
+msgstr "Stop Impersonating"
+
+#: nav.weavers
+msgid "nav.weavers"
+msgstr "Weavers"
+
+#: weavers.title
+msgid "weavers.title"
+msgstr "Weavers"
+
+#: weavers.description
+msgid "weavers.description"
+msgstr "Manage ephemeral development environments"
+
+#: weavers.create
+msgid "weavers.create"
+msgstr "Create Weaver"
+
+#: weavers.createFirst
+msgid "weavers.createFirst"
+msgstr "Create your first weaver"
+
+#: weavers.createTitle
+msgid "weavers.createTitle"
+msgstr "Create New Weaver"
+
+#: weavers.empty
+msgid "weavers.empty"
+msgstr "No weavers running"
+
+#: weavers.delete
+msgid "weavers.delete"
+msgstr "Delete"
+
+#: weavers.deleteConfirm
+msgid "weavers.deleteConfirm"
+msgstr "Are you sure you want to delete this weaver?"
+
+#: weavers.image
+msgid "weavers.image"
+msgstr "Image"
+
+#: weavers.imageName
+msgid "weavers.imageName"
+msgstr "Container Image"
+
+#: weavers.created
+msgid "weavers.created"
+msgstr "Created"
+
+#: weavers.age
+msgid "weavers.age"
+msgstr "Age"
+
+#: weavers.lifetime
+msgid "weavers.lifetime"
+msgstr "Lifetime"
+
+#: weavers.lifetimeLabel
+msgid "weavers.lifetimeLabel"
+msgstr "Lifetime (TTL)"
+
+#: weavers.workdir
+msgid "weavers.workdir"
+msgstr "Working Directory"
+
+#: weavers.hour
+msgid "weavers.hour"
+msgstr "hour"
+
+#: weavers.hours
+msgid "weavers.hours"
+msgstr "hours"
+
+#: weavers.attach
+msgid "weavers.attach"
+msgstr "Attach"
+
+#: weavers.backToList
+msgid "weavers.backToList"
+msgstr "Back to Weavers"
+
+#: weavers.notFound
+msgid "weavers.notFound"
+msgstr "Weaver not found"
+
+#: weavers.logs
+msgid "weavers.logs"
+msgstr "Logs"
+
+#: weavers.logsTitle
+msgid "weavers.logsTitle"
+msgstr "Weaver Logs"
+
+#: weavers.logsConnecting
+msgid "weavers.logsConnecting"
+msgstr "Connecting to log stream..."
+
+#: weavers.logsNoData
+msgid "weavers.logsNoData"
+msgstr "No logs available yet"
+
+#: weavers.logsError
+msgid "weavers.logsError"
+msgstr "Failed to connect to log stream"
+
+#: weavers.logsClosed
+msgid "weavers.logsClosed"
+msgstr "Log stream closed"
+
+#: weavers.creatingTitle
+msgid "weavers.creatingTitle"
+msgstr "Creating Weaver"
+
+#: weavers.creatingProgress
+msgid "weavers.creatingProgress"
+msgstr "Provisioning your weaver environment..."
+
+#: weavers.creatingWait
+msgid "weavers.creatingWait"
+msgstr "Waiting for weaver to become ready. You will be redirected automatically."
+
+#: weavers.createFailed
+msgid "weavers.createFailed"
+msgstr "Weaver creation failed"
+
+#: weavers.createTimeout
+msgid "weavers.createTimeout"
+msgstr "Weaver creation timed out"
+
+#: weavers.terminal.connected
+msgid "weavers.terminal.connected"
+msgstr "Connected"
+
+#: weavers.terminal.connecting
+msgid "weavers.terminal.connecting"
+msgstr "Connecting..."
+
+#: weavers.terminal.disconnected
+msgid "weavers.terminal.disconnected"
+msgstr "Disconnected"
+
+#: weavers.terminal.error
+msgid "weavers.terminal.error"
+msgstr "Connection error"
+
+#: weavers.terminal.reconnect
+msgid "weavers.terminal.reconnect"
+msgstr "Reconnect"
+
+#: weavers.terminal.pending
+msgid "weavers.terminal.pending"
+msgstr "Weaver is starting..."
+
+#: weavers.terminal.pendingHint
+msgid "weavers.terminal.pendingHint"
+msgstr "The terminal will be available once the weaver is running"
+
+#: weavers.terminal.notRunning
+msgid "weavers.terminal.notRunning"
+msgstr "Weaver is not running (status: {status})"

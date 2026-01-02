@@ -1,0 +1,996 @@
+# Translation catalog for Loom Web
+# Language: he
+#
+msgid ""
+msgstr ""
+"Language: he\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: nav.threads
+msgid "nav.threads"
+msgstr "שרשורים"
+
+#: nav.settings
+msgid "nav.settings"
+msgstr "הגדרות"
+
+#: nav.admin
+msgid "nav.admin"
+msgstr "ניהול"
+
+#: nav.jobs
+msgid "nav.jobs"
+msgstr "משימות"
+
+#: thread.new
+msgid "thread.new"
+msgstr "שרשור חדש"
+
+#: thread.delete
+msgid "thread.delete"
+msgstr "מחיקה"
+
+#: thread.search
+msgid "thread.search"
+msgstr "חיפוש שרשורים..."
+
+#: thread.noThreads
+msgid "thread.noThreads"
+msgstr "אין שרשורים עדיין"
+
+#: thread.loadError
+msgid "thread.loadError"
+msgstr "טעינת השרשורים נכשלה"
+
+#: state.waiting_for_user_input
+msgid "state.waiting_for_user_input"
+msgstr "ממתין לקלט"
+
+#: state.calling_llm
+msgid "state.calling_llm"
+msgstr "קורא ל-LLM"
+
+#: state.processing_llm_response
+msgid "state.processing_llm_response"
+msgstr "מעבד תגובה"
+
+#: state.executing_tools
+msgid "state.executing_tools"
+msgstr "מריץ כלים"
+
+#: state.post_tools_hook
+msgid "state.post_tools_hook"
+msgstr "עיבוד לאחר הרצה"
+
+#: state.error
+msgid "state.error"
+msgstr "שגיאה"
+
+#: state.shutting_down
+msgid "state.shutting_down"
+msgstr "מכבה"
+
+#: tool.pending
+msgid "tool.pending"
+msgstr "ממתין"
+
+#: tool.running
+msgid "tool.running"
+msgstr "רץ"
+
+#: tool.completed
+msgid "tool.completed"
+msgstr "הושלם"
+
+#: tool.failed
+msgid "tool.failed"
+msgstr "נכשל"
+
+#: connection.connected
+msgid "connection.connected"
+msgstr "מחובר"
+
+#: connection.disconnected
+msgid "connection.disconnected"
+msgstr "מנותק"
+
+#: connection.connecting
+msgid "connection.connecting"
+msgstr "מתחבר..."
+
+#: connection.reconnecting
+msgid "connection.reconnecting"
+msgstr "מתחבר מחדש..."
+
+#: connection.error
+msgid "connection.error"
+msgstr "שגיאת חיבור"
+
+#: connection.clickToReconnect
+msgid "connection.clickToReconnect"
+msgstr "לחץ להתחברות מחדש"
+
+#: connection.attempt
+msgid "connection.attempt"
+msgstr "ניסיון {count}"
+
+#: message.placeholder
+msgid "message.placeholder"
+msgstr "הקלד הודעה..."
+
+#: message.send
+msgid "message.send"
+msgstr "שלח"
+
+#: auth.signOut
+msgid "auth.signOut"
+msgstr "התנתקות"
+
+#: auth.dashboard.welcome
+msgid "auth.dashboard.welcome"
+msgstr "שלום,"
+
+#: auth.dashboard.protectedPage
+msgid "auth.dashboard.protectedPage"
+msgstr "זהו דף מוגן. עליך להיות מחובר כדי לצפות בו."
+
+#: general.loading
+msgid "general.loading"
+msgstr "טוען..."
+
+#: general.error
+msgid "general.error"
+msgstr "אירעה שגיאה"
+
+#: general.retry
+msgid "general.retry"
+msgstr "נסה שוב"
+
+#: general.cancel
+msgid "general.cancel"
+msgstr "ביטול"
+
+#: general.save
+msgid "general.save"
+msgstr "שמירה"
+
+#: general.close
+msgid "general.close"
+msgstr "סגירה"
+
+#: auth.login.title
+msgid "auth.login.title"
+msgstr "התחברות ל-Loom"
+
+#: auth.login.subtitle
+msgid "auth.login.subtitle"
+msgstr "בחר את שיטת ההתחברות המועדפת עליך"
+
+#: auth.login.github
+msgid "auth.login.github"
+msgstr "המשך עם GitHub"
+
+#: auth.login.google
+msgid "auth.login.google"
+msgstr "המשך עם Google"
+
+#: auth.login.or
+msgid "auth.login.or"
+msgstr "או"
+
+#: auth.login.emailLabel
+msgid "auth.login.emailLabel"
+msgstr "כתובת אימייל"
+
+#: auth.login.emailPlaceholder
+msgid "auth.login.emailPlaceholder"
+msgstr "you@example.com"
+
+#: auth.login.sendMagicLink
+msgid "auth.login.sendMagicLink"
+msgstr "שלח קישור קסם"
+
+#: auth.login.sending
+msgid "auth.login.sending"
+msgstr "שולח..."
+
+#: auth.login.checkEmail
+msgid "auth.login.checkEmail"
+msgstr "בדוק את האימייל שלך"
+
+#: auth.login.magicLinkSent
+msgid "auth.login.magicLinkSent"
+msgstr "שלחנו קישור התחברות אל"
+
+#: auth.login.useDifferentEmail
+msgid "auth.login.useDifferentEmail"
+msgstr "השתמש באימייל אחר"
+
+#: auth.login.error
+msgid "auth.login.error"
+msgstr "לא ניתן לשלוח קישור קסם. נסה שוב."
+
+#: auth.device.title
+msgid "auth.device.title"
+msgstr "אשר CLI"
+
+#: auth.device.subtitle
+msgid "auth.device.subtitle"
+msgstr "הזן את הקוד שמוצג בטרמינל שלך כדי לקשר את ה-CLI לחשבון שלך"
+
+#: auth.device.inputLabel
+msgid "auth.device.inputLabel"
+msgstr "הזן את הקוד שלך"
+
+#: auth.device.placeholder
+msgid "auth.device.placeholder"
+msgstr "XXX-XXX-XXX"
+
+#: auth.device.authorize
+msgid "auth.device.authorize"
+msgstr "אישור"
+
+#: auth.device.authorizing
+msgid "auth.device.authorizing"
+msgstr "מאשר..."
+
+#: auth.device.success
+msgid "auth.device.success"
+msgstr "אושר!"
+
+#: auth.device.successMessage
+msgid "auth.device.successMessage"
+msgstr "תוכל לסגור דף זה ולחזור לטרמינל."
+
+#: auth.device.error
+msgid "auth.device.error"
+msgstr "קוד לא תקין או שפג תוקפו. בדוק את הטרמינל ונסה שוב."
+
+#: auth.device.noCode
+msgid "auth.device.noCode"
+msgstr "אין לך קוד? הרץ"
+
+#: auth.device.cliCommand
+msgid "auth.device.cliCommand"
+msgstr "loom login"
+
+#: auth.device.inTerminal
+msgid "auth.device.inTerminal"
+msgstr "בטרמינל שלך."
+
+#: settings.sessions.title
+msgid "settings.sessions.title"
+msgstr "הפעלות פעילות"
+
+#: settings.sessions.description
+msgid "settings.sessions.description"
+msgstr "נהל את ההפעלות הפעילות שלך במכשירים שונים"
+
+#: settings.sessions.current
+msgid "settings.sessions.current"
+msgstr "הפעלה נוכחית"
+
+#: settings.sessions.lastUsed
+msgid "settings.sessions.lastUsed"
+msgstr "שימוש אחרון"
+
+#: settings.sessions.createdAt
+msgid "settings.sessions.createdAt"
+msgstr "נוצר"
+
+#: settings.sessions.revoke
+msgid "settings.sessions.revoke"
+msgstr "ביטול"
+
+#: settings.sessions.revokeConfirm
+msgid "settings.sessions.revokeConfirm"
+msgstr "האם אתה בטוח שברצונך לבטל הפעלה זו?"
+
+#: settings.sessions.noSessions
+msgid "settings.sessions.noSessions"
+msgstr "אין הפעלות פעילות"
+
+#: settings.sessions.web
+msgid "settings.sessions.web"
+msgstr "אתר"
+
+#: settings.sessions.cli
+msgid "settings.sessions.cli"
+msgstr "CLI"
+
+#: settings.sessions.vscode
+msgid "settings.sessions.vscode"
+msgstr "VS Code"
+
+#: settings.nav.sessions
+msgid "settings.nav.sessions"
+msgstr "הפעלות"
+
+#: settings.nav.profile
+msgid "settings.nav.profile"
+msgstr "פרופיל"
+
+#: settings.nav.orgs
+msgid "settings.nav.orgs"
+msgstr "ארגונים"
+
+#: settings.profile.title
+msgid "settings.profile.title"
+msgstr "הגדרות פרופיל"
+
+#: settings.profile.displayName
+msgid "settings.profile.displayName"
+msgstr "שם תצוגה"
+
+#: settings.profile.email
+msgid "settings.profile.email"
+msgstr "אימייל"
+
+#: settings.profile.emailHint
+msgid "settings.profile.emailHint"
+msgstr "לא ניתן לשנות את האימייל כאן"
+
+#: settings.profile.locale
+msgid "settings.profile.locale"
+msgstr "שפה"
+
+#: settings.profile.save
+msgid "settings.profile.save"
+msgstr "שמור שינויים"
+
+#: settings.profile.saving
+msgid "settings.profile.saving"
+msgstr "שומר..."
+
+#: settings.profile.saved
+msgid "settings.profile.saved"
+msgstr "הפרופיל עודכן בהצלחה"
+
+#: settings.profile.error
+msgid "settings.profile.error"
+msgstr "עדכון הפרופיל נכשל"
+
+#: orgs.title
+msgid "orgs.title"
+msgstr "ארגונים"
+
+#: orgs.description
+msgid "orgs.description"
+msgstr "נהל את הארגונים והצוותים שלך"
+
+#: orgs.create
+msgid "orgs.create"
+msgstr "צור ארגון"
+
+#: orgs.createTitle
+msgid "orgs.createTitle"
+msgstr "צור ארגון חדש"
+
+#: orgs.name
+msgid "orgs.name"
+msgstr "שם הארגון"
+
+#: orgs.slug
+msgid "orgs.slug"
+msgstr "מזהה URL"
+
+#: orgs.slugHint
+msgid "orgs.slugHint"
+msgstr "משמש בכתובות URL, אותיות קטנות ומקפים בלבד"
+
+#: orgs.visibility
+msgid "orgs.visibility"
+msgstr "נראות"
+
+#: orgs.visibilityPublic
+msgid "orgs.visibilityPublic"
+msgstr "ציבורי"
+
+#: orgs.visibilityPrivate
+msgid "orgs.visibilityPrivate"
+msgstr "פרטי"
+
+#: orgs.joinPolicy
+msgid "orgs.joinPolicy"
+msgstr "מדיניות הצטרפות"
+
+#: orgs.joinPolicyOpen
+msgid "orgs.joinPolicyOpen"
+msgstr "פתוח"
+
+#: orgs.joinPolicyRequest
+msgid "orgs.joinPolicyRequest"
+msgstr "בקשה להצטרפות"
+
+#: orgs.joinPolicyInvite
+msgid "orgs.joinPolicyInvite"
+msgstr "הזמנה בלבד"
+
+#: orgs.members
+msgid "orgs.members"
+msgstr "חברים"
+
+#: orgs.teams
+msgid "orgs.teams"
+msgstr "צוותות"
+
+#: orgs.apiKeys
+msgid "orgs.apiKeys"
+msgstr "מפתחות API"
+
+#: orgs.settings
+msgid "orgs.settings"
+msgstr "הגדרות"
+
+#: orgs.noOrgs
+msgid "orgs.noOrgs"
+msgstr "אין ארגונים עדיין"
+
+#: orgs.delete
+msgid "orgs.delete"
+msgstr "מחק ארגון"
+
+#: orgs.deleteConfirm
+msgid "orgs.deleteConfirm"
+msgstr "האם אתה בטוח שברצונך למחוק ארגון זה?"
+
+#: settings.orgs.title
+msgid "settings.orgs.title"
+msgstr "ארגונים"
+
+#: settings.orgs.description
+msgid "settings.orgs.description"
+msgstr "נהל את הארגונים וחברויות הצוות שלך"
+
+#: settings.orgs.create
+msgid "settings.orgs.create"
+msgstr "צור ארגון"
+
+#: settings.orgs.noOrgs
+msgid "settings.orgs.noOrgs"
+msgstr "אין ארגונים עדיין"
+
+#: settings.orgs.loadError
+msgid "settings.orgs.loadError"
+msgstr "טעינת הארגונים נכשלה"
+
+#: settings.orgs.personal
+msgid "settings.orgs.personal"
+msgstr "אישי"
+
+#: settings.orgs.slug
+msgid "settings.orgs.slug"
+msgstr "מזהה"
+
+#: settings.orgs.member
+msgid "settings.orgs.member"
+msgstr "חבר"
+
+#: settings.orgs.members
+msgid "settings.orgs.members"
+msgstr "חברים"
+
+#: settings.orgs.visibility.public
+msgid "settings.orgs.visibility.public"
+msgstr "ציבורי"
+
+#: settings.orgs.visibility.unlisted
+msgid "settings.orgs.visibility.unlisted"
+msgstr "לא ברשימה"
+
+#: settings.orgs.visibility.private
+msgid "settings.orgs.visibility.private"
+msgstr "פרטי"
+
+#: settings.orgs.new.title
+msgid "settings.orgs.new.title"
+msgstr "צור ארגון"
+
+#: settings.orgs.new.name
+msgid "settings.orgs.new.name"
+msgstr "שם הארגון"
+
+#: settings.orgs.new.namePlaceholder
+msgid "settings.orgs.new.namePlaceholder"
+msgstr "הארגון שלי"
+
+#: settings.orgs.new.slug
+msgid "settings.orgs.new.slug"
+msgstr "מזהה"
+
+#: settings.orgs.new.slugPlaceholder
+msgid "settings.orgs.new.slugPlaceholder"
+msgstr "my-organization"
+
+#: settings.orgs.new.slugHint
+msgid "settings.orgs.new.slugHint"
+msgstr "מזהה בטוח ל-URL (אותיות קטנות, מספרים ומקפים)"
+
+#: settings.orgs.new.visibility
+msgid "settings.orgs.new.visibility"
+msgstr "נראות"
+
+#: settings.orgs.new.create
+msgid "settings.orgs.new.create"
+msgstr "צור ארגון"
+
+#: settings.orgs.new.creating
+msgid "settings.orgs.new.creating"
+msgstr "יוצר..."
+
+#: settings.orgs.new.error
+msgid "settings.orgs.new.error"
+msgstr "יצירת הארגון נכשלה"
+
+#: settings.orgs.new.requiredFields
+msgid "settings.orgs.new.requiredFields"
+msgstr "שם ומזהה נדרשים"
+
+#: members.title
+msgid "members.title"
+msgstr "חברים"
+
+#: members.add
+msgid "members.add"
+msgstr "הוסף חבר"
+
+#: members.remove
+msgid "members.remove"
+msgstr "הסר"
+
+#: members.removeConfirm
+msgid "members.removeConfirm"
+msgstr "האם אתה בטוח שברצונך להסיר חבר זה?"
+
+#: members.role
+msgid "members.role"
+msgstr "תפקיד"
+
+#: members.roleOwner
+msgid "members.roleOwner"
+msgstr "בעלים"
+
+#: members.roleAdmin
+msgid "members.roleAdmin"
+msgstr "מנהל"
+
+#: members.roleMember
+msgid "members.roleMember"
+msgstr "חבר"
+
+#: members.changeRole
+msgid "members.changeRole"
+msgstr "שנה תפקיד"
+
+#: members.noMembers
+msgid "members.noMembers"
+msgstr "אין חברים עדיין"
+
+#: teams.title
+msgid "teams.title"
+msgstr "צוותות"
+
+#: teams.create
+msgid "teams.create"
+msgstr "צור צוות"
+
+#: teams.createTitle
+msgid "teams.createTitle"
+msgstr "צור צוות חדש"
+
+#: teams.name
+msgid "teams.name"
+msgstr "שם הצוות"
+
+#: teams.slug
+msgid "teams.slug"
+msgstr "מזהה URL"
+
+#: teams.members
+msgid "teams.members"
+msgstr "חברי צוות"
+
+#: teams.addMember
+msgid "teams.addMember"
+msgstr "הוסף חבר"
+
+#: teams.removeMember
+msgid "teams.removeMember"
+msgstr "הסר"
+
+#: teams.removeMemberConfirm
+msgid "teams.removeMemberConfirm"
+msgstr "האם אתה בטוח שברצונך להסיר חבר זה מהצוות?"
+
+#: teams.noTeams
+msgid "teams.noTeams"
+msgstr "אין צוותות עדיין"
+
+#: teams.noMembers
+msgid "teams.noMembers"
+msgstr "אין חברים בצוות זה"
+
+#: teams.delete
+msgid "teams.delete"
+msgstr "מחק צוות"
+
+#: teams.deleteConfirm
+msgid "teams.deleteConfirm"
+msgstr "האם אתה בטוח שברצונך למחוק צוות זה?"
+
+#: teams.roleMaintainer
+msgid "teams.roleMaintainer"
+msgstr "מתחזק"
+
+#: teams.roleMember
+msgid "teams.roleMember"
+msgstr "חבר"
+
+#: teams.role.maintainer
+msgid "teams.role.maintainer"
+msgstr "מתחזק"
+
+#: teams.role.member
+msgid "teams.role.member"
+msgstr "חבר"
+
+#: teams.backToOrg
+msgid "teams.backToOrg"
+msgstr "חזרה לארגון"
+
+#: teams.changeRole
+msgid "teams.changeRole"
+msgstr "שנה תפקיד"
+
+#: teams.settings
+msgid "teams.settings"
+msgstr "הגדרות צוות"
+
+#: teams.teamName
+msgid "teams.teamName"
+msgstr "שם הצוות"
+
+#: teams.save
+msgid "teams.save"
+msgstr "שמור שינויים"
+
+#: teams.saving
+msgid "teams.saving"
+msgstr "שומר..."
+
+#: teams.saved
+msgid "teams.saved"
+msgstr "הצוות עודכן בהצלחה"
+
+#: teams.deleteTeam
+msgid "teams.deleteTeam"
+msgstr "מחק צוות"
+
+#: teams.deleteTeamConfirm
+msgid "teams.deleteTeamConfirm"
+msgstr "האם אתה בטוח שברצונך למחוק צוות זה? פעולה זו אינה ניתנת לביטול."
+
+#: teams.deleteTeamWarning
+msgid "teams.deleteTeamWarning"
+msgstr "פעולה זו תמחק את הצוות לצמיתות ותסיר את כל החברים."
+
+#: teams.deleting
+msgid "teams.deleting"
+msgstr "מוחק..."
+
+#: teams.selectMember
+msgid "teams.selectMember"
+msgstr "בחר חבר להוספה"
+
+#: teams.selectRole
+msgid "teams.selectRole"
+msgstr "בחר תפקיד"
+
+#: teams.adding
+msgid "teams.adding"
+msgstr "מוסיף..."
+
+#: teams.add
+msgid "teams.add"
+msgstr "הוסף"
+
+#: teams.noAvailableMembers
+msgid "teams.noAvailableMembers"
+msgstr "אין חברי ארגון זמינים להוספה"
+
+#: apiKeys.title
+msgid "apiKeys.title"
+msgstr "מפתחות API"
+
+#: apiKeys.description
+msgid "apiKeys.description"
+msgstr "נהל מפתחות API לגישה תכנותית"
+
+#: apiKeys.create
+msgid "apiKeys.create"
+msgstr "צור מפתח API"
+
+#: apiKeys.createTitle
+msgid "apiKeys.createTitle"
+msgstr "צור מפתח API חדש"
+
+#: apiKeys.name
+msgid "apiKeys.name"
+msgstr "שם המפתח"
+
+#: apiKeys.nameHint
+msgid "apiKeys.nameHint"
+msgstr "שם תיאורי למפתח זה"
+
+#: apiKeys.scopes
+msgid "apiKeys.scopes"
+msgstr "הרשאות"
+
+#: apiKeys.scopesHint
+msgid "apiKeys.scopesHint"
+msgstr "בחר את ההרשאות למפתח זה"
+
+#: apiKeys.scopeThreadsRead
+msgid "apiKeys.scopeThreadsRead"
+msgstr "קריאת שרשורים"
+
+#: apiKeys.scopeThreadsWrite
+msgid "apiKeys.scopeThreadsWrite"
+msgstr "כתיבת שרשורים"
+
+#: apiKeys.scopeLlmUse
+msgid "apiKeys.scopeLlmUse"
+msgstr "שימוש ב-LLM"
+
+#: apiKeys.prefix
+msgid "apiKeys.prefix"
+msgstr "קידומת מפתח"
+
+#: apiKeys.createdAt
+msgid "apiKeys.createdAt"
+msgstr "נוצר"
+
+#: apiKeys.lastUsed
+msgid "apiKeys.lastUsed"
+msgstr "שימוש אחרון"
+
+#: apiKeys.never
+msgid "apiKeys.never"
+msgstr "מעולם לא"
+
+#: apiKeys.revoke
+msgid "apiKeys.revoke"
+msgstr "ביטול"
+
+#: apiKeys.revokeConfirm
+msgid "apiKeys.revokeConfirm"
+msgstr "האם אתה בטוח שברצונך לבטל מפתח API זה?"
+
+#: apiKeys.noKeys
+msgid "apiKeys.noKeys"
+msgstr "אין מפתחות API עדיין"
+
+#: apiKeys.copyWarning
+msgid "apiKeys.copyWarning"
+msgstr "העתק מפתח זה עכשיו. לא תוכל לראותו שוב."
+
+#: apiKeys.copied
+msgid "apiKeys.copied"
+msgstr "הועתק ללוח"
+
+#: general.search
+msgid "general.search"
+msgstr "Search"
+
+#: general.previous
+msgid "general.previous"
+msgstr "Previous"
+
+#: general.next
+msgid "general.next"
+msgstr "Next"
+
+#: general.done
+msgid "general.done"
+msgstr "Done"
+
+#: general.refresh
+msgid "general.refresh"
+msgstr "Refresh"
+
+#: admin.users.title
+msgid "admin.users.title"
+msgstr "User Management"
+
+#: admin.users.description
+msgid "admin.users.description"
+msgstr "View and manage users across the platform"
+
+#: admin.users.searchPlaceholder
+msgid "admin.users.searchPlaceholder"
+msgstr "Search by name or email..."
+
+#: admin.users.empty
+msgid "admin.users.empty"
+msgstr "No users found"
+
+#: admin.users.created
+msgid "admin.users.created"
+msgstr "Created"
+
+#: admin.users.lastLogin
+msgid "admin.users.lastLogin"
+msgstr "Last login"
+
+#: admin.users.impersonate
+msgid "admin.users.impersonate"
+msgstr "Impersonate"
+
+#: admin.impersonation.banner
+msgid "admin.impersonation.banner"
+msgstr "Admin {admin} impersonating {user}"
+
+#: admin.impersonation.stop
+msgid "admin.impersonation.stop"
+msgstr "Stop Impersonating"
+
+#: nav.weavers
+msgid "nav.weavers"
+msgstr "Weavers"
+
+#: weavers.title
+msgid "weavers.title"
+msgstr "Weavers"
+
+#: weavers.description
+msgid "weavers.description"
+msgstr "Manage ephemeral development environments"
+
+#: weavers.create
+msgid "weavers.create"
+msgstr "Create Weaver"
+
+#: weavers.createFirst
+msgid "weavers.createFirst"
+msgstr "Create your first weaver"
+
+#: weavers.createTitle
+msgid "weavers.createTitle"
+msgstr "Create New Weaver"
+
+#: weavers.empty
+msgid "weavers.empty"
+msgstr "No weavers running"
+
+#: weavers.delete
+msgid "weavers.delete"
+msgstr "Delete"
+
+#: weavers.deleteConfirm
+msgid "weavers.deleteConfirm"
+msgstr "Are you sure you want to delete this weaver?"
+
+#: weavers.image
+msgid "weavers.image"
+msgstr "Image"
+
+#: weavers.imageName
+msgid "weavers.imageName"
+msgstr "Container Image"
+
+#: weavers.created
+msgid "weavers.created"
+msgstr "Created"
+
+#: weavers.age
+msgid "weavers.age"
+msgstr "Age"
+
+#: weavers.lifetime
+msgid "weavers.lifetime"
+msgstr "Lifetime"
+
+#: weavers.lifetimeLabel
+msgid "weavers.lifetimeLabel"
+msgstr "Lifetime (TTL)"
+
+#: weavers.workdir
+msgid "weavers.workdir"
+msgstr "Working Directory"
+
+#: weavers.hour
+msgid "weavers.hour"
+msgstr "hour"
+
+#: weavers.hours
+msgid "weavers.hours"
+msgstr "hours"
+
+#: weavers.attach
+msgid "weavers.attach"
+msgstr "Attach"
+
+#: weavers.backToList
+msgid "weavers.backToList"
+msgstr "Back to Weavers"
+
+#: weavers.notFound
+msgid "weavers.notFound"
+msgstr "Weaver not found"
+
+#: weavers.logs
+msgid "weavers.logs"
+msgstr "Logs"
+
+#: weavers.logsTitle
+msgid "weavers.logsTitle"
+msgstr "Weaver Logs"
+
+#: weavers.logsConnecting
+msgid "weavers.logsConnecting"
+msgstr "Connecting to log stream..."
+
+#: weavers.logsNoData
+msgid "weavers.logsNoData"
+msgstr "No logs available yet"
+
+#: weavers.logsError
+msgid "weavers.logsError"
+msgstr "Failed to connect to log stream"
+
+#: weavers.logsClosed
+msgid "weavers.logsClosed"
+msgstr "Log stream closed"
+
+#: weavers.creatingTitle
+msgid "weavers.creatingTitle"
+msgstr "Creating Weaver"
+
+#: weavers.creatingProgress
+msgid "weavers.creatingProgress"
+msgstr "Provisioning your weaver environment..."
+
+#: weavers.creatingWait
+msgid "weavers.creatingWait"
+msgstr "Waiting for weaver to become ready. You will be redirected automatically."
+
+#: weavers.createFailed
+msgid "weavers.createFailed"
+msgstr "Weaver creation failed"
+
+#: weavers.createTimeout
+msgid "weavers.createTimeout"
+msgstr "Weaver creation timed out"
+
+#: weavers.terminal.connected
+msgid "weavers.terminal.connected"
+msgstr "Connected"
+
+#: weavers.terminal.connecting
+msgid "weavers.terminal.connecting"
+msgstr "Connecting..."
+
+#: weavers.terminal.disconnected
+msgid "weavers.terminal.disconnected"
+msgstr "Disconnected"
+
+#: weavers.terminal.error
+msgid "weavers.terminal.error"
+msgstr "Connection error"
+
+#: weavers.terminal.reconnect
+msgid "weavers.terminal.reconnect"
+msgstr "Reconnect"
+
+#: weavers.terminal.pending
+msgid "weavers.terminal.pending"
+msgstr "Weaver is starting..."
+
+#: weavers.terminal.pendingHint
+msgid "weavers.terminal.pendingHint"
+msgstr "The terminal will be available once the weaver is running"
+
+#: weavers.terminal.notRunning
+msgid "weavers.terminal.notRunning"
+msgstr "Weaver is not running (status: {status})"

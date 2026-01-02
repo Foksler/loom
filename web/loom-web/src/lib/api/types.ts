@@ -519,6 +519,25 @@ export interface HealthResponse {
 	components: HealthComponents;
 }
 
+// Server log types
+export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
+
+export interface LogEntry {
+	id: number;
+	timestamp: string;
+	level: LogLevel;
+	target: string;
+	message: string;
+	fields?: [string, string][];
+}
+
+export interface ListLogsResponse {
+	entries: LogEntry[];
+	buffer_size: number;
+	buffer_capacity: number;
+	current_id: number;
+}
+
 // Error class for API errors
 export class ApiError extends Error {
 	constructor(

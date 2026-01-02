@@ -1,0 +1,1064 @@
+# Translation catalog for Loom Web
+# Language: es
+#
+msgid ""
+msgstr ""
+"Language: es\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: nav.threads
+msgid "nav.threads"
+msgstr "Hilos"
+
+#: nav.settings
+msgid "nav.settings"
+msgstr "Configuración"
+
+#: nav.admin
+msgid "nav.admin"
+msgstr "Admin"
+
+#: nav.jobs
+msgid "nav.jobs"
+msgstr "Trabajos"
+
+#: thread.new
+msgid "thread.new"
+msgstr "Nuevo hilo"
+
+#: thread.delete
+msgid "thread.delete"
+msgstr "Eliminar"
+
+#: thread.search
+msgid "thread.search"
+msgstr "Buscar hilos..."
+
+#: thread.noThreads
+msgid "thread.noThreads"
+msgstr "No hay hilos todavía"
+
+#: thread.loadError
+msgid "thread.loadError"
+msgstr "Error al cargar hilos"
+
+#: state.waiting_for_user_input
+msgid "state.waiting_for_user_input"
+msgstr "Esperando entrada"
+
+#: state.calling_llm
+msgid "state.calling_llm"
+msgstr "Llamando LLM"
+
+#: state.processing_llm_response
+msgid "state.processing_llm_response"
+msgstr "Procesando respuesta"
+
+#: state.executing_tools
+msgid "state.executing_tools"
+msgstr "Ejecutando herramientas"
+
+#: state.post_tools_hook
+msgid "state.post_tools_hook"
+msgstr "Post-procesamiento"
+
+#: state.error
+msgid "state.error"
+msgstr "Error"
+
+#: state.shutting_down
+msgid "state.shutting_down"
+msgstr "Cerrando"
+
+#: tool.pending
+msgid "tool.pending"
+msgstr "Pendiente"
+
+#: tool.running
+msgid "tool.running"
+msgstr "Ejecutando"
+
+#: tool.completed
+msgid "tool.completed"
+msgstr "Completado"
+
+#: tool.failed
+msgid "tool.failed"
+msgstr "Fallido"
+
+#: connection.connected
+msgid "connection.connected"
+msgstr "Conectado"
+
+#: connection.disconnected
+msgid "connection.disconnected"
+msgstr "Desconectado"
+
+#: connection.connecting
+msgid "connection.connecting"
+msgstr "Conectando..."
+
+#: connection.reconnecting
+msgid "connection.reconnecting"
+msgstr "Reconectando..."
+
+#: connection.error
+msgid "connection.error"
+msgstr "Error de conexión"
+
+#: connection.clickToReconnect
+msgid "connection.clickToReconnect"
+msgstr "Clic para reconectar"
+
+#: connection.attempt
+msgid "connection.attempt"
+msgstr "Intento {count}"
+
+#: message.placeholder
+msgid "message.placeholder"
+msgstr "Escribe un mensaje..."
+
+#: message.send
+msgid "message.send"
+msgstr "Enviar"
+
+#: auth.signOut
+msgid "auth.signOut"
+msgstr "Cerrar sesión"
+
+#: auth.dashboard.welcome
+msgid "auth.dashboard.welcome"
+msgstr "Bienvenido,"
+
+#: auth.dashboard.protectedPage
+msgid "auth.dashboard.protectedPage"
+msgstr "Esta es una página protegida. Debes iniciar sesión para verla."
+
+#: general.loading
+msgid "general.loading"
+msgstr "Cargando..."
+
+#: general.error
+msgid "general.error"
+msgstr "Ocurrió un error"
+
+#: general.retry
+msgid "general.retry"
+msgstr "Reintentar"
+
+#: general.cancel
+msgid "general.cancel"
+msgstr "Cancelar"
+
+#: general.save
+msgid "general.save"
+msgstr "Guardar"
+
+#: general.close
+msgid "general.close"
+msgstr "Cerrar"
+
+#: auth.login.title
+msgid "auth.login.title"
+msgstr "Iniciar sesión en Loom"
+
+#: auth.login.subtitle
+msgid "auth.login.subtitle"
+msgstr "Elige tu método de inicio de sesión preferido"
+
+#: auth.login.github
+msgid "auth.login.github"
+msgstr "Continuar con GitHub"
+
+#: auth.login.google
+msgid "auth.login.google"
+msgstr "Continuar con Google"
+
+#: auth.login.or
+msgid "auth.login.or"
+msgstr "o"
+
+#: auth.login.emailLabel
+msgid "auth.login.emailLabel"
+msgstr "Dirección de correo electrónico"
+
+#: auth.login.emailPlaceholder
+msgid "auth.login.emailPlaceholder"
+msgstr "tu@ejemplo.com"
+
+#: auth.login.sendMagicLink
+msgid "auth.login.sendMagicLink"
+msgstr "Enviar enlace mágico"
+
+#: auth.login.sending
+msgid "auth.login.sending"
+msgstr "Enviando..."
+
+#: auth.login.checkEmail
+msgid "auth.login.checkEmail"
+msgstr "Revisa tu correo"
+
+#: auth.login.magicLinkSent
+msgid "auth.login.magicLinkSent"
+msgstr "Enviamos un enlace de inicio de sesión a"
+
+#: auth.login.useDifferentEmail
+msgid "auth.login.useDifferentEmail"
+msgstr "Usar otro correo electrónico"
+
+#: auth.login.error
+msgid "auth.login.error"
+msgstr "No se pudo enviar el enlace mágico. Por favor, inténtalo de nuevo."
+
+#: auth.device.title
+msgid "auth.device.title"
+msgstr "Autorizar CLI"
+
+#: auth.device.subtitle
+msgid "auth.device.subtitle"
+msgstr "Ingresa el código que aparece en tu terminal para vincular tu CLI con tu cuenta"
+
+#: auth.device.inputLabel
+msgid "auth.device.inputLabel"
+msgstr "Ingresa tu código"
+
+#: auth.device.placeholder
+msgid "auth.device.placeholder"
+msgstr "XXX-XXX-XXX"
+
+#: auth.device.authorize
+msgid "auth.device.authorize"
+msgstr "Autorizar"
+
+#: auth.device.authorizing
+msgid "auth.device.authorizing"
+msgstr "Autorizando..."
+
+#: auth.device.success
+msgid "auth.device.success"
+msgstr "¡Autorizado!"
+
+#: auth.device.successMessage
+msgid "auth.device.successMessage"
+msgstr "Ahora puedes cerrar esta página y volver a tu terminal."
+
+#: auth.device.error
+msgid "auth.device.error"
+msgstr "Código inválido o expirado. Por favor, verifica tu terminal e inténtalo de nuevo."
+
+#: auth.device.noCode
+msgid "auth.device.noCode"
+msgstr "¿No tienes un código? Ejecuta"
+
+#: auth.device.cliCommand
+msgid "auth.device.cliCommand"
+msgstr "loom login"
+
+#: auth.device.inTerminal
+msgid "auth.device.inTerminal"
+msgstr "en tu terminal."
+
+#: settings.sessions.title
+msgid "settings.sessions.title"
+msgstr "Sesiones activas"
+
+#: settings.sessions.description
+msgid "settings.sessions.description"
+msgstr "Administra tus sesiones activas en todos los dispositivos"
+
+#: settings.sessions.current
+msgid "settings.sessions.current"
+msgstr "Sesión actual"
+
+#: settings.sessions.lastUsed
+msgid "settings.sessions.lastUsed"
+msgstr "Último uso"
+
+#: settings.sessions.createdAt
+msgid "settings.sessions.createdAt"
+msgstr "Creada"
+
+#: settings.sessions.revoke
+msgid "settings.sessions.revoke"
+msgstr "Revocar"
+
+#: settings.sessions.revokeConfirm
+msgid "settings.sessions.revokeConfirm"
+msgstr "¿Estás seguro de que deseas revocar esta sesión?"
+
+#: settings.sessions.noSessions
+msgid "settings.sessions.noSessions"
+msgstr "No hay sesiones activas"
+
+#: settings.sessions.web
+msgid "settings.sessions.web"
+msgstr "Web"
+
+#: settings.sessions.cli
+msgid "settings.sessions.cli"
+msgstr "CLI"
+
+#: settings.sessions.vscode
+msgid "settings.sessions.vscode"
+msgstr "VS Code"
+
+#: settings.nav.sessions
+msgid "settings.nav.sessions"
+msgstr "Sesiones"
+
+#: settings.nav.profile
+msgid "settings.nav.profile"
+msgstr "Perfil"
+
+#: settings.nav.orgs
+msgid "settings.nav.orgs"
+msgstr "Organizaciones"
+
+#: settings.profile.title
+msgid "settings.profile.title"
+msgstr "Configuración del Perfil"
+
+#: settings.profile.displayName
+msgid "settings.profile.displayName"
+msgstr "Nombre para mostrar"
+
+#: settings.profile.email
+msgid "settings.profile.email"
+msgstr "Correo electrónico"
+
+#: settings.profile.emailHint
+msgid "settings.profile.emailHint"
+msgstr "El correo no se puede cambiar aquí"
+
+#: settings.profile.locale
+msgid "settings.profile.locale"
+msgstr "Idioma"
+
+#: settings.profile.save
+msgid "settings.profile.save"
+msgstr "Guardar Cambios"
+
+#: settings.profile.saving
+msgid "settings.profile.saving"
+msgstr "Guardando..."
+
+#: settings.profile.saved
+msgid "settings.profile.saved"
+msgstr "Perfil actualizado correctamente"
+
+#: settings.profile.error
+msgid "settings.profile.error"
+msgstr "Error al actualizar el perfil"
+
+#: orgs.title
+msgid "orgs.title"
+msgstr "Organizaciones"
+
+#: orgs.description
+msgid "orgs.description"
+msgstr "Gestiona tus organizaciones y equipos"
+
+#: orgs.create
+msgid "orgs.create"
+msgstr "Crear Organización"
+
+#: orgs.createTitle
+msgid "orgs.createTitle"
+msgstr "Crear Nueva Organización"
+
+#: orgs.name
+msgid "orgs.name"
+msgstr "Nombre de la Organización"
+
+#: orgs.slug
+msgid "orgs.slug"
+msgstr "Slug de URL"
+
+#: orgs.slugHint
+msgid "orgs.slugHint"
+msgstr "Usado en URLs, solo letras minúsculas y guiones"
+
+#: orgs.visibility
+msgid "orgs.visibility"
+msgstr "Visibilidad"
+
+#: orgs.visibilityPublic
+msgid "orgs.visibilityPublic"
+msgstr "Pública"
+
+#: orgs.visibilityPrivate
+msgid "orgs.visibilityPrivate"
+msgstr "Privada"
+
+#: orgs.joinPolicy
+msgid "orgs.joinPolicy"
+msgstr "Política de Acceso"
+
+#: orgs.joinPolicyOpen
+msgid "orgs.joinPolicyOpen"
+msgstr "Abierta"
+
+#: orgs.joinPolicyRequest
+msgid "orgs.joinPolicyRequest"
+msgstr "Solicitar Acceso"
+
+#: orgs.joinPolicyInvite
+msgid "orgs.joinPolicyInvite"
+msgstr "Solo por Invitación"
+
+#: orgs.members
+msgid "orgs.members"
+msgstr "Miembros"
+
+#: orgs.teams
+msgid "orgs.teams"
+msgstr "Equipos"
+
+#: orgs.apiKeys
+msgid "orgs.apiKeys"
+msgstr "Claves API"
+
+#: orgs.settings
+msgid "orgs.settings"
+msgstr "Configuración"
+
+#: orgs.noOrgs
+msgid "orgs.noOrgs"
+msgstr "Aún no hay organizaciones"
+
+#: orgs.delete
+msgid "orgs.delete"
+msgstr "Eliminar Organización"
+
+#: orgs.deleteConfirm
+msgid "orgs.deleteConfirm"
+msgstr "¿Estás seguro de que quieres eliminar esta organización?"
+
+#: settings.orgs.title
+msgid "settings.orgs.title"
+msgstr "Organizaciones"
+
+#: settings.orgs.description
+msgid "settings.orgs.description"
+msgstr "Gestiona tus organizaciones y membresías de equipo"
+
+#: settings.orgs.create
+msgid "settings.orgs.create"
+msgstr "Crear Organización"
+
+#: settings.orgs.noOrgs
+msgid "settings.orgs.noOrgs"
+msgstr "Aún no hay organizaciones"
+
+#: settings.orgs.loadError
+msgid "settings.orgs.loadError"
+msgstr "Error al cargar organizaciones"
+
+#: settings.orgs.personal
+msgid "settings.orgs.personal"
+msgstr "Personal"
+
+#: settings.orgs.slug
+msgid "settings.orgs.slug"
+msgstr "Slug"
+
+#: settings.orgs.member
+msgid "settings.orgs.member"
+msgstr "miembro"
+
+#: settings.orgs.members
+msgid "settings.orgs.members"
+msgstr "miembros"
+
+#: settings.orgs.visibility.public
+msgid "settings.orgs.visibility.public"
+msgstr "Pública"
+
+#: settings.orgs.visibility.unlisted
+msgid "settings.orgs.visibility.unlisted"
+msgstr "No listada"
+
+#: settings.orgs.visibility.private
+msgid "settings.orgs.visibility.private"
+msgstr "Privada"
+
+#: settings.orgs.new.title
+msgid "settings.orgs.new.title"
+msgstr "Crear Organización"
+
+#: settings.orgs.new.name
+msgid "settings.orgs.new.name"
+msgstr "Nombre de la Organización"
+
+#: settings.orgs.new.namePlaceholder
+msgid "settings.orgs.new.namePlaceholder"
+msgstr "Mi Organización"
+
+#: settings.orgs.new.slug
+msgid "settings.orgs.new.slug"
+msgstr "Slug"
+
+#: settings.orgs.new.slugPlaceholder
+msgid "settings.orgs.new.slugPlaceholder"
+msgstr "mi-organizacion"
+
+#: settings.orgs.new.slugHint
+msgid "settings.orgs.new.slugHint"
+msgstr "Identificador seguro para URL (letras minúsculas, números y guiones)"
+
+#: settings.orgs.new.visibility
+msgid "settings.orgs.new.visibility"
+msgstr "Visibilidad"
+
+#: settings.orgs.new.create
+msgid "settings.orgs.new.create"
+msgstr "Crear Organización"
+
+#: settings.orgs.new.creating
+msgid "settings.orgs.new.creating"
+msgstr "Creando..."
+
+#: settings.orgs.new.error
+msgid "settings.orgs.new.error"
+msgstr "Error al crear la organización"
+
+#: settings.orgs.new.requiredFields
+msgid "settings.orgs.new.requiredFields"
+msgstr "El nombre y el slug son obligatorios"
+
+#: members.title
+msgid "members.title"
+msgstr "Miembros"
+
+#: members.add
+msgid "members.add"
+msgstr "Agregar Miembro"
+
+#: members.remove
+msgid "members.remove"
+msgstr "Eliminar"
+
+#: members.removeConfirm
+msgid "members.removeConfirm"
+msgstr "¿Estás seguro de que quieres eliminar a este miembro?"
+
+#: members.role
+msgid "members.role"
+msgstr "Rol"
+
+#: members.roleOwner
+msgid "members.roleOwner"
+msgstr "Propietario"
+
+#: members.roleAdmin
+msgid "members.roleAdmin"
+msgstr "Administrador"
+
+#: members.roleMember
+msgid "members.roleMember"
+msgstr "Miembro"
+
+#: members.changeRole
+msgid "members.changeRole"
+msgstr "Cambiar Rol"
+
+#: members.noMembers
+msgid "members.noMembers"
+msgstr "Aún no hay miembros"
+
+#: teams.title
+msgid "teams.title"
+msgstr "Equipos"
+
+#: teams.create
+msgid "teams.create"
+msgstr "Crear Equipo"
+
+#: teams.createTitle
+msgid "teams.createTitle"
+msgstr "Crear Nuevo Equipo"
+
+#: teams.name
+msgid "teams.name"
+msgstr "Nombre del Equipo"
+
+#: teams.slug
+msgid "teams.slug"
+msgstr "Slug de URL"
+
+#: teams.members
+msgid "teams.members"
+msgstr "Miembros del Equipo"
+
+#: teams.addMember
+msgid "teams.addMember"
+msgstr "Agregar Miembro"
+
+#: teams.removeMember
+msgid "teams.removeMember"
+msgstr "Eliminar del Equipo"
+
+#: teams.noTeams
+msgid "teams.noTeams"
+msgstr "Aún no hay equipos"
+
+#: teams.delete
+msgid "teams.delete"
+msgstr "Eliminar Equipo"
+
+#: teams.deleteConfirm
+msgid "teams.deleteConfirm"
+msgstr "¿Estás seguro de que quieres eliminar este equipo?"
+
+#: teams.roleMaintainer
+msgid "teams.roleMaintainer"
+msgstr "Mantenedor"
+
+#: teams.roleMember
+msgid "teams.roleMember"
+msgstr "Miembro"
+
+#: apiKeys.title
+msgid "apiKeys.title"
+msgstr "Claves API"
+
+#: apiKeys.description
+msgid "apiKeys.description"
+msgstr "Gestiona las claves API para acceso programático"
+
+#: apiKeys.create
+msgid "apiKeys.create"
+msgstr "Crear Clave API"
+
+#: apiKeys.createTitle
+msgid "apiKeys.createTitle"
+msgstr "Crear Nueva Clave API"
+
+#: apiKeys.name
+msgid "apiKeys.name"
+msgstr "Nombre de la Clave"
+
+#: apiKeys.nameHint
+msgid "apiKeys.nameHint"
+msgstr "Un nombre descriptivo para esta clave"
+
+#: apiKeys.scopes
+msgid "apiKeys.scopes"
+msgstr "Permisos"
+
+#: apiKeys.scopesHint
+msgid "apiKeys.scopesHint"
+msgstr "Selecciona los permisos para esta clave"
+
+#: apiKeys.scopeThreadsRead
+msgid "apiKeys.scopeThreadsRead"
+msgstr "Leer Conversaciones"
+
+#: apiKeys.scopeThreadsWrite
+msgid "apiKeys.scopeThreadsWrite"
+msgstr "Escribir Conversaciones"
+
+#: apiKeys.scopeLlmUse
+msgid "apiKeys.scopeLlmUse"
+msgstr "Usar LLM"
+
+#: apiKeys.prefix
+msgid "apiKeys.prefix"
+msgstr "Prefijo de Clave"
+
+#: apiKeys.createdAt
+msgid "apiKeys.createdAt"
+msgstr "Creada"
+
+#: apiKeys.lastUsed
+msgid "apiKeys.lastUsed"
+msgstr "Último Uso"
+
+#: apiKeys.never
+msgid "apiKeys.never"
+msgstr "Nunca"
+
+#: apiKeys.revoke
+msgid "apiKeys.revoke"
+msgstr "Revocar"
+
+#: apiKeys.revokeConfirm
+msgid "apiKeys.revokeConfirm"
+msgstr "¿Estás seguro de que quieres revocar esta clave API?"
+
+#: apiKeys.noKeys
+msgid "apiKeys.noKeys"
+msgstr "Aún no hay claves API"
+
+#: apiKeys.copyWarning
+msgid "apiKeys.copyWarning"
+msgstr "Copia esta clave ahora. No podrás verla de nuevo."
+
+#: apiKeys.copied
+msgid "apiKeys.copied"
+msgstr "Copiado al portapapeles"
+
+#: general.search
+msgid "general.search"
+msgstr "Buscar"
+
+#: general.previous
+msgid "general.previous"
+msgstr "Anterior"
+
+#: general.next
+msgid "general.next"
+msgstr "Siguiente"
+
+#: general.done
+msgid "general.done"
+msgstr "Hecho"
+
+#: general.refresh
+msgid "general.refresh"
+msgstr "Actualizar"
+
+#: admin.users.title
+msgid "admin.users.title"
+msgstr "Gestión de Usuarios"
+
+#: admin.users.description
+msgid "admin.users.description"
+msgstr "Ver y gestionar usuarios en la plataforma"
+
+#: admin.users.searchPlaceholder
+msgid "admin.users.searchPlaceholder"
+msgstr "Buscar por nombre o correo..."
+
+#: admin.users.empty
+msgid "admin.users.empty"
+msgstr "No se encontraron usuarios"
+
+#: admin.users.created
+msgid "admin.users.created"
+msgstr "Creado"
+
+#: admin.users.lastLogin
+msgid "admin.users.lastLogin"
+msgstr "Último inicio de sesión"
+
+#: admin.users.impersonate
+msgid "admin.users.impersonate"
+msgstr "Suplantar"
+
+#: admin.impersonation.banner
+msgid "admin.impersonation.banner"
+msgstr "Admin {admin} suplantando a {user}"
+
+#: admin.impersonation.stop
+msgid "admin.impersonation.stop"
+msgstr "Dejar de suplantar"
+
+#: nav.weavers
+msgid "nav.weavers"
+msgstr "Weavers"
+
+#: weavers.title
+msgid "weavers.title"
+msgstr "Weavers"
+
+#: weavers.description
+msgid "weavers.description"
+msgstr "Gestiona entornos de desarrollo efímeros"
+
+#: weavers.create
+msgid "weavers.create"
+msgstr "Crear Weaver"
+
+#: weavers.createFirst
+msgid "weavers.createFirst"
+msgstr "Crea tu primer weaver"
+
+#: weavers.createTitle
+msgid "weavers.createTitle"
+msgstr "Crear Nuevo Weaver"
+
+#: weavers.empty
+msgid "weavers.empty"
+msgstr "No hay weavers ejecutándose"
+
+#: weavers.delete
+msgid "weavers.delete"
+msgstr "Eliminar"
+
+#: weavers.deleteConfirm
+msgid "weavers.deleteConfirm"
+msgstr "¿Estás seguro de que quieres eliminar este weaver?"
+
+#: weavers.image
+msgid "weavers.image"
+msgstr "Imagen"
+
+#: weavers.imageName
+msgid "weavers.imageName"
+msgstr "Imagen del Contenedor"
+
+#: weavers.created
+msgid "weavers.created"
+msgstr "Creado"
+
+#: weavers.age
+msgid "weavers.age"
+msgstr "Antigüedad"
+
+#: weavers.lifetime
+msgid "weavers.lifetime"
+msgstr "Tiempo de vida"
+
+#: weavers.lifetimeLabel
+msgid "weavers.lifetimeLabel"
+msgstr "Tiempo de vida (TTL)"
+
+#: weavers.workdir
+msgid "weavers.workdir"
+msgstr "Directorio de Trabajo"
+
+#: weavers.hour
+msgid "weavers.hour"
+msgstr "hora"
+
+#: weavers.hours
+msgid "weavers.hours"
+msgstr "horas"
+
+#: weavers.attach
+msgid "weavers.attach"
+msgstr "Conectar"
+
+#: weavers.backToList
+msgid "weavers.backToList"
+msgstr "Volver a Weavers"
+
+#: weavers.notFound
+msgid "weavers.notFound"
+msgstr "Weaver no encontrado"
+
+#: weavers.logs
+msgid "weavers.logs"
+msgstr "Logs"
+
+#: weavers.logsTitle
+msgid "weavers.logsTitle"
+msgstr "Logs del Weaver"
+
+#: weavers.logsConnecting
+msgid "weavers.logsConnecting"
+msgstr "Conectando al flujo de logs..."
+
+#: weavers.logsNoData
+msgid "weavers.logsNoData"
+msgstr "No hay logs disponibles aún"
+
+#: weavers.logsError
+msgid "weavers.logsError"
+msgstr "Error al conectar al flujo de logs"
+
+#: weavers.logsClosed
+msgid "weavers.logsClosed"
+msgstr "Flujo de logs cerrado"
+
+#: weavers.creatingTitle
+msgid "weavers.creatingTitle"
+msgstr "Creando Weaver"
+
+#: weavers.creatingProgress
+msgid "weavers.creatingProgress"
+msgstr "Aprovisionando tu entorno weaver..."
+
+#: weavers.creatingWait
+msgid "weavers.creatingWait"
+msgstr "Esperando que el weaver esté listo. Serás redirigido automáticamente."
+
+#: weavers.createFailed
+msgid "weavers.createFailed"
+msgstr "Error al crear el weaver"
+
+#: weavers.createTimeout
+msgid "weavers.createTimeout"
+msgstr "Tiempo de espera agotado al crear el weaver"
+
+#: weavers.terminal.connected
+msgid "weavers.terminal.connected"
+msgstr "Conectado"
+
+#: weavers.terminal.connecting
+msgid "weavers.terminal.connecting"
+msgstr "Conectando..."
+
+#: weavers.terminal.disconnected
+msgid "weavers.terminal.disconnected"
+msgstr "Desconectado"
+
+#: weavers.terminal.error
+msgid "weavers.terminal.error"
+msgstr "Error de conexión"
+
+#: weavers.terminal.reconnect
+msgid "weavers.terminal.reconnect"
+msgstr "Reconectar"
+
+#: weavers.terminal.pending
+msgid "weavers.terminal.pending"
+msgstr "El weaver está iniciando..."
+
+#: weavers.terminal.pendingHint
+msgid "weavers.terminal.pendingHint"
+msgstr "El terminal estará disponible cuando el weaver esté ejecutándose"
+
+#: weavers.terminal.notRunning
+msgid "weavers.terminal.notRunning"
+msgstr "El weaver no está ejecutándose (estado: {status})"
+
+#: jobs.title
+msgid "jobs.title"
+msgstr "Tareas en Segundo Plano"
+
+#: jobs.description
+msgid "jobs.description"
+msgstr "Monitorear y gestionar tareas programadas en segundo plano"
+
+#: jobs.loading
+msgid "jobs.loading"
+msgstr "Cargando tareas..."
+
+#: jobs.runNow
+msgid "jobs.runNow"
+msgstr "Ejecutar Ahora"
+
+#: jobs.running
+msgid "jobs.running"
+msgstr "Ejecutando..."
+
+#: jobs.history
+msgid "jobs.history"
+msgstr "Historial"
+
+#: jobs.hideHistory
+msgid "jobs.hideHistory"
+msgstr "Ocultar Historial"
+
+#: jobs.viewHistory
+msgid "jobs.viewHistory"
+msgstr "Ver Historial"
+
+#: jobs.noJobs
+msgid "jobs.noJobs"
+msgstr "No hay tareas en segundo plano configuradas"
+
+#: jobs.never
+msgid "jobs.never"
+msgstr "Nunca ejecutado"
+
+#: jobs.lastRun
+msgid "jobs.lastRun"
+msgstr "Última ejecución"
+
+#: jobs.duration
+msgid "jobs.duration"
+msgstr "Duración"
+
+#: jobs.interval
+msgid "jobs.interval"
+msgstr "Intervalo"
+
+#: jobs.type
+msgid "jobs.type"
+msgstr "Tipo"
+
+#: jobs.failures
+msgid "jobs.failures"
+msgstr "{count} fallos consecutivos"
+
+#: jobs.status.healthy
+msgid "jobs.status.healthy"
+msgstr "Saludable"
+
+#: jobs.status.degraded
+msgid "jobs.status.degraded"
+msgstr "Degradado"
+
+#: jobs.status.unhealthy
+msgid "jobs.status.unhealthy"
+msgstr "No saludable"
+
+#: jobs.status.succeeded
+msgid "jobs.status.succeeded"
+msgstr "Exitoso"
+
+#: jobs.status.failed
+msgid "jobs.status.failed"
+msgstr "Fallido"
+
+#: jobs.status.running
+msgid "jobs.status.running"
+msgstr "Ejecutando"
+
+#: jobs.status.cancelled
+msgid "jobs.status.cancelled"
+msgstr "Cancelado"
+
+#: jobs.trigger.schedule
+msgid "jobs.trigger.schedule"
+msgstr "Programado"
+
+#: jobs.trigger.manual
+msgid "jobs.trigger.manual"
+msgstr "Manual"
+
+#: jobs.trigger.retry
+msgid "jobs.trigger.retry"
+msgstr "Reintento"
+
+#: jobs.history.title
+msgid "jobs.history.title"
+msgstr "Historial de Ejecuciones"
+
+#: jobs.history.status
+msgid "jobs.history.status"
+msgstr "Estado"
+
+#: jobs.history.started
+msgid "jobs.history.started"
+msgstr "Iniciado"
+
+#: jobs.history.duration
+msgid "jobs.history.duration"
+msgstr "Duración"
+
+#: jobs.history.trigger
+msgid "jobs.history.trigger"
+msgstr "Disparador"
+
+#: jobs.history.details
+msgid "jobs.history.details"
+msgstr "Detalles"
+
+#: jobs.history.loadMore
+msgid "jobs.history.loadMore"
+msgstr "Cargar Más"
+
+#: jobs.history.noRuns
+msgid "jobs.history.noRuns"
+msgstr "No hay historial de ejecuciones disponible"
+
+#: jobs.time.justNow
+msgid "jobs.time.justNow"
+msgstr "ahora mismo"
+
+#: jobs.time.minutesAgo
+msgid "jobs.time.minutesAgo"
+msgstr "hace {count} min"
+
+#: jobs.time.hoursAgo
+msgid "jobs.time.hoursAgo"
+msgstr "hace {count} horas"
+
+#: jobs.time.daysAgo
+msgid "jobs.time.daysAgo"
+msgstr "hace {count} días"

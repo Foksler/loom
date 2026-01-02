@@ -1,0 +1,996 @@
+# Translation catalog for Loom Web
+# Language: ja
+#
+msgid ""
+msgstr ""
+"Language: ja\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: nav.threads
+msgid "nav.threads"
+msgstr "スレッド"
+
+#: nav.settings
+msgid "nav.settings"
+msgstr "設定"
+
+#: nav.admin
+msgid "nav.admin"
+msgstr "管理"
+
+#: nav.jobs
+msgid "nav.jobs"
+msgstr "ジョブ"
+
+#: thread.new
+msgid "thread.new"
+msgstr "新規スレッド"
+
+#: thread.delete
+msgid "thread.delete"
+msgstr "削除"
+
+#: thread.search
+msgid "thread.search"
+msgstr "スレッドを検索..."
+
+#: thread.noThreads
+msgid "thread.noThreads"
+msgstr "スレッドはまだありません"
+
+#: thread.loadError
+msgid "thread.loadError"
+msgstr "スレッドの読み込みに失敗しました"
+
+#: state.waiting_for_user_input
+msgid "state.waiting_for_user_input"
+msgstr "入力待ち"
+
+#: state.calling_llm
+msgid "state.calling_llm"
+msgstr "LLM呼び出し中"
+
+#: state.processing_llm_response
+msgid "state.processing_llm_response"
+msgstr "レスポンス処理中"
+
+#: state.executing_tools
+msgid "state.executing_tools"
+msgstr "ツール実行中"
+
+#: state.post_tools_hook
+msgid "state.post_tools_hook"
+msgstr "後処理中"
+
+#: state.error
+msgid "state.error"
+msgstr "エラー"
+
+#: state.shutting_down
+msgid "state.shutting_down"
+msgstr "シャットダウン中"
+
+#: tool.pending
+msgid "tool.pending"
+msgstr "保留中"
+
+#: tool.running
+msgid "tool.running"
+msgstr "実行中"
+
+#: tool.completed
+msgid "tool.completed"
+msgstr "完了"
+
+#: tool.failed
+msgid "tool.failed"
+msgstr "失敗"
+
+#: connection.connected
+msgid "connection.connected"
+msgstr "接続済み"
+
+#: connection.disconnected
+msgid "connection.disconnected"
+msgstr "切断"
+
+#: connection.connecting
+msgid "connection.connecting"
+msgstr "接続中..."
+
+#: connection.reconnecting
+msgid "connection.reconnecting"
+msgstr "再接続中..."
+
+#: connection.error
+msgid "connection.error"
+msgstr "接続エラー"
+
+#: connection.clickToReconnect
+msgid "connection.clickToReconnect"
+msgstr "クリックして再接続"
+
+#: connection.attempt
+msgid "connection.attempt"
+msgstr "試行 {count}"
+
+#: message.placeholder
+msgid "message.placeholder"
+msgstr "メッセージを入力..."
+
+#: message.send
+msgid "message.send"
+msgstr "送信"
+
+#: auth.signOut
+msgid "auth.signOut"
+msgstr "サインアウト"
+
+#: auth.dashboard.welcome
+msgid "auth.dashboard.welcome"
+msgstr "ようこそ、"
+
+#: auth.dashboard.protectedPage
+msgid "auth.dashboard.protectedPage"
+msgstr "これは保護されたページです。閲覧するにはログインが必要です。"
+
+#: general.loading
+msgid "general.loading"
+msgstr "読み込み中..."
+
+#: general.error
+msgid "general.error"
+msgstr "エラーが発生しました"
+
+#: general.retry
+msgid "general.retry"
+msgstr "再試行"
+
+#: general.cancel
+msgid "general.cancel"
+msgstr "キャンセル"
+
+#: general.save
+msgid "general.save"
+msgstr "保存"
+
+#: general.close
+msgid "general.close"
+msgstr "閉じる"
+
+#: auth.login.title
+msgid "auth.login.title"
+msgstr "Loomにサインイン"
+
+#: auth.login.subtitle
+msgid "auth.login.subtitle"
+msgstr "サインイン方法を選択してください"
+
+#: auth.login.github
+msgid "auth.login.github"
+msgstr "GitHubで続行"
+
+#: auth.login.google
+msgid "auth.login.google"
+msgstr "Googleで続行"
+
+#: auth.login.or
+msgid "auth.login.or"
+msgstr "または"
+
+#: auth.login.emailLabel
+msgid "auth.login.emailLabel"
+msgstr "メールアドレス"
+
+#: auth.login.emailPlaceholder
+msgid "auth.login.emailPlaceholder"
+msgstr "you@example.com"
+
+#: auth.login.sendMagicLink
+msgid "auth.login.sendMagicLink"
+msgstr "マジックリンクを送信"
+
+#: auth.login.sending
+msgid "auth.login.sending"
+msgstr "送信中..."
+
+#: auth.login.checkEmail
+msgid "auth.login.checkEmail"
+msgstr "メールをご確認ください"
+
+#: auth.login.magicLinkSent
+msgid "auth.login.magicLinkSent"
+msgstr "サインインリンクを送信しました："
+
+#: auth.login.useDifferentEmail
+msgid "auth.login.useDifferentEmail"
+msgstr "別のメールアドレスを使用"
+
+#: auth.login.error
+msgid "auth.login.error"
+msgstr "マジックリンクの送信に失敗しました。もう一度お試しください。"
+
+#: auth.device.title
+msgid "auth.device.title"
+msgstr "CLIを認証"
+
+#: auth.device.subtitle
+msgid "auth.device.subtitle"
+msgstr "ターミナルに表示されたコードを入力して、CLIをアカウントにリンクしてください"
+
+#: auth.device.inputLabel
+msgid "auth.device.inputLabel"
+msgstr "コードを入力"
+
+#: auth.device.placeholder
+msgid "auth.device.placeholder"
+msgstr "XXX-XXX-XXX"
+
+#: auth.device.authorize
+msgid "auth.device.authorize"
+msgstr "認証"
+
+#: auth.device.authorizing
+msgid "auth.device.authorizing"
+msgstr "認証中..."
+
+#: auth.device.success
+msgid "auth.device.success"
+msgstr "認証完了！"
+
+#: auth.device.successMessage
+msgid "auth.device.successMessage"
+msgstr "このページを閉じてターミナルに戻ってください。"
+
+#: auth.device.error
+msgid "auth.device.error"
+msgstr "無効または期限切れのコードです。ターミナルを確認してもう一度お試しください。"
+
+#: auth.device.noCode
+msgid "auth.device.noCode"
+msgstr "コードをお持ちでない場合は、ターミナルで"
+
+#: auth.device.cliCommand
+msgid "auth.device.cliCommand"
+msgstr "loom login"
+
+#: auth.device.inTerminal
+msgid "auth.device.inTerminal"
+msgstr "を実行してください。"
+
+#: settings.sessions.title
+msgid "settings.sessions.title"
+msgstr "アクティブなセッション"
+
+#: settings.sessions.description
+msgid "settings.sessions.description"
+msgstr "デバイス間のアクティブなセッションを管理"
+
+#: settings.sessions.current
+msgid "settings.sessions.current"
+msgstr "現在のセッション"
+
+#: settings.sessions.lastUsed
+msgid "settings.sessions.lastUsed"
+msgstr "最終使用"
+
+#: settings.sessions.createdAt
+msgid "settings.sessions.createdAt"
+msgstr "作成日時"
+
+#: settings.sessions.revoke
+msgid "settings.sessions.revoke"
+msgstr "取り消し"
+
+#: settings.sessions.revokeConfirm
+msgid "settings.sessions.revokeConfirm"
+msgstr "このセッションを取り消しますか？"
+
+#: settings.sessions.noSessions
+msgid "settings.sessions.noSessions"
+msgstr "アクティブなセッションはありません"
+
+#: settings.sessions.web
+msgid "settings.sessions.web"
+msgstr "Web"
+
+#: settings.sessions.cli
+msgid "settings.sessions.cli"
+msgstr "CLI"
+
+#: settings.sessions.vscode
+msgid "settings.sessions.vscode"
+msgstr "VS Code"
+
+#: settings.nav.sessions
+msgid "settings.nav.sessions"
+msgstr "セッション"
+
+#: settings.nav.profile
+msgid "settings.nav.profile"
+msgstr "プロフィール"
+
+#: settings.nav.orgs
+msgid "settings.nav.orgs"
+msgstr "組織"
+
+#: settings.profile.title
+msgid "settings.profile.title"
+msgstr "プロフィール設定"
+
+#: settings.profile.displayName
+msgid "settings.profile.displayName"
+msgstr "表示名"
+
+#: settings.profile.email
+msgid "settings.profile.email"
+msgstr "メール"
+
+#: settings.profile.emailHint
+msgid "settings.profile.emailHint"
+msgstr "ここではメールアドレスを変更できません"
+
+#: settings.profile.locale
+msgid "settings.profile.locale"
+msgstr "言語"
+
+#: settings.profile.save
+msgid "settings.profile.save"
+msgstr "変更を保存"
+
+#: settings.profile.saving
+msgid "settings.profile.saving"
+msgstr "保存中..."
+
+#: settings.profile.saved
+msgid "settings.profile.saved"
+msgstr "プロフィールを更新しました"
+
+#: settings.profile.error
+msgid "settings.profile.error"
+msgstr "プロフィールの更新に失敗しました"
+
+#: orgs.title
+msgid "orgs.title"
+msgstr "組織"
+
+#: orgs.description
+msgid "orgs.description"
+msgstr "組織とチームを管理"
+
+#: orgs.create
+msgid "orgs.create"
+msgstr "組織を作成"
+
+#: orgs.createTitle
+msgid "orgs.createTitle"
+msgstr "新しい組織を作成"
+
+#: orgs.name
+msgid "orgs.name"
+msgstr "組織名"
+
+#: orgs.slug
+msgid "orgs.slug"
+msgstr "URLスラッグ"
+
+#: orgs.slugHint
+msgid "orgs.slugHint"
+msgstr "URLに使用されます。小文字とハイフンのみ"
+
+#: orgs.visibility
+msgid "orgs.visibility"
+msgstr "公開設定"
+
+#: orgs.visibilityPublic
+msgid "orgs.visibilityPublic"
+msgstr "公開"
+
+#: orgs.visibilityPrivate
+msgid "orgs.visibilityPrivate"
+msgstr "非公開"
+
+#: orgs.joinPolicy
+msgid "orgs.joinPolicy"
+msgstr "参加ポリシー"
+
+#: orgs.joinPolicyOpen
+msgid "orgs.joinPolicyOpen"
+msgstr "オープン"
+
+#: orgs.joinPolicyRequest
+msgid "orgs.joinPolicyRequest"
+msgstr "参加申請制"
+
+#: orgs.joinPolicyInvite
+msgid "orgs.joinPolicyInvite"
+msgstr "招待制"
+
+#: orgs.members
+msgid "orgs.members"
+msgstr "メンバー"
+
+#: orgs.teams
+msgid "orgs.teams"
+msgstr "チーム"
+
+#: orgs.apiKeys
+msgid "orgs.apiKeys"
+msgstr "APIキー"
+
+#: orgs.settings
+msgid "orgs.settings"
+msgstr "設定"
+
+#: orgs.noOrgs
+msgid "orgs.noOrgs"
+msgstr "組織はまだありません"
+
+#: orgs.delete
+msgid "orgs.delete"
+msgstr "組織を削除"
+
+#: orgs.deleteConfirm
+msgid "orgs.deleteConfirm"
+msgstr "この組織を削除しますか？"
+
+#: settings.orgs.title
+msgid "settings.orgs.title"
+msgstr "組織"
+
+#: settings.orgs.description
+msgid "settings.orgs.description"
+msgstr "組織とチームメンバーシップを管理"
+
+#: settings.orgs.create
+msgid "settings.orgs.create"
+msgstr "組織を作成"
+
+#: settings.orgs.noOrgs
+msgid "settings.orgs.noOrgs"
+msgstr "組織はまだありません"
+
+#: settings.orgs.loadError
+msgid "settings.orgs.loadError"
+msgstr "組織の読み込みに失敗しました"
+
+#: settings.orgs.personal
+msgid "settings.orgs.personal"
+msgstr "個人"
+
+#: settings.orgs.slug
+msgid "settings.orgs.slug"
+msgstr "スラッグ"
+
+#: settings.orgs.member
+msgid "settings.orgs.member"
+msgstr "メンバー"
+
+#: settings.orgs.members
+msgid "settings.orgs.members"
+msgstr "メンバー"
+
+#: settings.orgs.visibility.public
+msgid "settings.orgs.visibility.public"
+msgstr "公開"
+
+#: settings.orgs.visibility.unlisted
+msgid "settings.orgs.visibility.unlisted"
+msgstr "限定公開"
+
+#: settings.orgs.visibility.private
+msgid "settings.orgs.visibility.private"
+msgstr "非公開"
+
+#: settings.orgs.new.title
+msgid "settings.orgs.new.title"
+msgstr "組織を作成"
+
+#: settings.orgs.new.name
+msgid "settings.orgs.new.name"
+msgstr "組織名"
+
+#: settings.orgs.new.namePlaceholder
+msgid "settings.orgs.new.namePlaceholder"
+msgstr "マイ組織"
+
+#: settings.orgs.new.slug
+msgid "settings.orgs.new.slug"
+msgstr "スラッグ"
+
+#: settings.orgs.new.slugPlaceholder
+msgid "settings.orgs.new.slugPlaceholder"
+msgstr "my-organization"
+
+#: settings.orgs.new.slugHint
+msgid "settings.orgs.new.slugHint"
+msgstr "URL用識別子（小文字、数字、ハイフン）"
+
+#: settings.orgs.new.visibility
+msgid "settings.orgs.new.visibility"
+msgstr "公開設定"
+
+#: settings.orgs.new.create
+msgid "settings.orgs.new.create"
+msgstr "組織を作成"
+
+#: settings.orgs.new.creating
+msgid "settings.orgs.new.creating"
+msgstr "作成中..."
+
+#: settings.orgs.new.error
+msgid "settings.orgs.new.error"
+msgstr "組織の作成に失敗しました"
+
+#: settings.orgs.new.requiredFields
+msgid "settings.orgs.new.requiredFields"
+msgstr "名前とスラッグは必須です"
+
+#: members.title
+msgid "members.title"
+msgstr "メンバー"
+
+#: members.add
+msgid "members.add"
+msgstr "メンバーを追加"
+
+#: members.remove
+msgid "members.remove"
+msgstr "削除"
+
+#: members.removeConfirm
+msgid "members.removeConfirm"
+msgstr "このメンバーを削除しますか？"
+
+#: members.role
+msgid "members.role"
+msgstr "ロール"
+
+#: members.roleOwner
+msgid "members.roleOwner"
+msgstr "オーナー"
+
+#: members.roleAdmin
+msgid "members.roleAdmin"
+msgstr "管理者"
+
+#: members.roleMember
+msgid "members.roleMember"
+msgstr "メンバー"
+
+#: members.changeRole
+msgid "members.changeRole"
+msgstr "ロールを変更"
+
+#: members.noMembers
+msgid "members.noMembers"
+msgstr "メンバーはまだいません"
+
+#: teams.title
+msgid "teams.title"
+msgstr "チーム"
+
+#: teams.create
+msgid "teams.create"
+msgstr "チームを作成"
+
+#: teams.createTitle
+msgid "teams.createTitle"
+msgstr "新しいチームを作成"
+
+#: teams.name
+msgid "teams.name"
+msgstr "チーム名"
+
+#: teams.slug
+msgid "teams.slug"
+msgstr "URLスラッグ"
+
+#: teams.members
+msgid "teams.members"
+msgstr "チームメンバー"
+
+#: teams.addMember
+msgid "teams.addMember"
+msgstr "メンバーを追加"
+
+#: teams.removeMember
+msgid "teams.removeMember"
+msgstr "削除"
+
+#: teams.removeMemberConfirm
+msgid "teams.removeMemberConfirm"
+msgstr "このメンバーをチームから削除しますか？"
+
+#: teams.noTeams
+msgid "teams.noTeams"
+msgstr "チームはまだありません"
+
+#: teams.noMembers
+msgid "teams.noMembers"
+msgstr "このチームにはメンバーがいません"
+
+#: teams.delete
+msgid "teams.delete"
+msgstr "チームを削除"
+
+#: teams.deleteConfirm
+msgid "teams.deleteConfirm"
+msgstr "このチームを削除しますか？"
+
+#: teams.roleMaintainer
+msgid "teams.roleMaintainer"
+msgstr "メンテナー"
+
+#: teams.roleMember
+msgid "teams.roleMember"
+msgstr "メンバー"
+
+#: teams.role.maintainer
+msgid "teams.role.maintainer"
+msgstr "メンテナー"
+
+#: teams.role.member
+msgid "teams.role.member"
+msgstr "メンバー"
+
+#: teams.backToOrg
+msgid "teams.backToOrg"
+msgstr "組織に戻る"
+
+#: teams.changeRole
+msgid "teams.changeRole"
+msgstr "ロールを変更"
+
+#: teams.settings
+msgid "teams.settings"
+msgstr "チーム設定"
+
+#: teams.teamName
+msgid "teams.teamName"
+msgstr "チーム名"
+
+#: teams.save
+msgid "teams.save"
+msgstr "変更を保存"
+
+#: teams.saving
+msgid "teams.saving"
+msgstr "保存中..."
+
+#: teams.saved
+msgid "teams.saved"
+msgstr "チームを更新しました"
+
+#: teams.deleteTeam
+msgid "teams.deleteTeam"
+msgstr "チームを削除"
+
+#: teams.deleteTeamConfirm
+msgid "teams.deleteTeamConfirm"
+msgstr "このチームを削除しますか？この操作は取り消せません。"
+
+#: teams.deleteTeamWarning
+msgid "teams.deleteTeamWarning"
+msgstr "チームを完全に削除し、すべてのメンバーを削除します。"
+
+#: teams.deleting
+msgid "teams.deleting"
+msgstr "削除中..."
+
+#: teams.selectMember
+msgid "teams.selectMember"
+msgstr "追加するメンバーを選択"
+
+#: teams.selectRole
+msgid "teams.selectRole"
+msgstr "ロールを選択"
+
+#: teams.adding
+msgid "teams.adding"
+msgstr "追加中..."
+
+#: teams.add
+msgid "teams.add"
+msgstr "追加"
+
+#: teams.noAvailableMembers
+msgid "teams.noAvailableMembers"
+msgstr "追加可能な組織メンバーがいません"
+
+#: apiKeys.title
+msgid "apiKeys.title"
+msgstr "APIキー"
+
+#: apiKeys.description
+msgid "apiKeys.description"
+msgstr "プログラムからのアクセス用APIキーを管理"
+
+#: apiKeys.create
+msgid "apiKeys.create"
+msgstr "APIキーを作成"
+
+#: apiKeys.createTitle
+msgid "apiKeys.createTitle"
+msgstr "新しいAPIキーを作成"
+
+#: apiKeys.name
+msgid "apiKeys.name"
+msgstr "キー名"
+
+#: apiKeys.nameHint
+msgid "apiKeys.nameHint"
+msgstr "このキーの説明的な名前"
+
+#: apiKeys.scopes
+msgid "apiKeys.scopes"
+msgstr "スコープ"
+
+#: apiKeys.scopesHint
+msgid "apiKeys.scopesHint"
+msgstr "このキーの権限を選択"
+
+#: apiKeys.scopeThreadsRead
+msgid "apiKeys.scopeThreadsRead"
+msgstr "スレッドの読み取り"
+
+#: apiKeys.scopeThreadsWrite
+msgid "apiKeys.scopeThreadsWrite"
+msgstr "スレッドの書き込み"
+
+#: apiKeys.scopeLlmUse
+msgid "apiKeys.scopeLlmUse"
+msgstr "LLMの使用"
+
+#: apiKeys.prefix
+msgid "apiKeys.prefix"
+msgstr "キープレフィックス"
+
+#: apiKeys.createdAt
+msgid "apiKeys.createdAt"
+msgstr "作成日時"
+
+#: apiKeys.lastUsed
+msgid "apiKeys.lastUsed"
+msgstr "最終使用"
+
+#: apiKeys.never
+msgid "apiKeys.never"
+msgstr "未使用"
+
+#: apiKeys.revoke
+msgid "apiKeys.revoke"
+msgstr "取り消し"
+
+#: apiKeys.revokeConfirm
+msgid "apiKeys.revokeConfirm"
+msgstr "このAPIキーを取り消しますか？"
+
+#: apiKeys.noKeys
+msgid "apiKeys.noKeys"
+msgstr "APIキーはまだありません"
+
+#: apiKeys.copyWarning
+msgid "apiKeys.copyWarning"
+msgstr "今すぐこのキーをコピーしてください。再度表示することはできません。"
+
+#: apiKeys.copied
+msgid "apiKeys.copied"
+msgstr "クリップボードにコピーしました"
+
+#: general.search
+msgid "general.search"
+msgstr "検索"
+
+#: general.previous
+msgid "general.previous"
+msgstr "前へ"
+
+#: general.next
+msgid "general.next"
+msgstr "次へ"
+
+#: general.done
+msgid "general.done"
+msgstr "完了"
+
+#: general.refresh
+msgid "general.refresh"
+msgstr "更新"
+
+#: admin.users.title
+msgid "admin.users.title"
+msgstr "ユーザー管理"
+
+#: admin.users.description
+msgid "admin.users.description"
+msgstr "プラットフォーム全体のユーザーを表示・管理"
+
+#: admin.users.searchPlaceholder
+msgid "admin.users.searchPlaceholder"
+msgstr "名前またはメールで検索..."
+
+#: admin.users.empty
+msgid "admin.users.empty"
+msgstr "ユーザーが見つかりません"
+
+#: admin.users.created
+msgid "admin.users.created"
+msgstr "作成日"
+
+#: admin.users.lastLogin
+msgid "admin.users.lastLogin"
+msgstr "最終ログイン"
+
+#: admin.users.impersonate
+msgid "admin.users.impersonate"
+msgstr "なりすまし"
+
+#: admin.impersonation.banner
+msgid "admin.impersonation.banner"
+msgstr "管理者 {admin} が {user} になりすまし中"
+
+#: admin.impersonation.stop
+msgid "admin.impersonation.stop"
+msgstr "なりすましを停止"
+
+#: nav.weavers
+msgid "nav.weavers"
+msgstr "ウィーバー"
+
+#: weavers.title
+msgid "weavers.title"
+msgstr "ウィーバー"
+
+#: weavers.description
+msgid "weavers.description"
+msgstr "一時的な開発環境を管理"
+
+#: weavers.create
+msgid "weavers.create"
+msgstr "ウィーバーを作成"
+
+#: weavers.createFirst
+msgid "weavers.createFirst"
+msgstr "最初のウィーバーを作成"
+
+#: weavers.createTitle
+msgid "weavers.createTitle"
+msgstr "新しいウィーバーを作成"
+
+#: weavers.empty
+msgid "weavers.empty"
+msgstr "実行中のウィーバーがありません"
+
+#: weavers.delete
+msgid "weavers.delete"
+msgstr "削除"
+
+#: weavers.deleteConfirm
+msgid "weavers.deleteConfirm"
+msgstr "このウィーバーを削除しますか？"
+
+#: weavers.image
+msgid "weavers.image"
+msgstr "イメージ"
+
+#: weavers.imageName
+msgid "weavers.imageName"
+msgstr "コンテナイメージ"
+
+#: weavers.created
+msgid "weavers.created"
+msgstr "作成日時"
+
+#: weavers.age
+msgid "weavers.age"
+msgstr "経過時間"
+
+#: weavers.lifetime
+msgid "weavers.lifetime"
+msgstr "有効期間"
+
+#: weavers.lifetimeLabel
+msgid "weavers.lifetimeLabel"
+msgstr "有効期間 (TTL)"
+
+#: weavers.workdir
+msgid "weavers.workdir"
+msgstr "作業ディレクトリ"
+
+#: weavers.hour
+msgid "weavers.hour"
+msgstr "時間"
+
+#: weavers.hours
+msgid "weavers.hours"
+msgstr "時間"
+
+#: weavers.attach
+msgid "weavers.attach"
+msgstr "接続"
+
+#: weavers.backToList
+msgid "weavers.backToList"
+msgstr "ウィーバー一覧に戻る"
+
+#: weavers.notFound
+msgid "weavers.notFound"
+msgstr "ウィーバーが見つかりません"
+
+#: weavers.logs
+msgid "weavers.logs"
+msgstr "ログ"
+
+#: weavers.logsTitle
+msgid "weavers.logsTitle"
+msgstr "ウィーバーログ"
+
+#: weavers.logsConnecting
+msgid "weavers.logsConnecting"
+msgstr "ログストリームに接続中..."
+
+#: weavers.logsNoData
+msgid "weavers.logsNoData"
+msgstr "ログがまだありません"
+
+#: weavers.logsError
+msgid "weavers.logsError"
+msgstr "ログストリームへの接続に失敗しました"
+
+#: weavers.logsClosed
+msgid "weavers.logsClosed"
+msgstr "ログストリームが閉じられました"
+
+#: weavers.creatingTitle
+msgid "weavers.creatingTitle"
+msgstr "ウィーバーを作成中"
+
+#: weavers.creatingProgress
+msgid "weavers.creatingProgress"
+msgstr "ウィーバー環境をプロビジョニング中..."
+
+#: weavers.creatingWait
+msgid "weavers.creatingWait"
+msgstr "ウィーバーの準備を待っています。自動的にリダイレクトされます。"
+
+#: weavers.createFailed
+msgid "weavers.createFailed"
+msgstr "ウィーバーの作成に失敗しました"
+
+#: weavers.createTimeout
+msgid "weavers.createTimeout"
+msgstr "ウィーバーの作成がタイムアウトしました"
+
+#: weavers.terminal.connected
+msgid "weavers.terminal.connected"
+msgstr "接続済み"
+
+#: weavers.terminal.connecting
+msgid "weavers.terminal.connecting"
+msgstr "接続中..."
+
+#: weavers.terminal.disconnected
+msgid "weavers.terminal.disconnected"
+msgstr "切断済み"
+
+#: weavers.terminal.error
+msgid "weavers.terminal.error"
+msgstr "接続エラー"
+
+#: weavers.terminal.reconnect
+msgid "weavers.terminal.reconnect"
+msgstr "再接続"
+
+#: weavers.terminal.pending
+msgid "weavers.terminal.pending"
+msgstr "ウィーバーを起動中..."
+
+#: weavers.terminal.pendingHint
+msgid "weavers.terminal.pendingHint"
+msgstr "ウィーバーが実行されるとターミナルが利用可能になります"
+
+#: weavers.terminal.notRunning
+msgid "weavers.terminal.notRunning"
+msgstr "ウィーバーは実行されていません (ステータス: {status})"
