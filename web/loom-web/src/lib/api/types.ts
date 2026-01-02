@@ -399,6 +399,126 @@ export interface SupportAccessErrorResponse {
 	code: string;
 }
 
+// Health check types
+export type HealthStatus = 'healthy' | 'degraded' | 'unhealthy' | 'unknown';
+
+export interface DatabaseHealth {
+	status: HealthStatus;
+	latency_ms: number;
+	error?: string;
+}
+
+export interface BinDirHealth {
+	status: HealthStatus;
+	latency_ms: number;
+	path: string;
+	exists: boolean;
+	is_dir: boolean;
+	file_count?: number;
+	error?: string;
+}
+
+export interface AnthropicAccountHealth {
+	id: string;
+	status: 'available' | 'cooling_down' | 'disabled';
+	cooldown_remaining_secs?: number;
+	last_error?: string;
+}
+
+export interface AnthropicPoolHealth {
+	accounts_total: number;
+	accounts_available: number;
+	accounts_cooling: number;
+	accounts_disabled: number;
+	accounts: AnthropicAccountHealth[];
+}
+
+export interface LlmProviderHealth {
+	name: string;
+	status: HealthStatus;
+	mode?: string;
+	pool?: AnthropicPoolHealth;
+	latency_ms?: number;
+	error?: string;
+}
+
+export interface LlmProvidersHealth {
+	status: HealthStatus;
+	providers: LlmProviderHealth[];
+}
+
+export interface GoogleCseHealth {
+	status: HealthStatus;
+	latency_ms: number;
+	configured: boolean;
+	error?: string;
+}
+
+export interface GithubAppHealth {
+	status: HealthStatus;
+	latency_ms: number;
+	configured: boolean;
+	error?: string;
+}
+
+export interface KubernetesHealth {
+	status: HealthStatus;
+	latency_ms: number;
+	namespace: string;
+	reachable: boolean;
+	error?: string;
+}
+
+export interface SmtpHealth {
+	status: HealthStatus;
+	latency_ms: number;
+	configured: boolean;
+	healthy: boolean;
+	error?: string;
+}
+
+export interface GeoIpHealth {
+	status: HealthStatus;
+	latency_ms: number;
+	configured: boolean;
+	healthy: boolean;
+	database_path?: string;
+	database_type?: string;
+	error?: string;
+}
+
+export interface JobsHealth {
+	status: HealthStatus;
+	jobs_total: number;
+	jobs_healthy: number;
+	jobs_failing: number;
+	failing_jobs?: string[];
+}
+
+export interface HealthComponents {
+	database: DatabaseHealth;
+	bin_dir: BinDirHealth;
+	llm_providers: LlmProvidersHealth;
+	google_cse: GoogleCseHealth;
+	github_app: GithubAppHealth;
+	kubernetes?: KubernetesHealth;
+	smtp: SmtpHealth;
+	geoip: GeoIpHealth;
+	jobs?: JobsHealth;
+}
+
+export interface HealthVersionInfo {
+	git_sha: string;
+}
+
+export interface HealthResponse {
+	status: HealthStatus;
+	timestamp: string;
+	duration_ms: number;
+	version: HealthVersionInfo;
+	components: HealthComponents;
+}
+
 // Error class for API errors
 export class ApiError extends Error {
 	constructor(

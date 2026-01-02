@@ -83,14 +83,8 @@
 							{i18n._('nav.settings')}
 						</a>
 						{#if isSystemAdmin}
-							<a href="/admin/users" class="text-sm text-warning hover:text-warning/80">
+							<a href="/admin" class="text-sm text-warning hover:text-warning/80">
 								{i18n._('nav.admin')}
-							</a>
-							<a href="/admin/anthropic-accounts" class="text-sm text-warning hover:text-warning/80">
-								{i18n._('admin.anthropic.title')}
-							</a>
-							<a href="/admin/jobs" class="text-sm text-warning hover:text-warning/80">
-								{i18n._('nav.jobs')}
 							</a>
 						{/if}
 					</nav>

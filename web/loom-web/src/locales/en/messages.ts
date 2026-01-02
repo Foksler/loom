@@ -259,6 +259,33 @@ export const messages = {
 	'admin.users.lastLogin': 'Last login',
 	'admin.users.impersonate': 'Impersonate',
 
+	// Admin - Dashboard
+	'admin.dashboard.title': 'Admin Dashboard',
+	'admin.dashboard.description': 'Server administration and monitoring',
+	'admin.dashboard.sections': 'Administration',
+	'admin.dashboard.anthropic_description': 'Manage Claude Max OAuth subscription pool',
+
+	// Admin - Health
+	'admin.health.title': 'Server Health',
+	'admin.health.overall': 'Overall Status',
+	'admin.health.version': 'Version',
+	'admin.health.response_time': 'Response time',
+	'admin.health.configured': 'Configured',
+	'admin.health.not_configured': 'Not configured',
+	'admin.health.status.healthy': 'Healthy',
+	'admin.health.status.degraded': 'Degraded',
+	'admin.health.status.unhealthy': 'Unhealthy',
+	'admin.health.status.unknown': 'Unknown',
+	'admin.health.database': 'Database',
+	'admin.health.bin_dir': 'Binary Directory',
+	'admin.health.llm_providers': 'LLM Providers',
+	'admin.health.google_cse': 'Google CSE',
+	'admin.health.github_app': 'GitHub App',
+	'admin.health.kubernetes': 'Kubernetes',
+	'admin.health.smtp': 'SMTP',
+	'admin.health.geoip': 'GeoIP',
+	'admin.health.jobs': 'Background Jobs',
+
 	// Admin - Impersonation
 	'admin.impersonation.banner': 'Admin {admin} impersonating {user}',
 	'admin.impersonation.stop': 'Stop Impersonating',
