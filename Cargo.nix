@@ -79,7 +79,7 @@ else let
   profilesByName = {
     dev = builtins.fromTOML "debug = 1\nincremental = true\nsplit-debuginfo = \"unpacked\"\n\n[package.loom-server]\ncodegen-units = 256\n\n[package.loom-server-api]\ncodegen-units = 128\n";
     dev-fast = builtins.fromTOML "codegen-units = 512\ndebug = 0\nincremental = true\ninherits = \"dev\"\n";
-    release = builtins.fromTOML "codegen-units = 16\nlto = \"thin\"\nstrip = \"debuginfo\"\n";
+    release = builtins.fromTOML "codegen-units = 256\nlto = false\nopt-level = 0\nstrip = \"debuginfo\"\n";
   };
   rootFeatures' = expandFeatures rootFeatures;
   overridableMkRustCrate = f:

@@ -158,8 +158,9 @@ debug = 0                    # No debug info for fastest builds
 codegen-units = 512          # Maximum parallelism
 incremental = true
 
-# Release profile optimizations
+# Release profile - zero optimization for fastest compile times
 [profile.release]
-lto = "thin"                 # Faster than full LTO, still good optimization
-codegen-units = 16
+lto = false
+opt-level = 0
+codegen-units = 256
 strip = "debuginfo"
