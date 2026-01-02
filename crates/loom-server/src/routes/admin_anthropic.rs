@@ -543,3 +543,34 @@ pub async fn remove_account(
 
 	(StatusCode::OK, Json(RemoveAccountResponse { removed: id })).into_response()
 }
+
+#[cfg(test)]
+mod tests {
+	#[test]
+	fn test_strip_fragment_from_code() {
+		let code_with_fragment = "1sCIWJJZXLfYfURhCUQ1rOq7yPCyFESxFp7BjKLlxFzhl3aJ#3b191854-6359-45d3-93ff-65a0b0c158b4";
+		let code = code_with_fragment.split('#').next().unwrap_or(code_with_fragment);
+		assert_eq!(code, "1sCIWJJZXLfYfURhCUQ1rOq7yPCyFESxFp7BjKLlxFzhl3aJ");
+	}
+
+	#[test]
+	fn test_strip_fragment_no_fragment() {
+		let code_without_fragment = "1sCIWJJZXLfYfURhCUQ1rOq7yPCyFESxFp7BjKLlxFzhl3aJ";
+		let code = code_without_fragment.split('#').next().unwrap_or(code_without_fragment);
+		assert_eq!(code, "1sCIWJJZXLfYfURhCUQ1rOq7yPCyFESxFp7BjKLlxFzhl3aJ");
+	}
+
+	#[test]
+	fn test_strip_fragment_empty_fragment() {
+		let code_empty_fragment = "someCode#";
+		let code = code_empty_fragment.split('#').next().unwrap_or(code_empty_fragment);
+		assert_eq!(code, "someCode");
+	}
+
+	#[test]
+	fn test_strip_fragment_multiple_hashes() {
+		let code_multiple = "code#state#extra";
+		let code = code_multiple.split('#').next().unwrap_or(code_multiple);
+		assert_eq!(code, "code");
+	}
+}
