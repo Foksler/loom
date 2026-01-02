@@ -180,6 +180,7 @@ impl AnthropicPool {
     ) -> Result<Self, LlmError> {
         let credential_file = credential_file.as_ref().to_path_buf();
         let store = Arc::new(FileCredentialStore::new(&credential_file));
+        // With user:sessions:claude_code scope, all models are accessible
         let model = model.unwrap_or_else(|| "claude-sonnet-4-20250514".to_string());
 
         let mut accounts = Vec::new();
@@ -258,6 +259,7 @@ impl AnthropicPool {
     ) -> Self {
         let credential_file = credential_file.as_ref().to_path_buf();
         let store = Arc::new(FileCredentialStore::new(&credential_file));
+        // With user:sessions:claude_code scope, all models are accessible
         let model = model.unwrap_or_else(|| "claude-sonnet-4-20250514".to_string());
 
         let state = PoolState {

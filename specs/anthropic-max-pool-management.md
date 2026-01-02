@@ -146,9 +146,11 @@ Credentials are stored in a JSON file keyed by account ID:
 |-----------|-------|
 | `client_id` | `9d1c250a-e61b-44d9-88ed-5944d1962f5e` |
 | `redirect_uri` | `{base_url}/api/admin/anthropic/callback` |
-| `scope` | `org:create_api_key user:read user:inference` |
+| `scope` | `user:inference user:profile user:sessions:claude_code` |
 | `response_type` | `code` |
 | `code_challenge_method` | `S256` |
+
+**Critical:** The `user:sessions:claude_code` scope is required to access Sonnet and Opus models. Without it, only Haiku-tier models are available.
 
 ### Account ID Generation
 
@@ -597,8 +599,38 @@ These are sent by Claude CLI but not required for authentication:
 
 | Error Message | Cause |
 |---------------|-------|
-| `This credential is only authorized for use with Claude Code` | Wrong headers - likely missing `anthropic-dangerous-direct-browser-access: true` or wrong `anthropic-beta` headers |
+| `This credential is only authorized for use with Claude Code` | Using an OAuth-incompatible model (see model restrictions below) |
 | `invalid_grant` | Refresh token expired or revoked |
+
+### Model Access with OAuth Tokens
+
+Model access depends on the OAuth scopes requested during authorization:
+
+| Scope | Model Access |
+|-------|--------------|
+| `user:inference user:profile` | Haiku only |
+| `user:inference user:profile user:sessions:claude_code` | All models (Haiku, Sonnet, Opus) |
+
+**CRITICAL:** The `user:sessions:claude_code` scope is required to access Sonnet and Opus models. Without it, you'll get the error: "This credential is only authorized for use with Claude Code".
+
+| Model | Requires `user:sessions:claude_code` |
+|-------|-------------------------------------|
+| `claude-haiku-4-5-20251001` | No |
+| `claude-haiku-4-5` (alias) | No |
+| `claude-3-5-haiku-20241022` | No |
+| `claude-3-haiku-20240307` | No |
+| `claude-sonnet-4-5-20250929` | Yes |
+| `claude-sonnet-4-20250514` | Yes |
+| `claude-3-7-sonnet-20250219` | Yes |
+| `claude-3-5-sonnet-20241022` | Yes |
+| `claude-opus-4-5-20251101` | Yes |
+| `claude-opus-4-20250514` | Yes |
+| `claude-3-opus-20240229` | Yes |
+
+**How Claude CLI accesses Sonnet/Opus:**
+The Claude CLI uses the OAuth scope `user:sessions:claude_code` which grants access to all model tiers. This scope was discovered by extracting strings from the Claude CLI binary.
+
+**Default model for OAuth pool:** `claude-sonnet-4-20250514` (with correct scopes)
 
 ### Header Discovery via mitmproxy
 

@@ -22,7 +22,8 @@ pub const REDIRECT_URI: &str = "https://console.anthropic.com/oauth/code/callbac
 pub const TOKEN_ENDPOINT: &str = "https://console.anthropic.com/v1/oauth/token";
 
 /// OAuth scopes required for Claude Pro/Max subscription inference.
-pub const SCOPES: &str = "user:inference user:profile";
+/// Must include user:sessions:claude_code to access Sonnet/Opus models.
+pub const SCOPES: &str = "user:inference user:profile user:sessions:claude_code";
 
 /// Authorization mode determines which OAuth endpoint to use.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -183,15 +183,6 @@ impl<S: CredentialStore + 'static> AnthropicClient<S> {
 				kind: ClientErrorKind::Permanent,
 			})?;
 
-		// Temporarily log outgoing headers for debugging
-		if let Some(req) = builder.try_clone().and_then(|b| b.build().ok()) {
-			info!(
-				url = %req.url(),
-				headers = ?req.headers(),
-				"DEBUG: Outgoing Anthropic request"
-			);
-		}
-
 		let response = builder.send().await.map_err(|e| {
 			let retryable = e.is_timeout() || e.is_connect();
 			error!(error = %e, retryable = retryable, "HTTP request failed");
