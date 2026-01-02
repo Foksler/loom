@@ -17,4 +17,9 @@ pub use oauth_flow::{
 	ExchangeResult, CLIENT_ID, REDIRECT_URI, SCOPES, TOKEN_ENDPOINT,
 };
 pub use pkce::Pkce;
-pub use scheme::{build_api_key_headers, build_oauth_headers, AnthropicAuth, AuthError, OAUTH_BETA_HEADER};
+pub use scheme::{
+	build_api_key_headers, build_oauth_headers, AnthropicAuth, AuthError,
+	API_KEY_BETA_HEADERS, ANTHROPIC_USER_AGENT, CLAUDE_CODE_BETA_HEADER,
+	INTERLEAVED_THINKING_BETA_HEADER, OAUTH_BETA_HEADER, OAUTH_COMBINED_BETA_HEADERS,
+	TOOL_STREAMING_BETA_HEADER,
+};

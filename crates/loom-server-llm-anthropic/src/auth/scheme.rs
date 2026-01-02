@@ -13,6 +13,29 @@ use super::oauth_client::OAuthClient;
 /// OAuth beta header required for subscription-based authentication.
 pub const OAUTH_BETA_HEADER: &str = "oauth-2025-04-20";
 
+/// Claude Code beta header required to use Claude Code credentials.
+pub const CLAUDE_CODE_BETA_HEADER: &str = "claude-code-20250219";
+
+/// Interleaved thinking beta header.
+pub const INTERLEAVED_THINKING_BETA_HEADER: &str = "interleaved-thinking-2025-05-14";
+
+/// Fine-grained tool streaming beta header.
+pub const TOOL_STREAMING_BETA_HEADER: &str = "fine-grained-tool-streaming-2025-05-14";
+
+/// Combined beta headers for API key requests (non-OAuth).
+/// These are required to use Claude Code credentials.
+pub const API_KEY_BETA_HEADERS: &str =
+	"claude-code-20250219,interleaved-thinking-2025-05-14,fine-grained-tool-streaming-2025-05-14";
+
+/// Combined beta headers for OAuth requests.
+/// Includes OAuth header plus all Claude Code features.
+pub const OAUTH_COMBINED_BETA_HEADERS: &str =
+	"oauth-2025-04-20,claude-code-20250219,interleaved-thinking-2025-05-14,fine-grained-tool-streaming-2025-05-14";
+
+/// User-Agent to use when talking to Anthropic API.
+/// We spoof as Claude Code to ensure Claude Code credentials work.
+pub const ANTHROPIC_USER_AGENT: &str = "claude-code/2.0.0";
+
 /// Authentication errors.
 #[derive(Debug, thiserror::Error)]
 pub enum AuthError {
@@ -69,25 +92,31 @@ impl<S: CredentialStore> AnthropicAuth<S> {
 
 	/// Apply authentication to a request builder.
 	///
-	/// For API keys, sets `x-api-key` header.
-	/// For OAuth, sets `Authorization: Bearer` header and `anthropic-beta` header.
+	/// For API keys, sets `x-api-key` header and `anthropic-beta` headers for Claude Code features.
+	/// For OAuth, sets `Authorization: Bearer` header and combined `anthropic-beta` headers.
+	/// Both cases also set the User-Agent to match Claude Code.
 	pub async fn apply_to_request(
 		&self,
 		request: reqwest::RequestBuilder,
 	) -> Result<reqwest::RequestBuilder, AuthError> {
 		match self {
-			AnthropicAuth::ApiKey { key } => Ok(request.header("x-api-key", key.expose())),
+			AnthropicAuth::ApiKey { key } => Ok(request
+				.header("x-api-key", key.expose())
+				.header("anthropic-beta", API_KEY_BETA_HEADERS)
+				.header("user-agent", ANTHROPIC_USER_AGENT)),
 			AnthropicAuth::OAuth { client } => {
 				let token = client.get_access_token().await?;
 				Ok(request
 					.bearer_auth(token)
-					.header("anthropic-beta", OAUTH_BETA_HEADER))
+					.header("anthropic-beta", OAUTH_COMBINED_BETA_HEADERS)
+					.header("user-agent", ANTHROPIC_USER_AGENT))
 			}
 		}
 	}
 }
 
 /// Build HTTP headers for OAuth requests.
+/// Includes all required beta headers for Claude Code compatibility.
 pub fn build_oauth_headers(
 	access_token: &str,
 	additional_beta: Option<&str>,
@@ -100,9 +129,9 @@ pub fn build_oauth_headers(
 	);
 
 	let beta_value = if let Some(additional) = additional_beta {
-		format!("{OAUTH_BETA_HEADER},{additional}")
+		format!("{OAUTH_COMBINED_BETA_HEADERS},{additional}")
 	} else {
-		OAUTH_BETA_HEADER.to_string()
+		OAUTH_COMBINED_BETA_HEADERS.to_string()
 	};
 
 	headers.insert(
@@ -110,16 +139,32 @@ pub fn build_oauth_headers(
 		beta_value.parse().unwrap(),
 	);
 
+	headers.insert(
+		reqwest::header::USER_AGENT,
+		ANTHROPIC_USER_AGENT.parse().unwrap(),
+	);
+
 	headers
 }
 
 /// Build HTTP headers for API key requests.
+/// Includes all required beta headers for Claude Code compatibility.
 pub fn build_api_key_headers(api_key: &str) -> reqwest::header::HeaderMap {
 	let mut headers = reqwest::header::HeaderMap::new();
 
 	headers.insert(
 		reqwest::header::HeaderName::from_static("x-api-key"),
 		api_key.parse().unwrap(),
+	);
+
+	headers.insert(
+		reqwest::header::HeaderName::from_static("anthropic-beta"),
+		API_KEY_BETA_HEADERS.parse().unwrap(),
+	);
+
+	headers.insert(
+		reqwest::header::USER_AGENT,
+		ANTHROPIC_USER_AGENT.parse().unwrap(),
 	);
 
 	headers
@@ -170,25 +215,27 @@ mod tests {
 			headers.get(reqwest::header::AUTHORIZATION).unwrap(),
 			"Bearer at_test"
 		);
-		assert_eq!(headers.get("anthropic-beta").unwrap(), OAUTH_BETA_HEADER);
+		// Should include all required beta headers
+		let beta = headers.get("anthropic-beta").unwrap().to_str().unwrap();
+		assert!(beta.contains(OAUTH_BETA_HEADER));
+		assert!(beta.contains(CLAUDE_CODE_BETA_HEADER));
+		assert!(beta.contains(INTERLEAVED_THINKING_BETA_HEADER));
+		assert!(beta.contains(TOOL_STREAMING_BETA_HEADER));
+		// Should spoof Claude Code user-agent
+		assert_eq!(
+			headers.get(reqwest::header::USER_AGENT).unwrap(),
+			ANTHROPIC_USER_AGENT
+		);
 	}
 
 	#[test]
 	fn test_build_oauth_headers_with_additional_beta() {
 		let headers = build_oauth_headers("at_test", Some("max-tokens-3-5-sonnet-2024-07-15"));
 
-		assert!(headers
-			.get("anthropic-beta")
-			.unwrap()
-			.to_str()
-			.unwrap()
-			.contains(OAUTH_BETA_HEADER));
-		assert!(headers
-			.get("anthropic-beta")
-			.unwrap()
-			.to_str()
-			.unwrap()
-			.contains("max-tokens"));
+		let beta = headers.get("anthropic-beta").unwrap().to_str().unwrap();
+		assert!(beta.contains(OAUTH_BETA_HEADER));
+		assert!(beta.contains(CLAUDE_CODE_BETA_HEADER));
+		assert!(beta.contains("max-tokens"));
 	}
 
 	#[test]
@@ -196,5 +243,17 @@ mod tests {
 		let headers = build_api_key_headers("sk-test-key");
 
 		assert_eq!(headers.get("x-api-key").unwrap(), "sk-test-key");
+		// Should include Claude Code beta headers
+		let beta = headers.get("anthropic-beta").unwrap().to_str().unwrap();
+		assert!(beta.contains(CLAUDE_CODE_BETA_HEADER));
+		assert!(beta.contains(INTERLEAVED_THINKING_BETA_HEADER));
+		assert!(beta.contains(TOOL_STREAMING_BETA_HEADER));
+		// Should NOT include OAuth header for API key auth
+		assert!(!beta.contains(OAUTH_BETA_HEADER));
+		// Should spoof Claude Code user-agent
+		assert_eq!(
+			headers.get(reqwest::header::USER_AGENT).unwrap(),
+			ANTHROPIC_USER_AGENT
+		);
 	}
 }
