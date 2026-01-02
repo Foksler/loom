@@ -11,7 +11,7 @@ description = "HTTP API routes and types for Loom server"
 
 [features]
 default = ["openapi"]
-openapi = ["dep:utoipa", "loom-server-github-app/openapi", "loom-server-google-cse/openapi", "loom-common-thread/openapi", "loom-common-version/utoipa"]
+openapi = ["dep:utoipa", "loom-server-github-app/openapi", "loom-server-search-google-cse/openapi", "loom-common-thread/openapi", "loom-common-version/utoipa"]
 
 [dependencies]
 axum = { version = "0.8", features = ["macros"] }
@@ -19,7 +19,7 @@ chrono = { version = "0.4", features = ["serde"] }
 loom-server-auth = { path = "../loom-server-auth" }
 loom-server-db = { path = "../loom-server-db" }
 loom-server-github-app = { path = "../loom-server-github-app", optional = true }
-loom-server-google-cse = { path = "../loom-server-google-cse", optional = true }
+loom-server-search-google-cse = { path = "../loom-server-search-google-cse", optional = true }
 loom-common-i18n = { path = "../loom-common-i18n" }
 loom-server-jobs = { path = "../loom-server-jobs" }
 loom-server-llm-anthropic = { path = "../loom-server-llm-anthropic" }

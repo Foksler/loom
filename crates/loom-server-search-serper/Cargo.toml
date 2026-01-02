@@ -2,12 +2,12 @@
 # SPDX-License-Identifier: Proprietary
 
 [package]
-name = "loom-server-google-cse"
+name = "loom-server-search-serper"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Google Custom Search Engine client for Loom"
+description = "Serper.dev search API client for Loom"
 
 [features]
 default = []

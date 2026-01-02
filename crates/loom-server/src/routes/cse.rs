@@ -4,7 +4,7 @@
 //! Google Custom Search Engine proxy HTTP handler.
 
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
-use loom_server_google_cse::{CseError, CseRequest};
+use loom_server_search_google_cse::{CseError, CseRequest};
 
 pub use loom_server_api::cse::*;
 

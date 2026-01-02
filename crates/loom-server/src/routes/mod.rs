@@ -20,6 +20,7 @@ pub mod maintenance;
 pub mod mirrors;
 pub mod orgs;
 pub mod protection;
+pub mod serper;
 pub mod sessions;
 pub mod share;
 pub mod teams;

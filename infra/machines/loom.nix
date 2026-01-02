@@ -120,6 +120,11 @@
     mode = "0400";
   };
 
+  sops.secrets.loom-serper-api-key = {
+    owner = "loom-server";
+    mode = "0400";
+  };
+
   sops.secrets.loom-google-oauth-client-id = {
     owner = "loom-server";
     mode = "0400";
@@ -237,6 +242,11 @@
       enable = true;
       apiKeyFile = config.sops.secrets.loom-google-cse-api-key.path;
       searchEngineIdFile = config.sops.secrets.loom-google-cse-search-engine-id.path;
+    };
+
+    serper = {
+      enable = true;
+      apiKeyFile = config.sops.secrets.loom-serper-api-key.path;
     };
 
     weaver = {

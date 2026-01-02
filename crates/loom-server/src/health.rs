@@ -112,6 +112,16 @@ pub struct GoogleCseHealth {
 	pub error: Option<String>,
 }
 
+/// Serper component health.
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub struct SerperHealth {
+	pub status: HealthStatus,
+	pub latency_ms: u64,
+	pub configured: bool,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub error: Option<String>,
+}
+
 /// GitHub App component health.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct GithubAppHealth {
@@ -194,6 +204,7 @@ pub struct HealthComponents {
 	pub bin_dir: BinDirHealth,
 	pub llm_providers: LlmProvidersHealth,
 	pub google_cse: GoogleCseHealth,
+	pub serper: SerperHealth,
 	pub github_app: GithubAppHealth,
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub kubernetes: Option<KubernetesHealth>,
@@ -423,7 +434,7 @@ fn get_cse_cache() -> &'static tokio::sync::RwLock<Option<(Instant, GoogleCseHea
 /// Check Google CSE health by verifying configuration and optionally testing
 /// connectivity. Results are cached for 5 minutes to avoid burning API quota.
 pub async fn check_google_cse() -> GoogleCseHealth {
-	use loom_server_google_cse::{CseClient, CseRequest};
+	use loom_server_search_google_cse::{CseClient, CseRequest};
 
 	// Check cache first
 	{
@@ -503,6 +514,109 @@ pub async fn check_google_cse() -> GoogleCseHealth {
 	{
 		let mut cache = get_cse_cache().write().await;
 		*cache = Some((Instant::now(), GoogleCseHealth {
+			status: health.status,
+			latency_ms: health.latency_ms,
+			configured: health.configured,
+			error: health.error.clone(),
+		}));
+	}
+
+	health
+}
+
+const SERPER_CHECK_TIMEOUT: Duration = Duration::from_secs(5);
+const SERPER_CACHE_TTL: Duration = Duration::from_secs(3600); // 1 hour
+
+/// Cached Serper health result to avoid burning through API quota on health checks.
+static SERPER_HEALTH_CACHE: std::sync::OnceLock<tokio::sync::RwLock<Option<(Instant, SerperHealth)>>> =
+	std::sync::OnceLock::new();
+
+fn get_serper_cache() -> &'static tokio::sync::RwLock<Option<(Instant, SerperHealth)>> {
+	SERPER_HEALTH_CACHE.get_or_init(|| tokio::sync::RwLock::new(None))
+}
+
+/// Check Serper health by verifying configuration and optionally testing
+/// connectivity. Results are cached for 1 hour to avoid burning API quota.
+pub async fn check_serper() -> SerperHealth {
+	use loom_server_search_serper::{SerperClient, SerperRequest};
+
+	// Check cache first
+	{
+		let cache = get_serper_cache().read().await;
+		if let Some((cached_at, ref health)) = *cache {
+			if cached_at.elapsed() < SERPER_CACHE_TTL {
+				return SerperHealth {
+					status: health.status,
+					latency_ms: 0, // Cached response
+					configured: health.configured,
+					error: health.error.clone(),
+				};
+			}
+		}
+	}
+
+	let start = Instant::now();
+
+	// Check if Serper is configured
+	let api_key = std::env::var("LOOM_SERVER_SERPER_API_KEY");
+
+	let (configured, status, error) = match api_key {
+		Ok(key) if !key.is_empty() => {
+			// Serper is configured, try a simple search to verify connectivity
+			let client = SerperClient::new(key);
+			let request = SerperRequest::new("test", 1);
+
+			match timeout(SERPER_CHECK_TIMEOUT, client.search(request)).await {
+				Ok(Ok(_)) => (true, HealthStatus::Healthy, None),
+				Ok(Err(e)) => {
+					// Check if it's an auth error vs network error
+					let err_str = e.to_string();
+					if err_str.contains("Unauthorized") || err_str.contains("Invalid API key") {
+						(
+							true,
+							HealthStatus::Unhealthy,
+							Some("Invalid API key".to_string()),
+						)
+					} else if err_str.contains("Rate limit") || err_str.contains("429") || err_str.contains("Quota") {
+						(
+							true,
+							HealthStatus::Degraded,
+							Some("Rate limited (quota exceeded)".to_string()),
+						)
+					} else {
+						(true, HealthStatus::Degraded, Some(err_str))
+					}
+				}
+				Err(_) => (
+					true,
+					HealthStatus::Degraded,
+					Some("Serper health check timed out".to_string()),
+				),
+			}
+		}
+		_ => {
+			// Not configured - this is degraded, not unhealthy (Serper is optional)
+			(
+				false,
+				HealthStatus::Degraded,
+				Some("Serper not configured".to_string()),
+			)
+		}
+	};
+
+	let latency_ms = start.elapsed().as_millis() as u64;
+
+	let health = SerperHealth {
+		status,
+		latency_ms,
+		configured,
+		error,
+	};
+
+	// Update cache
+	{
+		let mut cache = get_serper_cache().write().await;
+		*cache = Some((Instant::now(), SerperHealth {
 			status: health.status,
 			latency_ms: health.latency_ms,
 			configured: health.configured,
@@ -810,6 +924,7 @@ pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
 		components.database.status,
 		components.bin_dir.status,
 		components.google_cse.status,
+		components.serper.status,
 		components.github_app.status,
 		components.smtp.status,
 		components.geoip.status,

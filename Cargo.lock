@@ -3382,7 +3382,6 @@ dependencies = [
  "loom-server-db",
  "loom-server-geoip",
  "loom-server-github-app",
- "loom-server-google-cse",
  "loom-server-jobs",
  "loom-server-k8s",
  "loom-server-llm-anthropic",
@@ -3390,6 +3389,8 @@ dependencies = [
  "loom-server-logs",
  "loom-server-scm",
  "loom-server-scm-mirror",
+ "loom-server-search-google-cse",
+ "loom-server-search-serper",
  "loom-server-smtp",
  "loom-server-weaver",
  "pin-project-lite",
@@ -3429,11 +3430,11 @@ dependencies = [
  "loom-server-auth",
  "loom-server-db",
  "loom-server-github-app",
- "loom-server-google-cse",
  "loom-server-jobs",
  "loom-server-llm-anthropic",
  "loom-server-scm",
  "loom-server-scm-mirror",
+ "loom-server-search-google-cse",
  "loom-server-smtp",
  "loom-server-weaver",
  "proptest",
@@ -3612,22 +3613,6 @@ dependencies = [
  "tokio-test",
  "tracing",
  "urlencoding",
- "utoipa",
-]
-
-[[package]]
-name = "loom-server-google-cse"
-version = "0.1.0"
-dependencies = [
- "loom-common-http",
- "proptest",
- "reqwest",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "tracing",
  "utoipa",
 ]
 
@@ -3829,6 +3814,38 @@ dependencies = [
  "tokio-test",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "loom-server-search-google-cse"
+version = "0.1.0"
+dependencies = [
+ "loom-common-http",
+ "proptest",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "utoipa",
+]
+
+[[package]]
+name = "loom-server-search-serper"
+version = "0.1.0"
+dependencies = [
+ "loom-common-http",
+ "proptest",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "utoipa",
 ]
 
 [[package]]

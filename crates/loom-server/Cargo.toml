@@ -40,7 +40,8 @@ loom-server-github-app = { path = "../loom-server-github-app", features = ["open
 loom-server-scm = { path = "../loom-server-scm" }
 loom-server-scm-mirror = { path = "../loom-server-scm-mirror" }
 gix = { version = "0.68", default-features = false, features = ["revision"] }
-loom-server-google-cse = { path = "../loom-server-google-cse", features = ["openapi"] }
+loom-server-search-google-cse = { path = "../loom-server-search-google-cse", features = ["openapi"] }
+loom-server-search-serper = { path = "../loom-server-search-serper", features = ["openapi"] }
 loom-server-llm-anthropic = { path = "../loom-server-llm-anthropic" }
 loom-server-llm-service = { path = "../loom-server-llm-service" }
 loom-common-thread = { path = "../loom-common-thread", features = ["openapi"] }

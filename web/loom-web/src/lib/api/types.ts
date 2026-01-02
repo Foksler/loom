@@ -477,6 +477,13 @@ export interface GoogleCseHealth {
 	error?: string;
 }
 
+export interface SerperHealth {
+	status: HealthStatus;
+	latency_ms: number;
+	configured: boolean;
+	error?: string;
+}
+
 export interface GithubAppHealth {
 	status: HealthStatus;
 	latency_ms: number;
@@ -535,6 +542,7 @@ export interface HealthComponents {
 	bin_dir: BinDirHealth;
 	llm_providers: LlmProvidersHealth;
 	google_cse: GoogleCseHealth;
+	serper: SerperHealth;
 	github_app: GithubAppHealth;
 	kubernetes?: KubernetesHealth;
 	smtp: SmtpHealth;

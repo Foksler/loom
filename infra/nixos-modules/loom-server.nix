@@ -348,6 +348,17 @@ in
       };
     };
 
+    # Serper.dev Google Search API Configuration
+    serper = {
+      enable = mkEnableOption "Serper.dev Google Search API";
+
+      apiKeyFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = "Path to file containing Serper API key.";
+      };
+    };
+
     # GeoIP Configuration
     geoip = {
       enable = mkEnableOption "GeoIP lookup service using MaxMind databases";
@@ -547,6 +558,10 @@ in
         assertion = cfg.googleCse.enable -> (cfg.googleCse.apiKeyFile != null && cfg.googleCse.searchEngineIdFile != null);
         message = "services.loom-server.googleCse.apiKeyFile and searchEngineIdFile must be set when Google CSE is enabled.";
       }
+      {
+        assertion = cfg.serper.enable -> cfg.serper.apiKeyFile != null;
+        message = "services.loom-server.serper.apiKeyFile must be set when Serper is enabled.";
+      }
     ];
 
     users.users.loom-server = {
@@ -690,6 +705,9 @@ in
         # Google CSE Secrets
         ${loadSecret cfg.googleCse.apiKeyFile "LOOM_SERVER_GOOGLE_CSE_API_KEY"}
         ${loadSecret cfg.googleCse.searchEngineIdFile "LOOM_SERVER_GOOGLE_CSE_SEARCH_ENGINE_ID"}
+
+        # Serper Secrets
+        ${loadSecret cfg.serper.apiKeyFile "LOOM_SERVER_SERPER_API_KEY"}
 
         # SMTP Secrets
         ${loadSecret cfg.smtp.passwordFile "LOOM_SERVER_SMTP_PASSWORD"}

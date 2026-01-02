@@ -15,7 +15,8 @@ use loom_server_auth_okta::{OktaOAuthClient, OktaOAuthConfig};
 use loom_server_geoip::GeoIpService;
 use loom_server_github_app::{GithubAppClient, GithubAppConfig};
 use loom_server_jobs::{JobRepository, JobScheduler};
-use loom_server_google_cse::CseClient;
+use loom_server_search_google_cse::CseClient;
+use loom_server_search_serper::SerperClient;
 use loom_server_k8s::KubeClient;
 use loom_server_llm_service::LlmService;
 use loom_server_smtp::SmtpClient;
@@ -57,6 +58,7 @@ pub struct AppState {
 	pub dev_user: Option<loom_server_auth::User>,
 	pub base_url: String,
 	pub cse_client: Option<Arc<CseClient>>,
+	pub serper_client: Option<Arc<SerperClient>>,
 	pub github_client: Option<Arc<GithubAppClient>>,
 	pub llm_service: Option<Arc<LlmService>>,
 	pub query_manager: Arc<ServerQueryManager>,
@@ -119,6 +121,17 @@ pub async fn create_app_state(
 		}
 		_ => {
 			tracing::info!("Google CSE not configured");
+			None
+		}
+	};
+
+	let serper_client = match std::env::var("LOOM_SERVER_SERPER_API_KEY") {
+		Ok(api_key) if !api_key.is_empty() => {
+			tracing::info!("Serper configured, creating client");
+			Some(Arc::new(SerperClient::new(api_key)))
+		}
+		_ => {
+			tracing::info!("Serper not configured");
 			None
 		}
 	};
@@ -207,6 +220,7 @@ pub async fn create_app_state(
 		dev_user,
 		base_url: config.base_url.clone(),
 		cse_client,
+		serper_client,
 		github_client,
 		llm_service,
 		query_manager,
@@ -809,6 +823,8 @@ pub fn create_router(state: AppState) -> Router {
 		)
 		// CSE proxy route
 		.route("/proxy/cse", post(routes::cse::proxy_cse))
+		// Serper proxy route
+		.route("/proxy/serper", post(routes::serper::proxy_serper))
 		// GitHub App endpoints (authenticated)
 		.route(
 			"/api/github/app",

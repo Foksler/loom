@@ -256,10 +256,10 @@ use utoipa::OpenApi;
             loom_server_github_app::CodeSearchRequest,
             loom_server_github_app::CodeSearchResponse,
             loom_server_github_app::CodeSearchItem,
-            // Google CSE types (from loom-server-google-cse crate)
-            loom_server_google_cse::CseRequest,
-            loom_server_google_cse::CseResponse,
-            loom_server_google_cse::CseResultItem,
+            // Google CSE types (from loom-server-search-google-cse crate)
+            loom_server_search_google_cse::CseRequest,
+            loom_server_search_google_cse::CseResponse,
+            loom_server_search_google_cse::CseResultItem,
             // Weaver types
             crate::routes::weaver::CreateWeaverApiRequest,
             crate::routes::weaver::WeaverApiResponse,

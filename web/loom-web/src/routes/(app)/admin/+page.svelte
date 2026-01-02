@@ -204,6 +204,14 @@
 		});
 
 		components.push({
+			name: i18n._('admin.health.serper'),
+			status: c.serper.status,
+			latency: c.serper.latency_ms,
+			configured: c.serper.configured,
+			error: c.serper.error,
+		});
+
+		components.push({
 			name: i18n._('admin.health.github_app'),
 			status: c.github_app.status,
 			latency: c.github_app.latency_ms,

@@ -963,6 +963,10 @@ msgstr "LLM Providers"
 msgid "admin.health.google_cse"
 msgstr "Google CSE"
 
+#: admin.health.serper
+msgid "admin.health.serper"
+msgstr "Serper"
+
 #: admin.health.github_app
 msgid "admin.health.github_app"
 msgstr "GitHub App"
