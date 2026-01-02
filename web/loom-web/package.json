@@ -21,7 +21,7 @@
 		"lingui:compile": "node scripts/compile-po.mjs"
 	},
 	"dependencies": {
-		"@lingui/core": "^4.7.0",
+		"@lingui/core": "^4.14.1",
 		"@lingui/message-utils": "^4.14.1",
 		"@sveltejs/adapter-auto": "^3.0.0",
 		"@sveltejs/kit": "^2.0.0",
@@ -35,7 +35,7 @@
 	},
 	"devDependencies": {
 		"@fast-check/vitest": "^0.1.0",
-		"@lingui/cli": "^4.7.0",
+		"@lingui/cli": "^4.14.1",
 		"@storybook/addon-a11y": "^8.0.0",
 		"@storybook/addon-essentials": "^8.0.0",
 		"@storybook/svelte": "^8.0.0",
