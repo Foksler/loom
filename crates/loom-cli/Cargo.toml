@@ -36,7 +36,7 @@ loom-common-i18n = { path = "../loom-common-i18n" }
 loom-server-llm-proxy = { path = "../loom-server-llm-proxy" }
 loom-common-secret = { path = "../loom-common-secret" }
 loom-common-thread = { path = "../loom-common-thread" }
-loom-tools = { path = "../loom-tools" }
+loom-common-tools = { path = "../loom-common-tools" }
 loom-common-version = { workspace = true }
 reqwest = { workspace = true }
 self-replace = "1"

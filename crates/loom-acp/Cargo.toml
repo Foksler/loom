@@ -14,7 +14,7 @@ description = "Agent Client Protocol (ACP) integration for Loom"
 loom-common-core = { path = "../loom-common-core" }
 loom-server-llm-proxy = { path = "../loom-server-llm-proxy" }
 loom-common-thread = { path = "../loom-common-thread" }
-loom-tools = { path = "../loom-tools" }
+loom-common-tools = { path = "../loom-common-tools" }
 
 # ACP SDK
 agent-client-protocol = "0.9"
