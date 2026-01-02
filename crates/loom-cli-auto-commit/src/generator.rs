@@ -7,7 +7,7 @@ use loom_common_core::llm::{LlmClient, LlmRequest};
 use loom_common_core::message::Message;
 use tracing::{debug, info, warn};
 
-use loom_git::GitDiff;
+use loom_cli_git::GitDiff;
 
 use crate::config::AutoCommitConfig;
 use crate::error::AutoCommitError;

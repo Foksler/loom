@@ -28,7 +28,7 @@ use loom_cli_config::{
 use loom_common_core::{
 	LlmClient, LlmEvent, Message, ToolCall, ToolContext, ToolDefinition, ToolExecutionOutcome,
 };
-use loom_git::{detect_repo_status, CommandGitClient};
+use loom_cli_git::{detect_repo_status, CommandGitClient};
 use loom_server_llm_proxy::{LlmProvider, ProxyLlmClient};
 use loom_common_thread::{
 	AgentStateKind, AgentStateSnapshot, LocalThreadStore, MessageRole, MessageSnapshot,

@@ -5,7 +5,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use loom_common_core::llm::LlmClient;
-use loom_git::GitClient;
+use loom_cli_git::GitClient;
 use tracing::{debug, error, info, warn};
 
 use crate::config::AutoCommitConfig;
@@ -144,7 +144,7 @@ impl<G: GitClient, L: LlmClient> AutoCommitService<G, L> {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use loom_git::{GitDiff, GitError};
+	use loom_cli_git::{GitDiff, GitError};
 	use proptest::prelude::*;
 
 	proptest! {

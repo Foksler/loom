@@ -10,5 +10,5 @@ pub use config::AutoCommitConfig;
 pub use error::AutoCommitError;
 pub use generator::CommitMessageGenerator;
 // Re-export loom-git types for convenience
-pub use loom_git::{CommandGitClient, GitClient, GitDiff, GitError, MockGitClient};
+pub use loom_cli_git::{CommandGitClient, GitClient, GitDiff, GitError, MockGitClient};
 pub use service::{AutoCommitResult, AutoCommitService, CompletedToolInfo};

@@ -30,7 +30,7 @@ loom-cli-auto-commit = { path = "../loom-cli-auto-commit" }
 loom-cli-config = { path = "../loom-cli-config" }
 loom-common-core = { path = "../loom-common-core" }
 loom-cli-credentials = { path = "../loom-cli-credentials", features = ["keyring"] }
-loom-git = { path = "../loom-git" }
+loom-cli-git = { path = "../loom-cli-git" }
 loom-common-http = { path = "../loom-common-http" }
 loom-common-i18n = { path = "../loom-common-i18n" }
 loom-server-llm-proxy = { path = "../loom-server-llm-proxy" }

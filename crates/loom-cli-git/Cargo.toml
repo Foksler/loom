@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Proprietary
 
 [package]
-name = "loom-git"
+name = "loom-cli-git"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true

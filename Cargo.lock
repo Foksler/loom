@@ -3257,6 +3257,7 @@ dependencies = [
  "loom-cli-auto-commit",
  "loom-cli-config",
  "loom-cli-credentials",
+ "loom-cli-git",
  "loom-common-core",
  "loom-common-http",
  "loom-common-i18n",
@@ -3264,7 +3265,6 @@ dependencies = [
  "loom-common-thread",
  "loom-common-tools",
  "loom-common-version",
- "loom-git",
  "loom-server-llm-proxy",
  "proptest",
  "reqwest",
@@ -3287,8 +3287,8 @@ name = "loom-cli-auto-commit"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "loom-cli-git",
  "loom-common-core",
- "loom-git",
  "proptest",
  "serde",
  "serde_json",
@@ -3327,6 +3327,18 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tokio-test",
+ "tracing",
+]
+
+[[package]]
+name = "loom-cli-git"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "proptest",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
  "tracing",
 ]
 
@@ -3445,18 +3457,6 @@ dependencies = [
  "serde",
  "shadow-rs",
  "utoipa",
-]
-
-[[package]]
-name = "loom-git"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "proptest",
- "tempfile",
- "thiserror 1.0.69",
- "tokio",
- "tracing",
 ]
 
 [[package]]
