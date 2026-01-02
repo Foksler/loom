@@ -3352,32 +3352,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "loom-github-app"
-version = "0.1.0"
-dependencies = [
- "base64",
- "chrono",
- "hex",
- "hmac",
- "jsonwebtoken",
- "loom-common-config",
- "loom-common-http",
- "proptest",
- "rand 0.8.5",
- "reqwest",
- "rsa",
- "serde",
- "serde_json",
- "sha2",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "tracing",
- "urlencoding",
- "utoipa",
-]
-
-[[package]]
 name = "loom-google-cse"
 version = "0.1.0"
 dependencies = [
@@ -3461,7 +3435,6 @@ dependencies = [
  "loom-common-secret",
  "loom-common-thread",
  "loom-common-version",
- "loom-github-app",
  "loom-google-cse",
  "loom-scm",
  "loom-scm-mirror",
@@ -3474,6 +3447,7 @@ dependencies = [
  "loom-server-auth-okta",
  "loom-server-db",
  "loom-server-geoip",
+ "loom-server-github-app",
  "loom-server-jobs",
  "loom-server-k8s",
  "loom-server-llm-anthropic",
@@ -3514,12 +3488,12 @@ dependencies = [
  "loom-common-secret",
  "loom-common-thread",
  "loom-common-version",
- "loom-github-app",
  "loom-google-cse",
  "loom-scm",
  "loom-scm-mirror",
  "loom-server-auth",
  "loom-server-db",
+ "loom-server-github-app",
  "loom-server-jobs",
  "loom-server-llm-anthropic",
  "loom-server-smtp",
@@ -3675,6 +3649,32 @@ dependencies = [
  "tempfile",
  "thiserror 1.0.69",
  "tracing",
+]
+
+[[package]]
+name = "loom-server-github-app"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "chrono",
+ "hex",
+ "hmac",
+ "jsonwebtoken",
+ "loom-common-config",
+ "loom-common-http",
+ "proptest",
+ "rand 0.8.5",
+ "reqwest",
+ "rsa",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "urlencoding",
+ "utoipa",
 ]
 
 [[package]]

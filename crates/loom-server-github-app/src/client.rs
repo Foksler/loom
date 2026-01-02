@@ -233,7 +233,7 @@ impl GithubAppClient {
 			.header("Authorization", format!("Bearer {jwt}"))
 			.header("Accept", "application/vnd.github+json")
 			.header("X-GitHub-Api-Version", "2022-11-28")
-			.header("User-Agent", "loom-github-app")
+			.header("User-Agent", "loom-server-github-app")
 			.send()
 			.await
 			.map_err(|e| {
@@ -339,7 +339,7 @@ impl GithubAppClient {
 			.header("Authorization", format!("Bearer {token}"))
 			.header("Accept", "application/vnd.github+json")
 			.header("X-GitHub-Api-Version", "2022-11-28")
-			.header("User-Agent", "loom-github-app")
+			.header("User-Agent", "loom-server-github-app")
 			.send()
 			.await
 			.map_err(|e| {
@@ -438,7 +438,7 @@ impl GithubAppClient {
 			.header("Authorization", format!("Bearer {token}"))
 			.header("Accept", "application/vnd.github+json")
 			.header("X-GitHub-Api-Version", "2022-11-28")
-			.header("User-Agent", "loom-github-app")
+			.header("User-Agent", "loom-server-github-app")
 			.send()
 			.await
 			.map_err(|e| {
@@ -543,7 +543,7 @@ impl GithubAppClient {
 			.header("Authorization", format!("Bearer {token}"))
 			.header("Accept", "application/vnd.github+json")
 			.header("X-GitHub-Api-Version", "2022-11-28")
-			.header("User-Agent", "loom-github-app")
+			.header("User-Agent", "loom-server-github-app")
 			.send()
 			.await
 			.map_err(|e| {
@@ -604,7 +604,7 @@ impl GithubAppClient {
 			.header("Authorization", format!("Bearer {jwt}"))
 			.header("Accept", "application/vnd.github+json")
 			.header("X-GitHub-Api-Version", "2022-11-28")
-			.header("User-Agent", "loom-github-app")
+			.header("User-Agent", "loom-server-github-app")
 			.send()
 			.await
 			.map_err(|e| {
@@ -665,7 +665,7 @@ impl GithubAppClient {
 			.header("Authorization", format!("Bearer {jwt}"))
 			.header("Accept", "application/vnd.github+json")
 			.header("X-GitHub-Api-Version", "2022-11-28")
-			.header("User-Agent", "loom-github-app")
+			.header("User-Agent", "loom-server-github-app")
 			.send()
 			.await
 			.map_err(|e| {
