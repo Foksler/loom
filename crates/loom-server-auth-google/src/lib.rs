@@ -38,7 +38,7 @@
 //! # Example
 //!
 //! ```rust,no_run
-//! use loom_auth_google::{GoogleOAuthClient, GoogleOAuthConfig};
+//! use loom_server_auth_google::{GoogleOAuthClient, GoogleOAuthConfig};
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! let config = GoogleOAuthConfig::from_env()?;
@@ -400,7 +400,7 @@ struct GoogleErrorResponse {
 /// # Example
 ///
 /// ```rust,no_run
-/// use loom_auth_google::{GoogleOAuthClient, GoogleOAuthConfig};
+/// use loom_server_auth_google::{GoogleOAuthClient, GoogleOAuthConfig};
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 /// let config = GoogleOAuthConfig::from_env()?;
