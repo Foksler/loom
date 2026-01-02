@@ -185,7 +185,7 @@ This document tracks the comparison between specs/* and actual crate implementat
 | SecretString = Secret<String> | ✅ | |
 | REDACTED constant | ✅ | |
 
-### loom-config-common
+### loom-common-config
 
 | Item | Status | Notes |
 |------|--------|-------|

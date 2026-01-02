@@ -34,7 +34,7 @@ Design documentation for Loom, an AI-powered coding agent in Rust.
 | Spec | Code | Purpose |
 |------|------|---------|
 | [configuration-system.md](./configuration-system.md) | [loom-config](../crates/loom-config/) | Layered config with XDG paths |
-| [configuration.md](./configuration.md) | [loom-config-common](../crates/loom-config-common/) | CLI args and env vars |
+| [configuration.md](./configuration.md) | [loom-common-config](../crates/loom-common-config/) | CLI args and env vars |
 | [secret-system.md](./secret-system.md) | [loom-secret](../crates/loom-secret/) | `Secret<T>` wrapper for sensitive values |
 | [redact-system.md](./redact-system.md) | [loom-redact](../crates/loom-redact/) | Secret detection using gitleaks patterns |
 | [auth-abac-system.md](./auth-abac-system.md) | [loom-auth](../crates/loom-auth/), [loom-auth-*](../crates/) | OAuth, magic links, ABAC |

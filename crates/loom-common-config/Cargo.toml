@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Proprietary
 
 [package]
-name = "loom-config-common"
+name = "loom-common-config"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true

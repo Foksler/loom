@@ -11,7 +11,7 @@ repository.workspace = true
 description = "Server-side LLM provider abstraction for Loom"
 
 [dependencies]
-loom-config-common.workspace = true
+loom-common-config.workspace = true
 loom-common-core = { path = "../loom-common-core" }
 loom-common-http = { path = "../loom-common-http" }
 loom-server-llm-anthropic = { path = "../loom-server-llm-anthropic" }

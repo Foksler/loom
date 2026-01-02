@@ -3303,8 +3303,8 @@ name = "loom-cli-config"
 version = "0.1.0"
 dependencies = [
  "dirs 5.0.1",
+ "loom-common-config",
  "loom-common-secret",
- "loom-config-common",
  "proptest",
  "serde",
  "serde_json",
@@ -3312,6 +3312,18 @@ dependencies = [
  "thiserror 1.0.69",
  "toml",
  "tracing",
+]
+
+[[package]]
+name = "loom-common-config"
+version = "0.1.0"
+dependencies = [
+ "loom-common-secret",
+ "proptest",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -3420,18 +3432,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "loom-config-common"
-version = "0.1.0"
-dependencies = [
- "loom-common-secret",
- "proptest",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "loom-credentials"
 version = "0.1.0"
 dependencies = [
@@ -3468,8 +3468,8 @@ dependencies = [
  "hex",
  "hmac",
  "jsonwebtoken",
+ "loom-common-config",
  "loom-common-http",
- "loom-config-common",
  "proptest",
  "rand 0.8.5",
  "reqwest",
@@ -3780,9 +3780,9 @@ name = "loom-server-llm-service"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "loom-common-config",
  "loom-common-core",
  "loom-common-http",
- "loom-config-common",
  "loom-server-llm-anthropic",
  "loom-server-llm-openai",
  "loom-server-llm-vertex",

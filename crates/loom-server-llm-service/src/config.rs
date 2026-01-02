@@ -6,7 +6,7 @@
 use std::env;
 use std::path::PathBuf;
 
-use loom_config_common::{load_secret_env, Secret, SecretString};
+use loom_common_config::{load_secret_env, Secret, SecretString};
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
 

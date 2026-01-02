@@ -5,7 +5,7 @@
 
 use std::path::PathBuf;
 
-use loom_config_common::load_secret_env;
+use loom_common_config::load_secret_env;
 use tracing::{debug, trace};
 
 use crate::layer::*;

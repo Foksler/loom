@@ -28,5 +28,5 @@ pub enum ConfigError {
 	InvalidValue { key: String, message: String },
 
 	#[error("Secret loading error: {0}")]
-	SecretLoad(#[from] loom_config_common::SecretEnvError),
+	SecretLoad(#[from] loom_common_config::SecretEnvError),
 }

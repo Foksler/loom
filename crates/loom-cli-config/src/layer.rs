@@ -3,7 +3,7 @@
 
 //! Partial configuration layer for merging from multiple sources.
 
-use loom_config_common::SecretString;
+use loom_common_config::SecretString;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -471,7 +471,7 @@ mod tests {
 	/// for HashMap-based merging where keys collide.
 	#[test]
 	fn test_merge_providers_replaces_by_name() {
-		use loom_config_common::Secret;
+		use loom_common_config::Secret;
 
 		let mut base = ConfigLayer {
 			providers: Some(ProvidersLayer {

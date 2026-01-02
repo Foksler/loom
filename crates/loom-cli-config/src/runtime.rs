@@ -3,7 +3,7 @@
 
 //! Runtime configuration types with resolved defaults.
 
-use loom_config_common::SecretString;
+use loom_common_config::SecretString;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;

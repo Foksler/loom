@@ -50,7 +50,7 @@ and other secrets are never leaked in logs, error messages, or configuration dum
                               ▲
                               │ depends on
 ┌─────────────────────────────┴───────────────────────────────────┐
-│                      loom-config-common                         │
+│                      loom-common-config                         │
 │  - Re-exports Secret, SecretString, REDACTED                    │
 │  - load_secret_env() for VAR/VAR_FILE loading                   │
 │  - require_secret_env() for required secrets                    │
@@ -66,7 +66,7 @@ and other secrets are never leaked in logs, error messages, or configuration dum
 ### Rationale
 
 - **`loom-secret`** is a standalone primitive crate with no business logic
-- **`loom-config-common`** adds environment loading on top
+- **`loom-common-config`** adds environment loading on top
 - Domain crates can depend on `loom-secret` directly without pulling in config logic
 
 ---
@@ -211,7 +211,7 @@ export OPENAI_API_KEY_FILE="/run/secrets/openai_key"
 ```
 
 ```rust
-use loom_config_common::load_secret_env;
+use loom_common_config::load_secret_env;
 
 // Automatically checks OPENAI_API_KEY_FILE first, then OPENAI_API_KEY
 let api_key = load_secret_env("OPENAI_API_KEY")?;

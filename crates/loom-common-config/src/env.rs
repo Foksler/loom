@@ -58,7 +58,7 @@ pub enum SecretEnvError {
 /// # Example
 ///
 /// ```no_run
-/// use loom_config_common::load_secret_env;
+/// use loom_common_config::load_secret_env;
 ///
 /// // If OPENAI_API_KEY_FILE=/run/secrets/openai_key is set,
 /// // reads the secret from that file.
@@ -69,7 +69,7 @@ pub enum SecretEnvError {
 ///     println!("API key configured: {}", key); // prints "[REDACTED]"
 ///     // Use key.expose() when you actually need the value
 /// }
-/// # Ok::<(), loom_config_common::SecretEnvError>(())
+/// # Ok::<(), loom_common_config::SecretEnvError>(())
 /// ```
 pub fn load_secret_env(var: &str) -> Result<Option<Secret<String>>, SecretEnvError> {
 	let file_var = format!("{var}_FILE");
@@ -104,7 +104,7 @@ pub fn load_secret_env(var: &str) -> Result<Option<Secret<String>>, SecretEnvErr
 /// # Example
 ///
 /// ```no_run
-/// use loom_config_common::env::require_secret_env;
+/// use loom_common_config::env::require_secret_env;
 ///
 /// let api_key = require_secret_env("OPENAI_API_KEY")?;
 /// // api_key is guaranteed to be Some here
