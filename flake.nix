@@ -37,8 +37,18 @@
       # cargo2nix overlay for granular crate builds
       cargo2nixOverlay = cargo2nix.overlays.default;
       
+      # Function to create loom-server-binaries with configurable platforms
+      mkBinaries = { pkgs, platforms }: pkgs.callPackage ./infra/pkgs/loom-server-binaries.nix {
+        loom-cli-linux = pkgs.loom-cli-linux;
+        loom-cli-windows = if platforms.windows-x86_64 or false then pkgs.loom-cli-windows else null;
+        loom-cli-macos = if (platforms.macos-x86_64 or false) || (platforms.macos-aarch64 or false) then pkgs.loom-cli-macos else null;
+        loom-cli-linux-aarch64 = if platforms.linux-aarch64 or false then pkgs.loom-cli-linux-aarch64 else null;
+        loom-cli-windows-aarch64 = if platforms.windows-aarch64 or false then pkgs.loom-cli-windows-aarch64 else null;
+      };
+      
       mkSystem = modules: nixpkgs.lib.nixosSystem {
         inherit system;
+        specialArgs = { inherit mkBinaries; };
         modules = modules ++ [
           ({ config, pkgs, ... }: {
             nixpkgs.overlays = [ overlayNoCross toolsOverlay ];

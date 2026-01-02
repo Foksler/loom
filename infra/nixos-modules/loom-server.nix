@@ -1,12 +1,23 @@
 # Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 # SPDX-License-Identifier: Proprietary
 
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, mkBinaries ? null, ... }:
 
 with lib;
 
 let
   cfg = config.services.loom-server;
+  
+  # Build binaries package based on configured platforms
+  binariesPackage = if mkBinaries != null then
+    mkBinaries {
+      inherit pkgs;
+      platforms = {
+        inherit (cfg.binPlatforms) linux-x86_64 linux-aarch64 windows-x86_64 windows-aarch64 macos-x86_64 macos-aarch64;
+      };
+    }
+  else
+    pkgs.loom-server-binaries;
 in
 {
   options.services.loom-server = {
@@ -51,6 +62,40 @@ in
         Binaries are served at /bin/{platform} for self-update functionality.
         Expected structure: bin/linux-x86_64, bin/macos-aarch64, etc.
       '';
+    };
+
+    # Platform build options for CLI binaries
+    binPlatforms = {
+      linux-x86_64 = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Build CLI binaries for Linux x86_64.";
+      };
+      linux-aarch64 = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Build CLI binaries for Linux aarch64 (ARM64).";
+      };
+      windows-x86_64 = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Build CLI binaries for Windows x86_64.";
+      };
+      windows-aarch64 = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Build CLI binaries for Windows aarch64 (ARM64).";
+      };
+      macos-x86_64 = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Build CLI binaries for macOS x86_64 (Intel).";
+      };
+      macos-aarch64 = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Build CLI binaries for macOS aarch64 (Apple Silicon).";
+      };
     };
 
     openFirewall = mkOption {
@@ -572,6 +617,10 @@ in
         })
         (mkIf (cfg.binDir != null) {
           LOOM_SERVER_BIN_DIR = toString cfg.binDir;
+        })
+        # Use binariesPackage if binDir not explicitly set but platforms are configured
+        (mkIf (cfg.binDir == null && cfg.binPlatforms.linux-x86_64) {
+          LOOM_SERVER_BIN_DIR = toString binariesPackage;
         })
         (mkIf cfg.weaver.enable {
           LOOM_SERVER_WEAVER_ENABLED = "true";

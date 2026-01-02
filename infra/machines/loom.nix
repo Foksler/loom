@@ -175,8 +175,18 @@
     port = 8080;
     databasePath = "/var/lib/loom-server/loom.db";
     logLevel = "trace";
-    binDir = pkgs.loom-server-binaries;
     baseUrl = "https://loom.ghuntley.com";
+    
+    # CLI binary platforms to build for self-update distribution
+    # Only build linux-x86_64 by default for faster builds
+    binPlatforms = {
+      linux-x86_64 = true;      # Always needed
+      linux-aarch64 = false;    # Linux ARM64
+      windows-x86_64 = false;   # Windows Intel
+      windows-aarch64 = false;  # Windows ARM64
+      macos-x86_64 = false;     # macOS Intel
+      macos-aarch64 = false;    # macOS Apple Silicon
+    };
 
     anthropic = {
       enable = true;
