@@ -80,13 +80,18 @@ pub struct AppState {
 	pub scm_team_access_store: Option<Arc<loom_server_scm::SqliteRepoTeamAccessStore>>,
 	pub push_mirror_store: Option<Arc<loom_server_scm_mirror::SqlitePushMirrorStore>>,
 	pub external_mirror_store: Option<Arc<loom_server_scm_mirror::SqliteExternalMirrorStore>>,
+	pub log_buffer: loom_server_logs::LogBuffer,
 }
 
 /// Creates the application state, initializing optional components.
+///
+/// If `log_buffer` is None, a default buffer will be created.
+/// Pass a pre-created buffer if you need to share it with a tracing layer.
 pub async fn create_app_state(
 	pool: SqlitePool,
 	repo: Arc<ThreadRepository>,
 	config: &ServerConfig,
+	log_buffer: Option<loom_server_logs::LogBuffer>,
 ) -> AppState {
 	// Create auth repositories
 	let user_repo = Arc::new(UserRepository::new(pool.clone()));
@@ -225,6 +230,7 @@ pub async fn create_app_state(
 		scm_team_access_store: Some(scm_team_access_store),
 		push_mirror_store: Some(push_mirror_store),
 		external_mirror_store: Some(external_mirror_store),
+		log_buffer: log_buffer.unwrap_or_default(),
 	}
 }
 
@@ -468,6 +474,9 @@ fn admin_routes(state: AppState) -> Router<AppState> {
 			"/jobs/{job_id}/disable",
 			post(routes::admin_jobs::disable_job),
 		)
+		// Log streaming
+		.route("/logs", get(routes::admin_logs::list_logs))
+		.route("/logs/stream", get(routes::admin_logs::stream_logs))
 		.route_layer(RequireRole::admin().with_audit(state.audit_repo.clone()))
 		.layer(from_fn_with_state(state.clone(), require_auth_layer))
 		.layer(from_fn_with_state(state, auth_layer))
@@ -960,7 +969,7 @@ mod tests {
 		let pool = crate::db::create_pool(&db_url).await.unwrap();
 		let repo = Arc::new(ThreadRepository::new(pool.clone()));
 		let config = ServerConfig::default();
-		let mut state = create_app_state(pool, repo, &config).await;
+		let mut state = create_app_state(pool, repo, &config, None).await;
 		// Override auth config for testing
 		state.auth_config.dev_mode = dev_mode;
 		if dev_mode && state.dev_user.is_none() {
@@ -1489,7 +1498,7 @@ mod tests {
 		let pool = crate::db::create_pool(&db_url).await.unwrap();
 		let repo = Arc::new(ThreadRepository::new(pool.clone()));
 		let config = ServerConfig::default();
-		let mut state = create_app_state(pool, repo, &config).await;
+		let mut state = create_app_state(pool, repo, &config, None).await;
 
 		// Enable dev mode for testing
 		state.auth_config.dev_mode = true;

@@ -3387,6 +3387,7 @@ dependencies = [
  "loom-server-k8s",
  "loom-server-llm-anthropic",
  "loom-server-llm-service",
+ "loom-server-logs",
  "loom-server-scm",
  "loom-server-scm-mirror",
  "loom-server-smtp",
@@ -3766,6 +3767,20 @@ dependencies = [
  "tokio",
  "tokio-test",
  "tracing",
+]
+
+[[package]]
+name = "loom-server-logs"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "parking_lot",
+ "proptest",
+ "serde",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "utoipa",
 ]
 
 [[package]]
@@ -5875,6 +5890,7 @@ dependencies = [
  "futures-core",
  "pin-project-lite",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]

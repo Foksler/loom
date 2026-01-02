@@ -211,7 +211,7 @@
 								</div>
 								{#if account.status === 'cooling_down' && account.cooldown_remaining_secs}
 									<div class="text-sm text-fg-muted mt-1">
-										{i18n._('admin.anthropic.cooldown_remaining', { time: formatCooldown(account.cooldown_remaining_secs) })}
+										{formatCooldown(account.cooldown_remaining_secs)} remaining
 									</div>
 								{/if}
 								{#if account.last_error}
@@ -221,7 +221,7 @@
 								{/if}
 								{#if account.expires_at}
 									<div class="text-sm text-fg-muted mt-1">
-										{i18n._('admin.anthropic.expires_at', { time: formatExpiry(account.expires_at) })}
+										Token expires: {formatExpiry(account.expires_at)}
 									</div>
 								{/if}
 							</div>

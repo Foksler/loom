@@ -35,7 +35,7 @@ async fn setup_test_app() -> (axum::Router, tempfile::TempDir) {
 	let pool = loom_server::db::create_pool(&db_url).await.unwrap();
 	let repo = Arc::new(ThreadRepository::new(pool.clone()));
 	let config = ServerConfig::default();
-	let mut state = create_app_state(pool, repo, &config).await;
+	let mut state = create_app_state(pool, repo, &config, None).await;
 	// Explicitly disable dev mode for auth tests
 	state.auth_config.dev_mode = false;
 	(create_router(state), dir)
@@ -49,7 +49,7 @@ async fn setup_test_app_with_state() -> (axum::Router, AppState, tempfile::TempD
 	let pool = loom_server::db::create_pool(&db_url).await.unwrap();
 	let repo = Arc::new(ThreadRepository::new(pool.clone()));
 	let config = ServerConfig::default();
-	let mut state = create_app_state(pool, repo, &config).await;
+	let mut state = create_app_state(pool, repo, &config, None).await;
 	// Explicitly disable dev mode for auth tests
 	state.auth_config.dev_mode = false;
 	(create_router(state.clone()), state, dir)
@@ -462,7 +462,7 @@ async fn test_admin_route_forbidden_for_non_admin() {
 	let pool = loom_server::db::create_pool(&db_url).await.unwrap();
 	let repo = Arc::new(ThreadRepository::new(pool.clone()));
 	let config = ServerConfig::default();
-	let state = create_app_state(pool, repo, &config).await;
+	let state = create_app_state(pool, repo, &config, None).await;
 
 	let inject_auth = move |mut req: Request<Body>, next: Next| {
 		let auth_ctx = auth_ctx.clone();
@@ -517,7 +517,7 @@ async fn test_admin_route_allowed_for_admin() {
 	let pool = loom_server::db::create_pool(&db_url).await.unwrap();
 	let repo = Arc::new(ThreadRepository::new(pool.clone()));
 	let config = ServerConfig::default();
-	let state = create_app_state(pool, repo, &config).await;
+	let state = create_app_state(pool, repo, &config, None).await;
 
 	let inject_auth = move |mut req: Request<Body>, next: Next| {
 		let auth_ctx = auth_ctx.clone();

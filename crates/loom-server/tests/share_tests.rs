@@ -44,7 +44,7 @@ async fn setup_test_app() -> (
 	let pool = loom_server::db::create_pool(&db_url).await.unwrap();
 	let repo = Arc::new(ThreadRepository::new(pool.clone()));
 	let config = ServerConfig::default();
-	let state = create_app_state(pool.clone(), repo.clone(), &config).await;
+	let state = create_app_state(pool.clone(), repo.clone(), &config, None).await;
 
 	let user_repo = loom_server::db::UserRepository::new(pool.clone());
 	let session_repo = loom_server::db::SessionRepository::new(pool);

@@ -52,13 +52,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	// Load configuration
 	let config = ServerConfig::from_env()?;
 
-	// Setup tracing
+	// Create log buffer for admin UI streaming (must be created before tracing init)
+	let log_buffer = loom_server_logs::LogBuffer::with_default_capacity();
+	let log_layer = loom_server_logs::BroadcastLogLayer::new(log_buffer.clone());
+
+	// Setup tracing with both stdout and buffer layers
 	tracing_subscriber::registry()
 		.with(
 			tracing_subscriber::EnvFilter::try_from_default_env()
 				.unwrap_or_else(|_| config.log_level.clone().into()),
 		)
 		.with(tracing_subscriber::fmt::layer())
+		.with(log_layer)
 		.init();
 
 	tracing::info!(
@@ -71,7 +76,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	// Create database pool and repository
 	let pool = loom_server::db::create_pool(&config.database_url).await?;
 	let repo = Arc::new(ThreadRepository::new(pool.clone()));
-	let mut state = create_app_state(pool.clone(), repo, &config).await;
+	let mut state = create_app_state(pool.clone(), repo, &config, Some(log_buffer)).await;
 
 	// Weaver provisioner startup lifecycle - validate namespace
 	if let Some(ref provisioner) = state.provisioner {

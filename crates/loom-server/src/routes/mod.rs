@@ -6,6 +6,7 @@
 pub mod admin;
 pub mod admin_anthropic;
 pub mod admin_jobs;
+pub mod admin_logs;
 pub mod api_keys;
 pub mod auth;
 pub mod bin;
