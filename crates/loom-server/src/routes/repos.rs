@@ -27,7 +27,7 @@ pub use loom_server_api::repos::*;
 use crate::{api::AppState, auth_middleware::RequireAuth, i18n::{resolve_user_locale, t}};
 
 fn get_repos_base_dir() -> PathBuf {
-	std::env::var("LOOM_DATA_DIR")
+	std::env::var("LOOM_SERVER_DATA_DIR")
 		.map(PathBuf::from)
 		.unwrap_or_else(|_| PathBuf::from("/var/lib/loom"))
 		.join("repos")

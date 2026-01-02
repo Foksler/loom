@@ -27,9 +27,9 @@ use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 use axum::Router;
+use loom_server_config::ServerConfig;
 
 use crate::{
-	config::ServerConfig,
 	db::{
 		ApiKeyRepository, AuditRepository, OrgRepository, SessionRepository, ShareRepository,
 		TeamRepository, ThreadRepository, UserRepository,
@@ -110,7 +110,10 @@ pub async fn create_app_state(
 	let scm_team_access_store = Arc::new(loom_server_scm::SqliteRepoTeamAccessStore::new(pool.clone()));
 	let push_mirror_store = Arc::new(loom_server_scm_mirror::SqlitePushMirrorStore::new(pool.clone()));
 	let external_mirror_store = Arc::new(loom_server_scm_mirror::SqliteExternalMirrorStore::new(pool));
-	let auth_config = loom_server_auth::middleware::AuthConfig::from_env();
+	let auth_config = loom_server_auth::middleware::AuthConfig {
+		dev_mode: config.auth.dev_mode,
+		session_cookie_name: loom_server_auth::middleware::SESSION_COOKIE_NAME.to_string(),
+	};
 	let cse_client = match (
 		std::env::var("LOOM_SERVER_GOOGLE_CSE_API_KEY"),
 		std::env::var("LOOM_SERVER_GOOGLE_CSE_SEARCH_ENGINE_ID"),
@@ -218,7 +221,7 @@ pub async fn create_app_state(
 		share_repo,
 		auth_config,
 		dev_user,
-		base_url: config.base_url.clone(),
+		base_url: config.http.base_url.clone(),
 		cse_client,
 		serper_client,
 		github_client,
@@ -233,7 +236,7 @@ pub async fn create_app_state(
 		google_oauth,
 		okta_oauth,
 		oauth_state_store,
-		default_locale: config.default_locale.clone(),
+		default_locale: config.logging.locale.clone(),
 		geoip_service,
 		job_scheduler: None,
 		job_repository: None,
@@ -295,7 +298,7 @@ async fn initialize_weaver_provisioner(
 	config: &ServerConfig,
 ) -> (Option<Arc<Provisioner>>, Option<Arc<WebhookDispatcher>>) {
 	// Check if weaver provisioning is enabled
-	if !config.weaver_enabled {
+	if !config.weaver.enabled {
 		tracing::info!("Weaver provisioning disabled");
 		return (None, None);
 	}
@@ -312,37 +315,45 @@ async fn initialize_weaver_provisioner(
 		}
 	};
 
-	// Parse webhooks from JSON
-	let webhooks: Vec<WebhookConfig> = match serde_json::from_str(&config.weaver_webhooks) {
-		Ok(webhooks) => webhooks,
-		Err(e) => {
-			tracing::warn!(
-				error = %e,
-				webhooks_json = %config.weaver_webhooks,
-				"Failed to parse weaver webhooks JSON, using empty list"
-			);
-			Vec::new()
-		}
-	};
-
-	// Parse image pull secrets from comma-separated string
-	let image_pull_secrets: Vec<String> = config
-		.weaver_image_pull_secrets
-		.split(',')
-		.map(|s| s.trim().to_string())
-		.filter(|s| !s.is_empty())
+	// Convert webhooks from config types to weaver types
+	let webhooks: Vec<WebhookConfig> = config
+		.weaver
+		.webhooks
+		.iter()
+		.map(|w| WebhookConfig {
+			url: w.url.clone(),
+			events: w
+				.events
+				.iter()
+				.map(|e| match e {
+					loom_server_config::WebhookEvent::WeaverCreated => {
+						loom_server_weaver::WebhookEvent::WeaverCreated
+					}
+					loom_server_config::WebhookEvent::WeaverDeleted => {
+						loom_server_weaver::WebhookEvent::WeaverDeleted
+					}
+					loom_server_config::WebhookEvent::WeaverFailed => {
+						loom_server_weaver::WebhookEvent::WeaverFailed
+					}
+					loom_server_config::WebhookEvent::WeaversCleanup => {
+						loom_server_weaver::WebhookEvent::WeaversCleanup
+					}
+				})
+				.collect(),
+			secret: w.secret.as_ref().map(|s| s.expose().to_string()),
+		})
 		.collect();
 
 	// Create weaver config from server config
 	let weaver_config = WeaverConfig {
-		namespace: config.weaver_namespace.clone(),
-		cleanup_interval_secs: config.weaver_cleanup_interval_secs,
-		default_ttl_hours: config.weaver_default_ttl_hours,
-		max_ttl_hours: config.weaver_max_ttl_hours,
-		max_concurrent: config.weaver_max_concurrent,
-		ready_timeout_secs: config.weaver_ready_timeout_secs,
+		namespace: config.weaver.namespace.clone(),
+		cleanup_interval_secs: config.weaver.cleanup_interval_secs,
+		default_ttl_hours: config.weaver.default_ttl_hours,
+		max_ttl_hours: config.weaver.max_ttl_hours,
+		max_concurrent: config.weaver.max_concurrent,
+		ready_timeout_secs: config.weaver.ready_timeout_secs,
 		webhooks: webhooks.clone(),
-		image_pull_secrets,
+		image_pull_secrets: config.weaver.image_pull_secrets.clone(),
 	};
 
 	// Create provisioner and webhook dispatcher
@@ -350,9 +361,9 @@ async fn initialize_weaver_provisioner(
 	let webhook_dispatcher = Arc::new(WebhookDispatcher::new(webhooks));
 
 	tracing::info!(
-		namespace = %config.weaver_namespace,
-		max_concurrent = config.weaver_max_concurrent,
-		default_ttl_hours = config.weaver_default_ttl_hours,
+		namespace = %config.weaver.namespace,
+		max_concurrent = config.weaver.max_concurrent,
+		default_ttl_hours = config.weaver.default_ttl_hours,
 		"Weaver provisioning enabled"
 	);
 
@@ -361,22 +372,21 @@ async fn initialize_weaver_provisioner(
 
 /// Initialize the SMTP client if configured.
 fn initialize_smtp_client(config: &ServerConfig) -> Option<Arc<SmtpClient>> {
-	let (host, from_address) = match (&config.smtp_host, &config.smtp_from_address) {
-		(Some(h), Some(f)) if !h.is_empty() && !f.is_empty() => (h.clone(), f.clone()),
-		_ => {
-			tracing::info!("SMTP not configured (smtp_host and smtp_from_address required)");
-			return None;
-		}
-	};
+	let smtp = config.smtp.as_ref()?;
+
+	let use_tls = matches!(
+		smtp.tls_mode,
+		loom_server_config::TlsMode::Tls | loom_server_config::TlsMode::StartTls
+	);
 
 	let smtp_config = loom_server_smtp::SmtpConfig {
-		host,
-		port: config.smtp_port,
-		username: config.smtp_username.clone(),
-		password: config.smtp_password.clone().map(loom_common_secret::SecretString::new),
-		from_address,
-		from_name: config.smtp_from_name.clone(),
-		use_tls: config.smtp_use_tls,
+		host: smtp.host.clone(),
+		port: smtp.port,
+		username: smtp.username.clone(),
+		password: smtp.password.clone(),
+		from_address: smtp.from_address.clone(),
+		from_name: smtp.from_name.clone(),
+		use_tls,
 	};
 
 	match SmtpClient::new(smtp_config) {
@@ -978,6 +988,7 @@ mod tests {
 		let db_path = dir.path().join("test.db");
 		let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 		let pool = crate::db::create_pool(&db_url).await.unwrap();
+		crate::db::run_migrations(&pool).await.unwrap();
 		let repo = Arc::new(ThreadRepository::new(pool.clone()));
 		let config = ServerConfig::default();
 		let mut state = create_app_state(pool, repo, &config, None).await;
@@ -1507,6 +1518,7 @@ mod tests {
 		let db_path = dir.path().join("test.db");
 		let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 		let pool = crate::db::create_pool(&db_url).await.unwrap();
+		crate::db::run_migrations(&pool).await.unwrap();
 		let repo = Arc::new(ThreadRepository::new(pool.clone()));
 		let config = ServerConfig::default();
 		let mut state = create_app_state(pool, repo, &config, None).await;

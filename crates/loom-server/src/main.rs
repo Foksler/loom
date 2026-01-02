@@ -5,7 +5,7 @@
 
 use clap::{Parser, Subcommand};
 use loom_server_jobs::{JobRepository, JobScheduler};
-use loom_server::{create_app_state, create_router, ServerConfig, ThreadRepository};
+use loom_server::{create_app_state, create_router, ThreadRepository};
 use std::sync::Arc;
 use std::time::Duration;
 use tower_http::{
@@ -50,7 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	dotenvy::dotenv().ok();
 
 	// Load configuration
-	let config = ServerConfig::from_env()?;
+	let config = loom_server_config::load_config()?;
 
 	// Create log buffer for admin UI streaming (must be created before tracing init)
 	let log_buffer = loom_server_logs::LogBuffer::with_default_capacity();
@@ -60,21 +60,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	tracing_subscriber::registry()
 		.with(
 			tracing_subscriber::EnvFilter::try_from_default_env()
-				.unwrap_or_else(|_| config.log_level.clone().into()),
+				.unwrap_or_else(|_| config.logging.level.clone().into()),
 		)
 		.with(tracing_subscriber::fmt::layer())
 		.with(log_layer)
 		.init();
 
 	tracing::info!(
-			host = %config.host,
-			port = config.port,
-			database = %config.database_url,
+			host = %config.http.host,
+			port = config.http.port,
+			database = %config.database.url,
 			"starting loom-server"
 	);
 
 	// Create database pool and repository
-	let pool = loom_server::db::create_pool(&config.database_url).await?;
+	let pool = loom_server::db::create_pool(&config.database.url).await?;
 	let repo = Arc::new(ThreadRepository::new(pool.clone()));
 	let mut state = create_app_state(pool.clone(), repo, &config, Some(log_buffer)).await;
 
@@ -95,7 +95,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		use loom_server::jobs::WeaverCleanupJob;
 		scheduler.register_periodic(
 			Arc::new(WeaverCleanupJob::new(Arc::clone(provisioner))),
-			Duration::from_secs(config.weaver_cleanup_interval_secs),
+			Duration::from_secs(config.weaver.cleanup_interval_secs),
 		);
 	}
 
@@ -104,7 +104,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		use loom_server::jobs::SessionCleanupJob;
 		scheduler.register_periodic(
 			Arc::new(SessionCleanupJob::new(pool.clone())),
-			Duration::from_secs(config.session_cleanup_interval_secs),
+			Duration::from_secs(config.auth.session_cleanup_interval_secs),
 		);
 	}
 
@@ -113,7 +113,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		use loom_server::jobs::OAuthStateCleanupJob;
 		scheduler.register_periodic(
 			Arc::new(OAuthStateCleanupJob::new(Arc::clone(&state.oauth_state_store))),
-			Duration::from_secs(config.oauth_state_cleanup_interval_secs),
+			Duration::from_secs(config.auth.oauth_state_cleanup_interval_secs),
 		);
 	}
 
@@ -121,7 +121,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	{
 		use loom_server::jobs::JobHistoryCleanupJob;
 		scheduler.register_periodic(
-			Arc::new(JobHistoryCleanupJob::new(Arc::clone(&job_repo), config.job_history_retention_days)),
+			Arc::new(JobHistoryCleanupJob::new(Arc::clone(&job_repo), config.jobs.history_retention_days)),
 			Duration::from_secs(24 * 60 * 60), // Daily
 		);
 	}

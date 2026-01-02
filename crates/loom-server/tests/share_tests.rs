@@ -9,7 +9,7 @@
 //! - Thread owners can manage their own share links
 
 use loom_server::api::{create_app_state, create_router};
-use loom_server::config::ServerConfig;
+use loom_server::ServerConfig;
 use loom_server::db::ThreadRepository;
 use axum::{
 	body::Body,

@@ -3410,6 +3410,7 @@ dependencies = [
  "loom-server-auth-google",
  "loom-server-auth-magiclink",
  "loom-server-auth-okta",
+ "loom-server-config",
  "loom-server-db",
  "loom-server-geoip",
  "loom-server-github-app",
@@ -3606,6 +3607,21 @@ dependencies = [
  "tokio",
  "tracing",
  "url",
+]
+
+[[package]]
+name = "loom-server-config"
+version = "0.1.0"
+dependencies = [
+ "loom-common-config",
+ "loom-common-http",
+ "proptest",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "toml",
+ "tracing",
 ]
 
 [[package]]
@@ -3814,6 +3830,7 @@ dependencies = [
  "parking_lot",
  "proptest",
  "serde",
+ "serde_json",
  "tokio",
  "tracing",
  "tracing-subscriber",

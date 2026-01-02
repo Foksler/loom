@@ -4,7 +4,7 @@
 //! GeoIP lookup service for Loom.
 //!
 //! This crate provides IP-to-location lookups using MaxMind GeoLite2 databases.
-//! The database path is configured via the `LOOM_GEOIP_DATABASE_PATH` environment
+//! The database path is configured via the `LOOM_SERVER_GEOIP_DATABASE_PATH` environment
 //! variable.
 //!
 //! # Usage
@@ -25,7 +25,7 @@ use std::sync::Arc;
 use maxminddb::{geoip2, Reader};
 use serde::Serialize;
 
-pub const GEOIP_DATABASE_PATH_ENV: &str = "LOOM_GEOIP_DATABASE_PATH";
+pub const GEOIP_DATABASE_PATH_ENV: &str = "LOOM_SERVER_GEOIP_DATABASE_PATH";
 
 #[derive(Debug, thiserror::Error)]
 pub enum GeoIpError {

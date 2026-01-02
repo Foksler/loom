@@ -14,7 +14,7 @@
 //! - Access denial audit logging (H6)
 
 use loom_server::api::{create_app_state, create_router, AppState};
-use loom_server::config::ServerConfig;
+use loom_server::ServerConfig;
 use loom_server::db::ThreadRepository;
 use axum::{
 	body::Body,
@@ -33,6 +33,7 @@ async fn setup_test_app() -> (axum::Router, tempfile::TempDir) {
 	let db_path = dir.path().join("test_auth.db");
 	let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 	let pool = loom_server::db::create_pool(&db_url).await.unwrap();
+	loom_server::db::run_migrations(&pool).await.unwrap();
 	let repo = Arc::new(ThreadRepository::new(pool.clone()));
 	let config = ServerConfig::default();
 	let mut state = create_app_state(pool, repo, &config, None).await;
@@ -47,6 +48,7 @@ async fn setup_test_app_with_state() -> (axum::Router, AppState, tempfile::TempD
 	let db_path = dir.path().join("test_auth_audit.db");
 	let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 	let pool = loom_server::db::create_pool(&db_url).await.unwrap();
+	loom_server::db::run_migrations(&pool).await.unwrap();
 	let repo = Arc::new(ThreadRepository::new(pool.clone()));
 	let config = ServerConfig::default();
 	let mut state = create_app_state(pool, repo, &config, None).await;
@@ -515,6 +517,7 @@ async fn test_admin_route_allowed_for_admin() {
 	let db_path = dir.path().join("test_admin_access.db");
 	let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 	let pool = loom_server::db::create_pool(&db_url).await.unwrap();
+	loom_server::db::run_migrations(&pool).await.unwrap();
 	let repo = Arc::new(ThreadRepository::new(pool.clone()));
 	let config = ServerConfig::default();
 	let state = create_app_state(pool, repo, &config, None).await;

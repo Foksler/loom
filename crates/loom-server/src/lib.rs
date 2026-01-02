@@ -14,7 +14,6 @@ pub mod jobs;
 pub mod weaver_metrics;
 pub mod api;
 pub mod api_docs;
-pub mod config;
 pub mod db;
 pub mod error;
 pub mod health;
@@ -32,7 +31,7 @@ pub mod websocket;
 
 pub use api::{create_app_state, create_router, AppState};
 pub use api_docs::ApiDoc;
-pub use config::ServerConfig;
+pub use loom_server_config::ServerConfig;
 pub use db::{GithubInstallation, GithubInstallationInfo, GithubRepo, ThreadRepository};
 pub use error::ServerError;
 pub use llm_query_handler::{LlmQueryHandler, SimpleRegexDetector};

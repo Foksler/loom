@@ -44,7 +44,8 @@ members = [
 	"crates/loom-server-db",
 	"crates/loom-server-api",
 	"crates/loom-server-audit",
-]
+	"crates/loom-server-config",
+	]
 
 [workspace.package]
 version = "0.1.0"

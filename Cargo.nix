@@ -41,8 +41,10 @@ args@{
     "loom-server-smtp/default"
     "loom-server-weaver/default"
     "loom-server-k8s/default"
+    "loom-server-config/default"
     "loom-server-geoip/default"
     "loom-server-logs/default"
+    "loom-server-audit/default"
   ],
   rustPackages,
   buildRustPackages,
@@ -63,7 +65,7 @@ args@{
   cargoConfig ? {},
 }:
 let
-  nixifiedLockHash = "a540342aa8aa01861c8a2f16a4217f53e4103a8112c66cd978012a01ba889335";
+  nixifiedLockHash = "bd201316f1300545e60934fa4e8c3281ccce896c1f5353fa533c83c8db3a69f8";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -131,8 +133,10 @@ in
     loom-server-smtp = rustPackages.unknown.loom-server-smtp."0.1.0";
     loom-server-weaver = rustPackages.unknown.loom-server-weaver."0.1.0";
     loom-server-k8s = rustPackages.unknown.loom-server-k8s."0.1.0";
+    loom-server-config = rustPackages.unknown.loom-server-config."0.1.0";
     loom-server-geoip = rustPackages.unknown.loom-server-geoip."0.1.0";
     loom-server-logs = rustPackages.unknown.loom-server-logs."0.1.0";
+    loom-server-audit = rustPackages.unknown.loom-server-audit."0.1.0";
   };
   "registry+https://github.com/rust-lang/crates.io-index".adler2."2.0.1" = overridableMkRustCrate (profileName: rec {
     name = "adler2";
@@ -1808,6 +1812,23 @@ in
     src = fetchCratesIo { inherit name version; sha256 = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"; };
   });
   
+  "registry+https://github.com/rust-lang/crates.io-index".foreign-types."0.3.2" = overridableMkRustCrate (profileName: rec {
+    name = "foreign-types";
+    version = "0.3.2";
+    registry = "registry+https://github.com/rust-lang/crates.io-index";
+    src = fetchCratesIo { inherit name version; sha256 = "f6f339eb8adc052cd2ca78910fda869aefa38d22d5cb648e6485e4d3fc06f3b1"; };
+    dependencies = {
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "foreign_types_shared" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".foreign-types-shared."0.1.1" { inherit profileName; }).out;
+    };
+  });
+  
+  "registry+https://github.com/rust-lang/crates.io-index".foreign-types-shared."0.1.1" = overridableMkRustCrate (profileName: rec {
+    name = "foreign-types-shared";
+    version = "0.1.1";
+    registry = "registry+https://github.com/rust-lang/crates.io-index";
+    src = fetchCratesIo { inherit name version; sha256 = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"; };
+  });
+  
   "registry+https://github.com/rust-lang/crates.io-index".form_urlencoded."1.2.2" = overridableMkRustCrate (profileName: rec {
     name = "form_urlencoded";
     version = "1.2.2";
@@ -3350,6 +3371,23 @@ in
     };
   });
   
+  "registry+https://github.com/rust-lang/crates.io-index".hyper-tls."0.6.0" = overridableMkRustCrate (profileName: rec {
+    name = "hyper-tls";
+    version = "0.6.0";
+    registry = "registry+https://github.com/rust-lang/crates.io-index";
+    src = fetchCratesIo { inherit name version; sha256 = "70206fc6890eaca9fde8a0bf71caa2ddfc9fe045ac9e5c70df101a7dbde866e0"; };
+    dependencies = {
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "bytes" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".bytes."1.11.0" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "http_body_util" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".http-body-util."0.1.3" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "hyper" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".hyper."1.8.1" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "hyper_util" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".hyper-util."0.1.19" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "native_tls" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".native-tls."0.2.14" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "tokio" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.48.0" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "tokio_native_tls" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio-native-tls."0.3.1" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "tower_service" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tower-service."0.3.3" { inherit profileName; }).out;
+    };
+  });
+  
   "registry+https://github.com/rust-lang/crates.io-index".hyper-util."0.1.19" = overridableMkRustCrate (profileName: rec {
     name = "hyper-util";
     version = "0.1.19";
@@ -4678,6 +4716,7 @@ in
       loom_server_auth_google = (rustPackages."unknown".loom-server-auth-google."0.1.0" { inherit profileName; }).out;
       loom_server_auth_magiclink = (rustPackages."unknown".loom-server-auth-magiclink."0.1.0" { inherit profileName; }).out;
       loom_server_auth_okta = (rustPackages."unknown".loom-server-auth-okta."0.1.0" { inherit profileName; }).out;
+      loom_server_config = (rustPackages."unknown".loom-server-config."0.1.0" { inherit profileName; }).out;
       loom_server_db = (rustPackages."unknown".loom-server-db."0.1.0" { inherit profileName; }).out;
       loom_server_geoip = (rustPackages."unknown".loom-server-geoip."0.1.0" { inherit profileName; }).out;
       loom_server_github_app = (rustPackages."unknown".loom-server-github-app."0.1.0" { inherit profileName; }).out;
@@ -4760,6 +4799,45 @@ in
     devDependencies = {
       proptest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proptest."1.9.0" { inherit profileName; }).out;
       tokio_test = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio-test."0.4.4" { inherit profileName; }).out;
+    };
+  });
+  
+  "unknown".loom-server-audit."0.1.0" = overridableMkRustCrate (profileName: rec {
+    name = "loom-server-audit";
+    version = "0.1.0";
+    registry = "unknown";
+    src = fetchCrateLocal workspaceSrc;
+    features = builtins.concatLists [
+      (lib.optional (rootFeatures' ? "loom-server-audit/default") "default")
+      (lib.optional (rootFeatures' ? "loom-server-audit/geo-ip") "geo-ip")
+      (lib.optional (rootFeatures' ? "loom-server-audit/geo-ip" || rootFeatures' ? "loom-server-audit/maxminddb") "maxminddb")
+      (lib.optional (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") "reqwest")
+      (lib.optional (rootFeatures' ? "loom-server-audit/sink-file") "sink-file")
+      (lib.optional (rootFeatures' ? "loom-server-audit/sink-http") "sink-http")
+      (lib.optional (rootFeatures' ? "loom-server-audit/sink-json-stream") "sink-json-stream")
+      (lib.optional (rootFeatures' ? "loom-server-audit/default" || rootFeatures' ? "loom-server-audit/sink-sqlite") "sink-sqlite")
+      (lib.optional (rootFeatures' ? "loom-server-audit/sink-syslog") "sink-syslog")
+      (lib.optional (rootFeatures' ? "loom-server-audit/default" || rootFeatures' ? "loom-server-audit/sink-tracing") "sink-tracing")
+      (lib.optional (rootFeatures' ? "loom-server-audit/default" || rootFeatures' ? "loom-server-audit/sink-sqlite" || rootFeatures' ? "loom-server-audit/sqlx") "sqlx")
+    ];
+    dependencies = {
+      async_trait = (buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".async-trait."0.1.89" { profileName = "__noProfile"; }).out;
+      chrono = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".chrono."0.4.42" { inherit profileName; }).out;
+      loom_common_secret = (rustPackages."unknown".loom-common-secret."0.1.0" { inherit profileName; }).out;
+      loom_server_auth = (rustPackages."unknown".loom-server-auth."0.1.0" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/geo-ip" || rootFeatures' ? "loom-server-audit/maxminddb" then "maxminddb" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".maxminddb."0.24.0" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "reqwest" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".reqwest."0.12.28" { inherit profileName; }).out;
+      serde = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.228" { inherit profileName; }).out;
+      serde_json = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.148" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/default" || rootFeatures' ? "loom-server-audit/sink-sqlite" || rootFeatures' ? "loom-server-audit/sqlx" then "sqlx" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".sqlx."0.8.6" { inherit profileName; }).out;
+      thiserror = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."2.0.17" { inherit profileName; }).out;
+      tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.48.0" { inherit profileName; }).out;
+      tracing = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tracing."0.1.44" { inherit profileName; }).out;
+      uuid = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".uuid."1.19.0" { inherit profileName; }).out;
+    };
+    devDependencies = {
+      proptest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proptest."1.9.0" { inherit profileName; }).out;
+      tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.48.0" { inherit profileName; }).out;
     };
   });
   
@@ -4898,6 +4976,26 @@ in
     devDependencies = {
       proptest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proptest."1.9.0" { inherit profileName; }).out;
       tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.48.0" { inherit profileName; }).out;
+    };
+  });
+  
+  "unknown".loom-server-config."0.1.0" = overridableMkRustCrate (profileName: rec {
+    name = "loom-server-config";
+    version = "0.1.0";
+    registry = "unknown";
+    src = fetchCrateLocal workspaceSrc;
+    dependencies = {
+      loom_common_config = (rustPackages."unknown".loom-common-config."0.1.0" { inherit profileName; }).out;
+      loom_common_http = (rustPackages."unknown".loom-common-http."0.1.0" { inherit profileName; }).out;
+      serde = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.228" { inherit profileName; }).out;
+      serde_json = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.148" { inherit profileName; }).out;
+      thiserror = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."1.0.69" { inherit profileName; }).out;
+      toml = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".toml."0.8.23" { inherit profileName; }).out;
+      tracing = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tracing."0.1.44" { inherit profileName; }).out;
+    };
+    devDependencies = {
+      proptest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proptest."1.9.0" { inherit profileName; }).out;
+      tempfile = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tempfile."3.24.0" { inherit profileName; }).out;
     };
   });
   
@@ -5171,6 +5269,7 @@ in
     };
     devDependencies = {
       proptest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proptest."1.9.0" { inherit profileName; }).out;
+      serde_json = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.148" { inherit profileName; }).out;
       tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.48.0" { inherit profileName; }).out;
     };
   });
@@ -5478,6 +5577,24 @@ in
     };
   });
   
+  "registry+https://github.com/rust-lang/crates.io-index".native-tls."0.2.14" = overridableMkRustCrate (profileName: rec {
+    name = "native-tls";
+    version = "0.2.14";
+    registry = "registry+https://github.com/rust-lang/crates.io-index";
+    src = fetchCratesIo { inherit name version; sha256 = "87de3442987e9dbec73158d5c715e7ad9072fda936bb03d19d7fa10e00520f0e"; };
+    dependencies = {
+      ${ if (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") && hostPlatform.parsed.vendor.name == "apple" then "libc" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".libc."0.2.178" { inherit profileName; }).out;
+      ${ if (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") && !(hostPlatform.parsed.kernel.name == "windows" || hostPlatform.parsed.vendor.name == "apple") then "log" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".log."0.4.29" { inherit profileName; }).out;
+      ${ if (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") && !(hostPlatform.parsed.kernel.name == "windows" || hostPlatform.parsed.vendor.name == "apple") then "openssl" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".openssl."0.10.75" { inherit profileName; }).out;
+      ${ if (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") && !(hostPlatform.parsed.kernel.name == "windows" || hostPlatform.parsed.vendor.name == "apple") then "openssl_probe" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".openssl-probe."0.1.6" { inherit profileName; }).out;
+      ${ if (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") && !(hostPlatform.parsed.kernel.name == "windows" || hostPlatform.parsed.vendor.name == "apple") then "openssl_sys" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".openssl-sys."0.9.111" { inherit profileName; }).out;
+      ${ if (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") && hostPlatform.parsed.kernel.name == "windows" then "schannel" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".schannel."0.1.28" { inherit profileName; }).out;
+      ${ if (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") && hostPlatform.parsed.vendor.name == "apple" then "security_framework" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".security-framework."2.11.1" { inherit profileName; }).out;
+      ${ if (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") && hostPlatform.parsed.vendor.name == "apple" then "security_framework_sys" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".security-framework-sys."2.15.0" { inherit profileName; }).out;
+      ${ if (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") && hostPlatform.parsed.kernel.name == "darwin" then "tempfile" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tempfile."3.24.0" { inherit profileName; }).out;
+    };
+  });
+  
   "registry+https://github.com/rust-lang/crates.io-index".ndk-context."0.1.1" = overridableMkRustCrate (profileName: rec {
     name = "ndk-context";
     version = "0.1.1";
@@ -5728,6 +5845,37 @@ in
     src = fetchCratesIo { inherit name version; sha256 = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"; };
   });
   
+  "registry+https://github.com/rust-lang/crates.io-index".openssl."0.10.75" = overridableMkRustCrate (profileName: rec {
+    name = "openssl";
+    version = "0.10.75";
+    registry = "registry+https://github.com/rust-lang/crates.io-index";
+    src = fetchCratesIo { inherit name version; sha256 = "08838db121398ad17ab8531ce9de97b244589089e290a384c900cb9ff7434328"; };
+    features = builtins.concatLists [
+      (lib.optional (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") "default")
+    ];
+    dependencies = {
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "bitflags" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".bitflags."2.10.0" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "cfg_if" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".cfg-if."1.0.4" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "foreign_types" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".foreign-types."0.3.2" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "libc" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".libc."0.2.178" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "once_cell" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".once_cell."1.21.3" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "openssl_macros" else null } = (buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".openssl-macros."0.1.1" { profileName = "__noProfile"; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "ffi" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".openssl-sys."0.9.111" { inherit profileName; }).out;
+    };
+  });
+  
+  "registry+https://github.com/rust-lang/crates.io-index".openssl-macros."0.1.1" = overridableMkRustCrate (profileName: rec {
+    name = "openssl-macros";
+    version = "0.1.1";
+    registry = "registry+https://github.com/rust-lang/crates.io-index";
+    src = fetchCratesIo { inherit name version; sha256 = "a948666b637a0f465e8564c73e89d4dde00d72d4d473cc972f390fc3dcee7d9c"; };
+    dependencies = {
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "proc_macro2" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proc-macro2."1.0.104" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "quote" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".quote."1.0.42" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "syn" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".syn."2.0.112" { inherit profileName; }).out;
+    };
+  });
+  
   "registry+https://github.com/rust-lang/crates.io-index".openssl-probe."0.1.6" = overridableMkRustCrate (profileName: rec {
     name = "openssl-probe";
     version = "0.1.6";
@@ -5740,6 +5888,21 @@ in
     version = "0.2.0";
     registry = "registry+https://github.com/rust-lang/crates.io-index";
     src = fetchCratesIo { inherit name version; sha256 = "9f50d9b3dabb09ecd771ad0aa242ca6894994c130308ca3d7684634df8037391"; };
+  });
+  
+  "registry+https://github.com/rust-lang/crates.io-index".openssl-sys."0.9.111" = overridableMkRustCrate (profileName: rec {
+    name = "openssl-sys";
+    version = "0.9.111";
+    registry = "registry+https://github.com/rust-lang/crates.io-index";
+    src = fetchCratesIo { inherit name version; sha256 = "82cab2d520aa75e3c58898289429321eb788c3106963d0dc886ec7a5f4adc321"; };
+    dependencies = {
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "libc" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".libc."0.2.178" { inherit profileName; }).out;
+    };
+    buildDependencies = {
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "cc" else null } = (buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".cc."1.2.51" { profileName = "__noProfile"; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "pkg_config" else null } = (buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".pkg-config."0.3.32" { profileName = "__noProfile"; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "vcpkg" else null } = (buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".vcpkg."0.2.15" { profileName = "__noProfile"; }).out;
+    };
   });
   
   "registry+https://github.com/rust-lang/crates.io-index".option-ext."0.2.0" = overridableMkRustCrate (profileName: rec {
@@ -6610,6 +6773,8 @@ in
       [ "__tls" ]
       [ "blocking" ]
       [ "charset" ]
+      (lib.optional (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") "default")
+      (lib.optional (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") "default-tls")
       [ "h2" ]
       [ "http2" ]
       [ "json" ]
@@ -6633,10 +6798,12 @@ in
       ${ if !(hostPlatform.parsed.cpu.name == "wasm32") then "http_body_util" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".http-body-util."0.1.3" { inherit profileName; }).out;
       ${ if !(hostPlatform.parsed.cpu.name == "wasm32") then "hyper" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".hyper."1.8.1" { inherit profileName; }).out;
       ${ if !(hostPlatform.parsed.cpu.name == "wasm32") then "hyper_rustls" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".hyper-rustls."0.27.7" { inherit profileName; }).out;
+      ${ if (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") && !(hostPlatform.parsed.cpu.name == "wasm32") then "hyper_tls" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".hyper-tls."0.6.0" { inherit profileName; }).out;
       ${ if !(hostPlatform.parsed.cpu.name == "wasm32") then "hyper_util" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".hyper-util."0.1.19" { inherit profileName; }).out;
       ${ if hostPlatform.parsed.cpu.name == "wasm32" then "js_sys" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".js-sys."0.3.83" { inherit profileName; }).out;
       ${ if !(hostPlatform.parsed.cpu.name == "wasm32") then "log" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".log."0.4.29" { inherit profileName; }).out;
       ${ if !(hostPlatform.parsed.cpu.name == "wasm32") then "mime" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".mime."0.3.17" { inherit profileName; }).out;
+      ${ if (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") && !(hostPlatform.parsed.cpu.name == "wasm32") then "native_tls_crate" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".native-tls."0.2.14" { inherit profileName; }).out;
       ${ if !(hostPlatform.parsed.cpu.name == "wasm32") then "percent_encoding" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".percent-encoding."2.3.2" { inherit profileName; }).out;
       ${ if !(hostPlatform.parsed.cpu.name == "wasm32") then "pin_project_lite" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".pin-project-lite."0.2.16" { inherit profileName; }).out;
       ${ if !(hostPlatform.parsed.cpu.name == "wasm32") then "quinn" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".quinn."0.11.9" { inherit profileName; }).out;
@@ -6647,6 +6814,7 @@ in
       serde_urlencoded = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_urlencoded."0.7.1" { inherit profileName; }).out;
       sync_wrapper = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".sync_wrapper."1.0.2" { inherit profileName; }).out;
       ${ if !(hostPlatform.parsed.cpu.name == "wasm32") then "tokio" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.48.0" { inherit profileName; }).out;
+      ${ if (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") && !(hostPlatform.parsed.cpu.name == "wasm32") then "tokio_native_tls" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio-native-tls."0.3.1" { inherit profileName; }).out;
       ${ if !(hostPlatform.parsed.cpu.name == "wasm32") then "tokio_rustls" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio-rustls."0.26.4" { inherit profileName; }).out;
       ${ if !(hostPlatform.parsed.cpu.name == "wasm32") then "tokio_util" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio-util."0.7.17" { inherit profileName; }).out;
       ${ if !(hostPlatform.parsed.cpu.name == "wasm32") then "tower" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tower."0.5.2" { inherit profileName; }).out;
@@ -7132,6 +7300,7 @@ in
       [ "OSX_10_11" ]
       [ "OSX_10_12" ]
       [ "OSX_10_9" ]
+      (lib.optional (rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http") "default")
     ];
     dependencies = {
       core_foundation_sys = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".core-foundation-sys."0.8.7" { inherit profileName; }).out;
@@ -8198,6 +8367,17 @@ in
       proc_macro2 = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proc-macro2."1.0.104" { inherit profileName; }).out;
       quote = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".quote."1.0.42" { inherit profileName; }).out;
       syn = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".syn."2.0.112" { inherit profileName; }).out;
+    };
+  });
+  
+  "registry+https://github.com/rust-lang/crates.io-index".tokio-native-tls."0.3.1" = overridableMkRustCrate (profileName: rec {
+    name = "tokio-native-tls";
+    version = "0.3.1";
+    registry = "registry+https://github.com/rust-lang/crates.io-index";
+    src = fetchCratesIo { inherit name version; sha256 = "bbae76ab933c85776efabc971569dd6119c580d8f5d448769dec1764bf796ef2"; };
+    dependencies = {
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "native_tls" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".native-tls."0.2.14" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "tokio" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.48.0" { inherit profileName; }).out;
     };
   });
   

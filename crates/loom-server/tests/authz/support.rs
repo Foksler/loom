@@ -32,8 +32,8 @@ use tower::ServiceExt;
 
 use loom_server::{
 	api::{create_app_state, create_router, AppState},
-	config::ServerConfig,
 	db::ThreadRepository,
+	ServerConfig,
 };
 
 pub struct MockK8sClient {
