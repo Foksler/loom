@@ -53,7 +53,8 @@ impl From<ShareVisibilityArg> for ThreadVisibility {
 	}
 }
 use loom_cli_tools::{
-	BashTool, EditFileTool, ListFilesTool, OracleTool, ReadFileTool, ToolRegistry, WebSearchTool,
+	BashTool, EditFileTool, ListFilesTool, OracleTool, ReadFileTool, ToolRegistry,
+	WebSearchToolGoogle, WebSearchToolSerper,
 };
 use url::Url;
 
@@ -347,7 +348,8 @@ fn create_tool_registry() -> ToolRegistry {
 	registry.register(Box::new(EditFileTool::new()));
 	registry.register(Box::new(BashTool::new()));
 	registry.register(Box::new(OracleTool::default()));
-	registry.register(Box::new(WebSearchTool::default()));
+	registry.register(Box::new(WebSearchToolGoogle::default()));
+	registry.register(Box::new(WebSearchToolSerper::default()));
 
 	let definitions = registry.definitions();
 	debug!(tool_count = definitions.len(), "tool registry initialized");

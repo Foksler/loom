@@ -15,4 +15,4 @@ pub use list_files::ListFilesTool;
 pub use oracle::OracleTool;
 pub use read_file::ReadFileTool;
 pub use registry::*;
-pub use web_search::WebSearchTool;
+pub use web_search::{WebSearchToolGoogle, WebSearchToolSerper};
