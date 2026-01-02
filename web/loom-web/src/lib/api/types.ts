@@ -275,6 +275,11 @@ export interface DeviceCodeCompleteRequest {
 	user_code: string;
 }
 
+export interface WsTokenResponse {
+	token: string;
+	expires_in: number;
+}
+
 export interface Session {
 	id: string;
 	session_type: 'web' | 'cli' | 'vscode';

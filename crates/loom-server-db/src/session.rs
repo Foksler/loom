@@ -881,3 +881,125 @@ fn parse_session_row(row: &sqlx::sqlite::SqliteRow) -> Result<Session, DbError> 
 		geo_country,
 	})
 }
+
+// =============================================================================
+// WebSocket Token Repository Methods
+// =============================================================================
+
+impl SessionRepository {
+	/// Create a new WebSocket authentication token.
+	///
+	/// WS tokens are short-lived (30 seconds), single-use tokens for WebSocket
+	/// first-message authentication.
+	///
+	/// # Arguments
+	/// * `user_id` - The user who owns this token
+	/// * `token_hash` - SHA-256 hash of the token (never store plaintext)
+	///
+	/// # Returns
+	/// The token ID.
+	#[tracing::instrument(skip(self, token_hash), fields(user_id = %user_id))]
+	pub async fn create_ws_token(
+		&self,
+		user_id: &UserId,
+		token_hash: &str,
+	) -> Result<String, DbError> {
+		use loom_server_auth::ws_token::WS_TOKEN_EXPIRY_SECONDS;
+
+		let id = Uuid::new_v4().to_string();
+		let now = Utc::now();
+		let expires_at = now + Duration::seconds(WS_TOKEN_EXPIRY_SECONDS);
+
+		sqlx::query(
+			r#"
+			INSERT INTO ws_tokens (id, user_id, token_hash, created_at, expires_at)
+			VALUES (?, ?, ?, ?, ?)
+			"#,
+		)
+		.bind(&id)
+		.bind(user_id.to_string())
+		.bind(token_hash)
+		.bind(now.to_rfc3339())
+		.bind(expires_at.to_rfc3339())
+		.execute(&self.pool)
+		.await?;
+
+		tracing::debug!(ws_token_id = %id, user_id = %user_id, "ws token created");
+		Ok(id)
+	}
+
+	/// Validate and consume a WebSocket token.
+	///
+	/// This is a single-use operation: once validated, the token is marked as used
+	/// and cannot be used again.
+	///
+	/// # Arguments
+	/// * `token_hash` - SHA-256 hash of the token to validate
+	///
+	/// # Returns
+	/// The user ID if the token is valid, unexpired, and unused.
+	/// `None` if the token doesn't exist, is expired, or was already used.
+	#[tracing::instrument(skip(self, token_hash))]
+	pub async fn validate_and_consume_ws_token(
+		&self,
+		token_hash: &str,
+	) -> Result<Option<UserId>, DbError> {
+		let now = Utc::now();
+
+		let row = sqlx::query(
+			r#"
+			UPDATE ws_tokens
+			SET used_at = ?
+			WHERE token_hash = ?
+			  AND used_at IS NULL
+			  AND expires_at > ?
+			RETURNING user_id
+			"#,
+		)
+		.bind(now.to_rfc3339())
+		.bind(token_hash)
+		.bind(now.to_rfc3339())
+		.fetch_optional(&self.pool)
+		.await?;
+
+		match row {
+			Some(row) => {
+				let user_id_str: String = row.get("user_id");
+				let uuid = Uuid::parse_str(&user_id_str)
+					.map_err(|e| DbError::Internal(format!("Invalid user_id UUID: {e}")))?;
+				let user_id = UserId::new(uuid);
+				tracing::debug!(user_id = %user_id, "ws token validated and consumed");
+				Ok(Some(user_id))
+			}
+			None => {
+				tracing::debug!("ws token not found, expired, or already used");
+				Ok(None)
+			}
+		}
+	}
+
+	/// Clean up expired WebSocket tokens.
+	///
+	/// Should be called periodically to prevent table growth.
+	///
+	/// # Returns
+	/// Number of expired tokens deleted.
+	#[tracing::instrument(skip(self))]
+	pub async fn cleanup_expired_ws_tokens(&self) -> Result<i64, DbError> {
+		let result = sqlx::query(
+			r#"
+			DELETE FROM ws_tokens
+			WHERE expires_at < datetime('now')
+			   OR used_at IS NOT NULL
+			"#,
+		)
+		.execute(&self.pool)
+		.await?;
+
+		let count = result.rows_affected() as i64;
+		if count > 0 {
+			tracing::debug!(count, "cleaned up expired/used ws tokens");
+		}
+		Ok(count)
+	}
+}

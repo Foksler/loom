@@ -52,6 +52,7 @@ pub mod team;
 pub mod types;
 pub mod user;
 pub mod websocket;
+pub mod ws_token;
 
 pub mod device_code {
     //! Re-export device code types from loom-server-auth-devicecode.
@@ -88,7 +89,7 @@ pub use email::{render_email, EmailTemplate, SmtpConfig, TlsMode};
 pub use error::AuthError;
 pub use middleware::{
     extract_bearer_token, extract_session_cookie, extract_session_cookie_with_name,
-    identify_bearer_token, is_access_token, is_api_key_token, AuthConfig, AuthContext,
+    identify_bearer_token, is_access_token, is_api_key_token, is_ws_token, AuthConfig, AuthContext,
     AuthRequired, BearerTokenType, CurrentUser, DEV_MODE_ENV_VAR, LOOM_ENV_VAR,
     SESSION_COOKIE_NAME,
 };
@@ -108,4 +109,8 @@ pub use user::{generate_username_base, is_username_reserved, validate_username, 
 pub use websocket::{
     auth_timeout, close_code_for_error, close_codes, WsAuthContext, WsAuthError, WsAuthMessage,
     WsAuthMethod, WsAuthResponse, WsAuthState, WS_AUTH_TIMEOUT_SECS,
+};
+pub use ws_token::{
+    generate_ws_token, hash_ws_token, is_valid_ws_token_format, verify_ws_token, WsToken,
+    WS_TOKEN_BYTES, WS_TOKEN_EXPIRY_SECONDS, WS_TOKEN_PREFIX,
 };

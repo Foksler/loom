@@ -175,6 +175,9 @@ pub async fn auth_layer(
 			BearerTokenType::Unknown => {
 				tracing::debug!("Unknown bearer token type");
 			}
+			BearerTokenType::WsToken => {
+				tracing::debug!("WS tokens are only valid for WebSocket auth, not HTTP");
+			}
 		}
 	}
 

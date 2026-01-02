@@ -330,6 +330,8 @@ pub enum BearerTokenType {
     ApiKey,
     /// Access token (user-level, prefixed with `lt_`).
     AccessToken,
+    /// WebSocket token (short-lived, prefixed with `ws_`).
+    WsToken,
     /// Unknown token type.
     Unknown,
 }
@@ -340,9 +342,16 @@ pub fn identify_bearer_token(token: &str) -> BearerTokenType {
         BearerTokenType::ApiKey
     } else if is_access_token(token) {
         BearerTokenType::AccessToken
+    } else if is_ws_token(token) {
+        BearerTokenType::WsToken
     } else {
         BearerTokenType::Unknown
     }
+}
+
+/// Check if a token looks like a WebSocket token (ws_ prefix).
+pub fn is_ws_token(token: &str) -> bool {
+    token.starts_with(crate::ws_token::WS_TOKEN_PREFIX)
 }
 
 #[cfg(test)]

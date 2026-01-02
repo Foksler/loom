@@ -46,6 +46,7 @@ import type {
 	Weaver,
 	ListWeaversResponse,
 	CreateWeaverRequest,
+	WsTokenResponse,
 } from './types';
 import { ApiError } from './types';
 
@@ -147,6 +148,10 @@ export class LoomApiClient {
 
 	async getCurrentUser(): Promise<CurrentUser> {
 		return this.request<CurrentUser>('/api/auth/me');
+	}
+
+	async getWsToken(): Promise<WsTokenResponse> {
+		return this.request<WsTokenResponse>('/api/auth/ws-token');
 	}
 
 	async requestMagicLink(email: string): Promise<AuthSuccessResponse> {

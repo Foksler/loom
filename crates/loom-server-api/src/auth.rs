@@ -100,3 +100,16 @@ pub struct OAuthCallbackQuery {
 	pub error: Option<String>,
 	pub error_description: Option<String>,
 }
+
+/// Response for WebSocket token request.
+///
+/// Returns a short-lived token that can be used for WebSocket first-message authentication.
+/// The token is valid for 30 seconds and can only be used once.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct WsTokenResponse {
+	/// The WebSocket authentication token (prefix: ws_).
+	pub token: String,
+	/// Token expiry time in seconds (30).
+	pub expires_in: i64,
+}

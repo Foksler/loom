@@ -11,16 +11,11 @@ import { wsClientMachine, type WsClientMachine } from './wsClientMachine';
 import type { WsClientContext, WsClientEvent, WsClientState, WsClientOutput, statusFromState } from './wsClientMachine.types';
 import type { RealtimeMessage, ConnectionStatus, LlmEvent, LlmEventWire, ToolEvent, ToolEventWire } from './types';
 import { logger } from '../logging';
+import { getApiClient } from '../api';
 
 const AUTH_TIMEOUT_MS = 5000;
 const PING_INTERVAL_MS = 30000;
 const MAX_MISSED_PONGS = 2;
-
-function getSessionCookie(): string | null {
-	if (typeof document === 'undefined') return null;
-	const match = document.cookie.match(/(?:^|;\s*)loom_session=([^;]*)/);
-	return match ? decodeURIComponent(match[1]) : null;
-}
 
 function buildWsUrl(serverUrl: string, sessionId: string): string {
 	const baseUrl = serverUrl || (typeof window !== 'undefined' ? window.location.origin : '');
@@ -81,13 +76,15 @@ export class LoomWebSocketClient {
 		this.actor.start();
 	}
 
-	connect(sessionId: string): void {
-		const sessionToken = getSessionCookie();
-		if (!sessionToken) {
-			logger.error('No session cookie found for WebSocket auth');
-			return;
+	async connect(sessionId: string): Promise<void> {
+		try {
+			const api = getApiClient(this.serverUrl);
+			const { token } = await api.getWsToken();
+			this.actor.send({ type: 'CONNECT', sessionId, sessionToken: token });
+		} catch (error) {
+			logger.error('Failed to get WebSocket token', { error: String(error) });
+			this.emitStatus('error');
 		}
-		this.actor.send({ type: 'CONNECT', sessionId, sessionToken });
 	}
 
 	disconnect(): void {
@@ -209,7 +206,7 @@ export class LoomWebSocketClient {
 			return;
 		}
 
-		const authMsg = { type: 'auth', session_token: ctx.sessionToken };
+		const authMsg = { type: 'auth', token: ctx.sessionToken };
 		this.ws.send(JSON.stringify(authMsg));
 		logger.debug('Sent WebSocket auth message');
 	}

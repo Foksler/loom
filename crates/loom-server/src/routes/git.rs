@@ -125,6 +125,7 @@ async fn extract_basic_auth_user(headers: &HeaderMap, state: &AppState) -> Optio
 			Some(CurrentUser::from_api_key(user, api_key.id.into()))
 		}
 		BearerTokenType::Unknown => None,
+		BearerTokenType::WsToken => None,
 	}
 }
 

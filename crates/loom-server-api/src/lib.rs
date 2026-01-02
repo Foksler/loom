@@ -37,6 +37,7 @@ pub use auth::{
 	AuthErrorResponse, AuthProvidersResponse, AuthSuccessResponse, CurrentUserResponse,
 	DeviceCodeCompleteRequest, DeviceCodeCompleteResponse, DeviceCodePollRequest,
 	DeviceCodePollResponse, DeviceCodeStartResponse, MagicLinkRequest, OAuthCallbackQuery,
+	WsTokenResponse,
 };
 pub use cse::{CseProxyRequest, CseProxyResponse, CseProxyResultItem};
 pub use github::{

@@ -585,6 +585,7 @@ pub fn create_router(state: AppState) -> Router {
 		)
 		// Auth routes (authenticated)
 		.route("/api/auth/me", get(routes::auth::get_current_user))
+		.route("/api/auth/ws-token", get(routes::auth::get_ws_token))
 		.route("/api/auth/logout", post(routes::auth::logout))
 		.route(
 			"/api/auth/device/complete",

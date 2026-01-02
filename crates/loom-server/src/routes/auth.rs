@@ -27,7 +27,7 @@ use loom_server_auth_magiclink::{verify_magic_link_token, MagicLink};
 pub use loom_server_api::auth::{
 	AuthErrorResponse, AuthProvidersResponse, AuthSuccessResponse, CurrentUserResponse,
 	DeviceCodeCompleteRequest, DeviceCodeCompleteResponse, DeviceCodePollRequest,
-	DeviceCodePollResponse, DeviceCodeStartResponse, MagicLinkRequest,
+	DeviceCodePollResponse, DeviceCodeStartResponse, MagicLinkRequest, WsTokenResponse,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -101,6 +101,64 @@ pub async fn get_current_user(RequireAuth(current_user): RequireAuth) -> impl In
 		email: current_user.user.primary_email.clone(),
 		avatar_url: current_user.user.avatar_url.clone(),
 	})
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/auth/ws-token",
+    responses(
+        (status = 200, description = "WebSocket authentication token", body = WsTokenResponse),
+        (status = 401, description = "Not authenticated", body = AuthErrorResponse)
+    ),
+    tag = "auth"
+)]
+/// Returns a short-lived token for WebSocket first-message authentication.
+///
+/// This endpoint solves the problem of HttpOnly session cookies not being
+/// accessible to JavaScript. The returned token can be used in the WebSocket
+/// first message: `{"type": "auth", "token": "ws_xxx"}`.
+///
+/// # Security
+/// - Token expires in 30 seconds
+/// - Token can only be used once (single-use)
+/// - Requires valid session cookie authentication
+///
+/// # Usage
+/// 1. Call this endpoint to get a token
+/// 2. Connect to WebSocket at /api/ws/sessions/{session_id}
+/// 3. Send first message: {"type": "auth", "token": "<token>"}
+#[tracing::instrument(skip(state, current_user))]
+pub async fn get_ws_token(
+	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
+) -> impl IntoResponse {
+	use loom_server_auth::ws_token::{generate_ws_token, WS_TOKEN_EXPIRY_SECONDS};
+
+	let (token, token_hash) = generate_ws_token();
+
+	if let Err(e) = state
+		.session_repo
+		.create_ws_token(&current_user.user.id, &token_hash)
+		.await
+	{
+		tracing::error!(error = %e, user_id = %current_user.user.id, "Failed to create WS token");
+		return (
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(AuthErrorResponse {
+				error: "token_creation_failed".to_string(),
+				message: "Failed to create WebSocket token".to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	tracing::debug!(user_id = %current_user.user.id, "WS token created");
+
+	Json(WsTokenResponse {
+		token,
+		expires_in: WS_TOKEN_EXPIRY_SECONDS,
+	})
+	.into_response()
 }
 
 #[utoipa::path(

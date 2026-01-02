@@ -295,6 +295,7 @@ async fn handle_token_auth(
 	let user_result = match token_type {
 		BearerTokenType::AccessToken => validate_access_token(token, session_repo, user_repo).await,
 		BearerTokenType::ApiKey => validate_api_key(token, api_key_repo, user_repo).await,
+		BearerTokenType::WsToken => validate_ws_token(token, session_repo, user_repo).await,
 		BearerTokenType::Unknown => {
 			send_auth_error_and_close(tx, conn, AuthError::InvalidToken).await;
 			return Err("unknown token type".to_string());
@@ -315,6 +316,7 @@ async fn handle_token_auth(
 			let error = match token_type {
 				BearerTokenType::AccessToken => AuthError::InvalidToken,
 				BearerTokenType::ApiKey => AuthError::InvalidApiKey,
+				BearerTokenType::WsToken => AuthError::InvalidToken,
 				BearerTokenType::Unknown => AuthError::InvalidToken,
 			};
 			send_auth_error_and_close(tx, conn, error).await;
@@ -544,6 +546,41 @@ async fn validate_api_key(
 	});
 
 	Some(CurrentUser::from_api_key(user, api_key.id.into_inner()))
+}
+
+#[tracing::instrument(skip(token, session_repo, user_repo))]
+async fn validate_ws_token(
+	token: &str,
+	session_repo: &Arc<crate::db::SessionRepository>,
+	user_repo: &Arc<crate::db::UserRepository>,
+) -> Option<CurrentUser> {
+	let token_hash = hash_token(token);
+
+	let user_id = match session_repo.validate_and_consume_ws_token(&token_hash).await {
+		Ok(Some(uid)) => uid,
+		Ok(None) => {
+			debug!("WS token not found, expired, or already used");
+			return None;
+		}
+		Err(e) => {
+			error!(error = %e, "Failed to validate WS token");
+			return None;
+		}
+	};
+
+	let user = match user_repo.get_user_by_id(&user_id).await {
+		Ok(Some(user)) => user,
+		Ok(None) => {
+			warn!(user_id = %user_id, "User not found for WS token");
+			return None;
+		}
+		Err(e) => {
+			error!(error = %e, "Failed to look up user");
+			return None;
+		}
+	};
+
+	Some(CurrentUser::from_access_token(user))
 }
 
 #[cfg(test)]
