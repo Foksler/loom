@@ -41,6 +41,8 @@ import type {
 	ImpersonateResponse,
 	StopImpersonationResponse,
 	AdminUserListResponse,
+	UpdateUserRolesRequest,
+	UpdateUserRolesResponse,
 	Weaver,
 	ListWeaversResponse,
 	CreateWeaverRequest,
@@ -364,6 +366,16 @@ export class LoomApiClient {
 		const queryStr = query.toString();
 		const path = queryStr ? `/api/admin/users?${queryStr}` : '/api/admin/users';
 		return this.request<AdminUserListResponse>(path);
+	}
+
+	async updateUserRoles(userId: string, data: UpdateUserRolesRequest): Promise<UpdateUserRolesResponse> {
+		return this.request<UpdateUserRolesResponse>(
+			`/api/admin/users/${encodeURIComponent(userId)}/roles`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify(data),
+			}
+		);
 	}
 
 	// Weaver methods

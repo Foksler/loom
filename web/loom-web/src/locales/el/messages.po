@@ -898,6 +898,17 @@ msgstr "Εμφάνιση {shown} από {total} αρχεία"
 #: admin.dashboard.view_all_logs
 msgid "admin.dashboard.view_all_logs"
 msgstr "Προβολή όλων των αρχείων →"
+#: admin.users.you
+msgid "admin.users.you"
+msgstr "(εσύ)"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "Ορισμός διαχειριστή"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "Αφαίρεση διαχειριστή"
 
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"

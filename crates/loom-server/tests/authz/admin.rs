@@ -173,3 +173,22 @@ async fn non_admin_cannot_list_audit_logs() {
 
 	run_authz_cases(&app, &cases).await;
 }
+
+#[tokio::test]
+async fn admin_cannot_remove_last_system_admin() {
+	let app = TestApp::new().await;
+	// The admin fixture is the only system admin in the test setup
+	let admin_id = app.fixtures.admin.user.id.to_string();
+
+	let cases = vec![AuthzCase {
+		name: "admin_cannot_remove_last_system_admin",
+		method: Method::PATCH,
+		path: format!("/api/admin/users/{}/roles", admin_id),
+		user: Some(app.fixtures.admin.clone()),
+		body: Some(json!({ "is_system_admin": false })),
+		// Should fail with 400 because this is the last admin AND because you can't remove your own admin
+		expected_status: StatusCode::BAD_REQUEST,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}

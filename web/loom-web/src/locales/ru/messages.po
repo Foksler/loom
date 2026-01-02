@@ -898,6 +898,17 @@ msgstr "Показано {shown} из {total} журналов"
 #: admin.dashboard.view_all_logs
 msgid "admin.dashboard.view_all_logs"
 msgstr "Просмотреть все журналы →"
+#: admin.users.you
+msgid "admin.users.you"
+msgstr "(вы)"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "Сделать администратором"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "Снять администратора"
 
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"

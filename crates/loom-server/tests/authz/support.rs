@@ -81,9 +81,10 @@ impl TestApp {
 		let db_path = temp_dir.path().join("test_authz.db");
 		let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 		let pool = loom_server::db::create_pool(&db_url).await.unwrap();
+		loom_server::db::run_migrations(&pool).await.unwrap();
 		let repo = Arc::new(ThreadRepository::new(pool.clone()));
 		let config = ServerConfig::default();
-		let mut state = create_app_state(pool, repo.clone(), &config).await;
+		let mut state = create_app_state(pool, repo.clone(), &config, None).await;
 
 		state.auth_config.dev_mode = false;
 

@@ -468,6 +468,10 @@ msgstr "Se requiere rol de administrador del sistema"
 msgid "server.api.admin.cannot_remove_own_admin"
 msgstr "No puedes eliminar tu propio estado de administrador"
 
+#: API: Admin - Cannot remove last admin
+msgid "server.api.admin.cannot_remove_last_admin"
+msgstr "No se puede eliminar al último administrador del sistema"
+
 #: API: Admin - User list failed
 msgid "server.api.admin.user_list_failed"
 msgstr "Error al listar usuarios"

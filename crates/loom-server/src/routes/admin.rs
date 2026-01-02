@@ -302,6 +302,40 @@ pub async fn update_user_roles(
 		}
 	};
 
+	// Prevent removing the last system admin
+	if payload.is_system_admin == Some(false) && target_user.is_system_admin {
+		let admin_count = match state.user_repo.count_system_admins().await {
+			Ok(count) => count,
+			Err(e) => {
+				tracing::error!(error = %e, "Failed to count system admins");
+				return (
+					StatusCode::INTERNAL_SERVER_ERROR,
+					Json(AdminErrorResponse {
+						error: "internal_error".to_string(),
+						message: t(locale, "server.api.error.internal").to_string(),
+					}),
+				)
+					.into_response();
+			}
+		};
+
+		if admin_count <= 1 {
+			tracing::warn!(
+				actor_id = %current_user.user.id,
+				target_id = %target_user_id,
+				"Attempted to remove the last system admin"
+			);
+			return (
+				StatusCode::BAD_REQUEST,
+				Json(AdminErrorResponse {
+					error: "bad_request".to_string(),
+					message: t(locale, "server.api.admin.cannot_remove_last_admin").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	}
+
 	let old_roles = json!({
 		"is_system_admin": target_user.is_system_admin,
 		"is_support": target_user.is_support,

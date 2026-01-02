@@ -3,11 +3,11 @@
   SPDX-License-Identifier: Proprietary
 -->
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { i18n } from '$lib/i18n';
 	import { getApiClient } from '$lib/api/client';
 	import type { AdminUser } from '$lib/api/types';
-	import { Card, Badge, Button, Input } from '$lib/ui';
+	import { Card, Button, Input, AdminUserCard } from '$lib/ui';
+	import { page } from '$app/stores';
 
 	const client = getApiClient();
 
@@ -19,7 +19,10 @@
 	let offset = $state(0);
 	const limit = 20;
 
+	let updatingUserId = $state<string | null>(null);
 	let impersonatingId = $state<string | null>(null);
+
+	const currentUserId = $derived($page.data.user?.id ?? '');
 
 	async function loadUsers() {
 		loading = true;
@@ -40,8 +43,33 @@
 		await loadUsers();
 	}
 
-	async function impersonate(userId: string) {
+	async function handleToggleSystemAdmin(userId: string, isCurrentlyAdmin: boolean) {
+		updatingUserId = userId;
+		error = null;
+		try {
+			await client.updateUserRoles(userId, { is_system_admin: !isCurrentlyAdmin });
+			// Refresh the user list to get updated data
+			await loadUsers();
+		} catch (e) {
+			if (e instanceof Error) {
+				// Try to parse error message from API
+				try {
+					const parsed = JSON.parse(e.message.replace(/^API Error \d+: /, ''));
+					error = parsed.message || e.message;
+				} catch {
+					error = e.message;
+				}
+			} else {
+				error = i18n._('general.error');
+			}
+		} finally {
+			updatingUserId = null;
+		}
+	}
+
+	async function handleImpersonate(userId: string) {
 		impersonatingId = userId;
+		error = null;
 		try {
 			await client.startImpersonation(userId);
 			window.location.href = '/threads';
@@ -49,21 +77,6 @@
 			error = e instanceof Error ? e.message : i18n._('general.error');
 			impersonatingId = null;
 		}
-	}
-
-	function getRoleBadges(roles: string[]): Array<{ role: string; variant: 'accent' | 'warning' | 'success' | 'muted' }> {
-		return roles.map((role) => {
-			let variant: 'accent' | 'warning' | 'success' | 'muted' = 'muted';
-			if (role === 'system_admin') variant = 'accent';
-			else if (role === 'support') variant = 'warning';
-			else if (role === 'auditor') variant = 'success';
-			return { role, variant };
-		});
-	}
-
-	function formatDate(dateStr: string | null): string {
-		if (!dateStr) return '-';
-		return new Date(dateStr).toLocaleDateString();
 	}
 
 	$effect(() => {
@@ -105,45 +118,14 @@
 	{:else}
 		<div class="space-y-3">
 			{#each users as user (user.id)}
-				<Card>
-					<div class="flex items-center justify-between gap-4">
-						<div class="flex items-center gap-4 min-w-0">
-							{#if user.avatar_url}
-								<img src={user.avatar_url} alt="" class="w-10 h-10 rounded-full" />
-							{:else}
-								<div class="w-10 h-10 rounded-full bg-bg-muted flex items-center justify-center">
-									<span class="text-sm font-medium text-fg-muted">
-										{user.display_name?.charAt(0).toUpperCase() ?? '?'}
-									</span>
-								</div>
-							{/if}
-							<div class="min-w-0">
-								<div class="font-medium text-fg truncate">{user.display_name}</div>
-								<div class="text-sm text-fg-muted truncate">{user.email ?? '-'}</div>
-								<div class="flex flex-wrap gap-1 mt-1">
-									{#each getRoleBadges(user.global_roles) as { role, variant }}
-										<Badge {variant} size="sm">{role}</Badge>
-									{/each}
-								</div>
-							</div>
-						</div>
-						<div class="flex items-center gap-4 flex-shrink-0">
-							<div class="text-sm text-fg-muted text-right">
-								<div>{i18n._('admin.users.created')}: {formatDate(user.created_at)}</div>
-								<div>{i18n._('admin.users.lastLogin')}: {formatDate(user.last_login_at)}</div>
-							</div>
-							<Button
-								variant="secondary"
-								size="sm"
-								disabled={impersonatingId === user.id}
-								loading={impersonatingId === user.id}
-								onclick={() => impersonate(user.id)}
-							>
-								{i18n._('admin.users.impersonate')}
-							</Button>
-						</div>
-					</div>
-				</Card>
+				<AdminUserCard
+					{user}
+					{currentUserId}
+					onToggleSystemAdmin={handleToggleSystemAdmin}
+					onImpersonate={handleImpersonate}
+					isUpdating={updatingUserId === user.id}
+					isImpersonating={impersonatingId === user.id}
+				/>
 			{/each}
 		</div>
 

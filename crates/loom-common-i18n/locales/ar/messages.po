@@ -468,6 +468,10 @@ msgstr "مطلوب دور مسؤول النظام"
 msgid "server.api.admin.cannot_remove_own_admin"
 msgstr "لا يمكنك إزالة حالة المسؤول الخاصة بك"
 
+#: API: Admin - Cannot remove last admin
+msgid "server.api.admin.cannot_remove_last_admin"
+msgstr "لا يمكن إزالة آخر مسؤول في النظام"
+
 #: API: Admin - User list failed
 msgid "server.api.admin.user_list_failed"
 msgstr "فشل في إدراج المستخدمين"

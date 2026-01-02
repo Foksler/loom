@@ -339,6 +339,26 @@ export interface AdminUserListResponse {
 	offset: number;
 }
 
+// Admin role update types
+export interface UpdateUserRolesRequest {
+	is_system_admin?: boolean;
+	is_support?: boolean;
+	is_auditor?: boolean;
+}
+
+export interface UpdateUserRolesResponse {
+	id: string;
+	display_name: string;
+	primary_email: string | null;
+	avatar_url: string | null;
+	is_system_admin: boolean;
+	is_support: boolean;
+	is_auditor: boolean;
+	created_at: string;
+	updated_at: string;
+	deleted_at: string | null;
+}
+
 // Weaver types
 export type WeaverStatus = 'pending' | 'running' | 'succeeded' | 'failed' | 'terminating';
 

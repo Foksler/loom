@@ -859,6 +859,18 @@ msgstr "Last login"
 msgid "admin.users.impersonate"
 msgstr "Impersonate"
 
+#: admin.users.you
+msgid "admin.users.you"
+msgstr "(you)"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "Make Admin"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "Remove Admin"
+
 #: admin.dashboard.title
 msgid "admin.dashboard.title"
 msgstr "Admin Dashboard"

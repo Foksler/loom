@@ -898,6 +898,17 @@ msgstr "{shown} van {total} logboeken weergeven"
 #: admin.dashboard.view_all_logs
 msgid "admin.dashboard.view_all_logs"
 msgstr "Alle logboeken bekijken →"
+#: admin.users.you
+msgid "admin.users.you"
+msgstr "(jij)"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "Admin maken"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "Admin verwijderen"
 
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"

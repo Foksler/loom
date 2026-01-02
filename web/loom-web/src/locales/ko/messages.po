@@ -898,6 +898,17 @@ msgstr "{total}개 중 {shown}개 로그 표시"
 #: admin.dashboard.view_all_logs
 msgid "admin.dashboard.view_all_logs"
 msgstr "모든 로그 보기 →"
+#: admin.users.you
+msgid "admin.users.you"
+msgstr "(본인)"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "관리자로 설정"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "관리자 해제"
 
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"

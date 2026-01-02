@@ -436,6 +436,18 @@ impl UserRepository {
 		Ok((users, total))
 	}
 
+	#[tracing::instrument(skip(self))]
+	pub async fn count_system_admins(&self) -> Result<i64, DbError> {
+		let count: (i64,) = sqlx::query_as(
+			"SELECT COUNT(*) FROM users WHERE is_system_admin = 1 AND deleted_at IS NULL",
+		)
+		.fetch_one(&self.pool)
+		.await?;
+
+		tracing::debug!(count = count.0, "counted system admins");
+		Ok(count.0)
+	}
+
 	/// Create a new identity linking a user to an external provider.
 	///
 	/// # Arguments

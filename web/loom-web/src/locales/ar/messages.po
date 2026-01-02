@@ -818,6 +818,17 @@ msgstr "عرض {shown} من {total} سجل"
 #: admin.dashboard.view_all_logs
 msgid "admin.dashboard.view_all_logs"
 msgstr "عرض جميع السجلات ←"
+#: admin.users.you
+msgid "admin.users.you"
+msgstr "(أنت)"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "جعله مسؤولاً"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "إزالة صلاحيات المسؤول"
 
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"

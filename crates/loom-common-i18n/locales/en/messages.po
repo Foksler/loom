@@ -540,6 +540,10 @@ msgstr "System admin role required"
 msgid "server.api.admin.cannot_remove_own_admin"
 msgstr "Cannot remove your own admin status"
 
+#: API: Admin - Cannot remove last admin
+msgid "server.api.admin.cannot_remove_last_admin"
+msgstr "Cannot remove the last system administrator"
+
 #: API: Admin - User list failed
 msgid "server.api.admin.user_list_failed"
 msgstr "Failed to list users"

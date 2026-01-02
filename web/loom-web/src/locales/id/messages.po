@@ -898,6 +898,17 @@ msgstr "Menampilkan {shown} dari {total} log"
 #: admin.dashboard.view_all_logs
 msgid "admin.dashboard.view_all_logs"
 msgstr "Lihat semua log →"
+#: admin.users.you
+msgid "admin.users.you"
+msgstr "(Anda)"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "Jadikan Admin"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "Hapus Admin"
 
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"

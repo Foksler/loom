@@ -898,6 +898,17 @@ msgstr "{total} টির মধ্যে {shown} টি লগ দেখান�
 #: admin.dashboard.view_all_logs
 msgid "admin.dashboard.view_all_logs"
 msgstr "সব লগ দেখুন →"
+#: admin.users.you
+msgid "admin.users.you"
+msgstr "(আপনি)"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "অ্যাডমিন করুন"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "অ্যাডমিন সরান"
 
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"

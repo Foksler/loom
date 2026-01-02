@@ -818,6 +818,17 @@ msgstr "Mostrando {shown} de {total} registros"
 #: admin.dashboard.view_all_logs
 msgid "admin.dashboard.view_all_logs"
 msgstr "Ver todos los registros →"
+#: admin.users.you
+msgid "admin.users.you"
+msgstr "(tú)"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "Hacer administrador"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "Quitar administrador"
 
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"
