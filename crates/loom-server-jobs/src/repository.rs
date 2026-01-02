@@ -3,7 +3,7 @@
 
 use crate::error::{JobError, Result};
 use crate::types::{JobDefinition, JobRun, JobStatus};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, SecondsFormat, Utc};
 use sqlx::SqlitePool;
 use tracing::instrument;
 
@@ -18,16 +18,18 @@ impl JobRepository {
 
     #[instrument(skip(self, def), fields(job_id = %def.id))]
     pub async fn upsert_definition(&self, def: &JobDefinition) -> Result<()> {
+        let now = Utc::now().to_rfc3339_opts(SecondsFormat::Nanos, true);
         sqlx::query(
             r#"
-            INSERT INTO job_definitions (id, name, description, job_type, interval_secs, enabled)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO job_definitions (id, name, description, job_type, interval_secs, enabled, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 name = excluded.name,
                 description = excluded.description,
                 job_type = excluded.job_type,
                 interval_secs = excluded.interval_secs,
-                enabled = excluded.enabled
+                enabled = excluded.enabled,
+                updated_at = excluded.updated_at
             "#,
         )
         .bind(&def.id)
@@ -36,6 +38,8 @@ impl JobRepository {
         .bind(&def.job_type)
         .bind(def.interval_secs)
         .bind(def.enabled)
+        .bind(&now)
+        .bind(&now)
         .execute(&self.pool)
         .await?;
 
