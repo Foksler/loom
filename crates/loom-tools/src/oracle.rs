@@ -5,7 +5,7 @@
 //! server proxy.
 
 use async_trait::async_trait;
-use loom_core::{LlmRequest, Message, ToolContext, ToolError};
+use loom_common_core::{LlmRequest, Message, ToolContext, ToolError};
 use loom_http::{retry, RetryConfig, RetryableError};
 use reqwest::Client;
 use serde::Deserialize;
@@ -326,8 +326,8 @@ mod tests {
 					);
 
 					// First message is system, second is user
-					prop_assert_eq!(&request.messages[0].role, &loom_core::Role::System);
-					prop_assert_eq!(&request.messages[1].role, &loom_core::Role::User);
+					prop_assert_eq!(&request.messages[0].role, &loom_common_core::Role::System);
+					prop_assert_eq!(&request.messages[1].role, &loom_common_core::Role::User);
 
 					// User message contains the query
 					prop_assert_eq!(&request.messages[1].content, &query);

@@ -25,7 +25,7 @@ use loom_config::{
 	runtime::{LogFormat, LogLevel},
 	sources::CliOverrides,
 };
-use loom_core::{
+use loom_common_core::{
 	LlmClient, LlmEvent, Message, ToolCall, ToolContext, ToolDefinition, ToolExecutionOutcome,
 };
 use loom_git::{detect_repo_status, CommandGitClient};
@@ -397,7 +397,7 @@ async fn execute_tool(
 			);
 			ToolExecutionOutcome::Error {
 				call_id: tool_call.id.clone(),
-				error: loom_core::ToolError::NotFound(tool_call.tool_name.clone()),
+				error: loom_common_core::ToolError::NotFound(tool_call.tool_name.clone()),
 			}
 		}
 	}
@@ -487,7 +487,7 @@ async fn run_repl(
 							.messages
 							.push(MessageSnapshot::from(&user_message));
 
-						let request = loom_core::LlmRequest::new("default")
+						let request = loom_common_core::LlmRequest::new("default")
 							.with_messages(messages.clone())
 							.with_tools(tool_definitions.to_vec());
 

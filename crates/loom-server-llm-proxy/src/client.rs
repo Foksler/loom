@@ -7,7 +7,7 @@ use async_trait::async_trait;
 use loom_common_secret::SecretString;
 use tracing::{debug, info, instrument};
 
-use loom_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
+use loom_common_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
 
 use crate::stream::ProxyLlmStream;
 use crate::types::LlmProxyResponse;

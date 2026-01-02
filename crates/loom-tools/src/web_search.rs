@@ -4,7 +4,7 @@
 //! Web search tool that proxies requests through the Loom server.
 
 use async_trait::async_trait;
-use loom_core::{ToolContext, ToolError};
+use loom_common_core::{ToolContext, ToolError};
 use loom_http::{retry, RetryConfig};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};

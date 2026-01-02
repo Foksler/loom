@@ -3,7 +3,7 @@
 
 //! OpenAI-specific API types and conversions.
 
-use loom_core::{LlmRequest, LlmResponse, Message, Role, ToolCall, ToolDefinition, Usage};
+use loom_common_core::{LlmRequest, LlmResponse, Message, Role, ToolCall, ToolDefinition, Usage};
 use serde::{Deserialize, Serialize};
 
 /// Configuration for the OpenAI client.

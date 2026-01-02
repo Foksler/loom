@@ -18,7 +18,7 @@
 //!
 //! ```no_run
 //! use loom_server_llm_vertex::{VertexClient, VertexConfig};
-//! use loom_core::{LlmClient, LlmRequest, Message};
+//! use loom_common_core::{LlmClient, LlmRequest, Message};
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! let config = VertexConfig::new("my-gcp-project", "us-central1")

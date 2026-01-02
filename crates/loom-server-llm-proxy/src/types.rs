@@ -3,7 +3,7 @@
 
 //! Wire format types for LLM proxy communication.
 
-use loom_core::{server_query::ServerQuery, Message, ToolCall, Usage};
+use loom_common_core::{server_query::ServerQuery, Message, ToolCall, Usage};
 use serde::{Deserialize, Serialize};
 
 /// Wire format for LLM streaming events sent over SSE.
@@ -47,7 +47,7 @@ pub struct LlmProxyResponse {
 	pub finish_reason: Option<String>,
 }
 
-impl From<LlmProxyResponse> for loom_core::LlmResponse {
+impl From<LlmProxyResponse> for loom_common_core::LlmResponse {
 	fn from(proxy: LlmProxyResponse) -> Self {
 		Self {
 			message: proxy.message,
@@ -58,8 +58,8 @@ impl From<LlmProxyResponse> for loom_core::LlmResponse {
 	}
 }
 
-impl From<loom_core::LlmResponse> for LlmProxyResponse {
-	fn from(response: loom_core::LlmResponse) -> Self {
+impl From<loom_common_core::LlmResponse> for LlmProxyResponse {
+	fn from(response: loom_common_core::LlmResponse) -> Self {
 		Self {
 			message: response.message,
 			tool_calls: response.tool_calls,
@@ -72,7 +72,7 @@ impl From<loom_core::LlmResponse> for LlmProxyResponse {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use loom_core::Role;
+	use loom_common_core::Role;
 	use proptest::prelude::*;
 
 	proptest! {
@@ -161,7 +161,7 @@ mod tests {
 			/// as they are critical for server-client communication during streaming.
 			#[test]
 			fn server_query_serialization_roundtrip(query_id in "Q-[a-f0-9]{32}") {
-					use loom_core::server_query::ServerQueryKind;
+					use loom_common_core::server_query::ServerQueryKind;
 
 					let query = ServerQuery {
 							id: query_id,

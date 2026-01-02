@@ -16,7 +16,7 @@
 //! - Manager operations ensure storage/retrieval is efficient
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use loom_core::server_query::{
+use loom_common_core::server_query::{
 	ServerQuery, ServerQueryKind, ServerQueryResponse, ServerQueryResult,
 };
 use loom_server::ServerQueryManager;

@@ -5,7 +5,7 @@
 
 use bytes::Bytes;
 use futures::stream::Stream;
-use loom_core::{LlmError, LlmEvent, LlmResponse, Message, ToolCall, Usage};
+use loom_common_core::{LlmError, LlmEvent, LlmResponse, Message, ToolCall, Usage};
 use pin_project_lite::pin_project;
 use serde::Deserialize;
 use std::collections::HashMap;

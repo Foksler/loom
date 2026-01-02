@@ -12,7 +12,7 @@
 //! solely on structural transformations between type systems.
 
 use agent_client_protocol::{ContentBlock, ContentChunk, SessionId, StopReason};
-use loom_core::{Message, Role, ToolCall};
+use loom_common_core::{Message, Role, ToolCall};
 use loom_thread::{MessageRole, MessageSnapshot, Thread, ThreadId, ToolCallSnapshot};
 
 // =============================================================================

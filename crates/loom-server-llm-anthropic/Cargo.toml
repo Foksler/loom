@@ -15,7 +15,7 @@ chrono = { workspace = true }
 bytes = "1"
 futures = { workspace = true }
 getrandom = "0.2"
-loom-core = { path = "../loom-core" }
+loom-common-core = { path = "../loom-common-core" }
 loom-credentials = { path = "../loom-credentials" }
 loom-http = { path = "../loom-http" }
 loom-common-secret = { path = "../loom-common-secret" }

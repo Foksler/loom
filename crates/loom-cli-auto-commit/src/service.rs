@@ -4,7 +4,7 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use loom_core::llm::LlmClient;
+use loom_common_core::llm::LlmClient;
 use loom_git::GitClient;
 use tracing::{debug, error, info, warn};
 
@@ -189,10 +189,10 @@ mod tests {
 					struct DummyLlm;
 					#[async_trait::async_trait]
 					impl LlmClient for DummyLlm {
-							async fn complete(&self, _: loom_core::llm::LlmRequest) -> Result<loom_core::llm::LlmResponse, loom_core::error::LlmError> {
+							async fn complete(&self, _: loom_common_core::llm::LlmRequest) -> Result<loom_common_core::llm::LlmResponse, loom_common_core::error::LlmError> {
 									unimplemented!()
 							}
-							async fn complete_streaming(&self, _: loom_core::llm::LlmRequest) -> Result<loom_core::llm::LlmStream, loom_core::error::LlmError> {
+							async fn complete_streaming(&self, _: loom_common_core::llm::LlmRequest) -> Result<loom_common_core::llm::LlmStream, loom_common_core::error::LlmError> {
 									unimplemented!()
 							}
 					}
@@ -241,10 +241,10 @@ mod tests {
 					struct DummyLlm;
 					#[async_trait::async_trait]
 					impl LlmClient for DummyLlm {
-							async fn complete(&self, _: loom_core::llm::LlmRequest) -> Result<loom_core::llm::LlmResponse, loom_core::error::LlmError> {
+							async fn complete(&self, _: loom_common_core::llm::LlmRequest) -> Result<loom_common_core::llm::LlmResponse, loom_common_core::error::LlmError> {
 									unimplemented!()
 							}
-							async fn complete_streaming(&self, _: loom_core::llm::LlmRequest) -> Result<loom_core::llm::LlmStream, loom_core::error::LlmError> {
+							async fn complete_streaming(&self, _: loom_common_core::llm::LlmRequest) -> Result<loom_common_core::llm::LlmStream, loom_common_core::error::LlmError> {
 									unimplemented!()
 							}
 					}
@@ -291,10 +291,10 @@ mod tests {
 					struct DummyLlm;
 					#[async_trait::async_trait]
 					impl LlmClient for DummyLlm {
-							async fn complete(&self, _: loom_core::llm::LlmRequest) -> Result<loom_core::llm::LlmResponse, loom_core::error::LlmError> {
+							async fn complete(&self, _: loom_common_core::llm::LlmRequest) -> Result<loom_common_core::llm::LlmResponse, loom_common_core::error::LlmError> {
 									unimplemented!()
 							}
-							async fn complete_streaming(&self, _: loom_core::llm::LlmRequest) -> Result<loom_core::llm::LlmStream, loom_core::error::LlmError> {
+							async fn complete_streaming(&self, _: loom_common_core::llm::LlmRequest) -> Result<loom_common_core::llm::LlmStream, loom_common_core::error::LlmError> {
 									unimplemented!()
 							}
 					}

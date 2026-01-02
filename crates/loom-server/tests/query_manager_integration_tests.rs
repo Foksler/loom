@@ -10,7 +10,7 @@
 //! across multiple concurrent sessions without data leakage or race conditions.
 
 use loom_server::ServerQueryManager;
-use loom_core::server_query::{ServerQueryKind, ServerQueryResponse, ServerQueryResult};
+use loom_common_core::server_query::{ServerQueryKind, ServerQueryResponse, ServerQueryResult};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -19,8 +19,8 @@ use std::time::Duration;
 // ============================================================================
 
 /// Create a simple test query for a given session.
-fn create_test_query(id: &str, path: &str) -> loom_core::server_query::ServerQuery {
-	loom_core::server_query::ServerQuery {
+fn create_test_query(id: &str, path: &str) -> loom_common_core::server_query::ServerQuery {
+	loom_common_core::server_query::ServerQuery {
 		id: id.to_string(),
 		kind: ServerQueryKind::ReadFile {
 			path: path.to_string(),
@@ -148,7 +148,7 @@ async fn test_list_pending_empty() {
 async fn test_query_timeout() {
 	let manager = ServerQueryManager::new();
 
-	let query = loom_core::server_query::ServerQuery {
+	let query = loom_common_core::server_query::ServerQuery {
 		id: "Q-timeout-test".to_string(),
 		kind: ServerQueryKind::ReadFile {
 			path: "file.txt".to_string(),
@@ -166,7 +166,7 @@ async fn test_query_timeout() {
 	assert!(
 		matches!(
 			result.unwrap_err(),
-			loom_core::server_query::ServerQueryError::Timeout
+			loom_common_core::server_query::ServerQueryError::Timeout
 		),
 		"Should be timeout error"
 	);
@@ -196,7 +196,7 @@ async fn test_different_timeouts_per_query() {
 		.unwrap()
 		.as_nanos();
 
-	let query1 = loom_core::server_query::ServerQuery {
+	let query1 = loom_common_core::server_query::ServerQuery {
 		id: format!("Q-short-{test_id}").to_string(),
 		kind: ServerQueryKind::ReadFile {
 			path: "file1.txt".to_string(),
@@ -206,7 +206,7 @@ async fn test_different_timeouts_per_query() {
 		metadata: serde_json::json!({}),
 	};
 
-	let query2 = loom_core::server_query::ServerQuery {
+	let query2 = loom_common_core::server_query::ServerQuery {
 		id: format!("Q-long-{test_id}").to_string(),
 		kind: ServerQueryKind::ReadFile {
 			path: "file2.txt".to_string(),

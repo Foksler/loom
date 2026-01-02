@@ -3,7 +3,7 @@
 
 //! Vertex AI-specific API types and conversions.
 
-use loom_core::{
+use loom_common_core::{
 	LlmError, LlmRequest, LlmResponse, Message, Role, ToolCall, ToolDefinition, Usage,
 };
 use serde::{Deserialize, Serialize};

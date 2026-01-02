@@ -8,7 +8,7 @@
 //! concurrent operations to ensure robustness of the query-response protocol.
 
 use loom_server::ServerQueryManager;
-use loom_core::server_query::{
+use loom_common_core::server_query::{
 	ServerQuery, ServerQueryError, ServerQueryKind, ServerQueryResponse, ServerQueryResult,
 };
 use std::sync::Arc;

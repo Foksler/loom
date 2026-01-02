@@ -15,7 +15,7 @@ use agent_client_protocol::{
 	PromptResponse, ProtocolVersion, SessionId, SessionNotification, SessionUpdate,
 	SetSessionModeRequest, SetSessionModeResponse, StopReason,
 };
-use loom_core::{
+use loom_common_core::{
 	LlmClient, LlmEvent, LlmRequest, Message, ServerQuery, ServerQueryError, ServerQueryHandler,
 	ServerQueryKind, ServerQueryResponse, ServerQueryResult, ToolCall, ToolContext, ToolDefinition,
 };
@@ -442,7 +442,7 @@ impl LoomAcpAgent {
 
 			// Add assistant message to conversation
 			let assistant_message = Message {
-				role: loom_core::Role::Assistant,
+				role: loom_common_core::Role::Assistant,
 				content: assistant_content.clone(),
 				tool_call_id: None,
 				name: None,

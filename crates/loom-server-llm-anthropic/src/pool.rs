@@ -12,7 +12,7 @@ use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
 use chrono::{DateTime, TimeZone, Utc};
-use loom_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
+use loom_common_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
 use loom_credentials::{CredentialStore, CredentialValue, FileCredentialStore};
 
 use serde::Serialize;

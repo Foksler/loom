@@ -11,7 +11,7 @@
 //!
 //! ```no_run
 //! use loom_server_llm_proxy::{ProxyLlmClient, LlmProvider};
-//! use loom_core::{LlmClient, LlmRequest, Message};
+//! use loom_common_core::{LlmClient, LlmRequest, Message};
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create a client for Anthropic

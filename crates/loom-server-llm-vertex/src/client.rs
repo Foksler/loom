@@ -5,7 +5,7 @@
 
 use async_trait::async_trait;
 use gcp_auth::TokenProvider;
-use loom_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
+use loom_common_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
 use loom_http::{retry, RetryConfig, RetryableError};
 use reqwest::Client;
 use std::sync::Arc;

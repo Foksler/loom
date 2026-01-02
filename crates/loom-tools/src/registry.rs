@@ -2,7 +2,7 @@
 // reserved. SPDX-License-Identifier: Proprietary
 
 use async_trait::async_trait;
-use loom_core::{ToolContext, ToolDefinition, ToolError};
+use loom_common_core::{ToolContext, ToolDefinition, ToolError};
 use std::collections::HashMap;
 
 #[async_trait]

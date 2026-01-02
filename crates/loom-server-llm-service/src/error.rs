@@ -3,7 +3,7 @@
 
 //! Error types for the LLM service.
 
-use loom_core::LlmError;
+use loom_common_core::LlmError;
 
 /// Errors that can occur when configuring or using the LLM service.
 #[derive(Debug, thiserror::Error)]

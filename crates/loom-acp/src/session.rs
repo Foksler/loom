@@ -8,7 +8,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use agent_client_protocol::SessionId;
-use loom_core::Message;
+use loom_common_core::Message;
 use loom_thread::{Thread, ThreadId};
 use tokio::sync::oneshot;
 

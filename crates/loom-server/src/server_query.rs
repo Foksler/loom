@@ -12,7 +12,7 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use loom_core::server_query::{ServerQuery, ServerQueryError, ServerQueryResponse};
+use loom_common_core::server_query::{ServerQuery, ServerQueryError, ServerQueryResponse};
 use std::{
 	collections::HashMap,
 	sync::Arc,
@@ -281,20 +281,20 @@ impl ServerQueryManager {
 /// Extract a query type string from a ServerQuery
 fn extract_query_type(query: &ServerQuery) -> String {
 	match &query.kind {
-		loom_core::server_query::ServerQueryKind::ReadFile { .. } => "read_file".to_string(),
-		loom_core::server_query::ServerQueryKind::ExecuteCommand { .. } => {
+		loom_common_core::server_query::ServerQueryKind::ReadFile { .. } => "read_file".to_string(),
+		loom_common_core::server_query::ServerQueryKind::ExecuteCommand { .. } => {
 			"execute_command".to_string()
 		}
-		loom_core::server_query::ServerQueryKind::RequestUserInput { .. } => {
+		loom_common_core::server_query::ServerQueryKind::RequestUserInput { .. } => {
 			"request_user_input".to_string()
 		}
-		loom_core::server_query::ServerQueryKind::GetEnvironment { .. } => {
+		loom_common_core::server_query::ServerQueryKind::GetEnvironment { .. } => {
 			"get_environment".to_string()
 		}
-		loom_core::server_query::ServerQueryKind::GetWorkspaceContext => {
+		loom_common_core::server_query::ServerQueryKind::GetWorkspaceContext => {
 			"get_workspace_context".to_string()
 		}
-		loom_core::server_query::ServerQueryKind::Custom { .. } => "custom".to_string(),
+		loom_common_core::server_query::ServerQueryKind::Custom { .. } => "custom".to_string(),
 	}
 }
 
@@ -345,7 +345,7 @@ pub async fn list_pending_queries(
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use loom_core::server_query::{ServerQueryKind, ServerQueryResult};
+	use loom_common_core::server_query::{ServerQueryKind, ServerQueryResult};
 
 	#[tokio::test]
 	async fn test_send_and_receive_query() {

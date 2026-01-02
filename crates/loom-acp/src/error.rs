@@ -15,10 +15,10 @@ pub enum AcpError {
 	InvalidSessionId(String),
 
 	#[error("LLM error: {0}")]
-	Llm(#[from] loom_core::LlmError),
+	Llm(#[from] loom_common_core::LlmError),
 
 	#[error("tool error: {0}")]
-	Tool(#[from] loom_core::ToolError),
+	Tool(#[from] loom_common_core::ToolError),
 
 	#[error("thread store error: {0}")]
 	ThreadStore(#[from] loom_thread::ThreadStoreError),

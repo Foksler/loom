@@ -8,7 +8,7 @@
 
 use loom_server::QueryMetrics;
 use loom_server::ServerQueryManager;
-use loom_core::server_query::{
+use loom_common_core::server_query::{
 	ServerQuery, ServerQueryKind, ServerQueryResponse, ServerQueryResult,
 };
 use std::sync::Arc;

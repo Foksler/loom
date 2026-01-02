@@ -7,7 +7,7 @@
 //! and integrates with the ServerQueryManager for query lifecycle management.
 
 use crate::server_query::ServerQueryManager;
-use loom_core::server_query::{ServerQuery, ServerQueryError};
+use loom_common_core::server_query::{ServerQuery, ServerQueryError};
 use std::sync::Arc;
 use tracing::instrument;
 

@@ -10,7 +10,7 @@ license.workspace = true
 
 [dependencies]
 async-trait = { workspace = true }
-loom-core = { path = "../loom-core" }
+loom-common-core = { path = "../loom-common-core" }
 loom-http = { path = "../loom-http" }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 serde = { workspace = true }

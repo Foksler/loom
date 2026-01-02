@@ -8,7 +8,7 @@
 
 use bytes::Bytes;
 use futures::Stream;
-use loom_core::{LlmError, LlmEvent, LlmResponse, Message, ToolCall, Usage};
+use loom_common_core::{LlmError, LlmEvent, LlmResponse, Message, ToolCall, Usage};
 use pin_project_lite::pin_project;
 use std::collections::HashMap;
 use std::pin::Pin;

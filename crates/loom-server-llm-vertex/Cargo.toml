@@ -13,7 +13,7 @@ description = "Google Vertex AI (Gemini) LLM client for Loom"
 async-trait = { workspace = true }
 bytes = { workspace = true }
 futures = { workspace = true }
-loom-core = { path = "../loom-core" }
+loom-common-core = { path = "../loom-common-core" }
 loom-http = { path = "../loom-http" }
 pin-project-lite = { workspace = true }
 reqwest = { workspace = true }

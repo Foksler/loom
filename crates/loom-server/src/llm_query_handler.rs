@@ -14,7 +14,7 @@
 //!   phrases
 //! - `LlmQueryHandler`: Main handler that coordinates detection and processing
 
-use loom_core::server_query::{
+use loom_common_core::server_query::{
 	ServerQuery, ServerQueryError, ServerQueryKind, ServerQueryResponse,
 };
 use regex::Regex;

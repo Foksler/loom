@@ -6,7 +6,7 @@
 use std::env;
 use std::sync::Arc;
 
-use loom_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
+use loom_common_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
 use std::time::Duration;
 
 use loom_server_llm_anthropic::{

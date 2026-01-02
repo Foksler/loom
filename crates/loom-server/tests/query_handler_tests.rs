@@ -11,7 +11,7 @@
 //! into the LLM pipeline without breaking conversation flow.
 
 use loom_server::{LlmQueryHandler, SimpleRegexDetector, ServerQueryManager};
-use loom_core::server_query::{ServerQueryKind, ServerQueryResponse, ServerQueryResult};
+use loom_common_core::server_query::{ServerQueryKind, ServerQueryResponse, ServerQueryResult};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -121,7 +121,7 @@ async fn test_query_timeout_handling() {
 	assert!(result.is_err(), "Should error on timeout");
 	let error = result.unwrap_err();
 	assert!(
-		matches!(error, loom_core::server_query::ServerQueryError::Timeout),
+		matches!(error, loom_common_core::server_query::ServerQueryError::Timeout),
 		"Should be timeout error, got: {error:?}"
 	);
 }
@@ -512,7 +512,7 @@ async fn test_session_isolation() {
 	let manager = Arc::new(ServerQueryManager::new());
 
 	// Create two sessions with different query IDs
-	let query1 = loom_core::server_query::ServerQuery {
+	let query1 = loom_common_core::server_query::ServerQuery {
 		id: "Q-test-isolation-1".to_string(),
 		kind: ServerQueryKind::ReadFile {
 			path: "file.txt".to_string(),
@@ -522,7 +522,7 @@ async fn test_session_isolation() {
 		metadata: serde_json::json!({}),
 	};
 
-	let query2 = loom_core::server_query::ServerQuery {
+	let query2 = loom_common_core::server_query::ServerQuery {
 		id: "Q-test-isolation-2".to_string(),
 		kind: ServerQueryKind::ReadFile {
 			path: "file.txt".to_string(),

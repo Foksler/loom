@@ -7,7 +7,7 @@ use crate::stream::OpenAIStream;
 use crate::types::{OpenAIConfig, OpenAIError, OpenAIRequest, OpenAIResponse};
 use async_trait::async_trait;
 use futures::Stream;
-use loom_core::{LlmClient, LlmError, LlmEvent, LlmRequest, LlmResponse, LlmStream};
+use loom_common_core::{LlmClient, LlmError, LlmEvent, LlmRequest, LlmResponse, LlmStream};
 use loom_http::{retry, RetryConfig, RetryableError};
 use reqwest::Client;
 use std::pin::Pin;

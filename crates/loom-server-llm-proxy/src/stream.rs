@@ -11,7 +11,7 @@ use futures::Stream;
 use pin_project_lite::pin_project;
 use tracing::{debug, trace, warn};
 
-use loom_core::{LlmError, LlmEvent};
+use loom_common_core::{LlmError, LlmEvent};
 
 use crate::types::LlmStreamEvent;
 

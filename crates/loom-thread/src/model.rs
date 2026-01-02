@@ -74,13 +74,13 @@ pub enum MessageRole {
 	Tool,
 }
 
-impl From<&loom_core::Role> for MessageRole {
-	fn from(role: &loom_core::Role) -> Self {
+impl From<&loom_common_core::Role> for MessageRole {
+	fn from(role: &loom_common_core::Role) -> Self {
 		match role {
-			loom_core::Role::System => Self::System,
-			loom_core::Role::User => Self::User,
-			loom_core::Role::Assistant => Self::Assistant,
-			loom_core::Role::Tool => Self::Tool,
+			loom_common_core::Role::System => Self::System,
+			loom_common_core::Role::User => Self::User,
+			loom_common_core::Role::Assistant => Self::Assistant,
+			loom_common_core::Role::Tool => Self::Tool,
 		}
 	}
 }
@@ -136,8 +136,8 @@ pub struct MessageSnapshot {
 	pub tool_calls: Option<Vec<ToolCallSnapshot>>,
 }
 
-impl From<&loom_core::Message> for MessageSnapshot {
-	fn from(msg: &loom_core::Message) -> Self {
+impl From<&loom_common_core::Message> for MessageSnapshot {
+	fn from(msg: &loom_common_core::Message) -> Self {
 		let tool_calls = if msg.tool_calls.is_empty() {
 			None
 		} else {
@@ -209,28 +209,28 @@ pub struct AgentStateSnapshot {
 	pub pending_tool_calls: Vec<PendingToolCallSnapshot>,
 }
 
-impl From<&loom_core::AgentState> for AgentStateSnapshot {
-	fn from(state: &loom_core::AgentState) -> Self {
+impl From<&loom_common_core::AgentState> for AgentStateSnapshot {
+	fn from(state: &loom_common_core::AgentState) -> Self {
 		match state {
-			loom_core::AgentState::WaitingForUserInput { .. } => Self {
+			loom_common_core::AgentState::WaitingForUserInput { .. } => Self {
 				kind: AgentStateKind::WaitingForUserInput,
 				retries: 0,
 				last_error: None,
 				pending_tool_calls: Vec::new(),
 			},
-			loom_core::AgentState::CallingLlm { retries, .. } => Self {
+			loom_common_core::AgentState::CallingLlm { retries, .. } => Self {
 				kind: AgentStateKind::CallingLlm,
 				retries: *retries,
 				last_error: None,
 				pending_tool_calls: Vec::new(),
 			},
-			loom_core::AgentState::ProcessingLlmResponse { .. } => Self {
+			loom_common_core::AgentState::ProcessingLlmResponse { .. } => Self {
 				kind: AgentStateKind::ProcessingLlmResponse,
 				retries: 0,
 				last_error: None,
 				pending_tool_calls: Vec::new(),
 			},
-			loom_core::AgentState::ExecutingTools { executions, .. } => Self {
+			loom_common_core::AgentState::ExecutingTools { executions, .. } => Self {
 				kind: AgentStateKind::ExecutingTools,
 				retries: 0,
 				last_error: None,
@@ -242,19 +242,19 @@ impl From<&loom_core::AgentState> for AgentStateSnapshot {
 					})
 					.collect(),
 			},
-			loom_core::AgentState::PostToolsHook { .. } => Self {
+			loom_common_core::AgentState::PostToolsHook { .. } => Self {
 				kind: AgentStateKind::PostToolsHook,
 				retries: 0,
 				last_error: None,
 				pending_tool_calls: Vec::new(),
 			},
-			loom_core::AgentState::Error { error, retries, .. } => Self {
+			loom_common_core::AgentState::Error { error, retries, .. } => Self {
 				kind: AgentStateKind::Error,
 				retries: *retries,
 				last_error: Some(error.to_string()),
 				pending_tool_calls: Vec::new(),
 			},
-			loom_core::AgentState::ShuttingDown => Self {
+			loom_common_core::AgentState::ShuttingDown => Self {
 				kind: AgentStateKind::ShuttingDown,
 				retries: 0,
 				last_error: None,

@@ -3117,7 +3117,7 @@ dependencies = [
  "async-trait",
  "chrono",
  "futures",
- "loom-core",
+ "loom-common-core",
  "loom-server-llm-proxy",
  "loom-thread",
  "loom-tools",
@@ -3255,11 +3255,11 @@ dependencies = [
  "humantime",
  "loom-acp",
  "loom-cli-auto-commit",
+ "loom-common-core",
  "loom-common-i18n",
  "loom-common-secret",
  "loom-common-version",
  "loom-config",
- "loom-core",
  "loom-credentials",
  "loom-git",
  "loom-http",
@@ -3287,7 +3287,7 @@ name = "loom-cli-auto-commit"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "loom-core",
+ "loom-common-core",
  "loom-git",
  "proptest",
  "serde",
@@ -3296,6 +3296,24 @@ dependencies = [
  "tokio",
  "tokio-test",
  "tracing",
+]
+
+[[package]]
+name = "loom-common-core"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures",
+ "pin-project-lite",
+ "proptest",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "uuid",
 ]
 
 [[package]]
@@ -3356,24 +3374,6 @@ dependencies = [
  "serde_json",
  "tempfile",
  "thiserror 1.0.69",
-]
-
-[[package]]
-name = "loom-core"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures",
- "pin-project-lite",
- "proptest",
- "reqwest",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "tracing",
- "uuid",
 ]
 
 [[package]]
@@ -3527,10 +3527,10 @@ dependencies = [
  "loom-auth-google",
  "loom-auth-magiclink",
  "loom-auth-okta",
+ "loom-common-core",
  "loom-common-i18n",
  "loom-common-secret",
  "loom-common-version",
- "loom-core",
  "loom-github-app",
  "loom-google-cse",
  "loom-scm",
@@ -3676,8 +3676,8 @@ dependencies = [
  "chrono",
  "futures",
  "getrandom 0.2.16",
+ "loom-common-core",
  "loom-common-secret",
- "loom-core",
  "loom-credentials",
  "loom-http",
  "pin-project-lite",
@@ -3699,7 +3699,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "futures",
- "loom-core",
+ "loom-common-core",
  "loom-http",
  "pin-project-lite",
  "reqwest",
@@ -3718,8 +3718,8 @@ dependencies = [
  "async-trait",
  "bytes",
  "futures",
+ "loom-common-core",
  "loom-common-secret",
- "loom-core",
  "loom-http",
  "pin-project-lite",
  "proptest",
@@ -3737,8 +3737,8 @@ name = "loom-server-llm-service"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "loom-common-core",
  "loom-config-common",
- "loom-core",
  "loom-http",
  "loom-server-llm-anthropic",
  "loom-server-llm-openai",
@@ -3759,7 +3759,7 @@ dependencies = [
  "bytes",
  "futures",
  "gcp_auth",
- "loom-core",
+ "loom-common-core",
  "loom-http",
  "pin-project-lite",
  "proptest",
@@ -3814,8 +3814,8 @@ dependencies = [
  "async-trait",
  "chrono",
  "dirs 5.0.1",
+ "loom-common-core",
  "loom-common-secret",
- "loom-core",
  "loom-http",
  "proptest",
  "reqwest",
@@ -3837,7 +3837,7 @@ name = "loom-tools"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "loom-core",
+ "loom-common-core",
  "loom-http",
  "proptest",
  "reqwest",

@@ -4,7 +4,7 @@
 //! Anthropic client implementation.
 
 use async_trait::async_trait;
-use loom_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
+use loom_common_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
 use loom_credentials::{CredentialStore, MemoryCredentialStore};
 use loom_http::{retry, RetryConfig, RetryableError};
 use reqwest::Client;

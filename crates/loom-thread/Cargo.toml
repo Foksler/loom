@@ -14,7 +14,7 @@ openapi = ["dep:utoipa"]
 
 [dependencies]
 utoipa = { version = "5", optional = true }
-loom-core = { path = "../loom-core" }
+loom-common-core = { path = "../loom-common-core" }
 loom-http = { path = "../loom-http" }
 loom-common-secret = { path = "../loom-common-secret" }
 

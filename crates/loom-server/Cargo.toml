@@ -22,7 +22,7 @@ futures = { workspace = true }
 loom-server-db = { path = "../loom-server-db" }
 loom-server-jobs = { path = "../loom-server-jobs" }
 loom-server-weaver = { path = "../loom-server-weaver" }
-loom-core = { path = "../loom-core" }
+loom-common-core = { path = "../loom-common-core" }
 loom-server-k8s = { path = "../loom-server-k8s" }
 loom-common-secret = { path = "../loom-common-secret" }
 loom-auth = { path = "../loom-auth" }

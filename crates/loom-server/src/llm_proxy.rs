@@ -12,7 +12,7 @@ use axum::{
 	},
 	Json,
 };
-use loom_core::{
+use loom_common_core::{
 	server_query::ServerQuery, LlmError, LlmEvent, LlmRequest, LlmStream, Message, ToolCall, Usage,
 };
 use serde::{Deserialize, Serialize};
@@ -77,8 +77,8 @@ pub struct LlmProxyResponse {
 	pub finish_reason: Option<String>,
 }
 
-impl From<loom_core::LlmResponse> for LlmProxyResponse {
-	fn from(response: loom_core::LlmResponse) -> Self {
+impl From<loom_common_core::LlmResponse> for LlmProxyResponse {
+	fn from(response: loom_common_core::LlmResponse) -> Self {
 		Self {
 			message: response.message,
 			tool_calls: response.tool_calls,
@@ -429,7 +429,7 @@ pub fn map_llm_error(err: LlmError) -> ServerError {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use loom_core::Role;
+	use loom_common_core::Role;
 	use proptest::prelude::*;
 
 	proptest! {
@@ -518,9 +518,9 @@ mod tests {
 			/// as they are critical for server-client communication during streaming.
 			#[test]
 			fn server_query_stream_event_serialization_roundtrip(query_id in "Q-[a-f0-9]{32}") {
-					use loom_core::server_query::ServerQueryKind;
+					use loom_common_core::server_query::ServerQueryKind;
 
-					let query = loom_core::server_query::ServerQuery {
+					let query = loom_common_core::server_query::ServerQuery {
 							id: query_id,
 							kind: ServerQueryKind::ReadFile { path: "/test.txt".to_string() },
 							sent_at: "2025-01-01T00:00:00Z".to_string(),
