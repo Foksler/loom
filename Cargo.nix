@@ -62,7 +62,7 @@ args@{
   cargoConfig ? {},
 }:
 let
-  nixifiedLockHash = "b2e28bbf3164a20ac39510f2a809259a5bf909812426555895333023feb9fb6a";
+  nixifiedLockHash = "82c5689fb84850db2f98898987ff0beb10076d7b636d2a93c4494bee9aa924e0";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -5017,6 +5017,9 @@ in
       tracing = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tracing."0.1.44" { inherit profileName; }).out;
       uuid = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".uuid."1.19.0" { inherit profileName; }).out;
     };
+    devDependencies = {
+      tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.48.0" { inherit profileName; }).out;
+    };
   });
   
   "unknown".loom-server-k8s."0.1.0" = overridableMkRustCrate (profileName: rec {
@@ -5290,6 +5293,9 @@ in
       tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.48.0" { inherit profileName; }).out;
       tracing = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tracing."0.1.44" { inherit profileName; }).out;
       uuid7 = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".uuid7."1.4.0" { inherit profileName; }).out;
+    };
+    devDependencies = {
+      proptest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proptest."1.9.0" { inherit profileName; }).out;
     };
   });
   
