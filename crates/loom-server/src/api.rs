@@ -438,12 +438,16 @@ fn admin_routes(state: AppState) -> Router<AppState> {
 			get(routes::admin_anthropic::list_accounts),
 		)
 		.route(
-			"/anthropic/accounts",
+			"/anthropic/accounts/{id}",
+			delete(routes::admin_anthropic::remove_account),
+		)
+		.route(
+			"/anthropic/oauth/initiate",
 			post(routes::admin_anthropic::initiate_oauth),
 		)
 		.route(
-			"/anthropic/accounts/{id}",
-			delete(routes::admin_anthropic::remove_account),
+			"/anthropic/oauth/complete",
+			post(routes::admin_anthropic::complete_oauth),
 		)
 		// Job scheduler management
 		.route("/jobs", get(routes::admin_jobs::list_jobs))
@@ -519,11 +523,6 @@ pub fn create_router(state: AppState) -> Router {
 		.route(
 			"/api/github/webhook",
 			post(routes::github::github_webhook),
-		)
-		// Anthropic OAuth callback (public - redirected from claude.ai)
-		.route(
-			"/api/admin/anthropic/callback",
-			get(routes::admin_anthropic::oauth_callback),
 		)
 		.build();
 

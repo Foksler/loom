@@ -5,27 +5,35 @@
 //!
 //! Provides endpoints for managing Claude Max OAuth accounts in the pool:
 //! - List accounts with status
-//! - Add new accounts via OAuth flow
+//! - Add new accounts via OAuth flow (two-step: initiate + submit code)
 //! - Remove accounts
+//!
+//! # OAuth Flow
+//!
+//! Since we use Anthropic's public OAuth client, we cannot use custom redirect URIs.
+//! The flow is:
+//! 1. POST /api/admin/anthropic/oauth/initiate - Get auth URL and state token
+//! 2. User opens URL in browser, authorizes, and copies the code from Anthropic's page
+//! 3. POST /api/admin/anthropic/oauth/complete - Submit the code to exchange for tokens
 //!
 //! # Security
 //!
 //! All endpoints require `SystemRole::Admin`.
 
 use axum::{
-	extract::{Path, Query, State},
+	extract::{Path, State},
 	http::StatusCode,
-	response::{IntoResponse, Redirect},
+	response::IntoResponse,
 	Json,
 };
-use loom_server_llm_anthropic::{exchange_code, OAuthCredentials, Pkce, CLIENT_ID, SCOPES};
+use loom_server_llm_anthropic::{exchange_code, OAuthCredentials, Pkce, CLIENT_ID, REDIRECT_URI, SCOPES};
 use loom_common_secret::SecretString;
-use url::{form_urlencoded, Url};
+use url::Url;
 
 pub use loom_server_api::admin::{
-	AccountDetailsResponse, AccountsSummary, AccountStatus, AdminErrorResponse,
-	AnthropicAccountsResponse, AnthropicOAuthCallbackQuery as OAuthCallbackQuery,
-	InitiateOAuthRequest, InitiateOAuthResponse, RemoveAccountResponse,
+	AccountDetailsResponse, AccountsSummary, AccountStatus, AddAccountResponse, AdminErrorResponse,
+	AnthropicAccountsResponse, InitiateOAuthRequest, InitiateOAuthResponse, RemoveAccountResponse,
+	SubmitOAuthCodeRequest,
 };
 
 use crate::{
@@ -34,10 +42,6 @@ use crate::{
 	i18n::{resolve_user_locale, t},
 	oauth_state::generate_state,
 };
-
-fn url_encode(input: &str) -> String {
-	form_urlencoded::byte_serialize(input.as_bytes()).collect()
-}
 
 const ANTHROPIC_ADMIN_PROVIDER: &str = "anthropic-admin";
 
@@ -147,17 +151,19 @@ pub async fn list_accounts(
 
 /// Initiate OAuth flow to add a new Anthropic account.
 ///
+/// Returns an authorization URL that the admin should open in their browser.
+/// After authorizing, Anthropic will display a code on their page.
+/// The admin should then call the complete endpoint with that code.
+///
 /// # Authorization
 ///
 /// Requires `system_admin` role.
 ///
-/// # Request
-///
-/// Optionally specify `redirect_after` for where to go after OAuth completes.
-///
 /// # Response
 ///
-/// Returns [`InitiateOAuthResponse`] with the OAuth redirect URL.
+/// Returns [`InitiateOAuthResponse`] with:
+/// - `redirect_url`: URL to open in browser
+/// - `state`: State token to use when submitting the code
 ///
 /// # Errors
 ///
@@ -166,10 +172,10 @@ pub async fn list_accounts(
 /// - `501 Not Implemented`: Not in OAuth pool mode
 #[utoipa::path(
 	post,
-	path = "/api/admin/anthropic/accounts",
+	path = "/api/admin/anthropic/oauth/initiate",
 	request_body = InitiateOAuthRequest,
 	responses(
-		(status = 200, description = "OAuth redirect URL", body = InitiateOAuthResponse),
+		(status = 200, description = "OAuth authorization URL and state", body = InitiateOAuthResponse),
 		(status = 401, description = "Not authenticated", body = AdminErrorResponse),
 		(status = 403, description = "Not authorized", body = AdminErrorResponse),
 		(status = 501, description = "Not in OAuth pool mode", body = AdminErrorResponse)
@@ -224,15 +230,12 @@ pub async fn initiate_oauth(
 	let pkce = Pkce::generate();
 	let oauth_state = generate_state();
 
-	let redirect_uri = format!("{}/api/admin/anthropic/callback", state.base_url);
-
 	let mut auth_url = Url::parse("https://claude.ai/oauth/authorize").expect("Invalid authorize URL");
 	{
 		let mut params = auth_url.query_pairs_mut();
-		params.append_pair("code", "true");
 		params.append_pair("client_id", CLIENT_ID);
 		params.append_pair("response_type", "code");
-		params.append_pair("redirect_uri", &redirect_uri);
+		params.append_pair("redirect_uri", REDIRECT_URI);
 		params.append_pair("scope", SCOPES);
 		params.append_pair("code_challenge", &pkce.challenge);
 		params.append_pair("code_challenge_method", "S256");
@@ -248,44 +251,111 @@ pub async fn initiate_oauth(
 
 	tracing::info!(
 		actor_id = %current_user.user.id,
+		state = %oauth_state,
 		"Initiated Anthropic OAuth flow"
 	);
 
-	(StatusCode::OK, Json(InitiateOAuthResponse { redirect_url: auth_url.to_string() })).into_response()
+	(StatusCode::OK, Json(InitiateOAuthResponse {
+		redirect_url: auth_url.to_string(),
+		state: oauth_state,
+	})).into_response()
 }
 
-/// Handle OAuth callback from claude.ai.
+/// Complete OAuth flow by submitting the authorization code.
 ///
-/// This endpoint is called by claude.ai after the user authorizes.
-/// It exchanges the code for tokens and adds the account to the pool.
+/// After the admin authorizes on Anthropic's page, they will see a code.
+/// Submit that code along with the state from the initiate response.
+///
+/// # Authorization
+///
+/// Requires `system_admin` role.
+///
+/// # Request
+///
+/// Body ([`SubmitOAuthCodeRequest`]):
+/// - `code`: The authorization code from Anthropic's callback page
+/// - `state`: The state token from the initiate response
 ///
 /// # Response
 ///
-/// Redirects to `/admin/anthropic-accounts?added={account_id}` on success,
-/// or `/admin/anthropic-accounts?error={message}` on failure.
+/// Returns [`AddAccountResponse`] with the new account ID.
+///
+/// # Errors
+///
+/// - `400 Bad Request`: Invalid state or code
+/// - `401 Unauthorized`: Not authenticated
+/// - `403 Forbidden`: Not system admin
+/// - `501 Not Implemented`: Not in OAuth pool mode
 #[utoipa::path(
-	get,
-	path = "/api/admin/anthropic/callback",
-	params(
-		("code" = String, Query, description = "Authorization code"),
-		("state" = String, Query, description = "OAuth state parameter")
-	),
+	post,
+	path = "/api/admin/anthropic/oauth/complete",
+	request_body = SubmitOAuthCodeRequest,
 	responses(
-		(status = 302, description = "Redirect to admin page"),
-		(status = 400, description = "Invalid state or code")
+		(status = 200, description = "Account added successfully", body = AddAccountResponse),
+		(status = 400, description = "Invalid state or code", body = AdminErrorResponse),
+		(status = 401, description = "Not authenticated", body = AdminErrorResponse),
+		(status = 403, description = "Not authorized", body = AdminErrorResponse),
+		(status = 501, description = "Not in OAuth pool mode", body = AdminErrorResponse)
 	),
 	tag = "admin-anthropic"
 )]
-#[tracing::instrument(skip(state, query))]
-pub async fn oauth_callback(
+#[tracing::instrument(skip(state, body), fields(actor_id = %current_user.user.id))]
+pub async fn complete_oauth(
+	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
-	Query(query): Query<OAuthCallbackQuery>,
+	Json(body): Json<SubmitOAuthCodeRequest>,
 ) -> impl IntoResponse {
-	let entry = match state.oauth_state_store.validate_and_consume(&query.state, ANTHROPIC_ADMIN_PROVIDER).await {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	if !current_user.user.is_system_admin {
+		tracing::warn!(actor_id = %current_user.user.id, "Unauthorized anthropic OAuth completion attempt");
+		return (
+			StatusCode::FORBIDDEN,
+			Json(AdminErrorResponse {
+				error: "forbidden".to_string(),
+				message: t(locale, "server.api.admin.system_admin_required").to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	let llm_service = match &state.llm_service {
+		Some(service) => service,
+		None => {
+			return (
+				StatusCode::NOT_IMPLEMENTED,
+				Json(AdminErrorResponse {
+					error: "not_implemented".to_string(),
+					message: "LLM service not configured".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	if !llm_service.is_anthropic_oauth_pool() {
+		return (
+			StatusCode::NOT_IMPLEMENTED,
+			Json(AdminErrorResponse {
+				error: "not_implemented".to_string(),
+				message: "Anthropic is not configured in OAuth pool mode".to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	let entry = match state.oauth_state_store.validate_and_consume(&body.state, ANTHROPIC_ADMIN_PROVIDER).await {
 		Some(e) => e,
 		None => {
-			tracing::warn!("Invalid or expired OAuth state for Anthropic callback");
-			return Redirect::to("/admin/anthropic-accounts?error=invalid_state").into_response();
+			tracing::warn!(state = %body.state, "Invalid or expired OAuth state");
+			return (
+				StatusCode::BAD_REQUEST,
+				Json(AdminErrorResponse {
+					error: "invalid_state".to_string(),
+					message: "Invalid or expired OAuth state. Please start the OAuth flow again.".to_string(),
+				}),
+			)
+				.into_response();
 		}
 	};
 
@@ -293,15 +363,29 @@ pub async fn oauth_callback(
 		Some(v) => v,
 		None => {
 			tracing::error!("Missing PKCE verifier in OAuth state");
-			return Redirect::to("/admin/anthropic-accounts?error=missing_verifier").into_response();
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(AdminErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Missing PKCE verifier. Please start the OAuth flow again.".to_string(),
+				}),
+			)
+				.into_response();
 		}
 	};
 
-	let exchange_result = match exchange_code(&query.code, &verifier).await {
+	let exchange_result = match exchange_code(&body.code, &verifier).await {
 		Ok(result) => result,
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to exchange OAuth code");
-			return Redirect::to(&format!("/admin/anthropic-accounts?error={}", url_encode(&e.to_string()))).into_response();
+			return (
+				StatusCode::BAD_REQUEST,
+				Json(AdminErrorResponse {
+					error: "exchange_failed".to_string(),
+					message: format!("Failed to exchange code: {e}"),
+				}),
+			)
+				.into_response();
 		}
 	};
 
@@ -309,7 +393,14 @@ pub async fn oauth_callback(
 		loom_server_llm_anthropic::ExchangeResult::Success { access, refresh, expires } => (access, refresh, expires),
 		loom_server_llm_anthropic::ExchangeResult::Failed { error } => {
 			tracing::error!(error = %error, "OAuth token exchange failed");
-			return Redirect::to(&format!("/admin/anthropic-accounts?error={}", url_encode(&error))).into_response();
+			return (
+				StatusCode::BAD_REQUEST,
+				Json(AdminErrorResponse {
+					error: "exchange_failed".to_string(),
+					message: format!("Token exchange failed: {error}"),
+				}),
+			)
+				.into_response();
 		}
 	};
 
@@ -320,29 +411,25 @@ pub async fn oauth_callback(
 		expires,
 	);
 
-	let llm_service = match &state.llm_service {
-		Some(service) => service,
-		None => {
-			tracing::error!("LLM service not available during OAuth callback");
-			return Redirect::to("/admin/anthropic-accounts?error=service_unavailable").into_response();
-		}
-	};
-
 	if let Err(e) = llm_service.add_anthropic_account(account_id.clone(), credentials).await {
 		tracing::error!(error = %e, account_id = %account_id, "Failed to add account to pool");
-		return Redirect::to(&format!("/admin/anthropic-accounts?error={}", url_encode(&e.to_string()))).into_response();
+		return (
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(AdminErrorResponse {
+				error: "add_failed".to_string(),
+				message: format!("Failed to add account: {e}"),
+			}),
+		)
+			.into_response();
 	}
 
-	tracing::info!(account_id = %account_id, "Added Anthropic OAuth account to pool");
+	tracing::info!(
+		actor_id = %current_user.user.id,
+		account_id = %account_id,
+		"Added Anthropic OAuth account to pool"
+	);
 
-	let redirect_path = entry.redirect_url.unwrap_or_else(|| "/admin/anthropic-accounts".to_string());
-	let redirect_url = if redirect_path.contains('?') {
-		format!("{}&added={}", redirect_path, url_encode(&account_id))
-	} else {
-		format!("{}?added={}", redirect_path, url_encode(&account_id))
-	};
-
-	Redirect::to(&redirect_url).into_response()
+	(StatusCode::OK, Json(AddAccountResponse { account_id })).into_response()
 }
 
 /// Remove an Anthropic OAuth account from the pool.

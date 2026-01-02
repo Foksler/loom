@@ -184,7 +184,28 @@ pub struct InitiateOAuthRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 pub struct InitiateOAuthResponse {
+	/// URL to open in browser for OAuth authorization.
 	pub redirect_url: String,
+	/// State token to use when submitting the code.
+	pub state: String,
+}
+
+/// Request to submit OAuth authorization code.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct SubmitOAuthCodeRequest {
+	/// The authorization code from Anthropic's callback page.
+	pub code: String,
+	/// The state token from the initiate response.
+	pub state: String,
+}
+
+/// Response for successfully adding an account.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct AddAccountResponse {
+	/// The ID of the newly added account.
+	pub account_id: String,
 }
 
 /// Response for removing an account.
