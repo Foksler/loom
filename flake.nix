@@ -94,17 +94,34 @@
             overlays = [ overlayWithCross ];
           };
           pkgsWithTools = pkgs.extend toolsOverlay;
+          
+          # cargo2nix-built binaries for images
+          loom-cli-c2n = (rustPkgs.workspace.loom-cli {});
+          loom-server-c2n = (rustPkgs.workspace.loom-server {});
+          
+          # Build images using cargo2nix packages for faster rebuilds
+          weaver-image-c2n = pkgsWithCargo2nix.callPackage ./infra/pkgs/weaver-image.nix {
+            loom-cli = loom-cli-c2n;
+          };
+          loom-server-image-c2n = pkgsWithCargo2nix.callPackage ./infra/pkgs/loom-server-image.nix {
+            loom-server = loom-server-c2n;
+            loom-server-binaries = pkgs.loom-server-binaries;
+          };
         in
         {
-          inherit (pkgs) smtprelay loom-server loom-cli loom-cli-linux loom-web;
+          inherit (pkgs) smtprelay loom-cli loom-cli-linux loom-web;
           inherit (pkgs) loom-cli-windows loom-cli-macos loom-cli-linux-aarch64 loom-cli-windows-aarch64;
-          inherit (pkgs) loom-weaver-binaries loom-server-binaries weaver-image loom-server-image;
+          inherit (pkgs) loom-weaver-binaries loom-server-binaries;
           inherit (pkgsWithTools) license;
+          
+          # Use cargo2nix packages for main binaries and images (faster builds)
+          loom-server = loom-server-c2n;
+          weaver-image = weaver-image-c2n;
+          loom-server-image = loom-server-image-c2n;
           
           # cargo2nix-based granular crate builds
           # All workspace crates exposed individually
-          loom-cli-c2n = (rustPkgs.workspace.loom-cli {});
-          loom-server-c2n = (rustPkgs.workspace.loom-server {});
+          inherit loom-cli-c2n loom-server-c2n;
           loom-cli-acp-c2n = (rustPkgs.workspace.loom-cli-acp {});
           loom-cli-auto-commit-c2n = (rustPkgs.workspace.loom-cli-auto-commit {});
           loom-cli-config-c2n = (rustPkgs.workspace.loom-cli-config {});
