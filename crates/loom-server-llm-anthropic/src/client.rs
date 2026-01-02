@@ -156,7 +156,7 @@ impl<S: CredentialStore + 'static> AnthropicClient<S> {
 		format!("{}/v1/messages", self.config.base_url)
 	}
 
-	#[instrument(skip(self, request), fields(model = %self.config.model))]
+	#[instrument(skip(self, request), fields(model = %request.model))]
 	async fn send_request(
 		&self,
 		request: &AnthropicRequest,
@@ -226,12 +226,11 @@ impl<S: CredentialStore + 'static> AnthropicClient<S> {
 
 #[async_trait]
 impl<S: CredentialStore + 'static> LlmClient for AnthropicClient<S> {
-	#[instrument(skip(self, request), fields(model = %self.config.model))]
+	#[instrument(skip(self, request), fields(model = %request.model))]
 	async fn complete(&self, request: LlmRequest) -> Result<LlmResponse, LlmError> {
 		info!("Starting non-streaming completion request");
 
 		let mut anthropic_request = AnthropicRequest::from(&request);
-		anthropic_request.model = self.config.model.clone();
 		anthropic_request.stream = Some(false);
 
 		let client = self.clone();
@@ -266,12 +265,11 @@ impl<S: CredentialStore + 'static> LlmClient for AnthropicClient<S> {
 		Ok(llm_response)
 	}
 
-	#[instrument(skip(self, request), fields(model = %self.config.model))]
+	#[instrument(skip(self, request), fields(model = %request.model))]
 	async fn complete_streaming(&self, request: LlmRequest) -> Result<LlmStream, LlmError> {
 		info!("Starting streaming completion request");
 
 		let mut anthropic_request = AnthropicRequest::from(&request);
-		anthropic_request.model = self.config.model.clone();
 		anthropic_request.stream = Some(true);
 
 		let client = self.clone();
