@@ -135,7 +135,7 @@ loom-github-app = { path = "../loom-github-app", features = ["openapi"] }
 loom-google-cse = { path = "../loom-google-cse", features = ["openapi"] }
 loom-i18n = { path = "../loom-i18n" }
 loom-jobs = { path = "../loom-jobs" }
-loom-scm = { path = "../loom-scm" }
+loom-scm = { path = "../loom-server-scm" }
 loom-scm-mirror = { path = "../loom-scm-mirror" }
 loom-secret = { path = "../loom-secret" }
 loom-smtp = { path = "../loom-smtp" }
@@ -328,7 +328,7 @@ graph TD
         THREAD[loom-thread]
         SECRET[loom-secret]
         JOBS[loom-jobs]
-        SCM[loom-scm]
+        SCM[loom-server-scm]
         WEAVER[loom-weaver]
     end
     

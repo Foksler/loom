@@ -24,7 +24,7 @@ loom-common-i18n = { path = "../loom-common-i18n" }
 loom-server-jobs = { path = "../loom-server-jobs" }
 loom-server-llm-anthropic = { path = "../loom-server-llm-anthropic" }
 loom-server-scm = { path = "../loom-server-scm" }
-loom-scm-mirror = { path = "../loom-scm-mirror" }
+loom-server-scm-mirror = { path = "../loom-server-scm-mirror" }
 loom-common-secret = { path = "../loom-common-secret" }
 loom-server-smtp = { path = "../loom-server-smtp" }
 loom-common-thread = { path = "../loom-common-thread" }

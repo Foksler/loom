@@ -31,7 +31,7 @@ Deployments happen automatically via `git push` to the `trunk` branch. The produ
 **All database migrations go in `crates/loom-server/migrations/`** as numbered SQL files.
 
 - **Convention:** `NNN_description.sql` (e.g., `020_scm_repos.sql`)
-- **DO NOT** put inline SQL migrations in other crates (loom-scm, loom-thread, etc.)
+- **DO NOT** put inline SQL migrations in other crates (loom-server-scm, loom-thread, etc.)
 - Migrations run automatically on server startup via `db/mod.rs`
 - Check existing migrations for the next available number before creating new ones
 

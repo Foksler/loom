@@ -38,7 +38,7 @@ members = [
 	"crates/loom-server-geoip",
 	"crates/loom-server-jobs",
 	"crates/loom-server-scm",
-	"crates/loom-scm-mirror",
+	"crates/loom-server-scm-mirror",
 	"crates/loom-server-db",
 	"crates/loom-server-api",
 ]

@@ -13,10 +13,10 @@ Review of the SCM implementation against the specification at `specs/scm-system.
 
 ## 1. Repository Ownership ✅ Fully Implemented
 
-- **Repos can belong to users or orgs**: ✅ Implemented via `OwnerType::User | Org` in [types.rs](file:///home/ghuntley/loom/crates/loom-scm/src/types.rs)
+- **Repos can belong to users or orgs**: ✅ Implemented via `OwnerType::User | Org` in [types.rs](file:///home/ghuntley/loom/crates/loom-server-scm/src/types.rs)
 - **Visibility (private/public)**: ✅ `Visibility::Private | Public` with private as default
 - **UUID-based filesystem layout with sharding**: ✅ Implemented in [git.rs routes](file:///home/ghuntley/loom/crates/loom-server/src/routes/git.rs#L90-L97) using `{shard}/{uuid}/git/` pattern
-- **Database schema**: ✅ Matches spec exactly in [schema.rs](file:///home/ghuntley/loom/crates/loom-scm/src/schema.rs)
+- **Database schema**: ✅ Matches spec exactly in [schema.rs](file:///home/ghuntley/loom/crates/loom-server-scm/src/schema.rs)
 
 ---
 
@@ -42,8 +42,8 @@ Review of the SCM implementation against the specification at `specs/scm-system.
 
 ## 4. Access Control ⚠️ Partially Implemented
 
-- **Repo-level roles (read, write, admin)**: ✅ `RepoRole` enum defined in [types.rs](file:///home/ghuntley/loom/crates/loom-scm/src/types.rs#L62-L68)
-- **Team-based access**: ⚠️ **Schema only** - `repo_team_access` table exists in [schema.rs](file:///home/ghuntley/loom/crates/loom-scm/src/schema.rs#L38-L45) and `RepoTeamAccess` type exists, but:
+- **Repo-level roles (read, write, admin)**: ✅ `RepoRole` enum defined in [types.rs](file:///home/ghuntley/loom/crates/loom-server-scm/src/types.rs#L62-L68)
+- **Team-based access**: ⚠️ **Schema only** - `repo_team_access` table exists in [schema.rs](file:///home/ghuntley/loom/crates/loom-server-scm/src/schema.rs#L38-L45) and `RepoTeamAccess` type exists, but:
   - No `RepoTeamAccessStore` trait or implementation
   - No API endpoints for managing team access
   - Not used in access control checks in the server
@@ -58,7 +58,7 @@ Review of the SCM implementation against the specification at `specs/scm-system.
 
 ## 5. Branch Protection ✅ Fully Implemented
 
-- **Pattern matching (e.g., 'cannon', 'release/*')**: ✅ [protection.rs](file:///home/ghuntley/loom/crates/loom-scm/src/protection.rs#L161-L175)
+- **Pattern matching (e.g., 'cannon', 'release/*')**: ✅ [protection.rs](file:///home/ghuntley/loom/crates/loom-server-scm/src/protection.rs#L161-L175)
 - **Block direct push, force-push, deletion**: ✅ All three options supported
 - **Admins can bypass**: ✅ `user_is_admin` check in `check_push_allowed`
 - **API endpoints**: ✅ All three endpoints implemented in [protection.rs routes](file:///home/ghuntley/loom/crates/loom-server/src/routes/protection.rs)
@@ -70,7 +70,7 @@ Review of the SCM implementation against the specification at `specs/scm-system.
 
 - **Create via API (not push-to-create)**: ✅ `POST /api/v1/repos` in [repos.rs](file:///home/ghuntley/loom/crates/loom-server/src/routes/repos.rs)
 - **Soft delete (recoverable)**: ✅ `DELETE /api/v1/repos/{id}` sets `deleted_at`
-- **Default branch is 'cannon'**: ✅ Hardcoded in [types.rs](file:///home/ghuntley/loom/crates/loom-scm/src/types.rs#L114)
+- **Default branch is 'cannon'**: ✅ Hardcoded in [types.rs](file:///home/ghuntley/loom/crates/loom-server-scm/src/types.rs#L114)
 - **Creates bare git repo on disk**: ✅ Uses `GitRepository::init_bare()` via gitoxide
 
 ---
@@ -108,8 +108,8 @@ Review of the SCM implementation against the specification at `specs/scm-system.
 
 - **Per-repo webhooks**: ✅ [webhooks.rs routes](file:///home/ghuntley/loom/crates/loom-server/src/routes/webhooks.rs)
 - **Org-level webhooks**: ✅ Same file, org endpoints
-- **HMAC-SHA256 signature**: ✅ [delivery module](file:///home/ghuntley/loom/crates/loom-scm/src/webhook.rs#L640-L654)
-- **GitHub-compat and Loom-v1 payload formats**: ✅ [payload module](file:///home/ghuntley/loom/crates/loom-scm/src/webhook.rs#L400-L638)
+- **HMAC-SHA256 signature**: ✅ [delivery module](file:///home/ghuntley/loom/crates/loom-server-scm/src/webhook.rs#L640-L654)
+- **GitHub-compat and Loom-v1 payload formats**: ✅ [payload module](file:///home/ghuntley/loom/crates/loom-server-scm/src/webhook.rs#L400-L638)
 - **Retry with job scheduler**: ✅ `webhook_deliveries` table with retry logic
 - **Events**: ✅ `push`, `repo.created`, `repo.deleted`
 
@@ -138,7 +138,7 @@ Based on the directory structure at `web/loom-web/src/routes/(app)/repos/[owner]
 
 ## 10. Git Maintenance ✅ Fully Implemented
 
-- **Tasks (gc, prune, repack, fsck)**: ✅ [maintenance.rs](file:///home/ghuntley/loom/crates/loom-scm/src/maintenance.rs)
+- **Tasks (gc, prune, repack, fsck)**: ✅ [maintenance.rs](file:///home/ghuntley/loom/crates/loom-server-scm/src/maintenance.rs)
 - **Per-repo maintenance**: ✅ `POST /api/v1/repos/{id}/maintenance`
 - **Global sweep**: ✅ `POST /api/v1/admin/maintenance/sweep`
 - **Staggered execution**: ✅ `stagger_delay` parameter in `run_global_sweep`

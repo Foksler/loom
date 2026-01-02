@@ -37,7 +37,7 @@ loom-common-i18n = { path = "../loom-common-i18n" }
 loom-server-geoip = { path = "../loom-server-geoip" }
 loom-server-github-app = { path = "../loom-server-github-app", features = ["openapi"] }
 loom-server-scm = { path = "../loom-server-scm" }
-loom-scm-mirror = { path = "../loom-scm-mirror" }
+loom-server-scm-mirror = { path = "../loom-server-scm-mirror" }
 gix = { version = "0.68", default-features = false, features = ["revision"] }
 loom-server-google-cse = { path = "../loom-server-google-cse", features = ["openapi"] }
 loom-server-llm-anthropic = { path = "../loom-server-llm-anthropic" }

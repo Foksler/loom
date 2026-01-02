@@ -18,14 +18,14 @@ Git hosting for Loom, enabling weavers to clone/push repositories and users to b
 
 | Feature | Status | Crate |
 |---------|--------|-------|
-| Repository CRUD | ✅ Implemented | loom-scm, loom-server |
+| Repository CRUD | ✅ Implemented | loom-server-scm, loom-server |
 | Git HTTP Protocol | ✅ Implemented | loom-server (git CLI for protocol) |
-| Branch Protection | ✅ Implemented | loom-scm |
-| Webhooks | ✅ Implemented | loom-scm |
+| Branch Protection | ✅ Implemented | loom-server-scm |
+| Webhooks | ✅ Implemented | loom-server-scm |
 | Push Mirroring | ✅ Implemented | loom-scm-mirror |
 | Pull Mirroring | ✅ Implemented | loom-scm-mirror |
 | On-demand Mirroring | ✅ Implemented | loom-server |
-| Team-based Access | ✅ Implemented | loom-scm |
+| Team-based Access | ✅ Implemented | loom-server-scm |
 | Web UI | ✅ Implemented | loom-web |
 | Credential Helper | ✅ Implemented | loom-cli |
 
@@ -450,7 +450,7 @@ Scheduled job to delete unused external mirrors:
 
 ```
 crates/
-├── loom-scm/              # Core SCM logic
+├── loom-server-scm/              # Core SCM logic
 │   ├── types.rs           # Repository, RepoRole, Visibility
 │   ├── repo.rs            # Repository CRUD, name validation
 │   ├── git.rs             # gitoxide wrapper

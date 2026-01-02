@@ -3352,29 +3352,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "loom-scm-mirror"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "chrono",
- "gix",
- "loom-cli-credentials",
- "loom-common-http",
- "loom-common-secret",
- "loom-server-scm",
- "proptest",
- "reqwest",
- "serde",
- "sqlx",
- "tempfile",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "tracing",
- "uuid",
-]
-
-[[package]]
 name = "loom-server"
 version = "0.1.0"
 dependencies = [
@@ -3395,7 +3372,6 @@ dependencies = [
  "loom-common-secret",
  "loom-common-thread",
  "loom-common-version",
- "loom-scm-mirror",
  "loom-server-api",
  "loom-server-auth",
  "loom-server-auth-devicecode",
@@ -3412,6 +3388,7 @@ dependencies = [
  "loom-server-llm-anthropic",
  "loom-server-llm-service",
  "loom-server-scm",
+ "loom-server-scm-mirror",
  "loom-server-smtp",
  "loom-server-weaver",
  "pin-project-lite",
@@ -3448,7 +3425,6 @@ dependencies = [
  "loom-common-secret",
  "loom-common-thread",
  "loom-common-version",
- "loom-scm-mirror",
  "loom-server-auth",
  "loom-server-db",
  "loom-server-github-app",
@@ -3456,6 +3432,7 @@ dependencies = [
  "loom-server-jobs",
  "loom-server-llm-anthropic",
  "loom-server-scm",
+ "loom-server-scm-mirror",
  "loom-server-smtp",
  "loom-server-weaver",
  "proptest",
@@ -3806,6 +3783,29 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "sqlx",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "loom-server-scm-mirror"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "gix",
+ "loom-cli-credentials",
+ "loom-common-http",
+ "loom-common-secret",
+ "loom-server-scm",
+ "proptest",
+ "reqwest",
+ "serde",
  "sqlx",
  "tempfile",
  "thiserror 1.0.69",
