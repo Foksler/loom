@@ -20,7 +20,7 @@ use axum::{
 	body::Body,
 	http::{header::SET_COOKIE, Request, StatusCode},
 };
-use loom_auth_github::GitHubEmail;
+use loom_server_auth_github::GitHubEmail;
 use loom_auth_google::GoogleUserInfo;
 use loom_auth_okta::OktaUserInfo;
 use std::sync::Arc;

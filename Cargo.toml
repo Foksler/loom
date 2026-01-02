@@ -7,7 +7,7 @@ members = [
 	"crates/loom-cli-acp",
 	"crates/loom-server-auth",
 	"crates/loom-server-auth-devicecode",
-	"crates/loom-auth-github",
+	"crates/loom-server-auth-github",
 	"crates/loom-auth-google",
 	"crates/loom-auth-magiclink",
 	"crates/loom-auth-okta",

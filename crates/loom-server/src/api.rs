@@ -9,7 +9,7 @@ use crate::{
 	abac_middleware::RequireRole,
 	typed_router::{AuthedRouter, PublicRouter},
 };
-use loom_auth_github::{GitHubOAuthClient, GitHubOAuthConfig};
+use loom_server_auth_github::{GitHubOAuthClient, GitHubOAuthConfig};
 use loom_auth_google::{GoogleOAuthClient, GoogleOAuthConfig};
 use loom_auth_okta::{OktaOAuthClient, OktaOAuthConfig};
 use loom_server_geoip::GeoIpService;

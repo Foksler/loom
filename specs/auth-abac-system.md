@@ -52,7 +52,7 @@ loom/
 │   ├── loom-auth/               # Core auth types, ABAC engine
 │   ├── loom-auth-magiclink/     # Magic link authentication
 │   ├── loom-server-auth-devicecode/    # Device code flow for CLI
-│   ├── loom-auth-github/        # GitHub OAuth provider
+│   ├── loom-server-auth-github/ # GitHub OAuth provider
 │   ├── loom-auth-google/        # Google OAuth provider
 │   ├── loom-auth-okta/          # Okta OAuth/OIDC provider
 │   ├── loom-smtp/               # Email sending for magic links

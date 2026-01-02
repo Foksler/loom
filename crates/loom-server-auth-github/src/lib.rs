@@ -25,7 +25,7 @@
 //! # Example
 //!
 //! ```rust,no_run
-//! use loom_auth_github::{GitHubOAuthClient, GitHubOAuthConfig};
+//! use loom_server_auth_github::{GitHubOAuthClient, GitHubOAuthConfig};
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! let config = GitHubOAuthConfig::from_env()?;
@@ -295,7 +295,7 @@ struct GitHubErrorResponse {
 /// # Example
 ///
 /// ```rust,no_run
-/// use loom_auth_github::{GitHubOAuthClient, GitHubOAuthConfig};
+/// use loom_server_auth_github::{GitHubOAuthClient, GitHubOAuthConfig};
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 /// let config = GitHubOAuthConfig::from_env()?;
