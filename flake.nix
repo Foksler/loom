@@ -195,6 +195,9 @@
           inherit (pkgs) loom-cli-windows loom-cli-macos loom-cli-linux-aarch64 loom-cli-windows-aarch64;
           inherit (pkgsWithTools) license;
           
+          # cargo2nix tool for regenerating Cargo.nix
+          cargo2nix = cargo2nix.packages.${system}.cargo2nix;
+          
           # Use cargo2nix packages for all loom binaries (fast per-crate caching)
           loom-cli = loom-cli-c2n;
           loom-cli-linux = loom-cli-linux-c2n;
