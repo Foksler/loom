@@ -234,7 +234,8 @@
           loom-server-db-c2n = (rustPkgs.workspace.loom-server-db {});
           loom-server-geoip-c2n = (rustPkgs.workspace.loom-server-geoip {});
           loom-server-github-app-c2n = (rustPkgs.workspace.loom-server-github-app {});
-          loom-server-google-cse-c2n = (rustPkgs.workspace.loom-server-google-cse {});
+          loom-server-search-google-cse-c2n = (rustPkgs.workspace.loom-server-search-google-cse {});
+          loom-server-search-serper-c2n = (rustPkgs.workspace.loom-server-search-serper {});
           loom-server-jobs-c2n = (rustPkgs.workspace.loom-server-jobs {});
           loom-server-k8s-c2n = (rustPkgs.workspace.loom-server-k8s {});
           loom-server-llm-anthropic-c2n = (rustPkgs.workspace.loom-server-llm-anthropic {});
