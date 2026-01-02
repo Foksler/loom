@@ -27,7 +27,7 @@ loom-server-k8s = { path = "../loom-server-k8s" }
 loom-common-secret = { path = "../loom-common-secret" }
 loom-server-auth = { path = "../loom-server-auth" }
 loom-server-api = { path = "../loom-server-api", features = ["openapi"] }
-loom-auth-devicecode = { path = "../loom-auth-devicecode" }
+loom-server-auth-devicecode = { path = "../loom-server-auth-devicecode" }
 loom-auth-github = { path = "../loom-auth-github" }
 loom-auth-google = { path = "../loom-auth-google" }
 loom-auth-magiclink = { path = "../loom-auth-magiclink" }

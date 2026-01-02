@@ -52,7 +52,7 @@ loom-auth-magiclink.workspace = true
 loom-common-i18n = { path = "../loom-common-i18n" }
 
 # Device code auth
-loom-auth-devicecode.workspace = true
+loom-server-auth-devicecode.workspace = true
 
 # Database
 sqlx.workspace = true

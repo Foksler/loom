@@ -54,8 +54,8 @@ pub mod user;
 pub mod websocket;
 
 pub mod device_code {
-    //! Re-export device code types from loom-auth-devicecode.
-    pub use loom_auth_devicecode::*;
+    //! Re-export device code types from loom-server-auth-devicecode.
+    pub use loom_server_auth_devicecode::*;
 }
 
 pub mod magic_link {

@@ -172,14 +172,14 @@ pub enum DeviceCodeStatus {
 /// # Example
 ///
 /// ```
-/// use loom_auth_devicecode::{DeviceCode, DeviceCodeStatus};
+/// use loom_server_auth_devicecode::{DeviceCode, DeviceCodeStatus};
 ///
 /// // CLI requests a new code
 /// let mut code = DeviceCode::new();
 /// assert!(matches!(code.status(), DeviceCodeStatus::Pending));
 ///
 /// // User completes authentication in browser
-/// let user_id = loom_auth_devicecode::UserId::generate();
+/// let user_id = loom_server_auth_devicecode::UserId::generate();
 /// code.complete(user_id);
 /// assert!(matches!(code.status(), DeviceCodeStatus::Completed { .. }));
 /// ```

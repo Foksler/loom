@@ -6,7 +6,7 @@ resolver = "2"
 members = [
 	"crates/loom-cli-acp",
 	"crates/loom-server-auth",
-	"crates/loom-auth-devicecode",
+	"crates/loom-server-auth-devicecode",
 	"crates/loom-auth-github",
 	"crates/loom-auth-google",
 	"crates/loom-auth-magiclink",
@@ -128,7 +128,7 @@ sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
 utoipa = { version = "5", features = ["axum_extras", "uuid", "chrono"] }
 
 # Internal crates
-loom-auth-devicecode = { path = "crates/loom-auth-devicecode" }
+loom-server-auth-devicecode = { path = "crates/loom-server-auth-devicecode" }
 loom-auth-magiclink = { path = "crates/loom-auth-magiclink" }
 loom-common-config = { path = "crates/loom-common-config" }
 loom-common-secret = { path = "crates/loom-common-secret" }
