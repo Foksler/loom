@@ -8,7 +8,7 @@ import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
 
 export const ssr = false;
-export const prerender = true;
+export const prerender = false;
 
 export const load: LayoutLoad = async ({ url, fetch }) => {
 	if (!browser) {

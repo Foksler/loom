@@ -3,6 +3,6 @@
  * SPDX-License-Identifier: Proprietary
  */
 
-// SPA mode: disable SSR and prerender all pages
-export const prerender = true;
+// Pure SPA mode: disable SSR and prerendering
+export const prerender = false;
 export const ssr = false;

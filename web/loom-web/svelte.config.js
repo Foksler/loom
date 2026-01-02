@@ -17,6 +17,9 @@ const config = {
 			precompress: false,
 			strict: false,
 		}),
+		prerender: {
+			entries: [],
+		},
 		alias: {
 			$lib: './src/lib',
 			'$lib/*': './src/lib/*',

@@ -93,7 +93,7 @@ in
 
         locations = {
           "/" = {
-            tryFiles = "$uri $uri.html $uri/ /index.html";
+            tryFiles = "$uri /index.html";
           };
 
           # Proxy API requests to loom-server
