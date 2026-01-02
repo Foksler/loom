@@ -139,7 +139,7 @@ describe('WeaverTerminal keep-alive', () => {
 
 describe('WebSocket URL construction', () => {
 	it('should use wss for https', () => {
-		const protocol = 'https:';
+		const protocol: string = 'https:';
 		const host = 'loom.example.com';
 		const weaverId = 'test-weaver-123';
 
@@ -150,7 +150,7 @@ describe('WebSocket URL construction', () => {
 	});
 
 	it('should use ws for http', () => {
-		const protocol = 'http:';
+		const protocol: string = 'http:';
 		const host = 'localhost:3000';
 		const weaverId = 'test-weaver-456';
 

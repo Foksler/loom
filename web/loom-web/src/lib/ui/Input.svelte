@@ -7,6 +7,7 @@
     error?: string;
     label?: string;
     id?: string;
+    class?: string;
     oninput?: (event: Event) => void;
     onkeydown?: (event: KeyboardEvent) => void;
   }
@@ -19,6 +20,7 @@
     error,
     label,
     id,
+    class: className,
     oninput,
     onkeydown,
   }: Props = $props();
@@ -27,7 +29,7 @@
   const inputId = $derived(id || fallbackId);
 </script>
 
-<div class="w-full">
+<div class="w-full {className ?? ''}">
   {#if label}
     <label for={inputId} class="block text-sm font-medium text-fg mb-1.5">
       {label}

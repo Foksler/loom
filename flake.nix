@@ -65,7 +65,7 @@
       
       # Build the rust package set from Cargo.nix
       rustPkgs = pkgsWithCargo2nix.rustBuilder.makePackageSet {
-        rustVersion = "1.85.0";
+        rustToolchain = pkgsWithCargo2nix.rust-bin.stable.latest.default;
         packageFun = import ./Cargo.nix;
         workspaceSrc = ./.;
         extraRustComponents = [ "clippy" ];
