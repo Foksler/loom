@@ -871,4 +871,135 @@ mod tests {
         let default_strategy = AccountSelectionStrategy::default();
         assert!(matches!(default_strategy, AccountSelectionStrategy::RoundRobin));
     }
+
+    #[tokio::test]
+    async fn test_empty_pool_creation() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let cred_file = temp_dir.path().join("credentials.json");
+
+        let pool = AnthropicPool::empty(&cred_file, None, AnthropicPoolConfig::default());
+        let status = pool.pool_status().await;
+
+        assert_eq!(status.accounts_total, 0);
+        assert_eq!(status.accounts_available, 0);
+    }
+
+    #[tokio::test]
+    async fn test_load_from_empty_file() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let cred_file = temp_dir.path().join("credentials.json");
+
+        let pool = AnthropicPool::empty(&cred_file, None, AnthropicPoolConfig::default());
+        let loaded = pool.load_from_file().await.unwrap();
+
+        assert_eq!(loaded, 0);
+    }
+
+    #[tokio::test]
+    async fn test_load_from_file_with_oauth_credentials() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let cred_file = temp_dir.path().join("credentials.json");
+
+        let creds_json = serde_json::json!({
+            "account-1": {
+                "type": "oauth",
+                "refresh": "rt_test_refresh_1",
+                "access": "at_test_access_1",
+                "expires": 9999999999999_u64
+            },
+            "account-2": {
+                "type": "oauth",
+                "refresh": "rt_test_refresh_2",
+                "access": "at_test_access_2",
+                "expires": 9999999999999_u64
+            }
+        });
+        std::fs::write(&cred_file, serde_json::to_string_pretty(&creds_json).unwrap()).unwrap();
+
+        let pool = AnthropicPool::empty(&cred_file, None, AnthropicPoolConfig::default());
+        let loaded = pool.load_from_file().await.unwrap();
+
+        assert_eq!(loaded, 2);
+
+        let status = pool.pool_status().await;
+        assert_eq!(status.accounts_total, 2);
+        assert_eq!(status.accounts_available, 2);
+    }
+
+    #[tokio::test]
+    async fn test_load_from_file_skips_api_keys() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let cred_file = temp_dir.path().join("credentials.json");
+
+        let creds_json = serde_json::json!({
+            "oauth-account": {
+                "type": "oauth",
+                "refresh": "rt_test",
+                "access": "at_test",
+                "expires": 9999999999999_u64
+            },
+            "api-key-account": {
+                "type": "api",
+                "key": "sk-test-key"
+            }
+        });
+        std::fs::write(&cred_file, serde_json::to_string_pretty(&creds_json).unwrap()).unwrap();
+
+        let pool = AnthropicPool::empty(&cred_file, None, AnthropicPoolConfig::default());
+        let loaded = pool.load_from_file().await.unwrap();
+
+        assert_eq!(loaded, 1);
+
+        let status = pool.pool_status().await;
+        assert_eq!(status.accounts_total, 1);
+    }
+
+    #[tokio::test]
+    async fn test_add_account_persists_to_file() {
+        use crate::auth::OAuthCredentials;
+        use loom_common_secret::SecretString;
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let cred_file = temp_dir.path().join("credentials.json");
+
+        let pool = AnthropicPool::empty(&cred_file, None, AnthropicPoolConfig::default());
+
+        let creds = OAuthCredentials::new(
+            SecretString::new("rt_new".to_string()),
+            SecretString::new("at_new".to_string()),
+            9999999999999,
+        );
+        pool.add_account("new-account".to_string(), creds).await.unwrap();
+
+        assert!(cred_file.exists());
+        let contents = std::fs::read_to_string(&cred_file).unwrap();
+        assert!(contents.contains("new-account"));
+        assert!(contents.contains("rt_new"));
+    }
+
+    #[tokio::test]
+    async fn test_remove_account_updates_file() {
+        use crate::auth::OAuthCredentials;
+        use loom_common_secret::SecretString;
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let cred_file = temp_dir.path().join("credentials.json");
+
+        let pool = AnthropicPool::empty(&cred_file, None, AnthropicPoolConfig::default());
+
+        let creds = OAuthCredentials::new(
+            SecretString::new("rt_remove".to_string()),
+            SecretString::new("at_remove".to_string()),
+            9999999999999,
+        );
+        pool.add_account("remove-me".to_string(), creds).await.unwrap();
+
+        let contents_before = std::fs::read_to_string(&cred_file).unwrap();
+        assert!(contents_before.contains("remove-me"));
+
+        pool.remove_account("remove-me").await.unwrap();
+
+        let contents_after = std::fs::read_to_string(&cred_file).unwrap();
+        assert!(!contents_after.contains("remove-me"));
+    }
 }
