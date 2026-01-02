@@ -185,8 +185,8 @@ in
         
         ${if cfg.useNom then ''
           # Use nix-output-monitor for per-derivation timing
-          # Use --json for machine-readable output that works in non-TTY (journald)
-          nixos-rebuild switch --flake ".#$FLAKE_ATTR" $REBUILD_FLAGS 2>&1 | nom --json
+          # Pipe nixos-rebuild output through nom for human-readable parsing
+          nixos-rebuild switch --flake ".#$FLAKE_ATTR" $REBUILD_FLAGS |& nom
         '' else ''
           nixos-rebuild switch --flake ".#$FLAKE_ATTR" $REBUILD_FLAGS
         ''}
