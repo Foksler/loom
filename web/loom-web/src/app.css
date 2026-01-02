@@ -3,72 +3,99 @@
  * SPDX-License-Identifier: Proprietary
  */
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  /* Background */
-  --color-bg: #ffffff;
-  --color-bg-muted: #f8fafc;
-  --color-bg-subtle: #f1f5f9;
+@theme {
+  /* Custom colors */
+  --color-bg: var(--color-bg-value);
+  --color-bg-muted: var(--color-bg-muted-value);
+  --color-bg-subtle: var(--color-bg-subtle-value);
+  --color-fg: var(--color-fg-value);
+  --color-fg-muted: var(--color-fg-muted-value);
+  --color-fg-subtle: var(--color-fg-subtle-value);
+  --color-accent: var(--color-accent-value);
+  --color-accent-soft: var(--color-accent-soft-value);
+  --color-accent-hover: var(--color-accent-hover-value);
+  --color-border: var(--color-border-value);
+  --color-border-muted: var(--color-border-muted-value);
+  --color-error: var(--color-error-value);
+  --color-error-soft: var(--color-error-soft-value);
+  --color-success: var(--color-success-value);
+  --color-success-soft: var(--color-success-soft-value);
+  --color-warning: var(--color-warning-value);
+  --color-warning-soft: var(--color-warning-soft-value);
   
-  /* Foreground */
-  --color-fg: #0f172a;
-  --color-fg-muted: #475569;
-  --color-fg-subtle: #94a3b8;
-  
-  /* Accent */
-  --color-accent: #4f46e5;
-  --color-accent-soft: #eef2ff;
-  --color-accent-hover: #4338ca;
-  
-  /* Border */
-  --color-border: #e2e8f0;
-  --color-border-muted: #f1f5f9;
-  
-  /* Status */
-  --color-error: #dc2626;
-  --color-error-soft: #fef2f2;
-  --color-success: #16a34a;
-  --color-success-soft: #f0fdf4;
-  --color-warning: #f97316;
-  --color-warning-soft: #fff7ed;
-  
-  /* Radii */
+  /* Border radii */
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
   --radius-full: 9999px;
+  
+  /* Shadows */
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  
+  /* Animations */
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-spin-slow: spin 2s linear infinite;
+}
+
+:root {
+  /* Background */
+  --color-bg-value: #ffffff;
+  --color-bg-muted-value: #f8fafc;
+  --color-bg-subtle-value: #f1f5f9;
+  
+  /* Foreground */
+  --color-fg-value: #0f172a;
+  --color-fg-muted-value: #475569;
+  --color-fg-subtle-value: #94a3b8;
+  
+  /* Accent */
+  --color-accent-value: #4f46e5;
+  --color-accent-soft-value: #eef2ff;
+  --color-accent-hover-value: #4338ca;
+  
+  /* Border */
+  --color-border-value: #e2e8f0;
+  --color-border-muted-value: #f1f5f9;
+  
+  /* Status */
+  --color-error-value: #dc2626;
+  --color-error-soft-value: #fef2f2;
+  --color-success-value: #16a34a;
+  --color-success-soft-value: #f0fdf4;
+  --color-warning-value: #f97316;
+  --color-warning-soft-value: #fff7ed;
 }
 
 .dark {
   /* Background */
-  --color-bg: #0f172a;
-  --color-bg-muted: #1e293b;
-  --color-bg-subtle: #334155;
+  --color-bg-value: #0f172a;
+  --color-bg-muted-value: #1e293b;
+  --color-bg-subtle-value: #334155;
   
   /* Foreground */
-  --color-fg: #f1f5f9;
-  --color-fg-muted: #94a3b8;
-  --color-fg-subtle: #64748b;
+  --color-fg-value: #f1f5f9;
+  --color-fg-muted-value: #94a3b8;
+  --color-fg-subtle-value: #64748b;
   
   /* Accent */
-  --color-accent: #818cf8;
-  --color-accent-soft: #1e1b4b;
-  --color-accent-hover: #6366f1;
+  --color-accent-value: #818cf8;
+  --color-accent-soft-value: #1e1b4b;
+  --color-accent-hover-value: #6366f1;
   
   /* Border */
-  --color-border: #334155;
-  --color-border-muted: #1e293b;
+  --color-border-value: #334155;
+  --color-border-muted-value: #1e293b;
   
   /* Status */
-  --color-error: #f87171;
-  --color-error-soft: #450a0a;
-  --color-success: #4ade80;
-  --color-success-soft: #052e16;
-  --color-warning: #fb923c;
-  --color-warning-soft: #431407;
+  --color-error-value: #f87171;
+  --color-error-soft-value: #450a0a;
+  --color-success-value: #4ade80;
+  --color-success-soft-value: #052e16;
+  --color-warning-value: #fb923c;
+  --color-warning-soft-value: #431407;
 }
 
 /* Base styles */
