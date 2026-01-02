@@ -228,14 +228,14 @@
       enable = true;
       clientIdFile = config.sops.secrets.loom-github-app-client-id.path;
       clientSecretFile = config.sops.secrets.loom-github-app-client-secret.path;
-      redirectUri = "https://loom.ghuntley.com/auth/github/callback";
+      redirectUri = "https://loom.ghuntley.com/api/auth/callback/github";
     };
 
     googleOAuth = {
       enable = true;
       clientIdFile = config.sops.secrets.loom-google-oauth-client-id.path;
       clientSecretFile = config.sops.secrets.loom-google-oauth-client-secret.path;
-      redirectUri = "https://loom.ghuntley.com/auth/google/callback";
+      redirectUri = "https://loom.ghuntley.com/api/auth/callback/google";
     };
 
     googleCse = {
