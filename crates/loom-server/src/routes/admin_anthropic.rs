@@ -374,7 +374,10 @@ pub async fn complete_oauth(
 		}
 	};
 
-	let exchange_result = match exchange_code(&body.code, &body.state, &verifier).await {
+	// Anthropic's callback page displays code#state - strip the fragment if present
+	let code = body.code.split('#').next().unwrap_or(&body.code);
+
+	let exchange_result = match exchange_code(code, &body.state, &verifier).await {
 		Ok(result) => result,
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to exchange OAuth code");
