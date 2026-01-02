@@ -28,6 +28,7 @@ in
   packages = [ 
     pkgs.age
     pkgs.btop
+    pkgs.chromium    # Headless browser testing
     pkgs.clang
     pkgs.zlib         # Required by libz-sys (git2, etc.)
     pkgs.gettext      # For msgfmt (i18n .po → .mo compilation)
