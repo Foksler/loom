@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Proprietary
 
 use chrono::{DateTime, Utc};
-use loom_scm::BranchProtectionRule;
+use loom_server_scm::BranchProtectionRule;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;

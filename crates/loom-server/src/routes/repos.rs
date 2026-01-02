@@ -18,7 +18,7 @@ use axum::{
 	Json,
 };
 use loom_server_auth::types::{OrgId, OrgRole, UserId};
-use loom_scm::{validate_repo_name, GitRepository, OwnerType, RepoRole, RepoStore, RepoTeamAccessStore, Repository, Visibility};
+use loom_server_scm::{validate_repo_name, GitRepository, OwnerType, RepoRole, RepoStore, RepoTeamAccessStore, Repository, Visibility};
 use std::path::PathBuf;
 use uuid::Uuid;
 
@@ -200,7 +200,7 @@ pub async fn create_repo(
 
 	let created_repo = match scm_store.create(&repo).await {
 		Ok(r) => r,
-		Err(loom_scm::ScmError::AlreadyExists) => {
+		Err(loom_server_scm::ScmError::AlreadyExists) => {
 			return (
 				StatusCode::CONFLICT,
 				Json(RepoErrorResponse {
@@ -1173,7 +1173,7 @@ pub async fn revoke_repo_team_access(
 			);
 			StatusCode::NO_CONTENT.into_response()
 		}
-		Err(loom_scm::ScmError::NotFound) => (
+		Err(loom_server_scm::ScmError::NotFound) => (
 			StatusCode::NOT_FOUND,
 			Json(RepoErrorResponse {
 				error: "not_found".to_string(),

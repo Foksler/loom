@@ -35,5 +35,5 @@ pub enum MirrorError {
 	Http(#[from] reqwest::Error),
 
 	#[error("scm error: {0}")]
-	Scm(#[from] loom_scm::ScmError),
+	Scm(#[from] loom_server_scm::ScmError),
 }

@@ -73,13 +73,13 @@ pub struct AppState {
 	pub geoip_service: Option<Arc<GeoIpService>>,
 	pub job_scheduler: Option<Arc<JobScheduler>>,
 	pub job_repository: Option<Arc<JobRepository>>,
-	pub scm_repo_store: Option<Arc<loom_scm::SqliteRepoStore>>,
-	pub scm_protection_store: Option<Arc<loom_scm::SqliteProtectionStore>>,
-	pub scm_webhook_store: Option<Arc<loom_scm::SqliteWebhookStore>>,
-	pub scm_maintenance_store: Option<Arc<loom_scm::SqliteMaintenanceJobStore>>,
-	pub scm_team_access_store: Option<Arc<loom_scm::SqliteRepoTeamAccessStore>>,
-	pub push_mirror_store: Option<Arc<loom_scm_mirror::SqlitePushMirrorStore>>,
-	pub external_mirror_store: Option<Arc<loom_scm_mirror::SqliteExternalMirrorStore>>,
+	pub scm_repo_store: Option<Arc<loom_server_scm::SqliteRepoStore>>,
+	pub scm_protection_store: Option<Arc<loom_server_scm::SqliteProtectionStore>>,
+	pub scm_webhook_store: Option<Arc<loom_server_scm::SqliteWebhookStore>>,
+	pub scm_maintenance_store: Option<Arc<loom_server_scm::SqliteMaintenanceJobStore>>,
+	pub scm_team_access_store: Option<Arc<loom_server_scm::SqliteRepoTeamAccessStore>>,
+	pub push_mirror_store: Option<Arc<loom_server_scm_mirror::SqlitePushMirrorStore>>,
+	pub external_mirror_store: Option<Arc<loom_server_scm_mirror::SqliteExternalMirrorStore>>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -96,13 +96,13 @@ pub async fn create_app_state(
 	let api_key_repo = Arc::new(ApiKeyRepository::new(pool.clone()));
 	let audit_repo = Arc::new(AuditRepository::new(pool.clone()));
 	let share_repo = Arc::new(ShareRepository::new(pool.clone()));
-	let scm_repo_store = Arc::new(loom_scm::SqliteRepoStore::new(pool.clone()));
-	let scm_protection_store = Arc::new(loom_scm::SqliteProtectionStore::new(pool.clone()));
-	let scm_webhook_store = Arc::new(loom_scm::SqliteWebhookStore::new(pool.clone()));
-	let scm_maintenance_store = Arc::new(loom_scm::SqliteMaintenanceJobStore::new(pool.clone()));
-	let scm_team_access_store = Arc::new(loom_scm::SqliteRepoTeamAccessStore::new(pool.clone()));
-	let push_mirror_store = Arc::new(loom_scm_mirror::SqlitePushMirrorStore::new(pool.clone()));
-	let external_mirror_store = Arc::new(loom_scm_mirror::SqliteExternalMirrorStore::new(pool));
+	let scm_repo_store = Arc::new(loom_server_scm::SqliteRepoStore::new(pool.clone()));
+	let scm_protection_store = Arc::new(loom_server_scm::SqliteProtectionStore::new(pool.clone()));
+	let scm_webhook_store = Arc::new(loom_server_scm::SqliteWebhookStore::new(pool.clone()));
+	let scm_maintenance_store = Arc::new(loom_server_scm::SqliteMaintenanceJobStore::new(pool.clone()));
+	let scm_team_access_store = Arc::new(loom_server_scm::SqliteRepoTeamAccessStore::new(pool.clone()));
+	let push_mirror_store = Arc::new(loom_server_scm_mirror::SqlitePushMirrorStore::new(pool.clone()));
+	let external_mirror_store = Arc::new(loom_server_scm_mirror::SqliteExternalMirrorStore::new(pool));
 	let auth_config = loom_server_auth::middleware::AuthConfig::from_env();
 	let cse_client = match (
 		std::env::var("LOOM_SERVER_GOOGLE_CSE_API_KEY"),

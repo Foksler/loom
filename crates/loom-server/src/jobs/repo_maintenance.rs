@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use loom_server_jobs::{Job, JobContext, JobError, JobOutput};
-use loom_scm::MaintenanceTask;
+use loom_server_scm::MaintenanceTask;
 use sqlx::SqlitePool;
 use tracing::instrument;
 use uuid::Uuid;
@@ -56,7 +56,7 @@ impl Job for RepoMaintenanceJob {
 		let repo_path = self.repo_path();
 		let task = self.task;
 
-		let result = tokio::task::spawn_blocking(move || loom_scm::run_maintenance(&repo_path, task))
+		let result = tokio::task::spawn_blocking(move || loom_server_scm::run_maintenance(&repo_path, task))
 			.await
 			.map_err(|e| JobError::Failed {
 				message: format!("Task join error: {}", e),
@@ -167,7 +167,7 @@ impl Job for GlobalMaintenanceJob {
 
 		let stagger_delay = Duration::from_millis(self.stagger_ms);
 		let results =
-			loom_scm::run_global_sweep(&self.repos_dir, self.task, stagger_delay, repo_paths).await;
+			loom_server_scm::run_global_sweep(&self.repos_dir, self.task, stagger_delay, repo_paths).await;
 
 		let total = results.len();
 		let successful = results.iter().filter(|r| r.result.is_ok()).count();

@@ -6,7 +6,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use chrono::Utc;
 use loom_server_jobs::{Job, JobContext, JobError, JobOutput};
-use loom_scm::{delivery, DeliveryStatus, WebhookStore};
+use loom_server_scm::{delivery, DeliveryStatus, WebhookStore};
 use tracing::instrument;
 
 const MAX_RETRY_ATTEMPTS: i32 = 3;

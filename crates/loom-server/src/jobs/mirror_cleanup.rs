@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use loom_server_jobs::{Job, JobContext, JobError, JobOutput};
-use loom_scm_mirror::ExternalMirrorStore;
+use loom_server_scm_mirror::ExternalMirrorStore;
 use tracing::instrument;
 
 pub struct MirrorCleanupJob<S: ExternalMirrorStore> {
@@ -54,7 +54,7 @@ impl<S: ExternalMirrorStore + 'static> Job for MirrorCleanupJob<S> {
 
 		let stale_duration = Duration::from_secs(self.stale_after_days as u64 * 24 * 60 * 60);
 
-		let stale_mirrors = loom_scm_mirror::find_stale_mirrors(self.store.as_ref(), stale_duration)
+		let stale_mirrors = loom_server_scm_mirror::find_stale_mirrors(self.store.as_ref(), stale_duration)
 			.await
 			.map_err(|e| JobError::Failed {
 				message: e.to_string(),
@@ -81,7 +81,7 @@ impl<S: ExternalMirrorStore + 'static> Job for MirrorCleanupJob<S> {
 
 			let repo_path = self.repo_path_for_id(mirror.repo_id);
 
-			match loom_scm_mirror::delete_mirror(mirror, &repo_path, self.store.as_ref()).await {
+			match loom_server_scm_mirror::delete_mirror(mirror, &repo_path, self.store.as_ref()).await {
 				Ok(()) => {
 					deleted += 1;
 					tracing::info!(

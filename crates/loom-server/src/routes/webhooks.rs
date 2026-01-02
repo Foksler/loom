@@ -10,7 +10,7 @@ use axum::{
 	Json,
 };
 use loom_server_auth::types::{OrgId, OrgRole};
-use loom_scm::{OwnerType, RepoStore, Webhook, WebhookOwnerType, WebhookStore};
+use loom_server_scm::{OwnerType, RepoStore, Webhook, WebhookOwnerType, WebhookStore};
 use loom_common_secret::SecretString;
 use url::Url;
 use uuid::Uuid;
@@ -490,7 +490,7 @@ pub async fn delete_repo_webhook(
 			);
 			StatusCode::NO_CONTENT.into_response()
 		}
-		Err(loom_scm::ScmError::NotFound) => (
+		Err(loom_server_scm::ScmError::NotFound) => (
 			StatusCode::NOT_FOUND,
 			Json(WebhookErrorResponse {
 				error: "not_found".to_string(),
@@ -770,7 +770,7 @@ pub async fn delete_org_webhook(
 			);
 			StatusCode::NO_CONTENT.into_response()
 		}
-		Err(loom_scm::ScmError::NotFound) => (
+		Err(loom_server_scm::ScmError::NotFound) => (
 			StatusCode::NOT_FOUND,
 			Json(WebhookErrorResponse {
 				error: "not_found".to_string(),

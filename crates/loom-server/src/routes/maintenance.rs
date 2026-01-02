@@ -25,7 +25,7 @@ use crate::{
 	routes::admin::AdminErrorResponse,
 };
 use loom_server_auth::types::{OrgId, OrgRole};
-use loom_scm::{MaintenanceJob, MaintenanceJobStore, MaintenanceTask, OwnerType, RepoStore, Repository, Visibility};
+use loom_server_scm::{MaintenanceJob, MaintenanceJobStore, MaintenanceTask, OwnerType, RepoStore, Repository, Visibility};
 
 async fn check_repo_admin(
 	repo: &Repository,
@@ -427,7 +427,7 @@ pub async fn list_repo_maintenance_jobs(
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use loom_scm::{MaintenanceJobStatus, Repository};
+	use loom_server_scm::{MaintenanceJobStatus, Repository};
 	use uuid::Uuid;
 
 	fn make_user_repo(owner_id: Uuid) -> Repository {

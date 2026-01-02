@@ -23,7 +23,7 @@ loom-server-google-cse = { path = "../loom-server-google-cse", optional = true }
 loom-common-i18n = { path = "../loom-common-i18n" }
 loom-server-jobs = { path = "../loom-server-jobs" }
 loom-server-llm-anthropic = { path = "../loom-server-llm-anthropic" }
-loom-scm = { path = "../loom-scm" }
+loom-server-scm = { path = "../loom-server-scm" }
 loom-scm-mirror = { path = "../loom-scm-mirror" }
 loom-common-secret = { path = "../loom-common-secret" }
 loom-server-smtp = { path = "../loom-server-smtp" }

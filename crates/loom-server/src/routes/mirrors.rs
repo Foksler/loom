@@ -10,8 +10,8 @@ use axum::{
 	Json,
 };
 use loom_server_auth::types::{OrgId, OrgRole};
-use loom_scm::{OwnerType, RepoStore};
-use loom_scm_mirror::{CreatePushMirror, PushMirrorStore};
+use loom_server_scm::{OwnerType, RepoStore};
+use loom_server_scm_mirror::{CreatePushMirror, PushMirrorStore};
 use url::Url;
 use uuid::Uuid;
 
@@ -455,7 +455,7 @@ pub async fn delete_mirror(
 			);
 			StatusCode::NO_CONTENT.into_response()
 		}
-		Err(loom_scm_mirror::MirrorError::NotFound) => (
+		Err(loom_server_scm_mirror::MirrorError::NotFound) => (
 			StatusCode::NOT_FOUND,
 			Json(RepoErrorResponse {
 				error: "not_found".to_string(),

@@ -29,11 +29,11 @@ use base64::Engine;
 use loom_server_auth::middleware::{identify_bearer_token, BearerTokenType, CurrentUser};
 use sha2::{Digest, Sha256};
 use loom_server_auth::types::{OrgId, OrgRole};
-use loom_scm::{
+use loom_server_scm::{
 	check_push_allowed, OwnerType, ProtectionStore, PushCheck, RepoRole, RepoStore,
 	RepoTeamAccessStore, Repository, Visibility,
 };
-use loom_scm_mirror::{CreateExternalMirror, ExternalMirrorStore, Platform};
+use loom_server_scm_mirror::{CreateExternalMirror, ExternalMirrorStore, Platform};
 use serde::Deserialize;
 use std::{path::PathBuf, process::Stdio};
 use tokio::io::AsyncWriteExt;
@@ -57,7 +57,7 @@ fn git_unauthorized_response(message: &str) -> Response {
 async fn update_mirror_access_time(state: &AppState, repo_id: uuid::Uuid) {
 	if let Some(store) = &state.external_mirror_store {
 		if let Ok(Some(mirror)) = store.get_by_repo_id(repo_id).await {
-			if let Err(e) = loom_scm_mirror::touch_mirror(store.as_ref(), mirror.id).await {
+			if let Err(e) = loom_server_scm_mirror::touch_mirror(store.as_ref(), mirror.id).await {
 				tracing::warn!(
 					mirror_id = %mirror.id,
 					error = %e,
@@ -251,7 +251,7 @@ async fn resolve_repo(
 
 	if let Some(org) = state.org_repo.get_org_by_slug(owner).await? {
 		if let Some(scm_repo) = scm_store
-			.get_by_owner_and_name(loom_scm::OwnerType::Org, org.id.into(), repo_name)
+			.get_by_owner_and_name(loom_server_scm::OwnerType::Org, org.id.into(), repo_name)
 			.await
 			.map_err(|e| ServerError::Internal(e.to_string()))?
 		{
@@ -261,7 +261,7 @@ async fn resolve_repo(
 
 	if let Ok(Some(user)) = state.user_repo.get_user_by_username(owner).await {
 		if let Some(scm_repo) = scm_store
-			.get_by_owner_and_name(loom_scm::OwnerType::User, user.id.into_inner(), repo_name)
+			.get_by_owner_and_name(loom_server_scm::OwnerType::User, user.id.into_inner(), repo_name)
 			.await
 			.map_err(|e| ServerError::Internal(e.to_string()))?
 		{
@@ -586,7 +586,7 @@ async fn create_on_demand_mirror(
 		"Checking if remote repository exists"
 	);
 
-	if !loom_scm_mirror::check_repo_exists(
+	if !loom_server_scm_mirror::check_repo_exists(
 		mirror_info.platform,
 		&mirror_info.external_owner,
 		&mirror_info.external_repo,
@@ -665,7 +665,7 @@ async fn create_on_demand_mirror(
 		"Starting on-demand mirror clone"
 	);
 
-	loom_scm_mirror::pull_mirror(
+	loom_server_scm_mirror::pull_mirror(
 		mirror_info.platform,
 		&mirror_info.external_owner,
 		&mirror_info.external_repo,

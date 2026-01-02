@@ -17,7 +17,7 @@ use axum::{
 	Json,
 };
 use loom_server_auth::types::{OrgId, OrgRole};
-use loom_scm::{BranchProtectionRule, OwnerType, ProtectionStore, RepoStore};
+use loom_server_scm::{BranchProtectionRule, OwnerType, ProtectionStore, RepoStore};
 use uuid::Uuid;
 
 pub use loom_server_api::protection::*;
@@ -222,7 +222,7 @@ pub async fn create_protection_rule(
 			);
 			(StatusCode::CREATED, Json(ProtectionRuleResponse::from(created))).into_response()
 		}
-		Err(loom_scm::ScmError::AlreadyExists) => (
+		Err(loom_server_scm::ScmError::AlreadyExists) => (
 			StatusCode::CONFLICT,
 			Json(RepoErrorResponse {
 				error: "already_exists".to_string(),
@@ -331,7 +331,7 @@ pub async fn delete_protection_rule(
 			);
 			StatusCode::NO_CONTENT.into_response()
 		}
-		Err(loom_scm::ScmError::NotFound) => (
+		Err(loom_server_scm::ScmError::NotFound) => (
 			StatusCode::NOT_FOUND,
 			Json(RepoErrorResponse {
 				error: "not_found".to_string(),

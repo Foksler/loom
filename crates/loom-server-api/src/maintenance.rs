@@ -1,7 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
-use loom_scm::{MaintenanceJob, MaintenanceJobStatus, MaintenanceTask};
+use loom_server_scm::{MaintenanceJob, MaintenanceJobStatus, MaintenanceTask};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
