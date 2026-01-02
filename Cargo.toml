@@ -9,7 +9,7 @@ members = [
 	"crates/loom-server-auth-devicecode",
 	"crates/loom-server-auth-github",
 	"crates/loom-server-auth-google",
-	"crates/loom-auth-magiclink",
+	"crates/loom-server-auth-magiclink",
 	"crates/loom-auth-okta",
 	"crates/loom-cli-auto-commit",
 	"crates/loom-cli",
@@ -129,7 +129,7 @@ utoipa = { version = "5", features = ["axum_extras", "uuid", "chrono"] }
 
 # Internal crates
 loom-server-auth-devicecode = { path = "crates/loom-server-auth-devicecode" }
-loom-auth-magiclink = { path = "crates/loom-auth-magiclink" }
+loom-server-auth-magiclink = { path = "crates/loom-server-auth-magiclink" }
 loom-common-config = { path = "crates/loom-common-config" }
 loom-common-secret = { path = "crates/loom-common-secret" }
 loom-common-version = { path = "crates/loom-common-version" }

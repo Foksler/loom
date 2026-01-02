@@ -59,7 +59,7 @@ pub mod device_code {
 }
 
 pub mod magic_link {
-    //! Re-export magic link types from loom-auth-magiclink.
+    //! Re-export magic link types from loom-server-auth-magiclink.
     pub use loom_auth_magiclink::*;
 }
 

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Proprietary
 
 [package]
-name = "loom-auth-magiclink"
+name = "loom-server-auth-magiclink"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true

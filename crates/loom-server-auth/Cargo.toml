@@ -46,7 +46,7 @@ loom-common-secret.workspace = true
 zeroize.workspace = true
 
 # Magic link auth
-loom-auth-magiclink.workspace = true
+loom-server-auth-magiclink.workspace = true
 
 # Internationalization
 loom-common-i18n = { path = "../loom-common-i18n" }
