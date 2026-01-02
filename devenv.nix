@@ -57,6 +57,8 @@ in
     nix run github:cargo2nix/cargo2nix/release-0.12
     echo "✅ Cargo.nix updated. Don't forget to commit it!"
   '';
+  
+  
 
   # https://devenv.sh/languages/
   languages.rust.enable = true;
@@ -181,6 +183,35 @@ in
       pass_filenames = false;
       always_run = false;
       types = [ "rust" ];
+    };
+    
+    # Warn if Cargo.lock or migrations changed but Cargo.nix wasn't updated
+    # This is fast - just checks git staged files
+    cargo2nix-reminder = {
+      enable = true;
+      name = "Cargo.nix update reminder";
+      entry = "${pkgs.writeShellScript "cargo2nix-reminder" ''
+        # Check if Cargo.lock or migration files are staged
+        CARGO_LOCK_STAGED=$(git diff --cached --name-only | grep -c "^Cargo.lock$" || true)
+        MIGRATIONS_STAGED=$(git diff --cached --name-only | grep -c "^crates/loom-server/migrations/" || true)
+        CARGO_NIX_STAGED=$(git diff --cached --name-only | grep -c "^Cargo.nix$" || true)
+        
+        if [ "$CARGO_LOCK_STAGED" -gt 0 ] && [ "$CARGO_NIX_STAGED" -eq 0 ]; then
+          echo "⚠️  WARNING: Cargo.lock changed but Cargo.nix wasn't updated!"
+          echo "Run 'cargo2nix-update' and stage Cargo.nix to ensure the nix build is correct."
+          echo ""
+          echo "Continuing anyway - fix this if you want reproducible nix builds."
+        fi
+        
+        if [ "$MIGRATIONS_STAGED" -gt 0 ] && [ "$CARGO_NIX_STAGED" -eq 0 ]; then
+          echo "⚠️  WARNING: Migration files changed but Cargo.nix wasn't updated!"
+          echo "cargo2nix doesn't track include_str! files. Run 'cargo2nix-update' to force rebuild."
+          echo ""
+          echo "Without this, the deployed binary may not include the new migrations!"
+        fi
+      ''}";
+      pass_filenames = false;
+      always_run = true;
     };
     
     # Ensure loom-web flake package compiles (fast - Node.js cached build)
