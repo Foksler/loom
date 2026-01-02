@@ -247,6 +247,19 @@
 			});
 		}
 
+		// Auth providers
+		if (c.auth_providers) {
+			const configuredProviders = c.auth_providers.providers
+				.filter((p) => p.configured)
+				.map((p) => p.name)
+				.join(', ');
+			components.push({
+				name: i18n._('admin.health.auth_providers'),
+				status: c.auth_providers.status,
+				extra: configuredProviders || 'none configured',
+			});
+		}
+
 		return components;
 	}
 

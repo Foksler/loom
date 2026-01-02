@@ -983,6 +983,10 @@ msgstr "GeoIP"
 msgid "admin.health.jobs"
 msgstr "Background Jobs"
 
+#: admin.health.auth_providers
+msgid "admin.health.auth_providers"
+msgstr "Auth Providers"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "Server Logs"

@@ -40,6 +40,14 @@ pub async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
 
 	let llm_providers = health::check_llm_providers(state.llm_service.as_deref()).await;
 
+	// Check auth providers (sync check, just validates configuration)
+	let auth_providers = health::check_auth_providers(
+		state.github_oauth.as_deref(),
+		state.google_oauth.as_deref(),
+		state.okta_oauth.as_deref(),
+		state.smtp_client.is_some(),
+	);
+
 	let components = HealthComponents {
 		database,
 		bin_dir,
@@ -50,6 +58,7 @@ pub async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
 		smtp,
 		geoip,
 		jobs,
+		auth_providers,
 	};
 
 	let status = health::aggregate_status(&components);

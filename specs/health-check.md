@@ -47,6 +47,7 @@ diagnostic information.
 | Binary Directory | Non-critical | `degraded` - updates unavailable      |
 | LLM Providers    | Non-critical | `degraded` - inference unavailable    |
 | Google CSE       | Non-critical | `degraded` - web search unavailable   |
+| Auth Providers   | Non-critical | `degraded` - some login methods unavailable |
 
 ---
 
@@ -245,6 +246,24 @@ Verifies Google Custom Search Engine configuration and connectivity.
 - Configured but auth error → `unhealthy`
 - Not configured → `degraded` (CSE is optional)
 
+### 4.5 Auth Providers Check
+
+Validates that authentication providers (OAuth, Magic Link) are properly configured.
+
+**Providers checked:**
+
+1. GitHub OAuth - client ID and secret configured
+2. Google OAuth - client ID and secret configured
+3. Okta OAuth - domain, client ID, and secret configured
+4. Magic Link - SMTP configured (required for sending emails)
+
+**Status mapping:**
+
+- All providers configured → `healthy`
+- At least one provider configured → `healthy`
+- No providers configured → `unhealthy`
+- Individual unconfigured providers → `degraded` (per-provider)
+
 ---
 
 ## 5. Response Schema
@@ -277,6 +296,7 @@ interface HealthComponents {
 	bin_dir: BinDirHealth;
 	llm_providers: LlmProvidersHealth;
 	google_cse: GoogleCseHealth;
+	auth_providers: AuthProvidersHealth;
 }
 ```
 
@@ -326,6 +346,22 @@ interface LlmProviderHealth {
 interface GoogleCseHealth {
 	status: HealthStatus;
 	latency_ms: number;
+	configured: boolean;
+	error?: string;
+}
+```
+
+### 5.8 AuthProvidersHealth
+
+```typescript
+interface AuthProvidersHealth {
+	status: HealthStatus;
+	providers: AuthProviderHealth[];
+}
+
+interface AuthProviderHealth {
+	name: string; // "github", "google", "okta", "magic_link"
+	status: HealthStatus;
 	configured: boolean;
 	error?: string;
 }

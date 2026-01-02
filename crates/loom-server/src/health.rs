@@ -170,6 +170,23 @@ pub struct JobsHealth {
 	pub failing_jobs: Option<Vec<String>>,
 }
 
+/// Individual authentication provider health.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct AuthProviderHealth {
+	pub name: String,
+	pub status: HealthStatus,
+	pub configured: bool,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub error: Option<String>,
+}
+
+/// Authentication providers component health.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct AuthProvidersHealth {
+	pub status: HealthStatus,
+	pub providers: Vec<AuthProviderHealth>,
+}
+
 /// All health check components.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct HealthComponents {
@@ -184,6 +201,7 @@ pub struct HealthComponents {
 	pub geoip: GeoIpHealth,
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub jobs: Option<JobsHealth>,
+	pub auth_providers: AuthProvidersHealth,
 }
 
 /// Complete health check response.
@@ -657,6 +675,96 @@ pub async fn check_jobs(scheduler: Option<&Arc<JobScheduler>>) -> Option<JobsHea
 	})
 }
 
+/// Check authentication providers health.
+///
+/// Validates that OAuth providers are properly configured with valid credentials.
+/// This is a configuration check, not a connectivity check (OAuth providers don't
+/// have health check endpoints).
+pub fn check_auth_providers(
+	github_oauth: Option<&loom_server_auth_github::GitHubOAuthClient>,
+	google_oauth: Option<&loom_server_auth_google::GoogleOAuthClient>,
+	okta_oauth: Option<&loom_server_auth_okta::OktaOAuthClient>,
+	smtp_configured: bool,
+) -> AuthProvidersHealth {
+	let mut providers = Vec::new();
+
+	// GitHub OAuth
+	providers.push(AuthProviderHealth {
+		name: "github".to_string(),
+		status: if github_oauth.is_some() {
+			HealthStatus::Healthy
+		} else {
+			HealthStatus::Degraded
+		},
+		configured: github_oauth.is_some(),
+		error: if github_oauth.is_none() {
+			Some("GitHub OAuth not configured".to_string())
+		} else {
+			None
+		},
+	});
+
+	// Google OAuth
+	providers.push(AuthProviderHealth {
+		name: "google".to_string(),
+		status: if google_oauth.is_some() {
+			HealthStatus::Healthy
+		} else {
+			HealthStatus::Degraded
+		},
+		configured: google_oauth.is_some(),
+		error: if google_oauth.is_none() {
+			Some("Google OAuth not configured".to_string())
+		} else {
+			None
+		},
+	});
+
+	// Okta OAuth
+	providers.push(AuthProviderHealth {
+		name: "okta".to_string(),
+		status: if okta_oauth.is_some() {
+			HealthStatus::Healthy
+		} else {
+			HealthStatus::Degraded
+		},
+		configured: okta_oauth.is_some(),
+		error: if okta_oauth.is_none() {
+			Some("Okta OAuth not configured".to_string())
+		} else {
+			None
+		},
+	});
+
+	// Magic Link (depends on SMTP being configured)
+	providers.push(AuthProviderHealth {
+		name: "magic_link".to_string(),
+		status: if smtp_configured {
+			HealthStatus::Healthy
+		} else {
+			HealthStatus::Degraded
+		},
+		configured: smtp_configured,
+		error: if !smtp_configured {
+			Some("Magic link requires SMTP to be configured".to_string())
+		} else {
+			None
+		},
+	});
+
+	// Overall status: healthy if at least one provider is configured, degraded otherwise
+	let configured_count = providers.iter().filter(|p| p.configured).count();
+	let status = if configured_count == 0 {
+		HealthStatus::Unhealthy
+	} else if configured_count == providers.len() {
+		HealthStatus::Healthy
+	} else {
+		HealthStatus::Healthy // At least one provider is enough
+	};
+
+	AuthProvidersHealth { status, providers }
+}
+
 /// Aggregate component statuses into overall status.
 pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
 	let mut statuses = vec![
@@ -666,6 +774,7 @@ pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
 		components.github_app.status,
 		components.smtp.status,
 		components.geoip.status,
+		components.auth_providers.status,
 	];
 
 	if let Some(ref k8s) = components.kubernetes {

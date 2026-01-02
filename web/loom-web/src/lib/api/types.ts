@@ -518,6 +518,18 @@ export interface JobsHealth {
 	failing_jobs?: string[];
 }
 
+export interface AuthProviderHealth {
+	name: string;
+	status: HealthStatus;
+	configured: boolean;
+	error?: string;
+}
+
+export interface AuthProvidersHealth {
+	status: HealthStatus;
+	providers: AuthProviderHealth[];
+}
+
 export interface HealthComponents {
 	database: DatabaseHealth;
 	bin_dir: BinDirHealth;
@@ -528,6 +540,7 @@ export interface HealthComponents {
 	smtp: SmtpHealth;
 	geoip: GeoIpHealth;
 	jobs?: JobsHealth;
+	auth_providers: AuthProvidersHealth;
 }
 
 export interface HealthVersionInfo {
