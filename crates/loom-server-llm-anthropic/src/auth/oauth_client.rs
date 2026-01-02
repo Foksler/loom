@@ -5,7 +5,7 @@
 
 use std::sync::Arc;
 
-use loom_credentials::{CredentialError, CredentialStore, CredentialValue};
+use loom_cli_credentials::{CredentialError, CredentialStore, CredentialValue};
 use loom_common_secret::SecretString;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
@@ -121,7 +121,7 @@ impl<S: CredentialStore> OAuthClient<S> {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use loom_credentials::MemoryCredentialStore;
+	use loom_cli_credentials::MemoryCredentialStore;
 
 	#[test]
 	fn test_oauth_credentials_not_expired() {

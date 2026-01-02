@@ -5,7 +5,7 @@
 //!
 //! Supports both Claude Pro/Max subscription OAuth and Console OAuth for API key creation.
 
-use loom_credentials::CredentialError;
+use loom_cli_credentials::CredentialError;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, error, info};
 use url::Url;

@@ -16,7 +16,7 @@ bytes = "1"
 futures = { workspace = true }
 getrandom = "0.2"
 loom-common-core = { path = "../loom-common-core" }
-loom-credentials = { path = "../loom-credentials" }
+loom-cli-credentials = { path = "../loom-cli-credentials" }
 loom-common-http = { path = "../loom-common-http" }
 loom-common-secret = { path = "../loom-common-secret" }
 pin-project-lite = { workspace = true }

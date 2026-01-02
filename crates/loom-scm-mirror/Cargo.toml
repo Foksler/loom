@@ -10,7 +10,7 @@ license.workspace = true
 
 [dependencies]
 loom-scm = { path = "../loom-scm" }
-loom-credentials = { path = "../loom-credentials" }
+loom-cli-credentials = { path = "../loom-cli-credentials" }
 loom-common-http = { path = "../loom-common-http" }
 loom-common-secret = { path = "../loom-common-secret" }
 

@@ -16,7 +16,7 @@ members = [
 	"crates/loom-cli-config",
 	"crates/loom-common-config",
 	"crates/loom-common-core",
-	"crates/loom-credentials",
+	"crates/loom-cli-credentials",
 	"crates/loom-git",
 	"crates/loom-github-app",
 	"crates/loom-google-cse",

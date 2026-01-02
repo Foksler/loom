@@ -16,7 +16,7 @@
 //! # Example
 //!
 //! ```rust,no_run
-//! use loom_credentials::{CredentialStore, FileCredentialStore, CredentialValue};
+//! use loom_cli_credentials::{CredentialStore, FileCredentialStore, CredentialValue};
 //! use loom_common_secret::SecretString;
 //!
 //! # tokio_test::block_on(async {

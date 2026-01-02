@@ -41,7 +41,7 @@ pub use auth::{
 // Re-export OAuthCredentials from auth module
 pub use auth::oauth_client::OAuthCredentials;
 
-// Re-export credential types from loom-credentials
-pub use loom_credentials::{
+// Re-export credential types from loom-cli-credentials
+pub use loom_cli_credentials::{
 	CredentialError, CredentialStore, CredentialValue, FileCredentialStore, MemoryCredentialStore,
 };

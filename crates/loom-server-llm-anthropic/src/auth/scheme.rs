@@ -5,7 +5,7 @@
 //!
 //! Provides a unified interface for both API key and OAuth authentication.
 
-use loom_credentials::{CredentialError, CredentialStore};
+use loom_cli_credentials::{CredentialError, CredentialStore};
 use loom_common_secret::SecretString;
 
 use super::oauth_client::OAuthClient;
@@ -128,7 +128,7 @@ pub fn build_api_key_headers(api_key: &str) -> reqwest::header::HeaderMap {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use loom_credentials::MemoryCredentialStore;
+	use loom_cli_credentials::MemoryCredentialStore;
 	use std::sync::Arc;
 
 	use super::super::oauth_client::OAuthCredentials;

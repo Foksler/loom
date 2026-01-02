@@ -4,7 +4,7 @@
 //! Anthropic-specific API types and conversions.
 
 use loom_common_core::{LlmError, LlmRequest, LlmResponse, Message, Role, ToolCall, Usage};
-use loom_credentials::{CredentialStore, MemoryCredentialStore};
+use loom_cli_credentials::{CredentialStore, MemoryCredentialStore};
 use loom_common_secret::SecretString;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

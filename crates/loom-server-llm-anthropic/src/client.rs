@@ -5,7 +5,7 @@
 
 use async_trait::async_trait;
 use loom_common_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
-use loom_credentials::{CredentialStore, MemoryCredentialStore};
+use loom_cli_credentials::{CredentialStore, MemoryCredentialStore};
 use loom_common_http::{retry, RetryConfig, RetryableError};
 use reqwest::Client;
 use tracing::{debug, error, info, instrument, trace};

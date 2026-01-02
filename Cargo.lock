@@ -3256,6 +3256,7 @@ dependencies = [
  "loom-acp",
  "loom-cli-auto-commit",
  "loom-cli-config",
+ "loom-cli-credentials",
  "loom-common-core",
  "loom-common-http",
  "loom-common-i18n",
@@ -3263,7 +3264,6 @@ dependencies = [
  "loom-common-thread",
  "loom-common-tools",
  "loom-common-version",
- "loom-credentials",
  "loom-git",
  "loom-server-llm-proxy",
  "proptest",
@@ -3311,6 +3311,22 @@ dependencies = [
  "tempfile",
  "thiserror 1.0.69",
  "toml",
+ "tracing",
+]
+
+[[package]]
+name = "loom-cli-credentials"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "keyring",
+ "loom-common-secret",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
  "tracing",
 ]
 
@@ -3432,22 +3448,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "loom-credentials"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "keyring",
- "loom-common-secret",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "tracing",
-]
-
-[[package]]
 name = "loom-git"
 version = "0.1.0"
 dependencies = [
@@ -3532,9 +3532,9 @@ dependencies = [
  "async-trait",
  "chrono",
  "gix",
+ "loom-cli-credentials",
  "loom-common-http",
  "loom-common-secret",
- "loom-credentials",
  "loom-scm",
  "proptest",
  "reqwest",
@@ -3719,10 +3719,10 @@ dependencies = [
  "chrono",
  "futures",
  "getrandom 0.2.16",
+ "loom-cli-credentials",
  "loom-common-core",
  "loom-common-http",
  "loom-common-secret",
- "loom-credentials",
  "pin-project-lite",
  "reqwest",
  "serde",

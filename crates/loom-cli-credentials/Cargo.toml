@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Proprietary
 
 [package]
-name = "loom-credentials"
+name = "loom-cli-credentials"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true

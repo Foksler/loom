@@ -8,7 +8,7 @@
 use std::path::Path;
 use std::process::Command;
 
-use loom_credentials::{CredentialStore, CredentialValue};
+use loom_cli_credentials::{CredentialStore, CredentialValue};
 use tracing::{debug, error, info, instrument};
 
 use crate::error::{MirrorError, Result};
