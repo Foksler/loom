@@ -52,7 +52,7 @@ impl From<ShareVisibilityArg> for ThreadVisibility {
 		}
 	}
 }
-use loom_common_tools::{
+use loom_cli_tools::{
 	BashTool, EditFileTool, ListFilesTool, OracleTool, ReadFileTool, ToolRegistry, WebSearchTool,
 };
 use url::Url;

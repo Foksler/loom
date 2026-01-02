@@ -3127,12 +3127,12 @@ dependencies = [
  "loom-cli-config",
  "loom-cli-credentials",
  "loom-cli-git",
+ "loom-cli-tools",
  "loom-common-core",
  "loom-common-http",
  "loom-common-i18n",
  "loom-common-secret",
  "loom-common-thread",
- "loom-common-tools",
  "loom-common-version",
  "loom-server-llm-proxy",
  "proptest",
@@ -3160,9 +3160,9 @@ dependencies = [
  "async-trait",
  "chrono",
  "futures",
+ "loom-cli-tools",
  "loom-common-core",
  "loom-common-thread",
- "loom-common-tools",
  "loom-server-llm-proxy",
  "proptest",
  "serde",
@@ -3231,6 +3231,24 @@ dependencies = [
  "tempfile",
  "thiserror 1.0.69",
  "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "loom-cli-tools"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "loom-common-core",
+ "loom-common-http",
+ "proptest",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
  "tracing",
 ]
 
@@ -3322,24 +3340,6 @@ dependencies = [
  "utoipa",
  "uuid",
  "uuid7",
-]
-
-[[package]]
-name = "loom-common-tools"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "loom-common-core",
- "loom-common-http",
- "proptest",
- "reqwest",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "tracing",
 ]
 
 [[package]]

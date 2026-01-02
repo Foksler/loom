@@ -29,7 +29,7 @@ members = [
 	"crates/loom-common-secret",
 	"crates/loom-server",
 	"crates/loom-common-thread",
-	"crates/loom-common-tools",
+	"crates/loom-cli-tools",
 	"crates/loom-common-version",
 	"crates/loom-server-k8s",
 	"crates/loom-server-weaver",

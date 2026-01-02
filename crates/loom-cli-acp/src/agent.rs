@@ -20,7 +20,7 @@ use loom_common_core::{
 	ServerQueryKind, ServerQueryResponse, ServerQueryResult, ToolCall, ToolContext, ToolDefinition,
 };
 use loom_common_thread::{AgentStateKind, AgentStateSnapshot, Thread, ThreadStore};
-use loom_common_tools::ToolRegistry;
+use loom_cli_tools::ToolRegistry;
 use serde_json::value::RawValue;
 use tokio::sync::{mpsc, oneshot};
 use tracing::{debug, error, info, instrument, warn};
