@@ -49,6 +49,13 @@ in
     pkgs.sops
     pkgs.ssh-to-age
   ];
+  
+  # Shell aliases and scripts for cargo2nix workflow
+  scripts.cargo2nix-update.exec = ''
+    echo "🔄 Regenerating Cargo.nix from Cargo.lock..."
+    nix run github:cargo2nix/cargo2nix/release-0.12
+    echo "✅ Cargo.nix updated. Don't forget to commit it!"
+  '';
 
   # https://devenv.sh/languages/
   languages.rust.enable = true;
@@ -106,17 +113,39 @@ in
       types = [ "text" ];
     };
     
-    # Fast Rust workspace check using cargo (incremental builds)
-    # This replaces the slow nix build hooks for local development.
-    # Full nix builds are still run in CI for reproducibility.
-    rust-workspace-check = {
+    # Fast Rust workspace check using cargo2nix (nix builds with caching)
+    # Uses granular per-crate nix builds for reproducibility and better caching.
+    # Individual crates are cached in the nix store, so only changed crates rebuild.
+    rust-workspace-nix = {
       enable = true;
-      name = "Rust workspace check (cargo)";
+      name = "Rust workspace check (nix/cargo2nix)";
+      entry = "${pkgs.writeShellScript "rust-workspace-nix" ''
+        echo "🔨 Building Rust workspace with nix (cargo2nix)..."
+        
+        # Build the main binaries using cargo2nix
+        # This provides reproducible builds with per-crate caching
+        if ! nix build .#loom-cli-c2n .#loom-server-c2n --no-link 2>&1; then
+          echo "❌ BLOCKED: Rust workspace failed to compile!"
+          echo "Fix the build errors before committing."
+          exit 1
+        fi
+        
+        echo "✅ Rust workspace compiles successfully (nix)"
+      ''}";
+      pass_filenames = false;
+      # Only run when Rust-related files change
+      always_run = false;
+      types = [ "rust" ];
+    };
+    
+    # Optional: Fast cargo check for quick iteration (can be enabled alongside nix builds)
+    # Disabled by default since nix builds provide better reproducibility
+    rust-workspace-cargo = {
+      enable = false;
+      name = "Rust workspace check (cargo, fast)";
       entry = "${pkgs.writeShellScript "rust-workspace-check" ''
         echo "🔨 Checking Rust workspace with cargo (incremental)..."
         
-        # Use cargo check for fast type-checking without full compilation
-        # This leverages the existing target/ directory for incremental builds
         if ! cargo check --workspace --bins 2>&1; then
           echo "❌ BLOCKED: Rust workspace failed to compile!"
           echo "Fix the build errors before committing."
@@ -126,13 +155,12 @@ in
         echo "✅ Rust workspace compiles successfully"
       ''}";
       pass_filenames = false;
-      # Only run when Rust-related files change (not docs, nix, etc.)
       always_run = false;
       types = [ "rust" ];
     };
     
-    # Run clippy for linting
-    # Uses cargo-clippy directly to avoid rustup conflicts with nix toolchain
+    # Run clippy via nix for linting
+    # Uses the cargo2nix workspace shell for consistent toolchain
     clippy = {
       enable = true;
       name = "Clippy lint check";
@@ -173,48 +201,42 @@ in
       files = "^web/";
     };
     
-    # Ensure loom-cli flake package compiles
-    # Uses cargo build for speed (incremental), verifies the CLI binary builds
+    # Build loom-cli using cargo2nix (reproducible, cached per-crate)
     loom-cli-build = {
-      enable = true;
-      name = "Build loom-cli";
+      enable = false;  # Disabled - covered by rust-workspace-nix
+      name = "Build loom-cli (nix)";
       entry = "${pkgs.writeShellScript "loom-cli-build" ''
-        echo "🔨 Building loom-cli..."
+        echo "🔨 Building loom-cli with nix..."
         
-        # Use cargo build for the CLI binary (incremental, fast)
-        if ! cargo build --package loom-cli 2>&1; then
+        if ! nix build .#loom-cli-c2n --no-link 2>&1; then
           echo "❌ BLOCKED: loom-cli failed to compile!"
           echo "Fix the build errors before committing."
           exit 1
         fi
         
-        echo "✅ loom-cli builds successfully"
+        echo "✅ loom-cli builds successfully (nix)"
       ''}";
       pass_filenames = false;
-      # Only run when CLI-related crates change
       always_run = false;
       types = [ "rust" ];
     };
     
-    # Ensure loom-server compiles
-    # Uses cargo build for speed (incremental), verifies the server binary builds
+    # Build loom-server using cargo2nix (reproducible, cached per-crate)
     loom-server-build = {
-      enable = true;
-      name = "Build loom-server";
+      enable = false;  # Disabled - covered by rust-workspace-nix
+      name = "Build loom-server (nix)";
       entry = "${pkgs.writeShellScript "loom-server-build" ''
-        echo "🔨 Building loom-server..."
+        echo "🔨 Building loom-server with nix..."
         
-        # Use cargo build for the server binary (incremental, fast)
-        if ! cargo build --package loom-server 2>&1; then
+        if ! nix build .#loom-server-c2n --no-link 2>&1; then
           echo "❌ BLOCKED: loom-server failed to compile!"
           echo "Fix the build errors before committing."
           exit 1
         fi
         
-        echo "✅ loom-server builds successfully"
+        echo "✅ loom-server builds successfully (nix)"
       ''}";
       pass_filenames = false;
-      # Only run when Rust files change
       always_run = false;
       types = [ "rust" ];
     };
