@@ -64,11 +64,14 @@
       };
       
       # Build the rust package set from Cargo.nix
+      # Use fenix for latest stable Rust with edition 2024 support (1.85+)
+      fenixToolchain = fenixPkgs.stable.toolchain;
+      # cargo2nix needs a .version attribute on the toolchain
+      rustToolchain = fenixToolchain // { version = "1.86.0"; };
       rustPkgs = pkgsWithCargo2nix.rustBuilder.makePackageSet {
-        rustToolchain = pkgsWithCargo2nix.rust-bin.stable.latest.default;
+        inherit rustToolchain;
         packageFun = import ./Cargo.nix;
         workspaceSrc = ./.;
-        extraRustComponents = [ "clippy" ];
         packageOverrides = pkgs: pkgs.rustBuilder.overrides.all ++ [
           # Add custom overrides for crates that need native dependencies
           (pkgs.rustBuilder.rustLib.makeOverride {

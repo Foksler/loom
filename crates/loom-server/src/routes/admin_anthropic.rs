@@ -374,7 +374,7 @@ pub async fn complete_oauth(
 		}
 	};
 
-	let exchange_result = match exchange_code(&body.code, &verifier).await {
+	let exchange_result = match exchange_code(&body.code, &body.state, &verifier).await {
 		Ok(result) => result,
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to exchange OAuth code");

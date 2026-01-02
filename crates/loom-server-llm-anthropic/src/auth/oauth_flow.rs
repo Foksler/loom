@@ -126,12 +126,21 @@ pub enum ExchangeResult {
 }
 
 /// Exchange an authorization code for tokens.
-pub async fn exchange_code(code: &str, verifier: &str) -> Result<ExchangeResult, CredentialError> {
+///
+/// # Arguments
+/// * `code` - The authorization code from the callback
+/// * `state` - The state parameter from the callback (must match what was sent in authorization)
+/// * `verifier` - The PKCE code verifier (secret that proves we initiated the request)
+pub async fn exchange_code(
+	code: &str,
+	state: &str,
+	verifier: &str,
+) -> Result<ExchangeResult, CredentialError> {
 	let client = loom_common_http::new_client();
 
 	let request = TokenExchangeRequest {
 		code: code.to_string(),
-		state: verifier.to_string(),
+		state: state.to_string(),
 		grant_type: "authorization_code".to_string(),
 		client_id: CLIENT_ID.to_string(),
 		redirect_uri: REDIRECT_URI.to_string(),
