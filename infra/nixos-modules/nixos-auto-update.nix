@@ -47,6 +47,24 @@ in
       default = null;
       description = "Path to SSH private key for git authentication (optional)";
     };
+
+    verbose = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Enable verbose nix build output (shows build progress and timing)";
+    };
+
+    showBuildLogs = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Show full build logs for each derivation (very verbose)";
+    };
+
+    printBuildStats = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Print build statistics and timing after completion";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -142,12 +160,33 @@ in
         echo "At revision: $CURRENT_REV"
 
         echo "Activating flake..."
-        nixos-rebuild switch --flake ".#$FLAKE_ATTR"
+        
+        # Build nixos-rebuild flags based on configuration
+        REBUILD_FLAGS=""
+        ${optionalString cfg.verbose ''
+          REBUILD_FLAGS="$REBUILD_FLAGS --verbose"
+        ''}
+        ${optionalString cfg.showBuildLogs ''
+          REBUILD_FLAGS="$REBUILD_FLAGS -L"
+        ''}
+        ${optionalString cfg.printBuildStats ''
+          REBUILD_FLAGS="$REBUILD_FLAGS --print-build-logs"
+        ''}
+        
+        BUILD_START=$(date +%s)
+        echo "[$(date -Iseconds)] Starting nixos-rebuild with flags:$REBUILD_FLAGS"
+        
+        # Run rebuild and capture timing
+        nixos-rebuild switch --flake ".#$FLAKE_ATTR" $REBUILD_FLAGS
+        
+        BUILD_END=$(date +%s)
+        BUILD_DURATION=$((BUILD_END - BUILD_START))
+        echo "[$(date -Iseconds)] Build completed in ''${BUILD_DURATION}s"
 
         # Record successful deployment
         echo "$CURRENT_REV" > "$DEPLOYED_REV_FILE"
 
-        echo "[$(date -Iseconds)] Auto-update complete"
+        echo "[$(date -Iseconds)] Auto-update complete (total build time: ''${BUILD_DURATION}s)"
       '';
 
       serviceConfig = {

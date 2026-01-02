@@ -166,6 +166,10 @@
     flakeAttr = "virtualMachine";
     sshKeyFile = config.sops.secrets.nixos-auto-deploy-key.path;
     interval = "10s";  # every 10 seconds
+    # Logging options for troubleshooting builds
+    verbose = true;           # Show build progress
+    printBuildStats = true;   # Show timing statistics
+    # showBuildLogs = true;   # Uncomment for full derivation logs (very verbose)
   };
 
   # Loom Server - API backend
