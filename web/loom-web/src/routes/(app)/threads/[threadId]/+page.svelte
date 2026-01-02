@@ -33,6 +33,8 @@
   let realtimeClient = createRealtimeClient({
     serverUrl: import.meta.env.VITE_LOOM_SERVER_URL || '',
   });
+  
+  let loadingThreadId = $state<string | null>(null);
 
   realtimeClient.onStatus((status) => {
     if (status === 'connected') {
@@ -54,6 +56,9 @@
   });
 
   async function loadThread(id: string) {
+    if (loadingThreadId === id) return;
+    loadingThreadId = id;
+    
     logger.info('Loading thread', { threadId: id });
     conversationActor.send({ type: 'LOAD_THREAD', threadId: id });
     accessDenied = false;
@@ -188,9 +193,10 @@
     realtimeClient.disconnect();
   });
 
-  // Reload when threadId changes
+  // Reload when threadId changes (guard against duplicate loads)
   $effect(() => {
-    if (threadId && conversationState.context.thread?.id !== threadId) {
+    const currentThreadId = conversationState.context.thread?.id;
+    if (threadId && threadId !== currentThreadId && threadId !== loadingThreadId) {
       loadThread(threadId);
     }
   });
