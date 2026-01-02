@@ -6,7 +6,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
+use loom_server_config::{SyslogConfig, SyslogProtocol};
 use tokio::io::AsyncWriteExt;
 use tokio::net::{TcpStream, UdpSocket};
 use tokio::sync::Mutex;
@@ -16,61 +16,16 @@ use crate::enrichment::EnrichedAuditEvent;
 use crate::event::AuditSeverity;
 use crate::filter::AuditFilterConfig;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "lowercase")]
-pub enum SyslogProtocol {
-	#[default]
-	Udp,
-	Tcp,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SyslogConfig {
-	pub host: String,
-	pub port: u16,
-	#[serde(default)]
-	pub protocol: SyslogProtocol,
-	#[serde(default = "default_facility")]
-	pub facility: String,
-	#[serde(default = "default_app_name")]
-	pub app_name: String,
-	#[serde(default)]
-	pub use_cef: bool,
-	#[serde(default)]
-	pub filter: AuditFilterConfig,
-}
-
-fn default_facility() -> String {
-	"local0".to_string()
-}
-
-fn default_app_name() -> String {
-	"loom".to_string()
-}
-
-impl Default for SyslogConfig {
-	fn default() -> Self {
-		Self {
-			host: "localhost".to_string(),
-			port: 514,
-			protocol: SyslogProtocol::Udp,
-			facility: default_facility(),
-			app_name: default_app_name(),
-			use_cef: false,
-			filter: AuditFilterConfig::default(),
-		}
-	}
-}
-
 pub struct SyslogAuditSink {
 	config: SyslogConfig,
+	filter: AuditFilterConfig,
 	udp_socket: Option<UdpSocket>,
 	tcp_stream: Mutex<Option<TcpStream>>,
 	target_addr: SocketAddr,
 }
 
 impl SyslogAuditSink {
-	pub async fn new(config: SyslogConfig) -> Result<Self, AuditSinkError> {
+	pub async fn new(config: SyslogConfig, filter: AuditFilterConfig) -> Result<Self, AuditSinkError> {
 		let target_addr = format!("{}:{}", config.host, config.port)
 			.parse()
 			.map_err(|e| AuditSinkError::Permanent(format!("invalid syslog address: {e}")))?;
@@ -86,6 +41,7 @@ impl SyslogAuditSink {
 
 		Ok(Self {
 			config,
+			filter,
 			udp_socket,
 			tcp_stream: Mutex::new(None),
 			target_addr,
@@ -147,7 +103,7 @@ impl AuditSink for SyslogAuditSink {
 	}
 
 	fn filter(&self) -> &AuditFilterConfig {
-		&self.config.filter
+		&self.filter
 	}
 
 	async fn publish(&self, event: Arc<EnrichedAuditEvent>) -> Result<(), AuditSinkError> {
@@ -249,38 +205,39 @@ pub fn format_rfc5424(event: &EnrichedAuditEvent, facility: &str, app_name: &str
 pub fn format_cef(event: &EnrichedAuditEvent, app_name: &str) -> String {
 	let base = &event.base;
 
+	let signature_id = base.event_type.to_string().to_uppercase();
+	let event_name = base
+		.event_type
+		.to_string()
+		.to_uppercase()
+		.replace('_', " ");
+
 	let cef_severity = match base.severity {
-		AuditSeverity::Critical => 10,
-		AuditSeverity::Error => 7,
-		AuditSeverity::Warning => 5,
-		AuditSeverity::Notice => 3,
+		AuditSeverity::Debug => 1,
 		AuditSeverity::Info => 1,
-		AuditSeverity::Debug => 0,
+		AuditSeverity::Notice => 3,
+		AuditSeverity::Warning => 5,
+		AuditSeverity::Error => 7,
+		AuditSeverity::Critical => 10,
 	};
 
-	let event_name = base.event_type.to_string().to_uppercase().replace('_', " ");
-	let signature_id = base.event_type.to_string().to_uppercase();
-
 	let mut extensions = Vec::new();
+	extensions.push(format!("cs1Label=event_type cs1={}", base.event_type));
 
 	if let Some(ip) = &base.ip_address {
-		extensions.push(format!("src={ip}"));
+		extensions.push(format!("src={}", escape_cef_value(ip)));
 	}
 	if let Some(actor) = &base.actor_user_id {
 		extensions.push(format!("suser={actor}"));
 	}
-	extensions.push(format!("msg={}", escape_cef_value(&base.action)));
-
-	let rt = base.timestamp.format("%b %d %Y %H:%M:%S");
-	extensions.push(format!("rt={rt}"));
-
-	extensions.push(format!("cs1Label=event_type cs1={}", base.event_type));
-
-	if let Some(resource_type) = &base.resource_type {
-		extensions.push(format!("cs2Label=resource_type cs2={resource_type}"));
-	}
 	if let Some(resource_id) = &base.resource_id {
-		extensions.push(format!("cs3Label=resource_id cs3={}", escape_cef_value(resource_id)));
+		extensions.push(format!(
+			"cs2Label=resource_id cs2={}",
+			escape_cef_value(resource_id)
+		));
+	}
+	if let Some(request_id) = &base.request_id {
+		extensions.push(format!("cs3Label=request_id cs3={request_id}"));
 	}
 	if let Some(trace_id) = &base.trace_id {
 		extensions.push(format!("cs4Label=trace_id cs4={trace_id}"));
@@ -482,17 +439,6 @@ mod tests {
 		assert_eq!(escape_cef_value(r"test\value"), r"test\\value");
 		assert_eq!(escape_cef_value("line1\nline2"), r"line1\nline2");
 		assert_eq!(escape_cef_value("normal"), "normal");
-	}
-
-	#[test]
-	fn test_syslog_config_defaults() {
-		let config = SyslogConfig::default();
-		assert_eq!(config.host, "localhost");
-		assert_eq!(config.port, 514);
-		assert_eq!(config.protocol, SyslogProtocol::Udp);
-		assert_eq!(config.facility, "local0");
-		assert_eq!(config.app_name, "loom");
-		assert!(!config.use_cef);
 	}
 
 	#[test]

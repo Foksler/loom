@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use chrono::{Datelike, Timelike, Utc};
-use serde::{Deserialize, Serialize};
+use loom_server_config::{FileFormat, FileSinkConfig};
 use tokio::fs::OpenOptions;
 use tokio::io::AsyncWriteExt;
 use tokio::sync::Mutex;
@@ -18,22 +18,6 @@ use crate::event::AuditSeverity;
 use crate::filter::AuditFilterConfig;
 use crate::sink::AuditSink;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "snake_case")]
-pub enum FileFormat {
-	#[default]
-	JsonLines,
-	Cef,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FileSinkConfig {
-	pub path: String,
-	pub format: FileFormat,
-	#[serde(default)]
-	pub filter: AuditFilterConfig,
-}
-
 struct FileHandle {
 	path: String,
 	file: tokio::fs::File,
@@ -41,13 +25,15 @@ struct FileHandle {
 
 pub struct FileAuditSink {
 	config: FileSinkConfig,
+	filter: AuditFilterConfig,
 	handle: Mutex<Option<FileHandle>>,
 }
 
 impl FileAuditSink {
-	pub fn new(config: FileSinkConfig) -> Self {
+	pub fn new(config: FileSinkConfig, filter: AuditFilterConfig) -> Self {
 		Self {
 			config,
+			filter,
 			handle: Mutex::new(None),
 		}
 	}
@@ -106,7 +92,7 @@ impl AuditSink for FileAuditSink {
 	}
 
 	fn filter(&self) -> &AuditFilterConfig {
-		&self.config.filter
+		&self.filter
 	}
 
 	async fn publish(&self, event: Arc<EnrichedAuditEvent>) -> Result<(), AuditSinkError> {

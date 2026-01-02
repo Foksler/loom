@@ -3,6 +3,7 @@
 
 //! Configuration sections for loom-server.
 
+pub mod audit;
 pub mod auth;
 pub mod database;
 pub mod geoip;
@@ -17,6 +18,11 @@ pub mod search;
 pub mod smtp;
 pub mod weaver;
 
+pub use audit::{
+	AuditConfig, AuditConfigLayer, FileFormat, FileSinkConfig, FileSinkConfigLayer,
+	HttpSinkConfig, HttpSinkConfigLayer, JsonStreamConfig, JsonStreamConfigLayer,
+	QueueOverflowPolicy, StreamProtocol, SyslogConfig, SyslogConfigLayer, SyslogProtocol,
+};
 pub use auth::{AuthConfig, AuthConfigLayer};
 pub use database::{DatabaseConfig, DatabaseConfigLayer};
 pub use geoip::{GeoIpConfig, GeoIpConfigLayer};

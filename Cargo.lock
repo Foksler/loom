@@ -3489,6 +3489,7 @@ dependencies = [
  "chrono",
  "loom-common-secret",
  "loom-server-auth",
+ "loom-server-config",
  "maxminddb",
  "proptest",
  "reqwest",

@@ -10,7 +10,14 @@ use tracing::{debug, trace};
 
 use crate::error::ConfigError;
 use crate::layer::ServerConfigLayer;
-use crate::sections::*;
+use crate::sections::{
+	AuditConfigLayer, AuthConfigLayer, DatabaseConfigLayer, GeoIpConfigLayer,
+	GitHubAppConfigLayer, GoogleCseConfigLayer, HttpConfigLayer, JobsConfigLayer, LlmConfigLayer,
+	LlmProvider, LoggingConfigLayer, OAuthConfigLayer, OktaOAuthConfigLayer, PathsConfigLayer,
+	QueueOverflowPolicy, SearchConfigLayer, SerperConfigLayer, SmtpConfigLayer, SyslogConfigLayer,
+	SyslogProtocol, TlsMode, WeaverConfigLayer,
+};
+use crate::sections::{AnthropicAuthConfig, GitHubOAuthConfigLayer, GoogleOAuthConfigLayer};
 
 /// Source precedence levels (higher = overrides lower).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -123,6 +130,7 @@ impl ConfigSource for EnvSource {
 		layer.search = Some(load_search_from_env()?);
 		layer.paths = Some(load_paths_from_env()?);
 		layer.logging = Some(load_logging_from_env()?);
+		layer.audit = Some(load_audit_from_env()?);
 
 		Ok(layer)
 	}
@@ -386,6 +394,69 @@ fn load_logging_from_env() -> Result<LoggingConfigLayer, ConfigError> {
 		level: env_var("LOOM_SERVER_LOG_LEVEL"),
 		locale: env_var("LOOM_SERVER_DEFAULT_LOCALE"),
 	})
+}
+
+fn load_audit_from_env() -> Result<AuditConfigLayer, ConfigError> {
+	let queue_overflow_policy = env_var("LOOM_SERVER_AUDIT_QUEUE_OVERFLOW_POLICY").map(|v| {
+		match v.to_lowercase().as_str() {
+			"drop_oldest" => QueueOverflowPolicy::DropOldest,
+			"block" => QueueOverflowPolicy::Block,
+			_ => QueueOverflowPolicy::DropNewest,
+		}
+	});
+
+	let syslog = if env_bool("LOOM_SERVER_AUDIT_SYSLOG_ENABLED").unwrap_or(false) {
+		let protocol = env_var("LOOM_SERVER_AUDIT_SYSLOG_PROTOCOL").map(|v| {
+			match v.to_lowercase().as_str() {
+				"tcp" => SyslogProtocol::Tcp,
+				_ => SyslogProtocol::Udp,
+			}
+		});
+
+		Some(SyslogConfigLayer {
+			enabled: Some(true),
+			host: env_var("LOOM_SERVER_AUDIT_SYSLOG_HOST"),
+			port: env_u16("LOOM_SERVER_AUDIT_SYSLOG_PORT")?,
+			protocol,
+			facility: env_var("LOOM_SERVER_AUDIT_SYSLOG_FACILITY"),
+			app_name: env_var("LOOM_SERVER_AUDIT_SYSLOG_APP_NAME"),
+			use_cef: env_bool("LOOM_SERVER_AUDIT_SYSLOG_USE_CEF"),
+		})
+	} else {
+		None
+	};
+
+	Ok(AuditConfigLayer {
+		enabled: env_bool("LOOM_SERVER_AUDIT_ENABLED"),
+		retention_days: env_i64("LOOM_SERVER_AUDIT_RETENTION_DAYS")?,
+		queue_capacity: env_usize("LOOM_SERVER_AUDIT_QUEUE_CAPACITY")?,
+		queue_overflow_policy,
+		min_severity: env_var("LOOM_SERVER_AUDIT_MIN_SEVERITY"),
+		syslog,
+		http_sinks: None,
+		json_stream_sinks: None,
+		file_sinks: None,
+	})
+}
+
+fn env_i64(name: &str) -> Result<Option<i64>, ConfigError> {
+	match env_var(name) {
+		Some(v) => v.parse().map(Some).map_err(|_| ConfigError::InvalidValue {
+			key: name.to_string(),
+			message: format!("invalid i64 value '{v}'"),
+		}),
+		None => Ok(None),
+	}
+}
+
+fn env_usize(name: &str) -> Result<Option<usize>, ConfigError> {
+	match env_var(name) {
+		Some(v) => v.parse().map(Some).map_err(|_| ConfigError::InvalidValue {
+			key: name.to_string(),
+			message: format!("invalid usize value '{v}'"),
+		}),
+		None => Ok(None),
+	}
 }
 
 #[cfg(test)]

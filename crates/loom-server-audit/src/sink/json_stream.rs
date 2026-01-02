@@ -6,7 +6,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
+use loom_server_config::{JsonStreamConfig, StreamProtocol};
 use tokio::io::AsyncWriteExt;
 use tokio::net::{TcpStream, UdpSocket};
 use tokio::sync::Mutex;
@@ -16,32 +16,18 @@ use crate::error::AuditSinkError;
 use crate::filter::AuditFilterConfig;
 use crate::sink::AuditSink;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum StreamProtocol {
-	Tcp,
-	Udp,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct JsonStreamConfig {
-	pub name: String,
-	pub host: String,
-	pub port: u16,
-	pub protocol: StreamProtocol,
-	pub filter: AuditFilterConfig,
-}
-
 pub struct JsonStreamSink {
 	config: JsonStreamConfig,
+	filter: AuditFilterConfig,
 	tcp_stream: Mutex<Option<TcpStream>>,
 	udp_socket: Mutex<Option<UdpSocket>>,
 }
 
 impl JsonStreamSink {
-	pub fn new(config: JsonStreamConfig) -> Self {
+	pub fn new(config: JsonStreamConfig, filter: AuditFilterConfig) -> Self {
 		Self {
 			config,
+			filter,
 			tcp_stream: Mutex::new(None),
 			udp_socket: Mutex::new(None),
 		}
@@ -112,7 +98,7 @@ impl AuditSink for JsonStreamSink {
 	}
 
 	fn filter(&self) -> &AuditFilterConfig {
-		&self.config.filter
+		&self.filter
 	}
 
 	async fn publish(&self, event: Arc<EnrichedAuditEvent>) -> Result<(), AuditSinkError> {
@@ -154,6 +140,7 @@ impl AuditSink for JsonStreamSink {
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use crate::enrichment::EnrichedAuditEvent;
 	use crate::event::{AuditEventType, AuditLogEntry, AuditSeverity};
 
 	fn make_config(protocol: StreamProtocol) -> JsonStreamConfig {
@@ -162,7 +149,7 @@ mod tests {
 			host: "127.0.0.1".to_string(),
 			port: 9999,
 			protocol,
-			filter: AuditFilterConfig::default(),
+			min_severity: "info".to_string(),
 		}
 	}
 
@@ -206,7 +193,8 @@ mod tests {
 	#[test]
 	fn test_sink_name_and_filter() {
 		let config = make_config(StreamProtocol::Udp);
-		let sink = JsonStreamSink::new(config.clone());
+		let filter = AuditFilterConfig::default();
+		let sink = JsonStreamSink::new(config, filter);
 
 		assert_eq!(sink.name(), "test-stream");
 		assert_eq!(sink.filter().min_severity, AuditSeverity::Info);
@@ -219,9 +207,9 @@ mod tests {
 			host: "logstash.example.com".to_string(),
 			port: 5044,
 			protocol: StreamProtocol::Tcp,
-			filter: AuditFilterConfig::default(),
+			min_severity: "info".to_string(),
 		};
-		let sink = JsonStreamSink::new(config);
+		let sink = JsonStreamSink::new(config, AuditFilterConfig::default());
 		assert_eq!(sink.address(), "logstash.example.com:5044");
 	}
 
@@ -239,7 +227,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_tcp_connect_fails_gracefully() {
 		let config = make_config(StreamProtocol::Tcp);
-		let sink = JsonStreamSink::new(config);
+		let sink = JsonStreamSink::new(config, AuditFilterConfig::default());
 		let event = Arc::new(make_event());
 
 		let result = sink.publish(event).await;
@@ -255,7 +243,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_health_check_tcp_fails_gracefully() {
 		let config = make_config(StreamProtocol::Tcp);
-		let sink = JsonStreamSink::new(config);
+		let sink = JsonStreamSink::new(config, AuditFilterConfig::default());
 
 		let result = sink.health_check().await;
 		assert!(result.is_err());

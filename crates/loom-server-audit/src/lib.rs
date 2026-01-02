@@ -1,7 +1,6 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
-pub mod config;
 pub mod enrichment;
 pub mod error;
 pub mod event;
@@ -9,7 +8,6 @@ pub mod filter;
 pub mod pipeline;
 pub mod sink;
 
-pub use config::{AuditConfig, QueueConfig, QueueOverflowPolicy};
 pub use enrichment::{
 	AuditEnricher, EnrichedAuditEvent, GeoIpInfo, NoopEnricher, OrgContext, SessionContext,
 };
@@ -22,6 +20,11 @@ pub use filter::AuditFilterConfig;
 pub use pipeline::AuditService;
 pub use sink::AuditSink;
 
+pub use loom_server_config::{
+	AuditConfig, FileFormat, FileSinkConfig, HttpSinkConfig, JsonStreamConfig,
+	QueueOverflowPolicy, StreamProtocol, SyslogConfig, SyslogProtocol,
+};
+
 #[cfg(feature = "sink-sqlite")]
 pub use sink::sqlite::SqliteAuditSink;
 
@@ -29,7 +32,7 @@ pub use sink::sqlite::SqliteAuditSink;
 pub use sink::tracing::TracingAuditSink;
 
 #[cfg(feature = "sink-http")]
-pub use sink::http::{HttpAuditSink, HttpSinkConfig};
+pub use sink::http::HttpAuditSink;
 
 #[cfg(feature = "sink-json-stream")]
-pub use sink::json_stream::{JsonStreamConfig, JsonStreamSink, StreamProtocol};
+pub use sink::json_stream::JsonStreamSink;

@@ -6,9 +6,9 @@
 use serde::Deserialize;
 
 use crate::sections::{
-	AuthConfigLayer, DatabaseConfigLayer, GeoIpConfigLayer, GitHubAppConfigLayer,
-	HttpConfigLayer, JobsConfigLayer, LlmConfigLayer, LoggingConfigLayer, OAuthConfigLayer,
-	PathsConfigLayer, SearchConfigLayer, SmtpConfigLayer, WeaverConfigLayer,
+	AuditConfigLayer, AuthConfigLayer, DatabaseConfigLayer, GeoIpConfigLayer,
+	GitHubAppConfigLayer, HttpConfigLayer, JobsConfigLayer, LlmConfigLayer, LoggingConfigLayer,
+	OAuthConfigLayer, PathsConfigLayer, SearchConfigLayer, SmtpConfigLayer, WeaverConfigLayer,
 };
 
 /// Server configuration layer - all fields are Option for merging.
@@ -40,6 +40,8 @@ pub struct ServerConfigLayer {
 	pub paths: Option<PathsConfigLayer>,
 	#[serde(default)]
 	pub logging: Option<LoggingConfigLayer>,
+	#[serde(default)]
+	pub audit: Option<AuditConfigLayer>,
 }
 
 impl ServerConfigLayer {
@@ -58,6 +60,7 @@ impl ServerConfigLayer {
 		merge_option(&mut self.search, other.search, SearchConfigLayer::merge);
 		merge_option(&mut self.paths, other.paths, PathsConfigLayer::merge);
 		merge_option(&mut self.logging, other.logging, LoggingConfigLayer::merge);
+		merge_option(&mut self.audit, other.audit, AuditConfigLayer::merge);
 	}
 }
 

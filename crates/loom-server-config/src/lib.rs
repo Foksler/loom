@@ -45,6 +45,7 @@ pub struct ServerConfig {
 	pub search: SearchConfig,
 	pub paths: PathsConfig,
 	pub logging: LoggingConfig,
+	pub audit: AuditConfig,
 }
 
 impl ServerConfig {
@@ -70,6 +71,7 @@ impl Default for ServerConfig {
 			search: SearchConfig::default(),
 			paths: PathsConfig::default(),
 			logging: LoggingConfig::default(),
+			audit: AuditConfig::default(),
 		}
 	}
 }
@@ -138,6 +140,7 @@ fn finalize(layer: ServerConfigLayer) -> Result<ServerConfig, ConfigError> {
 	let logging = layer.logging.unwrap_or_default().finalize();
 	let search = layer.search.unwrap_or_default().finalize();
 	let oauth = layer.oauth.unwrap_or_default().finalize();
+	let audit = layer.audit.unwrap_or_default().finalize();
 
 	let smtp = layer.smtp.and_then(|l| l.finalize());
 	let github_app = layer.github_app.and_then(|l| l.finalize());
@@ -154,6 +157,7 @@ fn finalize(layer: ServerConfigLayer) -> Result<ServerConfig, ConfigError> {
 		smtp_configured = smtp.is_some(),
 		github_app_configured = github_app.is_some(),
 		geoip_configured = geoip.is_some(),
+		audit_enabled = audit.enabled,
 		"Server configuration loaded"
 	);
 
@@ -171,6 +175,7 @@ fn finalize(layer: ServerConfigLayer) -> Result<ServerConfig, ConfigError> {
 		search,
 		paths,
 		logging,
+		audit,
 	})
 }
 
@@ -235,6 +240,7 @@ mod tests {
 			search: SearchConfig::default(),
 			paths: PathsConfig::default(),
 			logging: LoggingConfig::default(),
+			audit: AuditConfig::default(),
 		};
 		assert_eq!(config.socket_addr(), "127.0.0.1:9000");
 	}

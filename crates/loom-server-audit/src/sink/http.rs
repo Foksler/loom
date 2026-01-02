@@ -7,80 +7,30 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use async_trait::async_trait;
+use loom_server_config::HttpSinkConfig;
 use reqwest::{Client, Method, StatusCode};
-use serde::{Deserialize, Serialize};
 
 use crate::enrichment::EnrichedAuditEvent;
 use crate::error::AuditSinkError;
 use crate::filter::AuditFilterConfig;
 use crate::sink::AuditSink;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HttpSinkConfig {
-	pub name: String,
-	pub url: String,
-	#[serde(default = "default_method")]
-	pub method: String,
-	#[serde(default)]
-	pub headers: Vec<(String, String)>,
-	#[serde(default = "default_timeout_ms")]
-	pub timeout_ms: u64,
-	#[serde(default = "default_retry_max_attempts")]
-	pub retry_max_attempts: u32,
-	pub filter: AuditFilterConfig,
-}
-
-fn default_method() -> String {
-	"POST".to_string()
-}
-
-fn default_timeout_ms() -> u64 {
-	5000
-}
-
-fn default_retry_max_attempts() -> u32 {
-	3
-}
-
-impl HttpSinkConfig {
-	pub fn validate(&self) -> Result<(), String> {
-		if self.name.is_empty() {
-			return Err("name cannot be empty".to_string());
-		}
-		if self.url.is_empty() {
-			return Err("url cannot be empty".to_string());
-		}
-		if !self.url.starts_with("http://") && !self.url.starts_with("https://") {
-			return Err("url must start with http:// or https://".to_string());
-		}
-		let method_upper = self.method.to_uppercase();
-		if !["POST", "PUT", "PATCH"].contains(&method_upper.as_str()) {
-			return Err(format!("unsupported method: {}", self.method));
-		}
-		if self.timeout_ms == 0 {
-			return Err("timeout_ms must be greater than 0".to_string());
-		}
-		Ok(())
-	}
-}
-
 pub struct HttpAuditSink {
 	config: HttpSinkConfig,
+	filter: AuditFilterConfig,
 	client: Client,
 }
 
 impl HttpAuditSink {
-	pub fn new(config: HttpSinkConfig) -> Result<Self, AuditSinkError> {
-		config
-			.validate()
-			.map_err(|e| AuditSinkError::Permanent(format!("invalid config: {e}")))?;
+	pub fn new(config: HttpSinkConfig, filter: AuditFilterConfig) -> Result<Self, AuditSinkError> {
+		validate_config(&config)?;
 
 		let client = Client::builder()
 			.timeout(Duration::from_millis(config.timeout_ms))
 			.build()
 			.map_err(|e| AuditSinkError::Permanent(format!("failed to create HTTP client: {e}")))?;
 
-		Ok(Self { config, client })
+		Ok(Self { config, filter, client })
 	}
 
 	fn parse_method(&self) -> Method {
@@ -144,6 +94,33 @@ impl HttpAuditSink {
 	}
 }
 
+pub fn validate_config(config: &HttpSinkConfig) -> Result<(), AuditSinkError> {
+	if config.name.is_empty() {
+		return Err(AuditSinkError::Permanent("name cannot be empty".to_string()));
+	}
+	if config.url.is_empty() {
+		return Err(AuditSinkError::Permanent("url cannot be empty".to_string()));
+	}
+	if !config.url.starts_with("http://") && !config.url.starts_with("https://") {
+		return Err(AuditSinkError::Permanent(
+			"url must start with http:// or https://".to_string(),
+		));
+	}
+	let method_upper = config.method.to_uppercase();
+	if !["POST", "PUT", "PATCH"].contains(&method_upper.as_str()) {
+		return Err(AuditSinkError::Permanent(format!(
+			"unsupported method: {}",
+			config.method
+		)));
+	}
+	if config.timeout_ms == 0 {
+		return Err(AuditSinkError::Permanent(
+			"timeout_ms must be greater than 0".to_string(),
+		));
+	}
+	Ok(())
+}
+
 fn is_permanent_status(status: StatusCode) -> bool {
 	matches!(
 		status,
@@ -166,7 +143,7 @@ impl AuditSink for HttpAuditSink {
 	}
 
 	fn filter(&self) -> &AuditFilterConfig {
-		&self.config.filter
+		&self.filter
 	}
 
 	async fn publish(&self, event: Arc<EnrichedAuditEvent>) -> Result<(), AuditSinkError> {
@@ -203,6 +180,18 @@ mod tests {
 		AuditFilterConfig::default()
 	}
 
+	fn make_config(name: &str, url: &str) -> HttpSinkConfig {
+		HttpSinkConfig {
+			name: name.to_string(),
+			url: url.to_string(),
+			method: "POST".to_string(),
+			headers: vec![],
+			timeout_ms: 5000,
+			retry_max_attempts: 3,
+			min_severity: "info".to_string(),
+		}
+	}
+
 	#[test]
 	fn test_config_valid() {
 		let config = HttpSinkConfig {
@@ -212,95 +201,46 @@ mod tests {
 			headers: vec![("DD-API-KEY".to_string(), "secret".to_string())],
 			timeout_ms: 5000,
 			retry_max_attempts: 3,
-			filter: default_filter(),
+			min_severity: "info".to_string(),
 		};
-		assert!(config.validate().is_ok());
+		assert!(validate_config(&config).is_ok());
 	}
 
 	#[test]
 	fn test_config_empty_name() {
-		let config = HttpSinkConfig {
-			name: "".to_string(),
-			url: "https://example.com".to_string(),
-			method: "POST".to_string(),
-			headers: vec![],
-			timeout_ms: 5000,
-			retry_max_attempts: 3,
-			filter: default_filter(),
-		};
-		assert_eq!(config.validate().unwrap_err(), "name cannot be empty");
+		let config = make_config("", "https://example.com");
+		let err = validate_config(&config).unwrap_err();
+		assert!(err.to_string().contains("name cannot be empty"));
 	}
 
 	#[test]
 	fn test_config_empty_url() {
-		let config = HttpSinkConfig {
-			name: "test".to_string(),
-			url: "".to_string(),
-			method: "POST".to_string(),
-			headers: vec![],
-			timeout_ms: 5000,
-			retry_max_attempts: 3,
-			filter: default_filter(),
-		};
-		assert_eq!(config.validate().unwrap_err(), "url cannot be empty");
+		let config = make_config("test", "");
+		let err = validate_config(&config).unwrap_err();
+		assert!(err.to_string().contains("url cannot be empty"));
 	}
 
 	#[test]
 	fn test_config_invalid_url_scheme() {
-		let config = HttpSinkConfig {
-			name: "test".to_string(),
-			url: "ftp://example.com".to_string(),
-			method: "POST".to_string(),
-			headers: vec![],
-			timeout_ms: 5000,
-			retry_max_attempts: 3,
-			filter: default_filter(),
-		};
-		assert_eq!(
-			config.validate().unwrap_err(),
-			"url must start with http:// or https://"
-		);
+		let config = make_config("test", "ftp://example.com");
+		let err = validate_config(&config).unwrap_err();
+		assert!(err.to_string().contains("http://"));
 	}
 
 	#[test]
 	fn test_config_invalid_method() {
-		let config = HttpSinkConfig {
-			name: "test".to_string(),
-			url: "https://example.com".to_string(),
-			method: "DELETE".to_string(),
-			headers: vec![],
-			timeout_ms: 5000,
-			retry_max_attempts: 3,
-			filter: default_filter(),
-		};
-		assert!(config.validate().unwrap_err().contains("unsupported method"));
+		let mut config = make_config("test", "https://example.com");
+		config.method = "DELETE".to_string();
+		let err = validate_config(&config).unwrap_err();
+		assert!(err.to_string().contains("unsupported method"));
 	}
 
 	#[test]
 	fn test_config_zero_timeout() {
-		let config = HttpSinkConfig {
-			name: "test".to_string(),
-			url: "https://example.com".to_string(),
-			method: "POST".to_string(),
-			headers: vec![],
-			timeout_ms: 0,
-			retry_max_attempts: 3,
-			filter: default_filter(),
-		};
-		assert_eq!(
-			config.validate().unwrap_err(),
-			"timeout_ms must be greater than 0"
-		);
-	}
-
-	#[test]
-	fn test_config_defaults() {
-		let json = r#"{"name":"test","url":"https://example.com","filter":{"min_severity":"info"}}"#;
-		let config: HttpSinkConfig = serde_json::from_str(json).unwrap();
-		assert_eq!(config.method, "POST");
-		assert_eq!(config.timeout_ms, 5000);
-		assert_eq!(config.retry_max_attempts, 3);
-		assert!(config.headers.is_empty());
+		let mut config = make_config("test", "https://example.com");
+		config.timeout_ms = 0;
+		let err = validate_config(&config).unwrap_err();
+		assert!(err.to_string().contains("timeout_ms"));
 	}
 
 	#[test]
@@ -312,24 +252,16 @@ mod tests {
 			headers: vec![("Authorization".to_string(), "Splunk token".to_string())],
 			timeout_ms: 5000,
 			retry_max_attempts: 3,
-			filter: default_filter(),
+			min_severity: "info".to_string(),
 		};
-		let sink = HttpAuditSink::new(config);
+		let sink = HttpAuditSink::new(config, default_filter());
 		assert!(sink.is_ok());
 	}
 
 	#[test]
 	fn test_sink_creation_invalid_config() {
-		let config = HttpSinkConfig {
-			name: "".to_string(),
-			url: "https://example.com".to_string(),
-			method: "POST".to_string(),
-			headers: vec![],
-			timeout_ms: 5000,
-			retry_max_attempts: 3,
-			filter: default_filter(),
-		};
-		let sink = HttpAuditSink::new(config);
+		let config = make_config("", "https://example.com");
+		let sink = HttpAuditSink::new(config, default_filter());
 		assert!(sink.is_err());
 	}
 

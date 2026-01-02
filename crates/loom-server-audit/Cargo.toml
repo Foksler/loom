@@ -21,6 +21,7 @@ uuid = { version = "1", features = ["v4", "serde"] }
 
 loom-common-secret = { path = "../loom-common-secret" }
 loom-server-auth = { path = "../loom-server-auth" }
+loom-server-config = { path = "../loom-server-config" }
 
 # Optional dependencies for specific sinks
 sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"], optional = true }

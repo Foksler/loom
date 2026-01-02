@@ -6,7 +6,7 @@ use std::sync::Arc;
 use tokio::sync::mpsc::{self, error::SendError};
 use tracing::{instrument, warn};
 
-use crate::config::{QueueConfig, QueueOverflowPolicy};
+use loom_server_config::QueueOverflowPolicy;
 use crate::enrichment::AuditEnricher;
 use crate::event::AuditLogEntry;
 use crate::filter::AuditFilterConfig;
@@ -21,11 +21,11 @@ impl AuditService {
 	pub fn new(
 		enricher: Arc<dyn AuditEnricher>,
 		global_filter: AuditFilterConfig,
-		queue_cfg: QueueConfig,
+		queue_capacity: usize,
+		overflow_policy: QueueOverflowPolicy,
 		sinks: Vec<Arc<dyn AuditSink>>,
 	) -> Self {
-		let (tx, rx) = mpsc::channel(queue_cfg.capacity);
-		let overflow_policy = queue_cfg.overflow_policy;
+		let (tx, rx) = mpsc::channel(queue_capacity);
 
 		tokio::spawn(Self::background_task(rx, enricher, global_filter, sinks));
 
@@ -165,7 +165,8 @@ mod tests {
 		let service = AuditService::new(
 			Arc::new(NoopEnricher),
 			AuditFilterConfig::default(),
-			QueueConfig::default(),
+			10000,
+			QueueOverflowPolicy::DropNewest,
 			vec![sink_clone],
 		);
 
@@ -184,7 +185,8 @@ mod tests {
 		let service = AuditService::new(
 			Arc::new(NoopEnricher),
 			AuditFilterConfig::default(),
-			QueueConfig::default(),
+			10000,
+			QueueOverflowPolicy::DropNewest,
 			vec![sink_clone],
 		);
 
@@ -209,7 +211,8 @@ mod tests {
 		let service = AuditService::new(
 			Arc::new(NoopEnricher),
 			filter,
-			QueueConfig::default(),
+			10000,
+			QueueOverflowPolicy::DropNewest,
 			vec![sink_clone],
 		);
 
@@ -237,7 +240,8 @@ mod tests {
 		let service = AuditService::new(
 			Arc::new(NoopEnricher),
 			AuditFilterConfig::default(),
-			QueueConfig::default(),
+			10000,
+			QueueOverflowPolicy::DropNewest,
 			vec![sink1_clone, sink2_clone],
 		);
 
@@ -261,7 +265,8 @@ mod tests {
 		let service = AuditService::new(
 			Arc::new(NoopEnricher),
 			AuditFilterConfig::default(),
-			QueueConfig::default(),
+			10000,
+			QueueOverflowPolicy::DropNewest,
 			vec![failing_sink, good_sink_clone],
 		);
 
@@ -276,15 +281,11 @@ mod tests {
 	async fn test_queue_full_returns_false() {
 		let sink = Arc::new(TestSink::new("test"));
 
-		let queue_cfg = QueueConfig {
-			capacity: 1,
-			overflow_policy: QueueOverflowPolicy::DropNewest,
-		};
-
 		let service = AuditService::new(
 			Arc::new(NoopEnricher),
 			AuditFilterConfig::default(),
-			queue_cfg,
+			1,
+			QueueOverflowPolicy::DropNewest,
 			vec![sink],
 		);
 
