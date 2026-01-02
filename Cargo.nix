@@ -65,7 +65,7 @@ args@{
   cargoConfig ? {},
 }:
 let
-  nixifiedLockHash = "bd201316f1300545e60934fa4e8c3281ccce896c1f5353fa533c83c8db3a69f8";
+  nixifiedLockHash = "cfa4fb8ec43b66dd3c4e8b0f170edbe975e0910ef5af7858f381342b76e37db4";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -4825,6 +4825,7 @@ in
       chrono = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".chrono."0.4.42" { inherit profileName; }).out;
       loom_common_secret = (rustPackages."unknown".loom-common-secret."0.1.0" { inherit profileName; }).out;
       loom_server_auth = (rustPackages."unknown".loom-server-auth."0.1.0" { inherit profileName; }).out;
+      loom_server_config = (rustPackages."unknown".loom-server-config."0.1.0" { inherit profileName; }).out;
       ${ if rootFeatures' ? "loom-server-audit/geo-ip" || rootFeatures' ? "loom-server-audit/maxminddb" then "maxminddb" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".maxminddb."0.24.0" { inherit profileName; }).out;
       ${ if rootFeatures' ? "loom-server-audit/reqwest" || rootFeatures' ? "loom-server-audit/sink-http" then "reqwest" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".reqwest."0.12.28" { inherit profileName; }).out;
       serde = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.228" { inherit profileName; }).out;
