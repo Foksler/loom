@@ -39,6 +39,11 @@ impl LlmRequest {
 		}
 	}
 
+	pub fn with_model(mut self, model: impl Into<String>) -> Self {
+		self.model = model.into();
+		self
+	}
+
 	pub fn with_messages(mut self, messages: Vec<Message>) -> Self {
 		self.messages = messages;
 		self

@@ -63,6 +63,16 @@ impl AnthropicClientWrapper {
 	}
 }
 
+/// Default model for Anthropic when client sends "default".
+/// Uses Opus 4 to match Claude Code's default for MAX subscribers.
+const DEFAULT_ANTHROPIC_MODEL: &str = "claude-opus-4-20250514";
+
+/// Default model for OpenAI when client sends "default".
+const DEFAULT_OPENAI_MODEL: &str = "gpt-4o";
+
+/// Default model for Vertex when client sends "default".
+const DEFAULT_VERTEX_MODEL: &str = "gemini-1.5-pro";
+
 /// Service for managing LLM provider interactions.
 ///
 /// This service holds clients for multiple LLM providers (Anthropic, OpenAI,
@@ -70,8 +80,11 @@ impl AnthropicClientWrapper {
 /// requests.
 pub struct LlmService {
 	anthropic_client: Option<AnthropicClientWrapper>,
+	anthropic_model: String,
 	openai_client: Option<Arc<OpenAIClient>>,
+	openai_model: String,
 	vertex_client: Option<Arc<VertexClient>>,
+	vertex_model: String,
 	#[allow(dead_code)] // Stored for future graceful shutdown
 	refresh_task_handle: Option<tokio::task::JoinHandle<()>>,
 }
@@ -138,9 +151,9 @@ impl LlmService {
 
 		let openai_client = if let Some(ref api_key) = config.openai_api_key {
 			let mut openai_config = loom_server_llm_openai::OpenAIConfig::new(api_key.expose().clone());
-			if let Some(model) = config.openai_model {
+			if let Some(ref model) = config.openai_model {
 				debug!(model = %model, "Using custom OpenAI model");
-				openai_config = openai_config.with_model(model);
+				openai_config = openai_config.with_model(model.clone());
 			}
 			if let Some(org) = config.openai_organization {
 				debug!(organization = %org, "Using OpenAI organization");
@@ -159,9 +172,9 @@ impl LlmService {
 		let vertex_client =
 			if let (Some(project), Some(location)) = (config.vertex_project, config.vertex_location) {
 				let mut vertex_config = loom_server_llm_vertex::VertexConfig::new(project, location);
-				if let Some(model) = config.vertex_model {
+				if let Some(ref model) = config.vertex_model {
 					debug!(model = %model, "Using custom Vertex model");
-					vertex_config = vertex_config.with_model(model);
+					vertex_config = vertex_config.with_model(model.clone());
 				}
 
 				let client =
@@ -206,17 +219,36 @@ impl LlmService {
 				None
 			};
 
+		let anthropic_model = config
+			.anthropic_model
+			.clone()
+			.unwrap_or_else(|| DEFAULT_ANTHROPIC_MODEL.to_string());
+		let openai_model = config
+			.openai_model
+			.clone()
+			.unwrap_or_else(|| DEFAULT_OPENAI_MODEL.to_string());
+		let vertex_model = config
+			.vertex_model
+			.clone()
+			.unwrap_or_else(|| DEFAULT_VERTEX_MODEL.to_string());
+
 		info!(
 			anthropic = anthropic_client.is_some(),
 			openai = openai_client.is_some(),
 			vertex = vertex_client.is_some(),
+			anthropic_model = %anthropic_model,
+			openai_model = %openai_model,
+			vertex_model = %vertex_model,
 			"LLM service initialized"
 		);
 
 		Ok(Self {
 			anthropic_client,
+			anthropic_model,
 			openai_client,
+			openai_model,
 			vertex_client,
+			vertex_model,
 			refresh_task_handle,
 		})
 	}
@@ -304,6 +336,48 @@ impl LlmService {
 		}
 	}
 
+	/// Substitute "default" model with the configured default for Anthropic.
+	fn resolve_anthropic_model(&self, request: LlmRequest) -> LlmRequest {
+		if request.model == "default" {
+			debug!(
+				original_model = "default",
+				resolved_model = %self.anthropic_model,
+				"Substituting default model"
+			);
+			request.with_model(&self.anthropic_model)
+		} else {
+			request
+		}
+	}
+
+	/// Substitute "default" model with the configured default for OpenAI.
+	fn resolve_openai_model(&self, request: LlmRequest) -> LlmRequest {
+		if request.model == "default" {
+			debug!(
+				original_model = "default",
+				resolved_model = %self.openai_model,
+				"Substituting default model"
+			);
+			request.with_model(&self.openai_model)
+		} else {
+			request
+		}
+	}
+
+	/// Substitute "default" model with the configured default for Vertex.
+	fn resolve_vertex_model(&self, request: LlmRequest) -> LlmRequest {
+		if request.model == "default" {
+			debug!(
+				original_model = "default",
+				resolved_model = %self.vertex_model,
+				"Substituting default model"
+			);
+			request.with_model(&self.vertex_model)
+		} else {
+			request
+		}
+	}
+
 	/// Sends a completion request to Anthropic.
 	#[instrument(skip(self, request), fields(provider = "anthropic"))]
 	pub async fn complete_anthropic(&self, request: LlmRequest) -> Result<LlmResponse, LlmError> {
@@ -311,6 +385,8 @@ impl LlmService {
 			.anthropic_client
 			.as_ref()
 			.ok_or_else(|| LlmError::Api("Anthropic provider not configured".to_string()))?;
+
+		let request = self.resolve_anthropic_model(request);
 
 		debug!(
 				model = %request.model,
@@ -333,6 +409,8 @@ impl LlmService {
 			.as_ref()
 			.ok_or_else(|| LlmError::Api("Anthropic provider not configured".to_string()))?;
 
+		let request = self.resolve_anthropic_model(request);
+
 		debug!(
 				model = %request.model,
 				message_count = request.messages.len(),
@@ -350,6 +428,8 @@ impl LlmService {
 			.openai_client
 			.as_ref()
 			.ok_or_else(|| LlmError::Api("OpenAI provider not configured".to_string()))?;
+
+		let request = self.resolve_openai_model(request);
 
 		debug!(
 				model = %request.model,
@@ -372,6 +452,8 @@ impl LlmService {
 			.as_ref()
 			.ok_or_else(|| LlmError::Api("OpenAI provider not configured".to_string()))?;
 
+		let request = self.resolve_openai_model(request);
+
 		debug!(
 				model = %request.model,
 				message_count = request.messages.len(),
@@ -389,6 +471,8 @@ impl LlmService {
 			.vertex_client
 			.as_ref()
 			.ok_or_else(|| LlmError::Api("Vertex provider not configured".to_string()))?;
+
+		let request = self.resolve_vertex_model(request);
 
 		debug!(
 				model = %request.model,
@@ -410,6 +494,8 @@ impl LlmService {
 			.vertex_client
 			.as_ref()
 			.ok_or_else(|| LlmError::Api("Vertex provider not configured".to_string()))?;
+
+		let request = self.resolve_vertex_model(request);
 
 		debug!(
 				model = %request.model,
