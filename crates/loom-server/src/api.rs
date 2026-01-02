@@ -706,97 +706,97 @@ pub fn create_router(state: AppState) -> Router {
 			delete(routes::users::unlink_identity),
 		)
 		// Repository routes
-		.route("/api/v1/repos", post(routes::repos::create_repo))
-		.route("/api/v1/repos/{id}", get(routes::repos::get_repo))
-		.route("/api/v1/repos/{id}", patch(routes::repos::update_repo))
-		.route("/api/v1/repos/{id}", delete(routes::repos::delete_repo))
+		.route("/api/repos", post(routes::repos::create_repo))
+		.route("/api/repos/{id}", get(routes::repos::get_repo))
+		.route("/api/repos/{id}", patch(routes::repos::update_repo))
+		.route("/api/repos/{id}", delete(routes::repos::delete_repo))
 		.route(
-			"/api/v1/users/{id}/repos",
+			"/api/users/{id}/repos",
 			get(routes::repos::list_user_repos),
 		)
 		.route(
-			"/api/v1/orgs/{id}/repos",
+			"/api/orgs/{id}/repos",
 			get(routes::repos::list_org_repos),
 		)
 		// Team access routes
 		.route(
-			"/api/v1/repos/{id}/teams",
+			"/api/repos/{id}/teams",
 			get(routes::repos::list_repo_team_access),
 		)
 		.route(
-			"/api/v1/repos/{id}/teams",
+			"/api/repos/{id}/teams",
 			post(routes::repos::grant_repo_team_access),
 		)
 		.route(
-			"/api/v1/repos/{id}/teams/{tid}",
+			"/api/repos/{id}/teams/{tid}",
 			delete(routes::repos::revoke_repo_team_access),
 		)
 		// Branch protection routes
 		.route(
-			"/api/v1/repos/{id}/protection",
+			"/api/repos/{id}/protection",
 			get(routes::protection::list_protection_rules),
 		)
 		.route(
-			"/api/v1/repos/{id}/protection",
+			"/api/repos/{id}/protection",
 			post(routes::protection::create_protection_rule),
 		)
 		.route(
-			"/api/v1/repos/{id}/protection/{rule_id}",
+			"/api/repos/{id}/protection/{rule_id}",
 			delete(routes::protection::delete_protection_rule),
 		)
 		// Webhook routes
 		.route(
-			"/api/v1/repos/{id}/webhooks",
+			"/api/repos/{id}/webhooks",
 			get(routes::webhooks::list_repo_webhooks),
 		)
 		.route(
-			"/api/v1/repos/{id}/webhooks",
+			"/api/repos/{id}/webhooks",
 			post(routes::webhooks::create_repo_webhook),
 		)
 		.route(
-			"/api/v1/repos/{id}/webhooks/{wid}",
+			"/api/repos/{id}/webhooks/{wid}",
 			delete(routes::webhooks::delete_repo_webhook),
 		)
 		.route(
-			"/api/v1/orgs/{id}/webhooks",
+			"/api/orgs/{id}/webhooks",
 			get(routes::webhooks::list_org_webhooks),
 		)
 		.route(
-			"/api/v1/orgs/{id}/webhooks",
+			"/api/orgs/{id}/webhooks",
 			post(routes::webhooks::create_org_webhook),
 		)
 		.route(
-			"/api/v1/orgs/{id}/webhooks/{wid}",
+			"/api/orgs/{id}/webhooks/{wid}",
 			delete(routes::webhooks::delete_org_webhook),
 		)
 		// Mirror routes
 		.route(
-			"/api/v1/repos/{id}/mirrors",
+			"/api/repos/{id}/mirrors",
 			get(routes::mirrors::list_mirrors),
 		)
 		.route(
-			"/api/v1/repos/{id}/mirrors",
+			"/api/repos/{id}/mirrors",
 			post(routes::mirrors::create_mirror),
 		)
 		.route(
-			"/api/v1/repos/{id}/mirrors/{mirror_id}",
+			"/api/repos/{id}/mirrors/{mirror_id}",
 			delete(routes::mirrors::delete_mirror),
 		)
 		.route(
-			"/api/v1/repos/{id}/mirrors/{mirror_id}/sync",
+			"/api/repos/{id}/mirrors/{mirror_id}/sync",
 			post(routes::mirrors::trigger_sync),
 		)
 		// Maintenance routes
 		.route(
-			"/api/v1/repos/{id}/maintenance",
+			"/api/repos/{id}/maintenance",
 			post(routes::maintenance::trigger_repo_maintenance),
 		)
 		.route(
-			"/api/v1/repos/{id}/maintenance/jobs",
+			"/api/repos/{id}/maintenance/jobs",
 			get(routes::maintenance::list_repo_maintenance_jobs),
 		)
 		.route(
-			"/api/v1/admin/maintenance/sweep",
+			"/api/admin/maintenance/sweep",
 			post(routes::maintenance::trigger_global_sweep),
 		)
 		// CSE proxy route
@@ -904,7 +904,7 @@ pub fn create_router(state: AppState) -> Router {
 		.nest("/api/admin", admin_routes(state.clone()))
 		// WebSocket endpoint - no auth middleware (uses first-message auth)
 		.route(
-			"/v1/ws/sessions/{session_id}",
+			"/api/ws/sessions/{session_id}",
 			get(crate::websocket::handler::ws_upgrade_handler),
 		)
 		.with_state(state)

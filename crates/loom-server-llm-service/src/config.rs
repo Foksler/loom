@@ -54,12 +54,10 @@ pub enum AnthropicAuthConfig {
 	/// Static API key (pay-per-use).
 	ApiKey(SecretString),
 
-	/// OAuth pool with 1+ Pro/Max subscriptions.
+	/// OAuth pool for Pro/Max subscriptions (accounts managed via admin UI).
 	OAuthPool {
 		/// Path to the credential store file.
 		credential_file: PathBuf,
-		/// Provider IDs to load from credential file.
-		provider_ids: Vec<String>,
 		/// Cooldown duration in seconds when quota exhausted (default: 7200 = 2 hours).
 		cooldown_secs: u64,
 	},
@@ -145,20 +143,13 @@ impl LlmServiceConfig {
 			}
 		};
 
-		let anthropic_auth = if let Ok(providers) = env::var("LOOM_SERVER_ANTHROPIC_OAUTH_PROVIDERS") {
-			let provider_ids: Vec<String> = providers
-				.split(',')
-				.map(|s| s.trim().to_string())
-				.filter(|s| !s.is_empty())
-				.collect();
+		// OAuth pool mode: LOOM_SERVER_ANTHROPIC_OAUTH_ENABLED=true
+		// Accounts are managed dynamically via the admin UI
+		let oauth_enabled = env::var("LOOM_SERVER_ANTHROPIC_OAUTH_ENABLED")
+			.map(|v| v.eq_ignore_ascii_case("true") || v == "1")
+			.unwrap_or(false);
 
-			if provider_ids.is_empty() {
-				return Err(ConfigError::InvalidValue {
-					key: "LOOM_SERVER_ANTHROPIC_OAUTH_PROVIDERS".to_string(),
-					message: "Provider IDs list cannot be empty".to_string(),
-				});
-			}
-
+		let anthropic_auth = if oauth_enabled {
 			let credential_file = env::var("LOOM_SERVER_ANTHROPIC_OAUTH_CREDENTIAL_FILE")
 				.map(PathBuf::from)
 				.map_err(|_| {
@@ -176,14 +167,12 @@ impl LlmServiceConfig {
 			};
 
 			debug!(
-				providers = ?provider_ids,
 				credential_file = ?credential_file,
 				cooldown_secs = cooldown_secs,
-				"Using Anthropic OAuth pool"
+				"Using Anthropic OAuth pool (accounts managed via admin UI)"
 			);
 			Some(AnthropicAuthConfig::OAuthPool {
 				credential_file,
-				provider_ids,
 				cooldown_secs,
 			})
 		} else if let Some(api_key) = load_secret_env("LOOM_SERVER_ANTHROPIC_API_KEY")? {
@@ -232,12 +221,10 @@ impl LlmServiceConfig {
 	pub fn with_anthropic_oauth_pool(
 		mut self,
 		credential_file: impl Into<PathBuf>,
-		provider_ids: Vec<String>,
 		cooldown_secs: u64,
 	) -> Self {
 		self.anthropic_auth = Some(AnthropicAuthConfig::OAuthPool {
 			credential_file: credential_file.into(),
-			provider_ids,
 			cooldown_secs,
 		});
 		self

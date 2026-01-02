@@ -99,7 +99,6 @@ impl LlmService {
 			}
 			Some(AnthropicAuthConfig::OAuthPool {
 				credential_file,
-				provider_ids,
 				cooldown_secs,
 			}) => {
 				let pool_config = AnthropicPoolConfig {
@@ -108,27 +107,18 @@ impl LlmService {
 				};
 
 				debug!(
-					providers = ?provider_ids,
 					credential_file = ?credential_file,
 					cooldown_secs = cooldown_secs,
-					"Creating Anthropic OAuth pool"
+					"Creating Anthropic OAuth pool (accounts managed via admin UI)"
 				);
 
-				let pool = Arc::new(
-					AnthropicPool::new(
-						credential_file,
-						provider_ids.clone(),
-						config.anthropic_model.clone(),
-						pool_config,
-					)
-					.await
-					.map_err(|e| LlmServiceError::Config(format!("Failed to create OAuth pool: {e}")))?,
-				);
+				let pool = Arc::new(AnthropicPool::empty(
+					credential_file.clone(),
+					config.anthropic_model.clone(),
+					pool_config,
+				));
 
-				info!(
-					account_count = provider_ids.len(),
-					"Anthropic OAuth pool initialized"
-				);
+				info!("Anthropic OAuth pool initialized");
 				Some(AnthropicClientWrapper::Pool(pool))
 			}
 			None => {
