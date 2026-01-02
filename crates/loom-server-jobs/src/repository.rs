@@ -293,3 +293,388 @@ impl JobRepository {
         self.delete_old_runs(cutoff).await
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{JobDefinition, JobRun, JobStatus, TriggerSource};
+
+    async fn setup_db() -> SqlitePool {
+        let pool = SqlitePool::connect(":memory:").await.unwrap();
+
+        sqlx::query(
+            r#"
+            CREATE TABLE IF NOT EXISTS job_definitions (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT,
+                job_type TEXT NOT NULL,
+                interval_secs INTEGER,
+                enabled INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            "#,
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query(
+            r#"
+            CREATE TABLE IF NOT EXISTS job_runs (
+                id TEXT PRIMARY KEY,
+                job_id TEXT NOT NULL REFERENCES job_definitions(id),
+                status TEXT NOT NULL,
+                started_at TEXT NOT NULL,
+                completed_at TEXT,
+                duration_ms INTEGER,
+                error_message TEXT,
+                retry_count INTEGER NOT NULL DEFAULT 0,
+                triggered_by TEXT NOT NULL,
+                metadata TEXT
+            )
+            "#,
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        pool
+    }
+
+    fn make_definition(id: &str, name: &str) -> JobDefinition {
+        JobDefinition {
+            id: id.to_string(),
+            name: name.to_string(),
+            description: "Test job".to_string(),
+            job_type: "periodic".to_string(),
+            interval_secs: Some(60),
+            enabled: true,
+        }
+    }
+
+    fn make_run(id: &str, job_id: &str, status: JobStatus) -> JobRun {
+        JobRun {
+            id: id.to_string(),
+            job_id: job_id.to_string(),
+            status,
+            started_at: Utc::now(),
+            completed_at: None,
+            duration_ms: None,
+            error_message: None,
+            retry_count: 0,
+            triggered_by: TriggerSource::Schedule,
+            metadata: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn test_upsert_definition_insert() {
+        let pool = setup_db().await;
+        let repo = JobRepository::new(pool);
+
+        let def = make_definition("job-1", "Test Job");
+        repo.upsert_definition(&def).await.unwrap();
+
+        let fetched = repo.get_definition("job-1").await.unwrap().unwrap();
+        assert_eq!(fetched.id, "job-1");
+        assert_eq!(fetched.name, "Test Job");
+        assert!(fetched.enabled);
+    }
+
+    #[tokio::test]
+    async fn test_upsert_definition_update() {
+        let pool = setup_db().await;
+        let repo = JobRepository::new(pool);
+
+        let def = make_definition("job-1", "Original Name");
+        repo.upsert_definition(&def).await.unwrap();
+
+        let mut updated_def = def.clone();
+        updated_def.name = "Updated Name".to_string();
+        updated_def.enabled = false;
+        repo.upsert_definition(&updated_def).await.unwrap();
+
+        let fetched = repo.get_definition("job-1").await.unwrap().unwrap();
+        assert_eq!(fetched.name, "Updated Name");
+        assert!(!fetched.enabled);
+    }
+
+    #[tokio::test]
+    async fn test_record_run_start_and_complete() {
+        let pool = setup_db().await;
+        let repo = JobRepository::new(pool);
+
+        let def = make_definition("job-1", "Test Job");
+        repo.upsert_definition(&def).await.unwrap();
+
+        let run = make_run("run-1", "job-1", JobStatus::Running);
+        repo.record_run_start(&run).await.unwrap();
+
+        let fetched = repo.get_run("run-1").await.unwrap().unwrap();
+        assert_eq!(fetched.status, JobStatus::Running);
+        assert!(fetched.completed_at.is_none());
+
+        repo.record_run_complete("run-1", JobStatus::Succeeded, None, None)
+            .await
+            .unwrap();
+
+        let completed = repo.get_run("run-1").await.unwrap().unwrap();
+        assert_eq!(completed.status, JobStatus::Succeeded);
+        assert!(completed.completed_at.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_record_run_complete_with_error() {
+        let pool = setup_db().await;
+        let repo = JobRepository::new(pool);
+
+        let def = make_definition("job-1", "Test Job");
+        repo.upsert_definition(&def).await.unwrap();
+
+        let run = make_run("run-1", "job-1", JobStatus::Running);
+        repo.record_run_start(&run).await.unwrap();
+
+        repo.record_run_complete(
+            "run-1",
+            JobStatus::Failed,
+            Some("Something went wrong".to_string()),
+            None,
+        )
+        .await
+        .unwrap();
+
+        let completed = repo.get_run("run-1").await.unwrap().unwrap();
+        assert_eq!(completed.status, JobStatus::Failed);
+        assert_eq!(completed.error_message.as_deref(), Some("Something went wrong"));
+    }
+
+    #[tokio::test]
+    async fn test_get_last_run() {
+        let pool = setup_db().await;
+        let repo = JobRepository::new(pool);
+
+        let def = make_definition("job-1", "Test Job");
+        repo.upsert_definition(&def).await.unwrap();
+
+        assert!(repo.get_last_run("job-1").await.unwrap().is_none());
+
+        let run1 = JobRun {
+            id: "run-1".to_string(),
+            job_id: "job-1".to_string(),
+            status: JobStatus::Running,
+            started_at: Utc::now() - chrono::Duration::hours(1),
+            completed_at: None,
+            duration_ms: None,
+            error_message: None,
+            retry_count: 0,
+            triggered_by: TriggerSource::Schedule,
+            metadata: None,
+        };
+        repo.record_run_start(&run1).await.unwrap();
+
+        let run2 = JobRun {
+            id: "run-2".to_string(),
+            job_id: "job-1".to_string(),
+            status: JobStatus::Running,
+            started_at: Utc::now(),
+            completed_at: None,
+            duration_ms: None,
+            error_message: None,
+            retry_count: 0,
+            triggered_by: TriggerSource::Schedule,
+            metadata: None,
+        };
+        repo.record_run_start(&run2).await.unwrap();
+
+        let last = repo.get_last_run("job-1").await.unwrap().unwrap();
+        assert_eq!(last.id, "run-2");
+    }
+
+    #[tokio::test]
+    async fn test_count_consecutive_failures_all_failed() {
+        let pool = setup_db().await;
+        let repo = JobRepository::new(pool);
+
+        let def = make_definition("job-1", "Test Job");
+        repo.upsert_definition(&def).await.unwrap();
+
+        for i in 0..3 {
+            let run = JobRun {
+                id: format!("run-{i}"),
+                job_id: "job-1".to_string(),
+                status: JobStatus::Failed,
+                started_at: Utc::now() - chrono::Duration::minutes(3 - i),
+                completed_at: Some(Utc::now() - chrono::Duration::minutes(3 - i)),
+                duration_ms: Some(100),
+                error_message: Some("Error".to_string()),
+                retry_count: 0,
+                triggered_by: TriggerSource::Schedule,
+                metadata: None,
+            };
+            repo.record_run_start(&run).await.unwrap();
+            repo.record_run_complete(&run.id, JobStatus::Failed, Some("Error".to_string()), None)
+                .await
+                .unwrap();
+        }
+
+        let count = repo.count_consecutive_failures("job-1").await.unwrap();
+        assert_eq!(count, 3);
+    }
+
+    #[tokio::test]
+    async fn test_count_consecutive_failures_with_success() {
+        let pool = setup_db().await;
+        let repo = JobRepository::new(pool);
+
+        let def = make_definition("job-1", "Test Job");
+        repo.upsert_definition(&def).await.unwrap();
+
+        let success_run = JobRun {
+            id: "run-0".to_string(),
+            job_id: "job-1".to_string(),
+            status: JobStatus::Succeeded,
+            started_at: Utc::now() - chrono::Duration::minutes(10),
+            completed_at: None,
+            duration_ms: None,
+            error_message: None,
+            retry_count: 0,
+            triggered_by: TriggerSource::Schedule,
+            metadata: None,
+        };
+        repo.record_run_start(&success_run).await.unwrap();
+        repo.record_run_complete("run-0", JobStatus::Succeeded, None, None)
+            .await
+            .unwrap();
+
+        for i in 1..=2 {
+            let run = JobRun {
+                id: format!("run-{i}"),
+                job_id: "job-1".to_string(),
+                status: JobStatus::Failed,
+                started_at: Utc::now() - chrono::Duration::minutes(5 - i as i64),
+                completed_at: None,
+                duration_ms: None,
+                error_message: None,
+                retry_count: 0,
+                triggered_by: TriggerSource::Schedule,
+                metadata: None,
+            };
+            repo.record_run_start(&run).await.unwrap();
+            repo.record_run_complete(&run.id, JobStatus::Failed, Some("Error".to_string()), None)
+                .await
+                .unwrap();
+        }
+
+        let count = repo.count_consecutive_failures("job-1").await.unwrap();
+        assert_eq!(count, 2);
+    }
+
+    #[tokio::test]
+    async fn test_count_consecutive_failures_no_runs() {
+        let pool = setup_db().await;
+        let repo = JobRepository::new(pool);
+
+        let count = repo.count_consecutive_failures("nonexistent").await.unwrap();
+        assert_eq!(count, 0);
+    }
+
+    #[tokio::test]
+    async fn test_cleanup_old_runs() {
+        let pool = setup_db().await;
+        let repo = JobRepository::new(pool);
+
+        let def = make_definition("job-1", "Test Job");
+        repo.upsert_definition(&def).await.unwrap();
+
+        let old_run = JobRun {
+            id: "old-run".to_string(),
+            job_id: "job-1".to_string(),
+            status: JobStatus::Running,
+            started_at: Utc::now() - chrono::Duration::days(10),
+            completed_at: None,
+            duration_ms: None,
+            error_message: None,
+            retry_count: 0,
+            triggered_by: TriggerSource::Schedule,
+            metadata: None,
+        };
+        repo.record_run_start(&old_run).await.unwrap();
+        repo.record_run_complete("old-run", JobStatus::Succeeded, None, None)
+            .await
+            .unwrap();
+
+        sqlx::query("UPDATE job_runs SET completed_at = ? WHERE id = ?")
+            .bind(Utc::now() - chrono::Duration::days(10))
+            .bind("old-run")
+            .execute(&repo.pool)
+            .await
+            .unwrap();
+
+        let new_run = JobRun {
+            id: "new-run".to_string(),
+            job_id: "job-1".to_string(),
+            status: JobStatus::Running,
+            started_at: Utc::now(),
+            completed_at: None,
+            duration_ms: None,
+            error_message: None,
+            retry_count: 0,
+            triggered_by: TriggerSource::Schedule,
+            metadata: None,
+        };
+        repo.record_run_start(&new_run).await.unwrap();
+        repo.record_run_complete("new-run", JobStatus::Succeeded, None, None)
+            .await
+            .unwrap();
+
+        let deleted = repo.cleanup_old_runs(7).await.unwrap();
+        assert_eq!(deleted, 1);
+
+        assert!(repo.get_run("old-run").await.unwrap().is_none());
+        assert!(repo.get_run("new-run").await.unwrap().is_some());
+    }
+
+    #[tokio::test]
+    async fn test_delete_old_runs_before_cutoff() {
+        let pool = setup_db().await;
+        let repo = JobRepository::new(pool);
+
+        let def = make_definition("job-1", "Test Job");
+        repo.upsert_definition(&def).await.unwrap();
+
+        for i in 0..5 {
+            let run = JobRun {
+                id: format!("run-{i}"),
+                job_id: "job-1".to_string(),
+                status: JobStatus::Running,
+                started_at: Utc::now() - chrono::Duration::days(i + 1),
+                completed_at: None,
+                duration_ms: None,
+                error_message: None,
+                retry_count: 0,
+                triggered_by: TriggerSource::Schedule,
+                metadata: None,
+            };
+            repo.record_run_start(&run).await.unwrap();
+            repo.record_run_complete(&run.id, JobStatus::Succeeded, None, None)
+                .await
+                .unwrap();
+
+            sqlx::query("UPDATE job_runs SET completed_at = ? WHERE id = ?")
+                .bind(Utc::now() - chrono::Duration::days(i + 1))
+                .bind(&run.id)
+                .execute(&repo.pool)
+                .await
+                .unwrap();
+        }
+
+        let cutoff = Utc::now() - chrono::Duration::days(3);
+        let deleted = repo.delete_old_runs(cutoff).await.unwrap();
+        assert_eq!(deleted, 3);
+
+        let remaining = repo.list_runs("job-1", 10, 0).await.unwrap();
+        assert_eq!(remaining.len(), 2);
+    }
+}

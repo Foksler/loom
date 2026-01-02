@@ -328,7 +328,305 @@ async fn run_job_with_retry(
     }
 }
 
-fn calculate_backoff_delay(retry_count: u32) -> u64 {
+pub(crate) fn calculate_backoff_delay(retry_count: u32) -> u64 {
     let delay = BASE_RETRY_DELAY_SECS as f64 * RETRY_FACTOR.powi(retry_count as i32 - 1);
     (delay as u64).min(MAX_RETRY_DELAY_SECS)
+}
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::context::JobContext;
+    use crate::error::JobError;
+    use crate::types::JobOutput;
+    use async_trait::async_trait;
+    use sqlx::SqlitePool;
+    use std::time::Duration;
+
+    async fn setup_db() -> SqlitePool {
+        let pool = SqlitePool::connect("sqlite::memory:").await.unwrap();
+        sqlx::query(
+            r#"
+            CREATE TABLE job_definitions (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT NOT NULL,
+                job_type TEXT NOT NULL,
+                interval_secs INTEGER,
+                enabled INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            "#,
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query(
+            r#"
+            CREATE TABLE job_runs (
+                id TEXT PRIMARY KEY,
+                job_id TEXT NOT NULL,
+                status TEXT NOT NULL,
+                started_at TEXT NOT NULL,
+                completed_at TEXT,
+                duration_ms INTEGER,
+                error_message TEXT,
+                retry_count INTEGER NOT NULL DEFAULT 0,
+                triggered_by TEXT NOT NULL,
+                metadata TEXT,
+                FOREIGN KEY (job_id) REFERENCES job_definitions(id)
+            )
+            "#,
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        pool
+    }
+
+    struct MockJob {
+        id: String,
+        name: String,
+    }
+
+    impl MockJob {
+        fn new(id: &str, name: &str) -> Self {
+            Self {
+                id: id.to_string(),
+                name: name.to_string(),
+            }
+        }
+    }
+
+    #[async_trait]
+    impl Job for MockJob {
+        fn id(&self) -> &str {
+            &self.id
+        }
+
+        fn name(&self) -> &str {
+            &self.name
+        }
+
+        fn description(&self) -> &str {
+            "A mock job for testing"
+        }
+
+        async fn run(&self, _ctx: &JobContext) -> std::result::Result<JobOutput, JobError> {
+            Ok(JobOutput {
+                message: "Mock job completed".to_string(),
+                metadata: None,
+            })
+        }
+    }
+
+    #[test]
+    fn test_calculate_backoff_delay_retry_1() {
+        let delay = calculate_backoff_delay(1);
+        assert_eq!(delay, BASE_RETRY_DELAY_SECS);
+    }
+
+    #[test]
+    fn test_calculate_backoff_delay_retry_2() {
+        let delay = calculate_backoff_delay(2);
+        assert_eq!(delay, 2);
+    }
+
+    #[test]
+    fn test_calculate_backoff_delay_retry_3() {
+        let delay = calculate_backoff_delay(3);
+        assert_eq!(delay, 4);
+    }
+
+    #[test]
+    fn test_calculate_backoff_delay_caps_at_max() {
+        let delay = calculate_backoff_delay(10);
+        assert_eq!(delay, MAX_RETRY_DELAY_SECS);
+
+        let delay = calculate_backoff_delay(100);
+        assert_eq!(delay, MAX_RETRY_DELAY_SECS);
+    }
+
+    #[test]
+    fn test_determine_health_state_no_last_run() {
+        let state = determine_health_state(&None, 0);
+        assert_eq!(state, HealthState::Healthy);
+    }
+
+    #[test]
+    fn test_determine_health_state_succeeded() {
+        let run = JobRun {
+            id: "run-1".to_string(),
+            job_id: "job-1".to_string(),
+            status: JobStatus::Succeeded,
+            started_at: Utc::now(),
+            completed_at: Some(Utc::now()),
+            duration_ms: Some(100),
+            error_message: None,
+            retry_count: 0,
+            triggered_by: TriggerSource::Schedule,
+            metadata: None,
+        };
+        let state = determine_health_state(&Some(run), 0);
+        assert_eq!(state, HealthState::Healthy);
+    }
+
+    #[test]
+    fn test_determine_health_state_running() {
+        let run = JobRun {
+            id: "run-1".to_string(),
+            job_id: "job-1".to_string(),
+            status: JobStatus::Running,
+            started_at: Utc::now(),
+            completed_at: None,
+            duration_ms: None,
+            error_message: None,
+            retry_count: 0,
+            triggered_by: TriggerSource::Schedule,
+            metadata: None,
+        };
+        let state = determine_health_state(&Some(run), 0);
+        assert_eq!(state, HealthState::Healthy);
+    }
+
+    #[test]
+    fn test_determine_health_state_cancelled() {
+        let run = JobRun {
+            id: "run-1".to_string(),
+            job_id: "job-1".to_string(),
+            status: JobStatus::Cancelled,
+            started_at: Utc::now(),
+            completed_at: Some(Utc::now()),
+            duration_ms: Some(50),
+            error_message: None,
+            retry_count: 0,
+            triggered_by: TriggerSource::Manual,
+            metadata: None,
+        };
+        let state = determine_health_state(&Some(run), 0);
+        assert_eq!(state, HealthState::Healthy);
+    }
+
+    #[test]
+    fn test_determine_health_state_failed_zero_consecutive() {
+        let run = JobRun {
+            id: "run-1".to_string(),
+            job_id: "job-1".to_string(),
+            status: JobStatus::Failed,
+            started_at: Utc::now(),
+            completed_at: Some(Utc::now()),
+            duration_ms: Some(100),
+            error_message: Some("Error".to_string()),
+            retry_count: 0,
+            triggered_by: TriggerSource::Schedule,
+            metadata: None,
+        };
+        let state = determine_health_state(&Some(run), 0);
+        assert_eq!(state, HealthState::Healthy);
+    }
+
+    #[test]
+    fn test_determine_health_state_failed_one_consecutive() {
+        let run = JobRun {
+            id: "run-1".to_string(),
+            job_id: "job-1".to_string(),
+            status: JobStatus::Failed,
+            started_at: Utc::now(),
+            completed_at: Some(Utc::now()),
+            duration_ms: Some(100),
+            error_message: Some("Error".to_string()),
+            retry_count: 0,
+            triggered_by: TriggerSource::Schedule,
+            metadata: None,
+        };
+        let state = determine_health_state(&Some(run), 1);
+        assert_eq!(state, HealthState::Degraded);
+    }
+
+    #[test]
+    fn test_determine_health_state_failed_two_consecutive() {
+        let run = JobRun {
+            id: "run-1".to_string(),
+            job_id: "job-1".to_string(),
+            status: JobStatus::Failed,
+            started_at: Utc::now(),
+            completed_at: Some(Utc::now()),
+            duration_ms: Some(100),
+            error_message: Some("Error".to_string()),
+            retry_count: 0,
+            triggered_by: TriggerSource::Schedule,
+            metadata: None,
+        };
+        let state = determine_health_state(&Some(run), 2);
+        assert_eq!(state, HealthState::Degraded);
+    }
+
+    #[test]
+    fn test_determine_health_state_failed_three_plus_consecutive() {
+        let run = JobRun {
+            id: "run-1".to_string(),
+            job_id: "job-1".to_string(),
+            status: JobStatus::Failed,
+            started_at: Utc::now(),
+            completed_at: Some(Utc::now()),
+            duration_ms: Some(100),
+            error_message: Some("Error".to_string()),
+            retry_count: 0,
+            triggered_by: TriggerSource::Schedule,
+            metadata: None,
+        };
+        let state = determine_health_state(&Some(run.clone()), 3);
+        assert_eq!(state, HealthState::Unhealthy);
+
+        let state = determine_health_state(&Some(run), 5);
+        assert_eq!(state, HealthState::Unhealthy);
+    }
+
+    #[tokio::test]
+    async fn test_register_periodic_job() {
+        let pool = setup_db().await;
+        let repository = Arc::new(JobRepository::new(pool));
+        let mut scheduler = JobScheduler::new(repository);
+
+        let job = Arc::new(MockJob::new("periodic-job-1", "Periodic Test Job"));
+        scheduler.register_periodic(job, Duration::from_secs(60));
+
+        let job_ids = scheduler.job_ids();
+        assert!(job_ids.contains(&"periodic-job-1".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_register_one_shot_job() {
+        let pool = setup_db().await;
+        let repository = Arc::new(JobRepository::new(pool));
+        let mut scheduler = JobScheduler::new(repository);
+
+        let job = Arc::new(MockJob::new("oneshot-job-1", "One Shot Test Job"));
+        scheduler.register_one_shot(job);
+
+        let job_ids = scheduler.job_ids();
+        assert!(job_ids.contains(&"oneshot-job-1".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_trigger_nonexistent_job_returns_not_found() {
+        let pool = setup_db().await;
+        let repository = Arc::new(JobRepository::new(pool));
+        let scheduler = JobScheduler::new(repository);
+
+        let result = scheduler
+            .trigger_job("nonexistent-job", TriggerSource::Manual)
+            .await;
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            JobError::NotFound(id) => assert_eq!(id, "nonexistent-job"),
+            e => panic!("Expected NotFound error, got: {:?}", e),
+        }
+    }
 }

@@ -20,3 +20,6 @@ chrono = { workspace = true }
 uuid = { workspace = true }
 tracing = { workspace = true }
 sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite", "chrono"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
