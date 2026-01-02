@@ -120,6 +120,16 @@
     mode = "0400";
   };
 
+  sops.secrets.loom-google-oauth-client-id = {
+    owner = "loom-server";
+    mode = "0400";
+  };
+
+  sops.secrets.loom-google-oauth-client-secret = {
+    owner = "loom-server";
+    mode = "0400";
+  };
+
   sops.secrets.maxmind-account-id = {
     owner = "root";
     mode = "0400";
@@ -214,6 +224,13 @@
       clientIdFile = config.sops.secrets.loom-github-app-client-id.path;
       clientSecretFile = config.sops.secrets.loom-github-app-client-secret.path;
       redirectUri = "https://loom.ghuntley.com/auth/github/callback";
+    };
+
+    googleOAuth = {
+      enable = true;
+      clientIdFile = config.sops.secrets.loom-google-oauth-client-id.path;
+      clientSecretFile = config.sops.secrets.loom-google-oauth-client-secret.path;
+      redirectUri = "https://loom.ghuntley.com/auth/google/callback";
     };
 
     googleCse = {
