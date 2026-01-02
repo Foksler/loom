@@ -38,8 +38,8 @@ in
 
     interval = mkOption {
       type = types.str;
-      default = "*:0/5";
-      description = "Systemd calendar expression for update interval (default: every 5 minutes)";
+      default = "10s";
+      description = "Interval between update checks (e.g., '10s', '1m', '5m')";
     };
 
     sshKeyFile = mkOption {
@@ -164,9 +164,9 @@ in
       wantedBy = [ "timers.target" ];
 
       timerConfig = {
-        OnCalendar = cfg.interval;
+        OnBootSec = cfg.interval;
+        OnUnitActiveSec = cfg.interval;
         Persistent = true;
-        RandomizedDelaySec = "30s";
       };
     };
 

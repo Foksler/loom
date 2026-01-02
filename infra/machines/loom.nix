@@ -165,7 +165,7 @@
     branch = "trunk";
     flakeAttr = "virtualMachine";
     sshKeyFile = config.sops.secrets.nixos-auto-deploy-key.path;
-    interval = "*:*";  # every minute
+    interval = "10s";  # every 10 seconds
   };
 
   # Loom Server - API backend
