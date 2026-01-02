@@ -278,19 +278,13 @@
     useTLS = true;
   };
 
-  # Podman container runtime with weaver and server images
+  # Podman container runtime (images built and pushed by GitHub Actions)
   services.loom-podman = {
     enable = true;
-    weaverImage = pkgs.weaver-image;
-    weaverImageTag = "weaver:latest";
 
+    # Disable local image building - CI handles this now
     ghcr = {
-      enable = true;
-      pushWeaver = true;
-      pushServer = false;
-      username = "ghuntley";
-      repository = "ghuntley/loom";
-      tokenFile = config.sops.secrets.ghcr-token.path;
+      enable = false;
     };
   };
 }
