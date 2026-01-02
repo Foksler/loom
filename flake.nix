@@ -68,7 +68,11 @@
       
       mkSystem = modules: nixpkgs.lib.nixosSystem {
         inherit system;
-        specialArgs = { inherit mkBinaries; };
+        specialArgs = { 
+          inherit mkBinaries;
+          # Pass cargo2nix-built CLI for faster incremental builds
+          loom-cli-linux-c2n = loom-cli-linux-c2n;
+        };
         modules = modules ++ [
           ({ config, pkgs, ... }: {
             nixpkgs.overlays = [ overlayNoCross toolsOverlay ];
@@ -117,6 +121,23 @@
           })
         ];
       };
+      
+      # cargo2nix-built binaries (fast per-crate caching)
+      # Defined here so they can be used by both NixOS system and packages
+      loom-cli-c2n = (rustPkgs.workspace.loom-cli {});
+      loom-server-c2n = (rustPkgs.workspace.loom-server {});
+      
+      # loom-cli-linux: cargo2nix package with renamed binary for distribution
+      loom-cli-linux-c2n = pkgsWithCargo2nix.runCommand "loom-cli-linux" {
+        inherit (loom-cli-c2n) version;
+        meta = {
+          description = "Loom CLI - AI-powered coding assistant (Linux x86_64)";
+          mainProgram = "loom-linux-x86_64";
+        };
+      } ''
+        mkdir -p $out/bin
+        cp ${loom-cli-c2n}/bin/loom $out/bin/loom-linux-x86_64
+      '';
     in
     {
       nixosConfigurations = {
@@ -135,22 +156,6 @@
             overlays = [ overlayWithCross ];
           };
           pkgsWithTools = pkgs.extend toolsOverlay;
-          
-          # cargo2nix-built binaries (fast per-crate caching)
-          loom-cli-c2n = (rustPkgs.workspace.loom-cli {});
-          loom-server-c2n = (rustPkgs.workspace.loom-server {});
-          
-          # loom-cli-linux: cargo2nix package with renamed binary for distribution
-          loom-cli-linux-c2n = pkgsWithCargo2nix.runCommand "loom-cli-linux" {
-            inherit (loom-cli-c2n) version;
-            meta = {
-              description = "Loom CLI - AI-powered coding assistant (Linux x86_64)";
-              mainProgram = "loom-linux-x86_64";
-            };
-          } ''
-            mkdir -p $out/bin
-            cp ${loom-cli-c2n}/bin/loom $out/bin/loom-linux-x86_64
-          '';
           
           # Binaries packages using cargo2nix builds
           loom-weaver-binaries-c2n = pkgsWithCargo2nix.runCommand "loom-weaver-binaries" {

@@ -1,7 +1,7 @@
 # Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 # SPDX-License-Identifier: Proprietary
 
-{ config, lib, pkgs, mkBinaries ? null, ... }:
+{ config, lib, pkgs, mkBinaries ? null, loom-cli-linux-c2n ? null, ... }:
 
 with lib;
 
@@ -9,12 +9,15 @@ let
   cfg = config.services.loom-server;
   
   # Build binaries package based on configured platforms
+  # Use cargo2nix CLI if available for faster incremental builds
   binariesPackage = if mkBinaries != null then
     mkBinaries {
       inherit pkgs;
       platforms = {
         inherit (cfg.binPlatforms) linux-x86_64 linux-aarch64 windows-x86_64 windows-aarch64 macos-x86_64 macos-aarch64;
       };
+      # Use cargo2nix CLI for fast incremental builds
+      loom-cli-linux = if loom-cli-linux-c2n != null then loom-cli-linux-c2n else pkgs.loom-cli-linux;
     }
   else
     pkgs.loom-server-binaries;
