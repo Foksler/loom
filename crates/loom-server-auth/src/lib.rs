@@ -60,7 +60,7 @@ pub mod device_code {
 
 pub mod magic_link {
     //! Re-export magic link types from loom-server-auth-magiclink.
-    pub use loom_auth_magiclink::*;
+    pub use loom_server_auth_magiclink::*;
 }
 
 pub use abac::{is_allowed, Action, OrgMembershipAttr, ResourceAttrs, ResourceType, SubjectAttrs, TeamMembershipAttr};

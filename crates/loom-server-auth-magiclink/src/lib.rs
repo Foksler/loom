@@ -137,7 +137,7 @@ impl MagicLink {
     /// # Example
     ///
     /// ```
-    /// use loom_auth_magiclink::MagicLink;
+    /// use loom_server_auth_magiclink::MagicLink;
     ///
     /// let (link, token) = MagicLink::new("user@example.com");
     /// // Store `link` in database

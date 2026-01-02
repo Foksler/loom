@@ -50,7 +50,7 @@ This specification defines the authentication and Attribute-Based Access Control
 loom/
 ├── crates/
 │   ├── loom-auth/               # Core auth types, ABAC engine
-│   ├── loom-auth-magiclink/     # Magic link authentication
+│   ├── loom-server-auth-magiclink/     # Magic link authentication
 │   ├── loom-server-auth-devicecode/    # Device code flow for CLI
 │   ├── loom-server-auth-github/ # GitHub OAuth provider
 │   ├── loom-server-auth-google/  # Google OAuth provider
