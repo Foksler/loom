@@ -184,8 +184,9 @@ in
         echo "[$(date -Iseconds)] Starting nixos-rebuild with flags:$REBUILD_FLAGS"
         
         ${if cfg.useNom then ''
-          # Use nix-output-monitor for pretty output with per-derivation timing
-          nixos-rebuild switch --flake ".#$FLAKE_ATTR" $REBUILD_FLAGS |& nom
+          # Use nix-output-monitor for per-derivation timing
+          # Use --json for machine-readable output that works in non-TTY (journald)
+          nixos-rebuild switch --flake ".#$FLAKE_ATTR" $REBUILD_FLAGS 2>&1 | nom --json
         '' else ''
           nixos-rebuild switch --flake ".#$FLAKE_ATTR" $REBUILD_FLAGS
         ''}
