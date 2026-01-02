@@ -67,7 +67,7 @@ async fn test_github_callback_without_provider_config_returns_501() {
 	let response = app
 		.oneshot(
 			Request::builder()
-				.uri("/api/auth/callback/github")
+				.uri("/auth/github/callback")
 				.body(Body::empty())
 				.unwrap(),
 		)
@@ -86,7 +86,7 @@ async fn test_google_callback_without_provider_config_returns_501() {
 	let response = app
 		.oneshot(
 			Request::builder()
-				.uri("/api/auth/callback/google?code=test_code&state=test_state")
+				.uri("/auth/google/callback?code=test_code&state=test_state")
 				.body(Body::empty())
 				.unwrap(),
 		)

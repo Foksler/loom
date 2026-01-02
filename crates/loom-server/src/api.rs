@@ -521,17 +521,11 @@ pub fn create_router(state: AppState) -> Router {
 		.route("/api/auth/device/poll", post(routes::auth::device_poll))
 		// OAuth login/callback routes
 		.route("/api/auth/login/github", get(routes::auth::login_github))
-		.route(
-			"/api/auth/callback/github",
-			get(routes::auth::callback_github),
-		)
+		.route("/auth/github/callback", get(routes::auth::callback_github))
 		.route("/api/auth/login/google", get(routes::auth::login_google))
-		.route(
-			"/api/auth/callback/google",
-			get(routes::auth::callback_google),
-		)
+		.route("/auth/google/callback", get(routes::auth::callback_google))
 		.route("/api/auth/login/okta", get(routes::auth::login_okta))
-		.route("/api/auth/callback/okta", get(routes::auth::callback_okta))
+		.route("/auth/okta/callback", get(routes::auth::callback_okta))
 		// Public invitation view (GET only)
 		.route(
 			"/api/invitations/{token}",

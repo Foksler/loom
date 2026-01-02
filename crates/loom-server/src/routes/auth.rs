@@ -685,7 +685,7 @@ pub async fn login_okta(
 
 #[utoipa::path(
     get,
-    path = "/api/auth/callback/github",
+    path = "/auth/github/callback",
     params(
         ("code" = Option<String>, Query, description = "Authorization code from GitHub"),
         ("state" = Option<String>, Query, description = "State parameter for CSRF protection"),
@@ -852,7 +852,7 @@ pub async fn callback_github(
 
 #[utoipa::path(
     get,
-    path = "/api/auth/callback/google",
+    path = "/auth/google/callback",
     params(
         ("code" = Option<String>, Query, description = "Authorization code from Google"),
         ("state" = Option<String>, Query, description = "State parameter for CSRF protection"),
@@ -995,7 +995,7 @@ pub async fn callback_google(
 
 #[utoipa::path(
     get,
-    path = "/api/auth/callback/okta",
+    path = "/auth/okta/callback",
     params(
         ("code" = Option<String>, Query, description = "Authorization code from Okta"),
         ("state" = Option<String>, Query, description = "State parameter for CSRF protection"),
