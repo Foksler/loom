@@ -5,6 +5,7 @@
 <script lang="ts">
 	import type { CompareResult } from '$lib/api/repos';
 	import { i18n } from '$lib/i18n';
+	import { ThreadDivider } from '$lib/ui';
 	import CommitList from './CommitList.svelte';
 
 	interface Props {
@@ -94,72 +95,74 @@
 	const totalDeletions = $derived(parsedDiff.reduce((sum, f) => sum + f.deletions, 0));
 </script>
 
-<div class="space-y-6">
-	<div class="bg-bg-muted border border-border rounded-lg p-4">
-		<div class="flex items-center gap-2 text-lg font-medium text-fg">
-			<code class="font-mono text-sm bg-bg px-2 py-1 rounded">{result.base_ref}</code>
-			<svg class="w-5 h-5 text-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<div class="compare-view">
+	<div class="compare-header">
+		<div class="compare-refs">
+			<code class="ref-badge">{result.base_ref}</code>
+			<svg class="arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
 			</svg>
-			<code class="font-mono text-sm bg-bg px-2 py-1 rounded">{result.head_ref}</code>
+			<code class="ref-badge">{result.head_ref}</code>
 		</div>
 
-		<div class="flex items-center gap-4 mt-3 text-sm text-fg-muted">
+		<div class="compare-stats">
 			{#if result.ahead_by > 0}
-				<span>
-					<strong class="text-success">{result.ahead_by}</strong> {result.ahead_by !== 1 ? i18n._('client.repos.compare.commits') : i18n._('client.repos.compare.commit')} {i18n._('client.repos.compare.ahead')}
+				<span class="stat-ahead">
+					<strong>{result.ahead_by}</strong> {result.ahead_by !== 1 ? i18n._('client.repos.compare.commits') : i18n._('client.repos.compare.commit')} {i18n._('client.repos.compare.ahead')}
 				</span>
 			{/if}
 			{#if result.behind_by > 0}
-				<span>
-					<strong class="text-error">{result.behind_by}</strong> {result.behind_by !== 1 ? i18n._('client.repos.compare.commits') : i18n._('client.repos.compare.commit')} {i18n._('client.repos.compare.behind')}
+				<span class="stat-behind">
+					<strong>{result.behind_by}</strong> {result.behind_by !== 1 ? i18n._('client.repos.compare.commits') : i18n._('client.repos.compare.commit')} {i18n._('client.repos.compare.behind')}
 				</span>
 			{/if}
 		</div>
 	</div>
 
 	{#if result.commits.length > 0}
-		<div>
-			<h3 class="text-lg font-medium text-fg mb-3">{i18n._('client.repos.compare.commits_heading')}</h3>
+		<div class="commits-section">
+			<h3 class="section-heading">{i18n._('client.repos.compare.commits_heading')}</h3>
 			<CommitList commits={result.commits} {owner} {repo} />
 		</div>
 	{/if}
 
-	<div class="flex items-center gap-4 text-sm">
-		<span class="text-fg-muted">
-			{i18n._('client.repos.diff.showing')} <strong class="text-fg">{parsedDiff.length}</strong> {parsedDiff.length !== 1 ? i18n._('client.repos.diff.changed_files') : i18n._('client.repos.diff.changed_file')}
+	<ThreadDivider variant="gradient" />
+
+	<div class="diff-summary">
+		<span class="diff-summary-text">
+			{i18n._('client.repos.diff.showing')} <strong>{parsedDiff.length}</strong> {parsedDiff.length !== 1 ? i18n._('client.repos.diff.changed_files') : i18n._('client.repos.diff.changed_file')}
 		</span>
-		<span class="text-success">+{totalAdditions}</span>
-		<span class="text-error">-{totalDeletions}</span>
+		<span class="diff-additions">+{totalAdditions}</span>
+		<span class="diff-deletions">-{totalDeletions}</span>
 	</div>
 
 	{#each parsedDiff as file}
-		<div class="border border-border rounded-lg overflow-hidden">
-			<div class="flex items-center justify-between px-4 py-2 bg-bg-muted border-b border-border">
-				<span class="font-mono text-sm text-fg">{file.newPath}</span>
-				<div class="flex items-center gap-2 text-sm">
-					<span class="text-success">+{file.additions}</span>
-					<span class="text-error">-{file.deletions}</span>
+		<div class="diff-file">
+			<div class="diff-file-header">
+				<span class="diff-file-path">{file.newPath}</span>
+				<div class="diff-file-stats">
+					<span class="diff-additions">+{file.additions}</span>
+					<span class="diff-deletions">-{file.deletions}</span>
 				</div>
 			</div>
 
-			<div class="overflow-x-auto">
-				<table class="w-full text-sm font-mono">
+			<div class="diff-content">
+				<table class="diff-table">
 					<tbody>
 						{#each file.hunks as hunk}
-							<tr class="bg-accent/10">
-								<td colspan="3" class="px-4 py-1 text-fg-muted text-xs">{hunk.header}</td>
+							<tr class="hunk-header-row">
+								<td colspan="3" class="hunk-header">{hunk.header}</td>
 							</tr>
 							{#each hunk.lines as line}
-								<tr class="{line.type === 'addition' ? 'bg-success/10' : line.type === 'deletion' ? 'bg-error/10' : ''}">
-									<td class="w-12 px-2 py-0 text-right text-fg-muted select-none border-r border-border text-xs">
+								<tr class="diff-line diff-line-{line.type}">
+									<td class="diff-line-num">
 										{line.oldLineNum ?? ''}
 									</td>
-									<td class="w-12 px-2 py-0 text-right text-fg-muted select-none border-r border-border text-xs">
+									<td class="diff-line-num">
 										{line.newLineNum ?? ''}
 									</td>
-									<td class="px-4 py-0 whitespace-pre {line.type === 'addition' ? 'text-success' : line.type === 'deletion' ? 'text-error' : 'text-fg'}">
-										<span class="inline-block w-4">{line.type === 'addition' ? '+' : line.type === 'deletion' ? '-' : ' '}</span>{line.content}
+									<td class="diff-line-content">
+										<span class="diff-line-prefix">{line.type === 'addition' ? '+' : line.type === 'deletion' ? '-' : ' '}</span>{line.content}
 									</td>
 								</tr>
 							{/each}
@@ -171,8 +174,199 @@
 	{/each}
 
 	{#if parsedDiff.length === 0 && result.commits.length === 0}
-		<div class="text-center text-fg-muted py-8">
+		<div class="compare-empty">
 			{i18n._('client.repos.compare.identical')}
 		</div>
 	{/if}
 </div>
+
+<style>
+	.compare-view {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-6);
+	}
+
+	.compare-header {
+		background: var(--color-bg-muted);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		padding: var(--space-4);
+	}
+
+	.compare-refs {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		font-family: var(--font-mono);
+		font-size: var(--text-lg);
+		font-weight: 500;
+		color: var(--color-fg);
+	}
+
+	.ref-badge {
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+		background: var(--color-bg);
+		padding: var(--space-1) var(--space-2);
+		border-radius: var(--radius-md);
+	}
+
+	.arrow-icon {
+		width: 1.25rem;
+		height: 1.25rem;
+		color: var(--color-fg-muted);
+	}
+
+	.compare-stats {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+		margin-top: var(--space-3);
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+	}
+
+	.stat-ahead strong {
+		color: var(--color-success);
+	}
+
+	.stat-behind strong {
+		color: var(--color-error);
+	}
+
+	.commits-section {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+	}
+
+	.section-heading {
+		font-family: var(--font-mono);
+		font-size: var(--text-lg);
+		font-weight: 500;
+		color: var(--color-fg);
+	}
+
+	.diff-summary {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+	}
+
+	.diff-summary-text {
+		color: var(--color-fg-muted);
+	}
+
+	.diff-summary-text strong {
+		color: var(--color-fg);
+	}
+
+	.diff-additions {
+		color: var(--color-success);
+	}
+
+	.diff-deletions {
+		color: var(--color-error);
+	}
+
+	.diff-file {
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+
+	.diff-file-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: var(--space-2) var(--space-4);
+		background: var(--color-bg-muted);
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.diff-file-path {
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+		color: var(--color-fg);
+	}
+
+	.diff-file-stats {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+	}
+
+	.diff-content {
+		overflow-x: auto;
+	}
+
+	.diff-table {
+		width: 100%;
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+		border-collapse: collapse;
+	}
+
+	.hunk-header-row {
+		background: var(--color-accent-soft);
+	}
+
+	.hunk-header {
+		padding: var(--space-1) var(--space-4);
+		font-size: var(--text-xs);
+		color: var(--color-fg-muted);
+	}
+
+	.diff-line-addition {
+		background: var(--color-success-soft);
+	}
+
+	.diff-line-deletion {
+		background: var(--color-error-soft);
+	}
+
+	.diff-line-num {
+		width: 3rem;
+		padding: 0 var(--space-2);
+		text-align: right;
+		font-size: var(--text-xs);
+		color: var(--color-fg-muted);
+		user-select: none;
+		border-right: 1px solid var(--color-border);
+	}
+
+	.diff-line-content {
+		padding: 0 var(--space-4);
+		white-space: pre;
+	}
+
+	.diff-line-addition .diff-line-content {
+		color: var(--color-success);
+	}
+
+	.diff-line-deletion .diff-line-content {
+		color: var(--color-error);
+	}
+
+	.diff-line-context .diff-line-content {
+		color: var(--color-fg);
+	}
+
+	.diff-line-prefix {
+		display: inline-block;
+		width: 1rem;
+	}
+
+	.compare-empty {
+		text-align: center;
+		font-family: var(--font-mono);
+		color: var(--color-fg-muted);
+		padding: var(--space-8);
+	}
+</style>

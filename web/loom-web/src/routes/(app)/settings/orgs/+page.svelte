@@ -6,7 +6,7 @@
 	import { i18n } from '$lib/i18n';
 	import { getApiClient } from '$lib/api/client';
 	import type { Org } from '$lib/api/types';
-	import { Card, Badge, Button } from '$lib/ui';
+	import { Card, Badge, Button, ThreadDivider } from '$lib/ui';
 
 	let orgs: Org[] = $state([]);
 	let loading = $state(true);
@@ -58,13 +58,13 @@
 	<title>{i18n._('settings.orgs.title')} - Loom</title>
 </svelte:head>
 
-<div>
-	<div class="flex items-center justify-between mb-6">
+<div class="orgs-page">
+	<div class="page-header">
 		<div>
-			<h1 class="text-2xl font-bold text-fg">
+			<h1 class="page-title">
 				{i18n._('settings.orgs.title')}
 			</h1>
-			<p class="text-fg-muted mt-1">
+			<p class="page-subtitle">
 				{i18n._('settings.orgs.description')}
 			</p>
 		</div>
@@ -75,28 +75,32 @@
 		</a>
 	</div>
 
+	<ThreadDivider variant="gradient" />
+
 	{#if loading}
-		<div class="text-fg-muted">{i18n._('general.loading')}</div>
+		<div class="loading-state">{i18n._('general.loading')}</div>
 	{:else if error}
 		<Card>
-			<div class="text-error">{error}</div>
-			<Button variant="secondary" onclick={loadOrgs} class="mt-2">
-				{i18n._('general.retry')}
-			</Button>
+			<div class="error-state">
+				<p class="error-text">{error}</p>
+				<Button variant="secondary" onclick={loadOrgs}>
+					{i18n._('general.retry')}
+				</Button>
+			</div>
 		</Card>
 	{:else if orgs.length === 0}
 		<Card>
-			<p class="text-fg-muted">{i18n._('settings.orgs.noOrgs')}</p>
+			<p class="empty-text">{i18n._('settings.orgs.noOrgs')}</p>
 		</Card>
 	{:else}
-		<div class="space-y-4">
+		<div class="org-list">
 			{#each orgs as org (org.id)}
-				<a href="/settings/orgs/{org.id}" class="block">
+				<a href="/settings/orgs/{org.id}" class="org-link">
 					<Card hover>
-						<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-							<div class="flex-1 min-w-0">
-								<div class="flex items-center gap-2 mb-2">
-									<span class="font-semibold text-fg">{org.name}</span>
+						<div class="org-item">
+							<div class="org-info">
+								<div class="org-header">
+									<span class="org-name">{org.name}</span>
 									{#if org.is_personal}
 										<Badge variant="muted" size="sm">
 											{i18n._('settings.orgs.personal')}
@@ -107,12 +111,12 @@
 									</Badge>
 								</div>
 
-								<div class="space-y-1 text-sm">
-									<div class="text-fg-muted">
-										{i18n._('settings.orgs.slug')}: <span class="font-mono">{org.slug}</span>
+								<div class="org-details">
+									<div class="org-slug">
+										{i18n._('settings.orgs.slug')}: <span class="slug-value">{org.slug}</span>
 									</div>
 									{#if org.member_count !== null}
-										<div class="text-fg-muted">
+										<div class="org-members">
 											{org.member_count} {org.member_count === 1 ? i18n._('settings.orgs.member') : i18n._('settings.orgs.members')}
 										</div>
 									{/if}
@@ -125,3 +129,107 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	.orgs-page {
+		font-family: var(--font-mono);
+	}
+
+	.page-header {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: var(--space-4);
+	}
+
+	.page-title {
+		font-size: var(--text-2xl);
+		font-weight: 600;
+		color: var(--color-fg);
+	}
+
+	.page-subtitle {
+		color: var(--color-fg-muted);
+		margin-top: var(--space-1);
+		font-size: var(--text-sm);
+	}
+
+	.loading-state {
+		color: var(--color-fg-muted);
+	}
+
+	.error-state {
+		text-align: center;
+		padding: var(--space-4);
+	}
+
+	.error-text {
+		color: var(--color-error);
+		margin-bottom: var(--space-4);
+	}
+
+	.empty-text {
+		color: var(--color-fg-muted);
+	}
+
+	.org-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+	}
+
+	.org-link {
+		display: block;
+		text-decoration: none;
+	}
+
+	.org-item {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+	}
+
+	@media (min-width: 640px) {
+		.org-item {
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+		}
+	}
+
+	.org-info {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.org-header {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin-bottom: var(--space-2);
+	}
+
+	.org-name {
+		font-weight: 600;
+		color: var(--color-fg);
+	}
+
+	.org-details {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		font-size: var(--text-sm);
+	}
+
+	.org-slug {
+		color: var(--color-fg-muted);
+	}
+
+	.slug-value {
+		font-family: var(--font-mono);
+	}
+
+	.org-members {
+		color: var(--color-fg-muted);
+	}
+</style>

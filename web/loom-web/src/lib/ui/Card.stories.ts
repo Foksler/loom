@@ -11,6 +11,7 @@ import Card from './Card.svelte';
 interface CardProps {
 	padding?: 'none' | 'sm' | 'md' | 'lg';
 	hover?: boolean;
+	showDivider?: boolean;
 	header?: Snippet;
 	footer?: Snippet;
 	children: Snippet;
@@ -26,6 +27,7 @@ const meta = {
 			options: ['none', 'sm', 'md', 'lg'],
 		},
 		hover: { control: 'boolean' },
+		showDivider: { control: 'boolean' },
 	},
 } as Meta<CardProps>;
 

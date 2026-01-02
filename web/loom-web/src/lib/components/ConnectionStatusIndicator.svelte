@@ -1,3 +1,8 @@
+<!--
+  Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+  SPDX-License-Identifier: Proprietary
+-->
+
 <script lang="ts">
 	import type { ConnectionStatus } from '../realtime/types';
 	import { Badge } from '../ui';
@@ -13,21 +18,40 @@
 
 	const statusConfig: Record<
 		ConnectionStatus,
-		{ labelKey: string; variant: 'success' | 'warning' | 'error' | 'muted'; dotClass: string }
+		{
+			labelKey: string;
+			variant: 'success' | 'warning' | 'error' | 'muted';
+			dotColor: string;
+			animation?: string;
+		}
 	> = {
-		connected: { labelKey: 'connection.connected', variant: 'success', dotClass: 'bg-green-500' },
-		connecting: { labelKey: 'connection.connecting', variant: 'muted', dotClass: 'bg-gray-400' },
+		connected: {
+			labelKey: 'connection.connected',
+			variant: 'success',
+			dotColor: 'var(--color-success)'
+		},
+		connecting: {
+			labelKey: 'connection.connecting',
+			variant: 'muted',
+			dotColor: 'var(--color-thread)',
+			animation: 'thread-weaving'
+		},
 		disconnected: {
 			labelKey: 'connection.disconnected',
 			variant: 'error',
-			dotClass: 'bg-red-500',
+			dotColor: 'var(--color-error)'
 		},
 		reconnecting: {
 			labelKey: 'connection.reconnecting',
 			variant: 'warning',
-			dotClass: 'bg-yellow-500',
+			dotColor: 'var(--color-warning)',
+			animation: 'thread-weaving'
 		},
-		error: { labelKey: 'connection.error', variant: 'error', dotClass: 'bg-red-500' },
+		error: {
+			labelKey: 'connection.error',
+			variant: 'error',
+			dotColor: 'var(--color-error)'
+		}
 	};
 
 	const config = $derived(statusConfig[status]);
@@ -53,24 +77,74 @@
 	{#if isClickable}
 		<button
 			type="button"
-			class="inline-flex items-center gap-1.5 cursor-pointer bg-transparent border-none p-0 m-0 text-inherit font-inherit"
+			class="status-button"
 			onclick={handleClick}
 			{title}
 		>
-			<span
-				class="inline-block w-2 h-2 rounded-full {config.dotClass}"
-			></span>
+			<span class="status-dot" style:background={config.dotColor}></span>
 			<span>{label}</span>
 		</button>
 	{:else}
-		<span class="inline-flex items-center gap-1.5">
+		<span class="status-content">
 			<span
-				class="inline-block w-2 h-2 rounded-full {config.dotClass} {status === 'connecting' || status === 'reconnecting' ? 'animate-pulse' : ''}"
+				class="status-dot"
+				class:animating={config.animation}
+				style:background={config.dotColor}
 			></span>
 			<span>{label}</span>
 			{#if attemptLabel}
-				<span class="text-xs opacity-75">({attemptLabel})</span>
+				<span class="attempt-count">({attemptLabel})</span>
 			{/if}
 		</span>
 	{/if}
 </Badge>
+
+<style>
+	.status-button {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+		cursor: pointer;
+		background: transparent;
+		border: none;
+		padding: 0;
+		margin: 0;
+		color: inherit;
+		font-family: var(--font-mono);
+		font-size: inherit;
+	}
+
+	.status-content {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	.status-dot {
+		display: inline-block;
+		width: 6px;
+		height: 6px;
+		border-radius: var(--radius-full);
+	}
+
+	.status-dot.animating {
+		animation: thread-weaving 1.5s ease-in-out infinite;
+	}
+
+	@keyframes thread-weaving {
+		0%,
+		100% {
+			opacity: 1;
+			transform: scale(1);
+		}
+		50% {
+			opacity: 0.5;
+			transform: scale(0.8);
+		}
+	}
+
+	.attempt-count {
+		font-size: var(--text-xs);
+		opacity: 0.75;
+	}
+</style>

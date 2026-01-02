@@ -7,7 +7,7 @@
 	import { i18n, locales, localeNames, setLocale, type Locale } from '$lib/i18n';
 	import { getApiClient } from '$lib/api/client';
 	import { authStore } from '$lib/auth';
-	import { Card, Button, Input } from '$lib/ui';
+	import { Card, Button, Input, ThreadDivider } from '$lib/ui';
 
 	const parentData = $derived($page.data as { user: import('$lib/api/types').CurrentUser & { username?: string } });
 	const user = $derived(parentData.user);
@@ -88,13 +88,15 @@
 	<title>{i18n._('settings.profile.title')} - Loom</title>
 </svelte:head>
 
-<div>
-	<h1 class="text-2xl font-bold text-fg mb-6">
+<div class="profile-page">
+	<h1 class="page-title">
 		{i18n._('settings.profile.title')}
 	</h1>
 
+	<ThreadDivider variant="gradient" />
+
 	<Card>
-		<form onsubmit={(e) => { e.preventDefault(); handleSave(); }} class="space-y-6">
+		<form onsubmit={(e) => { e.preventDefault(); handleSave(); }} class="profile-form">
 			<Input
 				label={i18n._('settings.profile.displayName')}
 				bind:value={displayName}
@@ -108,13 +110,13 @@
 				error={usernameError ?? undefined}
 			/>
 			{#if !usernameError}
-				<p class="-mt-4 text-sm text-fg-muted">
+				<p class="field-hint">
 					{i18n._('settings.profile.usernameHint')}
 				</p>
 			{/if}
 
-			<div class="w-full">
-				<label for="email" class="block text-sm font-medium text-fg mb-1.5">
+			<div class="form-field">
+				<label for="email" class="field-label">
 					{i18n._('settings.profile.email')}
 				</label>
 				<input
@@ -122,24 +124,22 @@
 					type="email"
 					value={user?.email ?? ''}
 					disabled
-					class="w-full h-10 px-3 rounded-md border border-border bg-bg-muted text-fg-muted
-								 cursor-not-allowed opacity-60"
+					class="field-input field-disabled"
 				/>
-				<p class="mt-1.5 text-sm text-fg-muted">
+				<p class="field-hint">
 					{i18n._('settings.profile.emailHint')}
 				</p>
 			</div>
 
-			<div class="w-full">
-				<label for="locale" class="block text-sm font-medium text-fg mb-1.5">
+			<div class="form-field">
+				<label for="locale" class="field-label">
 					{i18n._('settings.profile.locale')}
 				</label>
 				<select
 					id="locale"
 					value={selectedLocale}
 					onchange={handleLocaleChange}
-					class="w-full h-10 px-3 rounded-md border border-border bg-bg text-fg
-								 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-bg"
+					class="field-select"
 				>
 					{#each locales as locale}
 						<option value={locale}>{localeNames[locale]}</option>
@@ -148,18 +148,18 @@
 			</div>
 
 			{#if successMessage}
-				<div class="p-3 rounded-md bg-success/10 text-success text-sm">
+				<div class="message message-success">
 					{successMessage}
 				</div>
 			{/if}
 
 			{#if errorMessage}
-				<div class="p-3 rounded-md bg-error/10 text-error text-sm">
+				<div class="message message-error">
 					{errorMessage}
 				</div>
 			{/if}
 
-			<div class="flex justify-end">
+			<div class="form-actions">
 				<Button type="submit" disabled={saving || !!usernameError} loading={saving}>
 					{saving ? i18n._('settings.profile.saving') : i18n._('settings.profile.save')}
 				</Button>
@@ -167,3 +167,104 @@
 		</form>
 	</Card>
 </div>
+
+<style>
+	.profile-page {
+		font-family: var(--font-mono);
+	}
+
+	.page-title {
+		font-size: var(--text-2xl);
+		font-weight: 600;
+		color: var(--color-fg);
+		margin-bottom: var(--space-4);
+	}
+
+	.profile-form {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-6);
+	}
+
+	.form-field {
+		width: 100%;
+	}
+
+	.field-label {
+		display: block;
+		font-size: var(--text-sm);
+		font-weight: 500;
+		color: var(--color-fg);
+		margin-bottom: var(--space-2);
+	}
+
+	.field-input {
+		width: 100%;
+		height: 40px;
+		padding: 0 var(--space-3);
+		border-radius: var(--radius-md);
+		border: 1px solid var(--color-border);
+		background: var(--color-bg);
+		color: var(--color-fg);
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+	}
+
+	.field-input:focus {
+		outline: none;
+		border-color: var(--color-accent);
+		box-shadow: 0 0 0 2px var(--color-accent-soft);
+	}
+
+	.field-disabled {
+		background: var(--color-bg-muted);
+		color: var(--color-fg-muted);
+		cursor: not-allowed;
+		opacity: 0.6;
+	}
+
+	.field-select {
+		width: 100%;
+		height: 40px;
+		padding: 0 var(--space-3);
+		border-radius: var(--radius-md);
+		border: 1px solid var(--color-border);
+		background: var(--color-bg);
+		color: var(--color-fg);
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+	}
+
+	.field-select:focus {
+		outline: none;
+		border-color: var(--color-accent);
+		box-shadow: 0 0 0 2px var(--color-accent-soft);
+	}
+
+	.field-hint {
+		margin-top: var(--space-2);
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+	}
+
+	.message {
+		padding: var(--space-3);
+		border-radius: var(--radius-md);
+		font-size: var(--text-sm);
+	}
+
+	.message-success {
+		background: var(--color-success-soft);
+		color: var(--color-success);
+	}
+
+	.message-error {
+		background: var(--color-error-soft);
+		color: var(--color-error);
+	}
+
+	.form-actions {
+		display: flex;
+		justify-content: flex-end;
+	}
+</style>

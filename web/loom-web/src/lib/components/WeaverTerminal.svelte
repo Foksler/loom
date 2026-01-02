@@ -5,6 +5,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { i18n } from '$lib/i18n';
+	import { Button } from '$lib/ui';
 
 	interface Props {
 		weaverId: string;
@@ -19,7 +20,7 @@
 	let ws: WebSocket | null = null;
 	let keepAliveInterval: ReturnType<typeof setInterval> | null = null;
 
-	const KEEPALIVE_INTERVAL_MS = 15000; // Send ping every 15 seconds
+	const KEEPALIVE_INTERVAL_MS = 15000;
 
 	let connectionStatus = $state<'connecting' | 'connected' | 'disconnected' | 'error'>('connecting');
 	let errorMessage = $state<string | null>(null);
@@ -37,29 +38,29 @@
 		terminal = new Terminal({
 			cursorBlink: true,
 			fontSize: 14,
-			fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+			fontFamily: 'var(--font-mono)',
 			theme: {
-				background: '#1e1e1e',
-				foreground: '#d4d4d4',
-				cursor: '#d4d4d4',
-				cursorAccent: '#1e1e1e',
-				selectionBackground: '#264f78',
-				black: '#000000',
-				red: '#cd3131',
-				green: '#0dbc79',
-				yellow: '#e5e510',
-				blue: '#2472c8',
-				magenta: '#bc3fbc',
-				cyan: '#11a8cd',
-				white: '#e5e5e5',
-				brightBlack: '#666666',
-				brightRed: '#f14c4c',
-				brightGreen: '#23d18b',
-				brightYellow: '#f5f543',
-				brightBlue: '#3b8eea',
-				brightMagenta: '#d670d6',
-				brightCyan: '#29b8db',
-				brightWhite: '#ffffff',
+				background: 'var(--color-bg)',
+				foreground: 'var(--color-fg)',
+				cursor: 'var(--color-fg)',
+				cursorAccent: 'var(--color-bg)',
+				selectionBackground: 'var(--color-accent-soft)',
+				black: '#0D0C0B',
+				red: '#A63D2F',
+				green: '#4A7C59',
+				yellow: '#C9A227',
+				blue: '#4A6FA5',
+				magenta: '#8B3A62',
+				cyan: '#4A6FA5',
+				white: '#F7F4F0',
+				brightBlack: '#6B6560',
+				brightRed: '#C94F3F',
+				brightGreen: '#5A9C69',
+				brightYellow: '#D9B237',
+				brightBlue: '#5A8FC5',
+				brightMagenta: '#AB4A72',
+				brightCyan: '#6A8FC5',
+				brightWhite: '#FFFFFF',
 			},
 		});
 
@@ -101,8 +102,6 @@
 			connectionStatus = 'connected';
 			terminal?.focus();
 			startKeepAlive();
-			// Send Ctrl+L to refresh the terminal display
-			// This triggers a redraw so user sees current PTY state
 			sendTerminalRefresh();
 		};
 
@@ -133,7 +132,6 @@
 
 	function sendTerminalRefresh() {
 		if (ws && ws.readyState === WebSocket.OPEN) {
-			// Send Ctrl+L (ASCII 12 = Form Feed) to trigger terminal redraw
 			ws.send(new Uint8Array([12]));
 		}
 	}
@@ -142,7 +140,6 @@
 		stopKeepAlive();
 		keepAliveInterval = setInterval(() => {
 			if (ws && ws.readyState === WebSocket.OPEN) {
-				// Send empty ping frame to keep connection alive
 				ws.send(new Uint8Array(0));
 			}
 		}, KEEPALIVE_INTERVAL_MS);
@@ -194,16 +191,16 @@
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css" />
 </svelte:head>
 
-<div class="flex flex-col h-full">
-	<div class="flex items-center justify-between px-3 py-2 bg-gray-800 border-b border-gray-700">
-		<div class="flex items-center gap-2">
+<div class="terminal-wrapper">
+	<div class="terminal-header">
+		<div class="terminal-status">
 			<div
-				class="w-2 h-2 rounded-full"
-				class:bg-green-500={connectionStatus === 'connected'}
-				class:bg-yellow-500={connectionStatus === 'connecting'}
-				class:bg-red-500={connectionStatus === 'error' || connectionStatus === 'disconnected'}
+				class="terminal-status-dot"
+				class:terminal-status-connected={connectionStatus === 'connected'}
+				class:terminal-status-connecting={connectionStatus === 'connecting'}
+				class:terminal-status-error={connectionStatus === 'error' || connectionStatus === 'disconnected'}
 			></div>
-			<span class="text-sm text-gray-300">
+			<span class="terminal-status-text">
 				{#if connectionStatus === 'connected'}
 					{i18n._('weavers.terminal.connected')}
 				{:else if connectionStatus === 'connecting'}
@@ -216,34 +213,103 @@
 			</span>
 		</div>
 		{#if connectionStatus === 'disconnected' || connectionStatus === 'error'}
-			<button
+			<Button
+				variant="secondary"
+				size="sm"
 				onclick={reconnect}
-				class="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 rounded"
 			>
 				{i18n._('weavers.terminal.reconnect')}
-			</button>
+			</Button>
 		{/if}
 	</div>
 
 	{#if errorMessage}
-		<div class="px-3 py-2 bg-red-900/50 text-red-200 text-sm">
+		<div class="terminal-error">
 			{errorMessage}
 		</div>
 	{/if}
 
 	<div
 		bind:this={terminalContainer}
-		class="flex-1 min-h-0"
-		style="background: #1e1e1e;"
+		class="terminal-container"
 	></div>
 </div>
 
 <style>
+	.terminal-wrapper {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		font-family: var(--font-mono);
+	}
+
+	.terminal-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: var(--space-2) var(--space-3);
+		background: var(--color-bg-muted);
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.terminal-status {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	.terminal-status-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: var(--radius-full);
+	}
+
+	.terminal-status-connected {
+		background: var(--color-success);
+	}
+
+	.terminal-status-connecting {
+		background: var(--color-warning);
+		animation: pulse 1.5s ease-in-out infinite;
+	}
+
+	.terminal-status-error {
+		background: var(--color-error);
+	}
+
+	.terminal-status-text {
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+	}
+
+	.terminal-error {
+		padding: var(--space-2) var(--space-3);
+		background: var(--color-error-soft);
+		color: var(--color-error);
+		font-size: var(--text-sm);
+	}
+
+	.terminal-container {
+		flex: 1;
+		min-height: 0;
+		background: var(--color-bg);
+	}
+
 	:global(.xterm) {
 		height: 100%;
-		padding: 8px;
+		padding: var(--space-2);
 	}
+
 	:global(.xterm-viewport) {
 		overflow-y: auto !important;
+	}
+
+	@keyframes pulse {
+		0%, 100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.5;
+		}
 	}
 </style>

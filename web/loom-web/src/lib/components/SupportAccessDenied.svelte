@@ -11,7 +11,7 @@
 -->
 
 <script lang="ts">
-  import { Card, Button } from '$lib/ui';
+  import { Card, Button, LoomFrame } from '$lib/ui';
   import { getApiClient } from '$lib/api';
   import { logger } from '$lib/logging';
   import type { SupportAccessRequest } from '$lib/api/types';
@@ -66,64 +66,155 @@
   }
 </script>
 
-<div class="flex flex-1 items-center justify-center p-8">
-  <div class="max-w-md text-center">
-  <Card padding="lg">
-    {#if requestState === 'requested'}
-      <div class="mb-4">
-        <svg class="mx-auto h-12 w-12 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      </div>
-      <h2 class="text-lg font-semibold text-fg mb-2">Access Requested</h2>
-      <p class="text-fg-muted mb-4">
-        Your request has been sent to the thread owner. You'll be able to view this thread once they approve your request.
-      </p>
-      {#if pendingRequest}
-        <p class="text-sm text-fg-subtle">
-          Request ID: {pendingRequest.request_id.slice(0, 8)}...
+<div class="access-denied-wrapper">
+  <LoomFrame variant="full">
+    <div class="access-denied-content">
+      {#if requestState === 'requested'}
+        <div class="access-icon access-icon-success">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h2 class="access-title">Access Requested</h2>
+        <p class="access-description">
+          Your request has been sent to the thread owner. You'll be able to view this thread once they approve your request.
+        </p>
+        {#if pendingRequest}
+          <p class="access-request-id">
+            Request ID: {pendingRequest.request_id.slice(0, 8)}...
+          </p>
+        {/if}
+      {:else}
+        <div class="access-icon access-icon-warning">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m0 0v2m0-2h2m-2 0H10m5-6a3 3 0 11-6 0 3 3 0 016 0zm-3 10a9 9 0 100-18 9 9 0 000 18z" />
+          </svg>
+        </div>
+        <h2 class="access-title">Access Required</h2>
+        <p class="access-description">
+          This thread has not been shared with support. As a support team member, you can request access from the thread owner.
+        </p>
+        
+        {#if errorMessage}
+          <div class="access-error">
+            {errorMessage}
+          </div>
+        {/if}
+        
+        <Button
+          variant="primary"
+          onclick={handleRequestAccess}
+          disabled={requestState === 'loading'}
+        >
+          {#if requestState === 'loading'}
+            <span class="access-loading">
+              <svg class="access-spinner" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Requesting...
+            </span>
+          {:else}
+            Request Access
+          {/if}
+        </Button>
+        
+        <p class="access-note">
+          The thread owner will receive a notification and can approve or deny your request.
+          If approved, access will be granted for 31 days.
         </p>
       {/if}
-    {:else}
-      <div class="mb-4">
-        <svg class="mx-auto h-12 w-12 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m0 0v2m0-2h2m-2 0H10m5-6a3 3 0 11-6 0 3 3 0 016 0zm-3 10a9 9 0 100-18 9 9 0 000 18z" />
-        </svg>
-      </div>
-      <h2 class="text-lg font-semibold text-fg mb-2">Access Required</h2>
-      <p class="text-fg-muted mb-4">
-        This thread has not been shared with support. As a support team member, you can request access from the thread owner.
-      </p>
-      
-      {#if errorMessage}
-        <div class="mb-4 p-3 bg-error-soft text-error rounded-md text-sm">
-          {errorMessage}
-        </div>
-      {/if}
-      
-      <Button
-        variant="primary"
-        onclick={handleRequestAccess}
-        disabled={requestState === 'loading'}
-      >
-        {#if requestState === 'loading'}
-          <span class="flex items-center gap-2">
-            <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Requesting...
-          </span>
-        {:else}
-          Request Access
-        {/if}
-      </Button>
-      
-      <p class="mt-4 text-xs text-fg-subtle">
-        The thread owner will receive a notification and can approve or deny your request.
-        If approved, access will be granted for 31 days.
-      </p>
-    {/if}
-  </Card>
-  </div>
+    </div>
+  </LoomFrame>
 </div>
+
+<style>
+  .access-denied-wrapper {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8);
+  }
+
+  .access-denied-content {
+    max-width: 400px;
+    text-align: center;
+    font-family: var(--font-mono);
+  }
+
+  .access-icon {
+    margin: 0 auto var(--space-4);
+    width: 48px;
+    height: 48px;
+  }
+
+  .access-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .access-icon-success {
+    color: var(--color-success);
+  }
+
+  .access-icon-warning {
+    color: var(--color-warning);
+  }
+
+  .access-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-fg);
+    margin-bottom: var(--space-2);
+  }
+
+  .access-description {
+    font-size: var(--text-sm);
+    color: var(--color-fg-muted);
+    margin-bottom: var(--space-4);
+    line-height: 1.6;
+  }
+
+  .access-request-id {
+    font-size: var(--text-xs);
+    color: var(--color-fg-subtle);
+  }
+
+  .access-error {
+    margin-bottom: var(--space-4);
+    padding: var(--space-3);
+    background: var(--color-error-soft);
+    color: var(--color-error);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+  }
+
+  .access-loading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .access-spinner {
+    width: 16px;
+    height: 16px;
+    animation: spin 1s linear infinite;
+  }
+
+  .access-note {
+    margin-top: var(--space-4);
+    font-size: var(--text-xs);
+    color: var(--color-fg-subtle);
+    line-height: 1.5;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style>

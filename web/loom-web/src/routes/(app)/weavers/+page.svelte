@@ -6,8 +6,8 @@
 	import { goto } from '$app/navigation';
 	import { i18n } from '$lib/i18n';
 	import { getApiClient } from '$lib/api/client';
-	import type { Weaver, WeaverStatus, CreateWeaverRequest } from '$lib/api/types';
-	import { Card, Badge, Button, Input } from '$lib/ui';
+	import type { Weaver, WeaverStatus } from '$lib/api/types';
+	import { Card, Badge, Button, Input, ThreadDivider } from '$lib/ui';
 
 	const client = getApiClient();
 
@@ -251,81 +251,83 @@
 	<title>{i18n._('weavers.title')} - Loom</title>
 </svelte:head>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-	<div class="flex justify-between items-center mb-6">
+<div class="weavers-page">
+	<div class="header">
 		<div>
-			<h1 class="text-2xl font-bold text-fg">{i18n._('weavers.title')}</h1>
-			<p class="text-fg-muted">{i18n._('weavers.description')}</p>
+			<h1 class="title">{i18n._('weavers.title')}</h1>
+			<p class="subtitle">{i18n._('weavers.subtitle')}</p>
 		</div>
-		<div class="flex gap-2">
-			<Button variant="secondary" onclick={loadWeavers} disabled={loading}>
-				{i18n._('general.refresh')}
-			</Button>
-			<Button onclick={() => (showCreateModal = true)}>
-				{i18n._('weavers.create')}
-			</Button>
-		</div>
+		<Button onclick={() => (showCreateModal = true)}>
+			{i18n._('weavers.new')}
+		</Button>
 	</div>
 
-	{#if error}
-		<div class="mb-4 p-3 rounded-md bg-error/10 text-error text-sm">{error}</div>
-	{/if}
+	<ThreadDivider variant="gradient" />
 
-	{#if loading && weavers.length === 0}
+	{#if loading}
 		<Card>
-			<div class="text-fg-muted text-center py-8">{i18n._('general.loading')}</div>
+			<div class="loading-state">{i18n._('general.loading')}</div>
+		</Card>
+	{:else if error}
+		<Card>
+			<div class="error-state">
+				<p class="error-text">{error}</p>
+				<Button variant="secondary" onclick={loadWeavers}>
+					{i18n._('general.retry')}
+				</Button>
+			</div>
 		</Card>
 	{:else if weavers.length === 0}
 		<Card>
-			<div class="text-center py-8">
-				<p class="text-fg-muted mb-4">{i18n._('weavers.empty')}</p>
+			<div class="empty-state">
+				<p class="empty-text">{i18n._('weavers.empty')}</p>
 				<Button onclick={() => (showCreateModal = true)}>
-					{i18n._('weavers.createFirst')}
+					{i18n._('weavers.new')}
 				</Button>
 			</div>
 		</Card>
 	{:else}
-		<div class="space-y-3">
+		<div class="weaver-list">
 			{#each weavers as weaver (weaver.id)}
 				<Card>
-					<div class="flex items-start justify-between gap-4">
-						<div class="min-w-0 flex-1">
-							<div class="flex items-center gap-2 mb-1">
-								<span class="font-mono text-sm text-fg truncate">{weaver.id}</span>
+					<div class="weaver-item">
+						<div class="weaver-info">
+							<div class="weaver-header">
+								<span class="weaver-id">{weaver.id}</span>
 								<Badge variant={getStatusVariant(weaver.status)} size="sm">
 									{weaver.status}
 								</Badge>
 							</div>
 							{#if weaver.image}
-								<div class="text-sm text-fg-muted truncate mb-2">
-									<span class="font-medium">{i18n._('weavers.image')}:</span> {weaver.image}
+								<div class="weaver-image">
+									<span class="label">{i18n._('weavers.image')}:</span> {weaver.image}
 								</div>
 							{/if}
-							<div class="flex flex-wrap gap-4 text-xs text-fg-muted">
+							<div class="weaver-meta">
 								<div>
-									<span class="font-medium">{i18n._('weavers.created')}:</span>
+									<span class="label">{i18n._('weavers.created')}:</span>
 									{formatDate(weaver.created_at)}
 								</div>
 								<div>
-									<span class="font-medium">{i18n._('weavers.age')}:</span>
+									<span class="label">{i18n._('weavers.age')}:</span>
 									{formatAge(weaver.age_hours)}
 								</div>
 								{#if weaver.lifetime_hours}
 									<div>
-										<span class="font-medium">{i18n._('weavers.lifetime')}:</span>
+										<span class="label">{i18n._('weavers.lifetime')}:</span>
 										{weaver.lifetime_hours}h
 									</div>
 								{/if}
 							</div>
 							{#if weaver.tags && Object.keys(weaver.tags).length > 0}
-								<div class="flex flex-wrap gap-1 mt-2">
+								<div class="weaver-tags">
 									{#each Object.entries(weaver.tags) as [key, value]}
 										<Badge variant="muted" size="sm">{key}: {value}</Badge>
 									{/each}
 								</div>
 							{/if}
 						</div>
-						<div class="flex gap-2 flex-shrink-0">
+						<div class="weaver-actions">
 							<Button
 								variant="secondary"
 								size="sm"
@@ -359,7 +361,7 @@
 
 {#if showCreateModal}
 	<div
-		class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+		class="modal-overlay"
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="create-weaver-title"
@@ -368,28 +370,29 @@
 		onkeydown={(e) => e.key === 'Escape' && closeModal()}
 	>
 		<div
-			class="bg-bg border border-border rounded-lg w-full max-w-lg flex flex-col {createdWeaverId ? 'max-h-[80vh]' : ''}"
+			class="modal-content"
+			class:modal-expanded={createdWeaverId}
 			role="document"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 		>
-			<div class="p-6 {createdWeaverId ? 'pb-0' : ''}">
-				<h2 id="create-weaver-title" class="text-lg font-bold text-fg mb-4">
+			<div class="modal-header">
+				<h2 id="create-weaver-title" class="modal-title">
 					{createdWeaverId ? i18n._('weavers.creatingTitle') : i18n._('weavers.createTitle')}
 				</h2>
 
 				{#if createdWeaverId}
-					<div class="mb-4">
-						<p class="text-sm text-fg-muted mb-2">{i18n._('weavers.creatingProgress')}</p>
-						<p class="text-xs font-mono text-fg-muted">{createdWeaverId}</p>
+					<div class="creating-status">
+						<p class="status-text">{i18n._('weavers.creatingProgress')}</p>
+						<p class="status-id">{createdWeaverId}</p>
 					</div>
 				{:else}
-					<form onsubmit={(e) => { e.preventDefault(); createWeaver(); }} class="space-y-4">
-						<div class="w-full">
-							<label for="image" class="block text-sm font-medium text-fg mb-1.5">
+					<form onsubmit={(e) => { e.preventDefault(); createWeaver(); }} class="create-form">
+						<div class="form-field">
+							<label for="image" class="form-label">
 								{i18n._('weavers.imageName')}
 							</label>
-							<div class="relative">
+							<div class="image-input-wrapper">
 								<input
 									id="image"
 									type="text"
@@ -397,27 +400,28 @@
 									placeholder="ghcr.io/org/image:tag"
 									required
 									onfocus={() => (showImageDropdown = true)}
-									class="w-full h-10 px-3 pr-10 rounded-md border border-border bg-bg text-fg placeholder:text-fg-subtle focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-bg"
+									class="form-input"
 								/>
 								<button
 									type="button"
 									onclick={() => (showImageDropdown = !showImageDropdown)}
-									class="absolute right-0 top-0 h-10 w-10 flex items-center justify-center text-fg-muted hover:text-fg"
+									class="dropdown-toggle"
 								>
-									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
 									</svg>
 								</button>
 								{#if showImageDropdown}
-									<div class="absolute z-10 w-full mt-1 bg-bg border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+									<div class="dropdown-menu">
 										{#each PRESET_IMAGES as preset}
 											<button
 												type="button"
 												onclick={() => selectImage(preset.value)}
-												class="w-full px-3 py-2 text-left text-sm hover:bg-bg-muted flex flex-col {newWeaver.image === preset.value ? 'bg-accent/10' : ''}"
+												class="dropdown-item"
+												class:selected={newWeaver.image === preset.value}
 											>
-												<span class="text-fg font-medium">{preset.label}</span>
-												<span class="text-fg-muted text-xs font-mono">{preset.value}</span>
+												<span class="preset-label">{preset.label}</span>
+												<span class="preset-value">{preset.value}</span>
 											</button>
 										{/each}
 									</div>
@@ -425,14 +429,14 @@
 							</div>
 						</div>
 
-						<div class="w-full">
-							<label for="lifetime" class="block text-sm font-medium text-fg mb-1.5">
+						<div class="form-field">
+							<label for="lifetime" class="form-label">
 								{i18n._('weavers.lifetimeLabel')}
 							</label>
 							<select
 								id="lifetime"
 								bind:value={newWeaver.lifetime_hours}
-								class="w-full h-10 px-3 rounded-md border border-border bg-bg text-fg"
+								class="form-select"
 							>
 								<option value={1}>1 {i18n._('weavers.hour')}</option>
 								<option value={4}>4 {i18n._('weavers.hours')}</option>
@@ -448,7 +452,7 @@
 							placeholder="/app"
 						/>
 
-						<div class="flex justify-end gap-2 pt-2">
+						<div class="form-actions">
 							<Button variant="secondary" type="button" onclick={closeModal}>
 								{i18n._('general.cancel')}
 							</Button>
@@ -461,15 +465,15 @@
 			</div>
 
 			{#if createdWeaverId}
-				<div class="flex-1 overflow-auto mx-6 my-4 p-3 bg-black rounded-md min-h-[200px] max-h-[300px]">
+				<div class="log-container">
 					{#if createLogLines.length === 0}
-						<p class="text-fg-muted text-sm">{i18n._('weavers.logsConnecting')}</p>
+						<p class="log-placeholder">{i18n._('weavers.logsConnecting')}</p>
 					{:else}
-						<pre class="font-mono text-xs text-green-400 whitespace-pre-wrap break-all">{createLogLines.join('\n')}</pre>
+						<pre class="log-output">{createLogLines.join('\n')}</pre>
 					{/if}
 				</div>
-				<div class="p-6 pt-0 border-t border-border mt-auto">
-					<p class="text-xs text-fg-muted text-center">{i18n._('weavers.creatingWait')}</p>
+				<div class="modal-footer">
+					<p class="footer-text">{i18n._('weavers.creatingWait')}</p>
 				</div>
 			{/if}
 		</div>
@@ -478,7 +482,7 @@
 
 {#if showLogsModal && logsWeaver}
 	<div
-		class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+		class="modal-overlay"
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="logs-modal-title"
@@ -487,43 +491,43 @@
 		onkeydown={(e) => e.key === 'Escape' && closeLogsModal()}
 	>
 		<div
-			class="bg-bg border border-border rounded-lg w-full max-w-4xl max-h-[80vh] flex flex-col"
+			class="modal-content modal-large"
 			role="document"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 		>
-			<div class="flex items-center justify-between p-4 border-b border-border">
+			<div class="logs-header">
 				<div>
-					<h2 id="logs-modal-title" class="text-lg font-bold text-fg">
+					<h2 id="logs-modal-title" class="modal-title">
 						{i18n._('weavers.logsTitle')}
 					</h2>
-					<p class="text-sm text-fg-muted font-mono">{logsWeaver.id}</p>
+					<p class="logs-id">{logsWeaver.id}</p>
 				</div>
 				<button
 					type="button"
 					onclick={closeLogsModal}
-					class="text-fg-muted hover:text-fg p-1"
+					class="close-button"
 					aria-label={i18n._('general.close')}
 				>
-					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 					</svg>
 				</button>
 			</div>
 
-			<div class="flex-1 overflow-auto p-4 bg-black">
+			<div class="logs-container">
 				{#if logsConnecting}
-					<p class="text-fg-muted text-sm">{i18n._('weavers.logsConnecting')}</p>
+					<p class="log-placeholder">{i18n._('weavers.logsConnecting')}</p>
 				{:else if logsError}
-					<p class="text-error text-sm">{logsError}</p>
+					<p class="log-error">{logsError}</p>
 				{:else if logLines.length === 0}
-					<p class="text-fg-muted text-sm">{i18n._('weavers.logsNoData')}</p>
+					<p class="log-placeholder">{i18n._('weavers.logsNoData')}</p>
 				{:else}
-					<pre class="font-mono text-xs text-green-400 whitespace-pre-wrap break-all">{logLines.join('\n')}</pre>
+					<pre class="log-output">{logLines.join('\n')}</pre>
 				{/if}
 			</div>
 
-			<div class="flex justify-end p-4 border-t border-border">
+			<div class="logs-footer">
 				<Button variant="secondary" onclick={closeLogsModal}>
 					{i18n._('general.close')}
 				</Button>
@@ -531,3 +535,392 @@
 		</div>
 	</div>
 {/if}
+
+<style>
+	.weavers-page {
+		max-width: 1280px;
+		margin: 0 auto;
+		padding: var(--space-6) var(--space-4);
+		font-family: var(--font-mono);
+	}
+
+	.header {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: var(--space-4);
+	}
+
+	.title {
+		font-size: var(--text-xl);
+		font-weight: 600;
+		color: var(--color-fg);
+		margin-bottom: var(--space-1);
+	}
+
+	.subtitle {
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+	}
+
+	.loading-state,
+	.empty-state,
+	.error-state {
+		text-align: center;
+		padding: var(--space-8);
+	}
+
+	.error-text {
+		color: var(--color-error);
+		margin-bottom: var(--space-4);
+	}
+
+	.empty-text {
+		color: var(--color-fg-muted);
+		margin-bottom: var(--space-4);
+	}
+
+	.weaver-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+	}
+
+	.weaver-item {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: var(--space-4);
+	}
+
+	.weaver-info {
+		min-width: 0;
+		flex: 1;
+	}
+
+	.weaver-header {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin-bottom: var(--space-1);
+	}
+
+	.weaver-id {
+		font-size: var(--text-sm);
+		color: var(--color-fg);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.weaver-image {
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		margin-bottom: var(--space-2);
+	}
+
+	.weaver-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-4);
+		font-size: var(--text-xs);
+		color: var(--color-fg-muted);
+	}
+
+	.weaver-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-1);
+		margin-top: var(--space-2);
+	}
+
+	.weaver-actions {
+		display: flex;
+		gap: var(--space-2);
+		flex-shrink: 0;
+	}
+
+	.label {
+		font-weight: 500;
+	}
+
+	.modal-overlay {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 50;
+	}
+
+	.modal-content {
+		background: var(--color-bg);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		width: 100%;
+		max-width: 512px;
+		display: flex;
+		flex-direction: column;
+		font-family: var(--font-mono);
+	}
+
+	.modal-expanded {
+		max-height: 80vh;
+	}
+
+	.modal-large {
+		max-width: 896px;
+		max-height: 80vh;
+	}
+
+	.modal-header {
+		padding: var(--space-6);
+	}
+
+	.modal-title {
+		font-size: var(--text-lg);
+		font-weight: 600;
+		color: var(--color-fg);
+		margin-bottom: var(--space-4);
+	}
+
+	.creating-status {
+		margin-bottom: var(--space-4);
+	}
+
+	.status-text {
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+		margin-bottom: var(--space-2);
+	}
+
+	.status-id {
+		font-size: var(--text-xs);
+		color: var(--color-fg-muted);
+	}
+
+	.create-form {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+	}
+
+	.form-field {
+		width: 100%;
+	}
+
+	.form-label {
+		display: block;
+		font-size: var(--text-sm);
+		font-weight: 500;
+		color: var(--color-fg);
+		margin-bottom: var(--space-2);
+	}
+
+	.image-input-wrapper {
+		position: relative;
+	}
+
+	.form-input {
+		width: 100%;
+		height: 40px;
+		padding: 0 40px 0 var(--space-3);
+		border-radius: var(--radius-md);
+		border: 1px solid var(--color-border);
+		background: var(--color-bg);
+		color: var(--color-fg);
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+	}
+
+	.form-input::placeholder {
+		color: var(--color-fg-subtle);
+	}
+
+	.form-input:focus {
+		outline: none;
+		border-color: var(--color-accent);
+		box-shadow: 0 0 0 2px var(--color-accent-soft);
+	}
+
+	.form-select {
+		width: 100%;
+		height: 40px;
+		padding: 0 var(--space-3);
+		border-radius: var(--radius-md);
+		border: 1px solid var(--color-border);
+		background: var(--color-bg);
+		color: var(--color-fg);
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+	}
+
+	.dropdown-toggle {
+		position: absolute;
+		right: 0;
+		top: 0;
+		height: 40px;
+		width: 40px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--color-fg-muted);
+		background: transparent;
+		border: none;
+		cursor: pointer;
+	}
+
+	.dropdown-toggle:hover {
+		color: var(--color-fg);
+	}
+
+	.dropdown-menu {
+		position: absolute;
+		z-index: 10;
+		width: 100%;
+		margin-top: var(--space-1);
+		background: var(--color-bg);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-lg);
+		max-height: 240px;
+		overflow: auto;
+	}
+
+	.dropdown-item {
+		width: 100%;
+		padding: var(--space-2) var(--space-3);
+		text-align: left;
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.dropdown-item:hover {
+		background: var(--color-bg-muted);
+	}
+
+	.dropdown-item.selected {
+		background: var(--color-accent-soft);
+	}
+
+	.preset-label {
+		color: var(--color-fg);
+		font-weight: 500;
+		font-size: var(--text-sm);
+	}
+
+	.preset-value {
+		color: var(--color-fg-muted);
+		font-size: var(--text-xs);
+	}
+
+	.form-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: var(--space-2);
+		padding-top: var(--space-2);
+	}
+
+	.log-container {
+		flex: 1;
+		overflow: auto;
+		margin: 0 var(--space-6) var(--space-4);
+		padding: var(--space-3);
+		background: var(--color-bg-muted);
+		border-radius: var(--radius-md);
+		min-height: 200px;
+		max-height: 300px;
+	}
+
+	.log-placeholder {
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+	}
+
+	.log-error {
+		font-size: var(--text-sm);
+		color: var(--color-error);
+	}
+
+	.log-output {
+		font-size: var(--text-xs);
+		color: var(--color-success);
+		white-space: pre-wrap;
+		word-break: break-all;
+	}
+
+	.modal-footer {
+		padding: var(--space-6);
+		padding-top: 0;
+		border-top: 1px solid var(--color-border);
+		margin-top: auto;
+	}
+
+	.footer-text {
+		font-size: var(--text-xs);
+		color: var(--color-fg-muted);
+		text-align: center;
+	}
+
+	.logs-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: var(--space-4);
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.logs-id {
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+	}
+
+	.close-button {
+		color: var(--color-fg-muted);
+		background: transparent;
+		border: none;
+		padding: var(--space-1);
+		cursor: pointer;
+	}
+
+	.close-button:hover {
+		color: var(--color-fg);
+	}
+
+	.logs-container {
+		flex: 1;
+		overflow: auto;
+		padding: var(--space-4);
+		background: var(--color-bg-muted);
+	}
+
+	.logs-footer {
+		display: flex;
+		justify-content: flex-end;
+		padding: var(--space-4);
+		border-top: 1px solid var(--color-border);
+	}
+
+	.icon {
+		width: 16px;
+		height: 16px;
+	}
+
+	@media (max-width: 640px) {
+		.weaver-item {
+			flex-direction: column;
+		}
+
+		.weaver-actions {
+			width: 100%;
+			justify-content: flex-end;
+		}
+	}
+</style>

@@ -17,7 +17,12 @@ export { default as Skeleton } from './Skeleton.svelte';
 // Agent-specific components
 export { default as AgentStateBadge } from './AgentStateBadge.svelte';
 export { default as ToolStatusBadge } from './ToolStatusBadge.svelte';
+export { default as WeaverStateBadge, type WeaverState } from './WeaverStateBadge.svelte';
 
 // Admin components
 export { default as AdminUserCard } from './AdminUserCard.svelte';
 export { default as ImpersonationBanner } from './ImpersonationBanner.svelte';
+
+// Decorative components
+export { default as ThreadDivider } from './ThreadDivider.svelte';
+export { default as LoomFrame } from './LoomFrame.svelte';

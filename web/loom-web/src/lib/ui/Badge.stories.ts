@@ -7,7 +7,7 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import BadgeStoryWrapper from './BadgeStoryWrapper.svelte';
 
 type BadgeStoryProps = {
-	variant?: 'default' | 'accent' | 'success' | 'warning' | 'error' | 'muted';
+	variant?: 'default' | 'accent' | 'success' | 'warning' | 'error' | 'info' | 'muted';
 	size?: 'sm' | 'md';
 	text?: string;
 };
@@ -19,7 +19,7 @@ const meta: Meta<BadgeStoryProps> = {
 	argTypes: {
 		variant: {
 			control: 'select',
-			options: ['default', 'accent', 'success', 'warning', 'error', 'muted'],
+			options: ['default', 'accent', 'success', 'warning', 'error', 'info', 'muted'],
 		},
 		size: {
 			control: 'select',
@@ -73,6 +73,13 @@ export const Muted: Story = {
 	args: {
 		variant: 'muted',
 		text: 'Muted',
+	},
+};
+
+export const Info: Story = {
+	args: {
+		variant: 'info',
+		text: 'Info',
 	},
 };
 

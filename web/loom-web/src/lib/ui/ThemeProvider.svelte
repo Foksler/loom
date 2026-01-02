@@ -1,10 +1,16 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { themeStore } from './theme';
+	import type { Snippet } from 'svelte';
+	import { themeStore } from './theme';
 
-  onMount(() => {
-    themeStore.init();
-  });
+	interface Props {
+		children: Snippet;
+	}
+
+	let { children }: Props = $props();
+
+	$effect(() => {
+		themeStore.init();
+	});
 </script>
 
-<slot />
+{@render children()}

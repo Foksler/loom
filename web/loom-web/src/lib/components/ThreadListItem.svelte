@@ -1,55 +1,155 @@
+<!--
+  Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+  SPDX-License-Identifier: Proprietary
+-->
+
 <script lang="ts">
-  import type { ThreadSummary } from '../api/types';
+	import type { ThreadSummary } from '../api/types';
 
-  interface Props {
-    thread: ThreadSummary;
-    isActive?: boolean;
-    onclick?: () => void;
-  }
+	interface Props {
+		thread: ThreadSummary;
+		isActive?: boolean;
+		onclick?: () => void;
+	}
 
-  let { thread, isActive = false, onclick }: Props = $props();
+	let { thread, isActive = false, onclick }: Props = $props();
 
-  function formatRelativeTime(dateStr: string): string {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
+	function formatRelativeTime(dateStr: string): string {
+		const date = new Date(dateStr);
+		const now = new Date();
+		const diffMs = now.getTime() - date.getTime();
+		const diffMins = Math.floor(diffMs / 60000);
+		const diffHours = Math.floor(diffMs / 3600000);
+		const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
-  }
+		if (diffMins < 1) return 'Just now';
+		if (diffMins < 60) return `${diffMins}m ago`;
+		if (diffHours < 24) return `${diffHours}h ago`;
+		if (diffDays < 7) return `${diffDays}d ago`;
+		return date.toLocaleDateString();
+	}
 </script>
 
-<button
-  type="button"
-  class="w-full text-left p-3 rounded-lg border transition-colors
-         {isActive 
-           ? 'border-accent bg-accent-soft' 
-           : 'border-transparent hover:bg-bg-muted'}"
-  onclick={onclick}
->
-  <div class="flex items-start justify-between gap-2">
-    <div class="flex-1 min-w-0">
-      <h3 class="font-medium text-fg truncate">
-        {thread.title || `Thread ${thread.id.slice(0, 12)}...`}
-      </h3>
-      {#if thread.last_message_preview}
-        <p class="text-sm text-fg-muted truncate mt-0.5">
-          {thread.last_message_preview}
-        </p>
-      {/if}
-    </div>
-    <span class="text-xs text-fg-subtle whitespace-nowrap">
-      {formatRelativeTime(thread.updated_at)}
-    </span>
-  </div>
-  
-  <div class="flex items-center gap-2 mt-2">
-    <span class="text-xs text-fg-subtle">{thread.message_count} messages</span>
-  </div>
+<button type="button" class="thread-item" class:active={isActive} {onclick}>
+	<div class="thread-indicator"></div>
+	<div class="thread-content">
+		<div class="thread-header">
+			<div class="thread-info">
+				<h3 class="thread-title">
+					{thread.title || `Thread ${thread.id.slice(0, 12)}...`}
+				</h3>
+				{#if thread.last_message_preview}
+					<p class="thread-preview">
+						{thread.last_message_preview}
+					</p>
+				{/if}
+			</div>
+			<span class="thread-time">
+				{formatRelativeTime(thread.updated_at)}
+			</span>
+		</div>
+
+		<div class="thread-meta">
+			<span class="message-count">{thread.message_count} messages</span>
+		</div>
+	</div>
 </button>
+
+<style>
+	.thread-item {
+		display: flex;
+		width: 100%;
+		text-align: left;
+		padding: var(--space-3);
+		border-radius: var(--radius-md);
+		border: 1px solid transparent;
+		background: transparent;
+		cursor: pointer;
+		font-family: var(--font-mono);
+		transition: all 0.15s ease;
+	}
+
+	.thread-item:hover {
+		background: var(--color-bg-subtle);
+	}
+
+	.thread-item.active {
+		background: var(--color-accent-soft);
+		border-color: var(--color-accent);
+	}
+
+	.thread-indicator {
+		width: 2px;
+		flex-shrink: 0;
+		margin-right: var(--space-3);
+		border-radius: var(--radius-full);
+		background: transparent;
+		transition: background 0.15s ease;
+	}
+
+	.thread-item.active .thread-indicator {
+		background: var(--color-thread);
+	}
+
+	.thread-item:hover .thread-indicator {
+		background: var(--color-thread-muted);
+	}
+
+	.thread-item.active:hover .thread-indicator {
+		background: var(--color-thread);
+	}
+
+	.thread-content {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.thread-header {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: var(--space-2);
+	}
+
+	.thread-info {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.thread-title {
+		font-weight: 500;
+		font-size: var(--text-base);
+		color: var(--color-fg);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		margin: 0;
+	}
+
+	.thread-preview {
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		margin-top: 2px;
+	}
+
+	.thread-time {
+		font-size: var(--text-xs);
+		color: var(--color-fg-subtle);
+		white-space: nowrap;
+	}
+
+	.thread-meta {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin-top: var(--space-2);
+	}
+
+	.message-count {
+		font-size: var(--text-xs);
+		color: var(--color-fg-subtle);
+	}
+</style>

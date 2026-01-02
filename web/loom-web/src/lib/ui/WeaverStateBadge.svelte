@@ -3,37 +3,31 @@
   SPDX-License-Identifier: Proprietary
 -->
 <script lang="ts">
-	import type { AgentStateKind } from '../api/types';
-
-	export type WeaverDisplayState = 'idle' | 'weaving' | 'waiting' | 'error' | 'complete';
+	export type WeaverState = 'idle' | 'weaving' | 'waiting' | 'error' | 'complete';
 
 	interface Props {
-		state: AgentStateKind;
+		state: WeaverState;
 		weaverColor?: string;
 		size?: 'sm' | 'md';
 	}
 
 	let { state, weaverColor = 'var(--color-thread)', size = 'md' }: Props = $props();
 
-	const stateMapping: Record<AgentStateKind, { displayState: WeaverDisplayState; label: string }> = {
-		idle: { displayState: 'idle', label: 'Idle' },
-		thinking: { displayState: 'weaving', label: 'Weaving' },
-		streaming: { displayState: 'weaving', label: 'Weaving' },
-		tool_pending: { displayState: 'waiting', label: 'Waiting' },
-		tool_executing: { displayState: 'weaving', label: 'Shuttle Pass' },
-		waiting_input: { displayState: 'waiting', label: 'Waiting' },
-		error: { displayState: 'error', label: 'Broken Thread' },
+	const stateLabels: Record<WeaverState, string> = {
+		idle: 'Idle',
+		weaving: 'Weaving',
+		waiting: 'Waiting',
+		error: 'Broken Thread',
+		complete: 'Complete',
 	};
-
-	const config = $derived(stateMapping[state] || stateMapping.idle);
 </script>
 
 <span
-	class="badge badge-{config.displayState} badge-{size}"
+	class="badge badge-{state} badge-{size}"
 	style="--weaver-color: {weaverColor}"
 >
 	<span class="badge-dot"></span>
-	{config.label}
+	{stateLabels[state]}
 </span>
 
 <style>
@@ -49,7 +43,7 @@
 
 	.badge-sm {
 		padding: var(--space-1) var(--space-2);
-		font-size: calc(var(--text-xs) * 0.85);
+		font-size: 10px;
 	}
 
 	.badge-md {

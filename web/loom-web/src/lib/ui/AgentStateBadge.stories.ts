@@ -9,7 +9,8 @@ import type { AgentStateKind } from '../api/types';
 
 interface AgentStateBadgeProps {
 	state: AgentStateKind;
-	showIcon?: boolean;
+	weaverColor?: string;
+	size?: 'sm' | 'md';
 }
 
 const meta: Meta<AgentStateBadgeProps> = {
@@ -20,74 +21,89 @@ const meta: Meta<AgentStateBadgeProps> = {
 		state: {
 			control: 'select',
 			options: [
-				'waiting_input',
+				'idle',
 				'thinking',
 				'streaming',
-				'tool_executing',
 				'tool_pending',
+				'tool_executing',
+				'waiting_input',
 				'error',
-				'idle',
 			],
+			description: 'The agent state (maps to Threadwork weaver terminology)',
 		},
-		showIcon: { control: 'boolean' },
+		weaverColor: {
+			control: 'color',
+			description: 'Custom weaver thread color',
+		},
+		size: {
+			control: 'select',
+			options: ['sm', 'md'],
+		},
 	},
 };
 
 export default meta;
 type Story = StoryObj<AgentStateBadgeProps>;
 
-export const WaitingForInput: Story = {
-	args: {
-		state: 'waiting_input',
-		showIcon: true,
-	},
-};
-
-export const CallingLlm: Story = {
-	args: {
-		state: 'thinking',
-		showIcon: true,
-	},
-};
-
-export const ProcessingResponse: Story = {
-	args: {
-		state: 'streaming',
-		showIcon: true,
-	},
-};
-
-export const ExecutingTools: Story = {
-	args: {
-		state: 'tool_executing',
-		showIcon: true,
-	},
-};
-
-export const PostToolsHook: Story = {
-	args: {
-		state: 'tool_pending',
-		showIcon: true,
-	},
-};
-
-export const Error: Story = {
-	args: {
-		state: 'error',
-		showIcon: true,
-	},
-};
-
-export const ShuttingDown: Story = {
+export const Idle: Story = {
 	args: {
 		state: 'idle',
-		showIcon: true,
 	},
 };
 
-export const NoIcon: Story = {
+export const Weaving: Story = {
 	args: {
 		state: 'thinking',
-		showIcon: false,
+	},
+};
+
+export const Streaming: Story = {
+	args: {
+		state: 'streaming',
+	},
+};
+
+export const ShuttlePass: Story = {
+	args: {
+		state: 'tool_executing',
+	},
+};
+
+export const ToolPending: Story = {
+	args: {
+		state: 'tool_pending',
+	},
+};
+
+export const Waiting: Story = {
+	args: {
+		state: 'waiting_input',
+	},
+};
+
+export const BrokenThread: Story = {
+	args: {
+		state: 'error',
+	},
+};
+
+export const SmallSize: Story = {
+	args: {
+		state: 'thinking',
+		size: 'sm',
+	},
+};
+
+export const CustomWeaverColor: Story = {
+	args: {
+		state: 'thinking',
+		weaverColor: 'var(--weaver-madder)',
+	},
+};
+
+export const WeaverColors: Story = {
+	args: {
+		state: 'thinking',
+		weaverColor: 'var(--weaver-cochineal)',
 	},
 };

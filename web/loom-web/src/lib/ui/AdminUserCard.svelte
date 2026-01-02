@@ -8,6 +8,7 @@
 	import Badge from './Badge.svelte';
 	import Button from './Button.svelte';
 	import Card from './Card.svelte';
+	import ThreadDivider from './ThreadDivider.svelte';
 
 	interface Props {
 		user: AdminUser;
@@ -51,38 +52,39 @@
 </script>
 
 <Card>
-	<div class="flex items-center justify-between gap-4">
-		<div class="flex items-center gap-4 min-w-0">
+	<div class="user-card">
+		<div class="user-info">
 			{#if user.avatar_url}
-				<img src={user.avatar_url} alt="" class="w-10 h-10 rounded-full" />
+				<img src={user.avatar_url} alt="" class="user-avatar" />
 			{:else}
-				<div class="w-10 h-10 rounded-full bg-bg-muted flex items-center justify-center">
-					<span class="text-sm font-medium text-fg-muted">
-						{user.display_name?.charAt(0).toUpperCase() ?? '?'}
-					</span>
+				<div class="user-avatar-placeholder">
+					<span>{user.display_name?.charAt(0).toUpperCase() ?? '?'}</span>
 				</div>
 			{/if}
-			<div class="min-w-0">
-				<div class="font-medium text-fg truncate">
+			<div class="user-details">
+				<div class="user-name">
 					{user.display_name}
 					{#if isCurrentUser}
-						<span class="text-fg-muted text-sm">({i18n._('admin.users.you')})</span>
+						<span class="user-you">({i18n._('admin.users.you')})</span>
 					{/if}
 				</div>
-				<div class="text-sm text-fg-muted truncate">{user.primary_email ?? '-'}</div>
-				<div class="flex flex-wrap gap-1 mt-1">
+				<div class="user-email">{user.primary_email ?? '-'}</div>
+				<div class="user-badges">
 					{#each getRoleBadges() as { role, variant }}
 						<Badge {variant} size="sm">{role}</Badge>
 					{/each}
 				</div>
 			</div>
 		</div>
-		<div class="flex items-center gap-4 flex-shrink-0">
-			<div class="text-sm text-fg-muted text-right">
+
+		<ThreadDivider variant="simple" class="user-divider" />
+
+		<div class="user-actions">
+			<div class="user-dates">
 				<div>{i18n._('admin.users.created')}: {formatDate(user.created_at)}</div>
 				<div>{i18n._('admin.users.updated')}: {formatDate(user.updated_at)}</div>
 			</div>
-			<div class="flex gap-2">
+			<div class="user-buttons">
 				{#if onToggleSystemAdmin}
 					<Button
 						variant={isSystemAdmin ? 'danger' : 'secondary'}
@@ -143,3 +145,96 @@
 		</div>
 	</div>
 </Card>
+
+<style>
+	.user-card {
+		font-family: var(--font-mono);
+	}
+
+	.user-info {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-4);
+	}
+
+	.user-avatar {
+		width: 40px;
+		height: 40px;
+		border-radius: var(--radius-full);
+		flex-shrink: 0;
+	}
+
+	.user-avatar-placeholder {
+		width: 40px;
+		height: 40px;
+		border-radius: var(--radius-full);
+		background: var(--color-bg-muted);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+
+	.user-avatar-placeholder span {
+		font-size: var(--text-sm);
+		font-weight: 500;
+		color: var(--color-fg-muted);
+	}
+
+	.user-details {
+		min-width: 0;
+		flex: 1;
+	}
+
+	.user-name {
+		font-weight: 500;
+		color: var(--color-fg);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.user-you {
+		font-weight: 400;
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+	}
+
+	.user-email {
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.user-badges {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-1);
+		margin-top: var(--space-2);
+	}
+
+	.user-card :global(.user-divider) {
+		margin: var(--space-4) 0;
+	}
+
+	.user-actions {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-4);
+		flex-wrap: wrap;
+	}
+
+	.user-dates {
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+	}
+
+	.user-buttons {
+		display: flex;
+		gap: var(--space-2);
+		flex-wrap: wrap;
+	}
+</style>

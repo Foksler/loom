@@ -5,7 +5,7 @@
 <script lang="ts">
 	import { getReposClient, type Repository } from '$lib/api/repos';
 	import { getApiClient } from '$lib/api/client';
-	import { Card, Badge, Button, Input } from '$lib/ui';
+	import { Card, Badge, Button, Input, ThreadDivider, LoomFrame } from '$lib/ui';
 	import { i18n } from '$lib/i18n';
 
 	let repos = $state<Repository[]>([]);
@@ -56,18 +56,20 @@
 	<title>{i18n._('client.repos.list.title')} - Loom</title>
 </svelte:head>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-	<div class="flex items-center justify-between mb-6">
-		<h1 class="text-2xl font-bold text-fg">{i18n._('client.repos.list.title')}</h1>
+<div class="repos-page">
+	<div class="header">
+		<h1 class="title">{i18n._('client.repos.list.title')}</h1>
 		<Button variant="primary">
-			<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
 			</svg>
 			{i18n._('client.repos.list.new')}
 		</Button>
 	</div>
 
-	<div class="mb-6">
+	<ThreadDivider variant="gradient" />
+
+	<div class="search-bar">
 		<Input
 			type="search"
 			placeholder={i18n._('client.repos.list.search_placeholder')}
@@ -76,51 +78,51 @@
 	</div>
 
 	{#if loading}
-		<div class="space-y-3">
+		<div class="repo-list">
 			{#each Array(3) as _}
 				<Card>
-					<div class="animate-pulse">
-						<div class="h-5 bg-bg-muted rounded w-1/3 mb-2"></div>
-						<div class="h-4 bg-bg-muted rounded w-1/4"></div>
+					<div class="skeleton-item">
+						<div class="skeleton-title"></div>
+						<div class="skeleton-meta"></div>
 					</div>
 				</Card>
 			{/each}
 		</div>
 	{:else if error}
 		<Card>
-			<div class="text-center py-8">
-				<p class="text-error mb-4">{error}</p>
+			<div class="error-state">
+				<p class="error-text">{error}</p>
 				<Button variant="secondary" onclick={loadRepos}>
 					{i18n._('client.repos.list.try_again')}
 				</Button>
 			</div>
 		</Card>
 	{:else if filteredRepos.length === 0}
-		<Card>
-			<div class="text-center py-8">
+		<LoomFrame variant="full">
+			<div class="empty-state">
 				{#if searchQuery}
-					<p class="text-fg-muted">{i18n._('client.repos.list.no_match')}</p>
+					<p class="empty-text">{i18n._('client.repos.list.no_match')}</p>
 				{:else}
-					<svg class="w-16 h-16 mx-auto text-fg-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
 					</svg>
-					<p class="text-fg-muted mb-4">{i18n._('client.repos.list.empty')}</p>
+					<p class="empty-text">{i18n._('client.repos.list.empty')}</p>
 					<Button variant="primary">
 						{i18n._('client.repos.list.create_first')}
 					</Button>
 				{/if}
 			</div>
-		</Card>
+		</LoomFrame>
 	{:else}
-		<div class="space-y-3">
+		<div class="repo-list">
 			{#each filteredRepos as repo (repo.id)}
 				<Card>
-					<div class="flex items-start justify-between">
-						<div class="min-w-0 flex-1">
-							<div class="flex items-center gap-2 mb-1">
+					<div class="repo-item">
+						<div class="repo-info">
+							<div class="repo-header">
 								<a
 									href="/repos/{repo.owner_id}/{repo.name}"
-									class="font-semibold text-accent hover:underline"
+									class="repo-link"
 								>
 									{repo.owner_id}/{repo.name}
 								</a>
@@ -128,10 +130,10 @@
 									{repo.visibility}
 								</Badge>
 							</div>
-							<div class="flex items-center gap-4 text-sm text-fg-muted">
+							<div class="repo-meta">
 								<span>
 									{i18n._('client.repos.list.default_branch')}
-									<code class="font-mono text-xs bg-bg-muted px-1 py-0.5 rounded">{repo.default_branch}</code>
+									<code class="branch-code">{repo.default_branch}</code>
 								</span>
 								<span>{i18n._('client.repos.list.updated')} {formatDate(repo.updated_at)}</span>
 							</div>
@@ -142,3 +144,139 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	.repos-page {
+		max-width: 1280px;
+		margin: 0 auto;
+		padding: var(--space-6) var(--space-4);
+		font-family: var(--font-mono);
+	}
+
+	.header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-4);
+	}
+
+	.title {
+		font-size: var(--text-2xl);
+		font-weight: 600;
+		color: var(--color-fg);
+	}
+
+	.icon {
+		width: 16px;
+		height: 16px;
+		margin-right: var(--space-2);
+	}
+
+	.search-bar {
+		margin-bottom: var(--space-6);
+	}
+
+	.repo-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+	}
+
+	.skeleton-item {
+		animation: pulse 1.5s ease-in-out infinite;
+	}
+
+	.skeleton-title {
+		height: 20px;
+		background: var(--color-bg-muted);
+		border-radius: var(--radius-md);
+		width: 33%;
+		margin-bottom: var(--space-2);
+	}
+
+	.skeleton-meta {
+		height: 16px;
+		background: var(--color-bg-muted);
+		border-radius: var(--radius-md);
+		width: 25%;
+	}
+
+	@keyframes pulse {
+		0%, 100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.5;
+		}
+	}
+
+	.error-state {
+		text-align: center;
+		padding: var(--space-8);
+	}
+
+	.error-text {
+		color: var(--color-error);
+		margin-bottom: var(--space-4);
+	}
+
+	.empty-state {
+		text-align: center;
+		padding: var(--space-8);
+	}
+
+	.empty-icon {
+		width: 64px;
+		height: 64px;
+		margin: 0 auto var(--space-4);
+		color: var(--color-fg-muted);
+	}
+
+	.empty-text {
+		color: var(--color-fg-muted);
+		margin-bottom: var(--space-4);
+	}
+
+	.repo-item {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+	}
+
+	.repo-info {
+		min-width: 0;
+		flex: 1;
+	}
+
+	.repo-header {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin-bottom: var(--space-1);
+	}
+
+	.repo-link {
+		font-weight: 600;
+		color: var(--color-accent);
+		text-decoration: none;
+	}
+
+	.repo-link:hover {
+		text-decoration: underline;
+	}
+
+	.repo-meta {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+	}
+
+	.branch-code {
+		font-size: var(--text-xs);
+		background: var(--color-bg-muted);
+		padding: var(--space-1) var(--space-1);
+		border-radius: var(--radius-sm);
+	}
+</style>

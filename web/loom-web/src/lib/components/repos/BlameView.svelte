@@ -5,6 +5,7 @@
 <script lang="ts">
 	import type { BlameLine } from '$lib/api/repos';
 	import { i18n } from '$lib/i18n';
+	import { ThreadDivider } from '$lib/ui';
 
 	interface Props {
 		blameLines: BlameLine[];
@@ -61,55 +62,55 @@
 		return i18n._('client.repos.blame.years_ago', { count: Math.floor(days / 365) });
 	}
 
-	const colors = [
-		'bg-accent/5',
-		'bg-success/5',
-		'bg-warning/5',
-		'bg-error/5',
-		'bg-fg/5',
+	const blockColors = [
+		'var(--color-accent-soft)',
+		'var(--color-success-soft)',
+		'var(--color-warning-soft)',
+		'var(--color-error-soft)',
+		'var(--color-bg-subtle)',
 	];
 
 	function getBlockColor(index: number): string {
-		return colors[index % colors.length];
+		return blockColors[index % blockColors.length];
 	}
 </script>
 
-<div class="border border-border rounded-lg overflow-hidden">
-	<div class="flex items-center justify-between px-4 py-2 bg-bg-muted border-b border-border">
-		<span class="text-sm font-medium text-fg">{fileName}</span>
-		<span class="text-xs text-fg-muted">{blameLines.length} {i18n._('client.repos.blame.lines')}</span>
+<div class="blame-container">
+	<div class="blame-header">
+		<span class="blame-filename">{fileName}</span>
+		<span class="blame-line-count">{blameLines.length} {i18n._('client.repos.blame.lines')}</span>
 	</div>
 
-	<div class="overflow-x-auto">
-		<table class="w-full text-sm font-mono">
+	<div class="blame-content">
+		<table class="blame-table">
 			<tbody>
 				{#each blameBlocks() as block, blockIndex}
 					{#each block.lines as line, lineIndex}
-						<tr class="hover:bg-bg-muted group {getBlockColor(blockIndex)}">
+						<tr class="blame-row" style="--block-color: {getBlockColor(blockIndex)}">
 							{#if lineIndex === 0}
 								<td
 									rowspan={block.lines.length}
-									class="w-64 px-3 py-1 text-xs text-fg-muted border-r border-border align-top bg-bg-muted/50"
+									class="blame-commit-cell"
 								>
-									<div class="flex flex-col gap-0.5">
+									<div class="blame-commit-info">
 										<a
 											href="{basePath}/commit/{block.sha}"
-											class="font-mono text-accent hover:underline"
+											class="blame-sha"
 											title={block.sha}
 										>
 											{block.sha.slice(0, 7)}
 										</a>
-										<span class="truncate" title={block.authorName}>{block.authorName}</span>
-										<span class="text-fg-subtle" title={block.authorDate}>{formatDate(block.authorDate)}</span>
+										<span class="blame-author" title={block.authorName}>{block.authorName}</span>
+										<span class="blame-date" title={block.authorDate}>{formatDate(block.authorDate)}</span>
 									</div>
 								</td>
 							{/if}
-							<td class="w-12 px-3 py-0.5 text-right text-fg-muted select-none border-r border-border">
-								<a href="#{line.line_number}" id={String(line.line_number)} class="hover:text-accent">
+							<td class="blame-line-num">
+								<a href="#{line.line_number}" id={String(line.line_number)} class="line-num-link">
 									{line.line_number}
 								</a>
 							</td>
-							<td class="px-4 py-0.5 whitespace-pre text-fg">
+							<td class="blame-line-content">
 								{line.content || ' '}
 							</td>
 						</tr>
@@ -120,8 +121,122 @@
 	</div>
 
 	{#if blameLines.length === 0}
-		<div class="px-4 py-8 text-center text-fg-muted">
+		<div class="blame-empty">
 			{i18n._('client.repos.blame.empty')}
 		</div>
 	{/if}
 </div>
+
+<style>
+	.blame-container {
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+
+	.blame-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: var(--space-2) var(--space-4);
+		background: var(--color-bg-muted);
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.blame-filename {
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+		font-weight: 500;
+		color: var(--color-fg);
+	}
+
+	.blame-line-count {
+		font-family: var(--font-mono);
+		font-size: var(--text-xs);
+		color: var(--color-fg-muted);
+	}
+
+	.blame-content {
+		overflow-x: auto;
+	}
+
+	.blame-table {
+		width: 100%;
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+		border-collapse: collapse;
+	}
+
+	.blame-row {
+		background: var(--block-color);
+	}
+
+	.blame-row:hover {
+		background: var(--color-bg-muted);
+	}
+
+	.blame-commit-cell {
+		width: 16rem;
+		padding: var(--space-1) var(--space-3);
+		font-size: var(--text-xs);
+		color: var(--color-fg-muted);
+		border-right: 1px solid var(--color-border);
+		vertical-align: top;
+		background: var(--color-bg-muted);
+	}
+
+	.blame-commit-info {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.blame-sha {
+		font-family: var(--font-mono);
+		color: var(--color-accent);
+	}
+
+	.blame-sha:hover {
+		text-decoration: underline;
+	}
+
+	.blame-author {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.blame-date {
+		color: var(--color-fg-subtle);
+	}
+
+	.blame-line-num {
+		width: 3rem;
+		padding: 2px var(--space-3);
+		text-align: right;
+		color: var(--color-fg-muted);
+		user-select: none;
+		border-right: 1px solid var(--color-border);
+	}
+
+	.line-num-link {
+		color: inherit;
+	}
+
+	.line-num-link:hover {
+		color: var(--color-accent);
+	}
+
+	.blame-line-content {
+		padding: 2px var(--space-4);
+		white-space: pre;
+		color: var(--color-fg);
+	}
+
+	.blame-empty {
+		padding: var(--space-8) var(--space-4);
+		text-align: center;
+		font-family: var(--font-mono);
+		color: var(--color-fg-muted);
+	}
+</style>

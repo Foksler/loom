@@ -5,6 +5,7 @@
 <script lang="ts">
 	import type { CommitWithDiff } from '$lib/api/repos';
 	import { i18n } from '$lib/i18n';
+	import { ThreadDivider } from '$lib/ui';
 
 	interface Props {
 		commit: CommitWithDiff;
@@ -113,29 +114,29 @@
 	}
 </script>
 
-<div class="space-y-6">
-	<div class="bg-bg-muted border border-border rounded-lg p-4">
-		<h2 class="text-lg font-bold text-fg mb-2">{getCommitTitle(commit.message)}</h2>
+<div class="commit-diff">
+	<div class="commit-info">
+		<h2 class="commit-title">{getCommitTitle(commit.message)}</h2>
 
 		{#if getCommitBody(commit.message)}
-			<pre class="text-sm text-fg-muted whitespace-pre-wrap mb-4 font-mono">{getCommitBody(commit.message)}</pre>
+			<pre class="commit-body">{getCommitBody(commit.message)}</pre>
 		{/if}
 
-		<div class="flex items-center gap-4 text-sm">
-			<div class="flex items-center gap-2">
-				<span class="font-medium text-fg">{commit.author_name}</span>
-				<span class="text-fg-muted">&lt;{commit.author_email}&gt;</span>
+		<div class="commit-meta">
+			<div class="commit-author">
+				<span class="author-name">{commit.author_name}</span>
+				<span class="author-email">&lt;{commit.author_email}&gt;</span>
 			</div>
-			<span class="text-fg-muted">{formatDate(commit.author_date)}</span>
+			<span class="commit-date">{formatDate(commit.author_date)}</span>
 		</div>
 
-		<div class="flex items-center gap-4 mt-3 text-sm">
-			<code class="font-mono text-xs bg-bg px-2 py-1 rounded">{commit.sha}</code>
+		<div class="commit-refs">
+			<code class="commit-sha">{commit.sha}</code>
 			{#if commit.parent_shas.length > 0}
-				<span class="text-fg-muted">
+				<span class="parent-refs">
 					{commit.parent_shas.length > 1 ? i18n._('client.repos.diff.parents') : i18n._('client.repos.diff.parent')}:
 					{#each commit.parent_shas as parent, i}
-						<a href="/repos/{owner}/{repo}/commit/{parent}" class="font-mono text-accent hover:underline">
+						<a href="/repos/{owner}/{repo}/commit/{parent}" class="parent-link">
 							{parent.slice(0, 7)}
 						</a>{i < commit.parent_shas.length - 1 ? ', ' : ''}
 					{/each}
@@ -144,41 +145,43 @@
 		</div>
 	</div>
 
-	<div class="flex items-center gap-4 text-sm">
-		<span class="text-fg-muted">
-			{i18n._('client.repos.diff.showing')} <strong class="text-fg">{parsedDiff.length}</strong> {parsedDiff.length !== 1 ? i18n._('client.repos.diff.changed_files') : i18n._('client.repos.diff.changed_file')}
+	<ThreadDivider variant="gradient" />
+
+	<div class="diff-summary">
+		<span class="diff-summary-text">
+			{i18n._('client.repos.diff.showing')} <strong>{parsedDiff.length}</strong> {parsedDiff.length !== 1 ? i18n._('client.repos.diff.changed_files') : i18n._('client.repos.diff.changed_file')}
 		</span>
-		<span class="text-success">+{totalAdditions}</span>
-		<span class="text-error">-{totalDeletions}</span>
+		<span class="diff-additions">+{totalAdditions}</span>
+		<span class="diff-deletions">-{totalDeletions}</span>
 	</div>
 
 	{#each parsedDiff as file}
-		<div class="border border-border rounded-lg overflow-hidden">
-			<div class="flex items-center justify-between px-4 py-2 bg-bg-muted border-b border-border">
-				<span class="font-mono text-sm text-fg">{file.newPath}</span>
-				<div class="flex items-center gap-2 text-sm">
-					<span class="text-success">+{file.additions}</span>
-					<span class="text-error">-{file.deletions}</span>
+		<div class="diff-file">
+			<div class="diff-file-header">
+				<span class="diff-file-path">{file.newPath}</span>
+				<div class="diff-file-stats">
+					<span class="diff-additions">+{file.additions}</span>
+					<span class="diff-deletions">-{file.deletions}</span>
 				</div>
 			</div>
 
-			<div class="overflow-x-auto">
-				<table class="w-full text-sm font-mono">
+			<div class="diff-content">
+				<table class="diff-table">
 					<tbody>
 						{#each file.hunks as hunk}
-							<tr class="bg-accent/10">
-								<td colspan="3" class="px-4 py-1 text-fg-muted text-xs">{hunk.header}</td>
+							<tr class="hunk-header-row">
+								<td colspan="3" class="hunk-header">{hunk.header}</td>
 							</tr>
 							{#each hunk.lines as line}
-								<tr class="{line.type === 'addition' ? 'bg-success/10' : line.type === 'deletion' ? 'bg-error/10' : ''}">
-									<td class="w-12 px-2 py-0 text-right text-fg-muted select-none border-r border-border text-xs">
+								<tr class="diff-line diff-line-{line.type}">
+									<td class="diff-line-num">
 										{line.oldLineNum ?? ''}
 									</td>
-									<td class="w-12 px-2 py-0 text-right text-fg-muted select-none border-r border-border text-xs">
+									<td class="diff-line-num">
 										{line.newLineNum ?? ''}
 									</td>
-									<td class="px-4 py-0 whitespace-pre {line.type === 'addition' ? 'text-success' : line.type === 'deletion' ? 'text-error' : 'text-fg'}">
-										<span class="inline-block w-4">{line.type === 'addition' ? '+' : line.type === 'deletion' ? '-' : ' '}</span>{line.content}
+									<td class="diff-line-content">
+										<span class="diff-line-prefix">{line.type === 'addition' ? '+' : line.type === 'deletion' ? '-' : ' '}</span>{line.content}
 									</td>
 								</tr>
 							{/each}
@@ -189,3 +192,206 @@
 		</div>
 	{/each}
 </div>
+
+<style>
+	.commit-diff {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-6);
+	}
+
+	.commit-info {
+		background: var(--color-bg-muted);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		padding: var(--space-4);
+	}
+
+	.commit-title {
+		font-family: var(--font-mono);
+		font-size: var(--text-lg);
+		font-weight: 700;
+		color: var(--color-fg);
+		margin-bottom: var(--space-2);
+	}
+
+	.commit-body {
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+		white-space: pre-wrap;
+		margin-bottom: var(--space-4);
+	}
+
+	.commit-meta {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+	}
+
+	.commit-author {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	.author-name {
+		font-weight: 500;
+		color: var(--color-fg);
+	}
+
+	.author-email {
+		color: var(--color-fg-muted);
+	}
+
+	.commit-date {
+		color: var(--color-fg-muted);
+	}
+
+	.commit-refs {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+		margin-top: var(--space-3);
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+	}
+
+	.commit-sha {
+		font-family: var(--font-mono);
+		font-size: var(--text-xs);
+		background: var(--color-bg);
+		padding: var(--space-1) var(--space-2);
+		border-radius: var(--radius-md);
+		color: var(--color-fg);
+	}
+
+	.parent-refs {
+		color: var(--color-fg-muted);
+	}
+
+	.parent-link {
+		font-family: var(--font-mono);
+		color: var(--color-accent);
+	}
+
+	.parent-link:hover {
+		text-decoration: underline;
+	}
+
+	.diff-summary {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+	}
+
+	.diff-summary-text {
+		color: var(--color-fg-muted);
+	}
+
+	.diff-summary-text strong {
+		color: var(--color-fg);
+	}
+
+	.diff-additions {
+		color: var(--color-success);
+	}
+
+	.diff-deletions {
+		color: var(--color-error);
+	}
+
+	.diff-file {
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+
+	.diff-file-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: var(--space-2) var(--space-4);
+		background: var(--color-bg-muted);
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.diff-file-path {
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+		color: var(--color-fg);
+	}
+
+	.diff-file-stats {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+	}
+
+	.diff-content {
+		overflow-x: auto;
+	}
+
+	.diff-table {
+		width: 100%;
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+		border-collapse: collapse;
+	}
+
+	.hunk-header-row {
+		background: var(--color-accent-soft);
+	}
+
+	.hunk-header {
+		padding: var(--space-1) var(--space-4);
+		font-size: var(--text-xs);
+		color: var(--color-fg-muted);
+	}
+
+	.diff-line-addition {
+		background: var(--color-success-soft);
+	}
+
+	.diff-line-deletion {
+		background: var(--color-error-soft);
+	}
+
+	.diff-line-num {
+		width: 3rem;
+		padding: 0 var(--space-2);
+		text-align: right;
+		font-size: var(--text-xs);
+		color: var(--color-fg-muted);
+		user-select: none;
+		border-right: 1px solid var(--color-border);
+	}
+
+	.diff-line-content {
+		padding: 0 var(--space-4);
+		white-space: pre;
+	}
+
+	.diff-line-addition .diff-line-content {
+		color: var(--color-success);
+	}
+
+	.diff-line-deletion .diff-line-content {
+		color: var(--color-error);
+	}
+
+	.diff-line-context .diff-line-content {
+		color: var(--color-fg);
+	}
+
+	.diff-line-prefix {
+		display: inline-block;
+		width: 1rem;
+	}
+</style>

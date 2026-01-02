@@ -11,18 +11,18 @@ export type ThemeMode = 'light' | 'dark' | 'system';
 const STORAGE_KEY = 'loom-theme';
 
 function getInitialTheme(): ThemeMode {
-	if (!browser) return 'system';
+	if (!browser) return 'dark';
 
 	const stored = localStorage.getItem(STORAGE_KEY);
 	if (stored === 'light' || stored === 'dark' || stored === 'system') {
 		return stored;
 	}
-	return 'system';
+	return 'dark';
 }
 
 function getSystemTheme(): 'light' | 'dark' {
-	if (!browser) return 'light';
-	return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+	if (!browser) return 'dark';
+	return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 }
 
 function applyTheme(mode: ThemeMode): void {
@@ -30,10 +30,10 @@ function applyTheme(mode: ThemeMode): void {
 
 	const effectiveTheme = mode === 'system' ? getSystemTheme() : mode;
 
-	if (effectiveTheme === 'dark') {
-		document.documentElement.classList.add('dark');
+	if (effectiveTheme === 'light') {
+		document.documentElement.classList.add('light');
 	} else {
-		document.documentElement.classList.remove('dark');
+		document.documentElement.classList.remove('light');
 	}
 }
 
@@ -51,7 +51,7 @@ function createThemeStore() {
 		},
 		toggle: () => {
 			update((current) => {
-				const next = current === 'light' ? 'dark' : current === 'dark' ? 'system' : 'light';
+				const next = current === 'dark' ? 'light' : current === 'light' ? 'system' : 'dark';
 				if (browser) {
 					localStorage.setItem(STORAGE_KEY, next);
 				}
@@ -64,7 +64,7 @@ function createThemeStore() {
 			applyTheme(initial);
 
 			if (browser) {
-				window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+				window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
 					const current = getInitialTheme();
 					if (current === 'system') {
 						applyTheme('system');

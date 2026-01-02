@@ -9,7 +9,7 @@ import { createRawSnippet } from 'svelte';
 import Button from './Button.svelte';
 
 interface ButtonProps {
-	variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+	variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'warning' | 'success';
 	size?: 'sm' | 'md' | 'lg';
 	disabled?: boolean;
 	loading?: boolean;
@@ -26,7 +26,7 @@ const meta = {
 	argTypes: {
 		variant: {
 			control: 'select',
-			options: ['primary', 'secondary', 'ghost', 'danger'],
+			options: ['primary', 'secondary', 'ghost', 'danger', 'warning', 'success'],
 		},
 		size: {
 			control: 'select',

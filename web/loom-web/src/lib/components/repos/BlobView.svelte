@@ -88,16 +88,16 @@
 	const basePath = $derived(`/repos/${owner}/${repo}`);
 </script>
 
-<div class="border border-border rounded-lg overflow-hidden">
-	<div class="flex items-center justify-between px-4 py-2 bg-bg-muted border-b border-border">
-		<div class="flex items-center gap-4">
-			<span class="text-sm font-medium text-fg">{fileName}</span>
-			<span class="text-xs text-fg-muted">{lines.length} {i18n.t('client.repos.blob.lines')}</span>
+<div class="blob-container">
+	<div class="blob-header">
+		<div class="blob-header-left">
+			<span class="blob-filename">{fileName}</span>
+			<span class="blob-meta">{lines.length} {i18n.t('client.repos.blob.lines')}</span>
 			{#if !isImage && !isBinary}
-				<span class="text-xs text-fg-muted">({new Blob([content]).size} {i18n.t('client.repos.blob.bytes')})</span>
+				<span class="blob-meta">({new Blob([content]).size} {i18n.t('client.repos.blob.bytes')})</span>
 			{/if}
 		</div>
-		<div class="flex items-center gap-2">
+		<div class="blob-actions">
 			<a href="{basePath}/blame/{currentRef}/{path}">
 				<Button variant="ghost" size="sm">{i18n.t('client.repos.blob.blame')}</Button>
 			</a>
@@ -111,23 +111,23 @@
 	</div>
 
 	{#if isImage}
-		<div class="flex items-center justify-center p-8 bg-bg">
-			<img src="/api/repos/{owner}/{repo}/blob/{currentRef}/{path}" alt={fileName} class="max-w-full max-h-96" />
+		<div class="blob-image-container">
+			<img src="/api/repos/{owner}/{repo}/blob/{currentRef}/{path}" alt={fileName} class="blob-image" />
 		</div>
 	{:else if isBinary}
-		<div class="flex items-center justify-center p-8 bg-bg text-fg-muted">
+		<div class="blob-binary-message">
 			{i18n.t('client.repos.blob.binary_not_shown')}
 		</div>
 	{:else}
-		<div class="overflow-x-auto">
-			<table class="w-full text-sm font-mono">
+		<div class="blob-content">
+			<table class="blob-table">
 				<tbody>
 					{#each lines as line, i}
-						<tr class="hover:bg-bg-muted group">
-							<td class="w-12 px-3 py-0.5 text-right text-fg-muted select-none border-r border-border bg-bg-muted sticky left-0">
-								<a href="#{i + 1}" id={String(i + 1)} class="hover:text-accent">{i + 1}</a>
+						<tr class="blob-row">
+							<td class="blob-line-num">
+								<a href="#{i + 1}" id={String(i + 1)} class="line-num-link">{i + 1}</a>
 							</td>
-							<td class="px-4 py-0.5 whitespace-pre text-fg">
+							<td class="blob-line-content">
 								{line || ' '}
 							</td>
 						</tr>
@@ -137,3 +137,109 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	.blob-container {
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+
+	.blob-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: var(--space-2) var(--space-4);
+		background: var(--color-bg-muted);
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.blob-header-left {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+	}
+
+	.blob-filename {
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+		font-weight: 500;
+		color: var(--color-fg);
+	}
+
+	.blob-meta {
+		font-family: var(--font-mono);
+		font-size: var(--text-xs);
+		color: var(--color-fg-muted);
+	}
+
+	.blob-actions {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	.blob-image-container {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: var(--space-8);
+		background: var(--color-bg);
+	}
+
+	.blob-image {
+		max-width: 100%;
+		max-height: 24rem;
+	}
+
+	.blob-binary-message {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: var(--space-8);
+		background: var(--color-bg);
+		font-family: var(--font-mono);
+		color: var(--color-fg-muted);
+	}
+
+	.blob-content {
+		overflow-x: auto;
+	}
+
+	.blob-table {
+		width: 100%;
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+		border-collapse: collapse;
+	}
+
+	.blob-row:hover {
+		background: var(--color-bg-muted);
+	}
+
+	.blob-line-num {
+		width: 3rem;
+		padding: 2px var(--space-3);
+		text-align: right;
+		color: var(--color-fg-muted);
+		user-select: none;
+		border-right: 1px solid var(--color-border);
+		background: var(--color-bg-muted);
+		position: sticky;
+		left: 0;
+	}
+
+	.line-num-link {
+		color: inherit;
+	}
+
+	.line-num-link:hover {
+		color: var(--color-accent);
+	}
+
+	.blob-line-content {
+		padding: 2px var(--space-4);
+		white-space: pre;
+		color: var(--color-fg);
+	}
+</style>

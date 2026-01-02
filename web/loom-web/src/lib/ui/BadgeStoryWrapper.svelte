@@ -6,7 +6,7 @@
   import Badge from './Badge.svelte';
 
   interface Props {
-    variant?: 'default' | 'accent' | 'success' | 'warning' | 'error' | 'muted';
+    variant?: 'default' | 'accent' | 'success' | 'warning' | 'error' | 'info' | 'muted';
     size?: 'sm' | 'md';
     text?: string;
   }

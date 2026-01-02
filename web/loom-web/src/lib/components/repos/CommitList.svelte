@@ -52,19 +52,19 @@
 	}
 </script>
 
-<div class="border border-border rounded-lg overflow-hidden divide-y divide-border">
+<div class="commit-list">
 	{#each commits as commit}
-		<div class="flex items-start gap-4 px-4 py-3 hover:bg-bg-muted">
+		<div class="commit-item">
 			<img
 				src={getAvatarUrl(commit.author_email)}
 				alt={commit.author_name}
-				class="w-10 h-10 rounded-full flex-shrink-0"
+				class="commit-avatar"
 			/>
 
-			<div class="flex-1 min-w-0">
+			<div class="commit-content">
 				<a
 					href="{basePath}/commit/{commit.sha}"
-					class="font-medium text-fg hover:text-accent line-clamp-1"
+					class="commit-message"
 				>
 					{getCommitTitle(commit.message)}
 				</a>
@@ -72,23 +72,23 @@
 				{#if getCommitBody(commit.message)}
 					<button
 						type="button"
-						class="text-xs text-fg-muted hover:text-fg mt-0.5"
+						class="commit-expand-btn"
 					>
 						...
 					</button>
 				{/if}
 
-				<div class="flex items-center gap-2 mt-1 text-sm text-fg-muted">
-					<span class="font-medium text-fg">{commit.author_name}</span>
+				<div class="commit-meta">
+					<span class="commit-author">{commit.author_name}</span>
 					<span>{i18n._('client.repos.commits.committed')}</span>
 					<span title={commit.author_date}>{formatDate(commit.author_date)}</span>
 				</div>
 			</div>
 
-			<div class="flex items-center gap-2 flex-shrink-0">
+			<div class="commit-actions">
 				<a
 					href="{basePath}/commit/{commit.sha}"
-					class="font-mono text-sm text-accent hover:underline"
+					class="commit-sha"
 					title={commit.sha}
 				>
 					{commit.sha.slice(0, 7)}
@@ -96,10 +96,10 @@
 				<button
 					type="button"
 					onclick={() => navigator.clipboard.writeText(commit.sha)}
-					class="p-1 hover:bg-bg-subtle rounded"
+					class="copy-btn"
 					title={i18n._('client.repos.commits.copy_sha')}
 				>
-					<svg class="w-4 h-4 text-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg class="copy-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
 					</svg>
 				</button>
@@ -108,8 +108,133 @@
 	{/each}
 
 	{#if commits.length === 0}
-		<div class="px-4 py-8 text-center text-fg-muted">
+		<div class="commit-empty">
 			{i18n._('client.repos.commits.empty')}
 		</div>
 	{/if}
 </div>
+
+<style>
+	.commit-list {
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+
+	.commit-item {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-4);
+		padding: var(--space-3) var(--space-4);
+		border-bottom: 1px solid var(--color-border);
+		transition: background 0.15s ease;
+	}
+
+	.commit-item:last-child {
+		border-bottom: none;
+	}
+
+	.commit-item:hover {
+		background: var(--color-bg-muted);
+	}
+
+	.commit-avatar {
+		width: 2.5rem;
+		height: 2.5rem;
+		border-radius: var(--radius-full);
+		flex-shrink: 0;
+	}
+
+	.commit-content {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.commit-message {
+		font-family: var(--font-mono);
+		font-weight: 500;
+		color: var(--color-fg);
+		display: -webkit-box;
+		-webkit-line-clamp: 1;
+		line-clamp: 1;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.commit-message:hover {
+		color: var(--color-accent);
+	}
+
+	.commit-expand-btn {
+		font-family: var(--font-mono);
+		font-size: var(--text-xs);
+		color: var(--color-fg-muted);
+		background: none;
+		border: none;
+		padding: 0;
+		margin-top: 2px;
+		cursor: pointer;
+	}
+
+	.commit-expand-btn:hover {
+		color: var(--color-fg);
+	}
+
+	.commit-meta {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin-top: var(--space-1);
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+	}
+
+	.commit-author {
+		font-weight: 500;
+		color: var(--color-fg);
+	}
+
+	.commit-actions {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		flex-shrink: 0;
+	}
+
+	.commit-sha {
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+		color: var(--color-accent);
+	}
+
+	.commit-sha:hover {
+		text-decoration: underline;
+	}
+
+	.copy-btn {
+		padding: var(--space-1);
+		background: none;
+		border: none;
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		transition: background 0.15s ease;
+	}
+
+	.copy-btn:hover {
+		background: var(--color-bg-subtle);
+	}
+
+	.copy-icon {
+		width: 1rem;
+		height: 1rem;
+		color: var(--color-fg-muted);
+	}
+
+	.commit-empty {
+		padding: var(--space-8) var(--space-4);
+		text-align: center;
+		font-family: var(--font-mono);
+		color: var(--color-fg-muted);
+	}
+</style>

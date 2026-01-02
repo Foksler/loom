@@ -1,44 +1,144 @@
+<!--
+  Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+  SPDX-License-Identifier: Proprietary
+-->
+
 <script lang="ts">
-  import type { MessageSnapshot } from '../api/types';
-  import { Card } from '../ui';
+	import type { MessageSnapshot } from '../api/types';
 
-  interface Props {
-    message: MessageSnapshot;
-    isStreaming?: boolean;
-    streamingContent?: string;
-  }
+	interface Props {
+		message: MessageSnapshot;
+		isStreaming?: boolean;
+		streamingContent?: string;
+		weaverColor?: string;
+	}
 
-  let { message, isStreaming = false, streamingContent = '' }: Props = $props();
+	let {
+		message,
+		isStreaming = false,
+		streamingContent = '',
+		weaverColor = 'var(--weaver-indigo)'
+	}: Props = $props();
 
-  const content = $derived(isStreaming ? streamingContent : message.content);
-
-  const roleStyles = {
-    user: 'ml-auto bg-accent text-white max-w-[80%]',
-    assistant: 'mr-auto bg-bg-muted max-w-[80%]',
-    tool: 'mr-auto bg-warning-soft border border-warning/20 max-w-[90%]',
-    system: 'mx-auto bg-bg-subtle text-fg-muted text-center max-w-[90%]',
-  };
+	const content = $derived(isStreaming ? streamingContent : message.content);
 </script>
 
-<div class="flex {message.role === 'user' ? 'justify-end' : 'justify-start'}">
-  <div class="rounded-lg p-3 {roleStyles[message.role]}">
-    {#if message.role === 'tool'}
-      <div class="text-xs font-medium text-warning mb-1">
-        🔧 Tool Result{#if message.tool_call_id} <span class="text-fg-muted">({message.tool_call_id})</span>{/if}
-      </div>
-    {/if}
-    
-    <div class="whitespace-pre-wrap break-words">
-      {content}
-      {#if isStreaming}
-        <span class="inline-block w-2 h-4 bg-accent animate-pulse ml-0.5"></span>
-      {/if}
-    </div>
-    
-    {#if message.created_at}
-      <div class="text-xs text-fg-subtle mt-1 {message.role === 'user' ? 'text-right' : ''}">
-        {new Date(message.created_at).toLocaleTimeString()}
-      </div>
-    {/if}
-  </div>
+<div class="message-container" class:user={message.role === 'user'}>
+	<div
+		class="message-bubble message-{message.role}"
+		style:--weaver-color={weaverColor}
+	>
+		{#if message.role === 'tool'}
+			<div class="tool-label">
+				🔧 Tool Result{#if message.tool_call_id}
+					<span class="tool-id">({message.tool_call_id})</span>
+				{/if}
+			</div>
+		{/if}
+
+		<div class="message-content">
+			{content}
+			{#if isStreaming}
+				<span class="cursor"></span>
+			{/if}
+		</div>
+
+		{#if message.created_at}
+			<div class="timestamp" class:text-right={message.role === 'user'}>
+				{new Date(message.created_at).toLocaleTimeString()}
+			</div>
+		{/if}
+	</div>
 </div>
+
+<style>
+	.message-container {
+		display: flex;
+		justify-content: flex-start;
+	}
+
+	.message-container.user {
+		justify-content: flex-end;
+	}
+
+	.message-bubble {
+		font-family: var(--font-mono);
+		border-radius: var(--radius-md);
+		padding: var(--space-3);
+		max-width: 80%;
+	}
+
+	.message-user {
+		background: var(--color-bg-subtle);
+		color: var(--color-fg);
+		margin-left: auto;
+	}
+
+	.message-assistant {
+		background: var(--color-bg-muted);
+		color: var(--color-fg);
+		margin-right: auto;
+		border-left: 2px solid var(--weaver-color);
+	}
+
+	.message-tool {
+		background: var(--color-warning-soft);
+		border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
+		color: var(--color-fg);
+		margin-right: auto;
+		max-width: 90%;
+	}
+
+	.message-system {
+		background: var(--color-bg-subtle);
+		color: var(--color-fg-muted);
+		text-align: center;
+		margin: 0 auto;
+		max-width: 90%;
+	}
+
+	.tool-label {
+		font-size: var(--text-xs);
+		font-weight: 500;
+		color: var(--color-warning);
+		margin-bottom: var(--space-1);
+	}
+
+	.tool-id {
+		color: var(--color-fg-muted);
+	}
+
+	.message-content {
+		white-space: pre-wrap;
+		word-break: break-word;
+	}
+
+	.cursor {
+		display: inline-block;
+		width: 0.5rem;
+		height: 1rem;
+		background: var(--color-accent);
+		margin-left: 2px;
+		animation: thread-idle 1s ease-in-out infinite;
+	}
+
+	@keyframes thread-idle {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.3;
+		}
+	}
+
+	.timestamp {
+		font-size: var(--text-xs);
+		color: var(--color-fg-subtle);
+		margin-top: var(--space-1);
+	}
+
+	.text-right {
+		text-align: right;
+	}
+</style>

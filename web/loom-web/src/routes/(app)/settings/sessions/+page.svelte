@@ -6,7 +6,7 @@
 	import { i18n } from '$lib/i18n';
 	import { getApiClient } from '$lib/api/client';
 	import type { Session } from '$lib/api/types';
-	import { Card, Badge, Button } from '$lib/ui';
+	import { Card, Badge, Button, ThreadDivider } from '$lib/ui';
 
 	let sessions: Session[] = $state([]);
 	let loading = $state(true);
@@ -79,34 +79,38 @@
 	<title>{i18n._('settings.sessions.title')} - Loom</title>
 </svelte:head>
 
-<div>
-	<h1 class="text-2xl font-bold text-fg mb-2">
+<div class="sessions-page">
+	<h1 class="page-title">
 		{i18n._('settings.sessions.title')}
 	</h1>
-	<p class="text-fg-muted mb-6">
+	<p class="page-subtitle">
 		{i18n._('settings.sessions.description')}
 	</p>
 
+	<ThreadDivider variant="gradient" />
+
 	{#if loading}
-		<div class="text-fg-muted">{i18n._('general.loading')}</div>
+		<div class="loading-state">{i18n._('general.loading')}</div>
 	{:else if error}
 		<Card>
-			<div class="text-error">{error}</div>
-			<Button variant="secondary" onclick={loadSessions} class="mt-2">
-				{i18n._('general.retry')}
-			</Button>
+			<div class="error-state">
+				<p class="error-text">{error}</p>
+				<Button variant="secondary" onclick={loadSessions}>
+					{i18n._('general.retry')}
+				</Button>
+			</div>
 		</Card>
 	{:else if sessions.length === 0}
 		<Card>
-			<p class="text-fg-muted">{i18n._('settings.sessions.noSessions')}</p>
+			<p class="empty-text">{i18n._('settings.sessions.noSessions')}</p>
 		</Card>
 	{:else}
-		<div class="space-y-4">
+		<div class="session-list">
 			{#each sessions as session (session.id)}
 				<Card>
-					<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-						<div class="flex-1 min-w-0">
-							<div class="flex items-center gap-2 mb-2">
+					<div class="session-item">
+						<div class="session-info">
+							<div class="session-badges">
 								<Badge variant={getSessionTypeVariant(session.session_type)} size="sm">
 									{getSessionTypeLabel(session.session_type)}
 								</Badge>
@@ -117,25 +121,25 @@
 								{/if}
 							</div>
 
-							<div class="space-y-1 text-sm">
+							<div class="session-details">
 								{#if session.ip_address}
-									<div class="text-fg">
+									<div class="session-ip">
 										{session.ip_address}
 										{#if session.geo_location}
-											<span class="text-fg-muted"> · {session.geo_location}</span>
+											<span class="session-geo"> · {session.geo_location}</span>
 										{/if}
 									</div>
 								{/if}
 
 								{#if session.user_agent}
-									<div class="text-fg-muted truncate" title={session.user_agent}>
+									<div class="session-ua" title={session.user_agent}>
 										{session.user_agent}
 									</div>
 								{/if}
 
-								<div class="text-fg-muted">
+								<div class="session-times">
 									<span>{i18n._('settings.sessions.lastUsed')}: {formatDate(session.last_used_at)}</span>
-									<span class="mx-2">·</span>
+									<span class="time-separator">·</span>
 									<span>{i18n._('settings.sessions.createdAt')}: {formatDate(session.created_at)}</span>
 								</div>
 							</div>
@@ -158,3 +162,101 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	.sessions-page {
+		font-family: var(--font-mono);
+	}
+
+	.page-title {
+		font-size: var(--text-2xl);
+		font-weight: 600;
+		color: var(--color-fg);
+		margin-bottom: var(--space-2);
+	}
+
+	.page-subtitle {
+		color: var(--color-fg-muted);
+		font-size: var(--text-sm);
+	}
+
+	.loading-state {
+		color: var(--color-fg-muted);
+	}
+
+	.error-state {
+		text-align: center;
+		padding: var(--space-4);
+	}
+
+	.error-text {
+		color: var(--color-error);
+		margin-bottom: var(--space-4);
+	}
+
+	.empty-text {
+		color: var(--color-fg-muted);
+	}
+
+	.session-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+	}
+
+	.session-item {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+	}
+
+	@media (min-width: 640px) {
+		.session-item {
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+		}
+	}
+
+	.session-info {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.session-badges {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin-bottom: var(--space-2);
+	}
+
+	.session-details {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		font-size: var(--text-sm);
+	}
+
+	.session-ip {
+		color: var(--color-fg);
+	}
+
+	.session-geo {
+		color: var(--color-fg-muted);
+	}
+
+	.session-ua {
+		color: var(--color-fg-muted);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.session-times {
+		color: var(--color-fg-muted);
+	}
+
+	.time-separator {
+		margin: 0 var(--space-2);
+	}
+</style>

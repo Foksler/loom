@@ -1,41 +1,85 @@
+<!--
+  Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+  SPDX-License-Identifier: Proprietary
+-->
+
 <script lang="ts">
-  import type { MessageSnapshot } from '../api/types';
-  import MessageBubble from './MessageBubble.svelte';
+	import type { MessageSnapshot } from '../api/types';
+	import { ThreadDivider } from '../ui';
+	import MessageBubble from './MessageBubble.svelte';
 
-  interface Props {
-    messages: MessageSnapshot[];
-    streamingContent?: string;
-    isStreaming?: boolean;
-  }
+	interface Props {
+		messages: MessageSnapshot[];
+		streamingContent?: string;
+		isStreaming?: boolean;
+		weaverColor?: string;
+	}
 
-  let { messages, streamingContent = '', isStreaming = false }: Props = $props();
+	let {
+		messages,
+		streamingContent = '',
+		isStreaming = false,
+		weaverColor = 'var(--weaver-indigo)'
+	}: Props = $props();
 
-  let containerRef: HTMLDivElement;
+	let containerRef: HTMLDivElement;
 
-  $effect(() => {
-    // Auto-scroll to bottom when new messages arrive
-    if (containerRef) {
-      containerRef.scrollTop = containerRef.scrollHeight;
-    }
-  });
+	function shouldShowDivider(currentMessage: MessageSnapshot, index: number): boolean {
+		if (index === 0) return false;
+		const prevMessage = messages[index - 1];
+		return currentMessage.role !== prevMessage.role && currentMessage.role === 'user';
+	}
+
+	$effect(() => {
+		if (containerRef) {
+			containerRef.scrollTop = containerRef.scrollHeight;
+		}
+	});
 </script>
 
-<div bind:this={containerRef} class="flex-1 overflow-y-auto p-4 space-y-4">
-  {#if messages.length === 0 && !isStreaming}
-    <div class="flex items-center justify-center h-full text-fg-muted">
-      Start a conversation...
-    </div>
-  {:else}
-    {#each messages as message (message.id || message.created_at)}
-      <MessageBubble {message} />
-    {/each}
-    
-    {#if isStreaming && streamingContent}
-      <MessageBubble
-        message={{ id: 'streaming', role: 'assistant', content: '', created_at: new Date().toISOString() }}
-        isStreaming={true}
-        {streamingContent}
-      />
-    {/if}
-  {/if}
+<div bind:this={containerRef} class="message-list">
+	{#if messages.length === 0 && !isStreaming}
+		<div class="empty-state">Start a conversation...</div>
+	{:else}
+		{#each messages as message, index (message.id || message.created_at)}
+			{#if shouldShowDivider(message, index)}
+				<ThreadDivider variant="gradient" />
+			{/if}
+			<MessageBubble {message} {weaverColor} />
+		{/each}
+
+		{#if isStreaming && streamingContent}
+			<MessageBubble
+				message={{
+					id: 'streaming',
+					role: 'assistant',
+					content: '',
+					created_at: new Date().toISOString()
+				}}
+				isStreaming={true}
+				{streamingContent}
+				{weaverColor}
+			/>
+		{/if}
+	{/if}
 </div>
+
+<style>
+	.message-list {
+		flex: 1;
+		overflow-y: auto;
+		padding: var(--space-4);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+		font-family: var(--font-mono);
+	}
+
+	.empty-state {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 100%;
+		color: var(--color-fg-muted);
+	}
+</style>

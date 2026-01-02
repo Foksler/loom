@@ -13,6 +13,17 @@
 
 <ThemeProvider>
   <I18nProvider>
-    {@render children()}
+    <div class="app-root">
+      {@render children()}
+    </div>
   </I18nProvider>
 </ThemeProvider>
+
+<style>
+  .app-root {
+    min-height: 100vh;
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+  }
+</style>

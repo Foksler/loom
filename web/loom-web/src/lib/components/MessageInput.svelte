@@ -1,50 +1,90 @@
+<!--
+  Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
+  SPDX-License-Identifier: Proprietary
+-->
+
 <script lang="ts">
-  import { Button } from '../ui';
+	import { Button } from '../ui';
 
-  interface Props {
-    disabled?: boolean;
-    placeholder?: string;
-    onSubmit?: (content: string) => void;
-  }
+	interface Props {
+		disabled?: boolean;
+		placeholder?: string;
+		onSubmit?: (content: string) => void;
+	}
 
-  let { disabled = false, placeholder = 'Type a message...', onSubmit }: Props = $props();
+	let { disabled = false, placeholder = 'Type a message...', onSubmit }: Props = $props();
 
-  let inputValue = $state('');
+	let inputValue = $state('');
 
-  function handleSubmit() {
-    const content = inputValue.trim();
-    if (content && !disabled) {
-      onSubmit?.(content);
-      inputValue = '';
-    }
-  }
+	function handleSubmit() {
+		const content = inputValue.trim();
+		if (content && !disabled) {
+			onSubmit?.(content);
+			inputValue = '';
+		}
+	}
 
-  function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      handleSubmit();
-    }
-  }
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter' && !event.shiftKey) {
+			event.preventDefault();
+			handleSubmit();
+		}
+	}
 </script>
 
-<div class="border-t border-border p-4">
-  <div class="flex gap-2">
-    <textarea
-      bind:value={inputValue}
-      {placeholder}
-      {disabled}
-      rows="1"
-      class="flex-1 resize-none rounded-lg border border-border bg-bg px-3 py-2 text-fg
-             placeholder:text-fg-subtle focus:outline-none focus:ring-2 focus:ring-accent
-             disabled:cursor-not-allowed disabled:opacity-50"
-      onkeydown={handleKeydown}
-    ></textarea>
-    <Button
-      variant="primary"
-      disabled={disabled || !inputValue.trim()}
-      onclick={handleSubmit}
-    >
-      Send
-    </Button>
-  </div>
+<div class="input-container">
+	<div class="input-wrapper">
+		<textarea
+			bind:value={inputValue}
+			{placeholder}
+			{disabled}
+			rows="1"
+			class="message-textarea"
+			onkeydown={handleKeydown}
+		></textarea>
+		<Button variant="primary" disabled={disabled || !inputValue.trim()} onclick={handleSubmit}>
+			Send
+		</Button>
+	</div>
 </div>
+
+<style>
+	.input-container {
+		border-top: 1px solid var(--color-border);
+		padding: var(--space-4);
+		background: var(--color-bg);
+	}
+
+	.input-wrapper {
+		display: flex;
+		gap: var(--space-2);
+	}
+
+	.message-textarea {
+		flex: 1;
+		resize: none;
+		border-radius: var(--radius-md);
+		border: 1px solid var(--color-border);
+		background: var(--color-bg-muted);
+		padding: var(--space-2) var(--space-3);
+		font-family: var(--font-mono);
+		font-size: var(--text-base);
+		color: var(--color-fg);
+		transition: border-color 0.15s ease, box-shadow 0.15s ease;
+	}
+
+	.message-textarea::placeholder {
+		color: var(--color-fg-subtle);
+	}
+
+	.message-textarea:focus {
+		outline: none;
+		border-color: var(--color-accent);
+		box-shadow: 0 0 0 2px var(--color-accent-soft);
+	}
+
+	.message-textarea:disabled {
+		cursor: not-allowed;
+		opacity: 0.5;
+	}
+</style>
