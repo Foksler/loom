@@ -15,7 +15,7 @@ use loom_server_auth_okta::{OktaOAuthClient, OktaOAuthConfig};
 use loom_server_geoip::GeoIpService;
 use loom_server_github_app::{GithubAppClient, GithubAppConfig};
 use loom_server_jobs::{JobRepository, JobScheduler};
-use loom_google_cse::CseClient;
+use loom_server_google_cse::CseClient;
 use loom_server_k8s::KubeClient;
 use loom_server_llm_service::LlmService;
 use loom_server_smtp::SmtpClient;

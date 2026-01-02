@@ -394,7 +394,7 @@ const CSE_CHECK_TIMEOUT: Duration = Duration::from_secs(5);
 /// Check Google CSE health by verifying configuration and optionally testing
 /// connectivity.
 pub async fn check_google_cse() -> GoogleCseHealth {
-	use loom_google_cse::{CseClient, CseRequest};
+	use loom_server_google_cse::{CseClient, CseRequest};
 
 	let start = Instant::now();
 

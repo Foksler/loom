@@ -3,7 +3,7 @@
 
 //! CSE cache extension for ThreadRepository.
 
-use loom_google_cse::CseResponse;
+use loom_server_google_cse::CseResponse;
 
 use crate::db::ThreadRepository;
 use crate::error::ServerError;
