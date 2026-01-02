@@ -3109,29 +3109,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
 
 [[package]]
-name = "loom-acp"
-version = "0.1.0"
-dependencies = [
- "agent-client-protocol",
- "anyhow",
- "async-trait",
- "chrono",
- "futures",
- "loom-common-core",
- "loom-common-thread",
- "loom-common-tools",
- "loom-server-llm-proxy",
- "proptest",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "tokio-util",
- "tracing",
-]
-
-[[package]]
 name = "loom-auth"
 version = "0.1.0"
 dependencies = [
@@ -3253,7 +3230,7 @@ dependencies = [
  "futures",
  "hex",
  "humantime",
- "loom-acp",
+ "loom-cli-acp",
  "loom-cli-auto-commit",
  "loom-cli-config",
  "loom-cli-credentials",
@@ -3280,6 +3257,29 @@ dependencies = [
  "tracing-subscriber",
  "url",
  "webbrowser",
+]
+
+[[package]]
+name = "loom-cli-acp"
+version = "0.1.0"
+dependencies = [
+ "agent-client-protocol",
+ "anyhow",
+ "async-trait",
+ "chrono",
+ "futures",
+ "loom-common-core",
+ "loom-common-thread",
+ "loom-common-tools",
+ "loom-server-llm-proxy",
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tokio-util",
+ "tracing",
 ]
 
 [[package]]

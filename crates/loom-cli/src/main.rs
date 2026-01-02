@@ -1230,7 +1230,7 @@ async fn run_acp_agent(
 	thread_store: Arc<dyn ThreadStore>,
 ) -> Result<()> {
 	use agent_client_protocol::{self as acp, Client as _};
-	use loom_acp::{LoomAcpAgent, SessionNotificationRequest};
+	use loom_cli_acp::{LoomAcpAgent, SessionNotificationRequest};
 	use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 
 	info!("starting ACP agent mode");

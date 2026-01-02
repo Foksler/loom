@@ -4,7 +4,7 @@
 [workspace]
 resolver = "2"
 members = [
-	"crates/loom-acp",
+	"crates/loom-cli-acp",
 	"crates/loom-auth",
 	"crates/loom-auth-devicecode",
 	"crates/loom-auth-github",
