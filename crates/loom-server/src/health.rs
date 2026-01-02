@@ -321,7 +321,9 @@ pub async fn check_llm_providers(llm_service: Option<&LlmService>) -> LlmProvide
 						(HealthStatus::Healthy, Some("api_key".to_string()), None)
 					}
 					Some(loom_server_llm_service::AnthropicHealthInfo::Pool(pool_status)) => {
-						let status = if pool_status.accounts_available == pool_status.accounts_total {
+						let status = if pool_status.accounts_total == 0 {
+							HealthStatus::Unhealthy
+						} else if pool_status.accounts_available == pool_status.accounts_total {
 							HealthStatus::Healthy
 						} else if pool_status.accounts_available > 0 {
 							HealthStatus::Degraded
@@ -794,5 +796,45 @@ pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
 		HealthStatus::Degraded
 	} else {
 		HealthStatus::Healthy
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	fn pool_health_status(accounts_total: usize, accounts_available: usize) -> HealthStatus {
+		if accounts_total == 0 {
+			HealthStatus::Unhealthy
+		} else if accounts_available == accounts_total {
+			HealthStatus::Healthy
+		} else if accounts_available > 0 {
+			HealthStatus::Degraded
+		} else {
+			HealthStatus::Unhealthy
+		}
+	}
+
+	#[test]
+	fn test_empty_oauth_pool_is_unhealthy() {
+		assert_eq!(pool_health_status(0, 0), HealthStatus::Unhealthy);
+	}
+
+	#[test]
+	fn test_all_accounts_available_is_healthy() {
+		assert_eq!(pool_health_status(3, 3), HealthStatus::Healthy);
+		assert_eq!(pool_health_status(1, 1), HealthStatus::Healthy);
+	}
+
+	#[test]
+	fn test_some_accounts_available_is_degraded() {
+		assert_eq!(pool_health_status(3, 2), HealthStatus::Degraded);
+		assert_eq!(pool_health_status(3, 1), HealthStatus::Degraded);
+	}
+
+	#[test]
+	fn test_no_accounts_available_is_unhealthy() {
+		assert_eq!(pool_health_status(3, 0), HealthStatus::Unhealthy);
+		assert_eq!(pool_health_status(1, 0), HealthStatus::Unhealthy);
 	}
 }
