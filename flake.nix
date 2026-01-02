@@ -37,9 +37,29 @@
       # cargo2nix overlay for granular crate builds
       cargo2nixOverlay = cargo2nix.overlays.default;
       
+      # Default platform configurations
+      platformsLinuxOnly = {
+        linux-x86_64 = true;
+        linux-aarch64 = false;
+        windows-x86_64 = false;
+        windows-aarch64 = false;
+        macos-x86_64 = false;
+        macos-aarch64 = false;
+      };
+      
+      platformsAll = {
+        linux-x86_64 = true;
+        linux-aarch64 = true;
+        windows-x86_64 = true;
+        windows-aarch64 = true;
+        macos-x86_64 = true;
+        macos-aarch64 = true;
+      };
+      
       # Function to create loom-server-binaries with configurable platforms
-      mkBinaries = { pkgs, platforms }: pkgs.callPackage ./infra/pkgs/loom-server-binaries.nix {
-        loom-cli-linux = pkgs.loom-cli-linux;
+      # Used by NixOS module (via specialArgs) and flake packages
+      mkBinaries = { pkgs, platforms, loom-cli-linux ? pkgs.loom-cli-linux }: pkgs.callPackage ./infra/pkgs/loom-server-binaries.nix {
+        inherit loom-cli-linux;
         loom-cli-windows = if platforms.windows-x86_64 or false then pkgs.loom-cli-windows else null;
         loom-cli-macos = if (platforms.macos-x86_64 or false) || (platforms.macos-aarch64 or false) then pkgs.loom-cli-macos else null;
         loom-cli-linux-aarch64 = if platforms.linux-aarch64 or false then pkgs.loom-cli-linux-aarch64 else null;
@@ -140,21 +160,29 @@
             cp ${loom-cli-c2n}/bin/loom $out/bin/loom
           '';
           
-          loom-server-binaries-c2n = pkgsWithCargo2nix.callPackage ./infra/pkgs/loom-server-binaries.nix {
+          # Server binaries using mkBinaries with platform selection
+          # Linux-only: fast builds for NixOS deployments and server images
+          loom-server-binaries-linux-only = mkBinaries {
+            pkgs = pkgsWithCargo2nix.extend overlayWithCross;
+            platforms = platformsLinuxOnly;
             loom-cli-linux = loom-cli-linux-c2n;
-            loom-cli-windows = pkgs.loom-cli-windows;
-            loom-cli-macos = pkgs.loom-cli-macos;
-            loom-cli-linux-aarch64 = pkgs.loom-cli-linux-aarch64;
-            loom-cli-windows-aarch64 = pkgs.loom-cli-windows-aarch64;
+          };
+          
+          # All platforms: for release artifacts and CI
+          loom-server-binaries-all = mkBinaries {
+            pkgs = pkgsWithCargo2nix.extend overlayWithCross;
+            platforms = platformsAll;
+            loom-cli-linux = loom-cli-linux-c2n;
           };
           
           # Build images using cargo2nix packages for faster rebuilds
+          # Uses linux-only binaries for fast image builds
           weaver-image-c2n = pkgsWithCargo2nix.callPackage ./infra/pkgs/weaver-image.nix {
             loom-cli = loom-cli-c2n;
           };
           loom-server-image-c2n = pkgsWithCargo2nix.callPackage ./infra/pkgs/loom-server-image.nix {
             loom-server = loom-server-c2n;
-            loom-server-binaries = loom-server-binaries-c2n;
+            loom-server-binaries = loom-server-binaries-linux-only;
           };
         in
         {
@@ -167,7 +195,12 @@
           loom-cli-linux = loom-cli-linux-c2n;
           loom-server = loom-server-c2n;
           loom-weaver-binaries = loom-weaver-binaries-c2n;
-          loom-server-binaries = loom-server-binaries-c2n;
+          
+          # Server binaries: default to linux-only for fast builds
+          # Use loom-server-binaries-all for release artifacts with all platforms
+          loom-server-binaries = loom-server-binaries-linux-only;
+          inherit loom-server-binaries-linux-only loom-server-binaries-all;
+          
           weaver-image = weaver-image-c2n;
           loom-server-image = loom-server-image-c2n;
           
