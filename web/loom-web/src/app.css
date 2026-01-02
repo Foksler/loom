@@ -8,17 +8,13 @@
 /* ============================================
    Commit Mono Font
    ============================================
-   Download font files from https://commitmono.com/
-   Place the following files in /static/fonts/:
-   - CommitMono-Regular.woff2
-   - CommitMono-Medium.woff2
-   - CommitMono-SemiBold.woff2
-   - CommitMono-Bold.woff2
+   Font files from https://github.com/eigilnikolajsen/commit-mono
+   Available weights: 400 (Regular), 700 (Bold)
    ============================================ */
 
 @font-face {
   font-family: 'CommitMono';
-  src: url('/fonts/CommitMono-Regular.woff2') format('woff2');
+  src: url('/fonts/CommitMono-400-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -26,7 +22,15 @@
 
 @font-face {
   font-family: 'CommitMono';
-  src: url('/fonts/CommitMono-Medium.woff2') format('woff2');
+  src: url('/fonts/CommitMono-400-Italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'CommitMono';
+  src: url('/fonts/CommitMono-400-Regular.woff2') format('woff2');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -34,7 +38,7 @@
 
 @font-face {
   font-family: 'CommitMono';
-  src: url('/fonts/CommitMono-SemiBold.woff2') format('woff2');
+  src: url('/fonts/CommitMono-700-Regular.woff2') format('woff2');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -42,9 +46,17 @@
 
 @font-face {
   font-family: 'CommitMono';
-  src: url('/fonts/CommitMono-Bold.woff2') format('woff2');
+  src: url('/fonts/CommitMono-700-Regular.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'CommitMono';
+  src: url('/fonts/CommitMono-700-Italic.woff2') format('woff2');
+  font-weight: 700;
+  font-style: italic;
   font-display: swap;
 }
 
