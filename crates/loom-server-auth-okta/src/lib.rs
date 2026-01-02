@@ -57,7 +57,7 @@
 //! # Example
 //!
 //! ```rust,no_run
-//! use loom_auth_okta::{OktaOAuthClient, OktaOAuthConfig};
+//! use loom_server_auth_okta::{OktaOAuthClient, OktaOAuthConfig};
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! let config = OktaOAuthConfig::from_env()?;
@@ -380,7 +380,7 @@ struct OktaErrorResponse {
 /// # Example
 ///
 /// ```rust,no_run
-/// use loom_auth_okta::{OktaOAuthClient, OktaOAuthConfig};
+/// use loom_server_auth_okta::{OktaOAuthClient, OktaOAuthConfig};
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 /// let config = OktaOAuthConfig::from_env()?;

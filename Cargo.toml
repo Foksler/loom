@@ -10,7 +10,7 @@ members = [
 	"crates/loom-server-auth-github",
 	"crates/loom-server-auth-google",
 	"crates/loom-server-auth-magiclink",
-	"crates/loom-auth-okta",
+	"crates/loom-server-auth-okta",
 	"crates/loom-cli-auto-commit",
 	"crates/loom-cli",
 	"crates/loom-cli-config",

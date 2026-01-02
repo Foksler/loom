@@ -54,7 +54,7 @@ loom/
 │   ├── loom-server-auth-devicecode/    # Device code flow for CLI
 │   ├── loom-server-auth-github/ # GitHub OAuth provider
 │   ├── loom-server-auth-google/  # Google OAuth provider
-│   ├── loom-auth-okta/          # Okta OAuth/OIDC provider
+│   ├── loom-server-auth-okta/   # Okta OAuth/OIDC provider
 │   ├── loom-smtp/               # Email sending for magic links
 │   ├── loom-server/             # HTTP handlers, middleware
 │   └── ...

@@ -3109,38 +3109,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
 
 [[package]]
-name = "loom-auth-magiclink"
-version = "0.1.0"
-dependencies = [
- "argon2",
- "chrono",
- "hex",
- "proptest",
- "rand 0.8.5",
- "serde",
- "thiserror 1.0.69",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "loom-auth-okta"
-version = "0.1.0"
-dependencies = [
- "base64",
- "loom-common-http",
- "loom-common-secret",
- "proptest",
- "reqwest",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio",
- "tracing",
- "url",
-]
-
-[[package]]
 name = "loom-cli"
 version = "0.1.0"
 dependencies = [
@@ -3488,8 +3456,6 @@ dependencies = [
  "hex",
  "hmac",
  "humantime",
- "loom-auth-magiclink",
- "loom-auth-okta",
  "loom-common-core",
  "loom-common-i18n",
  "loom-common-secret",
@@ -3504,6 +3470,8 @@ dependencies = [
  "loom-server-auth-devicecode",
  "loom-server-auth-github",
  "loom-server-auth-google",
+ "loom-server-auth-magiclink",
+ "loom-server-auth-okta",
  "loom-server-db",
  "loom-server-geoip",
  "loom-server-jobs",
@@ -3578,10 +3546,10 @@ dependencies = [
  "futures",
  "hex",
  "http",
- "loom-auth-magiclink",
  "loom-common-i18n",
  "loom-common-secret",
  "loom-server-auth-devicecode",
+ "loom-server-auth-magiclink",
  "proptest",
  "rand 0.8.5",
  "serde",
@@ -3629,6 +3597,38 @@ dependencies = [
 
 [[package]]
 name = "loom-server-auth-google"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "loom-common-http",
+ "loom-common-secret",
+ "proptest",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "loom-server-auth-magiclink"
+version = "0.1.0"
+dependencies = [
+ "argon2",
+ "chrono",
+ "hex",
+ "proptest",
+ "rand 0.8.5",
+ "serde",
+ "thiserror 1.0.69",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "loom-server-auth-okta"
 version = "0.1.0"
 dependencies = [
  "base64",

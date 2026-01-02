@@ -22,7 +22,7 @@ use axum::{
 };
 use loom_server_auth_github::GitHubEmail;
 use loom_server_auth_google::GoogleUserInfo;
-use loom_auth_okta::OktaUserInfo;
+use loom_server_auth_okta::OktaUserInfo;
 use std::sync::Arc;
 use tempfile::tempdir;
 use tower::ServiceExt;

@@ -31,7 +31,7 @@ loom-server-auth-devicecode = { path = "../loom-server-auth-devicecode" }
 loom-server-auth-github = { path = "../loom-server-auth-github" }
 loom-server-auth-google = { path = "../loom-server-auth-google" }
 loom-server-auth-magiclink = { path = "../loom-server-auth-magiclink" }
-loom-auth-okta = { path = "../loom-auth-okta" }
+loom-server-auth-okta = { path = "../loom-server-auth-okta" }
 loom-server-smtp = { path = "../loom-server-smtp" }
 loom-common-i18n = { path = "../loom-common-i18n" }
 loom-server-geoip = { path = "../loom-server-geoip" }
