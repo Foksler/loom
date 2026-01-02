@@ -13,7 +13,7 @@ use std::time::{Duration, Instant};
 use async_trait::async_trait;
 use chrono::{DateTime, TimeZone, Utc};
 use loom_common_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
-use loom_cli_credentials::{CredentialStore, CredentialValue, FileCredentialStore};
+use loom_cli_credentials::{CredentialStore, CredentialValue, FileCredentialStore, PersistedCredentialValue};
 
 use serde::Serialize;
 use tokio::sync::{Mutex, RwLock};
@@ -275,6 +275,69 @@ impl AnthropicPool {
             model,
             store,
         }
+    }
+
+    /// Load all accounts from the credential file.
+    ///
+    /// This should be called after creating an empty pool to restore
+    /// persisted accounts from the credential file.
+    pub async fn load_from_file(&self) -> Result<usize, LlmError> {
+        let store_contents = self.store.read_store().await.map_err(|e| {
+            LlmError::Api(format!("Failed to read credential file: {e}"))
+        })?;
+
+        let mut loaded_count = 0;
+
+        for (account_id, cred_value) in store_contents {
+            match cred_value {
+                PersistedCredentialValue::OAuth {
+                    refresh,
+                    access,
+                    expires,
+                } => {
+                    let creds = OAuthCredentials::new(
+                        loom_common_secret::SecretString::new(refresh),
+                        loom_common_secret::SecretString::new(access),
+                        expires,
+                    );
+                    let oauth_client =
+                        OAuthClient::new(account_id.clone(), creds, Arc::clone(&self.store));
+                    let auth = AnthropicAuth::OAuth {
+                        client: oauth_client.clone(),
+                    };
+                    let anthropic_config =
+                        AnthropicConfig::new_with_auth(auth).with_model(self.model.clone());
+
+                    match AnthropicClient::new_with_store(anthropic_config) {
+                        Ok(client) => {
+                            {
+                                let mut accounts = self.accounts.write().await;
+                                accounts.push(AccountEntry {
+                                    id: account_id.clone(),
+                                    client,
+                                    oauth_client,
+                                });
+                            }
+                            {
+                                let mut state = self.state.lock().await;
+                                state.runtimes.push(AccountRuntime::default());
+                            }
+                            info!(account_id = %account_id, "Loaded OAuth account from file");
+                            loaded_count += 1;
+                        }
+                        Err(e) => {
+                            warn!(account_id = %account_id, error = %e, "Failed to create client for account");
+                        }
+                    }
+                }
+                PersistedCredentialValue::ApiKey { .. } => {
+                    warn!(account_id = %account_id, "Skipping API key credential in OAuth pool");
+                }
+            }
+        }
+
+        info!(loaded_count, "Loaded accounts from credential file");
+        Ok(loaded_count)
     }
 
     /// Add an account dynamically.

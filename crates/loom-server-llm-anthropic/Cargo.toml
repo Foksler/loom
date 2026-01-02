@@ -30,4 +30,5 @@ tracing = { workspace = true }
 url = "2.5"
 
 [dev-dependencies]
+tempfile = { workspace = true }
 tokio-test = { workspace = true }

@@ -18,7 +18,7 @@ pub use loom_server_llm_anthropic::{
 };
 use loom_server_llm_openai::OpenAIClient;
 use loom_server_llm_vertex::VertexClient;
-use tracing::{debug, info, instrument};
+use tracing::{debug, info, instrument, warn};
 
 use crate::config::{AnthropicAuthConfig, LlmServiceConfig};
 use crate::error::LlmServiceError;
@@ -118,7 +118,16 @@ impl LlmService {
 					pool_config,
 				));
 
-				info!("Anthropic OAuth pool initialized");
+				// Load existing accounts from the credential file
+				match pool.load_from_file().await {
+					Ok(count) => {
+						info!(accounts_loaded = count, "Anthropic OAuth pool initialized with persisted accounts");
+					}
+					Err(e) => {
+						warn!(error = %e, "Failed to load accounts from credential file, starting with empty pool");
+					}
+				}
+
 				Some(AnthropicClientWrapper::Pool(pool))
 			}
 			None => {

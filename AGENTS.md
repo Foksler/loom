@@ -41,12 +41,20 @@ When you modify `Cargo.toml` or `Cargo.lock`:
 3. The nix build will use the updated dependency graph
 
 ## Deployment
-Deployments happen automatically via `git push` to the `trunk` branch. The production server runs NixOS with auto-update enabled.
+Deployments happen automatically via `git push` to the `trunk` branch. The production server runs NixOS with auto-update enabled. The update service runs every 10 seconds, checks for new commits, and rebuilds if needed.
 
 - **Deploy:** `git push origin trunk`
-- **Check status:** `systemctl status nixos-auto-update.service`
-- **View logs:** `journalctl -u nixos-auto-update.service -f` (follow) or `-n 100` (last 100 lines)
+- **Check status:** `sudo systemctl status nixos-auto-update.service`
+- **View logs:** `sudo journalctl -u nixos-auto-update.service -f` (follow) or `-n 100` (last 100 lines)
+- **Check deployed revision:** `cat /var/lib/nixos-auto-update/deployed-revision`
+- **Force rebuild:** Delete the deployed revision file and restart: `sudo rm /var/lib/nixos-auto-update/deployed-revision && sudo systemctl start nixos-auto-update.service`
 - **Service state:** `activating` = deploying, `active (exited)` = completed successfully
+- **Repo location on server:** `/var/lib/depot`
+
+### Verifying Deployment
+1. Check the deployed revision matches your commit: `cat /var/lib/nixos-auto-update/deployed-revision`
+2. Check loom-server was restarted: `sudo systemctl status loom-server` (look at start time)
+3. Check health endpoint: `curl -s https://loom.ghuntley.com/health | jq .`
 
 ## Database Migrations
 

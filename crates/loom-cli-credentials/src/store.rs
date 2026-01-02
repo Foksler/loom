@@ -56,7 +56,8 @@ impl FileCredentialStore {
 		&self.path
 	}
 
-	async fn read_store(&self) -> Result<PersistedCredentialStore, CredentialError> {
+	/// Read the entire credential store from disk.
+	pub async fn read_store(&self) -> Result<PersistedCredentialStore, CredentialError> {
 		if !self.path.exists() {
 			return Ok(HashMap::new());
 		}
