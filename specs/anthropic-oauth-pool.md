@@ -473,11 +473,59 @@ pub enum AnthropicHealthInfo {
 
 ### "This credential is only authorized for use with Claude Code" Error
 
-This error occurs when headers sent to the Anthropic API don't match what Claude CLI sends.
+This error occurs when using OAuth tokens with premium models (Opus, Sonnet) without the required system prompt prefix.
+
+#### Root Cause
+
+Anthropic validates OAuth requests server-side to ensure they come from legitimate coding assistant tools. The validation is **content-based**, checking the system prompt in the request body.
+
+**Key Discovery**: The restriction is NOT based on headers, User-Agent, or network fingerprinting. It's based on the **system prompt content**.
+
+Reference: [Anthropic MAX Plan Implementation Guide](https://raw.githubusercontent.com/nsxdavid/anthropic-max-router/main/ANTHROPIC-MAX-PLAN-IMPLEMENTATION-GUIDE.md)
+
+#### Required System Prompt Prefix
+
+The system prompt **MUST** start with this exact phrase (case-sensitive, punctuation-sensitive):
+
+```
+You are Claude Code, Anthropic's official CLI for Claude.
+```
+
+**Requirements:**
+- Must be the **FIRST** content in the system prompt
+- Exact capitalization (case-sensitive)
+- Include the period at the end
+- Additional system content can be appended AFTER this phrase
+
+**What works:**
+```json
+{
+  "system": "You are Claude Code, Anthropic's official CLI for Claude. You are also a helpful coding assistant."
+}
+```
+
+**What fails:**
+- ❌ No system prompt at all
+- ❌ Phrase appears after other content: `"You are a helpful assistant. You are Claude Code..."`
+- ❌ Case variations: `"you are claude code..."`
+- ❌ Missing period: `"You are Claude Code, Anthropic's official CLI for Claude"`
+- ❌ Shortened version: `"You are Claude Code."`
+
+#### Model-Specific Behavior
+
+| Model | System Prompt Required? |
+|-------|------------------------|
+| `claude-opus-4-5-*` | ✅ Yes |
+| `claude-sonnet-4-*` | ✅ Yes |
+| `claude-haiku-*` | ❌ No (works without prefix) |
+
+#### Implementation
+
+Loom automatically prepends the required system prompt when using OAuth authentication. See `AnthropicRequest::with_oauth_system_prompt()` in `crates/loom-server-llm-anthropic/src/types.rs`.
 
 #### Required Headers for OAuth
 
-The following headers must be sent **exactly** as shown:
+In addition to the system prompt, the following headers must be sent:
 
 ```
 Authorization: Bearer <access_token>
@@ -486,7 +534,7 @@ anthropic-dangerous-direct-browser-access: true
 User-Agent: claude-cli/2.0.76 (external, sdk-cli)
 ```
 
-**Critical**: Do NOT include `claude-code-20250219` in the beta headers. This causes the API to reject the request.
+**Note**: The `claude-code-20250219` beta header is NOT required for `/v1/messages` requests. It's only used for internal telemetry endpoints.
 
 #### Sniffing Claude CLI Traffic with mitmproxy
 
@@ -549,6 +597,7 @@ When Anthropic updates Claude CLI, the beta headers may change:
 3. Update constants in `crates/loom-server-llm-anthropic/src/auth/scheme.rs`:
    - `OAUTH_COMBINED_BETA_HEADERS`
    - `ANTHROPIC_USER_AGENT`
+   - `OAUTH_REQUIRED_SYSTEM_PROMPT_PREFIX`
 4. Run tests to verify no regressions
 
 ## Future Enhancements

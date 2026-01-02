@@ -233,6 +233,11 @@ impl<S: CredentialStore + 'static> LlmClient for AnthropicClient<S> {
 		let mut anthropic_request = AnthropicRequest::from(&request);
 		anthropic_request.stream = Some(false);
 
+		// Apply OAuth system prompt prefix for Opus/Sonnet access
+		if self.config.auth.is_oauth() {
+			anthropic_request = anthropic_request.with_oauth_system_prompt();
+		}
+
 		let client = self.clone();
 		let anthropic_request_clone = anthropic_request.clone();
 		let response = retry(&self.retry_config, || {
@@ -271,6 +276,11 @@ impl<S: CredentialStore + 'static> LlmClient for AnthropicClient<S> {
 
 		let mut anthropic_request = AnthropicRequest::from(&request);
 		anthropic_request.stream = Some(true);
+
+		// Apply OAuth system prompt prefix for Opus/Sonnet access
+		if self.config.auth.is_oauth() {
+			anthropic_request = anthropic_request.with_oauth_system_prompt();
+		}
 
 		let client = self.clone();
 		let anthropic_request_clone = anthropic_request.clone();

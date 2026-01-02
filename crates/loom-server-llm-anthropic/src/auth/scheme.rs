@@ -32,6 +32,21 @@ pub const API_KEY_BETA_HEADERS: &str =
 /// Must match Claude CLI format exactly.
 pub const ANTHROPIC_USER_AGENT: &str = "claude-cli/2.0.76 (external, sdk-cli)";
 
+/// Required system prompt prefix for OAuth authentication with Opus/Sonnet models.
+///
+/// Anthropic validates OAuth requests to ensure they come from legitimate coding
+/// assistant tools. The system prompt MUST start with this exact phrase (case-sensitive,
+/// punctuation-sensitive) for OAuth tokens to work with premium models like Opus and Sonnet.
+///
+/// Without this prefix, OAuth requests to Opus/Sonnet will fail with:
+/// "This credential is only authorized for use with Claude Code"
+///
+/// Haiku models work without this prefix, but Opus/Sonnet require it.
+///
+/// Reference: https://github.com/nsxdavid/anthropic-max-router
+pub const OAUTH_REQUIRED_SYSTEM_PROMPT_PREFIX: &str =
+	"You are Claude Code, Anthropic's official CLI for Claude.";
+
 /// Authentication errors.
 #[derive(Debug, thiserror::Error)]
 pub enum AuthError {

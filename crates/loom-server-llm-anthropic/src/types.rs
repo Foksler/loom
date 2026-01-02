@@ -105,6 +105,35 @@ pub struct AnthropicRequest {
 	pub stream: Option<bool>,
 }
 
+impl AnthropicRequest {
+	/// Prepend the required OAuth system prompt prefix for Opus/Sonnet models.
+	///
+	/// Anthropic validates OAuth requests to ensure they come from legitimate coding
+	/// assistant tools. The system prompt MUST start with the magic phrase for OAuth
+	/// tokens to work with premium models like Opus and Sonnet.
+	///
+	/// This method prepends the required prefix to any existing system prompt,
+	/// or sets it if no system prompt exists.
+	///
+	/// Haiku models work without this prefix, but calling this method is harmless.
+	pub fn with_oauth_system_prompt(mut self) -> Self {
+		use crate::auth::OAUTH_REQUIRED_SYSTEM_PROMPT_PREFIX;
+
+		self.system = Some(match self.system {
+			Some(existing) => {
+				// Only prepend if not already present
+				if existing.starts_with(OAUTH_REQUIRED_SYSTEM_PROMPT_PREFIX) {
+					existing
+				} else {
+					format!("{OAUTH_REQUIRED_SYSTEM_PROMPT_PREFIX} {existing}")
+				}
+			}
+			None => OAUTH_REQUIRED_SYSTEM_PROMPT_PREFIX.to_string(),
+		});
+		self
+	}
+}
+
 /// A message in the Anthropic conversation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnthropicMessage {
@@ -367,5 +396,61 @@ mod tests {
 		);
 		assert!(config.auth.is_oauth());
 		assert!(!config.auth.is_api_key());
+	}
+
+	#[test]
+	fn test_oauth_system_prompt_sets_when_none() {
+		use crate::auth::OAUTH_REQUIRED_SYSTEM_PROMPT_PREFIX;
+
+		let request = AnthropicRequest {
+			model: "claude-opus-4-5".to_string(),
+			messages: vec![],
+			max_tokens: 4096,
+			system: None,
+			temperature: None,
+			tools: None,
+			stream: None,
+		};
+
+		let updated = request.with_oauth_system_prompt();
+		assert_eq!(updated.system, Some(OAUTH_REQUIRED_SYSTEM_PROMPT_PREFIX.to_string()));
+	}
+
+	#[test]
+	fn test_oauth_system_prompt_prepends_to_existing() {
+		use crate::auth::OAUTH_REQUIRED_SYSTEM_PROMPT_PREFIX;
+
+		let request = AnthropicRequest {
+			model: "claude-opus-4-5".to_string(),
+			messages: vec![],
+			max_tokens: 4096,
+			system: Some("You are a helpful assistant.".to_string()),
+			temperature: None,
+			tools: None,
+			stream: None,
+		};
+
+		let updated = request.with_oauth_system_prompt();
+		let expected = format!("{OAUTH_REQUIRED_SYSTEM_PROMPT_PREFIX} You are a helpful assistant.");
+		assert_eq!(updated.system, Some(expected));
+	}
+
+	#[test]
+	fn test_oauth_system_prompt_does_not_duplicate() {
+		use crate::auth::OAUTH_REQUIRED_SYSTEM_PROMPT_PREFIX;
+
+		let existing = format!("{OAUTH_REQUIRED_SYSTEM_PROMPT_PREFIX} You are a helpful assistant.");
+		let request = AnthropicRequest {
+			model: "claude-opus-4-5".to_string(),
+			messages: vec![],
+			max_tokens: 4096,
+			system: Some(existing.clone()),
+			temperature: None,
+			tools: None,
+			stream: None,
+		};
+
+		let updated = request.with_oauth_system_prompt();
+		assert_eq!(updated.system, Some(existing));
 	}
 }
