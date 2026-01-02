@@ -10,5 +10,8 @@
 mod client;
 mod retry;
 
-pub use client::{builder, new_client, new_client_with_timeout, user_agent};
+pub use client::{
+	builder, builder_with_user_agent, new_client, new_client_with_timeout,
+	new_client_with_user_agent, user_agent,
+};
 pub use retry::{retry, RetryConfig, RetryableError};

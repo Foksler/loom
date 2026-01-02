@@ -134,7 +134,9 @@ impl AnthropicClient<MemoryCredentialStore> {
 impl<S: CredentialStore + 'static> AnthropicClient<S> {
 	/// Create a new client with a specific credential store.
 	pub fn new_with_store(config: AnthropicConfig<S>) -> Result<Self, LlmError> {
-		let http_client = loom_common_http::builder()
+		use crate::auth::ANTHROPIC_USER_AGENT;
+
+		let http_client = loom_common_http::builder_with_user_agent(ANTHROPIC_USER_AGENT)
 			.build()
 			.map_err(|e| LlmError::Http(format!("Failed to create HTTP client: {e}")))?;
 
