@@ -827,6 +827,78 @@ msgstr "Last login"
 msgid "admin.users.impersonate"
 msgstr "Impersonate"
 
+#: admin.logs.title
+msgid "admin.logs.title"
+msgstr "Logs do Servidor"
+
+#: admin.logs.description
+msgid "admin.logs.description"
+msgstr "Visualizar e transmitir logs do servidor em tempo real"
+
+#: admin.logs.buffer_status
+msgid "admin.logs.buffer_status"
+msgstr "{size} / {capacity} entradas no buffer"
+
+#: admin.logs.start_stream
+msgid "admin.logs.start_stream"
+msgstr "Iniciar Transmissão"
+
+#: admin.logs.stop_stream
+msgid "admin.logs.stop_stream"
+msgstr "Parar Transmissão"
+
+#: admin.logs.clear
+msgid "admin.logs.clear"
+msgstr "Limpar"
+
+#: admin.logs.level
+msgid "admin.logs.level"
+msgstr "Nível"
+
+#: admin.logs.target
+msgid "admin.logs.target"
+msgstr "Alvo"
+
+#: admin.logs.auto_scroll
+msgid "admin.logs.auto_scroll"
+msgstr "Rolagem automática"
+
+#: admin.logs.no_logs
+msgid "admin.logs.no_logs"
+msgstr "Sem entradas de log"
+
+#: admin.logs.no_matches
+msgid "admin.logs.no_matches"
+msgstr "Nenhum log corresponde aos filtros atuais"
+
+#: admin.logs.streaming
+msgid "admin.logs.streaming"
+msgstr "Ao vivo"
+
+#: admin.logs.stream_error
+msgid "admin.logs.stream_error"
+msgstr "Transmissão de logs desconectada"
+
+#: admin.logs.search_placeholder
+msgid "admin.logs.search_placeholder"
+msgstr "Pesquisar logs..."
+
+#: admin.logs.show_all
+msgid "admin.logs.show_all"
+msgstr "Todos os níveis"
+
+#: admin.logs.errors_only
+msgid "admin.logs.errors_only"
+msgstr "Apenas erros"
+
+#: admin.logs.showing_count
+msgid "admin.logs.showing_count"
+msgstr "Mostrando {shown} de {total} logs"
+
+#: admin.dashboard.view_all_logs
+msgid "admin.dashboard.view_all_logs"
+msgstr "Ver todos os logs →"
+
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"
 msgstr "Admin {admin} impersonating {user}"

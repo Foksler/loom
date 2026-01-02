@@ -827,6 +827,78 @@ msgstr "Last login"
 msgid "admin.users.impersonate"
 msgstr "Impersonate"
 
+#: admin.logs.title
+msgid "admin.logs.title"
+msgstr "सर्वर लॉग"
+
+#: admin.logs.description
+msgid "admin.logs.description"
+msgstr "रीयल-टाइम में सर्वर लॉग देखें और स्ट्रीम करें"
+
+#: admin.logs.buffer_status
+msgid "admin.logs.buffer_status"
+msgstr "बफर में {size} / {capacity} प्रविष्टियाँ"
+
+#: admin.logs.start_stream
+msgid "admin.logs.start_stream"
+msgstr "स्ट्रीमिंग शुरू करें"
+
+#: admin.logs.stop_stream
+msgid "admin.logs.stop_stream"
+msgstr "स्ट्रीमिंग रोकें"
+
+#: admin.logs.clear
+msgid "admin.logs.clear"
+msgstr "साफ़ करें"
+
+#: admin.logs.level
+msgid "admin.logs.level"
+msgstr "स्तर"
+
+#: admin.logs.target
+msgid "admin.logs.target"
+msgstr "लक्ष्य"
+
+#: admin.logs.auto_scroll
+msgid "admin.logs.auto_scroll"
+msgstr "ऑटो-स्क्रॉल"
+
+#: admin.logs.no_logs
+msgid "admin.logs.no_logs"
+msgstr "कोई लॉग प्रविष्टि नहीं"
+
+#: admin.logs.no_matches
+msgid "admin.logs.no_matches"
+msgstr "वर्तमान फ़िल्टर से कोई लॉग मेल नहीं खाता"
+
+#: admin.logs.streaming
+msgid "admin.logs.streaming"
+msgstr "लाइव"
+
+#: admin.logs.stream_error
+msgid "admin.logs.stream_error"
+msgstr "लॉग स्ट्रीम डिस्कनेक्ट हो गई"
+
+#: admin.logs.search_placeholder
+msgid "admin.logs.search_placeholder"
+msgstr "लॉग खोजें..."
+
+#: admin.logs.show_all
+msgid "admin.logs.show_all"
+msgstr "सभी स्तर"
+
+#: admin.logs.errors_only
+msgid "admin.logs.errors_only"
+msgstr "केवल त्रुटियाँ"
+
+#: admin.logs.showing_count
+msgid "admin.logs.showing_count"
+msgstr "{total} में से {shown} लॉग दिखा रहे हैं"
+
+#: admin.dashboard.view_all_logs
+msgid "admin.dashboard.view_all_logs"
+msgstr "सभी लॉग देखें →"
+
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"
 msgstr "Admin {admin} impersonating {user}"

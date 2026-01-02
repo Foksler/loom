@@ -827,6 +827,78 @@ msgstr "Last login"
 msgid "admin.users.impersonate"
 msgstr "Impersonate"
 
+#: admin.logs.title
+msgid "admin.logs.title"
+msgstr "서버 로그"
+
+#: admin.logs.description
+msgid "admin.logs.description"
+msgstr "실시간으로 서버 로그 보기 및 스트리밍"
+
+#: admin.logs.buffer_status
+msgid "admin.logs.buffer_status"
+msgstr "버퍼에 {size} / {capacity} 항목"
+
+#: admin.logs.start_stream
+msgid "admin.logs.start_stream"
+msgstr "스트리밍 시작"
+
+#: admin.logs.stop_stream
+msgid "admin.logs.stop_stream"
+msgstr "스트리밍 중지"
+
+#: admin.logs.clear
+msgid "admin.logs.clear"
+msgstr "지우기"
+
+#: admin.logs.level
+msgid "admin.logs.level"
+msgstr "레벨"
+
+#: admin.logs.target
+msgid "admin.logs.target"
+msgstr "대상"
+
+#: admin.logs.auto_scroll
+msgid "admin.logs.auto_scroll"
+msgstr "자동 스크롤"
+
+#: admin.logs.no_logs
+msgid "admin.logs.no_logs"
+msgstr "로그 항목 없음"
+
+#: admin.logs.no_matches
+msgid "admin.logs.no_matches"
+msgstr "현재 필터와 일치하는 로그가 없습니다"
+
+#: admin.logs.streaming
+msgid "admin.logs.streaming"
+msgstr "실시간"
+
+#: admin.logs.stream_error
+msgid "admin.logs.stream_error"
+msgstr "로그 스트림 연결 끊김"
+
+#: admin.logs.search_placeholder
+msgid "admin.logs.search_placeholder"
+msgstr "로그 검색..."
+
+#: admin.logs.show_all
+msgid "admin.logs.show_all"
+msgstr "모든 레벨"
+
+#: admin.logs.errors_only
+msgid "admin.logs.errors_only"
+msgstr "오류만"
+
+#: admin.logs.showing_count
+msgid "admin.logs.showing_count"
+msgstr "{total}개 중 {shown}개 로그 표시"
+
+#: admin.dashboard.view_all_logs
+msgid "admin.dashboard.view_all_logs"
+msgstr "모든 로그 보기 →"
+
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"
 msgstr "Admin {admin} impersonating {user}"

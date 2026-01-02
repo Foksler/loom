@@ -827,6 +827,78 @@ msgstr "Dernière connexion"
 msgid "admin.users.impersonate"
 msgstr "Usurper"
 
+#: admin.logs.title
+msgid "admin.logs.title"
+msgstr "Journaux du Serveur"
+
+#: admin.logs.description
+msgid "admin.logs.description"
+msgstr "Afficher et diffuser les journaux du serveur en temps réel"
+
+#: admin.logs.buffer_status
+msgid "admin.logs.buffer_status"
+msgstr "{size} / {capacity} entrées dans le tampon"
+
+#: admin.logs.start_stream
+msgid "admin.logs.start_stream"
+msgstr "Démarrer la Diffusion"
+
+#: admin.logs.stop_stream
+msgid "admin.logs.stop_stream"
+msgstr "Arrêter la Diffusion"
+
+#: admin.logs.clear
+msgid "admin.logs.clear"
+msgstr "Effacer"
+
+#: admin.logs.level
+msgid "admin.logs.level"
+msgstr "Niveau"
+
+#: admin.logs.target
+msgid "admin.logs.target"
+msgstr "Cible"
+
+#: admin.logs.auto_scroll
+msgid "admin.logs.auto_scroll"
+msgstr "Défilement automatique"
+
+#: admin.logs.no_logs
+msgid "admin.logs.no_logs"
+msgstr "Aucune entrée de journal"
+
+#: admin.logs.no_matches
+msgid "admin.logs.no_matches"
+msgstr "Aucun journal ne correspond aux filtres actuels"
+
+#: admin.logs.streaming
+msgid "admin.logs.streaming"
+msgstr "En direct"
+
+#: admin.logs.stream_error
+msgid "admin.logs.stream_error"
+msgstr "Flux de journaux déconnecté"
+
+#: admin.logs.search_placeholder
+msgid "admin.logs.search_placeholder"
+msgstr "Rechercher dans les journaux..."
+
+#: admin.logs.show_all
+msgid "admin.logs.show_all"
+msgstr "Tous les niveaux"
+
+#: admin.logs.errors_only
+msgid "admin.logs.errors_only"
+msgstr "Erreurs uniquement"
+
+#: admin.logs.showing_count
+msgid "admin.logs.showing_count"
+msgstr "Affichage de {shown} sur {total} journaux"
+
+#: admin.dashboard.view_all_logs
+msgid "admin.dashboard.view_all_logs"
+msgstr "Voir tous les journaux →"
+
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"
 msgstr "Admin {admin} usurpe {user}"

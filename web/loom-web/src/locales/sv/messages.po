@@ -827,6 +827,78 @@ msgstr "Last login"
 msgid "admin.users.impersonate"
 msgstr "Impersonate"
 
+#: admin.logs.title
+msgid "admin.logs.title"
+msgstr "Serverloggar"
+
+#: admin.logs.description
+msgid "admin.logs.description"
+msgstr "Visa och strömma serverloggar i realtid"
+
+#: admin.logs.buffer_status
+msgid "admin.logs.buffer_status"
+msgstr "{size} / {capacity} poster i buffert"
+
+#: admin.logs.start_stream
+msgid "admin.logs.start_stream"
+msgstr "Starta Strömning"
+
+#: admin.logs.stop_stream
+msgid "admin.logs.stop_stream"
+msgstr "Stoppa Strömning"
+
+#: admin.logs.clear
+msgid "admin.logs.clear"
+msgstr "Rensa"
+
+#: admin.logs.level
+msgid "admin.logs.level"
+msgstr "Nivå"
+
+#: admin.logs.target
+msgid "admin.logs.target"
+msgstr "Mål"
+
+#: admin.logs.auto_scroll
+msgid "admin.logs.auto_scroll"
+msgstr "Automatisk rullning"
+
+#: admin.logs.no_logs
+msgid "admin.logs.no_logs"
+msgstr "Inga loggposter"
+
+#: admin.logs.no_matches
+msgid "admin.logs.no_matches"
+msgstr "Inga loggar matchar de aktuella filtren"
+
+#: admin.logs.streaming
+msgid "admin.logs.streaming"
+msgstr "Live"
+
+#: admin.logs.stream_error
+msgid "admin.logs.stream_error"
+msgstr "Loggströmmen avbruten"
+
+#: admin.logs.search_placeholder
+msgid "admin.logs.search_placeholder"
+msgstr "Sök i loggar..."
+
+#: admin.logs.show_all
+msgid "admin.logs.show_all"
+msgstr "Alla nivåer"
+
+#: admin.logs.errors_only
+msgid "admin.logs.errors_only"
+msgstr "Endast fel"
+
+#: admin.logs.showing_count
+msgid "admin.logs.showing_count"
+msgstr "Visar {shown} av {total} loggar"
+
+#: admin.dashboard.view_all_logs
+msgid "admin.dashboard.view_all_logs"
+msgstr "Visa alla loggar →"
+
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"
 msgstr "Admin {admin} impersonating {user}"

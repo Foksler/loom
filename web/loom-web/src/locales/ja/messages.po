@@ -827,6 +827,78 @@ msgstr "最終ログイン"
 msgid "admin.users.impersonate"
 msgstr "なりすまし"
 
+#: admin.logs.title
+msgid "admin.logs.title"
+msgstr "サーバーログ"
+
+#: admin.logs.description
+msgid "admin.logs.description"
+msgstr "リアルタイムでサーバーログを表示・ストリーミング"
+
+#: admin.logs.buffer_status
+msgid "admin.logs.buffer_status"
+msgstr "バッファ内 {size} / {capacity} エントリ"
+
+#: admin.logs.start_stream
+msgid "admin.logs.start_stream"
+msgstr "ストリーミング開始"
+
+#: admin.logs.stop_stream
+msgid "admin.logs.stop_stream"
+msgstr "ストリーミング停止"
+
+#: admin.logs.clear
+msgid "admin.logs.clear"
+msgstr "クリア"
+
+#: admin.logs.level
+msgid "admin.logs.level"
+msgstr "レベル"
+
+#: admin.logs.target
+msgid "admin.logs.target"
+msgstr "ターゲット"
+
+#: admin.logs.auto_scroll
+msgid "admin.logs.auto_scroll"
+msgstr "自動スクロール"
+
+#: admin.logs.no_logs
+msgid "admin.logs.no_logs"
+msgstr "ログエントリがありません"
+
+#: admin.logs.no_matches
+msgid "admin.logs.no_matches"
+msgstr "現在のフィルターに一致するログがありません"
+
+#: admin.logs.streaming
+msgid "admin.logs.streaming"
+msgstr "ライブ"
+
+#: admin.logs.stream_error
+msgid "admin.logs.stream_error"
+msgstr "ログストリームが切断されました"
+
+#: admin.logs.search_placeholder
+msgid "admin.logs.search_placeholder"
+msgstr "ログを検索..."
+
+#: admin.logs.show_all
+msgid "admin.logs.show_all"
+msgstr "すべてのレベル"
+
+#: admin.logs.errors_only
+msgid "admin.logs.errors_only"
+msgstr "エラーのみ"
+
+#: admin.logs.showing_count
+msgid "admin.logs.showing_count"
+msgstr "{total} 件中 {shown} 件を表示"
+
+#: admin.dashboard.view_all_logs
+msgid "admin.dashboard.view_all_logs"
+msgstr "すべてのログを表示 →"
+
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"
 msgstr "管理者 {admin} が {user} になりすまし中"

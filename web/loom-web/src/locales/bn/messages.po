@@ -827,6 +827,78 @@ msgstr "Last login"
 msgid "admin.users.impersonate"
 msgstr "Impersonate"
 
+#: admin.logs.title
+msgid "admin.logs.title"
+msgstr "সার্ভার লগ"
+
+#: admin.logs.description
+msgid "admin.logs.description"
+msgstr "রিয়েল-টাইমে সার্ভার লগ দেখুন এবং স্ট্রিম করুন"
+
+#: admin.logs.buffer_status
+msgid "admin.logs.buffer_status"
+msgstr "বাফারে {size} / {capacity} এন্ট্রি"
+
+#: admin.logs.start_stream
+msgid "admin.logs.start_stream"
+msgstr "স্ট্রিমিং শুরু করুন"
+
+#: admin.logs.stop_stream
+msgid "admin.logs.stop_stream"
+msgstr "স্ট্রিমিং বন্ধ করুন"
+
+#: admin.logs.clear
+msgid "admin.logs.clear"
+msgstr "মুছুন"
+
+#: admin.logs.level
+msgid "admin.logs.level"
+msgstr "স্তর"
+
+#: admin.logs.target
+msgid "admin.logs.target"
+msgstr "লক্ষ্য"
+
+#: admin.logs.auto_scroll
+msgid "admin.logs.auto_scroll"
+msgstr "স্বয়ংক্রিয় স্ক্রোল"
+
+#: admin.logs.no_logs
+msgid "admin.logs.no_logs"
+msgstr "কোনো লগ এন্ট্রি নেই"
+
+#: admin.logs.no_matches
+msgid "admin.logs.no_matches"
+msgstr "বর্তমান ফিল্টারের সাথে কোনো লগ মেলেনি"
+
+#: admin.logs.streaming
+msgid "admin.logs.streaming"
+msgstr "লাইভ"
+
+#: admin.logs.stream_error
+msgid "admin.logs.stream_error"
+msgstr "লগ স্ট্রিম বিচ্ছিন্ন হয়েছে"
+
+#: admin.logs.search_placeholder
+msgid "admin.logs.search_placeholder"
+msgstr "লগ খুঁজুন..."
+
+#: admin.logs.show_all
+msgid "admin.logs.show_all"
+msgstr "সব স্তর"
+
+#: admin.logs.errors_only
+msgid "admin.logs.errors_only"
+msgstr "শুধু ত্রুটি"
+
+#: admin.logs.showing_count
+msgid "admin.logs.showing_count"
+msgstr "{total} টির মধ্যে {shown} টি লগ দেখানো হচ্ছে"
+
+#: admin.dashboard.view_all_logs
+msgid "admin.dashboard.view_all_logs"
+msgstr "সব লগ দেখুন →"
+
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"
 msgstr "Admin {admin} impersonating {user}"

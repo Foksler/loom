@@ -827,6 +827,78 @@ msgstr "Last login"
 msgid "admin.users.impersonate"
 msgstr "Impersonate"
 
+#: admin.logs.title
+msgid "admin.logs.title"
+msgstr "Журналы Сервера"
+
+#: admin.logs.description
+msgid "admin.logs.description"
+msgstr "Просмотр и потоковая передача журналов сервера в реальном времени"
+
+#: admin.logs.buffer_status
+msgid "admin.logs.buffer_status"
+msgstr "{size} / {capacity} записей в буфере"
+
+#: admin.logs.start_stream
+msgid "admin.logs.start_stream"
+msgstr "Начать Трансляцию"
+
+#: admin.logs.stop_stream
+msgid "admin.logs.stop_stream"
+msgstr "Остановить Трансляцию"
+
+#: admin.logs.clear
+msgid "admin.logs.clear"
+msgstr "Очистить"
+
+#: admin.logs.level
+msgid "admin.logs.level"
+msgstr "Уровень"
+
+#: admin.logs.target
+msgid "admin.logs.target"
+msgstr "Цель"
+
+#: admin.logs.auto_scroll
+msgid "admin.logs.auto_scroll"
+msgstr "Автопрокрутка"
+
+#: admin.logs.no_logs
+msgid "admin.logs.no_logs"
+msgstr "Нет записей журнала"
+
+#: admin.logs.no_matches
+msgid "admin.logs.no_matches"
+msgstr "Нет журналов, соответствующих текущим фильтрам"
+
+#: admin.logs.streaming
+msgid "admin.logs.streaming"
+msgstr "В прямом эфире"
+
+#: admin.logs.stream_error
+msgid "admin.logs.stream_error"
+msgstr "Поток журналов отключен"
+
+#: admin.logs.search_placeholder
+msgid "admin.logs.search_placeholder"
+msgstr "Поиск в журналах..."
+
+#: admin.logs.show_all
+msgid "admin.logs.show_all"
+msgstr "Все уровни"
+
+#: admin.logs.errors_only
+msgid "admin.logs.errors_only"
+msgstr "Только ошибки"
+
+#: admin.logs.showing_count
+msgid "admin.logs.showing_count"
+msgstr "Показано {shown} из {total} журналов"
+
+#: admin.dashboard.view_all_logs
+msgid "admin.dashboard.view_all_logs"
+msgstr "Просмотреть все журналы →"
+
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"
 msgstr "Admin {admin} impersonating {user}"

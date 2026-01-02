@@ -827,6 +827,78 @@ msgstr "上次登录"
 msgid "admin.users.impersonate"
 msgstr "模拟用户"
 
+#: admin.logs.title
+msgid "admin.logs.title"
+msgstr "服务器日志"
+
+#: admin.logs.description
+msgid "admin.logs.description"
+msgstr "查看和实时流式传输服务器日志"
+
+#: admin.logs.buffer_status
+msgid "admin.logs.buffer_status"
+msgstr "缓冲区中 {size} / {capacity} 条目"
+
+#: admin.logs.start_stream
+msgid "admin.logs.start_stream"
+msgstr "开始流式传输"
+
+#: admin.logs.stop_stream
+msgid "admin.logs.stop_stream"
+msgstr "停止流式传输"
+
+#: admin.logs.clear
+msgid "admin.logs.clear"
+msgstr "清除"
+
+#: admin.logs.level
+msgid "admin.logs.level"
+msgstr "级别"
+
+#: admin.logs.target
+msgid "admin.logs.target"
+msgstr "目标"
+
+#: admin.logs.auto_scroll
+msgid "admin.logs.auto_scroll"
+msgstr "自动滚动"
+
+#: admin.logs.no_logs
+msgid "admin.logs.no_logs"
+msgstr "没有日志条目"
+
+#: admin.logs.no_matches
+msgid "admin.logs.no_matches"
+msgstr "没有日志匹配当前筛选条件"
+
+#: admin.logs.streaming
+msgid "admin.logs.streaming"
+msgstr "实时"
+
+#: admin.logs.stream_error
+msgid "admin.logs.stream_error"
+msgstr "日志流已断开"
+
+#: admin.logs.search_placeholder
+msgid "admin.logs.search_placeholder"
+msgstr "搜索日志..."
+
+#: admin.logs.show_all
+msgid "admin.logs.show_all"
+msgstr "所有级别"
+
+#: admin.logs.errors_only
+msgid "admin.logs.errors_only"
+msgstr "仅错误"
+
+#: admin.logs.showing_count
+msgid "admin.logs.showing_count"
+msgstr "显示 {shown} / {total} 条日志"
+
+#: admin.dashboard.view_all_logs
+msgid "admin.dashboard.view_all_logs"
+msgstr "查看所有日志 →"
+
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"
 msgstr "管理员 {admin} 正在模拟 {user}"

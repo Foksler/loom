@@ -827,6 +827,78 @@ msgstr "Last login"
 msgid "admin.users.impersonate"
 msgstr "Impersonate"
 
+#: admin.logs.title
+msgid "admin.logs.title"
+msgstr "Αρχεία Καταγραφής Διακομιστή"
+
+#: admin.logs.description
+msgid "admin.logs.description"
+msgstr "Προβολή και ζωντανή μετάδοση αρχείων καταγραφής διακομιστή"
+
+#: admin.logs.buffer_status
+msgid "admin.logs.buffer_status"
+msgstr "{size} / {capacity} εγγραφές στον buffer"
+
+#: admin.logs.start_stream
+msgid "admin.logs.start_stream"
+msgstr "Έναρξη Μετάδοσης"
+
+#: admin.logs.stop_stream
+msgid "admin.logs.stop_stream"
+msgstr "Διακοπή Μετάδοσης"
+
+#: admin.logs.clear
+msgid "admin.logs.clear"
+msgstr "Εκκαθάριση"
+
+#: admin.logs.level
+msgid "admin.logs.level"
+msgstr "Επίπεδο"
+
+#: admin.logs.target
+msgid "admin.logs.target"
+msgstr "Στόχος"
+
+#: admin.logs.auto_scroll
+msgid "admin.logs.auto_scroll"
+msgstr "Αυτόματη κύλιση"
+
+#: admin.logs.no_logs
+msgid "admin.logs.no_logs"
+msgstr "Δεν υπάρχουν εγγραφές"
+
+#: admin.logs.no_matches
+msgid "admin.logs.no_matches"
+msgstr "Δεν βρέθηκαν αρχεία που να ταιριάζουν με τα τρέχοντα φίλτρα"
+
+#: admin.logs.streaming
+msgid "admin.logs.streaming"
+msgstr "Ζωντανά"
+
+#: admin.logs.stream_error
+msgid "admin.logs.stream_error"
+msgstr "Η ροή αρχείων καταγραφής αποσυνδέθηκε"
+
+#: admin.logs.search_placeholder
+msgid "admin.logs.search_placeholder"
+msgstr "Αναζήτηση στα αρχεία..."
+
+#: admin.logs.show_all
+msgid "admin.logs.show_all"
+msgstr "Όλα τα επίπεδα"
+
+#: admin.logs.errors_only
+msgid "admin.logs.errors_only"
+msgstr "Μόνο σφάλματα"
+
+#: admin.logs.showing_count
+msgid "admin.logs.showing_count"
+msgstr "Εμφάνιση {shown} από {total} αρχεία"
+
+#: admin.dashboard.view_all_logs
+msgid "admin.dashboard.view_all_logs"
+msgstr "Προβολή όλων των αρχείων →"
+
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"
 msgstr "Admin {admin} impersonating {user}"

@@ -747,6 +747,78 @@ msgstr "آخر تسجيل دخول"
 msgid "admin.users.impersonate"
 msgstr "انتحال الشخصية"
 
+#: admin.logs.title
+msgid "admin.logs.title"
+msgstr "سجلات الخادم"
+
+#: admin.logs.description
+msgid "admin.logs.description"
+msgstr "عرض وبث سجلات الخادم في الوقت الفعلي"
+
+#: admin.logs.buffer_status
+msgid "admin.logs.buffer_status"
+msgstr "{size} / {capacity} إدخالات في المخزن المؤقت"
+
+#: admin.logs.start_stream
+msgid "admin.logs.start_stream"
+msgstr "بدء البث"
+
+#: admin.logs.stop_stream
+msgid "admin.logs.stop_stream"
+msgstr "إيقاف البث"
+
+#: admin.logs.clear
+msgid "admin.logs.clear"
+msgstr "مسح"
+
+#: admin.logs.level
+msgid "admin.logs.level"
+msgstr "المستوى"
+
+#: admin.logs.target
+msgid "admin.logs.target"
+msgstr "الهدف"
+
+#: admin.logs.auto_scroll
+msgid "admin.logs.auto_scroll"
+msgstr "التمرير التلقائي"
+
+#: admin.logs.no_logs
+msgid "admin.logs.no_logs"
+msgstr "لا توجد إدخالات سجل"
+
+#: admin.logs.no_matches
+msgid "admin.logs.no_matches"
+msgstr "لا توجد سجلات تطابق الفلاتر الحالية"
+
+#: admin.logs.streaming
+msgid "admin.logs.streaming"
+msgstr "مباشر"
+
+#: admin.logs.stream_error
+msgid "admin.logs.stream_error"
+msgstr "تم قطع اتصال بث السجلات"
+
+#: admin.logs.search_placeholder
+msgid "admin.logs.search_placeholder"
+msgstr "البحث في السجلات..."
+
+#: admin.logs.show_all
+msgid "admin.logs.show_all"
+msgstr "جميع المستويات"
+
+#: admin.logs.errors_only
+msgid "admin.logs.errors_only"
+msgstr "الأخطاء فقط"
+
+#: admin.logs.showing_count
+msgid "admin.logs.showing_count"
+msgstr "عرض {shown} من {total} سجل"
+
+#: admin.dashboard.view_all_logs
+msgid "admin.dashboard.view_all_logs"
+msgstr "عرض جميع السجلات ←"
+
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"
 msgstr "المسؤول {admin} ينتحل شخصية {user}"

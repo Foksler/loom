@@ -827,6 +827,78 @@ msgstr "Last login"
 msgid "admin.users.impersonate"
 msgstr "Impersonate"
 
+#: admin.logs.title
+msgid "admin.logs.title"
+msgstr "Serverlogboeken"
+
+#: admin.logs.description
+msgid "admin.logs.description"
+msgstr "Bekijk en stream serverlogboeken in realtime"
+
+#: admin.logs.buffer_status
+msgid "admin.logs.buffer_status"
+msgstr "{size} / {capacity} items in buffer"
+
+#: admin.logs.start_stream
+msgid "admin.logs.start_stream"
+msgstr "Streaming Starten"
+
+#: admin.logs.stop_stream
+msgid "admin.logs.stop_stream"
+msgstr "Streaming Stoppen"
+
+#: admin.logs.clear
+msgid "admin.logs.clear"
+msgstr "Wissen"
+
+#: admin.logs.level
+msgid "admin.logs.level"
+msgstr "Niveau"
+
+#: admin.logs.target
+msgid "admin.logs.target"
+msgstr "Doel"
+
+#: admin.logs.auto_scroll
+msgid "admin.logs.auto_scroll"
+msgstr "Automatisch scrollen"
+
+#: admin.logs.no_logs
+msgid "admin.logs.no_logs"
+msgstr "Geen logboekitems"
+
+#: admin.logs.no_matches
+msgid "admin.logs.no_matches"
+msgstr "Geen logboeken komen overeen met de huidige filters"
+
+#: admin.logs.streaming
+msgid "admin.logs.streaming"
+msgstr "Live"
+
+#: admin.logs.stream_error
+msgid "admin.logs.stream_error"
+msgstr "Logboekstream verbroken"
+
+#: admin.logs.search_placeholder
+msgid "admin.logs.search_placeholder"
+msgstr "Zoeken in logboeken..."
+
+#: admin.logs.show_all
+msgid "admin.logs.show_all"
+msgstr "Alle niveaus"
+
+#: admin.logs.errors_only
+msgid "admin.logs.errors_only"
+msgstr "Alleen fouten"
+
+#: admin.logs.showing_count
+msgid "admin.logs.showing_count"
+msgstr "{shown} van {total} logboeken weergeven"
+
+#: admin.dashboard.view_all_logs
+msgid "admin.dashboard.view_all_logs"
+msgstr "Alle logboeken bekijken →"
+
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"
 msgstr "Admin {admin} impersonating {user}"

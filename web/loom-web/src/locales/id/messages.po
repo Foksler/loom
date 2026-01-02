@@ -827,6 +827,78 @@ msgstr "Last login"
 msgid "admin.users.impersonate"
 msgstr "Impersonate"
 
+#: admin.logs.title
+msgid "admin.logs.title"
+msgstr "Log Server"
+
+#: admin.logs.description
+msgid "admin.logs.description"
+msgstr "Lihat dan streaming log server secara real-time"
+
+#: admin.logs.buffer_status
+msgid "admin.logs.buffer_status"
+msgstr "{size} / {capacity} entri dalam buffer"
+
+#: admin.logs.start_stream
+msgid "admin.logs.start_stream"
+msgstr "Mulai Streaming"
+
+#: admin.logs.stop_stream
+msgid "admin.logs.stop_stream"
+msgstr "Hentikan Streaming"
+
+#: admin.logs.clear
+msgid "admin.logs.clear"
+msgstr "Hapus"
+
+#: admin.logs.level
+msgid "admin.logs.level"
+msgstr "Level"
+
+#: admin.logs.target
+msgid "admin.logs.target"
+msgstr "Target"
+
+#: admin.logs.auto_scroll
+msgid "admin.logs.auto_scroll"
+msgstr "Gulir otomatis"
+
+#: admin.logs.no_logs
+msgid "admin.logs.no_logs"
+msgstr "Tidak ada entri log"
+
+#: admin.logs.no_matches
+msgid "admin.logs.no_matches"
+msgstr "Tidak ada log yang cocok dengan filter saat ini"
+
+#: admin.logs.streaming
+msgid "admin.logs.streaming"
+msgstr "Langsung"
+
+#: admin.logs.stream_error
+msgid "admin.logs.stream_error"
+msgstr "Stream log terputus"
+
+#: admin.logs.search_placeholder
+msgid "admin.logs.search_placeholder"
+msgstr "Cari log..."
+
+#: admin.logs.show_all
+msgid "admin.logs.show_all"
+msgstr "Semua level"
+
+#: admin.logs.errors_only
+msgid "admin.logs.errors_only"
+msgstr "Hanya error"
+
+#: admin.logs.showing_count
+msgid "admin.logs.showing_count"
+msgstr "Menampilkan {shown} dari {total} log"
+
+#: admin.dashboard.view_all_logs
+msgid "admin.dashboard.view_all_logs"
+msgstr "Lihat semua log →"
+
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"
 msgstr "Admin {admin} impersonating {user}"

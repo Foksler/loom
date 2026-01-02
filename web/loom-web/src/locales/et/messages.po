@@ -827,6 +827,78 @@ msgstr "Last login"
 msgid "admin.users.impersonate"
 msgstr "Impersonate"
 
+#: admin.logs.title
+msgid "admin.logs.title"
+msgstr "Serveri logid"
+
+#: admin.logs.description
+msgid "admin.logs.description"
+msgstr "Vaata ja voogedasta serveri logisid reaalajas"
+
+#: admin.logs.buffer_status
+msgid "admin.logs.buffer_status"
+msgstr "{size} / {capacity} kirjet puhvris"
+
+#: admin.logs.start_stream
+msgid "admin.logs.start_stream"
+msgstr "Alusta voogedastust"
+
+#: admin.logs.stop_stream
+msgid "admin.logs.stop_stream"
+msgstr "Peata voogedastus"
+
+#: admin.logs.clear
+msgid "admin.logs.clear"
+msgstr "Tühjenda"
+
+#: admin.logs.level
+msgid "admin.logs.level"
+msgstr "Tase"
+
+#: admin.logs.target
+msgid "admin.logs.target"
+msgstr "Sihtmärk"
+
+#: admin.logs.auto_scroll
+msgid "admin.logs.auto_scroll"
+msgstr "Automaatne kerimine"
+
+#: admin.logs.no_logs
+msgid "admin.logs.no_logs"
+msgstr "Logikirjeid pole"
+
+#: admin.logs.no_matches
+msgid "admin.logs.no_matches"
+msgstr "Ükski logi ei vasta praegustele filtritele"
+
+#: admin.logs.streaming
+msgid "admin.logs.streaming"
+msgstr "Otse"
+
+#: admin.logs.stream_error
+msgid "admin.logs.stream_error"
+msgstr "Logivoog katkes"
+
+#: admin.logs.search_placeholder
+msgid "admin.logs.search_placeholder"
+msgstr "Otsi logidest..."
+
+#: admin.logs.show_all
+msgid "admin.logs.show_all"
+msgstr "Kõik tasemed"
+
+#: admin.logs.errors_only
+msgid "admin.logs.errors_only"
+msgstr "Ainult vead"
+
+#: admin.logs.showing_count
+msgid "admin.logs.showing_count"
+msgstr "Näidatakse {shown} / {total} logi"
+
+#: admin.dashboard.view_all_logs
+msgid "admin.dashboard.view_all_logs"
+msgstr "Vaata kõiki logisid →"
+
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"
 msgstr "Admin {admin} impersonating {user}"
