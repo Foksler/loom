@@ -580,6 +580,10 @@ impl UserRepository {
 			return Ok(user);
 		}
 
+		// Check if this will be the first user (auto-promote to system admin)
+		let user_count = self.count_users().await?;
+		let is_first_user = user_count == 0;
+
 		let now = Utc::now();
 		let username_base = preferred_username.unwrap_or(display_name);
 		let username = self.generate_unique_username(username_base).await?;
@@ -590,7 +594,7 @@ impl UserRepository {
 			primary_email: Some(email.to_string()),
 			avatar_url: avatar_url.map(|s| s.to_string()),
 			email_visible: true,
-			is_system_admin: false,
+			is_system_admin: is_first_user,
 			is_support: false,
 			is_auditor: false,
 			created_at: now,
@@ -600,7 +604,13 @@ impl UserRepository {
 		};
 
 		self.create_user(&user).await?;
-		tracing::debug!(user_id = %user.id, "created new user by email");
+
+		if is_first_user {
+			tracing::info!(user_id = %user.id, email = %email, "first user created as system admin");
+		} else {
+			tracing::debug!(user_id = %user.id, "created new user by email");
+		}
+
 		Ok(user)
 	}
 
@@ -726,7 +736,145 @@ impl UserRepository {
 mod tests {
 	use super::*;
 	use proptest::prelude::*;
+	use sqlx::sqlite::SqlitePool;
 	use std::collections::HashSet;
+
+	async fn create_test_pool() -> SqlitePool {
+		let pool = SqlitePool::connect(":memory:").await.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS users (
+				id TEXT PRIMARY KEY,
+				display_name TEXT NOT NULL,
+				username TEXT UNIQUE,
+				primary_email TEXT UNIQUE,
+				avatar_url TEXT,
+				email_visible INTEGER DEFAULT 1,
+				is_system_admin INTEGER DEFAULT 0,
+				is_support INTEGER DEFAULT 0,
+				is_auditor INTEGER DEFAULT 0,
+				created_at TEXT NOT NULL,
+				updated_at TEXT NOT NULL,
+				deleted_at TEXT,
+				locale TEXT DEFAULT NULL
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS identities (
+				id TEXT PRIMARY KEY,
+				user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+				provider TEXT NOT NULL,
+				provider_user_id TEXT NOT NULL,
+				email TEXT NOT NULL,
+				email_verified INTEGER DEFAULT 0,
+				access_token TEXT,
+				refresh_token TEXT,
+				token_expires_at TEXT,
+				created_at TEXT NOT NULL,
+				UNIQUE(provider, provider_user_id)
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		pool
+	}
+
+	#[tokio::test]
+	async fn test_first_user_becomes_system_admin() {
+		let pool = create_test_pool().await;
+		let repo = UserRepository::new(pool);
+
+		let user = repo
+			.find_or_create_user_by_email(
+				"first@example.com",
+				"First User",
+				None,
+				Some("firstuser"),
+			)
+			.await
+			.unwrap();
+
+		assert!(
+			user.is_system_admin,
+			"First user should be promoted to system admin"
+		);
+	}
+
+	#[tokio::test]
+	async fn test_second_user_is_not_system_admin() {
+		let pool = create_test_pool().await;
+		let repo = UserRepository::new(pool);
+
+		let first = repo
+			.find_or_create_user_by_email(
+				"first@example.com",
+				"First User",
+				None,
+				Some("firstuser"),
+			)
+			.await
+			.unwrap();
+
+		let second = repo
+			.find_or_create_user_by_email(
+				"second@example.com",
+				"Second User",
+				None,
+				Some("seconduser"),
+			)
+			.await
+			.unwrap();
+
+		assert!(first.is_system_admin, "First user should be system admin");
+		assert!(
+			!second.is_system_admin,
+			"Second user should NOT be system admin"
+		);
+	}
+
+	#[tokio::test]
+	async fn test_existing_user_retains_admin_status() {
+		let pool = create_test_pool().await;
+		let repo = UserRepository::new(pool);
+
+		let first = repo
+			.find_or_create_user_by_email(
+				"admin@example.com",
+				"Admin User",
+				None,
+				Some("adminuser"),
+			)
+			.await
+			.unwrap();
+
+		assert!(first.is_system_admin, "First user should be system admin");
+
+		let same_user = repo
+			.find_or_create_user_by_email(
+				"admin@example.com",
+				"Admin User Updated",
+				None,
+				Some("adminuser"),
+			)
+			.await
+			.unwrap();
+
+		assert_eq!(first.id, same_user.id, "Should return the same user");
+		assert!(
+			same_user.is_system_admin,
+			"Existing admin should retain admin status"
+		);
+	}
 
 	proptest! {
 		#[test]
