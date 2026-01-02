@@ -653,7 +653,7 @@ in
           KUBECONFIG = toString cfg.weaver.kubeconfigPath;
         })
         (mkIf cfg.geoip.enable {
-          LOOM_GEOIP_DATABASE_PATH = toString cfg.geoip.databasePath;
+          LOOM_SERVER_GEOIP_DATABASE_PATH = toString cfg.geoip.databasePath;
         })
         (mkIf cfg.smtp.enable {
           LOOM_SERVER_SMTP_HOST = cfg.smtp.host;
