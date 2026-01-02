@@ -551,7 +551,76 @@ services.loom-server.anthropic = {
 
 ---
 
-## 13. Future Enhancements
+## 13. Required HTTP Headers for OAuth
+
+OAuth tokens from Claude Max subscriptions require specific headers to authenticate with the Anthropic API. These were identified by sniffing Claude CLI traffic with mitmproxy.
+
+### Working Request Example
+
+```bash
+curl -X POST "https://api.anthropic.com/v1/messages" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "anthropic-beta: oauth-2025-04-20,interleaved-thinking-2025-05-14,context-management-2025-06-27" \
+  -H "anthropic-dangerous-direct-browser-access: true" \
+  -H "user-agent: claude-cli/2.0.76 (external, sdk-cli)" \
+  -H "content-type: application/json" \
+  -d '{"model":"claude-haiku-4-5-20251001","max_tokens":10,"messages":[{"role":"user","content":"hi"}]}'
+```
+
+### Required Headers
+
+| Header | Value | Notes |
+|--------|-------|-------|
+| `Authorization` | `Bearer {access_token}` | OAuth access token |
+| `anthropic-version` | `2023-06-01` | API version |
+| `anthropic-beta` | `oauth-2025-04-20,interleaved-thinking-2025-05-14,context-management-2025-06-27` | **Critical**: Must include `oauth-2025-04-20`. Do NOT include `claude-code-20250219` for `/v1/messages`. |
+| `anthropic-dangerous-direct-browser-access` | `true` | Required for OAuth |
+| `user-agent` | `claude-cli/2.0.76 (external, sdk-cli)` | Must match Claude CLI format |
+| `content-type` | `application/json` | Standard JSON content type |
+
+### Optional Headers (from Claude CLI)
+
+These are sent by Claude CLI but not required for authentication:
+
+| Header | Example Value |
+|--------|---------------|
+| `x-app` | `cli` |
+| `x-stainless-arch` | `x64` |
+| `x-stainless-lang` | `js` |
+| `x-stainless-os` | `Linux` |
+| `x-stainless-package-version` | `0.70.0` |
+| `x-stainless-runtime` | `node` |
+| `x-stainless-runtime-version` | `v24.3.0` |
+
+### Common Errors
+
+| Error Message | Cause |
+|---------------|-------|
+| `This credential is only authorized for use with Claude Code` | Wrong headers - likely missing `anthropic-dangerous-direct-browser-access: true` or wrong `anthropic-beta` headers |
+| `invalid_grant` | Refresh token expired or revoked |
+
+### Header Discovery via mitmproxy
+
+To sniff Claude CLI traffic and verify headers:
+
+```bash
+# Start mitmproxy
+sudo mitmdump --set flow_detail=4 -p 8888 > /tmp/mitm-output.txt 2>&1 &
+
+# Run Claude CLI through proxy (with TLS bypass for Node)
+NODE_TLS_REJECT_UNAUTHORIZED=0 \
+HTTPS_PROXY=http://127.0.0.1:8888 \
+HTTP_PROXY=http://127.0.0.1:8888 \
+claude --print "hello"
+
+# Check captured traffic
+grep -A50 "POST.*v1/messages" /tmp/mitm-output.txt
+```
+
+---
+
+## 14. Future Enhancements
 
 - CLI command for account management (backup to web UI)
 - Per-account usage metrics
