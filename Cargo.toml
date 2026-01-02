@@ -13,7 +13,7 @@ members = [
 	"crates/loom-auth-okta",
 	"crates/loom-cli-auto-commit",
 	"crates/loom-cli",
-	"crates/loom-config",
+	"crates/loom-cli-config",
 	"crates/loom-config-common",
 	"crates/loom-common-core",
 	"crates/loom-credentials",

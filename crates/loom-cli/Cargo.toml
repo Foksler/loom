@@ -27,7 +27,7 @@ sys-locale = "0.3"
 humantime = "2"
 loom-acp = { path = "../loom-acp" }
 loom-cli-auto-commit = { path = "../loom-cli-auto-commit" }
-loom-config = { path = "../loom-config" }
+loom-cli-config = { path = "../loom-cli-config" }
 loom-common-core = { path = "../loom-common-core" }
 loom-credentials = { path = "../loom-credentials", features = ["keyring"] }
 loom-git = { path = "../loom-git" }

@@ -20,7 +20,7 @@ use tracing::{debug, error, info, instrument, warn};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 use loom_cli_auto_commit::{AutoCommitConfig, AutoCommitResult, AutoCommitService, CompletedToolInfo};
-use loom_config::{
+use loom_cli_config::{
 	load_config_with_cli,
 	runtime::{LogFormat, LogLevel},
 	sources::CliOverrides,
@@ -244,7 +244,7 @@ fn log_level_to_tracing(level: LogLevel) -> tracing::Level {
 	}
 }
 
-fn init_tracing(logging: &loom_config::runtime::LoggingConfig) {
+fn init_tracing(logging: &loom_cli_config::runtime::LoggingConfig) {
 	let filter = EnvFilter::try_from_default_env()
 		.unwrap_or_else(|_| EnvFilter::new(format!("loom={}", log_level_to_tracing(logging.level))));
 
@@ -655,7 +655,7 @@ async fn run_repl(
 }
 
 async fn start_repl_session(
-	config: &loom_config::LoomConfig,
+	config: &loom_cli_config::LoomConfig,
 	args: &Args,
 	thread_store: Arc<dyn ThreadStore>,
 	mut thread: Thread,
@@ -920,7 +920,7 @@ fn print_local_search_results(results: &[loom_common_thread::ThreadSummary], que
 	}
 }
 
-fn create_new_thread(config: &loom_config::LoomConfig, args: &Args) -> Result<Thread> {
+fn create_new_thread(config: &loom_cli_config::LoomConfig, args: &Args) -> Result<Thread> {
 	let workspace = config
 		.global
 		.workspace_root
@@ -1225,7 +1225,7 @@ async fn main() -> Result<()> {
 }
 
 async fn run_acp_agent(
-	config: &loom_config::LoomConfig,
+	config: &loom_cli_config::LoomConfig,
 	args: &Args,
 	thread_store: Arc<dyn ThreadStore>,
 ) -> Result<()> {

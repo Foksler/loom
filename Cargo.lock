@@ -3255,6 +3255,7 @@ dependencies = [
  "humantime",
  "loom-acp",
  "loom-cli-auto-commit",
+ "loom-cli-config",
  "loom-common-core",
  "loom-common-http",
  "loom-common-i18n",
@@ -3262,7 +3263,6 @@ dependencies = [
  "loom-common-thread",
  "loom-common-tools",
  "loom-common-version",
- "loom-config",
  "loom-credentials",
  "loom-git",
  "loom-server-llm-proxy",
@@ -3295,6 +3295,22 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tokio-test",
+ "tracing",
+]
+
+[[package]]
+name = "loom-cli-config"
+version = "0.1.0"
+dependencies = [
+ "dirs 5.0.1",
+ "loom-common-secret",
+ "loom-config-common",
+ "proptest",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "toml",
  "tracing",
 ]
 
@@ -3401,22 +3417,6 @@ dependencies = [
  "serde",
  "shadow-rs",
  "utoipa",
-]
-
-[[package]]
-name = "loom-config"
-version = "0.1.0"
-dependencies = [
- "dirs 5.0.1",
- "loom-common-secret",
- "loom-config-common",
- "proptest",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 1.0.69",
- "toml",
- "tracing",
 ]
 
 [[package]]
