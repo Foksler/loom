@@ -11,7 +11,7 @@ use tokio::time::{timeout, Instant};
 use utoipa::ToSchema;
 
 use loom_server_weaver::Provisioner;
-use loom_github_app::{GithubAppClient, GithubAppError};
+use loom_server_github_app::{GithubAppClient, GithubAppError};
 use loom_server_jobs::JobScheduler;
 use loom_server_llm_service::LlmService;
 use loom_server_smtp::SmtpClient;

@@ -250,12 +250,12 @@ use utoipa::OpenApi;
             loom_common_thread::AgentStateSnapshot,
             loom_common_thread::AgentStateKind,
             loom_common_thread::ThreadMetadata,
-            // GitHub types (from loom-github-app crate)
-            loom_github_app::AppInfoResponse,
-            loom_github_app::InstallationStatusResponse,
-            loom_github_app::CodeSearchRequest,
-            loom_github_app::CodeSearchResponse,
-            loom_github_app::CodeSearchItem,
+            // GitHub types (from loom-server-github-app crate)
+            loom_server_github_app::AppInfoResponse,
+            loom_server_github_app::InstallationStatusResponse,
+            loom_server_github_app::CodeSearchRequest,
+            loom_server_github_app::CodeSearchResponse,
+            loom_server_github_app::CodeSearchItem,
             // Google CSE types (from loom-google-cse crate)
             loom_google_cse::CseRequest,
             loom_google_cse::CseResponse,

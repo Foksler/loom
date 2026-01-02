@@ -32,7 +32,7 @@ type HmacSha256 = Hmac<Sha256>;
 /// # Example
 ///
 /// ```rust,ignore
-/// use loom_github_app::verify_webhook_signature;
+/// use loom_server_github_app::verify_webhook_signature;
 ///
 /// let secret = "my-webhook-secret";
 /// let signature = "sha256=abc123...";

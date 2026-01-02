@@ -13,7 +13,7 @@ use loom_server_auth_github::{GitHubOAuthClient, GitHubOAuthConfig};
 use loom_server_auth_google::{GoogleOAuthClient, GoogleOAuthConfig};
 use loom_server_auth_okta::{OktaOAuthClient, OktaOAuthConfig};
 use loom_server_geoip::GeoIpService;
-use loom_github_app::{GithubAppClient, GithubAppConfig};
+use loom_server_github_app::{GithubAppClient, GithubAppConfig};
 use loom_server_jobs::{JobRepository, JobScheduler};
 use loom_google_cse::CseClient;
 use loom_server_k8s::KubeClient;

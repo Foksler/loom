@@ -10,7 +10,7 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use loom_github_app::{
+use loom_server_github_app::{
 	AppInfoResponse, CodeSearchRequest, CodeSearchResponse, GithubAppError,
 	InstallationStatusResponse,
 };
@@ -118,7 +118,7 @@ pub async fn github_webhook(
 		})?;
 
 	// 4. Verify signature
-	if let Err(e) = loom_github_app::verify_webhook_signature(secret, sig_header, &body) {
+	if let Err(e) = loom_server_github_app::verify_webhook_signature(secret, sig_header, &body) {
 		tracing::warn!(error = %e, "github_webhook: signature verification failed");
 		return Err(ServerError::Unauthorized(
 			"Invalid webhook signature".into(),
@@ -139,7 +139,7 @@ pub async fn github_webhook(
 
 /// Handle installation webhook events.
 async fn handle_installation_webhook(state: &AppState, body: &[u8]) -> Result<(), ServerError> {
-	use loom_github_app::types::InstallationWebhookPayload;
+	use loom_server_github_app::types::InstallationWebhookPayload;
 
 	let payload: InstallationWebhookPayload = serde_json::from_slice(body)
 		.map_err(|e| ServerError::BadRequest(format!("Invalid webhook payload: {e}")))?;
@@ -222,7 +222,7 @@ async fn handle_installation_repos_webhook(
 	state: &AppState,
 	body: &[u8],
 ) -> Result<(), ServerError> {
-	use loom_github_app::types::InstallationWebhookPayload;
+	use loom_server_github_app::types::InstallationWebhookPayload;
 
 	let payload: InstallationWebhookPayload = serde_json::from_slice(body)
 		.map_err(|e| ServerError::BadRequest(format!("Invalid webhook payload: {e}")))?;

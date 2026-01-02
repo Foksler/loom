@@ -35,7 +35,7 @@ loom-server-auth-okta = { path = "../loom-server-auth-okta" }
 loom-server-smtp = { path = "../loom-server-smtp" }
 loom-common-i18n = { path = "../loom-common-i18n" }
 loom-server-geoip = { path = "../loom-server-geoip" }
-loom-github-app = { path = "../loom-github-app", features = ["openapi"] }
+loom-server-github-app = { path = "../loom-server-github-app", features = ["openapi"] }
 loom-scm = { path = "../loom-scm" }
 loom-scm-mirror = { path = "../loom-scm-mirror" }
 gix = { version = "0.68", default-features = false, features = ["revision"] }
