@@ -20,7 +20,7 @@ pub struct AgentConfig {
 impl Default for AgentConfig {
 	fn default() -> Self {
 		Self {
-			model_name: "claude-sonnet-4-20250514".to_string(),
+			model_name: "claude-opus-4-20250514".to_string(),
 			max_retries: 3,
 			tool_timeout: Duration::from_secs(30),
 			llm_timeout: Duration::from_secs(120),
