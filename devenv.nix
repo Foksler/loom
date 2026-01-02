@@ -28,7 +28,7 @@ in
   packages = [ 
     pkgs.age
     pkgs.btop
-    pkgs.clang        # For mold linker wrapper
+    pkgs.clang
     pkgs.zlib         # Required by libz-sys (git2, etc.)
     pkgs.gettext      # For msgfmt (i18n .po → .mo compilation)
     pkgs.cargo-watch
@@ -40,7 +40,7 @@ in
     pkgs.jq
     pkgs.lazygit
     tools.license    # License header management tool
-    pkgs.mold        # Fast linker for Rust (see .cargo/config.toml)
+
     pkgs.nixos-rebuild
     pkgs.nodejs_22   # Node.js for web tooling compatibility
     pkgs.pnpm_9

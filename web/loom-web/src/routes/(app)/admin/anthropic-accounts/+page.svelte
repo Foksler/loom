@@ -3,12 +3,12 @@
   SPDX-License-Identifier: Proprietary
 -->
 <script lang="ts">
-	import { page } from '$app/stores';
 	import { i18n } from '$lib/i18n';
 	import { Card, Badge, Button } from '$lib/ui';
 	import {
 		listAnthropicAccounts,
 		initiateAnthropicOAuth,
+		completeAnthropicOAuth,
 		removeAnthropicAccount,
 		type AnthropicAccount,
 		type AccountsSummary,
@@ -23,15 +23,10 @@
 	let successMessage = $state<string | null>(null);
 	let notConfigured = $state(false);
 
-	$effect(() => {
-		const added = $page.url.searchParams.get('added');
-		if (added) {
-			successMessage = `Account ${added} added successfully`;
-			const url = new URL($page.url);
-			url.searchParams.delete('added');
-			history.replaceState({}, '', url.toString());
-		}
-	});
+	let showCodeModal = $state(false);
+	let oauthState = $state<string | null>(null);
+	let authCode = $state('');
+	let submittingCode = $state(false);
 
 	async function loadAccounts() {
 		loading = true;
@@ -42,7 +37,7 @@
 			accounts = response.accounts;
 			summary = response.summary;
 		} catch (e) {
-			if (e instanceof Error && e.message.includes('404')) {
+			if (e instanceof Error && e.message.includes('501')) {
 				notConfigured = true;
 			} else {
 				error = e instanceof Error ? e.message : i18n._('general.error');
@@ -57,11 +52,40 @@
 		error = null;
 		try {
 			const response = await initiateAnthropicOAuth('/admin/anthropic-accounts');
-			window.location.href = response.redirect_url;
+			oauthState = response.state;
+			window.open(response.redirect_url, '_blank');
+			showCodeModal = true;
 		} catch (e) {
 			error = e instanceof Error ? e.message : i18n._('general.error');
+		} finally {
 			addingAccount = false;
 		}
+	}
+
+	async function handleSubmitCode() {
+		if (!oauthState || !authCode.trim()) {
+			return;
+		}
+		submittingCode = true;
+		error = null;
+		try {
+			const response = await completeAnthropicOAuth(authCode.trim(), oauthState);
+			successMessage = i18n._('admin.anthropic.account_added', { id: response.account_id });
+			showCodeModal = false;
+			authCode = '';
+			oauthState = null;
+			await loadAccounts();
+		} catch (e) {
+			error = e instanceof Error ? e.message : i18n._('general.error');
+		} finally {
+			submittingCode = false;
+		}
+	}
+
+	function handleCancelOAuth() {
+		showCodeModal = false;
+		authCode = '';
+		oauthState = null;
 	}
 
 	async function handleRemove(accountId: string) {
@@ -223,3 +247,39 @@
 		{/if}
 	{/if}
 </div>
+
+{#if showCodeModal}
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" role="dialog" aria-modal="true" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && handleCancelOAuth()}>
+		<div class="bg-bg-secondary rounded-lg shadow-xl max-w-lg w-full mx-4 p-6" role="document">
+			<h2 class="text-xl font-semibold text-fg mb-4">{i18n._('admin.anthropic.enter_code_title')}</h2>
+			<p class="text-fg-muted text-sm mb-4">
+				{i18n._('admin.anthropic.enter_code_description')}
+			</p>
+			{#if error}
+				<div class="mb-4 p-3 rounded-md bg-error/10 text-error text-sm">{error}</div>
+			{/if}
+			<div class="mb-4">
+				<label for="auth-code" class="block text-sm font-medium text-fg mb-1">
+					{i18n._('admin.anthropic.authorization_code')}
+				</label>
+				<input
+					id="auth-code"
+					type="text"
+					bind:value={authCode}
+					class="w-full px-3 py-2 rounded-md border border-border bg-bg text-fg focus:outline-none focus:ring-2 focus:ring-accent"
+					placeholder={i18n._('admin.anthropic.code_placeholder')}
+					disabled={submittingCode}
+				/>
+			</div>
+			<div class="flex justify-end gap-3">
+				<Button variant="secondary" onclick={handleCancelOAuth} disabled={submittingCode}>
+					{i18n._('general.cancel')}
+				</Button>
+				<Button onclick={handleSubmitCode} disabled={!authCode.trim() || submittingCode} loading={submittingCode}>
+					{i18n._('admin.anthropic.submit_code')}
+				</Button>
+			</div>
+		</div>
+	</div>
+{/if}

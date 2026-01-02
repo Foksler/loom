@@ -65,9 +65,10 @@
       
       # Build the rust package set from Cargo.nix
       rustPkgs = pkgsWithCargo2nix.rustBuilder.makePackageSet {
-        rustVersion = "1.83.0";
+        rustVersion = "1.85.0";
         packageFun = import ./Cargo.nix;
         workspaceSrc = ./.;
+        extraRustComponents = [ "clippy" ];
         packageOverrides = pkgs: pkgs.rustBuilder.overrides.all ++ [
           # Add custom overrides for crates that need native dependencies
           (pkgs.rustBuilder.rustLib.makeOverride {
@@ -82,6 +83,13 @@
             overrideAttrs = drv: {
               nativeBuildInputs = (drv.nativeBuildInputs or []) ++ [ pkgs.pkg-config ];
               buildInputs = (drv.buildInputs or []) ++ [ pkgs.sqlite ];
+            };
+          })
+          # loom-common-i18n needs gettext for msgfmt (.po -> .mo compilation)
+          (pkgs.rustBuilder.rustLib.makeOverride {
+            name = "loom-common-i18n";
+            overrideAttrs = drv: {
+              nativeBuildInputs = (drv.nativeBuildInputs or []) ++ [ pkgs.gettext ];
             };
           })
         ];
@@ -105,9 +113,37 @@
           };
           pkgsWithTools = pkgs.extend toolsOverlay;
           
-          # cargo2nix-built binaries for images
+          # cargo2nix-built binaries (fast per-crate caching)
           loom-cli-c2n = (rustPkgs.workspace.loom-cli {});
           loom-server-c2n = (rustPkgs.workspace.loom-server {});
+          
+          # loom-cli-linux: cargo2nix package with renamed binary for distribution
+          loom-cli-linux-c2n = pkgsWithCargo2nix.runCommand "loom-cli-linux" {
+            inherit (loom-cli-c2n) version;
+            meta = {
+              description = "Loom CLI - AI-powered coding assistant (Linux x86_64)";
+              mainProgram = "loom-linux-x86_64";
+            };
+          } ''
+            mkdir -p $out/bin
+            cp ${loom-cli-c2n}/bin/loom $out/bin/loom-linux-x86_64
+          '';
+          
+          # Binaries packages using cargo2nix builds
+          loom-weaver-binaries-c2n = pkgsWithCargo2nix.runCommand "loom-weaver-binaries" {
+            inherit (loom-cli-c2n) version;
+          } ''
+            mkdir -p $out/bin
+            cp ${loom-cli-c2n}/bin/loom $out/bin/loom
+          '';
+          
+          loom-server-binaries-c2n = pkgsWithCargo2nix.callPackage ./infra/pkgs/loom-server-binaries.nix {
+            loom-cli-linux = loom-cli-linux-c2n;
+            loom-cli-windows = pkgs.loom-cli-windows;
+            loom-cli-macos = pkgs.loom-cli-macos;
+            loom-cli-linux-aarch64 = pkgs.loom-cli-linux-aarch64;
+            loom-cli-windows-aarch64 = pkgs.loom-cli-windows-aarch64;
+          };
           
           # Build images using cargo2nix packages for faster rebuilds
           weaver-image-c2n = pkgsWithCargo2nix.callPackage ./infra/pkgs/weaver-image.nix {
@@ -115,22 +151,24 @@
           };
           loom-server-image-c2n = pkgsWithCargo2nix.callPackage ./infra/pkgs/loom-server-image.nix {
             loom-server = loom-server-c2n;
-            loom-server-binaries = pkgs.loom-server-binaries;
+            loom-server-binaries = loom-server-binaries-c2n;
           };
         in
         {
-          inherit (pkgs) smtprelay loom-cli loom-cli-linux loom-web;
+          inherit (pkgs) smtprelay loom-web;
           inherit (pkgs) loom-cli-windows loom-cli-macos loom-cli-linux-aarch64 loom-cli-windows-aarch64;
-          inherit (pkgs) loom-weaver-binaries loom-server-binaries;
           inherit (pkgsWithTools) license;
           
-          # Use cargo2nix packages for main binaries and images (faster builds)
+          # Use cargo2nix packages for all loom binaries (fast per-crate caching)
+          loom-cli = loom-cli-c2n;
+          loom-cli-linux = loom-cli-linux-c2n;
           loom-server = loom-server-c2n;
+          loom-weaver-binaries = loom-weaver-binaries-c2n;
+          loom-server-binaries = loom-server-binaries-c2n;
           weaver-image = weaver-image-c2n;
           loom-server-image = loom-server-image-c2n;
           
-          # cargo2nix-based granular crate builds
-          # All workspace crates exposed individually
+          # cargo2nix-based granular crate builds (with -c2n suffix for explicit access)
           inherit loom-cli-c2n loom-server-c2n;
           loom-cli-acp-c2n = (rustPkgs.workspace.loom-cli-acp {});
           loom-cli-auto-commit-c2n = (rustPkgs.workspace.loom-cli-auto-commit {});

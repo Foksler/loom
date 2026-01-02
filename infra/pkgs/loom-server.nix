@@ -9,8 +9,7 @@
 , gettext
 , git
 , makeWrapper
-, mold
-, clang
+
 }:
 
 rustPlatform.buildRustPackage rec {
@@ -27,8 +26,6 @@ rustPlatform.buildRustPackage rec {
     pkg-config
     gettext
     makeWrapper
-    mold
-    clang
   ];
 
   buildInputs = [

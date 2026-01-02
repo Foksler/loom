@@ -275,6 +275,13 @@ export const messages = {
 	'admin.anthropic.expires_at': 'Token expires: {time}',
 	'admin.anthropic.no_accounts': 'No accounts configured. Add a Claude Max account to get started.',
 	'admin.anthropic.not_configured': 'Anthropic OAuth pool is not configured on this server.',
+	'admin.anthropic.account_added': 'Account {id} added successfully',
+	'admin.anthropic.enter_code_title': 'Enter Authorization Code',
+	'admin.anthropic.enter_code_description':
+		'A new browser tab has opened for you to authorize with Claude. After authorizing, copy the code from the Anthropic page and paste it below.',
+	'admin.anthropic.authorization_code': 'Authorization Code',
+	'admin.anthropic.code_placeholder': 'Paste the code from Anthropic here',
+	'admin.anthropic.submit_code': 'Add Account',
 
 	// Weavers
 	'weavers.title': 'Weavers',

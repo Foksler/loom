@@ -29,6 +29,11 @@ export interface AnthropicAccountsResponse {
 
 export interface InitiateOAuthResponse {
 	redirect_url: string;
+	state: string;
+}
+
+export interface AddAccountResponse {
+	account_id: string;
 }
 
 export async function listAnthropicAccounts(): Promise<AnthropicAccountsResponse> {
@@ -42,13 +47,26 @@ export async function listAnthropicAccounts(): Promise<AnthropicAccountsResponse
 }
 
 export async function initiateAnthropicOAuth(redirectAfter?: string): Promise<InitiateOAuthResponse> {
-	const response = await fetch('/api/admin/anthropic/accounts', {
+	const response = await fetch('/api/admin/anthropic/oauth/initiate', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ redirect_after: redirectAfter }),
 	});
 	if (!response.ok) {
 		throw new Error(`Failed to initiate OAuth: ${response.status}`);
+	}
+	return response.json();
+}
+
+export async function completeAnthropicOAuth(code: string, state: string): Promise<AddAccountResponse> {
+	const response = await fetch('/api/admin/anthropic/oauth/complete', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ code, state }),
+	});
+	if (!response.ok) {
+		const errorData = await response.json().catch(() => ({}));
+		throw new Error(errorData.message || `Failed to complete OAuth: ${response.status}`);
 	}
 	return response.json();
 }

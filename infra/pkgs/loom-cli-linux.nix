@@ -10,8 +10,7 @@
 , openssl
 , sqlite
 , gettext
-, mold
-, clang
+
 }:
 
 rustPlatform.buildRustPackage rec {
@@ -27,8 +26,6 @@ rustPlatform.buildRustPackage rec {
   nativeBuildInputs = [
     pkg-config
     gettext
-    mold
-    clang
   ];
 
   buildInputs = [
