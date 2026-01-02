@@ -103,7 +103,7 @@ pub struct LlmProvidersHealth {
 }
 
 /// Google CSE component health.
-#[derive(Debug, Serialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct GoogleCseHealth {
 	pub status: HealthStatus,
 	pub latency_ms: u64,
@@ -410,11 +410,35 @@ pub async fn check_llm_providers(llm_service: Option<&LlmService>) -> LlmProvide
 }
 
 const CSE_CHECK_TIMEOUT: Duration = Duration::from_secs(5);
+const CSE_CACHE_TTL: Duration = Duration::from_secs(3600); // 1 hour
+
+/// Cached CSE health result to avoid burning through API quota on health checks.
+static CSE_HEALTH_CACHE: std::sync::OnceLock<tokio::sync::RwLock<Option<(Instant, GoogleCseHealth)>>> =
+	std::sync::OnceLock::new();
+
+fn get_cse_cache() -> &'static tokio::sync::RwLock<Option<(Instant, GoogleCseHealth)>> {
+	CSE_HEALTH_CACHE.get_or_init(|| tokio::sync::RwLock::new(None))
+}
 
 /// Check Google CSE health by verifying configuration and optionally testing
-/// connectivity.
+/// connectivity. Results are cached for 5 minutes to avoid burning API quota.
 pub async fn check_google_cse() -> GoogleCseHealth {
 	use loom_server_google_cse::{CseClient, CseRequest};
+
+	// Check cache first
+	{
+		let cache = get_cse_cache().read().await;
+		if let Some((cached_at, ref health)) = *cache {
+			if cached_at.elapsed() < CSE_CACHE_TTL {
+				return GoogleCseHealth {
+					status: health.status,
+					latency_ms: 0, // Cached response
+					configured: health.configured,
+					error: health.error.clone(),
+				};
+			}
+		}
+	}
 
 	let start = Instant::now();
 
@@ -439,11 +463,11 @@ pub async fn check_google_cse() -> GoogleCseHealth {
 							HealthStatus::Unhealthy,
 							Some("Invalid API key or CSE ID".to_string()),
 						)
-					} else if err_str.contains("Rate limit") {
+					} else if err_str.contains("Rate limit") || err_str.contains("429") || err_str.contains("Quota") {
 						(
 							true,
 							HealthStatus::Degraded,
-							Some("Rate limited".to_string()),
+							Some("Rate limited (quota exceeded)".to_string()),
 						)
 					} else {
 						(true, HealthStatus::Degraded, Some(err_str))
@@ -468,12 +492,25 @@ pub async fn check_google_cse() -> GoogleCseHealth {
 
 	let latency_ms = start.elapsed().as_millis() as u64;
 
-	GoogleCseHealth {
+	let health = GoogleCseHealth {
 		status,
 		latency_ms,
 		configured,
 		error,
+	};
+
+	// Update cache
+	{
+		let mut cache = get_cse_cache().write().await;
+		*cache = Some((Instant::now(), GoogleCseHealth {
+			status: health.status,
+			latency_ms: health.latency_ms,
+			configured: health.configured,
+			error: health.error.clone(),
+		}));
 	}
+
+	health
 }
 
 const GITHUB_CHECK_TIMEOUT: Duration = Duration::from_secs(3);
