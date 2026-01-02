@@ -951,6 +951,78 @@ msgstr "GeoIP"
 msgid "admin.health.jobs"
 msgstr "Background Jobs"
 
+#: admin.logs.title
+msgid "admin.logs.title"
+msgstr "Server Logs"
+
+#: admin.logs.description
+msgid "admin.logs.description"
+msgstr "View and stream real-time server logs"
+
+#: admin.logs.buffer_status
+msgid "admin.logs.buffer_status"
+msgstr "{size} / {capacity} entries in buffer"
+
+#: admin.logs.start_stream
+msgid "admin.logs.start_stream"
+msgstr "Start Streaming"
+
+#: admin.logs.stop_stream
+msgid "admin.logs.stop_stream"
+msgstr "Stop Streaming"
+
+#: admin.logs.clear
+msgid "admin.logs.clear"
+msgstr "Clear"
+
+#: admin.logs.level
+msgid "admin.logs.level"
+msgstr "Level"
+
+#: admin.logs.target
+msgid "admin.logs.target"
+msgstr "Target"
+
+#: admin.logs.auto_scroll
+msgid "admin.logs.auto_scroll"
+msgstr "Auto-scroll"
+
+#: admin.logs.no_logs
+msgid "admin.logs.no_logs"
+msgstr "No log entries"
+
+#: admin.logs.no_matches
+msgid "admin.logs.no_matches"
+msgstr "No logs match the current filters"
+
+#: admin.logs.streaming
+msgid "admin.logs.streaming"
+msgstr "Live"
+
+#: admin.logs.stream_error
+msgid "admin.logs.stream_error"
+msgstr "Log stream disconnected"
+
+#: admin.logs.search_placeholder
+msgid "admin.logs.search_placeholder"
+msgstr "Search logs..."
+
+#: admin.logs.show_all
+msgid "admin.logs.show_all"
+msgstr "All levels"
+
+#: admin.logs.errors_only
+msgid "admin.logs.errors_only"
+msgstr "Errors only"
+
+#: admin.logs.showing_count
+msgid "admin.logs.showing_count"
+msgstr "Showing {shown} of {total} logs"
+
+#: admin.dashboard.view_all_logs
+msgid "admin.dashboard.view_all_logs"
+msgstr "View all logs →"
+
 #: admin.impersonation.banner
 msgid "admin.impersonation.banner"
 msgstr "Admin {admin} impersonating {user}"
