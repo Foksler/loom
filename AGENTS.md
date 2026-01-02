@@ -66,6 +66,14 @@ Deployments happen automatically via `git push` to the `trunk` branch. The produ
 - Migrations run automatically on server startup via `db/mod.rs`
 - Check existing migrations for the next available number before creating new ones
 
+### IMPORTANT: Force Rebuild After Adding Migrations
+
+**cargo2nix doesn't track `include_str!` file changes.** When you add or modify migration files:
+
+1. Run `cargo2nix-update` to regenerate `Cargo.nix` (this changes the hash and forces rebuild)
+2. Commit `Cargo.nix` along with your migration changes
+3. Without this step, the deployed binary will NOT include the new migration!
+
 ## Local Testing
 Before deploying, test changes locally to verify behavior:
 
