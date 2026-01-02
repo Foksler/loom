@@ -28,3 +28,6 @@ sha2.workspace = true
 
 loom-server-k8s.workspace = true
 loom-common-secret.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true

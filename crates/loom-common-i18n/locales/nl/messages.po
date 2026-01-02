@@ -947,3 +947,19 @@ msgstr "Weaver verwijderd."
 #: CLI: Weaver - Attach prefix
 msgid "client.weaver.attach_prefix"
 msgstr "[koppelen aan weaver {id}]"
+
+# ============================================================================
+# Weaver API responses
+# ============================================================================
+
+#: API: Weaver - Invalid org ID
+msgid "server.api.weaver.invalid_org_id"
+msgstr "Ongeldige organisatie-ID: {id}"
+
+#: API: Weaver - Not org member
+msgid "server.api.weaver.not_org_member"
+msgstr "U bent geen lid van deze organisatie"
+
+#: API: Weaver - Membership check failed
+msgid "server.api.weaver.membership_check_failed"
+msgstr "Kan lidmaatschap van organisatie niet verifiëren"

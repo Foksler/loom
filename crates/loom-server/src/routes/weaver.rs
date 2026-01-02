@@ -20,9 +20,10 @@ use futures::{
 	stream::{Stream, StreamExt},
 	SinkExt,
 };
-use loom_server_auth::CurrentUser;
+use loom_server_auth::{CurrentUser, OrgId};
 use loom_server_weaver::{CreateWeaverRequest, LogStreamOptions, ResourceSpec, Weaver, WeaverId};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use uuid::Uuid;
 
 pub use loom_server_api::weaver::*;
 
@@ -102,8 +103,36 @@ pub async fn create_weaver(
 			ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
 		})?;
 
+	let org_uuid = Uuid::parse_str(&request.org_id).map_err(|_| {
+		ServerError::BadRequest(t_fmt(
+			locale,
+			"server.api.weaver.invalid_org_id",
+			&[("id", &request.org_id)],
+		))
+	})?;
+	let org_id = OrgId::new(org_uuid);
+
+	if !current_user.user.is_system_admin() {
+		match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+			Ok(Some(_)) => {}
+			Ok(None) => {
+				return Err(ServerError::Forbidden(t(
+					locale,
+					"server.api.weaver.not_org_member",
+				)));
+			}
+			Err(e) => {
+				tracing::error!(error = %e, org_id = %request.org_id, "Failed to check org membership");
+				return Err(ServerError::Internal(t(
+					locale,
+					"server.api.weaver.membership_check_failed",
+				)));
+			}
+		}
+	}
+
 	let actor_id = current_user.user.id.to_string();
-	tracing::info!(image = %request.image, actor_id = %actor_id, "Creating weaver");
+	tracing::info!(image = %request.image, org_id = %request.org_id, actor_id = %actor_id, "Creating weaver");
 
 	let create_request = CreateWeaverRequest {
 		image: request.image,
@@ -120,6 +149,7 @@ pub async fn create_weaver(
 		repo: None,
 		branch: None,
 		owner_user_id: Some(actor_id.clone()),
+		org_id: request.org_id,
 	};
 
 	let weaver = provisioner.create_weaver(create_request).await?;

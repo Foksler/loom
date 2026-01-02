@@ -947,3 +947,19 @@ msgstr "Weaver raderad."
 #: CLI: Weaver - Attach prefix
 msgid "client.weaver.attach_prefix"
 msgstr "[ansluter till weaver {id}]"
+
+# ============================================================================
+# Weaver API responses
+# ============================================================================
+
+#: API: Weaver - Invalid org ID
+msgid "server.api.weaver.invalid_org_id"
+msgstr "Ogiltigt organisations-ID: {id}"
+
+#: API: Weaver - Not org member
+msgid "server.api.weaver.not_org_member"
+msgstr "Du är inte medlem i denna organisation"
+
+#: API: Weaver - Membership check failed
+msgid "server.api.weaver.membership_check_failed"
+msgstr "Det gick inte att verifiera organisationsmedlemskap"

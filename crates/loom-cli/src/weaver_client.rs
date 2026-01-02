@@ -18,6 +18,7 @@ use url::Url;
 #[derive(Debug, Clone, Serialize)]
 pub struct CreateWeaverRequest {
 	pub image: String,
+	pub org_id: String,
 	#[serde(skip_serializing_if = "HashMap::is_empty")]
 	pub env: HashMap<String, String>,
 	#[serde(skip_serializing_if = "Option::is_none")]

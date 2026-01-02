@@ -1067,3 +1067,19 @@ msgstr "منظمة المرايا غير مُعدة. يرجى إنشاء منظ�
 #: API: SCM Mirror - Clone failed
 msgid "server.api.scm.mirror.clone_failed"
 msgstr "فشل في استنساخ المستودع البعيد"
+
+# ============================================================================
+# Weaver API responses
+# ============================================================================
+
+#: API: Weaver - Invalid org ID
+msgid "server.api.weaver.invalid_org_id"
+msgstr "معرّف المنظمة غير صالح: {id}"
+
+#: API: Weaver - Not org member
+msgid "server.api.weaver.not_org_member"
+msgstr "أنت لست عضوًا في هذه المنظمة"
+
+#: API: Weaver - Membership check failed
+msgid "server.api.weaver.membership_check_failed"
+msgstr "فشل التحقق من عضوية المنظمة"

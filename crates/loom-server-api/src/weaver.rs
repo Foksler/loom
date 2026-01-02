@@ -16,6 +16,8 @@ use utoipa::{IntoParams, ToSchema};
 pub struct CreateWeaverApiRequest {
 	/// Container image to run
 	pub image: String,
+	/// Organization ID that owns this weaver
+	pub org_id: String,
 	/// Environment variables
 	#[serde(default)]
 	pub env: HashMap<String, String>,

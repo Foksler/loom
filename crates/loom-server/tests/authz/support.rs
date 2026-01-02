@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+use async_trait::async_trait;
 use axum::{
 	body::Body,
 	http::{header::HeaderName, header::HeaderValue, Method, Request, StatusCode},
@@ -19,10 +20,14 @@ use loom_common_thread::{
 	AgentStateKind, AgentStateSnapshot, ConversationSnapshot, Thread, ThreadId, ThreadMetadata,
 	ThreadVisibility,
 };
+use loom_server_k8s::{AttachedProcess, K8sClient, K8sError, LogOptions, LogStream, Namespace, Pod};
+use loom_server_weaver::{Provisioner, WeaverConfig};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
-use std::sync::Arc;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 use tempfile::TempDir;
+use tokio::io::duplex;
 use tower::ServiceExt;
 
 use loom_server::{
@@ -30,6 +35,98 @@ use loom_server::{
 	config::ServerConfig,
 	db::ThreadRepository,
 };
+
+pub struct MockK8sClient {
+	pods: Mutex<HashMap<String, Pod>>,
+}
+
+impl MockK8sClient {
+	pub fn new() -> Self {
+		Self {
+			pods: Mutex::new(HashMap::new()),
+		}
+	}
+}
+
+#[async_trait]
+impl K8sClient for MockK8sClient {
+	async fn create_pod(&self, _namespace: &str, mut pod: Pod) -> Result<Pod, K8sError> {
+		let name = pod.metadata.name.clone().unwrap_or_default();
+		pod.status = Some(loom_server_k8s::PodStatus {
+			phase: Some("Running".to_string()),
+			..Default::default()
+		});
+		let mut pods = self.pods.lock().unwrap();
+		pods.insert(name.clone(), pod.clone());
+		Ok(pod)
+	}
+
+	async fn delete_pod(
+		&self,
+		name: &str,
+		_namespace: &str,
+		_grace_period_seconds: u32,
+	) -> Result<(), K8sError> {
+		let mut pods = self.pods.lock().unwrap();
+		pods.remove(name);
+		Ok(())
+	}
+
+	async fn list_pods(&self, _namespace: &str, _label_selector: &str) -> Result<Vec<Pod>, K8sError> {
+		let pods = self.pods.lock().unwrap();
+		Ok(pods.values().cloned().collect())
+	}
+
+	async fn get_pod(&self, name: &str, _namespace: &str) -> Result<Pod, K8sError> {
+		let pods = self.pods.lock().unwrap();
+		pods.get(name).cloned().ok_or_else(|| K8sError::PodNotFound {
+			name: name.to_string(),
+		})
+	}
+
+	async fn get_namespace(&self, _name: &str) -> Result<Namespace, K8sError> {
+		Ok(Namespace::default())
+	}
+
+	async fn stream_logs(
+		&self,
+		_name: &str,
+		_namespace: &str,
+		_container: &str,
+		_opts: LogOptions,
+	) -> Result<LogStream, K8sError> {
+		Ok(Box::pin(futures::stream::empty()))
+	}
+
+	async fn exec_attach(
+		&self,
+		_name: &str,
+		_namespace: &str,
+		_container: &str,
+	) -> Result<AttachedProcess, K8sError> {
+		let (stdin, _) = duplex(1024);
+		let (_, stdout) = duplex(1024);
+		Ok(AttachedProcess {
+			stdin: Box::pin(stdin),
+			stdout: Box::pin(stdout),
+		})
+	}
+}
+
+pub fn create_mock_provisioner() -> Arc<Provisioner> {
+	let client = Arc::new(MockK8sClient::new());
+	let config = WeaverConfig {
+		namespace: "test-namespace".to_string(),
+		max_concurrent: 100,
+		ready_timeout_secs: 1,
+		default_ttl_hours: 24,
+		max_ttl_hours: 48,
+		cleanup_interval_secs: 3600,
+		webhooks: vec![],
+		image_pull_secrets: vec![],
+	};
+	Arc::new(Provisioner::new(client, config))
+}
 
 fn hash_token(token: &str) -> String {
 	let mut hasher = Sha256::new();
@@ -77,6 +174,14 @@ pub struct TestApp {
 
 impl TestApp {
 	pub async fn new() -> Self {
+		Self::new_internal(false).await
+	}
+
+	pub async fn with_provisioner() -> Self {
+		Self::new_internal(true).await
+	}
+
+	async fn new_internal(with_provisioner: bool) -> Self {
 		let temp_dir = tempfile::tempdir().unwrap();
 		let db_path = temp_dir.path().join("test_authz.db");
 		let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
@@ -87,6 +192,10 @@ impl TestApp {
 		let mut state = create_app_state(pool, repo.clone(), &config, None).await;
 
 		state.auth_config.dev_mode = false;
+
+		if with_provisioner {
+			state.provisioner = Some(create_mock_provisioner());
+		}
 
 		let fixtures = create_fixtures(&state, &repo).await;
 

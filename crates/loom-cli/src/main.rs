@@ -107,6 +107,9 @@ enum WeaverCommand {
 		/// Container image to use
 		#[arg(long, short)]
 		image: Option<String>,
+		/// Organization ID (required)
+		#[arg(long, short)]
+		org: String,
 		/// Git repository to clone (public https URL)
 		#[arg(long)]
 		repo: Option<String>,
@@ -186,6 +189,9 @@ enum Command {
 		/// Container image to use
 		#[arg(long, short)]
 		image: Option<String>,
+		/// Organization ID (required)
+		#[arg(long, short)]
+		org: String,
 		/// Git repository to clone (public https URL)
 		#[arg(long)]
 		repo: Option<String>,
@@ -1163,6 +1169,7 @@ async fn main() -> Result<()> {
 		Some(Command::CredentialHelper(_)) => unreachable!("handled early in main"),
 		Some(Command::New {
 			image,
+			org,
 			repo,
 			branch,
 			env,
@@ -1173,6 +1180,7 @@ async fn main() -> Result<()> {
 				&args.server_url,
 				token,
 				image.clone(),
+				org.clone(),
 				repo.clone(),
 				branch.clone(),
 				env.clone(),
@@ -1187,6 +1195,7 @@ async fn main() -> Result<()> {
 		Some(Command::Weaver { command }) => match command {
 			WeaverCommand::New {
 				image,
+				org,
 				repo,
 				branch,
 				env,
@@ -1197,6 +1206,7 @@ async fn main() -> Result<()> {
 					&args.server_url,
 					token,
 					image.clone(),
+					org.clone(),
 					repo.clone(),
 					branch.clone(),
 					env.clone(),
@@ -1305,6 +1315,7 @@ async fn run_weaver_new(
 	server_url: &str,
 	token: Option<loom_common_secret::SecretString>,
 	image: Option<String>,
+	org_id: String,
 	repo: Option<String>,
 	branch: Option<String>,
 	env: Vec<String>,
@@ -1324,6 +1335,7 @@ async fn run_weaver_new(
 
 	let request = weaver_client::CreateWeaverRequest {
 		image: image.unwrap_or_else(|| "ghcr.io/ghuntley/loom/weaver:latest".to_string()),
+		org_id,
 		env: env_map,
 		repo,
 		branch,

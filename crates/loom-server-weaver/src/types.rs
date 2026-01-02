@@ -102,6 +102,8 @@ pub struct CreateWeaverRequest {
     pub branch: Option<String>,
     #[serde(default)]
     pub owner_user_id: Option<String>,
+    /// Organization ID that owns this weaver (required for billing/isolation).
+    pub org_id: String,
 }
 
 /// Options for streaming weaver logs.

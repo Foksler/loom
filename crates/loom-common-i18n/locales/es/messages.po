@@ -1199,3 +1199,19 @@ msgstr "Organización de espejos no configurada. Por favor cree una organizació
 #: API: SCM Mirror - Clone failed
 msgid "server.api.scm.mirror.clone_failed"
 msgstr "Error al clonar el repositorio remoto"
+
+# ============================================================================
+# Weaver API responses
+# ============================================================================
+
+#: API: Weaver - Invalid org ID
+msgid "server.api.weaver.invalid_org_id"
+msgstr "ID de organización no válido: {id}"
+
+#: API: Weaver - Not org member
+msgid "server.api.weaver.not_org_member"
+msgstr "No eres miembro de esta organización"
+
+#: API: Weaver - Membership check failed
+msgid "server.api.weaver.membership_check_failed"
+msgstr "Error al verificar la membresía de la organización"

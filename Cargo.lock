@@ -3855,6 +3855,7 @@ dependencies = [
  "k8s-openapi",
  "loom-common-secret",
  "loom-server-k8s",
+ "proptest",
  "reqwest",
  "serde",
  "serde_json",

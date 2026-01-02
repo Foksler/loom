@@ -8,3 +8,4 @@ mod authz_git_tests;
 mod orgs;
 mod threads;
 mod users;
+mod weaver;
