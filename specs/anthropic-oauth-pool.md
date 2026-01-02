@@ -469,6 +469,88 @@ pub enum AnthropicHealthInfo {
 3. **Graceful degradation**: Service continues with reduced capacity when accounts are cooling
 4. **Audit trail**: Log which account was used for each request (at debug level)
 
+## Troubleshooting
+
+### "This credential is only authorized for use with Claude Code" Error
+
+This error occurs when headers sent to the Anthropic API don't match what Claude CLI sends.
+
+#### Required Headers for OAuth
+
+The following headers must be sent **exactly** as shown:
+
+```
+Authorization: Bearer <access_token>
+anthropic-beta: oauth-2025-04-20,interleaved-thinking-2025-05-14,context-management-2025-06-27
+anthropic-dangerous-direct-browser-access: true
+User-Agent: claude-cli/2.0.76 (external, sdk-cli)
+```
+
+**Critical**: Do NOT include `claude-code-20250219` in the beta headers. This causes the API to reject the request.
+
+#### Sniffing Claude CLI Traffic with mitmproxy
+
+To identify what headers the official Claude CLI sends:
+
+1. Install mitmproxy:
+   ```bash
+   nix-env -iA nixos.mitmproxy
+   ```
+
+2. Start mitmproxy in dump mode:
+   ```bash
+   mitmdump --set flow_detail=4 -p 8888 2>&1 &
+   ```
+
+3. Configure environment for Claude CLI to use the proxy:
+   ```bash
+   export HTTPS_PROXY=http://127.0.0.1:8888
+   export HTTP_PROXY=http://127.0.0.1:8888
+   export SSL_CERT_FILE=~/.mitmproxy/mitmproxy-ca-cert.pem
+   export REQUESTS_CA_BUNDLE=~/.mitmproxy/mitmproxy-ca-cert.pem
+   export NODE_EXTRA_CA_CERTS=~/.mitmproxy/mitmproxy-ca-cert.pem
+   ```
+
+4. Run a Claude CLI command:
+   ```bash
+   claude --print "hello"
+   ```
+
+5. Observe the headers in mitmproxy output, particularly for `POST https://api.anthropic.com/v1/messages`
+
+#### Key Observations from Traffic Analysis
+
+The Claude CLI (v2.0.76) sends these specific headers for `/v1/messages`:
+
+| Header | Value |
+|--------|-------|
+| `anthropic-beta` | `oauth-2025-04-20,interleaved-thinking-2025-05-14,context-management-2025-06-27` |
+| `anthropic-dangerous-direct-browser-access` | `true` |
+| `user-agent` | `claude-cli/2.0.76 (external, sdk-cli)` |
+| `x-app` | `cli` |
+
+Note: The `claude-code-20250219` beta header is used for internal telemetry (`/api/event_logging/batch`) but **NOT** for `/v1/messages` requests.
+
+### Debugging Header Mismatches
+
+If you encounter authentication errors:
+
+1. Check the actual headers being sent by adding debug logging
+2. Compare against sniffed Claude CLI traffic
+3. Ensure `OAUTH_COMBINED_BETA_HEADERS` constant matches current Claude CLI behavior
+4. Verify User-Agent matches the format: `claude-cli/<version> (external, sdk-cli)`
+
+### Updating Headers When Claude CLI Changes
+
+When Anthropic updates Claude CLI, the beta headers may change:
+
+1. Install the new Claude CLI version
+2. Sniff traffic as described above
+3. Update constants in `crates/loom-server-llm-anthropic/src/auth/scheme.rs`:
+   - `OAUTH_COMBINED_BETA_HEADERS`
+   - `ANTHROPIC_USER_AGENT`
+4. Run tests to verify no regressions
+
 ## Future Enhancements
 
 - Parse `retry-after` header for more precise cooldown timing

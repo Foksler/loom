@@ -52,6 +52,7 @@ Deployments happen automatically via `git push` to the `trunk` branch. The produ
 - **Repo location on server:** `/var/lib/depot`
 
 ### Verifying Deployment
+0. IMPORTANT: You are running on the machine and can check status without ssh (just use sudo)
 1. Check the deployed revision matches your commit: `cat /var/lib/nixos-auto-update/deployed-revision`
 2. Check loom-server was restarted: `sudo systemctl status loom-server` (look at start time)
 3. Check health endpoint: `curl -s https://loom.ghuntley.com/health | jq .`

@@ -13,28 +13,24 @@ use super::oauth_client::OAuthClient;
 /// OAuth beta header required for subscription-based authentication.
 pub const OAUTH_BETA_HEADER: &str = "oauth-2025-04-20";
 
-/// Claude Code beta header required to use Claude Code credentials.
-pub const CLAUDE_CODE_BETA_HEADER: &str = "claude-code-20250219";
-
 /// Interleaved thinking beta header.
 pub const INTERLEAVED_THINKING_BETA_HEADER: &str = "interleaved-thinking-2025-05-14";
 
-/// Fine-grained tool streaming beta header.
-pub const TOOL_STREAMING_BETA_HEADER: &str = "fine-grained-tool-streaming-2025-05-14";
+/// Context management beta header.
+pub const CONTEXT_MANAGEMENT_BETA_HEADER: &str = "context-management-2025-06-27";
+
+/// Combined beta headers for OAuth requests (matching Claude CLI).
+/// Note: Claude CLI does NOT include claude-code-20250219 for /v1/messages requests.
+pub const OAUTH_COMBINED_BETA_HEADERS: &str =
+	"oauth-2025-04-20,interleaved-thinking-2025-05-14,context-management-2025-06-27";
 
 /// Combined beta headers for API key requests (non-OAuth).
-/// These are required to use Claude Code credentials.
 pub const API_KEY_BETA_HEADERS: &str =
-	"claude-code-20250219,interleaved-thinking-2025-05-14,fine-grained-tool-streaming-2025-05-14";
-
-/// Combined beta headers for OAuth requests.
-/// Includes OAuth header plus all Claude Code features.
-pub const OAUTH_COMBINED_BETA_HEADERS: &str =
-	"oauth-2025-04-20,claude-code-20250219,interleaved-thinking-2025-05-14,fine-grained-tool-streaming-2025-05-14";
+	"interleaved-thinking-2025-05-14,context-management-2025-06-27";
 
 /// User-Agent to use when talking to Anthropic API.
-/// We spoof as Claude Code to ensure Claude Code credentials work.
-pub const ANTHROPIC_USER_AGENT: &str = "claude-code/2.0.0";
+/// Must match Claude CLI format exactly.
+pub const ANTHROPIC_USER_AGENT: &str = "claude-cli/2.0.76 (external, sdk-cli)";
 
 /// Authentication errors.
 #[derive(Debug, thiserror::Error)]
@@ -92,9 +88,9 @@ impl<S: CredentialStore> AnthropicAuth<S> {
 
 	/// Apply authentication to a request builder.
 	///
-	/// For API keys, sets `x-api-key` header and `anthropic-beta` headers for Claude Code features.
+	/// For API keys, sets `x-api-key` header and `anthropic-beta` headers.
 	/// For OAuth, sets `Authorization: Bearer` header and combined `anthropic-beta` headers.
-	/// Both cases also set the User-Agent to match Claude Code.
+	/// Both cases also set the User-Agent and other required headers to match Claude CLI.
 	pub async fn apply_to_request(
 		&self,
 		request: reqwest::RequestBuilder,
@@ -103,12 +99,14 @@ impl<S: CredentialStore> AnthropicAuth<S> {
 			AnthropicAuth::ApiKey { key } => Ok(request
 				.header("x-api-key", key.expose())
 				.header("anthropic-beta", API_KEY_BETA_HEADERS)
+				.header("anthropic-dangerous-direct-browser-access", "true")
 				.header("user-agent", ANTHROPIC_USER_AGENT)),
 			AnthropicAuth::OAuth { client } => {
 				let token = client.get_access_token().await?;
 				Ok(request
 					.bearer_auth(token)
 					.header("anthropic-beta", OAUTH_COMBINED_BETA_HEADERS)
+					.header("anthropic-dangerous-direct-browser-access", "true")
 					.header("user-agent", ANTHROPIC_USER_AGENT))
 			}
 		}
@@ -116,7 +114,7 @@ impl<S: CredentialStore> AnthropicAuth<S> {
 }
 
 /// Build HTTP headers for OAuth requests.
-/// Includes all required beta headers for Claude Code compatibility.
+/// Includes all required headers to match Claude CLI behavior.
 pub fn build_oauth_headers(
 	access_token: &str,
 	additional_beta: Option<&str>,
@@ -140,6 +138,11 @@ pub fn build_oauth_headers(
 	);
 
 	headers.insert(
+		reqwest::header::HeaderName::from_static("anthropic-dangerous-direct-browser-access"),
+		"true".parse().unwrap(),
+	);
+
+	headers.insert(
 		reqwest::header::USER_AGENT,
 		ANTHROPIC_USER_AGENT.parse().unwrap(),
 	);
@@ -148,7 +151,7 @@ pub fn build_oauth_headers(
 }
 
 /// Build HTTP headers for API key requests.
-/// Includes all required beta headers for Claude Code compatibility.
+/// Includes all required headers to match Claude CLI behavior.
 pub fn build_api_key_headers(api_key: &str) -> reqwest::header::HeaderMap {
 	let mut headers = reqwest::header::HeaderMap::new();
 
@@ -160,6 +163,11 @@ pub fn build_api_key_headers(api_key: &str) -> reqwest::header::HeaderMap {
 	headers.insert(
 		reqwest::header::HeaderName::from_static("anthropic-beta"),
 		API_KEY_BETA_HEADERS.parse().unwrap(),
+	);
+
+	headers.insert(
+		reqwest::header::HeaderName::from_static("anthropic-dangerous-direct-browser-access"),
+		"true".parse().unwrap(),
 	);
 
 	headers.insert(
@@ -215,13 +223,19 @@ mod tests {
 			headers.get(reqwest::header::AUTHORIZATION).unwrap(),
 			"Bearer at_test"
 		);
-		// Should include all required beta headers
+		// Should include all required beta headers (matching Claude CLI)
 		let beta = headers.get("anthropic-beta").unwrap().to_str().unwrap();
 		assert!(beta.contains(OAUTH_BETA_HEADER));
-		assert!(beta.contains(CLAUDE_CODE_BETA_HEADER));
 		assert!(beta.contains(INTERLEAVED_THINKING_BETA_HEADER));
-		assert!(beta.contains(TOOL_STREAMING_BETA_HEADER));
-		// Should spoof Claude Code user-agent
+		assert!(beta.contains(CONTEXT_MANAGEMENT_BETA_HEADER));
+		// Should include dangerous direct browser access header
+		assert_eq!(
+			headers
+				.get("anthropic-dangerous-direct-browser-access")
+				.unwrap(),
+			"true"
+		);
+		// Should have Claude CLI user-agent
 		assert_eq!(
 			headers.get(reqwest::header::USER_AGENT).unwrap(),
 			ANTHROPIC_USER_AGENT
@@ -234,7 +248,6 @@ mod tests {
 
 		let beta = headers.get("anthropic-beta").unwrap().to_str().unwrap();
 		assert!(beta.contains(OAUTH_BETA_HEADER));
-		assert!(beta.contains(CLAUDE_CODE_BETA_HEADER));
 		assert!(beta.contains("max-tokens"));
 	}
 
@@ -243,14 +256,20 @@ mod tests {
 		let headers = build_api_key_headers("sk-test-key");
 
 		assert_eq!(headers.get("x-api-key").unwrap(), "sk-test-key");
-		// Should include Claude Code beta headers
+		// Should include beta headers
 		let beta = headers.get("anthropic-beta").unwrap().to_str().unwrap();
-		assert!(beta.contains(CLAUDE_CODE_BETA_HEADER));
 		assert!(beta.contains(INTERLEAVED_THINKING_BETA_HEADER));
-		assert!(beta.contains(TOOL_STREAMING_BETA_HEADER));
+		assert!(beta.contains(CONTEXT_MANAGEMENT_BETA_HEADER));
 		// Should NOT include OAuth header for API key auth
 		assert!(!beta.contains(OAUTH_BETA_HEADER));
-		// Should spoof Claude Code user-agent
+		// Should include dangerous direct browser access header
+		assert_eq!(
+			headers
+				.get("anthropic-dangerous-direct-browser-access")
+				.unwrap(),
+			"true"
+		);
+		// Should have Claude CLI user-agent
 		assert_eq!(
 			headers.get(reqwest::header::USER_AGENT).unwrap(),
 			ANTHROPIC_USER_AGENT
