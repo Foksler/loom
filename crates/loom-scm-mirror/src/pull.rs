@@ -113,7 +113,7 @@ pub async fn check_repo_exists(platform: Platform, owner: &str, repo: &str) -> R
 		),
 	};
 
-	let client = loom_http::new_client();
+	let client = loom_common_http::new_client();
 	let response = client.get(&url).send().await?;
 
 	Ok(response.status().is_success())

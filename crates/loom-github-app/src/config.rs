@@ -6,7 +6,7 @@
 use std::env;
 
 use loom_config_common::{load_secret_env, Secret, SecretString};
-use loom_http::RetryConfig;
+use loom_common_http::RetryConfig;
 use reqwest::Url;
 use tracing::warn;
 

@@ -5,7 +5,7 @@
 
 use async_trait::async_trait;
 use loom_common_core::{ToolContext, ToolError};
-use loom_http::{retry, RetryConfig};
+use loom_common_http::{retry, RetryConfig};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
@@ -31,7 +31,7 @@ pub struct WebSearchTool {
 impl WebSearchTool {
 	pub fn new(base_url: impl Into<String>) -> Self {
 		Self {
-			client: loom_http::new_client(),
+			client: loom_common_http::new_client(),
 			base_url: base_url.into(),
 		}
 	}

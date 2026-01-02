@@ -65,7 +65,7 @@ impl ProxyLlmClient {
 		Self {
 			base_url,
 			provider,
-			http_client: loom_http::new_client(),
+			http_client: loom_common_http::new_client(),
 			auth_token: None,
 		}
 	}

@@ -3178,8 +3178,8 @@ dependencies = [
 name = "loom-auth-github"
 version = "0.1.0"
 dependencies = [
+ "loom-common-http",
  "loom-common-secret",
- "loom-http",
  "proptest",
  "reqwest",
  "serde",
@@ -3195,8 +3195,8 @@ name = "loom-auth-google"
 version = "0.1.0"
 dependencies = [
  "base64",
+ "loom-common-http",
  "loom-common-secret",
- "loom-http",
  "proptest",
  "reqwest",
  "serde",
@@ -3227,8 +3227,8 @@ name = "loom-auth-okta"
 version = "0.1.0"
 dependencies = [
  "base64",
+ "loom-common-http",
  "loom-common-secret",
- "loom-http",
  "proptest",
  "reqwest",
  "serde",
@@ -3256,13 +3256,13 @@ dependencies = [
  "loom-acp",
  "loom-cli-auto-commit",
  "loom-common-core",
+ "loom-common-http",
  "loom-common-i18n",
  "loom-common-secret",
  "loom-common-version",
  "loom-config",
  "loom-credentials",
  "loom-git",
- "loom-http",
  "loom-server-llm-proxy",
  "loom-thread",
  "loom-tools",
@@ -3314,6 +3314,18 @@ dependencies = [
  "tokio-test",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "loom-common-http"
+version = "0.1.0"
+dependencies = [
+ "fastrand",
+ "loom-common-version",
+ "reqwest",
+ "tokio",
+ "tokio-test",
+ "tracing",
 ]
 
 [[package]]
@@ -3413,8 +3425,8 @@ dependencies = [
  "hex",
  "hmac",
  "jsonwebtoken",
+ "loom-common-http",
  "loom-config-common",
- "loom-http",
  "proptest",
  "rand 0.8.5",
  "reqwest",
@@ -3434,7 +3446,7 @@ dependencies = [
 name = "loom-google-cse"
 version = "0.1.0"
 dependencies = [
- "loom-http",
+ "loom-common-http",
  "proptest",
  "reqwest",
  "serde",
@@ -3444,18 +3456,6 @@ dependencies = [
  "tokio-test",
  "tracing",
  "utoipa",
-]
-
-[[package]]
-name = "loom-http"
-version = "0.1.0"
-dependencies = [
- "fastrand",
- "loom-common-version",
- "reqwest",
- "tokio",
- "tokio-test",
- "tracing",
 ]
 
 [[package]]
@@ -3489,9 +3489,9 @@ dependencies = [
  "async-trait",
  "chrono",
  "gix",
+ "loom-common-http",
  "loom-common-secret",
  "loom-credentials",
- "loom-http",
  "loom-scm",
  "proptest",
  "reqwest",
@@ -3677,9 +3677,9 @@ dependencies = [
  "futures",
  "getrandom 0.2.16",
  "loom-common-core",
+ "loom-common-http",
  "loom-common-secret",
  "loom-credentials",
- "loom-http",
  "pin-project-lite",
  "reqwest",
  "serde",
@@ -3700,7 +3700,7 @@ dependencies = [
  "bytes",
  "futures",
  "loom-common-core",
- "loom-http",
+ "loom-common-http",
  "pin-project-lite",
  "reqwest",
  "serde",
@@ -3719,8 +3719,8 @@ dependencies = [
  "bytes",
  "futures",
  "loom-common-core",
+ "loom-common-http",
  "loom-common-secret",
- "loom-http",
  "pin-project-lite",
  "proptest",
  "reqwest",
@@ -3738,8 +3738,8 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "loom-common-core",
+ "loom-common-http",
  "loom-config-common",
- "loom-http",
  "loom-server-llm-anthropic",
  "loom-server-llm-openai",
  "loom-server-llm-vertex",
@@ -3760,7 +3760,7 @@ dependencies = [
  "futures",
  "gcp_auth",
  "loom-common-core",
- "loom-http",
+ "loom-common-http",
  "pin-project-lite",
  "proptest",
  "reqwest",
@@ -3815,8 +3815,8 @@ dependencies = [
  "chrono",
  "dirs 5.0.1",
  "loom-common-core",
+ "loom-common-http",
  "loom-common-secret",
- "loom-http",
  "proptest",
  "reqwest",
  "serde",
@@ -3838,7 +3838,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "loom-common-core",
- "loom-http",
+ "loom-common-http",
  "proptest",
  "reqwest",
  "serde",

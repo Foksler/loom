@@ -55,7 +55,7 @@ pub struct WeaverClient {
 impl WeaverClient {
 	pub fn new(base_url: &str) -> Result<Self> {
 		let base_url = Url::parse(base_url).context("invalid server URL")?;
-		let http = loom_http::new_client();
+		let http = loom_common_http::new_client();
 		Ok(Self {
 			base_url,
 			http,

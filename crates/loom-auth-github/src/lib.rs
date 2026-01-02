@@ -320,7 +320,7 @@ impl GitHubOAuthClient {
 	/// Panics if the HTTP client cannot be built (should never happen in practice).
 	#[tracing::instrument(skip_all, name = "GitHubOAuthClient::new")]
 	pub fn new(config: GitHubOAuthConfig) -> Self {
-		let http_client = loom_http::builder()
+		let http_client = loom_common_http::builder()
 			.build()
 			.expect("failed to build HTTP client");
 

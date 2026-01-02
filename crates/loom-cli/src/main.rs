@@ -815,7 +815,7 @@ async fn search_server(
 	query: &str,
 	limit: usize,
 ) -> Result<Vec<serde_json::Value>> {
-	let client = loom_http::new_client();
+	let client = loom_common_http::new_client();
 	let url = format!("{}/api/threads/search", base_url.trim_end_matches('/'));
 
 	let response = client
@@ -974,7 +974,7 @@ async fn main() -> Result<()> {
 			args.server_url.trim_end_matches('/')
 		);
 		let base_url = Url::parse(&sync_url).context("invalid server URL for thread sync")?;
-		let http_client = loom_http::new_client();
+		let http_client = loom_common_http::new_client();
 
 		let mut sync_client = ThreadSyncClient::new(base_url, http_client);
 		if let Some(token) = auth_token.clone() {

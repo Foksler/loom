@@ -13,7 +13,7 @@ async-trait = { workspace = true }
 bytes = { workspace = true }
 futures = { workspace = true }
 loom-common-core = { path = "../loom-common-core" }
-loom-http = { path = "../loom-http" }
+loom-common-http = { path = "../loom-common-http" }
 loom-common-secret = { path = "../loom-common-secret" }
 pin-project-lite = { workspace = true }
 reqwest = { workspace = true }

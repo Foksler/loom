@@ -6,7 +6,7 @@
 
 use async_trait::async_trait;
 use loom_common_core::{LlmRequest, Message, ToolContext, ToolError};
-use loom_http::{retry, RetryConfig, RetryableError};
+use loom_common_http::{retry, RetryConfig, RetryableError};
 use reqwest::Client;
 use serde::Deserialize;
 use std::fmt;
@@ -70,7 +70,7 @@ pub struct OracleTool {
 impl OracleTool {
 	pub fn new(base_url: impl Into<String>) -> Self {
 		Self {
-			client: loom_http::new_client(),
+			client: loom_common_http::new_client(),
 			base_url: base_url.into(),
 		}
 	}

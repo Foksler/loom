@@ -13,7 +13,7 @@ description = "Server-side LLM provider abstraction for Loom"
 [dependencies]
 loom-config-common.workspace = true
 loom-common-core = { path = "../loom-common-core" }
-loom-http = { path = "../loom-http" }
+loom-common-http = { path = "../loom-common-http" }
 loom-server-llm-anthropic = { path = "../loom-server-llm-anthropic" }
 loom-server-llm-openai = { path = "../loom-server-llm-openai" }
 loom-server-llm-vertex = { path = "../loom-server-llm-vertex" }

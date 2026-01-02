@@ -108,7 +108,7 @@ pub async fn run_update() -> Result<()> {
 	let current_sha = compute_sha256(&current_bytes);
 	debug!(sha = %current_sha, "current executable SHA");
 
-	let http_client = loom_http::new_client();
+	let http_client = loom_common_http::new_client();
 
 	info!(url = %sha_url, "fetching remote SHA");
 	let sha_response = http_client

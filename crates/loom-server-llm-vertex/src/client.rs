@@ -6,7 +6,7 @@
 use async_trait::async_trait;
 use gcp_auth::TokenProvider;
 use loom_common_core::{LlmClient, LlmError, LlmRequest, LlmResponse, LlmStream};
-use loom_http::{retry, RetryConfig, RetryableError};
+use loom_common_http::{retry, RetryConfig, RetryableError};
 use reqwest::Client;
 use std::sync::Arc;
 use std::time::Duration;
@@ -75,7 +75,7 @@ impl VertexClient {
 	///
 	/// Authentication is initialized lazily on first request.
 	pub fn new(config: VertexConfig) -> Result<Self, LlmError> {
-		let http_client = loom_http::builder()
+		let http_client = loom_common_http::builder()
 			.timeout(Duration::from_secs(300))
 			.build()
 			.map_err(|e| LlmError::Http(format!("Failed to create HTTP client: {e}")))?;

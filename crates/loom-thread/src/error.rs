@@ -1,7 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights
 // reserved. SPDX-License-Identifier: Proprietary
 
-use loom_http::RetryableError;
+use loom_common_http::RetryableError;
 use reqwest::StatusCode;
 use thiserror::Error;
 

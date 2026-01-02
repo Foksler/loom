@@ -17,7 +17,7 @@ use crate::store::{LocalThreadStore, ThreadStore};
 pub struct ThreadSyncClient {
 	base_url: Url,
 	http: reqwest::Client,
-	retry_config: loom_http::RetryConfig,
+	retry_config: loom_common_http::RetryConfig,
 	auth_token: Option<loom_common_secret::SecretString>,
 }
 
@@ -26,7 +26,7 @@ impl ThreadSyncClient {
 		Self {
 			base_url,
 			http,
-			retry_config: loom_http::RetryConfig::default(),
+			retry_config: loom_common_http::RetryConfig::default(),
 			auth_token: None,
 		}
 	}
@@ -36,7 +36,7 @@ impl ThreadSyncClient {
 		self
 	}
 
-	pub fn with_retry_config(mut self, config: loom_http::RetryConfig) -> Self {
+	pub fn with_retry_config(mut self, config: loom_common_http::RetryConfig) -> Self {
 		self.retry_config = config;
 		self
 	}
@@ -73,7 +73,7 @@ impl ThreadSyncClient {
 				"upserting thread to server"
 		);
 
-		let response = loom_http::retry(&self.retry_config, || async {
+		let response = loom_common_http::retry(&self.retry_config, || async {
 			let req = self.http.put(url.clone()).json(thread);
 			self
 				.apply_auth(req)
@@ -113,7 +113,7 @@ impl ThreadSyncClient {
 
 		debug!(thread_id = %id, url = %url, "fetching thread from server");
 
-		let response = loom_http::retry(&self.retry_config, || async {
+		let response = loom_common_http::retry(&self.retry_config, || async {
 			let req = self.http.get(url.clone());
 			self
 				.apply_auth(req)
@@ -153,7 +153,7 @@ impl ThreadSyncClient {
 
 		debug!(url = %url, limit = limit, "listing threads from server");
 
-		let response = loom_http::retry(&self.retry_config, || async {
+		let response = loom_common_http::retry(&self.retry_config, || async {
 			let req = self.http.get(url.clone());
 			self
 				.apply_auth(req)
@@ -183,7 +183,7 @@ impl ThreadSyncClient {
 
 		debug!(thread_id = %id, url = %url, "deleting thread from server");
 
-		let response = loom_http::retry(&self.retry_config, || async {
+		let response = loom_common_http::retry(&self.retry_config, || async {
 			let req = self.http.delete(url.clone());
 			self
 				.apply_auth(req)

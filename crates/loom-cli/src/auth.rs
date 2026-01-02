@@ -57,7 +57,7 @@ fn get_credential_store() -> KeyringThenFileStore {
 
 #[instrument(skip_all, fields(server_url = %server_url))]
 pub async fn login(server_url: &str) -> Result<()> {
-	let client = loom_http::new_client();
+	let client = loom_common_http::new_client();
 	let base = normalize_base(server_url);
 	let start_url = format!("{base}/api/auth/device/start");
 
@@ -185,7 +185,7 @@ pub async fn logout(server_url: &str) -> Result<()> {
 	if let Some(CredentialValue::ApiKey { key: token }) =
 		store.load(&key).await.context("failed to load credentials")?
 	{
-		let client = loom_http::new_client();
+		let client = loom_common_http::new_client();
 		let logout_url = format!("{base}/api/auth/logout");
 		debug!("calling logout endpoint");
 		let _ = client

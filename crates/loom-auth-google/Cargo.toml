@@ -11,7 +11,7 @@ repository.workspace = true
 description = "Google OAuth 2.0 / OpenID Connect authentication for Loom"
 
 [dependencies]
-loom-http = { path = "../loom-http" }
+loom-common-http = { path = "../loom-common-http" }
 loom-common-secret = { path = "../loom-common-secret" }
 reqwest.workspace = true
 serde.workspace = true

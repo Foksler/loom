@@ -21,7 +21,7 @@ pub fn new_client() -> Client {
 ///
 /// # Example
 /// ```ignore
-/// let client = loom_http::builder()
+/// let client = loom_common_http::builder()
 ///     .timeout(Duration::from_secs(30))
 ///     .build()?;
 /// ```

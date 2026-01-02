@@ -425,7 +425,7 @@ impl GoogleOAuthClient {
 	/// Panics if the HTTP client cannot be built (should never happen in practice).
 	#[tracing::instrument(skip_all, name = "GoogleOAuthClient::new")]
 	pub fn new(config: GoogleOAuthConfig) -> Self {
-		let http_client = loom_http::builder()
+		let http_client = loom_common_http::builder()
 			.build()
 			.expect("failed to build HTTP client");
 

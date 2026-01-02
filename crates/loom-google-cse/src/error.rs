@@ -3,7 +3,7 @@
 
 //! Error types for Google Custom Search Engine client.
 
-use loom_http::RetryableError;
+use loom_common_http::RetryableError;
 use thiserror::Error;
 
 /// Errors that can occur when interacting with the Google CSE API.
