@@ -21,8 +21,8 @@ pub const REDIRECT_URI: &str = "https://console.anthropic.com/oauth/code/callbac
 /// Token endpoint for exchange and refresh.
 pub const TOKEN_ENDPOINT: &str = "https://console.anthropic.com/v1/oauth/token";
 
-/// OAuth scopes required.
-pub const SCOPES: &str = "org:create_api_key user:read user:inference";
+/// OAuth scopes required for Claude Pro/Max subscription inference.
+pub const SCOPES: &str = "user:inference user:profile";
 
 /// Authorization mode determines which OAuth endpoint to use.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
