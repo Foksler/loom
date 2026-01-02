@@ -10,13 +10,35 @@
 - **Spec index:** `specs/README.md` lists all specifications organized by category (core, LLM, security, etc.).
 
 ## Commands
+
+### Building with Nix (Preferred)
+Use cargo2nix for reproducible builds with per-crate caching. Much faster on incremental changes.
+
+- **Build CLI:** `nix build .#loom-cli-c2n`
+- **Build server:** `nix build .#loom-server-c2n`
+- **Build any crate:** `nix build .#<crate-name>-c2n` (e.g., `nix build .#loom-common-http-c2n`)
+- **Build images:** `nix build .#weaver-image` or `nix build .#loom-server-image`
+- **Update Cargo.nix:** `cargo2nix-update` (after modifying Cargo.lock)
+
+### Building with Cargo (Development)
+Use cargo for quick iteration during development. Slower than nix on clean builds.
+
 - **Build:** `cargo build --workspace`
 - **Test all:** `cargo test --workspace`
 - **Test single:** `cargo test -p loom-<crate> <test_name>` (e.g., `cargo test -p loom-core test_agent`)
 - **Lint:** `cargo clippy --workspace -- -D warnings`
 - **Format:** `cargo fmt --all`
 - **Check all:** `make check` (format + lint + build + test)
-- **Web dev:** `cd web/loom-web && pnpm dev` | **Web test:** `pnpm test`
+
+### Web
+- **Web dev:** `cd web/loom-web && pnpm dev`
+- **Web test:** `pnpm test`
+
+### cargo2nix Workflow
+When you modify `Cargo.toml` or `Cargo.lock`:
+1. Run `cargo2nix-update` to regenerate `Cargo.nix`
+2. Commit `Cargo.nix` along with your changes
+3. The nix build will use the updated dependency graph
 
 ## Deployment
 Deployments happen automatically via `git push` to the `trunk` branch. The production server runs NixOS with auto-update enabled.
