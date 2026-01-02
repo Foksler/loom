@@ -43,6 +43,7 @@ members = [
 	"crates/loom-server-scm-mirror",
 	"crates/loom-server-db",
 	"crates/loom-server-api",
+	"crates/loom-server-audit",
 ]
 
 [workspace.package]

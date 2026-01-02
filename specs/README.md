@@ -38,6 +38,7 @@ Design documentation for Loom, an AI-powered coding agent in Rust.
 | [secret-system.md](./secret-system.md) | [loom-secret](../crates/loom-secret/) | `Secret<T>` wrapper for sensitive values |
 | [redact-system.md](./redact-system.md) | [loom-redact](../crates/loom-redact/) | Secret detection using gitleaks patterns |
 | [auth-abac-system.md](./auth-abac-system.md) | [loom-auth](../crates/loom-auth/), [loom-auth-*](../crates/) | OAuth, magic links, ABAC |
+| [audit-system.md](./audit-system.md) | [loom-server-audit](../crates/loom-server-audit/) | Audit logging with SIEM integration |
 
 ## Server & API
 
