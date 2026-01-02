@@ -113,11 +113,11 @@ in
       types = [ "text" ];
     };
     
-    # Fast Rust workspace check using cargo2nix (nix builds with caching)
-    # Uses granular per-crate nix builds for reproducibility and better caching.
-    # Individual crates are cached in the nix store, so only changed crates rebuild.
+    # Rust workspace check using cargo2nix - DISABLED for faster commits
+    # The nix build happens on push via nixos-auto-update anyway.
+    # Enable this if you want pre-commit validation: enable = true;
     rust-workspace-nix = {
-      enable = true;
+      enable = false;
       name = "Rust workspace check (nix/cargo2nix)";
       entry = "${pkgs.writeShellScript "rust-workspace-nix" ''
         echo "🔨 Building Rust workspace with nix (cargo2nix)..."
@@ -159,21 +159,22 @@ in
       types = [ "rust" ];
     };
     
-    # Run clippy via nix for linting
-    # Uses the cargo2nix workspace shell for consistent toolchain
+    # Clippy lint check - DISABLED for faster commits
+    # Clippy uses cargo which rebuilds the workspace from scratch.
+    # Run clippy manually or in CI instead: cargo clippy --workspace -- -D warnings
     clippy = {
-      enable = true;
+      enable = false;
       name = "Clippy lint check";
       entry = "${pkgs.writeShellScript "clippy-check" ''
         echo "🔍 Running clippy..."
-        
+
         # Use cargo-clippy directly (nix-provided) to avoid rustup conflicts
         if ! cargo-clippy --all-targets --all-features -- -D warnings 2>&1; then
           echo "❌ BLOCKED: Clippy found warnings/errors!"
           echo "Fix the clippy issues before committing."
           exit 1
         fi
-        
+
         echo "✅ Clippy passed"
       ''}";
       pass_filenames = false;
