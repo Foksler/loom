@@ -13,6 +13,8 @@
 		user: AdminUser;
 		currentUserId: string;
 		onToggleSystemAdmin?: (userId: string, currentValue: boolean) => void;
+		onToggleSupport?: (userId: string, currentValue: boolean) => void;
+		onToggleAuditor?: (userId: string, currentValue: boolean) => void;
 		onImpersonate?: (userId: string) => void;
 		isUpdating?: boolean;
 		isImpersonating?: boolean;
@@ -22,6 +24,8 @@
 		user,
 		currentUserId,
 		onToggleSystemAdmin,
+		onToggleSupport,
+		onToggleAuditor,
 		onImpersonate,
 		isUpdating = false,
 		isImpersonating = false,
@@ -91,6 +95,36 @@
 							{i18n._('admin.users.removeAdmin')}
 						{:else}
 							{i18n._('admin.users.makeAdmin')}
+						{/if}
+					</Button>
+				{/if}
+				{#if onToggleSupport}
+					<Button
+						variant={isSupport ? 'warning' : 'secondary'}
+						size="sm"
+						disabled={isUpdating || isCurrentUser}
+						loading={isUpdating}
+						onclick={() => onToggleSupport?.(user.id, isSupport)}
+					>
+						{#if isSupport}
+							{i18n._('admin.users.removeSupport')}
+						{:else}
+							{i18n._('admin.users.makeSupport')}
+						{/if}
+					</Button>
+				{/if}
+				{#if onToggleAuditor}
+					<Button
+						variant={isAuditor ? 'success' : 'secondary'}
+						size="sm"
+						disabled={isUpdating || isCurrentUser}
+						loading={isUpdating}
+						onclick={() => onToggleAuditor?.(user.id, isAuditor)}
+					>
+						{#if isAuditor}
+							{i18n._('admin.users.removeAuditor')}
+						{:else}
+							{i18n._('admin.users.makeAuditor')}
 						{/if}
 					</Button>
 				{/if}

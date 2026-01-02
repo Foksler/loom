@@ -67,6 +67,50 @@
 		}
 	}
 
+	async function handleToggleSupport(userId: string, isCurrentlySupport: boolean) {
+		updatingUserId = userId;
+		error = null;
+		try {
+			await client.updateUserRoles(userId, { is_support: !isCurrentlySupport });
+			await loadUsers();
+		} catch (e) {
+			if (e instanceof Error) {
+				try {
+					const parsed = JSON.parse(e.message.replace(/^API Error \d+: /, ''));
+					error = parsed.message || e.message;
+				} catch {
+					error = e.message;
+				}
+			} else {
+				error = i18n._('general.error');
+			}
+		} finally {
+			updatingUserId = null;
+		}
+	}
+
+	async function handleToggleAuditor(userId: string, isCurrentlyAuditor: boolean) {
+		updatingUserId = userId;
+		error = null;
+		try {
+			await client.updateUserRoles(userId, { is_auditor: !isCurrentlyAuditor });
+			await loadUsers();
+		} catch (e) {
+			if (e instanceof Error) {
+				try {
+					const parsed = JSON.parse(e.message.replace(/^API Error \d+: /, ''));
+					error = parsed.message || e.message;
+				} catch {
+					error = e.message;
+				}
+			} else {
+				error = i18n._('general.error');
+			}
+		} finally {
+			updatingUserId = null;
+		}
+	}
+
 	async function handleImpersonate(userId: string) {
 		impersonatingId = userId;
 		error = null;
@@ -122,6 +166,8 @@
 					{user}
 					{currentUserId}
 					onToggleSystemAdmin={handleToggleSystemAdmin}
+					onToggleSupport={handleToggleSupport}
+					onToggleAuditor={handleToggleAuditor}
 					onImpersonate={handleImpersonate}
 					isUpdating={updatingUserId === user.id}
 					isImpersonating={impersonatingId === user.id}

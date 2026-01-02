@@ -875,6 +875,22 @@ msgstr "Make Admin"
 msgid "admin.users.removeAdmin"
 msgstr "Remove Admin"
 
+#: admin.users.makeSupport
+msgid "admin.users.makeSupport"
+msgstr "Make Support"
+
+#: admin.users.removeSupport
+msgid "admin.users.removeSupport"
+msgstr "Remove Support"
+
+#: admin.users.makeAuditor
+msgid "admin.users.makeAuditor"
+msgstr "Make Auditor"
+
+#: admin.users.removeAuditor
+msgid "admin.users.removeAuditor"
+msgstr "Remove Auditor"
+
 #: admin.dashboard.title
 msgid "admin.dashboard.title"
 msgstr "Admin Dashboard"

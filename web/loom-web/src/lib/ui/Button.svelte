@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte';
 
   interface Props {
-    variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+    variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'warning' | 'success';
     size?: 'sm' | 'md' | 'lg';
     disabled?: boolean;
     loading?: boolean;
@@ -30,6 +30,8 @@
     secondary: 'bg-bg-muted text-fg border border-border hover:bg-bg-subtle',
     ghost: 'text-fg hover:bg-bg-muted',
     danger: 'bg-error text-white hover:bg-error/90',
+    warning: 'bg-warning text-white hover:bg-warning/90',
+    success: 'bg-success text-white hover:bg-success/90',
   };
 
   const sizeClasses = {
