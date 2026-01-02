@@ -17,7 +17,7 @@ use axum::{
 };
 use chrono::Utc;
 use loom_auth::{generate_session_token, Session, SessionType, User, UserId};
-use loom_thread::Thread;
+use loom_common_thread::Thread;
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use tempfile::tempdir;

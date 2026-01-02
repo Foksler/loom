@@ -13,7 +13,7 @@ description = "Agent Client Protocol (ACP) integration for Loom"
 # Internal crates
 loom-common-core = { path = "../loom-common-core" }
 loom-server-llm-proxy = { path = "../loom-server-llm-proxy" }
-loom-thread = { path = "../loom-thread" }
+loom-common-thread = { path = "../loom-common-thread" }
 loom-tools = { path = "../loom-tools" }
 
 # ACP SDK

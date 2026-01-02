@@ -13,7 +13,7 @@
 //! remove the `#[ignore]` attribute to enable these tests.
 
 use axum::http::{Method, StatusCode};
-use loom_thread::{Thread, ThreadVisibility};
+use loom_common_thread::{Thread, ThreadVisibility};
 
 use super::support::{run_authz_cases, AuthzCase, TestApp};
 

@@ -28,7 +28,7 @@ members = [
 	"crates/loom-server-llm-vertex",
 	"crates/loom-common-secret",
 	"crates/loom-server",
-	"crates/loom-thread",
+	"crates/loom-common-thread",
 	"crates/loom-tools",
 	"crates/loom-common-version",
 	"crates/loom-server-k8s",

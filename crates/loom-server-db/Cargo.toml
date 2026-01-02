@@ -13,7 +13,7 @@ description = "Database layer for Loom server"
 chrono = { version = "0.4", features = ["serde"] }
 loom-auth = { path = "../loom-auth" }
 loom-common-secret = { path = "../loom-common-secret" }
-loom-thread = { path = "../loom-thread" }
+loom-common-thread = { path = "../loom-common-thread" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }

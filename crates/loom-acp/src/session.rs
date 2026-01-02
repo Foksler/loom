@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use agent_client_protocol::SessionId;
 use loom_common_core::Message;
-use loom_thread::{Thread, ThreadId};
+use loom_common_thread::{Thread, ThreadId};
 use tokio::sync::oneshot;
 
 /// A request to send a session notification to the client.

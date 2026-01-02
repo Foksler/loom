@@ -939,7 +939,7 @@ mod tests {
 		body::Body,
 		http::{Request, StatusCode},
 	};
-	use loom_thread::{
+	use loom_common_thread::{
 		AgentStateKind, AgentStateSnapshot, ConversationSnapshot, Thread, ThreadId, ThreadMetadata,
 		ThreadVisibility,
 	};
@@ -1234,7 +1234,7 @@ mod tests {
 			.await
 			.unwrap();
 		let updated: Thread = serde_json::from_slice(&body).unwrap();
-		assert_eq!(updated.visibility, loom_thread::ThreadVisibility::Public);
+		assert_eq!(updated.visibility, loom_common_thread::ThreadVisibility::Public);
 	}
 
 	#[tokio::test]

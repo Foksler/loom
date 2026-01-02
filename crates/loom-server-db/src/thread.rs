@@ -7,7 +7,7 @@
 //! For extended functionality (CSE cache, GitHub integration), see loom-server's
 //! ThreadRepository which wraps this one.
 
-use loom_thread::{Thread, ThreadId, ThreadSummary, ThreadVisibility};
+use loom_common_thread::{Thread, ThreadId, ThreadSummary, ThreadVisibility};
 use sqlx::{sqlite::SqlitePool, Row};
 
 use crate::error::DbError;
@@ -1034,16 +1034,16 @@ trait AgentStateKindExt {
 	fn as_str(&self) -> &'static str;
 }
 
-impl AgentStateKindExt for loom_thread::AgentStateKind {
+impl AgentStateKindExt for loom_common_thread::AgentStateKind {
 	fn as_str(&self) -> &'static str {
 		match self {
-			loom_thread::AgentStateKind::WaitingForUserInput => "waiting_for_user_input",
-			loom_thread::AgentStateKind::CallingLlm => "calling_llm",
-			loom_thread::AgentStateKind::ProcessingLlmResponse => "processing_llm_response",
-			loom_thread::AgentStateKind::ExecutingTools => "executing_tools",
-			loom_thread::AgentStateKind::PostToolsHook => "post_tools_hook",
-			loom_thread::AgentStateKind::Error => "error",
-			loom_thread::AgentStateKind::ShuttingDown => "shutting_down",
+			loom_common_thread::AgentStateKind::WaitingForUserInput => "waiting_for_user_input",
+			loom_common_thread::AgentStateKind::CallingLlm => "calling_llm",
+			loom_common_thread::AgentStateKind::ProcessingLlmResponse => "processing_llm_response",
+			loom_common_thread::AgentStateKind::ExecutingTools => "executing_tools",
+			loom_common_thread::AgentStateKind::PostToolsHook => "post_tools_hook",
+			loom_common_thread::AgentStateKind::Error => "error",
+			loom_common_thread::AgentStateKind::ShuttingDown => "shutting_down",
 		}
 	}
 }

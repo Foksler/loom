@@ -19,7 +19,7 @@ use loom_common_core::{
 	LlmClient, LlmEvent, LlmRequest, Message, ServerQuery, ServerQueryError, ServerQueryHandler,
 	ServerQueryKind, ServerQueryResponse, ServerQueryResult, ToolCall, ToolContext, ToolDefinition,
 };
-use loom_thread::{AgentStateKind, AgentStateSnapshot, Thread, ThreadStore};
+use loom_common_thread::{AgentStateKind, AgentStateSnapshot, Thread, ThreadStore};
 use loom_tools::ToolRegistry;
 use serde_json::value::RawValue;
 use tokio::sync::{mpsc, oneshot};

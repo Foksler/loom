@@ -3118,8 +3118,8 @@ dependencies = [
  "chrono",
  "futures",
  "loom-common-core",
+ "loom-common-thread",
  "loom-server-llm-proxy",
- "loom-thread",
  "loom-tools",
  "proptest",
  "serde",
@@ -3259,12 +3259,12 @@ dependencies = [
  "loom-common-http",
  "loom-common-i18n",
  "loom-common-secret",
+ "loom-common-thread",
  "loom-common-version",
  "loom-config",
  "loom-credentials",
  "loom-git",
  "loom-server-llm-proxy",
- "loom-thread",
  "loom-tools",
  "proptest",
  "reqwest",
@@ -3349,6 +3349,31 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "zeroize",
+]
+
+[[package]]
+name = "loom-common-thread"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "dirs 5.0.1",
+ "loom-common-core",
+ "loom-common-http",
+ "loom-common-secret",
+ "proptest",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "url",
+ "utoipa",
+ "uuid",
+ "uuid7",
 ]
 
 [[package]]
@@ -3530,6 +3555,7 @@ dependencies = [
  "loom-common-core",
  "loom-common-i18n",
  "loom-common-secret",
+ "loom-common-thread",
  "loom-common-version",
  "loom-github-app",
  "loom-google-cse",
@@ -3544,7 +3570,6 @@ dependencies = [
  "loom-server-llm-service",
  "loom-server-smtp",
  "loom-server-weaver",
- "loom-thread",
  "pin-project-lite",
  "prometheus",
  "proptest",
@@ -3578,6 +3603,7 @@ dependencies = [
  "loom-auth",
  "loom-common-i18n",
  "loom-common-secret",
+ "loom-common-thread",
  "loom-common-version",
  "loom-github-app",
  "loom-google-cse",
@@ -3588,7 +3614,6 @@ dependencies = [
  "loom-server-llm-anthropic",
  "loom-server-smtp",
  "loom-server-weaver",
- "loom-thread",
  "proptest",
  "serde",
  "serde_json",
@@ -3608,7 +3633,7 @@ dependencies = [
  "chrono",
  "loom-auth",
  "loom-common-secret",
- "loom-thread",
+ "loom-common-thread",
  "proptest",
  "serde",
  "serde_json",
@@ -3804,31 +3829,6 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tracing",
- "uuid7",
-]
-
-[[package]]
-name = "loom-thread"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "chrono",
- "dirs 5.0.1",
- "loom-common-core",
- "loom-common-http",
- "loom-common-secret",
- "proptest",
- "reqwest",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 1.0.69",
- "tokio",
- "tokio-test",
- "tracing",
- "url",
- "utoipa",
- "uuid",
  "uuid7",
 ]
 

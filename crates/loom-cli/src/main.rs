@@ -30,7 +30,7 @@ use loom_common_core::{
 };
 use loom_git::{detect_repo_status, CommandGitClient};
 use loom_server_llm_proxy::{LlmProvider, ProxyLlmClient};
-use loom_thread::{
+use loom_common_thread::{
 	AgentStateKind, AgentStateSnapshot, LocalThreadStore, MessageRole, MessageSnapshot,
 	SyncingThreadStore, Thread, ThreadId, ThreadStore, ThreadSyncClient, ThreadVisibility,
 	ToolCallSnapshot,
@@ -888,7 +888,7 @@ fn print_search_results(results: &[serde_json::Value], query: &str) {
 	}
 }
 
-fn print_local_search_results(results: &[loom_thread::ThreadSummary], query: &str) {
+fn print_local_search_results(results: &[loom_common_thread::ThreadSummary], query: &str) {
 	if results.is_empty() {
 		println!(
 			"{}",

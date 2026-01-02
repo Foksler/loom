@@ -13,7 +13,7 @@ pub use loom_server_api::threads::{
 	ListParams, ListResponse, SearchParams, SearchResponse, SearchResponseHit,
 	UpdateVisibilityRequest,
 };
-use loom_thread::{Thread, ThreadId};
+use loom_common_thread::{Thread, ThreadId};
 
 use crate::{api::AppState, error::ServerError};
 

@@ -6,14 +6,14 @@
 //! This module contains pure conversion functions between:
 //! - ACP protocol types (`agent_client_protocol`)
 //! - Loom runtime types (`loom_core`)
-//! - Loom persistence types (`loom_thread`)
+//! - Loom persistence types (`loom_common_thread`)
 //!
 //! All functions are pure (no I/O, no async, no side effects) and focus
 //! solely on structural transformations between type systems.
 
 use agent_client_protocol::{ContentBlock, ContentChunk, SessionId, StopReason};
 use loom_common_core::{Message, Role, ToolCall};
-use loom_thread::{MessageRole, MessageSnapshot, Thread, ThreadId, ToolCallSnapshot};
+use loom_common_thread::{MessageRole, MessageSnapshot, Thread, ThreadId, ToolCallSnapshot};
 
 // =============================================================================
 // ACP ContentBlock ↔ Loom Message

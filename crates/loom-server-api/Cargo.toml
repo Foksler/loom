@@ -11,7 +11,7 @@ description = "HTTP API routes and types for Loom server"
 
 [features]
 default = ["openapi"]
-openapi = ["dep:utoipa", "loom-github-app/openapi", "loom-google-cse/openapi", "loom-thread/openapi", "loom-common-version/utoipa"]
+openapi = ["dep:utoipa", "loom-github-app/openapi", "loom-google-cse/openapi", "loom-common-thread/openapi", "loom-common-version/utoipa"]
 
 [dependencies]
 axum = { version = "0.8", features = ["macros"] }
@@ -27,7 +27,7 @@ loom-scm = { path = "../loom-scm" }
 loom-scm-mirror = { path = "../loom-scm-mirror" }
 loom-common-secret = { path = "../loom-common-secret" }
 loom-server-smtp = { path = "../loom-server-smtp" }
-loom-thread = { path = "../loom-thread" }
+loom-common-thread = { path = "../loom-common-thread" }
 loom-common-version = { path = "../loom-common-version" }
 loom-server-weaver = { path = "../loom-server-weaver" }
 serde = { workspace = true }

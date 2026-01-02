@@ -21,7 +21,7 @@ pub enum AcpError {
 	Tool(#[from] loom_common_core::ToolError),
 
 	#[error("thread store error: {0}")]
-	ThreadStore(#[from] loom_thread::ThreadStoreError),
+	ThreadStore(#[from] loom_common_thread::ThreadStoreError),
 
 	#[error("notification channel closed")]
 	NotificationChannelClosed,

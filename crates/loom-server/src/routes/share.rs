@@ -15,7 +15,7 @@ use axum::{
 };
 use chrono::{DateTime, Duration, Utc};
 use loom_auth::{AuditEventType, AuditLogEntry, GlobalRole, ShareLink, SupportAccess};
-use loom_thread::ThreadId;
+use loom_common_thread::ThreadId;
 use serde_json::json;
 
 pub use loom_server_api::share::*;

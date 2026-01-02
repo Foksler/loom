@@ -15,7 +15,7 @@ use loom_auth::{
 	types::{OrgId, OrgRole, SessionType, TeamRole, UserId},
 	User,
 };
-use loom_thread::{
+use loom_common_thread::{
 	AgentStateKind, AgentStateSnapshot, ConversationSnapshot, Thread, ThreadId, ThreadMetadata,
 	ThreadVisibility,
 };

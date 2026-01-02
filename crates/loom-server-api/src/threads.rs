@@ -3,7 +3,7 @@
 
 //! Thread-related API types.
 
-use loom_thread::{ThreadSummary, ThreadVisibility};
+use loom_common_thread::{ThreadSummary, ThreadVisibility};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "openapi")]
 use utoipa::{IntoParams, ToSchema};

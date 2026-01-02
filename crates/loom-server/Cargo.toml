@@ -42,7 +42,7 @@ gix = { version = "0.68", default-features = false, features = ["revision"] }
 loom-google-cse = { path = "../loom-google-cse", features = ["openapi"] }
 loom-server-llm-anthropic = { path = "../loom-server-llm-anthropic" }
 loom-server-llm-service = { path = "../loom-server-llm-service" }
-loom-thread = { path = "../loom-thread", features = ["openapi"] }
+loom-common-thread = { path = "../loom-common-thread", features = ["openapi"] }
 url = "2"
 loom-common-version = { path = "../loom-common-version", features = ["serde", "utoipa"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
