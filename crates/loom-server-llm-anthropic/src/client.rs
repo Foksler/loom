@@ -181,6 +181,18 @@ impl<S: CredentialStore + 'static> AnthropicClient<S> {
 				kind: ClientErrorKind::Permanent,
 			})?;
 
+		// Debug: Build request to inspect headers
+		let request_for_debug = builder.try_clone().and_then(|b| b.build().ok());
+		if let Some(req) = request_for_debug {
+			debug!(
+				url = %req.url(),
+				user_agent = ?req.headers().get("user-agent"),
+				anthropic_beta = ?req.headers().get("anthropic-beta"),
+				dangerous_access = ?req.headers().get("anthropic-dangerous-direct-browser-access"),
+				"Outgoing Anthropic request headers"
+			);
+		}
+
 		let response = builder.send().await.map_err(|e| {
 			let retryable = e.is_timeout() || e.is_connect();
 			error!(error = %e, retryable = retryable, "HTTP request failed");
