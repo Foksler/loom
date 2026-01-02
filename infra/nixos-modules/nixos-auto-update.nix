@@ -65,6 +65,12 @@ in
       default = false;
       description = "Print build statistics and timing after completion";
     };
+
+    useNom = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Use nix-output-monitor (nom) for pretty output with per-derivation timing";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -73,7 +79,8 @@ in
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
 
-      path = with pkgs; [ git nix nixos-rebuild openssh util-linux ];
+      path = with pkgs; [ git nix nixos-rebuild openssh util-linux ]
+        ++ lib.optional cfg.useNom pkgs.nix-output-monitor;
 
       environment = mkMerge [
         { HOME = "/root"; }
@@ -176,8 +183,12 @@ in
         BUILD_START=$(date +%s)
         echo "[$(date -Iseconds)] Starting nixos-rebuild with flags:$REBUILD_FLAGS"
         
-        # Run rebuild and capture timing
-        nixos-rebuild switch --flake ".#$FLAKE_ATTR" $REBUILD_FLAGS
+        ${if cfg.useNom then ''
+          # Use nix-output-monitor for pretty output with per-derivation timing
+          nixos-rebuild switch --flake ".#$FLAKE_ATTR" $REBUILD_FLAGS |& nom
+        '' else ''
+          nixos-rebuild switch --flake ".#$FLAKE_ATTR" $REBUILD_FLAGS
+        ''}
         
         BUILD_END=$(date +%s)
         BUILD_DURATION=$((BUILD_END - BUILD_START))
