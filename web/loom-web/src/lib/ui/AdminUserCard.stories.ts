@@ -32,11 +32,14 @@ type Story = StoryObj<AdminUserCardProps>;
 const baseUser: AdminUser = {
 	id: 'user-123',
 	display_name: 'John Doe',
-	email: 'john@example.com',
+	primary_email: 'john@example.com',
 	avatar_url: null,
-	global_roles: [],
+	is_system_admin: false,
+	is_support: false,
+	is_auditor: false,
 	created_at: '2024-01-15T10:30:00Z',
-	last_login_at: '2025-01-02T14:22:00Z',
+	updated_at: '2025-01-02T14:22:00Z',
+	deleted_at: null,
 };
 
 export const RegularUser: Story = {
@@ -48,21 +51,21 @@ export const RegularUser: Story = {
 
 export const SystemAdmin: Story = {
 	args: {
-		user: { ...baseUser, global_roles: ['system_admin'] },
+		user: { ...baseUser, is_system_admin: true },
 		currentUserId: 'other-user',
 	},
 };
 
 export const AllRoles: Story = {
 	args: {
-		user: { ...baseUser, global_roles: ['system_admin', 'support', 'auditor'] },
+		user: { ...baseUser, is_system_admin: true, is_support: true, is_auditor: true },
 		currentUserId: 'other-user',
 	},
 };
 
 export const CurrentUser: Story = {
 	args: {
-		user: { ...baseUser, global_roles: ['system_admin'] },
+		user: { ...baseUser, is_system_admin: true },
 		currentUserId: 'user-123',
 	},
 };
@@ -72,7 +75,7 @@ export const WithAvatar: Story = {
 		user: {
 			...baseUser,
 			avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4',
-			global_roles: ['system_admin'],
+			is_system_admin: true,
 		},
 		currentUserId: 'other-user',
 	},
@@ -80,7 +83,7 @@ export const WithAvatar: Story = {
 
 export const Updating: Story = {
 	args: {
-		user: { ...baseUser, global_roles: ['system_admin'] },
+		user: { ...baseUser, is_system_admin: true },
 		currentUserId: 'other-user',
 		isUpdating: true,
 	},

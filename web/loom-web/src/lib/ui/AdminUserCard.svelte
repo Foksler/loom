@@ -28,9 +28,9 @@
 	}: Props = $props();
 
 	const isCurrentUser = $derived(user.id === currentUserId);
-	const isSystemAdmin = $derived(user.global_roles.includes('system_admin'));
-	const isSupport = $derived(user.global_roles.includes('support'));
-	const isAuditor = $derived(user.global_roles.includes('auditor'));
+	const isSystemAdmin = $derived(user.is_system_admin);
+	const isSupport = $derived(user.is_support);
+	const isAuditor = $derived(user.is_auditor);
 
 	function formatDate(dateStr: string | null): string {
 		if (!dateStr) return '-';
@@ -65,7 +65,7 @@
 						<span class="text-fg-muted text-sm">({i18n._('admin.users.you')})</span>
 					{/if}
 				</div>
-				<div class="text-sm text-fg-muted truncate">{user.email ?? '-'}</div>
+				<div class="text-sm text-fg-muted truncate">{user.primary_email ?? '-'}</div>
 				<div class="flex flex-wrap gap-1 mt-1">
 					{#each getRoleBadges() as { role, variant }}
 						<Badge {variant} size="sm">{role}</Badge>
@@ -76,7 +76,7 @@
 		<div class="flex items-center gap-4 flex-shrink-0">
 			<div class="text-sm text-fg-muted text-right">
 				<div>{i18n._('admin.users.created')}: {formatDate(user.created_at)}</div>
-				<div>{i18n._('admin.users.lastLogin')}: {formatDate(user.last_login_at)}</div>
+				<div>{i18n._('admin.users.updated')}: {formatDate(user.updated_at)}</div>
 			</div>
 			<div class="flex gap-2">
 				{#if onToggleSystemAdmin}

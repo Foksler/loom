@@ -57,8 +57,8 @@
 		error = null;
 		try {
 			const res = await fetch('/health', { credentials: 'include' });
-			if (!res.ok) throw new Error(`Failed to load health: ${res.status}`);
-			health = await res.json();
+			const data = await res.json();
+			health = data;
 		} catch (e) {
 			error = e instanceof Error ? e.message : i18n._('general.error');
 		} finally {

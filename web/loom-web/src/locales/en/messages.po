@@ -855,6 +855,10 @@ msgstr "Created"
 msgid "admin.users.lastLogin"
 msgstr "Last login"
 
+#: admin.users.updated
+msgid "admin.users.updated"
+msgstr "Updated"
+
 #: admin.users.impersonate
 msgid "admin.users.impersonate"
 msgstr "Impersonate"

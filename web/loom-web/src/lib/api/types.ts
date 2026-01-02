@@ -325,11 +325,14 @@ export interface StopImpersonationResponse {
 export interface AdminUser {
 	id: string;
 	display_name: string;
-	email: string | null;
+	primary_email: string | null;
 	avatar_url: string | null;
-	global_roles: string[];
+	is_system_admin: boolean;
+	is_support: boolean;
+	is_auditor: boolean;
 	created_at: string;
-	last_login_at: string | null;
+	updated_at: string;
+	deleted_at: string | null;
 }
 
 export interface AdminUserListResponse {
