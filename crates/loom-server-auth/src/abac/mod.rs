@@ -35,8 +35,8 @@
 //! # Example
 //!
 //! ```
-//! use loom_auth::abac::{is_allowed, Action, ResourceAttrs, SubjectAttrs};
-//! use loom_auth::{UserId, OrgId, OrgRole};
+//! use loom_server_auth::abac::{is_allowed, Action, ResourceAttrs, SubjectAttrs};
+//! use loom_server_auth::{UserId, OrgId, OrgRole};
 //!
 //! // Create a subject (the user making the request)
 //! let user_id = UserId::generate();

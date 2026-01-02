@@ -16,7 +16,7 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use loom_auth::types::{OrgId, OrgRole};
+use loom_server_auth::types::{OrgId, OrgRole};
 use loom_scm::{BranchProtectionRule, OwnerType, ProtectionStore, RepoStore};
 use uuid::Uuid;
 
@@ -27,7 +27,7 @@ use crate::{api::AppState, auth_middleware::RequireAuth, i18n::{resolve_user_loc
 
 async fn check_repo_admin(
 	repo_id: Uuid,
-	current_user: &loom_auth::middleware::CurrentUser,
+	current_user: &loom_server_auth::middleware::CurrentUser,
 	state: &AppState,
 	locale: &str,
 ) -> Result<(), (StatusCode, Json<RepoErrorResponse>)> {

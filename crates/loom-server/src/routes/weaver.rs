@@ -20,7 +20,7 @@ use futures::{
 	stream::{Stream, StreamExt},
 	SinkExt,
 };
-use loom_auth::CurrentUser;
+use loom_server_auth::CurrentUser;
 use loom_server_weaver::{CreateWeaverRequest, LogStreamOptions, ResourceSpec, Weaver, WeaverId};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 

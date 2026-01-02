@@ -13,7 +13,7 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use loom_auth::SessionId;
+use loom_server_auth::SessionId;
 use uuid::Uuid;
 
 pub use loom_server_api::sessions::*;

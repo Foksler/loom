@@ -493,7 +493,7 @@ pub async fn disable_job(
 }
 
 async fn set_job_enabled(
-	current_user: loom_auth::middleware::CurrentUser,
+	current_user: loom_server_auth::middleware::CurrentUser,
 	state: AppState,
 	job_id: String,
 	enabled: bool,

@@ -18,7 +18,7 @@ use axum::{
 };
 use chrono::Utc;
 use futures::{SinkExt, StreamExt};
-use loom_auth::middleware::{identify_bearer_token, BearerTokenType, CurrentUser};
+use loom_server_auth::middleware::{identify_bearer_token, BearerTokenType, CurrentUser};
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use tokio::sync::{mpsc, RwLock};
@@ -561,7 +561,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_connection_state_transitions() {
 		use chrono::Utc;
-		use loom_auth::{Session, SessionType, User, UserId};
+		use loom_server_auth::{Session, SessionType, User, UserId};
 
 		let conn = WebSocketConnection::new("session-456".to_string());
 

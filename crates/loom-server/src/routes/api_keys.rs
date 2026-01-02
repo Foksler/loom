@@ -34,7 +34,7 @@ use axum::{
 	Json,
 };
 use chrono::Utc;
-use loom_auth::{Action, ApiKeyScope, AuditEventType, AuditLogEntry, OrgId, Visibility};
+use loom_server_auth::{Action, ApiKeyScope, AuditEventType, AuditLogEntry, OrgId, Visibility};
 use serde_json::json;
 use sha2::{Digest, Sha256};
 
@@ -308,7 +308,7 @@ pub async fn create_api_key(
 	}
 
 	let scopes: Vec<ApiKeyScope> = payload.scopes.iter().cloned().map(Into::into).collect();
-	let (plaintext_key, _argon_hash) = loom_auth::generate_api_key();
+	let (plaintext_key, _argon_hash) = loom_server_auth::generate_api_key();
 	let token_hash = hash_token(&plaintext_key);
 
 	match state

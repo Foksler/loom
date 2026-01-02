@@ -33,7 +33,7 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use loom_auth::{AuditEventType, AuditLogEntry, UserId};
+use loom_server_auth::{AuditEventType, AuditLogEntry, UserId};
 use serde_json::json;
 use uuid::Uuid;
 

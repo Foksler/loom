@@ -36,7 +36,7 @@
 //!
 //! ```ignore
 //! use loom_server::abac_middleware::{RequireCapability, RequireRole};
-//! use loom_auth::{Action, ResourceType};
+//! use loom_server_auth::{Action, ResourceType};
 //!
 //! // Route-level: require admin role
 //! Router::new()
@@ -55,7 +55,7 @@ use axum::{
 	response::{IntoResponse, Response},
 	Json,
 };
-use loom_auth::{
+use loom_server_auth::{
 	abac::{OrgMembershipAttr, TeamMembershipAttr},
 	middleware::{AuthContext, CurrentUser},
 	Action, AuditEventType, AuditLogEntry, GlobalRole, OrgId, ResourceAttrs, ResourceType,
@@ -185,11 +185,11 @@ where
 			owner_user_id: None,
 			org_id: None,
 			team_id: None,
-			visibility: loom_auth::Visibility::Private,
+			visibility: loom_server_auth::Visibility::Private,
 			is_shared_with_support: false,
 		};
 
-		if !loom_auth::is_allowed(&subject, self.action, &resource) {
+		if !loom_server_auth::is_allowed(&subject, self.action, &resource) {
 			tracing::info!(
 				user_id = %current_user.user.id,
 				action = ?self.action,
@@ -514,17 +514,17 @@ where
 ///
 /// This is used by route-level middleware where we cannot perform async operations.
 /// It only includes global roles, not organization or team memberships.
-fn build_subject_attrs_sync(current_user: &loom_auth::middleware::CurrentUser) -> SubjectAttrs {
+fn build_subject_attrs_sync(current_user: &loom_server_auth::middleware::CurrentUser) -> SubjectAttrs {
 	let mut subject = SubjectAttrs::new(current_user.user.id);
 
 	if current_user.user.is_system_admin {
-		subject.global_roles.push(loom_auth::GlobalRole::SystemAdmin);
+		subject.global_roles.push(loom_server_auth::GlobalRole::SystemAdmin);
 	}
 	if current_user.user.is_support {
-		subject.global_roles.push(loom_auth::GlobalRole::Support);
+		subject.global_roles.push(loom_server_auth::GlobalRole::Support);
 	}
 	if current_user.user.is_auditor {
-		subject.global_roles.push(loom_auth::GlobalRole::Auditor);
+		subject.global_roles.push(loom_server_auth::GlobalRole::Auditor);
 	}
 
 	subject
@@ -766,7 +766,7 @@ pub fn check_authorization(
 	action: Action,
 	resource: &ResourceAttrs,
 ) -> Result<(), AuthorizationError> {
-	if loom_auth::is_allowed(subject, action, resource) {
+	if loom_server_auth::is_allowed(subject, action, resource) {
 		tracing::debug!("Authorization check passed");
 		Ok(())
 	} else {
@@ -800,7 +800,7 @@ pub async fn check_authorization_with_audit(
 	resource: &ResourceAttrs,
 	audit_repo: &AuditRepository,
 ) -> Result<(), AuthorizationError> {
-	if loom_auth::is_allowed(subject, action, resource) {
+	if loom_server_auth::is_allowed(subject, action, resource) {
 		tracing::debug!("Authorization check passed");
 		Ok(())
 	} else {
@@ -866,7 +866,7 @@ mod tests {
 	use super::*;
 	use axum::{http::Request, routing::get, Router};
 	use chrono::Utc;
-	use loom_auth::{middleware::CurrentUser, User, UserId};
+	use loom_server_auth::{middleware::CurrentUser, User, UserId};
 	use proptest::prelude::*;
 	use tower::ServiceExt;
 

@@ -53,8 +53,8 @@ pub struct AppState {
 	pub api_key_repo: Arc<ApiKeyRepository>,
 	pub audit_repo: Arc<AuditRepository>,
 	pub share_repo: Arc<ShareRepository>,
-	pub auth_config: loom_auth::middleware::AuthConfig,
-	pub dev_user: Option<loom_auth::User>,
+	pub auth_config: loom_server_auth::middleware::AuthConfig,
+	pub dev_user: Option<loom_server_auth::User>,
 	pub base_url: String,
 	pub cse_client: Option<Arc<CseClient>>,
 	pub github_client: Option<Arc<GithubAppClient>>,
@@ -103,7 +103,7 @@ pub async fn create_app_state(
 	let scm_team_access_store = Arc::new(loom_scm::SqliteRepoTeamAccessStore::new(pool.clone()));
 	let push_mirror_store = Arc::new(loom_scm_mirror::SqlitePushMirrorStore::new(pool.clone()));
 	let external_mirror_store = Arc::new(loom_scm_mirror::SqliteExternalMirrorStore::new(pool));
-	let auth_config = loom_auth::middleware::AuthConfig::from_env();
+	let auth_config = loom_server_auth::middleware::AuthConfig::from_env();
 	let cse_client = match (
 		std::env::var("LOOM_SERVER_GOOGLE_CSE_API_KEY"),
 		std::env::var("LOOM_SERVER_GOOGLE_CSE_SEARCH_ENGINE_ID"),
@@ -231,7 +231,7 @@ pub async fn create_app_state(
 /// Create or get the development user for dev mode.
 pub async fn create_or_get_dev_user(
 	user_repo: &Arc<UserRepository>,
-) -> Result<loom_auth::User, crate::error::ServerError> {
+) -> Result<loom_server_auth::User, crate::error::ServerError> {
 	let email = "dev@localhost";
 	let display_name = "Development User";
 
@@ -249,8 +249,8 @@ pub async fn create_or_get_dev_user(
 	// Create new dev user with full privileges
 	let now = chrono::Utc::now();
 	let username = user_repo.generate_unique_username(display_name).await?;
-	let user = loom_auth::User {
-		id: loom_auth::UserId::generate(),
+	let user = loom_server_auth::User {
+		id: loom_server_auth::UserId::generate(),
 		display_name: display_name.to_string(),
 		username: Some(username),
 		primary_email: Some(email.to_string()),

@@ -5,7 +5,7 @@
 resolver = "2"
 members = [
 	"crates/loom-cli-acp",
-	"crates/loom-auth",
+	"crates/loom-server-auth",
 	"crates/loom-auth-devicecode",
 	"crates/loom-auth-github",
 	"crates/loom-auth-google",

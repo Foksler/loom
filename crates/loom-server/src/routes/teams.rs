@@ -14,7 +14,7 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use loom_auth::{
+use loom_server_auth::{
 	team::Team,
 	types::{OrgId, TeamId, TeamRole, UserId},
 	Action,

@@ -14,7 +14,7 @@ use axum::{
 	Json,
 };
 use chrono::{DateTime, Duration, Utc};
-use loom_auth::{AuditEventType, AuditLogEntry, GlobalRole, ShareLink, SupportAccess};
+use loom_server_auth::{AuditEventType, AuditLogEntry, GlobalRole, ShareLink, SupportAccess};
 use loom_common_thread::ThreadId;
 use serde_json::json;
 
@@ -450,7 +450,7 @@ pub async fn get_shared_thread(
 		}
 	};
 
-	let token_hash = loom_auth::hash_share_token(&token);
+	let token_hash = loom_server_auth::hash_share_token(&token);
 
 	let share_link = match state.share_repo.get_share_link_by_hash(&token_hash).await {
 		Ok(Some(link)) => link,

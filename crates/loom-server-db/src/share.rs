@@ -8,7 +8,7 @@
 //! - Support access (temporary debug access for support staff)
 
 use chrono::{DateTime, Utc};
-use loom_auth::{ShareLink, SupportAccess, UserId};
+use loom_server_auth::{ShareLink, SupportAccess, UserId};
 use sqlx::{sqlite::SqlitePool, Row};
 use uuid::Uuid;
 

@@ -26,9 +26,9 @@ use axum::{
 	routing::{get, post},
 };
 use base64::Engine;
-use loom_auth::middleware::{identify_bearer_token, BearerTokenType, CurrentUser};
+use loom_server_auth::middleware::{identify_bearer_token, BearerTokenType, CurrentUser};
 use sha2::{Digest, Sha256};
-use loom_auth::types::{OrgId, OrgRole};
+use loom_server_auth::types::{OrgId, OrgRole};
 use loom_scm::{
 	check_push_allowed, OwnerType, ProtectionStore, PushCheck, RepoRole, RepoStore,
 	RepoTeamAccessStore, Repository, Visibility,

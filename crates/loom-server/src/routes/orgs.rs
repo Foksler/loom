@@ -16,7 +16,7 @@ use axum::{
 	Json,
 };
 use chrono::Utc;
-use loom_auth::{
+use loom_server_auth::{
 	is_username_reserved,
 	org::{OrgVisibility, Organization},
 	types::{OrgId, OrgRole, UserId},
@@ -1146,7 +1146,7 @@ pub async fn create_join_request(
 		}
 	};
 
-	if org.visibility == loom_auth::org::OrgVisibility::Private {
+	if org.visibility == loom_server_auth::org::OrgVisibility::Private {
 		return (
 			StatusCode::BAD_REQUEST,
 			Json(OrgErrorResponse {

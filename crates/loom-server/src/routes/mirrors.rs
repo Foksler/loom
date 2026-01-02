@@ -9,7 +9,7 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use loom_auth::types::{OrgId, OrgRole};
+use loom_server_auth::types::{OrgId, OrgRole};
 use loom_scm::{OwnerType, RepoStore};
 use loom_scm_mirror::{CreatePushMirror, PushMirrorStore};
 use url::Url;
@@ -90,7 +90,7 @@ fn is_private_or_reserved_v6(ipv6: &Ipv6Addr) -> bool {
 
 async fn check_repo_admin(
 	repo_id: Uuid,
-	current_user: &loom_auth::middleware::CurrentUser,
+	current_user: &loom_server_auth::middleware::CurrentUser,
 	state: &AppState,
 	locale: &str,
 ) -> Result<(), (StatusCode, Json<RepoErrorResponse>)> {
@@ -155,7 +155,7 @@ async fn check_repo_admin(
 
 async fn check_repo_write(
 	repo_id: Uuid,
-	current_user: &loom_auth::middleware::CurrentUser,
+	current_user: &loom_server_auth::middleware::CurrentUser,
 	state: &AppState,
 	locale: &str,
 ) -> Result<(), (StatusCode, Json<RepoErrorResponse>)> {

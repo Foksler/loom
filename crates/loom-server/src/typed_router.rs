@@ -10,7 +10,7 @@ use axum::{
 	routing::MethodRouter,
 	Json, Router,
 };
-use loom_auth::middleware::AuthContext;
+use loom_server_auth::middleware::AuthContext;
 use tracing::instrument;
 
 use crate::{api::AppState, auth_middleware::auth_layer, error::ErrorResponse};

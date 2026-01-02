@@ -21,7 +21,7 @@ use axum::{
 	response::{IntoResponse, Redirect},
 	Json,
 };
-use loom_auth::{generate_access_token, generate_session_token, Session, SessionType};
+use loom_server_auth::{generate_access_token, generate_session_token, Session, SessionType};
 use loom_auth_devicecode::{DeviceCode, DEVICE_CODE_EXPIRY_MINUTES};
 use loom_auth_magiclink::{verify_magic_link_token, MagicLink};
 pub use loom_server_api::auth::{

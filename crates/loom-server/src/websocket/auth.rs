@@ -30,7 +30,7 @@
 //! 6. Failure: `{"type": "auth_error", "message": "..."}` then close
 //! 7. After auth_ok, normal message flow proceeds
 
-use loom_auth::CurrentUser;
+use loom_server_auth::CurrentUser;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -78,7 +78,7 @@ impl AuthenticatedContext {
 		Self { current_user }
 	}
 
-	pub fn user_id(&self) -> &loom_auth::UserId {
+	pub fn user_id(&self) -> &loom_server_auth::UserId {
 		&self.current_user.user.id
 	}
 }
@@ -141,7 +141,7 @@ pub enum AuthResponse {
 }
 
 impl AuthResponse {
-	pub fn ok(user_id: &loom_auth::UserId) -> Self {
+	pub fn ok(user_id: &loom_server_auth::UserId) -> Self {
 		AuthResponse::AuthOk {
 			user_id: user_id.to_string(),
 		}
@@ -220,7 +220,7 @@ mod tests {
 	mod auth_state {
 		use super::*;
 		use chrono::Utc;
-		use loom_auth::{Session, SessionType, User, UserId};
+		use loom_server_auth::{Session, SessionType, User, UserId};
 
 		fn make_test_user() -> User {
 			User {
@@ -337,7 +337,7 @@ mod tests {
 
 	mod auth_response {
 		use super::*;
-		use loom_auth::UserId;
+		use loom_server_auth::UserId;
 
 		#[test]
 		fn ok_response() {
@@ -429,7 +429,7 @@ mod tests {
 	mod state_machine {
 		use super::*;
 		use chrono::Utc;
-		use loom_auth::{Session, SessionType, User, UserId};
+		use loom_server_auth::{Session, SessionType, User, UserId};
 
 		fn make_test_user() -> User {
 			User {

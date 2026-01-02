@@ -7,7 +7,7 @@
 //! API keys are organization-scoped and used for programmatic access.
 
 use chrono::{DateTime, Utc};
-use loom_auth::{ApiKey, ApiKeyId, ApiKeyScope, ApiKeyUsage, OrgId, UserId};
+use loom_server_auth::{ApiKey, ApiKeyId, ApiKeyScope, ApiKeyUsage, OrgId, UserId};
 use sqlx::{sqlite::SqlitePool, Row};
 use std::net::IpAddr;
 use uuid::Uuid;

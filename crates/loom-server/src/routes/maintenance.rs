@@ -24,12 +24,12 @@ use crate::{
 	i18n::{resolve_user_locale, t, t_fmt},
 	routes::admin::AdminErrorResponse,
 };
-use loom_auth::types::{OrgId, OrgRole};
+use loom_server_auth::types::{OrgId, OrgRole};
 use loom_scm::{MaintenanceJob, MaintenanceJobStore, MaintenanceTask, OwnerType, RepoStore, Repository, Visibility};
 
 async fn check_repo_admin(
 	repo: &Repository,
-	current_user: &loom_auth::middleware::CurrentUser,
+	current_user: &loom_server_auth::middleware::CurrentUser,
 	state: &AppState,
 	locale: &str,
 ) -> Result<(), (StatusCode, Json<MaintenanceErrorResponse>)> {
@@ -63,7 +63,7 @@ async fn check_repo_admin(
 
 async fn check_repo_access(
 	repo: &Repository,
-	current_user: &loom_auth::middleware::CurrentUser,
+	current_user: &loom_server_auth::middleware::CurrentUser,
 	state: &AppState,
 	locale: &str,
 ) -> Result<(), (StatusCode, Json<MaintenanceErrorResponse>)> {

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Proprietary
 
 use chrono::{DateTime, Utc};
-use loom_auth::ApiKeyScope;
+use loom_server_auth::ApiKeyScope;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "openapi")]

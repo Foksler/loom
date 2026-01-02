@@ -16,7 +16,7 @@ openapi = ["dep:utoipa", "loom-github-app/openapi", "loom-google-cse/openapi", "
 [dependencies]
 axum = { version = "0.8", features = ["macros"] }
 chrono = { version = "0.4", features = ["serde"] }
-loom-auth = { path = "../loom-auth" }
+loom-server-auth = { path = "../loom-server-auth" }
 loom-server-db = { path = "../loom-server-db" }
 loom-github-app = { path = "../loom-github-app", optional = true }
 loom-google-cse = { path = "../loom-google-cse", optional = true }

@@ -17,7 +17,7 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use loom_auth::types::{OrgId, OrgRole, UserId};
+use loom_server_auth::types::{OrgId, OrgRole, UserId};
 use loom_scm::{validate_repo_name, GitRepository, OwnerType, RepoRole, RepoStore, RepoTeamAccessStore, Repository, Visibility};
 use std::path::PathBuf;
 use uuid::Uuid;
@@ -830,7 +830,7 @@ pub async fn list_org_repos(
 }
 
 async fn check_repo_admin_access(
-	current_user: &loom_auth::middleware::CurrentUser,
+	current_user: &loom_server_auth::middleware::CurrentUser,
 	repo: &Repository,
 	state: &AppState,
 	locale: &str,

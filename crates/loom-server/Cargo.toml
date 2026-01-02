@@ -25,7 +25,7 @@ loom-server-weaver = { path = "../loom-server-weaver" }
 loom-common-core = { path = "../loom-common-core" }
 loom-server-k8s = { path = "../loom-server-k8s" }
 loom-common-secret = { path = "../loom-common-secret" }
-loom-auth = { path = "../loom-auth" }
+loom-server-auth = { path = "../loom-server-auth" }
 loom-server-api = { path = "../loom-server-api", features = ["openapi"] }
 loom-auth-devicecode = { path = "../loom-auth-devicecode" }
 loom-auth-github = { path = "../loom-auth-github" }

@@ -39,7 +39,7 @@ use axum::{
 	Json,
 };
 use chrono::Utc;
-use loom_auth::{
+use loom_server_auth::{
 	org::OrgVisibility, render_email, Action, EmailTemplate, OrgId, OrgRole, Visibility,
 };
 use sha2::{Digest, Sha256};
@@ -404,7 +404,7 @@ pub async fn create_invitation(
 		}
 	}
 
-	let expires_at = Utc::now() + chrono::Duration::days(loom_auth::OrgInvitation::EXPIRY_DAYS);
+	let expires_at = Utc::now() + chrono::Duration::days(loom_server_auth::OrgInvitation::EXPIRY_DAYS);
 
 	tracing::info!(
 		actor_id = %current_user.user.id,

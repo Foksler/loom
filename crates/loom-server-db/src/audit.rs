@@ -7,7 +7,7 @@
 //! Audit logs track security-relevant events for compliance and debugging.
 
 use chrono::{DateTime, Duration, Utc};
-use loom_auth::{audit::AUDIT_RETENTION_DAYS, AuditEventType, AuditLogEntry, UserId};
+use loom_server_auth::{audit::AUDIT_RETENTION_DAYS, AuditEventType, AuditLogEntry, UserId};
 use sqlx::{sqlite::SqlitePool, Row};
 use uuid::Uuid;
 

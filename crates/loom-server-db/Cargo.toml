@@ -11,7 +11,7 @@ description = "Database layer for Loom server"
 
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
-loom-auth = { path = "../loom-auth" }
+loom-server-auth = { path = "../loom-server-auth" }
 loom-common-secret = { path = "../loom-common-secret" }
 loom-common-thread = { path = "../loom-common-thread" }
 serde = { workspace = true }

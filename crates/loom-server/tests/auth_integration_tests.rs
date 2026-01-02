@@ -308,11 +308,11 @@ async fn test_session_cookie_has_same_site() {
 // ============================================================================
 
 /// Helper function to create a test user with specific email
-fn create_test_user(email: &str) -> loom_auth::User {
+fn create_test_user(email: &str) -> loom_server_auth::User {
 	use chrono::Utc;
-	use loom_auth::UserId;
+	use loom_server_auth::UserId;
 
-	loom_auth::User {
+	loom_server_auth::User {
 		id: UserId::generate(),
 		display_name: "Test User".to_string(),
 		username: None,
@@ -451,7 +451,7 @@ async fn test_admin_route_forbidden_for_non_admin() {
 	let user = create_test_user("regular@example.com");
 
 	// Use auth context middleware approach
-	use loom_auth::middleware::{AuthContext, CurrentUser};
+	use loom_server_auth::middleware::{AuthContext, CurrentUser};
 
 	let current_user = CurrentUser::from_access_token(user);
 	let auth_ctx = AuthContext::authenticated(current_user);
@@ -504,7 +504,7 @@ async fn test_admin_route_allowed_for_admin() {
 	use loom_server::abac_middleware::RequireRole;
 	use loom_server::routes;
 
-	use loom_auth::middleware::{AuthContext, CurrentUser};
+	use loom_server_auth::middleware::{AuthContext, CurrentUser};
 
 	let mut admin_user = create_test_user("admin@example.com");
 	admin_user.is_system_admin = true;

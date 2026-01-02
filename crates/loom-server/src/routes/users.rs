@@ -15,7 +15,7 @@ use axum::{
 	Json,
 };
 use chrono::Utc;
-use loom_auth::{validate_username, Action, UserId, ACCOUNT_DELETION_GRACE_DAYS};
+use loom_server_auth::{validate_username, Action, UserId, ACCOUNT_DELETION_GRACE_DAYS};
 use uuid::Uuid;
 
 pub use loom_server_api::users::*;

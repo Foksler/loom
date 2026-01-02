@@ -7,7 +7,7 @@
 //! Users can have multiple identities (e.g., GitHub, Google, MagicLink).
 
 use chrono::{DateTime, Utc};
-use loom_auth::{Identity, IdentityId, Provider, User, UserId};
+use loom_server_auth::{Identity, IdentityId, Provider, User, UserId};
 use sqlx::{sqlite::SqlitePool, Row};
 use uuid::Uuid;
 
@@ -307,7 +307,7 @@ impl UserRepository {
 	/// Generate a unique username from a base, adding numeric suffix if needed.
 	#[tracing::instrument(skip(self))]
 	pub async fn generate_unique_username(&self, base: &str) -> Result<String, DbError> {
-		use loom_auth::generate_username_base;
+		use loom_server_auth::generate_username_base;
 
 		let sanitized = generate_username_base(base);
 

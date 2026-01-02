@@ -10,7 +10,7 @@
 //! - Join requests (for public orgs)
 
 use chrono::Utc;
-use loom_auth::{
+use loom_server_auth::{
 	org::{OrgInvitation, OrgJoinRequest, OrgMembership, OrgVisibility, Organization},
 	types::{InvitationId, OrgId, OrgRole, UserId},
 	user::User,

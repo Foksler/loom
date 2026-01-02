@@ -46,7 +46,7 @@ use axum::{
 	Json,
 };
 use chrono::Utc;
-use loom_auth::middleware::{
+use loom_server_auth::middleware::{
 	extract_bearer_token, extract_session_cookie_with_name, identify_bearer_token, AuthContext,
 	BearerTokenType, CurrentUser,
 };
@@ -620,7 +620,7 @@ mod tests {
 	mod require_auth_layer_tests {
 		use super::*;
 		use axum::{body::Body, http::Request, middleware, routing::get, Router};
-		use loom_auth::{User, UserId};
+		use loom_server_auth::{User, UserId};
 		use tower::ServiceExt;
 
 		fn test_user() -> User {

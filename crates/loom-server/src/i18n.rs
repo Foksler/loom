@@ -6,7 +6,7 @@
 //! This module provides utilities to determine the user's locale and
 //! generate translated API response messages.
 
-use loom_auth::middleware::CurrentUser;
+use loom_server_auth::middleware::CurrentUser;
 
 /// Resolve the locale for API responses from a CurrentUser.
 ///

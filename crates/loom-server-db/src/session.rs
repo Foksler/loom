@@ -11,7 +11,7 @@
 //! - Impersonation sessions (admin support)
 
 use chrono::{Duration, Utc};
-use loom_auth::{
+use loom_server_auth::{
 	access_token::ACCESS_TOKEN_EXPIRY_DAYS, device_code::DEVICE_CODE_EXPIRY_MINUTES,
 	magic_link::MAGIC_LINK_EXPIRY_MINUTES, Session, SessionId, SessionType, UserId,
 };
@@ -163,7 +163,7 @@ impl SessionRepository {
 	#[tracing::instrument(skip(self), fields(session_id = %id))]
 	pub async fn update_session_last_used(&self, id: &SessionId) -> Result<(), DbError> {
 		let now = Utc::now();
-		let expires_at = now + Duration::days(loom_auth::SESSION_EXPIRY_DAYS);
+		let expires_at = now + Duration::days(loom_server_auth::SESSION_EXPIRY_DAYS);
 
 		sqlx::query(
 			r#"

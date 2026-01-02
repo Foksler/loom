@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Proprietary
 
 use chrono::{DateTime, Utc};
-use loom_auth::{team::Team, types::TeamRole};
+use loom_server_auth::{team::Team, types::TeamRole};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "openapi")]

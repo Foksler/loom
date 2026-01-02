@@ -7,7 +7,7 @@
 //! Teams group users for access control and collaboration.
 
 use chrono::Utc;
-use loom_auth::{
+use loom_server_auth::{
 	team::{Team, TeamMembership},
 	types::{OrgId, TeamId, TeamRole, UserId},
 };

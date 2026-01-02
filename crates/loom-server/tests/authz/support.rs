@@ -8,7 +8,7 @@ use axum::{
 	Router,
 };
 use chrono::Utc;
-use loom_auth::{
+use loom_server_auth::{
 	org::{OrgVisibility, Organization},
 	session::{generate_session_token, Session},
 	team::Team,
