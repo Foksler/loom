@@ -4,12 +4,14 @@
  */
 
 export * from './types';
-export { LoomWebSocketClient } from './wsClient';
+export { LoomWebSocketClient } from './wsClientService';
 export { LoomSseClient } from './sseClient';
+export { wsClientMachine, type WsClientMachine } from './wsClientMachine';
+export * from './wsClientMachine.types';
 export { createAccumulator, accumulateEvent, accumulateTextDeltas } from './accumulator';
 export type { AccumulatedContent } from './accumulator';
 
-import { LoomWebSocketClient } from './wsClient';
+import { LoomWebSocketClient } from './wsClientService';
 import { LoomSseClient } from './sseClient';
 
 export type RealtimeClient = LoomWebSocketClient | LoomSseClient;
