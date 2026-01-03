@@ -47,7 +47,22 @@ members = [
 	"crates/loom-server-config",
 	"crates/loom-common-spool",
 	"crates/loom-cli-spool",
-	"crates/loom-redact",
+	"crates/loom-tui-component",
+	"crates/loom-tui-core",
+	"crates/loom-tui-testing",
+	"crates/loom-tui-theme",
+	"crates/loom-tui-widget-header",
+	"crates/loom-tui-widget-scrollable",
+	"crates/loom-tui-widget-status-bar",
+	"crates/loom-tui-widget-input-box",
+	"crates/loom-tui-widget-spinner",
+	"crates/loom-tui-widget-message-list",
+	"crates/loom-tui-widget-modal",
+	"crates/loom-tui-widget-thread-list",
+	"crates/loom-tui-widget-tool-panel",
+	"crates/loom-tui-widget-markdown",
+	"crates/loom-tui-app",
+	"crates/loom-tui-storybook",
 	]
 
 [workspace.package]

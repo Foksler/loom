@@ -49,6 +49,12 @@ Design documentation for Loom, an AI-powered coding agent in Rust.
 | [retry-strategy.md](./retry-strategy.md) | [loom-http](../crates/loom-http/) | Exponential backoff |
 | [job-scheduler-system.md](./job-scheduler-system.md) | [loom-jobs](../crates/loom-jobs/) | Background job system |
 
+## Terminal UI (TUI)
+
+| Spec | Code | Purpose |
+|------|------|---------|
+| [tui-system.md](./tui-system.md) | [loom-tui-*](../crates/) | Ratatui 0.30 component system with visual snapshot testing |
+
 ## Editor Integration
 
 | Spec | Code | Purpose |
