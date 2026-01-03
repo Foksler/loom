@@ -1239,13 +1239,16 @@ async fn complete_oauth_login(
 ) -> axum::response::Response {
 	let locale = state.default_locale.as_str();
 
+	// Check if signups are disabled and user doesn't already exist
 	if state.auth_config.signups_disabled {
 		match state.user_repo.get_user_by_email(email).await {
 			Ok(None) => {
 				tracing::warn!(email = %email, provider = %provider, "Signup rejected: signups are disabled");
 				return Redirect::to("/login?error=signups_disabled").into_response();
 			}
-			Ok(Some(_)) => {}
+			Ok(Some(_)) => {
+				// User exists, allow login to proceed
+			}
 			Err(e) => {
 				tracing::error!(error = %e, email = %email, "Failed to check if user exists");
 				return Redirect::to("/login?error=internal_error").into_response();
@@ -1438,14 +1441,16 @@ pub async fn verify_magic_link(
 		}
 	}
 
-	// Check if signups are disabled and user doesn't exist
+	// Check if signups are disabled and user doesn't already exist
 	if state.auth_config.signups_disabled {
 		match state.user_repo.get_user_by_email(&email).await {
 			Ok(None) => {
 				tracing::warn!(email = %email, "Signup rejected via magic link: signups are disabled");
 				return Redirect::to("/login?error=signups_disabled").into_response();
 			}
-			Ok(Some(_)) => {}
+			Ok(Some(_)) => {
+				// User exists, allow login to proceed
+			}
 			Err(e) => {
 				tracing::error!(error = %e, email = %email, "Failed to check if user exists");
 				return Redirect::to("/login?error=internal_error").into_response();

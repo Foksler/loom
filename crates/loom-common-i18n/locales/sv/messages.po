@@ -1295,3 +1295,51 @@ msgstr "Spegelorganisationen är inte konfigurerad. Skapa en organisation med na
 #: API: SCM Mirror - Clone failed
 msgid "server.api.scm.mirror.clone_failed"
 msgstr "Kunde inte klona fjärrförvaret"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - User deleted
+msgid "server.api.admin.user_deleted"
+msgstr "Användaren har raderats"
+
+#: API: Admin - Cannot delete self
+msgid "server.api.admin.cannot_delete_self"
+msgstr "Du kan inte radera ditt eget konto"
+
+#: API: Admin - User not found
+msgid "server.api.admin.user_not_found"
+msgstr "Användaren hittades inte"
+
+# ============================================================================
+# Admin Users UI
+# ============================================================================
+
+#: Admin Users - Delete button
+msgid "admin.users.delete"
+msgstr "Radera"
+
+#: Admin Users - Delete user title
+msgid "admin.users.deleteUser"
+msgstr "Radera användare"
+
+#: Admin Users - Delete confirm title
+msgid "admin.users.deleteConfirmTitle"
+msgstr "Radera användare"
+
+#: Admin Users - Delete confirm message
+msgid "admin.users.deleteConfirmMessage"
+msgstr "Är du säker på att du vill radera den här användaren? Denna åtgärd kommer att mjukradera kontot."
+
+#: Admin Users - Delete success
+msgid "admin.users.deleteSuccess"
+msgstr "Användaren har raderats"
+
+#: Admin Users - Cancel button
+msgid "admin.users.cancel"
+msgstr "Avbryt"
+
+#: Admin Users - Confirm delete button
+msgid "admin.users.confirm"
+msgstr "Bekräfta radering"

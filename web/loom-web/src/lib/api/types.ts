@@ -367,6 +367,11 @@ export interface UpdateUserRolesResponse {
 	deleted_at: string | null;
 }
 
+export interface DeleteUserResponse {
+	message: string;
+	user_id: string;
+}
+
 // Weaver types
 export type WeaverStatus = 'pending' | 'running' | 'succeeded' | 'failed' | 'terminating';
 

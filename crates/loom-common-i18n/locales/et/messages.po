@@ -1299,3 +1299,51 @@ msgstr "Töö {job_id} lubati"
 #: Jobs: API - Job disabled
 msgid "server.jobs.success.disabled"
 msgstr "Töö {job_id} keelati"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - User deleted
+msgid "server.api.admin.user_deleted"
+msgstr "Kasutaja kustutatud edukalt"
+
+#: API: Admin - Cannot delete self
+msgid "server.api.admin.cannot_delete_self"
+msgstr "Enda kontot ei saa kustutada"
+
+#: API: Admin - User not found
+msgid "server.api.admin.user_not_found"
+msgstr "Kasutajat ei leitud"
+
+# ============================================================================
+# Admin Users UI
+# ============================================================================
+
+#: Admin Users - Delete button
+msgid "admin.users.delete"
+msgstr "Kustuta"
+
+#: Admin Users - Delete user title
+msgid "admin.users.deleteUser"
+msgstr "Kustuta kasutaja"
+
+#: Admin Users - Delete confirm title
+msgid "admin.users.deleteConfirmTitle"
+msgstr "Kustuta kasutaja"
+
+#: Admin Users - Delete confirm message
+msgid "admin.users.deleteConfirmMessage"
+msgstr "Kas olete kindel, et soovite selle kasutaja kustutada? See tegevus kustutab konto pehmelt."
+
+#: Admin Users - Delete success
+msgid "admin.users.deleteSuccess"
+msgstr "Kasutaja kustutatud edukalt"
+
+#: Admin Users - Cancel button
+msgid "admin.users.cancel"
+msgstr "Tühista"
+
+#: Admin Users - Confirm delete button
+msgid "admin.users.confirm"
+msgstr "Kinnita kustutamine"

@@ -887,6 +887,42 @@ msgstr "Сделать аудитором"
 msgid "admin.users.removeAuditor"
 msgstr "Снять аудитора"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "Отмена"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "Удалить"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "Удалить"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "Вы уверены, что хотите удалить этого пользователя? Это действие нельзя отменить."
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "Удалить пользователя"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "Вы собираетесь выдать себя за этого пользователя. Все действия будут записаны для аудита."
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "Выдать себя за пользователя"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "Причина имперсонации"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "напр., Расследование тикета поддержки #1234"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "Журналы Сервера"

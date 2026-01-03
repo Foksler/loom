@@ -887,6 +887,42 @@ msgstr "设为审计员"
 msgid "admin.users.removeAuditor"
 msgstr "移除审计员"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "取消"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "删除"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "删除"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "您确定要删除此用户吗？此操作无法撤销。"
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "删除用户"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "您即将模拟此用户。所有操作都将被记录以供审计。"
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "模拟用户"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "模拟原因"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "例如，调查支持工单 #1234"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "服务器日志"

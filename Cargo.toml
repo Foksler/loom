@@ -3,6 +3,7 @@
 
 [workspace]
 resolver = "2"
+exclude = ["crates/loom-weaver-ebpf"]
 members = [
 	"crates/loom-cli-acp",
 	"crates/loom-server-auth",
@@ -73,6 +74,8 @@ members = [
 	"crates/loom-server-wgtunnel",
 	"crates/loom-cli-wgtunnel",
 	"crates/loom-weaver-wgtunnel",
+	"crates/loom-weaver-ebpf-common",
+	"crates/loom-weaver-audit-sidecar",
 	]
 
 [workspace.package]

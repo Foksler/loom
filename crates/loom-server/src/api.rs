@@ -443,6 +443,18 @@ async fn initialize_weaver_infrastructure(config: &ServerConfig) -> WeaverInfras
 		secrets_allow_insecure: config.weaver.secrets_allow_insecure,
 		wg_enabled: config.weaver.wg_enabled.unwrap_or(true),
 		wg_server_url: config.weaver.wg_server_url.clone(),
+		audit_enabled: config.audit.enabled,
+		audit_image: std::env::var("LOOM_SERVER_WEAVER_AUDIT_IMAGE")
+			.unwrap_or_else(|_| "ghcr.io/ghuntley/loom-audit-sidecar:latest".to_string()),
+		audit_batch_interval_ms: std::env::var("LOOM_SERVER_WEAVER_AUDIT_BATCH_INTERVAL_MS")
+			.ok()
+			.and_then(|v| v.parse().ok())
+			.unwrap_or(100),
+		audit_buffer_max_bytes: std::env::var("LOOM_SERVER_WEAVER_AUDIT_BUFFER_MAX_BYTES")
+			.ok()
+			.and_then(|v| v.parse().ok())
+			.unwrap_or(256 * 1024 * 1024),
+		server_url: config.http.base_url.clone(),
 	};
 
 	let kube_client = match KubeClient::new().await {
@@ -589,6 +601,7 @@ fn admin_routes(state: AppState) -> Router<AppState> {
 
 	Router::new()
 		.route("/users", get(routes::admin::list_users))
+		.route("/users/{id}", delete(routes::admin::delete_user))
 		.route(
 			"/users/{id}/roles",
 			patch(routes::admin::update_user_roles),
@@ -726,6 +739,11 @@ pub fn create_router(state: AppState) -> Router {
 		.route(
 			"/internal/wg/weavers/{id}/peers",
 			get(routes::wgtunnel::stream_peers),
+		)
+		// Internal weaver audit endpoint (SPIFFE/SVID auth verified in handler)
+		.route(
+			"/internal/weaver-audit/events",
+			post(routes::weaver_audit::submit_events),
 		)
 		// Documentation search
 		.route("/docs/search", get(routes::docs::search_handler))

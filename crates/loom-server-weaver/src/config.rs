@@ -32,6 +32,16 @@ pub struct WeaverConfig {
     pub wg_enabled: bool,
     /// Loom server URL for WireGuard registration (e.g., https://loom.ghuntley.com)
     pub wg_server_url: Option<String>,
+    /// Enable audit sidecar
+    pub audit_enabled: bool,
+    /// Audit sidecar image
+    pub audit_image: String,
+    /// Audit batch interval in milliseconds
+    pub audit_batch_interval_ms: u32,
+    /// Audit buffer max size in bytes
+    pub audit_buffer_max_bytes: u64,
+    /// Server URL for audit sidecar to report to
+    pub server_url: String,
 }
 
 impl Default for WeaverConfig {
@@ -49,6 +59,11 @@ impl Default for WeaverConfig {
             secrets_allow_insecure: false,
             wg_enabled: false,
             wg_server_url: None,
+            audit_enabled: false,
+            audit_image: "ghcr.io/ghuntley/loom-audit-sidecar:latest".to_string(),
+            audit_batch_interval_ms: 100,
+            audit_buffer_max_bytes: 256 * 1024 * 1024, // 256 MB
+            server_url: String::new(),
         }
     }
 }

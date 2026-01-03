@@ -54,4 +54,10 @@ in
     loom-server = final.loom-server;
     loom-server-binaries = final.loom-server-binaries;
   };
+
+  loom-audit-sidecar = final.callPackage ./loom-audit-sidecar.nix { };
+
+  audit-sidecar-image = final.callPackage ./audit-sidecar-image.nix {
+    loom-audit-sidecar = final.loom-audit-sidecar;
+  };
 }

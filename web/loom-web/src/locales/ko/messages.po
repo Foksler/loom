@@ -887,6 +887,42 @@ msgstr "감사자로 지정"
 msgid "admin.users.removeAuditor"
 msgstr "감사자 해제"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "취소"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "삭제"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "삭제"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "이 사용자를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다."
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "사용자 삭제"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "이 사용자를 가장하려고 합니다. 모든 작업은 감사 목적으로 기록됩니다."
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "사용자 가장"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "가장 이유"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "예: 지원 티켓 #1234 조사"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "서버 로그"

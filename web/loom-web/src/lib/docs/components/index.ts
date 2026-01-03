@@ -12,3 +12,5 @@ export { default as Callout } from './Callout.svelte';
 export { default as Steps } from './Steps.svelte';
 export { default as Step } from './Step.svelte';
 export { default as AsciinemaPlayer } from './AsciinemaPlayer.svelte';
+export { default as Sidebar } from './Sidebar.svelte';
+export { default as DocPage } from './DocPage.svelte';

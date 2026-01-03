@@ -43,6 +43,7 @@ import type {
 	AdminUserListResponse,
 	UpdateUserRolesRequest,
 	UpdateUserRolesResponse,
+	DeleteUserResponse,
 	Weaver,
 	ListWeaversResponse,
 	CreateWeaverRequest,
@@ -348,10 +349,13 @@ export class LoomApiClient {
 		return this.request<ImpersonationState>('/api/admin/impersonate/state');
 	}
 
-	async startImpersonation(userId: string): Promise<ImpersonateResponse> {
+	async startImpersonation(userId: string, reason: string = 'Admin impersonation'): Promise<ImpersonateResponse> {
 		return this.request<ImpersonateResponse>(
 			`/api/admin/users/${encodeURIComponent(userId)}/impersonate`,
-			{ method: 'POST' }
+			{
+				method: 'POST',
+				body: JSON.stringify({ reason }),
+			}
 		);
 	}
 
@@ -380,6 +384,13 @@ export class LoomApiClient {
 				method: 'PATCH',
 				body: JSON.stringify(data),
 			}
+		);
+	}
+
+	async deleteUser(userId: string): Promise<DeleteUserResponse> {
+		return this.request<DeleteUserResponse>(
+			`/api/admin/users/${encodeURIComponent(userId)}`,
+			{ method: 'DELETE' }
 		);
 	}
 

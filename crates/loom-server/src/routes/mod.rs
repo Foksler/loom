@@ -32,6 +32,7 @@ pub mod secrets;
 pub mod users;
 pub mod weaver;
 pub mod weaver_auth;
+pub mod weaver_audit;
 pub mod weaver_secrets;
 pub mod webhooks;
 pub mod wgtunnel;

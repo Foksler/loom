@@ -372,6 +372,8 @@ mod tests {
 				ready_timeout_secs: Some(120),
 				webhooks: None,
 				image_pull_secrets: Some(vec!["ghcr-secret".to_string()]),
+				secrets_server_url: None,
+				secrets_allow_insecure: None,
 			};
 			let config = layer.resolve().unwrap();
 

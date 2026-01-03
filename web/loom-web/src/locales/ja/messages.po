@@ -887,6 +887,42 @@ msgstr "監査者にする"
 msgid "admin.users.removeAuditor"
 msgstr "監査者を解除"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "キャンセル"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "削除"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "削除"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "このユーザーを削除してもよろしいですか？この操作は元に戻せません。"
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "ユーザーを削除"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "このユーザーになりすまそうとしています。すべての操作は監査目的で記録されます。"
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "ユーザーになりすます"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "なりすましの理由"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "例：サポートチケット #1234 の調査"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "サーバーログ"

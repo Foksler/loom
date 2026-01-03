@@ -1295,3 +1295,51 @@ msgstr "ミラー組織が設定されていません。「mirrors」という�
 #: API: SCM Mirror - Clone failed
 msgid "server.api.scm.mirror.clone_failed"
 msgstr "リモートリポジトリのクローンに失敗しました"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - User deleted
+msgid "server.api.admin.user_deleted"
+msgstr "ユーザーが正常に削除されました"
+
+#: API: Admin - Cannot delete self
+msgid "server.api.admin.cannot_delete_self"
+msgstr "自分のアカウントは削除できません"
+
+#: API: Admin - User not found
+msgid "server.api.admin.user_not_found"
+msgstr "ユーザーが見つかりません"
+
+# ============================================================================
+# Admin Users UI
+# ============================================================================
+
+#: Admin Users - Delete button
+msgid "admin.users.delete"
+msgstr "削除"
+
+#: Admin Users - Delete user title
+msgid "admin.users.deleteUser"
+msgstr "ユーザーを削除"
+
+#: Admin Users - Delete confirm title
+msgid "admin.users.deleteConfirmTitle"
+msgstr "ユーザーを削除"
+
+#: Admin Users - Delete confirm message
+msgid "admin.users.deleteConfirmMessage"
+msgstr "このユーザーを削除してもよろしいですか？この操作によりアカウントは論理削除されます。"
+
+#: Admin Users - Delete success
+msgid "admin.users.deleteSuccess"
+msgstr "ユーザーが正常に削除されました"
+
+#: Admin Users - Cancel button
+msgid "admin.users.cancel"
+msgstr "キャンセル"
+
+#: Admin Users - Confirm delete button
+msgid "admin.users.confirm"
+msgstr "削除を確認"

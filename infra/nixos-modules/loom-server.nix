@@ -116,6 +116,15 @@ in
       '';
     };
 
+    docsIndexPath = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = ''
+        Path to docs-index.json for documentation search.
+        If null, defaults to the loom-web package's static/docs-index.json.
+      '';
+    };
+
     # Weaver Secrets System Configuration
     # See specs/weaver-secrets-system.md for full documentation
     #
@@ -178,6 +187,15 @@ in
       type = types.str;
       default = "en";
       description = "Default locale for emails and user-facing content.";
+    };
+
+    signupsDisabled = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Disable new user signups. When enabled, only existing users can log in.
+        New users attempting to register will receive a "signups disabled" error.
+      '';
     };
 
     # LLM Provider Configuration
@@ -536,6 +554,40 @@ in
         description = "List of Kubernetes secret names for pulling private container images.";
         example = [ "ghcr-secret" ];
       };
+
+      audit = {
+        enable = mkEnableOption "eBPF audit sidecar for weavers";
+
+        image = mkOption {
+          type = types.str;
+          default = "ghcr.io/ghuntley/loom-audit-sidecar:latest";
+          description = "Container image for the audit sidecar.";
+        };
+
+        batchIntervalMs = mkOption {
+          type = types.int;
+          default = 100;
+          description = "Event batch interval in milliseconds.";
+        };
+
+        bufferMaxBytes = mkOption {
+          type = types.int;
+          default = 268435456;  # 256 MB
+          description = "Maximum local buffer size in bytes.";
+        };
+
+        metricsPort = mkOption {
+          type = types.port;
+          default = 9090;
+          description = "Prometheus metrics port.";
+        };
+
+        healthPort = mkOption {
+          type = types.port;
+          default = 9091;
+          description = "Health endpoint port.";
+        };
+      };
     };
 
     jobs = {
@@ -714,6 +766,12 @@ in
           LOOM_SERVER_WEAVER_READY_TIMEOUT_SECS = toString cfg.weaver.readyTimeoutSecs;
           LOOM_SERVER_WEAVER_WEBHOOKS = cfg.weaver.webhooks;
           LOOM_SERVER_WEAVER_IMAGE_PULL_SECRETS = lib.concatStringsSep "," cfg.weaver.imagePullSecrets;
+          LOOM_SERVER_WEAVER_AUDIT_ENABLED = if cfg.weaver.audit.enable then "true" else "false";
+          LOOM_SERVER_WEAVER_AUDIT_IMAGE = cfg.weaver.audit.image;
+          LOOM_SERVER_WEAVER_AUDIT_BATCH_INTERVAL_MS = toString cfg.weaver.audit.batchIntervalMs;
+          LOOM_SERVER_WEAVER_AUDIT_BUFFER_MAX_BYTES = toString cfg.weaver.audit.bufferMaxBytes;
+          LOOM_SERVER_WEAVER_AUDIT_METRICS_PORT = toString cfg.weaver.audit.metricsPort;
+          LOOM_SERVER_WEAVER_AUDIT_HEALTH_PORT = toString cfg.weaver.audit.healthPort;
           KUBECONFIG = toString cfg.weaver.kubeconfigPath;
         })
         (mkIf cfg.secrets.enable {
@@ -740,6 +798,9 @@ in
           LOOM_SERVER_SESSION_CLEANUP_INTERVAL_SECS = toString cfg.jobs.sessionCleanupIntervalSecs;
           LOOM_SERVER_OAUTH_STATE_CLEANUP_INTERVAL_SECS = toString cfg.jobs.oauthStateCleanupIntervalSecs;
         }
+        (mkIf (cfg.docsIndexPath != null) {
+          LOOM_SERVER_DOCS_INDEX = toString cfg.docsIndexPath;
+        })
         cfg.extraEnvironment
       ];
 

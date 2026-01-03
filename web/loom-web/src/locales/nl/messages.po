@@ -887,6 +887,42 @@ msgstr "Maak Auditor"
 msgid "admin.users.removeAuditor"
 msgstr "Verwijder Auditor"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "Annuleren"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "Verwijderen"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "Verwijderen"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "Weet u zeker dat u deze gebruiker wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "Gebruiker Verwijderen"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "U staat op het punt deze gebruiker na te bootsen. Alle acties worden geregistreerd voor auditdoeleinden."
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "Gebruiker Nabootsen"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "Reden voor nabootsing"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "bijv., Onderzoek naar supportticket #1234"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "Serverlogboeken"

@@ -207,7 +207,7 @@
     databasePath = "/var/lib/loom-server/loom.db";
     logLevel = "trace";
     baseUrl = "https://loom.ghuntley.com";
-    signupsDisabled = false;  # Allow new user signups
+    signupsDisabled = true;
     
     # CLI binary platforms to build for self-update distribution
     # Only build linux-x86_64 by default for faster builds
@@ -299,6 +299,9 @@
       # Local smtprelay doesn't support STARTTLS - TLS is used by smtprelay to upstream
       useTLS = false;
     };
+
+    # Documentation search index from loom-web static files
+    docsIndexPath = "${pkgs.loom-web}/share/loom-web/docs-index.json";
   };
 
   # Loom Web - Web frontend
@@ -333,7 +336,7 @@
   # Automatic Nix garbage collection based on disk space
   services.automatic-nix-gc = {
     enable = true;
-    interval = "1h";
+    interval = "1min";
     diskThreshold = 64;
     maxFreed = 32;
     preserveGenerations = "1d";

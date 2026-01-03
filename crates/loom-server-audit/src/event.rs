@@ -78,11 +78,30 @@ pub enum AuditEventType {
 	ImpersonationStarted,
 	ImpersonationEnded,
 	GlobalRoleChanged,
+	UserDeleted,
+	UserRestored,
 
 	// Weaver events
 	WeaverCreated,
 	WeaverDeleted,
 	WeaverAttached,
+
+	// Weaver syscall audit events
+	WeaverProcessExec,
+	WeaverProcessFork,
+	WeaverProcessExit,
+	WeaverFileWrite,
+	WeaverFileRead,
+	WeaverFileMetadata,
+	WeaverNetworkSocket,
+	WeaverNetworkConnect,
+	WeaverNetworkListen,
+	WeaverNetworkAccept,
+	WeaverDnsQuery,
+	WeaverDnsResponse,
+	WeaverPrivilegeChange,
+	WeaverMemoryExec,
+	WeaverSandboxEscape,
 
 	// LLM events
 	LlmRequestStarted,
@@ -161,6 +180,23 @@ impl fmt::Display for AuditEventType {
 			AuditEventType::WeaverDeleted => "weaver_deleted",
 			AuditEventType::WeaverAttached => "weaver_attached",
 
+			// Weaver syscall audit events
+			AuditEventType::WeaverProcessExec => "weaver_process_exec",
+			AuditEventType::WeaverProcessFork => "weaver_process_fork",
+			AuditEventType::WeaverProcessExit => "weaver_process_exit",
+			AuditEventType::WeaverFileWrite => "weaver_file_write",
+			AuditEventType::WeaverFileRead => "weaver_file_read",
+			AuditEventType::WeaverFileMetadata => "weaver_file_metadata",
+			AuditEventType::WeaverNetworkSocket => "weaver_network_socket",
+			AuditEventType::WeaverNetworkConnect => "weaver_network_connect",
+			AuditEventType::WeaverNetworkListen => "weaver_network_listen",
+			AuditEventType::WeaverNetworkAccept => "weaver_network_accept",
+			AuditEventType::WeaverDnsQuery => "weaver_dns_query",
+			AuditEventType::WeaverDnsResponse => "weaver_dns_response",
+			AuditEventType::WeaverPrivilegeChange => "weaver_privilege_change",
+			AuditEventType::WeaverMemoryExec => "weaver_memory_exec",
+			AuditEventType::WeaverSandboxEscape => "weaver_sandbox_escape",
+
 			// LLM events
 			AuditEventType::LlmRequestStarted => "llm_request_started",
 			AuditEventType::LlmRequestCompleted => "llm_request_completed",
@@ -172,6 +208,10 @@ impl fmt::Display for AuditEventType {
 			AuditEventType::MirrorCreated => "mirror_created",
 			AuditEventType::MirrorSynced => "mirror_synced",
 			AuditEventType::WebhookReceived => "webhook_received",
+
+			// User management events
+			AuditEventType::UserDeleted => "user_deleted",
+			AuditEventType::UserRestored => "user_restored",
 		};
 		write!(f, "{s}")
 	}
@@ -208,6 +248,18 @@ impl AuditEventType {
 			| AuditEventType::ThreadShared
 			| AuditEventType::WeaverCreated
 			| AuditEventType::WeaverAttached
+			| AuditEventType::WeaverProcessExec
+			| AuditEventType::WeaverProcessFork
+			| AuditEventType::WeaverProcessExit
+			| AuditEventType::WeaverFileWrite
+			| AuditEventType::WeaverFileRead
+			| AuditEventType::WeaverFileMetadata
+			| AuditEventType::WeaverNetworkSocket
+			| AuditEventType::WeaverNetworkConnect
+			| AuditEventType::WeaverNetworkListen
+			| AuditEventType::WeaverNetworkAccept
+			| AuditEventType::WeaverDnsQuery
+			| AuditEventType::WeaverDnsResponse
 			| AuditEventType::LlmRequestStarted
 			| AuditEventType::LlmRequestCompleted
 			| AuditEventType::RepoCreated
@@ -216,7 +268,13 @@ impl AuditEventType {
 			| AuditEventType::WebhookReceived => AuditSeverity::Info,
 
 			// Warning: Security-relevant failures
-			AuditEventType::LoginFailed | AuditEventType::AccessDenied => AuditSeverity::Warning,
+			AuditEventType::LoginFailed
+			| AuditEventType::AccessDenied
+			| AuditEventType::WeaverPrivilegeChange
+			| AuditEventType::WeaverMemoryExec => AuditSeverity::Warning,
+
+			// Critical: Security breaches
+			AuditEventType::WeaverSandboxEscape => AuditSeverity::Critical,
 
 			// Notice: Administrative/destructive actions
 			AuditEventType::SessionRevoked
@@ -237,6 +295,8 @@ impl AuditEventType {
 			| AuditEventType::ImpersonationStarted
 			| AuditEventType::ImpersonationEnded
 			| AuditEventType::GlobalRoleChanged
+			| AuditEventType::UserDeleted
+			| AuditEventType::UserRestored
 			| AuditEventType::WeaverDeleted
 			| AuditEventType::RepoDeleted => AuditSeverity::Notice,
 

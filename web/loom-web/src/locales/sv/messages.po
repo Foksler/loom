@@ -887,6 +887,42 @@ msgstr "Gör till Granskare"
 msgid "admin.users.removeAuditor"
 msgstr "Ta bort Granskare"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "Avbryt"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "Ta bort"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "Ta bort"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "Är du säker på att du vill ta bort denna användare? Denna åtgärd kan inte ångras."
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "Ta bort Användare"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "Du är på väg att imitera denna användare. Alla åtgärder kommer att loggas för granskningsändamål."
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "Imitera Användare"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "Anledning till imitation"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "t.ex., Undersöker supportärende #1234"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "Serverloggar"

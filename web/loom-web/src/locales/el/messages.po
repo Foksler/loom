@@ -887,6 +887,42 @@ msgstr "Κάντε Ελεγκτή"
 msgid "admin.users.removeAuditor"
 msgstr "Αφαίρεση Ελεγκτή"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "Ακύρωση"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "Διαγραφή"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "Διαγραφή"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτόν τον χρήστη; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "Διαγραφή Χρήστη"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "Πρόκειται να υποδυθείτε αυτόν τον χρήστη. Όλες οι ενέργειες θα καταγράφονται για σκοπούς ελέγχου."
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "Υποδυθείτε Χρήστη"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "Λόγος υποδυσης"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "π.χ., Διερεύνηση αιτήματος υποστήριξης #1234"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "Αρχεία Καταγραφής Διακομιστή"

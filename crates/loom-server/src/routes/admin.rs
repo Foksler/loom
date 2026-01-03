@@ -40,9 +40,9 @@ use uuid::Uuid;
 
 pub use loom_server_api::admin::{
 	AdminErrorResponse, AdminSuccessResponse, AdminUserResponse, AuditLogEntryResponse,
-	ImpersonateRequest, ImpersonateResponse, ImpersonationState, ImpersonationUserInfo,
-	ListAuditLogsParams, ListAuditLogsResponse, ListUsersParams, ListUsersResponse,
-	UpdateRolesRequest,
+	DeleteUserResponse, ImpersonateRequest, ImpersonateResponse, ImpersonationState,
+	ImpersonationUserInfo, ListAuditLogsParams, ListAuditLogsResponse, ListUsersParams,
+	ListUsersResponse, UpdateRolesRequest,
 };
 
 use crate::{api::AppState, auth_middleware::RequireAuth, i18n::{resolve_user_locale, t}};
@@ -410,6 +410,168 @@ pub async fn update_user_roles(
 			created_at: target_user.created_at,
 			updated_at: target_user.updated_at,
 			deleted_at: target_user.deleted_at,
+		}),
+	)
+		.into_response()
+}
+
+/// Delete a user account (soft-delete).
+///
+/// # Authorization
+///
+/// Requires `system_admin` role. Returns 403 Forbidden otherwise.
+///
+/// # Request
+///
+/// Path parameters:
+/// - `id`: Target user's UUID
+///
+/// # Response
+///
+/// Returns [`DeleteUserResponse`] confirming deletion.
+///
+/// # Errors
+///
+/// - `400 Bad Request`: Invalid user ID or attempting to delete own account
+/// - `401 Unauthorized`: Missing or invalid authentication
+/// - `403 Forbidden`: Caller lacks `system_admin` role
+/// - `404 Not Found`: Target user does not exist
+/// - `500 Internal Server Error`: Database error
+///
+/// # Security
+///
+/// - Admins cannot delete their own account
+/// - All deletions are logged to audit trail
+/// - Uses soft-delete (user can be restored within grace period)
+#[utoipa::path(
+    delete,
+    path = "/api/admin/users/{id}",
+    params(
+        ("id" = String, Path, description = "User ID")
+    ),
+    responses(
+        (status = 200, description = "User deleted", body = DeleteUserResponse),
+        (status = 400, description = "Invalid request", body = AdminErrorResponse),
+        (status = 401, description = "Not authenticated", body = AdminErrorResponse),
+        (status = 403, description = "Not authorized (system_admin required)", body = AdminErrorResponse),
+        (status = 404, description = "User not found", body = AdminErrorResponse)
+    ),
+    tag = "admin"
+)]
+#[tracing::instrument(
+	skip(state),
+	fields(
+		actor_id = %current_user.user.id,
+		target_id = %user_id
+	)
+)]
+pub async fn delete_user(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(user_id): Path<String>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	// Check system admin
+	if !current_user.user.is_system_admin {
+		tracing::warn!(
+			actor_id = %current_user.user.id,
+			target_id = %user_id,
+			"Unauthorized user delete attempt"
+		);
+		return (
+			StatusCode::FORBIDDEN,
+			Json(AdminErrorResponse {
+				error: "forbidden".to_string(),
+				message: t(locale, "server.api.admin.system_admin_required").to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	// Parse user ID
+	let target_user_id = match parse_user_id(&user_id, locale) {
+		Ok(id) => id,
+		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+	};
+
+	// Cannot delete self
+	if current_user.user.id == target_user_id {
+		return (
+			StatusCode::BAD_REQUEST,
+			Json(AdminErrorResponse {
+				error: "bad_request".to_string(),
+				message: t(locale, "server.api.admin.cannot_delete_self").to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	// Check user exists
+	let target_user = match state.user_repo.get_user_by_id(&target_user_id).await {
+		Ok(Some(user)) => user,
+		Ok(None) => {
+			return (
+				StatusCode::NOT_FOUND,
+				Json(AdminErrorResponse {
+					error: "not_found".to_string(),
+					message: t(locale, "server.api.admin.user_not_found").to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, target_id = %user_id, "Failed to get user");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(AdminErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Soft-delete the user
+	if let Err(e) = state.user_repo.soft_delete_user(&target_user_id).await {
+		tracing::error!(error = %e, target_id = %user_id, "Failed to delete user");
+		return (
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(AdminErrorResponse {
+				error: "internal_error".to_string(),
+				message: t(locale, "server.api.error.internal").to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	tracing::info!(
+		actor_id = %current_user.user.id,
+		target_id = %user_id,
+		target_email = ?target_user.primary_email,
+		"Admin deleted user"
+	);
+
+	// Audit log
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::UserDeleted)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.severity(AuditSeverity::Critical)
+			.resource("user", user_id.clone())
+			.details(json!({
+				"action": "user_deleted_by_admin",
+				"target_email": target_user.primary_email,
+				"target_display_name": target_user.display_name,
+			}))
+			.build()
+	);
+
+	(
+		StatusCode::OK,
+		Json(DeleteUserResponse {
+			message: t(locale, "server.api.admin.user_deleted").to_string(),
+			user_id,
 		}),
 	)
 		.into_response()

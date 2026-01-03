@@ -150,6 +150,14 @@ pub struct AdminErrorResponse {
 	pub message: String,
 }
 
+/// Response for deleting a user.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct DeleteUserResponse {
+	pub message: String,
+	pub user_id: String,
+}
+
 /// Account status for API responses.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "openapi", derive(ToSchema))]

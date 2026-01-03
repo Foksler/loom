@@ -1291,3 +1291,51 @@ msgstr "Mirrors organization not configured. Please create an organization named
 #: API: SCM Mirror - Clone failed
 msgid "server.api.scm.mirror.clone_failed"
 msgstr "Failed to clone remote repository"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - User deleted
+msgid "server.api.admin.user_deleted"
+msgstr "User deleted successfully"
+
+#: API: Admin - Cannot delete self
+msgid "server.api.admin.cannot_delete_self"
+msgstr "Cannot delete your own account"
+
+#: API: Admin - User not found
+msgid "server.api.admin.user_not_found"
+msgstr "User not found"
+
+# ============================================================================
+# Admin Users UI
+# ============================================================================
+
+#: Admin Users - Delete button
+msgid "admin.users.delete"
+msgstr "Delete"
+
+#: Admin Users - Delete user title
+msgid "admin.users.deleteUser"
+msgstr "Delete User"
+
+#: Admin Users - Delete confirm title
+msgid "admin.users.deleteConfirmTitle"
+msgstr "Delete User"
+
+#: Admin Users - Delete confirm message
+msgid "admin.users.deleteConfirmMessage"
+msgstr "Are you sure you want to delete this user? This action will soft-delete the account."
+
+#: Admin Users - Delete success
+msgid "admin.users.deleteSuccess"
+msgstr "User deleted successfully"
+
+#: Admin Users - Cancel button
+msgid "admin.users.cancel"
+msgstr "Cancel"
+
+#: Admin Users - Confirm delete button
+msgid "admin.users.confirm"
+msgstr "Confirm Delete"

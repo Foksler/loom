@@ -887,6 +887,42 @@ msgstr "Tornar Auditor"
 msgid "admin.users.removeAuditor"
 msgstr "Remover Auditor"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "Cancelar"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "Excluir"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "Excluir"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "Tem certeza de que deseja excluir este usuário? Esta ação não pode ser desfeita."
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "Excluir Usuário"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "Você está prestes a personificar este usuário. Todas as ações serão registradas para fins de auditoria."
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "Personificar Usuário"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "Motivo da personificação"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "ex., Investigando ticket de suporte #1234"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "Logs do Servidor"

@@ -92,6 +92,14 @@
       fenixToolchain = fenixPkgs.stable.toolchain;
       # cargo2nix needs a .version attribute on the toolchain
       rustToolchain = fenixToolchain // { version = "1.86.0"; };
+      
+      # Nightly toolchain with rust-src for eBPF compilation
+      ebpfToolchain = fenixPkgs.latest.withComponents [
+        "cargo"
+        "rustc"
+        "rust-src"
+        "llvm-tools-preview"
+      ];
       rustPkgs = pkgsWithCargo2nix.rustBuilder.makePackageSet {
         inherit rustToolchain;
         packageFun = import ./Cargo.nix;
@@ -189,11 +197,28 @@
             loom-server = loom-server-c2n;
             loom-server-binaries = loom-server-binaries-linux-only;
           };
+          
+          # eBPF programs for weaver security monitoring
+          loom-weaver-ebpf-pkg = pkgsWithCargo2nix.callPackage ./infra/pkgs/loom-weaver-ebpf.nix {
+            fenix = fenixPkgs;
+          };
+          
+          # Audit sidecar image for eBPF-based weaver monitoring
+          loom-weaver-audit-sidecar-c2n = (rustPkgs.workspace.loom-weaver-audit-sidecar {});
+          audit-sidecar-image-c2n = pkgsWithCargo2nix.callPackage ./infra/pkgs/audit-sidecar-image.nix {
+            loom-audit-sidecar = loom-weaver-audit-sidecar-c2n;
+            loom-weaver-ebpf = loom-weaver-ebpf-pkg;
+          };
+          
         in
         {
           inherit (pkgs) smtprelay loom-web;
           inherit (pkgs) loom-cli-windows loom-cli-macos loom-cli-linux-aarch64 loom-cli-windows-aarch64;
           inherit (pkgsWithTools) license;
+          
+          # CI tools (pinned to flake's nixpkgs)
+          skopeo = pkgsWithCargo2nix.skopeo;
+          cosign = pkgsWithCargo2nix.cosign;
           
           # cargo2nix tool for regenerating Cargo.nix
           cargo2nix = cargo2nix.packages.${system}.cargo2nix;
@@ -211,6 +236,10 @@
           
           weaver-image = weaver-image-c2n;
           loom-server-image = loom-server-image-c2n;
+          audit-sidecar-image = audit-sidecar-image-c2n;
+          loom-weaver-audit-sidecar = loom-weaver-audit-sidecar-c2n;
+          loom-weaver-ebpf-common = (rustPkgs.workspace.loom-weaver-ebpf-common {});
+          loom-weaver-ebpf = loom-weaver-ebpf-pkg;
           
           # cargo2nix-based granular crate builds (with -c2n suffix for explicit access)
           inherit loom-cli-c2n loom-server-c2n;
@@ -250,6 +279,7 @@
           loom-server-scm-mirror-c2n = (rustPkgs.workspace.loom-server-scm-mirror {});
           loom-server-smtp-c2n = (rustPkgs.workspace.loom-server-smtp {});
           loom-server-weaver-c2n = (rustPkgs.workspace.loom-server-weaver {});
+          loom-weaver-ebpf-common-c2n = (rustPkgs.workspace.loom-weaver-ebpf-common {});
           loom-common-spool-c2n = (rustPkgs.workspace.loom-common-spool {});
           loom-cli-spool-c2n = (rustPkgs.workspace.loom-cli-spool {});
           loom-redact-c2n = (rustPkgs.workspace.loom-redact {});

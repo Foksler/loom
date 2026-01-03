@@ -1295,3 +1295,51 @@ msgstr "أنت لست عضوًا في هذه المنظمة"
 #: API: Weaver - Membership check failed
 msgid "server.api.weaver.membership_check_failed"
 msgstr "فشل التحقق من عضوية المنظمة"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - User deleted
+msgid "server.api.admin.user_deleted"
+msgstr "تم حذف المستخدم بنجاح"
+
+#: API: Admin - Cannot delete self
+msgid "server.api.admin.cannot_delete_self"
+msgstr "لا يمكنك حذف حسابك الخاص"
+
+#: API: Admin - User not found
+msgid "server.api.admin.user_not_found"
+msgstr "المستخدم غير موجود"
+
+# ============================================================================
+# Admin Users UI
+# ============================================================================
+
+#: Admin Users - Delete button
+msgid "admin.users.delete"
+msgstr "حذف"
+
+#: Admin Users - Delete user title
+msgid "admin.users.deleteUser"
+msgstr "حذف المستخدم"
+
+#: Admin Users - Delete confirm title
+msgid "admin.users.deleteConfirmTitle"
+msgstr "حذف المستخدم"
+
+#: Admin Users - Delete confirm message
+msgid "admin.users.deleteConfirmMessage"
+msgstr "هل أنت متأكد أنك تريد حذف هذا المستخدم؟ سيؤدي هذا الإجراء إلى حذف الحساب بشكل مؤقت."
+
+#: Admin Users - Delete success
+msgid "admin.users.deleteSuccess"
+msgstr "تم حذف المستخدم بنجاح"
+
+#: Admin Users - Cancel button
+msgid "admin.users.cancel"
+msgstr "إلغاء"
+
+#: Admin Users - Confirm delete button
+msgid "admin.users.confirm"
+msgstr "تأكيد الحذف"

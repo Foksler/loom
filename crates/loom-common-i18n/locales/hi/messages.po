@@ -1299,3 +1299,51 @@ msgstr "जॉब {job_id} सक्षम की गई"
 #: Jobs: API - Job disabled
 msgid "server.jobs.success.disabled"
 msgstr "जॉब {job_id} अक्षम की गई"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - User deleted
+msgid "server.api.admin.user_deleted"
+msgstr "उपयोगकर्ता सफलतापूर्वक हटाया गया"
+
+#: API: Admin - Cannot delete self
+msgid "server.api.admin.cannot_delete_self"
+msgstr "अपना खाता नहीं हटा सकते"
+
+#: API: Admin - User not found
+msgid "server.api.admin.user_not_found"
+msgstr "उपयोगकर्ता नहीं मिला"
+
+# ============================================================================
+# Admin Users UI
+# ============================================================================
+
+#: Admin Users - Delete button
+msgid "admin.users.delete"
+msgstr "हटाएं"
+
+#: Admin Users - Delete user title
+msgid "admin.users.deleteUser"
+msgstr "उपयोगकर्ता हटाएं"
+
+#: Admin Users - Delete confirm title
+msgid "admin.users.deleteConfirmTitle"
+msgstr "उपयोगकर्ता हटाएं"
+
+#: Admin Users - Delete confirm message
+msgid "admin.users.deleteConfirmMessage"
+msgstr "क्या आप वाकई इस उपयोगकर्ता को हटाना चाहते हैं? यह क्रिया खाते को सॉफ्ट-डिलीट करेगी।"
+
+#: Admin Users - Delete success
+msgid "admin.users.deleteSuccess"
+msgstr "उपयोगकर्ता सफलतापूर्वक हटाया गया"
+
+#: Admin Users - Cancel button
+msgid "admin.users.cancel"
+msgstr "रद्द करें"
+
+#: Admin Users - Confirm delete button
+msgid "admin.users.confirm"
+msgstr "हटाने की पुष्टि करें"
