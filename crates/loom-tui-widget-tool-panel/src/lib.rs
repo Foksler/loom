@@ -3,6 +3,7 @@
 
 use std::collections::HashSet;
 
+use loom_tui_core::TextDirection;
 use ratatui::{
 	buffer::Buffer,
 	layout::Rect,
@@ -103,6 +104,7 @@ pub struct ToolPanel {
 	executions: Vec<ToolExecution>,
 	title: String,
 	style: Style,
+	direction: TextDirection,
 }
 
 impl ToolPanel {
@@ -111,6 +113,7 @@ impl ToolPanel {
 			executions,
 			title: "Tools".to_string(),
 			style: Style::default(),
+			direction: TextDirection::Ltr,
 		}
 	}
 
@@ -121,6 +124,11 @@ impl ToolPanel {
 
 	pub fn style(mut self, style: Style) -> Self {
 		self.style = style;
+		self
+	}
+
+	pub fn direction(mut self, direction: TextDirection) -> Self {
+		self.direction = direction;
 		self
 	}
 }
@@ -146,6 +154,8 @@ impl StatefulWidget for ToolPanel {
 			}
 		}
 
+		let is_rtl = self.direction.is_rtl();
+
 		for (idx, execution) in self.executions.iter().enumerate().skip(state.scroll_offset) {
 			if y >= max_y {
 				break;
@@ -165,7 +175,11 @@ impl StatefulWidget for ToolPanel {
 				"  "
 			};
 
-			let header = format!("{}{} {}{}", marker, icon, execution.name, duration_str);
+			let header = if is_rtl {
+				format!("{} {} {} {}", duration_str.trim(), execution.name, icon, marker.trim())
+			} else {
+				format!("{}{} {}{}", marker, icon, execution.name, duration_str)
+			};
 			let header_style = status_style(execution.status);
 			let header_line = Line::from(vec![Span::styled(&header, header_style)]);
 			buf.set_line(area.x, y, &header_line, area.width);

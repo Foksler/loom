@@ -7,9 +7,35 @@ use ratatui::layout::Rect;
 use loom_tui_core::{Action, ComponentError, Event, FocusState};
 use loom_tui_theme::Theme;
 
+pub use loom_tui_core::{LocaleContext, TextDirection};
+pub use loom_tui_theme::LayoutDirection;
+
 pub struct RenderContext<'a> {
 	pub theme: &'a Theme,
 	pub focus: &'a FocusState,
+	pub locale: &'a LocaleContext,
+}
+
+impl<'a> RenderContext<'a> {
+	pub fn new(theme: &'a Theme, focus: &'a FocusState, locale: &'a LocaleContext) -> Self {
+		Self { theme, focus, locale }
+	}
+
+	pub fn direction(&self) -> TextDirection {
+		self.locale.direction
+	}
+
+	pub fn layout(&self) -> LayoutDirection {
+		LayoutDirection::new(self.locale.direction)
+	}
+
+	pub fn is_rtl(&self) -> bool {
+		self.locale.is_rtl()
+	}
+
+	pub fn t(&self, key: &str) -> String {
+		self.locale.t(key)
+	}
 }
 
 /// Core trait for TUI components.

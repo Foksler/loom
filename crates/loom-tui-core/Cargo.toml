@@ -13,4 +13,5 @@ description = "Core TUI types and event handling for Loom"
 [dependencies]
 async-trait = { workspace = true }
 crossterm = "0.29"
+loom-common-i18n = { path = "../loom-common-i18n" }
 thiserror = { workspace = true }

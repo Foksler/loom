@@ -7,6 +7,103 @@ use async_trait::async_trait;
 use crossterm::event::{KeyEvent, MouseEvent};
 use thiserror::Error;
 
+pub use loom_common_i18n::{available_locales, is_rtl, resolve_locale, t, t_fmt, Direction, LocaleInfo};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum TextDirection {
+	#[default]
+	Ltr,
+	Rtl,
+}
+
+impl From<loom_common_i18n::Direction> for TextDirection {
+	fn from(dir: loom_common_i18n::Direction) -> Self {
+		match dir {
+			loom_common_i18n::Direction::Ltr => TextDirection::Ltr,
+			loom_common_i18n::Direction::Rtl => TextDirection::Rtl,
+		}
+	}
+}
+
+impl TextDirection {
+	pub fn from_locale(locale: &str) -> Self {
+		if loom_common_i18n::is_rtl(locale) {
+			TextDirection::Rtl
+		} else {
+			TextDirection::Ltr
+		}
+	}
+
+	pub fn is_rtl(&self) -> bool {
+		matches!(self, TextDirection::Rtl)
+	}
+
+	pub fn is_ltr(&self) -> bool {
+		matches!(self, TextDirection::Ltr)
+	}
+
+	/// Mirror a horizontal position for RTL
+	pub fn mirror_x(&self, x: u16, width: u16) -> u16 {
+		match self {
+			TextDirection::Ltr => x,
+			TextDirection::Rtl => width.saturating_sub(x + 1),
+		}
+	}
+
+	/// Get alignment start position
+	pub fn align_start(&self, area_width: u16, content_width: u16) -> u16 {
+		match self {
+			TextDirection::Ltr => 0,
+			TextDirection::Rtl => area_width.saturating_sub(content_width),
+		}
+	}
+
+	/// Get alignment end position
+	pub fn align_end(&self, area_width: u16, content_width: u16) -> u16 {
+		match self {
+			TextDirection::Ltr => area_width.saturating_sub(content_width),
+			TextDirection::Rtl => 0,
+		}
+	}
+}
+
+#[derive(Debug, Clone)]
+pub struct LocaleContext {
+	pub locale: String,
+	pub direction: TextDirection,
+}
+
+impl Default for LocaleContext {
+	fn default() -> Self {
+		Self {
+			locale: "en".to_string(),
+			direction: TextDirection::Ltr,
+		}
+	}
+}
+
+impl LocaleContext {
+	pub fn new(locale: impl Into<String>) -> Self {
+		let locale = locale.into();
+		let direction = TextDirection::from_locale(&locale);
+		Self { locale, direction }
+	}
+
+	pub fn is_rtl(&self) -> bool {
+		self.direction.is_rtl()
+	}
+
+	/// Translate a key using this context's locale
+	pub fn t(&self, key: &str) -> String {
+		loom_common_i18n::t(&self.locale, key)
+	}
+
+	/// Translate a key with format variables
+	pub fn t_fmt(&self, key: &str, vars: &[(&str, &str)]) -> String {
+		loom_common_i18n::t_fmt(&self.locale, key, vars)
+	}
+}
+
 /// Result type alias using ComponentError as the default error type.
 pub type Result<T, E = ComponentError> = std::result::Result<T, E>;
 

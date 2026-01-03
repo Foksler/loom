@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+use loom_tui_core::TextDirection;
 use loom_tui_theme::Theme;
 use ratatui::{
 	buffer::Buffer,
@@ -35,6 +36,7 @@ pub struct Modal {
 	theme: Theme,
 	track_style: Style,
 	thumb_style: Style,
+	direction: TextDirection,
 }
 
 impl Modal {
@@ -48,6 +50,7 @@ impl Modal {
 			theme: Theme::default(),
 			track_style: Style::default(),
 			thumb_style: Style::default(),
+			direction: TextDirection::default(),
 		}
 	}
 
@@ -79,6 +82,11 @@ impl Modal {
 
 	pub fn thumb_style(mut self, style: Style) -> Self {
 		self.thumb_style = style;
+		self
+	}
+
+	pub fn direction(mut self, direction: TextDirection) -> Self {
+		self.direction = direction;
 		self
 	}
 
@@ -132,6 +140,8 @@ impl StatefulWidget for Modal {
 			return;
 		}
 
+		let is_rtl = self.direction.is_rtl();
+
 		for y in area.y..area.y + area.height {
 			for x in area.x..area.x + area.width {
 				if x < modal_area.x
@@ -146,11 +156,13 @@ impl StatefulWidget for Modal {
 
 		Clear.render(modal_area, buf);
 
+		let title_alignment = if is_rtl { Alignment::Right } else { Alignment::Left };
+
 		let block = Block::default()
 			.borders(Borders::ALL)
 			.border_style(self.theme.borders.normal)
 			.title(self.title.clone())
-			.title_alignment(Alignment::Center)
+			.title_alignment(title_alignment)
 			.style(Style::default().bg(self.theme.colors.background).fg(self.theme.colors.text));
 
 		let inner_area = block.inner(modal_area);
@@ -165,8 +177,10 @@ impl StatefulWidget for Modal {
 
 		if content_height > 0 {
 			let content_area = Rect::new(inner_area.x, inner_area.y, inner_area.width, content_height);
+			let content_alignment = if is_rtl { Alignment::Right } else { Alignment::Left };
 			let content = Paragraph::new(self.content.clone())
 				.style(self.theme.text.normal)
+				.alignment(content_alignment)
 				.wrap(Wrap { trim: true });
 			content.render(content_area, buf);
 		}
@@ -175,8 +189,19 @@ impl StatefulWidget for Modal {
 			let button_y = inner_area.y + inner_area.height - 1;
 			let mut button_strs: Vec<String> = Vec::new();
 
-			for (i, btn) in self.buttons.iter().enumerate() {
-				let is_selected = i == state.selected_button;
+			let buttons_to_render: Vec<_> = if is_rtl {
+				self.buttons.iter().rev().collect()
+			} else {
+				self.buttons.iter().collect()
+			};
+
+			for (i, btn) in buttons_to_render.iter().enumerate() {
+				let visual_selected = if is_rtl && !self.buttons.is_empty() {
+					self.buttons.len() - 1 - state.selected_button
+				} else {
+					state.selected_button
+				};
+				let is_selected = i == visual_selected;
 				let label = if is_selected {
 					format!("[ {} ]", btn.label)
 				} else {
@@ -190,8 +215,13 @@ impl StatefulWidget for Modal {
 
 			let mut x = start_x;
 			for (i, label) in button_strs.iter().enumerate() {
-				let is_selected = i == state.selected_button;
-				let is_primary = self.buttons[i].is_primary;
+				let visual_selected = if is_rtl && !self.buttons.is_empty() {
+					self.buttons.len() - 1 - state.selected_button
+				} else {
+					state.selected_button
+				};
+				let is_selected = i == visual_selected;
+				let is_primary = buttons_to_render[i].is_primary;
 
 				let style = if is_selected {
 					if is_primary {
@@ -284,5 +314,14 @@ mod tests {
 
 		state.select_prev(0);
 		assert_eq!(state.selected(), 0);
+	}
+
+	#[test]
+	fn test_modal_direction() {
+		let modal = Modal::new("Test").direction(TextDirection::Rtl);
+		assert!(modal.direction.is_rtl());
+
+		let modal_ltr = Modal::new("Test").direction(TextDirection::Ltr);
+		assert!(!modal_ltr.direction.is_rtl());
 	}
 }

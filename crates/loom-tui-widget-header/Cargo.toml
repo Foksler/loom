@@ -12,6 +12,7 @@ description = "Header widget for Loom TUI"
 
 [dependencies]
 ratatui = "0.30"
+loom-tui-core = { path = "../loom-tui-core" }
 loom-tui-theme = { path = "../loom-tui-theme" }
 unicode-width = "0.2"
 

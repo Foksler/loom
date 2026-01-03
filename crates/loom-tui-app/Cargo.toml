@@ -24,6 +24,7 @@ tracing-subscriber = { workspace = true }
 
 loom-tui-core = { path = "../loom-tui-core" }
 loom-tui-theme = { path = "../loom-tui-theme" }
+loom-common-i18n = { path = "../loom-common-i18n" }
 loom-tui-component = { path = "../loom-tui-component" }
 loom-tui-widget-spinner = { path = "../loom-tui-widget-spinner" }
 loom-tui-widget-status-bar = { path = "../loom-tui-widget-status-bar" }

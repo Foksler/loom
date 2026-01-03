@@ -4,10 +4,11 @@
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
+use loom_tui_core::TextDirection;
 use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag, TagEnd};
 use ratatui::{
 	buffer::Buffer,
-	layout::Rect,
+	layout::{Alignment, Rect},
 	style::{Modifier, Style},
 	text::{Line, Span},
 	widgets::{Paragraph, StatefulWidget, Widget, Wrap},
@@ -37,10 +38,12 @@ impl MarkdownState {
 		&mut self,
 		content: &str,
 		_style: Style,
+		direction: TextDirection,
 		compute: impl FnOnce() -> Vec<Line<'static>>,
 	) -> Vec<Line<'static>> {
 		let mut hasher = DefaultHasher::new();
 		content.hash(&mut hasher);
+		direction.is_rtl().hash(&mut hasher);
 		let hash = hasher.finish();
 
 		if self.cached_hash == hash {
@@ -60,6 +63,7 @@ impl MarkdownState {
 pub struct Markdown {
 	content: String,
 	style: Style,
+	direction: TextDirection,
 }
 
 impl Markdown {
@@ -67,11 +71,17 @@ impl Markdown {
 		Self {
 			content: content.into(),
 			style: Style::default(),
+			direction: TextDirection::default(),
 		}
 	}
 
 	pub fn style(mut self, style: Style) -> Self {
 		self.style = style;
+		self
+	}
+
+	pub fn direction(mut self, direction: TextDirection) -> Self {
+		self.direction = direction;
 		self
 	}
 
@@ -91,6 +101,8 @@ impl Markdown {
 		let mut in_table_cell = false;
 		let mut current_cell_text = String::new();
 
+		let is_rtl = self.direction.is_rtl();
+
 		let options = Options::all();
 		let parser = Parser::new_ext(&self.content, options);
 
@@ -101,11 +113,19 @@ impl Markdown {
 						let header_style = self.style.add_modifier(Modifier::BOLD);
 						style_stack.push(header_style);
 						let prefix = "#".repeat(level as usize) + " ";
-						current_spans.push(Span::styled(prefix, header_style));
+						if is_rtl {
+							current_spans.push(Span::styled(prefix, header_style));
+						} else {
+							current_spans.push(Span::styled(prefix, header_style));
+						}
 					}
 					Tag::Paragraph => {
 						if in_block_quote {
-							current_spans.push(Span::styled("> ", self.style));
+							if is_rtl {
+								current_spans.push(Span::styled(" <", self.style));
+							} else {
+								current_spans.push(Span::styled("> ", self.style));
+							}
 						}
 					}
 					Tag::CodeBlock(kind) => {
@@ -133,15 +153,27 @@ impl Markdown {
 						if let Some(list_type) = list_stack.last_mut() {
 							match list_type {
 								Some(num) => {
-									current_spans.push(Span::styled(
-										format!("{}{}. ", indent, num),
-										self.style,
-									));
+									if is_rtl {
+										current_spans.push(Span::styled(
+											format!(" .{}{}", num, indent),
+											self.style,
+										));
+									} else {
+										current_spans.push(Span::styled(
+											format!("{}{}. ", indent, num),
+											self.style,
+										));
+									}
 									*num += 1;
 								}
 								None => {
-									current_spans
-										.push(Span::styled(format!("{}• ", indent), self.style));
+									if is_rtl {
+										current_spans
+											.push(Span::styled(format!(" •{}", indent), self.style));
+									} else {
+										current_spans
+											.push(Span::styled(format!("{}• ", indent), self.style));
+									}
 								}
 							}
 						}
@@ -246,7 +278,11 @@ impl Markdown {
 						style_stack.pop();
 						if let Some(url) = link_stack.pop() {
 							let dim_style = self.style.add_modifier(Modifier::DIM);
-							current_spans.push(Span::styled(format!(" ({})", url), dim_style));
+							if is_rtl {
+								current_spans.push(Span::styled(format!("({}) ", url), dim_style));
+							} else {
+								current_spans.push(Span::styled(format!(" ({})", url), dim_style));
+							}
 						}
 					}
 					TagEnd::BlockQuote(_) => {
@@ -340,11 +376,19 @@ impl StatefulWidget for Markdown {
 	fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
 		let content = self.content.clone();
 		let style = self.style;
-		let lines = state.get_or_compute_lines(&content, style, || self.parse_to_lines());
+		let direction = self.direction;
+		let lines = state.get_or_compute_lines(&content, style, direction, || self.parse_to_lines());
+
+		let alignment = if direction.is_rtl() {
+			Alignment::Right
+		} else {
+			Alignment::Left
+		};
 
 		let paragraph = Paragraph::new(lines)
 			.style(style)
 			.wrap(Wrap { trim: false })
+			.alignment(alignment)
 			.scroll((state.scroll_offset as u16, 0));
 		paragraph.render(area, buf);
 	}
@@ -460,14 +504,39 @@ mod tests {
 		let md = Markdown::new("# Test");
 		let content = md.content.clone();
 		let style = md.style;
+		let direction = md.direction;
 
-		let lines1 = state.get_or_compute_lines(&content, style, || md.parse_to_lines());
+		let lines1 = state.get_or_compute_lines(&content, style, direction, || md.parse_to_lines());
 		assert!(state.cached_lines.is_some());
 
 		let hash_before = state.cached_hash;
 		let md2 = Markdown::new("# Test");
-		let lines2 = state.get_or_compute_lines(&content, style, || md2.parse_to_lines());
+		let lines2 = state.get_or_compute_lines(&content, style, direction, || md2.parse_to_lines());
 		assert_eq!(hash_before, state.cached_hash);
 		assert_eq!(lines1.len(), lines2.len());
+	}
+
+	#[test]
+	fn test_direction_builder() {
+		let md = Markdown::new("# Hello").direction(TextDirection::Rtl);
+		assert!(md.direction.is_rtl());
+	}
+
+	#[test]
+	fn test_rtl_bullet_list() {
+		let md = Markdown::new("- item").direction(TextDirection::Rtl);
+		let lines = md.parse_to_lines();
+		assert!(lines.iter().any(|l| {
+			l.spans.iter().any(|s| s.content.contains(" •"))
+		}));
+	}
+
+	#[test]
+	fn test_rtl_block_quote() {
+		let md = Markdown::new("> quoted").direction(TextDirection::Rtl);
+		let lines = md.parse_to_lines();
+		assert!(lines.iter().any(|l| {
+			l.spans.iter().any(|s| s.content.contains("<"))
+		}));
 	}
 }

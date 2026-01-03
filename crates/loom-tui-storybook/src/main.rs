@@ -5,6 +5,7 @@ use std::time::Duration;
 
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent};
+use loom_tui_core::LocaleContext;
 use loom_tui_storybook::{run_tui_app, stories, StoryRegistry, TuiApp};
 use ratatui::{
 	layout::{Constraint, Direction, Layout, Rect},
@@ -26,6 +27,7 @@ struct App {
 	story_cursor: usize,
 	variant_cursor: usize,
 	should_quit: bool,
+	locale: LocaleContext,
 }
 
 impl App {
@@ -39,6 +41,7 @@ impl App {
 			story_cursor: 0,
 			variant_cursor: 0,
 			should_quit: false,
+			locale: LocaleContext::default(),
 		}
 	}
 
@@ -49,8 +52,19 @@ impl App {
 			KeyCode::Char('k') | KeyCode::Up => self.move_up(),
 			KeyCode::Enter | KeyCode::Char('l') | KeyCode::Right => self.enter(),
 			KeyCode::Esc | KeyCode::Char('h') | KeyCode::Left => self.back(),
+			KeyCode::Char('L') => self.cycle_locale(),
 			_ => {}
 		}
+	}
+
+	fn cycle_locale(&mut self) {
+		let new_locale = match self.locale.locale.as_str() {
+			"en" => "ar",
+			"ar" => "he",
+			"he" => "en",
+			_ => "en",
+		};
+		self.locale = LocaleContext::new(new_locale);
 	}
 
 	fn move_down(&mut self) {
@@ -242,7 +256,8 @@ fn draw_sidebar(frame: &mut Frame, area: Rect, app: &App) {
 	}
 
 	let help_area = Rect::new(area.x, area.y + area.height.saturating_sub(1), area.width, 1);
-	let help_text = " j/k:nav  ↵:select  esc:back  q:quit ";
+	let locale_indicator = format!("[{}]", app.locale.locale);
+	let help_text = format!(" j/k:nav  ↵:select  esc:back  L:locale  q:quit  {} ", locale_indicator);
 	let help = Paragraph::new(help_text).style(Style::default().fg(Color::DarkGray));
 	frame.render_widget(help, help_area);
 }

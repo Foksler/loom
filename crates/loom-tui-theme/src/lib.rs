@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+use loom_tui_core::TextDirection;
 use ratatui::style::{Color, Modifier, Style};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -203,5 +204,78 @@ impl Theme {
 
 	pub fn success_text(&self) -> Style {
 		self.text.success
+	}
+
+	pub fn border_style_for(&self, focused: bool, _direction: TextDirection) -> Style {
+		if focused {
+			self.borders.focused
+		} else {
+			self.borders.normal
+		}
+	}
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LayoutDirection {
+	pub direction: TextDirection,
+}
+
+impl Default for LayoutDirection {
+	fn default() -> Self {
+		Self {
+			direction: TextDirection::Ltr,
+		}
+	}
+}
+
+impl LayoutDirection {
+	pub fn new(direction: TextDirection) -> Self {
+		Self { direction }
+	}
+
+	pub fn from_locale(locale: &str) -> Self {
+		Self {
+			direction: TextDirection::from_locale(locale),
+		}
+	}
+
+	pub fn is_rtl(&self) -> bool {
+		self.direction.is_rtl()
+	}
+
+	pub fn start_x(&self, area_x: u16, area_width: u16, content_width: u16) -> u16 {
+		if self.is_rtl() {
+			area_x + area_width.saturating_sub(content_width)
+		} else {
+			area_x
+		}
+	}
+
+	pub fn end_x(&self, area_x: u16, area_width: u16, content_width: u16) -> u16 {
+		if self.is_rtl() {
+			area_x
+		} else {
+			area_x + area_width.saturating_sub(content_width)
+		}
+	}
+
+	pub fn split_horizontal(
+		&self,
+		area: ratatui::layout::Rect,
+		start_width: u16,
+	) -> (ratatui::layout::Rect, ratatui::layout::Rect) {
+		use ratatui::layout::Rect;
+
+		let end_width = area.width.saturating_sub(start_width);
+
+		if self.is_rtl() {
+			let end_area = Rect::new(area.x, area.y, end_width, area.height);
+			let start_area = Rect::new(area.x + end_width, area.y, start_width, area.height);
+			(start_area, end_area)
+		} else {
+			let start_area = Rect::new(area.x, area.y, start_width, area.height);
+			let end_area = Rect::new(area.x + start_width, area.y, end_width, area.height);
+			(start_area, end_area)
+		}
 	}
 }

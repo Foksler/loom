@@ -13,6 +13,7 @@ description = "Markdown rendering widget for Loom TUI"
 [dependencies]
 ratatui = "0.30"
 pulldown-cmark = "0.12"
+loom-tui-core = { path = "../loom-tui-core" }
 loom-tui-theme = { path = "../loom-tui-theme" }
 
 [dev-dependencies]

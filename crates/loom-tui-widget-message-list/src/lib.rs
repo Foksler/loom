@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+use loom_tui_core::TextDirection;
 use ratatui::{
 	buffer::Buffer,
 	layout::Rect,
@@ -120,6 +121,7 @@ pub struct MessageList {
 	header_style: Style,
 	timestamp_style: Style,
 	selected_style: Style,
+	direction: TextDirection,
 }
 
 impl MessageList {
@@ -130,6 +132,7 @@ impl MessageList {
 			header_style: Style::default(),
 			timestamp_style: Style::default().add_modifier(Modifier::DIM),
 			selected_style: Style::default(),
+			direction: TextDirection::default(),
 		}
 	}
 
@@ -152,6 +155,11 @@ impl MessageList {
 		self.selected_style = style;
 		self
 	}
+
+	pub fn direction(mut self, direction: TextDirection) -> Self {
+		self.direction = direction;
+		self
+	}
 }
 
 impl StatefulWidget for MessageList {
@@ -170,6 +178,7 @@ impl StatefulWidget for MessageList {
 			state.scroll_offset = 0;
 		}
 
+		let is_rtl = self.direction.is_rtl();
 		let mut y = area.y;
 		let max_y = area.y + area.height;
 		let mut prev_role: Option<MessageRole> = None;
@@ -187,28 +196,49 @@ impl StatefulWidget for MessageList {
 
 			if !same_as_prev {
 				let role_label = message.role.label();
-				let header_span = Span::styled(format!("{}: ", role_label), self.header_style);
 
-				if let Some(ts) = &message.timestamp {
-					let header_len = role_label.len() + 2;
-					let ts_len = ts.len();
-					let total_len = header_len + ts_len;
-					let padding = if (area.width as usize) > total_len {
-						area.width as usize - total_len
+				let header_line = if is_rtl {
+					let role_span = Span::styled(format!(" :{}", role_label), self.header_style);
+					if let Some(ts) = &message.timestamp {
+						let ts_span = Span::styled(format!("[{}]", ts), self.timestamp_style);
+						let ts_len = ts.len() + 2;
+						let role_len = role_label.len() + 2;
+						let total_len = ts_len + role_len;
+						let padding = if (area.width as usize) > total_len {
+							area.width as usize - total_len
+						} else {
+							0
+						};
+						Line::from(vec![ts_span, Span::raw(" ".repeat(padding)), role_span])
 					} else {
-						0
-					};
-
-					let header_line = Line::from(vec![
-						header_span,
-						Span::raw(" ".repeat(padding)),
-						Span::styled(ts.clone(), self.timestamp_style),
-					]);
-					buf.set_line(area.x, y, &header_line, area.width);
+						let padding = if (area.width as usize) > role_label.len() + 2 {
+							area.width as usize - role_label.len() - 2
+						} else {
+							0
+						};
+						Line::from(vec![Span::raw(" ".repeat(padding)), role_span])
+					}
 				} else {
-					let header_line = Line::from(vec![header_span]);
-					buf.set_line(area.x, y, &header_line, area.width);
-				}
+					let header_span = Span::styled(format!("{}: ", role_label), self.header_style);
+					if let Some(ts) = &message.timestamp {
+						let header_len = role_label.len() + 2;
+						let ts_len = ts.len();
+						let total_len = header_len + ts_len;
+						let padding = if (area.width as usize) > total_len {
+							area.width as usize - total_len
+						} else {
+							0
+						};
+						Line::from(vec![
+							header_span,
+							Span::raw(" ".repeat(padding)),
+							Span::styled(ts.clone(), self.timestamp_style),
+						])
+					} else {
+						Line::from(vec![header_span])
+					}
+				};
+				buf.set_line(area.x, y, &header_line, area.width);
 				y += 1;
 
 				if y >= max_y {
@@ -223,9 +253,22 @@ impl StatefulWidget for MessageList {
 							break;
 						}
 
-						let indent = "  ";
-						let content_line =
-							Line::from(vec![Span::styled(format!("{}{}", indent, line), base_style)]);
+						let content_line = if is_rtl {
+							let line_len = line.len() + 2;
+							let padding = if (area.width as usize) > line_len {
+								area.width as usize - line_len
+							} else {
+								0
+							};
+							Line::from(vec![
+								Span::raw(" ".repeat(padding)),
+								Span::styled(line.to_string(), base_style),
+								Span::raw("  "),
+							])
+						} else {
+							let indent = "  ";
+							Line::from(vec![Span::styled(format!("{}{}", indent, line), base_style)])
+						};
 						buf.set_line(area.x, y, &content_line, area.width);
 						y += 1;
 					}
@@ -236,13 +279,34 @@ impl StatefulWidget for MessageList {
 							break;
 						}
 
-						let mut spans = vec![Span::raw("  ")];
-						for span in line.spans.iter() {
-							let mut styled_span = span.clone();
-							styled_span.style = styled_span.style.patch(base_style);
-							spans.push(styled_span);
-						}
-						let content_line = Line::from(spans);
+						let content_line = if is_rtl {
+							let mut spans: Vec<Span> = Vec::new();
+							let mut content_width: usize = 0;
+							for span in line.spans.iter() {
+								content_width += span.content.len();
+								let mut styled_span = span.clone();
+								styled_span.style = styled_span.style.patch(base_style);
+								spans.push(styled_span);
+							}
+							content_width += 2;
+							let padding = if (area.width as usize) > content_width {
+								area.width as usize - content_width
+							} else {
+								0
+							};
+							let mut result = vec![Span::raw(" ".repeat(padding))];
+							result.extend(spans);
+							result.push(Span::raw("  "));
+							Line::from(result)
+						} else {
+							let mut spans = vec![Span::raw("  ")];
+							for span in line.spans.iter() {
+								let mut styled_span = span.clone();
+								styled_span.style = styled_span.style.patch(base_style);
+								spans.push(styled_span);
+							}
+							Line::from(spans)
+						};
 						buf.set_line(area.x, y, &content_line, area.width);
 						y += 1;
 					}

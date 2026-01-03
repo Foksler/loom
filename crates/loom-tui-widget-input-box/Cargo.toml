@@ -16,6 +16,7 @@ crossterm = "0.29"
 unicode-segmentation = "1.11"
 loom-tui-core = { path = "../loom-tui-core" }
 loom-tui-theme = { path = "../loom-tui-theme" }
+loom-tui-component = { path = "../loom-tui-component" }
 
 [dev-dependencies]
 loom-tui-testing = { path = "../loom-tui-testing" }

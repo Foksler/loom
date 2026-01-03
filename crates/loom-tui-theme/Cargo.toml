@@ -11,4 +11,5 @@ repository.workspace = true
 description = "Theming system for Loom TUI"
 
 [dependencies]
+loom-tui-core = { path = "../loom-tui-core" }
 ratatui = "0.30"

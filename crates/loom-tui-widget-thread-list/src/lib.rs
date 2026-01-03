@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+use loom_tui_core::TextDirection;
 use ratatui::{
 	buffer::Buffer,
 	layout::Rect,
@@ -133,6 +134,7 @@ pub struct ThreadList {
 	threads: Vec<ThreadItem>,
 	style: Style,
 	focused: bool,
+	direction: TextDirection,
 }
 
 impl ThreadList {
@@ -141,6 +143,7 @@ impl ThreadList {
 			threads,
 			style: Style::default(),
 			focused: false,
+			direction: TextDirection::default(),
 		}
 	}
 
@@ -151,6 +154,11 @@ impl ThreadList {
 
 	pub fn focused(mut self, focused: bool) -> Self {
 		self.focused = focused;
+		self
+	}
+
+	pub fn direction(mut self, direction: TextDirection) -> Self {
+		self.direction = direction;
 		self
 	}
 }
@@ -190,7 +198,12 @@ impl StatefulWidget for ThreadList {
 				self.style
 			};
 
-			let unread_indicator = if thread.unread { "● " } else { "  " };
+			let is_rtl = self.direction.is_rtl();
+			let unread_indicator = if thread.unread {
+				if is_rtl { " ●" } else { "● " }
+			} else {
+				"  "
+			};
 			let title_style = if thread.unread {
 				line_style.add_modifier(Modifier::BOLD)
 			} else {
@@ -205,12 +218,21 @@ impl StatefulWidget for ThreadList {
 
 			let truncated_title_width = UnicodeWidthStr::width(truncated_title.as_str());
 			let padding = title_width.saturating_sub(unread_width + truncated_title_width + timestamp_width);
-			let title_line = Line::from(vec![
-				Span::styled(unread_indicator, title_style),
-				Span::styled(&truncated_title, title_style),
-				Span::styled(" ".repeat(padding), line_style),
-				Span::styled(&thread.timestamp, line_style),
-			]);
+			let title_line = if is_rtl {
+				Line::from(vec![
+					Span::styled(&thread.timestamp, line_style),
+					Span::styled(" ".repeat(padding), line_style),
+					Span::styled(&truncated_title, title_style),
+					Span::styled(unread_indicator, title_style),
+				])
+			} else {
+				Line::from(vec![
+					Span::styled(unread_indicator, title_style),
+					Span::styled(&truncated_title, title_style),
+					Span::styled(" ".repeat(padding), line_style),
+					Span::styled(&thread.timestamp, line_style),
+				])
+			};
 			buf.set_line(area.x, y, &title_line, area.width);
 			y += 1;
 

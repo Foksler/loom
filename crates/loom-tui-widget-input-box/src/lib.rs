@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+use loom_tui_core::TextDirection;
 use ratatui::{
 	buffer::Buffer,
 	layout::Rect,
@@ -185,6 +186,7 @@ pub struct InputBox {
 	style: Style,
 	cursor_style: Style,
 	focused: bool,
+	direction: TextDirection,
 }
 
 impl Default for InputBox {
@@ -200,6 +202,7 @@ impl InputBox {
 			style: Style::default(),
 			cursor_style: Style::default().bg(ratatui::style::Color::White).fg(ratatui::style::Color::Black),
 			focused: false,
+			direction: TextDirection::Ltr,
 		}
 	}
 
@@ -222,6 +225,11 @@ impl InputBox {
 		self.focused = focused;
 		self
 	}
+
+	pub fn direction(mut self, direction: TextDirection) -> Self {
+		self.direction = direction;
+		self
+	}
 }
 
 impl StatefulWidget for InputBox {
@@ -233,14 +241,26 @@ impl StatefulWidget for InputBox {
 		}
 
 		let width = area.width as usize;
+		let is_rtl = self.direction.is_rtl();
 
 		if state.content.is_empty() {
 			if let Some(ref placeholder) = self.placeholder {
 				let placeholder_style = self.style.fg(ratatui::style::Color::DarkGray);
 				let display: String = placeholder.graphemes(true).take(width).collect();
-				buf.set_string(area.x, area.y, &display, placeholder_style);
+				let display_width = display.graphemes(true).count() as u16;
+				let placeholder_x = if is_rtl {
+					area.x + area.width.saturating_sub(display_width)
+				} else {
+					area.x
+				};
+				buf.set_string(placeholder_x, area.y, &display, placeholder_style);
 			}
-			buf.set_string(area.x, area.y, " ", self.cursor_style);
+			let cursor_x = if is_rtl {
+				area.x + area.width.saturating_sub(1)
+			} else {
+				area.x
+			};
+			buf.set_string(cursor_x, area.y, " ", self.cursor_style);
 			return;
 		}
 
@@ -253,19 +273,36 @@ impl StatefulWidget for InputBox {
 		}
 
 		let visible_graphemes: Vec<&str> = state.content.graphemes(true).skip(state.scroll_offset).take(width).collect();
+		let visible_width = visible_graphemes.len() as u16;
 		let cursor_display_pos = cursor_grapheme_pos - state.scroll_offset;
 
+		let text_start_x = if is_rtl {
+			area.x + area.width.saturating_sub(visible_width)
+		} else {
+			area.x
+		};
+
 		for (i, g) in visible_graphemes.iter().enumerate() {
+			let x = if is_rtl {
+				text_start_x + visible_width.saturating_sub(1).saturating_sub(i as u16)
+			} else {
+				text_start_x + i as u16
+			};
 			let style = if i == cursor_display_pos {
 				self.cursor_style
 			} else {
 				self.style
 			};
-			buf.set_string(area.x + i as u16, area.y, *g, style);
+			buf.set_string(x, area.y, *g, style);
 		}
 
 		if cursor_display_pos >= visible_graphemes.len() && cursor_display_pos < width {
-			buf.set_string(area.x + cursor_display_pos as u16, area.y, " ", self.cursor_style);
+			let cursor_x = if is_rtl {
+				text_start_x.saturating_sub(1)
+			} else {
+				text_start_x + cursor_display_pos as u16
+			};
+			buf.set_string(cursor_x, area.y, " ", self.cursor_style);
 		}
 	}
 }

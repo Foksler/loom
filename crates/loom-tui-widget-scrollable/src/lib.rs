@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+use loom_tui_core::TextDirection;
 use loom_tui_theme::Theme;
 use ratatui::{
 	buffer::Buffer,
@@ -72,6 +73,7 @@ pub struct Scrollable {
 	track_style: Style,
 	thumb_style: Style,
 	theme: Option<Theme>,
+	direction: TextDirection,
 }
 
 impl Default for Scrollable {
@@ -81,6 +83,7 @@ impl Default for Scrollable {
 			track_style: Style::default(),
 			thumb_style: Style::default(),
 			theme: None,
+			direction: TextDirection::default(),
 		}
 	}
 }
@@ -109,6 +112,11 @@ impl Scrollable {
 		self.theme = Some(theme);
 		self
 	}
+
+	pub fn direction(mut self, direction: TextDirection) -> Self {
+		self.direction = direction;
+		self
+	}
 }
 
 impl StatefulWidget for Scrollable {
@@ -125,7 +133,12 @@ impl StatefulWidget for Scrollable {
 			return;
 		}
 
-		let scrollbar_x = area.right().saturating_sub(1);
+		let is_rtl = self.direction.is_rtl();
+		let scrollbar_x = if is_rtl {
+			area.x
+		} else {
+			area.x + area.width - 1
+		};
 		let track_height = area.height as usize;
 
 		if track_height == 0 {

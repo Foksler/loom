@@ -8,7 +8,8 @@ use ratatui::{
 	Frame,
 };
 
-use loom_tui_theme::Theme;
+use loom_tui_core::LocaleContext;
+use loom_tui_theme::{LayoutDirection, Theme};
 use loom_tui_widget_header::Header;
 use loom_tui_widget_input_box::{InputBox, InputBoxState};
 use loom_tui_widget_message_list::{Message, MessageList, MessageListState, MessageRole};
@@ -36,6 +37,7 @@ pub struct AppState {
 	pub is_loading: bool,
 	pub should_quit: bool,
 	pub focus: Focus,
+	pub locale: LocaleContext,
 }
 
 impl Default for AppState {
@@ -58,6 +60,7 @@ impl Default for AppState {
 			is_loading: false,
 			should_quit: false,
 			focus: Focus::Input,
+			locale: LocaleContext::default(),
 		}
 	}
 }
@@ -78,6 +81,17 @@ impl App {
 	pub fn handle_key_event(&mut self, key: KeyEvent) {
 		if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('c') {
 			self.state.should_quit = true;
+			return;
+		}
+
+		if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('l') {
+			let new_locale = match self.state.locale.locale.as_str() {
+				"en" => "ar",
+				"ar" => "he",
+				"he" => "en",
+				_ => "en",
+			};
+			self.state.locale = LocaleContext::new(new_locale);
 			return;
 		}
 
@@ -186,11 +200,17 @@ impl App {
 			frame.render_widget(header, header_inner);
 		}
 
-		let content_layout = create_content_layout(content_area);
-		let content_areas = content_layout.split(content_area);
+		let direction = self.state.locale.direction;
+		let layout_dir = LayoutDirection::new(direction);
 
-		let sidebar_area = content_areas[0];
-		let chat_area = content_areas[1];
+		let (sidebar_area, chat_area) = if content_area.width < 80 {
+			let content_layout = create_content_layout(content_area);
+			let content_areas = content_layout.split(content_area);
+			(content_areas[0], content_areas[1])
+		} else {
+			let sidebar_width = content_area.width / 4;
+			layout_dir.split_horizontal(content_area, sidebar_width)
+		};
 
 		let sidebar_focused = self.state.focus == Focus::ThreadList;
 		let sidebar_border_style = if sidebar_focused {
@@ -280,24 +300,28 @@ impl App {
 	}
 
 	fn build_status_bar(&self) -> StatusBar {
+		let locale_display = format!("[{}]", self.state.locale.locale.to_uppercase());
 		let mut status = StatusBar::new()
 			.item("Focus", match self.state.focus {
 				Focus::Input => "Input",
 				Focus::MessageList => "Messages",
 				Focus::ThreadList => "Threads",
-			});
+			})
+			.item("Locale", &locale_display);
 
 		match self.state.focus {
 			Focus::Input => {
 				status = status
 					.shortcut("Enter", "Send")
 					.shortcut("Tab", "Switch")
+					.shortcut("Ctrl+L", "Locale")
 					.shortcut("Ctrl+C", "Quit");
 			}
 			Focus::MessageList => {
 				status = status
 					.shortcut("↑↓", "Scroll")
 					.shortcut("Tab", "Switch")
+					.shortcut("Ctrl+L", "Locale")
 					.shortcut("q", "Quit");
 			}
 			Focus::ThreadList => {
@@ -305,6 +329,7 @@ impl App {
 					.shortcut("↑↓", "Select")
 					.shortcut("Enter", "Open")
 					.shortcut("Tab", "Switch")
+					.shortcut("Ctrl+L", "Locale")
 					.shortcut("q", "Quit");
 			}
 		}
