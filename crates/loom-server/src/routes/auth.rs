@@ -100,6 +100,7 @@ pub async fn get_current_user(RequireAuth(current_user): RequireAuth) -> impl In
 		username: current_user.user.username.clone(),
 		email: current_user.user.primary_email.clone(),
 		avatar_url: current_user.user.avatar_url.clone(),
+		locale: current_user.user.locale.clone(),
 	})
 }
 

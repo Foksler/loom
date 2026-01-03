@@ -23,6 +23,7 @@ pub struct CurrentUserResponse {
 	pub username: Option<String>,
 	pub email: Option<String>,
 	pub avatar_url: Option<String>,
+	pub locale: Option<String>,
 }
 
 /// Generic success response for auth operations.

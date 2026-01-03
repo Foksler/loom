@@ -128,6 +128,38 @@ async fn user_cannot_set_invalid_locale() {
 	);
 }
 
+#[tokio::test]
+async fn auth_me_returns_locale_after_update() {
+	let app = TestApp::new().await;
+	let owner = &app.fixtures.org_a.owner;
+
+	// First update locale
+	let update_response = app
+		.patch(
+			"/api/users/me",
+			Some(owner),
+			json!({
+				"locale": "ja"
+			}),
+		)
+		.await;
+	assert_eq!(update_response.status(), StatusCode::OK);
+
+	// Then verify /api/auth/me returns the updated locale
+	let me_response = app.get("/api/auth/me", Some(owner)).await;
+	assert_eq!(me_response.status(), StatusCode::OK);
+
+	let body = axum::body::to_bytes(me_response.into_body(), usize::MAX)
+		.await
+		.unwrap();
+	let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+	assert_eq!(
+		json["locale"], "ja",
+		"/api/auth/me should return the user's locale preference"
+	);
+}
+
 // ============================================================================
 // Account Deletion Tests
 // ============================================================================
