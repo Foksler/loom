@@ -53,7 +53,7 @@ in
       type = types.str;
       default = "localhost.localdomain";
       description = "Hostname for this SMTP server (used in EHLO).";
-      example = "loomery.ghuntley.com";
+      example = "loom.ghuntley.com";
     };
 
     remoteSender = mkOption {
