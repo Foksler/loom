@@ -4319,6 +4319,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-redact"
+version = "0.1.0"
+dependencies = [
+ "lazy_static",
+ "once_cell",
+ "proptest",
+ "regex",
+ "serde",
+ "thiserror 1.0.69",
+ "toml",
+]
+
+[[package]]
 name = "loom-server"
 version = "0.1.0"
 dependencies = [
