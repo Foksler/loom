@@ -923,8 +923,8 @@ pub fn create_router(state: AppState) -> Router {
 	// Git routes use optional auth (public repos allow anonymous access)
 	let git_routes = routes::git::router().build(state.clone());
 
-	// Git browser routes (repo browsing API for web UI)
-	let git_browser_routes = routes::git_browser::router();
+	// Git browser routes (repo browsing API for web UI, optional auth for public repos)
+	let git_browser_routes = routes::git_browser::router().build(state.clone());
 
 	// Merge public and authenticated routes
 	let mut router = Router::new()

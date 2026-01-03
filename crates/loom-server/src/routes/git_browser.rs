@@ -15,10 +15,9 @@
 
 use axum::{
 	extract::{Path, Query, State},
-
 	response::IntoResponse,
 	routing::get,
-	Json, Router,
+	Json,
 };
 use chrono::{DateTime, Utc};
 use loom_server_auth::middleware::CurrentUser;
@@ -716,8 +715,8 @@ fn parse_blame_output(output: &str) -> Result<Vec<BlameLine>, ServerError> {
 	Ok(lines)
 }
 
-pub fn router() -> Router<AppState> {
-	Router::new()
+pub fn router() -> crate::OptionalAuthRouter {
+	crate::OptionalAuthRouter::new()
 		.route("/api/repos/{owner}/{name}", get(get_repo_by_owner_name))
 		.route("/api/repos/{owner}/{name}/branches", get(list_branches))
 		.route("/api/repos/{owner}/{name}/tree/{*ref_and_path}", get(get_tree))
