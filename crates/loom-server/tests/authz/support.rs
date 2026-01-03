@@ -111,6 +111,19 @@ impl K8sClient for MockK8sClient {
 			stdout: Box::pin(stdout),
 		})
 	}
+
+	async fn validate_token(
+		&self,
+		_token: &str,
+		_audiences: &[&str],
+	) -> Result<loom_server_k8s::TokenReviewResult, K8sError> {
+		Ok(loom_server_k8s::TokenReviewResult::authenticated(
+			"test-user".to_string(),
+			vec!["system:authenticated".to_string()],
+			std::collections::HashMap::new(),
+			vec![],
+		))
+	}
 }
 
 pub fn create_mock_provisioner() -> Arc<Provisioner> {
@@ -129,6 +142,8 @@ pub fn create_mock_provisioner() -> Arc<Provisioner> {
 		audit_batch_interval_ms: 100,
 		audit_buffer_max_bytes: 256 * 1024 * 1024,
 		server_url: String::new(),
+		secrets_server_url: None,
+		secrets_allow_insecure: false,
 	};
 	Arc::new(Provisioner::new(client, config))
 }

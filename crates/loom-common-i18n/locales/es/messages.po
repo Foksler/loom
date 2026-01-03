@@ -172,6 +172,10 @@ msgstr "La dirección de correo electrónico no ha sido verificada por el provee
 msgid "server.api.auth.no_verified_email"
 msgstr "No se encontró una dirección de correo electrónico verificada. Por favor, verifica tu correo con GitHub e intenta de nuevo."
 
+#: API: Auth - Signups disabled
+msgid "server.api.auth.signups_disabled"
+msgstr "El registro de nuevas cuentas está actualmente deshabilitado. Por favor, contacta a un administrador para obtener acceso."
+
 # ============================================================================
 # User API responses
 # ============================================================================

@@ -179,19 +179,22 @@ impl std::error::Error for AuthRequired {}
 /// Configuration for authentication middleware.
 #[derive(Debug, Clone)]
 pub struct AuthConfig {
-    /// Enable dev mode (bypass authentication when LOOM_SERVER_AUTH_DEV_MODE=1).
-    pub dev_mode: bool,
-    /// Name of the session cookie.
-    pub session_cookie_name: String,
+	/// Enable dev mode (bypass authentication when LOOM_SERVER_AUTH_DEV_MODE=1).
+	pub dev_mode: bool,
+	/// Name of the session cookie.
+	pub session_cookie_name: String,
+	/// Disable new user signups (existing users can still log in).
+	pub signups_disabled: bool,
 }
 
 impl Default for AuthConfig {
-    fn default() -> Self {
-        Self {
-            dev_mode: false,
-            session_cookie_name: SESSION_COOKIE_NAME.to_string(),
-        }
-    }
+	fn default() -> Self {
+		Self {
+			dev_mode: false,
+			session_cookie_name: SESSION_COOKIE_NAME.to_string(),
+			signups_disabled: false,
+		}
+	}
 }
 
 impl AuthConfig {

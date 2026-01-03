@@ -180,6 +180,15 @@ in
       description = "Default locale for emails and user-facing content.";
     };
 
+    signupsDisabled = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Disable new user signups. When enabled, only existing users can log in.
+        New users attempting to register will receive a "signups disabled" error.
+      '';
+    };
+
     # LLM Provider Configuration
     anthropic = {
       enable = mkEnableOption "Anthropic Claude provider";
@@ -692,6 +701,9 @@ in
         }
         (mkIf (cfg.baseUrl != null) {
           LOOM_SERVER_BASE_URL = cfg.baseUrl;
+        })
+        (mkIf cfg.signupsDisabled {
+          LOOM_SERVER_SIGNUPS_DISABLED = "true";
         })
         (mkIf cfg.anthropic.enable {
           LOOM_SERVER_ANTHROPIC_MODEL = cfg.anthropic.model;
