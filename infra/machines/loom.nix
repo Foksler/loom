@@ -36,13 +36,13 @@
   # Networking
   networking.networkmanager.enable = false;
   networking.useDHCP = false;
-  networking.interfaces.eth0.ipv4.addresses = [{
+  networking.interfaces.ens18.ipv4.addresses = [{
     address = "51.161.140.159";
     prefixLength = 32; # 255.255.255.255
   }];
   networking.defaultGateway = {
     address = "51.161.216.158";
-    interface = "eth0";
+    interface = "ens18";
   };
  
   networking.nameservers = [ 
