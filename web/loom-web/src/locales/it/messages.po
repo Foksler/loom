@@ -883,6 +883,42 @@ msgstr "Rendi Revisore"
 msgid "admin.users.removeAuditor"
 msgstr "Rimuovi Revisore"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "Annulla"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "Elimina"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "Elimina"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "Sei sicuro di voler eliminare questo utente? Questa azione non può essere annullata."
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "Elimina Utente"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "Stai per impersonare questo utente. Tutte le azioni saranno registrate a scopo di audit."
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "Impersona Utente"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "Motivo dell'impersonazione"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "es., Indagine sul ticket di supporto #1234"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "Log del Server"

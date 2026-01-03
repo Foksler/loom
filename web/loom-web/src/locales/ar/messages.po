@@ -883,6 +883,42 @@ msgstr "جعله مدقق"
 msgid "admin.users.removeAuditor"
 msgstr "إزالة المدقق"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "إلغاء"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "حذف"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "حذف"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "هل أنت متأكد أنك تريد حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء."
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "حذف المستخدم"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "أنت على وشك انتحال شخصية هذا المستخدم. سيتم تسجيل جميع الإجراءات لأغراض التدقيق."
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "انتحال شخصية المستخدم"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "سبب الانتحال"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "مثال: التحقيق في تذكرة الدعم رقم 1234"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "سجلات الخادم"

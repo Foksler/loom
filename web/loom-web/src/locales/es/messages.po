@@ -883,6 +883,42 @@ msgstr "Hacer Auditor"
 msgid "admin.users.removeAuditor"
 msgstr "Quitar Auditor"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "Cancelar"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "Eliminar"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "Eliminar"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "¿Está seguro de que desea eliminar este usuario? Esta acción no se puede deshacer."
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "Eliminar Usuario"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "Está a punto de suplantar a este usuario. Todas las acciones se registrarán con fines de auditoría."
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "Suplantar Usuario"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "Motivo de la suplantación"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "ej., Investigando ticket de soporte #1234"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "Registros del Servidor"

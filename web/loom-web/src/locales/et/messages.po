@@ -883,6 +883,42 @@ msgstr "Tee Audiitoriks"
 msgid "admin.users.removeAuditor"
 msgstr "Eemalda Audiitor"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "Tühista"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "Kustuta"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "Kustuta"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "Kas olete kindel, et soovite selle kasutaja kustutada? Seda toimingut ei saa tagasi võtta."
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "Kustuta Kasutaja"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "Hakkate seda kasutajat kehastama. Kõik tegevused logitakse auditeerimise eesmärgil."
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "Kehasta Kasutajat"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "Kehastamise põhjus"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "nt. Tugipilet #1234 uurimine"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "Serveri logid"

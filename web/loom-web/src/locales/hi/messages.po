@@ -883,6 +883,42 @@ msgstr "लेखापरीक्षक बनाएं"
 msgid "admin.users.removeAuditor"
 msgstr "लेखापरीक्षक हटाएं"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "रद्द करें"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "हटाएं"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "हटाएं"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "क्या आप वाकई इस उपयोगकर्ता को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।"
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "उपयोगकर्ता हटाएं"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "आप इस उपयोगकर्ता का प्रतिरूपण करने वाले हैं। ऑडिट उद्देश्यों के लिए सभी क्रियाएं लॉग की जाएंगी।"
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "उपयोगकर्ता का प्रतिरूपण करें"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "प्रतिरूपण का कारण"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "उदा., सपोर्ट टिकट #1234 की जांच"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "सर्वर लॉग"

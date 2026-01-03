@@ -883,6 +883,42 @@ msgstr "הפוך למבקר"
 msgid "admin.users.removeAuditor"
 msgstr "הסר מבקר"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "ביטול"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "מחק"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "מחק"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "האם אתה בטוח שברצונך למחוק משתמש זה? לא ניתן לבטל פעולה זו."
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "מחק משתמש"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "אתה עומד להתחזות למשתמש זה. כל הפעולות יתועדו למטרות ביקורת."
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "התחזה למשתמש"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "סיבת ההתחזות"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "לדוגמה, חקירת כרטיס תמיכה #1234"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "יומני שרת"

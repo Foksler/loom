@@ -883,6 +883,42 @@ msgstr "Nommer auditeur"
 msgid "admin.users.removeAuditor"
 msgstr "Retirer auditeur"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "Annuler"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "Supprimer"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "Supprimer"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action ne peut pas être annulée."
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "Supprimer l'utilisateur"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "Vous êtes sur le point d'usurper l'identité de cet utilisateur. Toutes les actions seront enregistrées à des fins d'audit."
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "Usurper l'identité de l'utilisateur"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "Raison de l'usurpation"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "ex., Enquête sur le ticket de support #1234"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "Journaux du Serveur"

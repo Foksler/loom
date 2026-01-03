@@ -883,6 +883,42 @@ msgstr "Jadikan Auditor"
 msgid "admin.users.removeAuditor"
 msgstr "Hapus Auditor"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "Batal"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "Hapus"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "Hapus"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "Apakah Anda yakin ingin menghapus pengguna ini? Tindakan ini tidak dapat dibatalkan."
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "Hapus Pengguna"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "Anda akan menyamar sebagai pengguna ini. Semua tindakan akan dicatat untuk tujuan audit."
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "Menyamar sebagai Pengguna"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "Alasan penyamaran"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "cth., Menyelidiki tiket dukungan #1234"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "Log Server"

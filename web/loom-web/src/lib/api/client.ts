@@ -349,10 +349,13 @@ export class LoomApiClient {
 		return this.request<ImpersonationState>('/api/admin/impersonate/state');
 	}
 
-	async startImpersonation(userId: string): Promise<ImpersonateResponse> {
+	async startImpersonation(userId: string, reason: string = 'Admin impersonation'): Promise<ImpersonateResponse> {
 		return this.request<ImpersonateResponse>(
 			`/api/admin/users/${encodeURIComponent(userId)}/impersonate`,
-			{ method: 'POST' }
+			{
+				method: 'POST',
+				body: JSON.stringify({ reason }),
+			}
 		);
 	}
 

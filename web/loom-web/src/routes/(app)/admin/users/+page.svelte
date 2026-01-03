@@ -24,6 +24,9 @@
 	let deletingId = $state<string | null>(null);
 	let showDeleteConfirm = $state(false);
 	let userToDelete = $state<AdminUser | null>(null);
+	let showImpersonateConfirm = $state(false);
+	let userToImpersonate = $state<AdminUser | null>(null);
+	let impersonateReason = $state('');
 
 	const currentUserId = $derived($page.data.user?.id ?? '');
 
@@ -114,11 +117,28 @@
 		}
 	}
 
-	async function handleImpersonate(userId: string) {
-		impersonatingId = userId;
+	function openImpersonateConfirm(userId: string) {
+		const user = users.find(u => u.id === userId);
+		if (user) {
+			userToImpersonate = user;
+			impersonateReason = '';
+			showImpersonateConfirm = true;
+		}
+	}
+
+	function closeImpersonateConfirm() {
+		showImpersonateConfirm = false;
+		userToImpersonate = null;
+		impersonateReason = '';
+	}
+
+	async function handleImpersonate() {
+		if (!userToImpersonate || !impersonateReason.trim()) return;
+
+		impersonatingId = userToImpersonate.id;
 		error = null;
 		try {
-			await client.startImpersonation(userId);
+			await client.startImpersonation(userToImpersonate.id, impersonateReason.trim());
 			window.location.href = '/threads';
 		} catch (e) {
 			error = e instanceof Error ? e.message : i18n._('general.error');
@@ -210,7 +230,7 @@
 					onToggleSystemAdmin={handleToggleSystemAdmin}
 					onToggleSupport={handleToggleSupport}
 					onToggleAuditor={handleToggleAuditor}
-					onImpersonate={handleImpersonate}
+					onImpersonate={openImpersonateConfirm}
 					onDelete={openDeleteConfirm}
 					isUpdating={updatingUserId === user.id}
 					isImpersonating={impersonatingId === user.id}
@@ -268,6 +288,43 @@
 					</Button>
 					<Button variant="danger" onclick={handleDelete} loading={!!deletingId}>
 						{i18n._('admin.users.confirm')}
+					</Button>
+				</div>
+				</Card>
+			</div>
+		</div>
+	{/if}
+
+	{#if showImpersonateConfirm && userToImpersonate}
+		<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+			<div class="max-w-md w-full mx-4">
+				<Card>
+				<h2 class="text-lg font-bold text-fg mb-2">{i18n._('admin.users.impersonateConfirmTitle')}</h2>
+				<p class="text-fg-muted mb-4">
+					{i18n._('admin.users.impersonateConfirmMessage')}
+				</p>
+				<p class="text-sm text-fg mb-4">
+					<strong>{userToImpersonate.display_name}</strong>
+					{#if userToImpersonate.primary_email}
+						({userToImpersonate.primary_email})
+					{/if}
+				</p>
+				<div class="mb-4">
+					<label for="impersonate-reason" class="block text-sm font-medium text-fg mb-1">
+						{i18n._('admin.users.impersonateReasonLabel')}
+					</label>
+					<Input
+						id="impersonate-reason"
+						bind:value={impersonateReason}
+						placeholder={i18n._('admin.users.impersonateReasonPlaceholder')}
+					/>
+				</div>
+				<div class="flex gap-2 justify-end">
+					<Button variant="secondary" onclick={closeImpersonateConfirm} disabled={!!impersonatingId}>
+						{i18n._('admin.users.cancel')}
+					</Button>
+					<Button onclick={handleImpersonate} loading={!!impersonatingId} disabled={!impersonateReason.trim()}>
+						{i18n._('admin.users.impersonate')}
 					</Button>
 				</div>
 				</Card>

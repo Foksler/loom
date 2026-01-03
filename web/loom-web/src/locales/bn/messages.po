@@ -883,6 +883,42 @@ msgstr "নিরীক্ষক করুন"
 msgid "admin.users.removeAuditor"
 msgstr "নিরীক্ষক সরান"
 
+#: admin.users.cancel
+msgid "admin.users.cancel"
+msgstr "বাতিল"
+
+#: admin.users.confirm
+msgid "admin.users.confirm"
+msgstr "মুছুন"
+
+#: admin.users.delete
+msgid "admin.users.delete"
+msgstr "মুছুন"
+
+#: admin.users.deleteConfirmMessage
+msgid "admin.users.deleteConfirmMessage"
+msgstr "আপনি কি নিশ্চিত যে আপনি এই ব্যবহারকারীকে মুছতে চান? এই ক্রিয়াটি পূর্বাবস্থায় ফেরানো যাবে না।"
+
+#: admin.users.deleteConfirmTitle
+msgid "admin.users.deleteConfirmTitle"
+msgstr "ব্যবহারকারী মুছুন"
+
+#: admin.users.impersonateConfirmMessage
+msgid "admin.users.impersonateConfirmMessage"
+msgstr "আপনি এই ব্যবহারকারীর ছদ্মবেশ ধারণ করতে চলেছেন। অডিট উদ্দেশ্যে সমস্ত ক্রিয়া লগ করা হবে।"
+
+#: admin.users.impersonateConfirmTitle
+msgid "admin.users.impersonateConfirmTitle"
+msgstr "ব্যবহারকারীর ছদ্মবেশ"
+
+#: admin.users.impersonateReasonLabel
+msgid "admin.users.impersonateReasonLabel"
+msgstr "ছদ্মবেশের কারণ"
+
+#: admin.users.impersonateReasonPlaceholder
+msgid "admin.users.impersonateReasonPlaceholder"
+msgstr "যেমন, সাপোর্ট টিকেট #1234 তদন্ত করা"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "সার্ভার লগ"
