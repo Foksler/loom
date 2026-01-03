@@ -47,6 +47,7 @@ args@{
     "loom-server-geoip/default"
     "loom-server-logs/default"
     "loom-server-audit/default"
+    "loom-redact/default"
   ],
   rustPackages,
   buildRustPackages,
@@ -67,7 +68,7 @@ args@{
   cargoConfig ? {},
 }:
 let
-  nixifiedLockHash = "558f975cf8e9e18d5db69630346fe30bcbaf9c5e5fda79737dc8dd42d5e88005";
+  nixifiedLockHash = "f46ff444108a18d1fde47132387e7d4f7cb3fcb7707ee8ecd92f1ea9ee899183";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -141,6 +142,7 @@ in
     loom-server-geoip = rustPackages.unknown.loom-server-geoip."0.1.0";
     loom-server-logs = rustPackages.unknown.loom-server-logs."0.1.0";
     loom-server-audit = rustPackages.unknown.loom-server-audit."0.1.0";
+    loom-redact = rustPackages.unknown.loom-redact."0.1.0";
   };
   "registry+https://github.com/rust-lang/crates.io-index".adler2."2.0.1" = overridableMkRustCrate (profileName: rec {
     name = "adler2";
@@ -5792,6 +5794,27 @@ in
     };
     buildDependencies = {
       shadow_rs = (buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".shadow-rs."0.36.1" { profileName = "__noProfile"; }).out;
+    };
+  });
+  
+  "unknown".loom-redact."0.1.0" = overridableMkRustCrate (profileName: rec {
+    name = "loom-redact";
+    version = "0.1.0";
+    registry = "unknown";
+    src = fetchCrateLocal workspaceSrc;
+    dependencies = {
+      once_cell = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".once_cell."1.21.3" { inherit profileName; }).out;
+      regex = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".regex."1.12.2" { inherit profileName; }).out;
+      thiserror = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."1.0.69" { inherit profileName; }).out;
+    };
+    devDependencies = {
+      proptest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proptest."1.9.0" { inherit profileName; }).out;
+    };
+    buildDependencies = {
+      lazy_static = (buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".lazy_static."1.5.0" { profileName = "__noProfile"; }).out;
+      regex = (buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".regex."1.12.2" { profileName = "__noProfile"; }).out;
+      serde = (buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.228" { profileName = "__noProfile"; }).out;
+      toml = (buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".toml."0.8.23" { profileName = "__noProfile"; }).out;
     };
   });
   

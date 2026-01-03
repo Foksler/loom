@@ -47,6 +47,7 @@ members = [
 	"crates/loom-server-config",
 	"crates/loom-common-spool",
 	"crates/loom-cli-spool",
+	"crates/loom-redact",
 	]
 
 [workspace.package]
