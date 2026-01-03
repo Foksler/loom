@@ -189,15 +189,6 @@ in
       description = "Default locale for emails and user-facing content.";
     };
 
-    signupsDisabled = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Disable new user signups. When enabled, only existing users can log in.
-        New users attempting to register will receive a "signups disabled" error.
-      '';
-    };
-
     # LLM Provider Configuration
     anthropic = {
       enable = mkEnableOption "Anthropic Claude provider";
