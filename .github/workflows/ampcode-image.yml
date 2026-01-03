@@ -27,11 +27,18 @@ jobs:
               curl \
               ca-certificates \
               git \
+              sudo \
               && rm -rf /var/lib/apt/lists/*
+
+          RUN useradd -m -s /bin/bash ubuntu && \
+              echo "ubuntu ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+          USER ubuntu
+          WORKDIR /home/ubuntu
 
           RUN curl -fsSL https://ampcode.com/install.sh | bash
 
-          ENV PATH="/root/.amp/bin:${PATH}"
+          ENV PATH="/home/ubuntu/.amp/bin:${PATH}"
 
           CMD ["bash"]
           EOF
