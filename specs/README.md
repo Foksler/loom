@@ -102,6 +102,7 @@ Design documentation for Loom, an AI-powered coding agent in Rust.
 | Spec | Code | Purpose |
 |------|------|---------|
 | [loom-web.md](./loom-web.md) | [web/loom-web](../web/loom-web/) | Svelte 5 web frontend |
+| [docs-system.md](./docs-system.md) | [web/loom-web/src/routes/docs](../web/loom-web/src/routes/docs/) | Documentation system with Diátaxis, MDX, Pagefind |
 | [distribution.md](./distribution.md) | [loom-version](../crates/loom-version/) | Binary builds and self-update |
 | [container-system.md](./container-system.md) | [docker/](../docker/), [flake.nix](../flake.nix) | Docker/OCI via Nix |
 | [sbom-system.md](./sbom-system.md) | [.github/](../.github/) | SBOM generation (SPDX/CycloneDX) |
