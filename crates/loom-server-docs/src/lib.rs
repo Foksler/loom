@@ -51,9 +51,18 @@ pub struct DocIndexEntry {
 	pub title: String,
 	pub summary: String,
 	pub body: String,
-	pub diataxis: Option<String>,
-	pub tags: Option<String>,
-	pub updated_at: Option<String>,
+	pub diataxis: String,
+	#[serde(default)]
+	pub tags: Vec<String>,
+	#[serde(default)]
+	pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DocsIndex {
+	pub version: u32,
+	pub generated_at: String,
+	pub docs: Vec<DocIndexEntry>,
 }
 
 pub async fn load_docs_index(pool: &SqlitePool, index_path: &str) -> Result<usize> {
@@ -61,16 +70,17 @@ pub async fn load_docs_index(pool: &SqlitePool, index_path: &str) -> Result<usiz
 		.await
 		.map_err(|_| DocsError::IndexNotFound(index_path.to_string()))?;
 
-	let entries: Vec<DocIndexEntry> =
+	let index: DocsIndex =
 		serde_json::from_str(&content).map_err(|e| DocsError::InvalidIndex(e.to_string()))?;
 
-	let count = entries.len();
+	let count = index.docs.len();
 
 	sqlx::query("DELETE FROM docs_fts")
 		.execute(pool)
 		.await?;
 
-	for entry in entries {
+	for entry in &index.docs {
+		let tags = entry.tags.join(" ");
 		sqlx::query(
 			r#"
             INSERT INTO docs_fts (doc_id, path, title, summary, body, diataxis, tags, updated_at)
@@ -83,7 +93,7 @@ pub async fn load_docs_index(pool: &SqlitePool, index_path: &str) -> Result<usiz
 		.bind(&entry.summary)
 		.bind(&entry.body)
 		.bind(&entry.diataxis)
-		.bind(&entry.tags)
+		.bind(&tags)
 		.bind(&entry.updated_at)
 		.execute(pool)
 		.await?;
