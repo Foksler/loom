@@ -1,24 +1,26 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+use std::collections::HashMap;
+
 /// Calculate Shannon entropy of a string.
 /// Returns bits per character (0.0 to ~log2(charset_size)).
 /// Higher entropy indicates more randomness (likely a secret).
 pub fn shannon_entropy(s: &str) -> f32 {
-	let bytes = s.as_bytes();
-	if bytes.is_empty() {
+	if s.is_empty() {
 		return 0.0;
 	}
 
-	let mut freq = [0u32; 256];
-	for &b in bytes {
-		freq[b as usize] += 1;
+	let bytes = s.as_bytes();
+	let len = bytes.len() as f32;
+
+	let mut freq: HashMap<u8, usize> = HashMap::new();
+	for &byte in bytes {
+		*freq.entry(byte).or_insert(0) += 1;
 	}
 
-	let len = bytes.len() as f32;
-	let mut entropy = 0.0f32;
-
-	for &count in freq.iter().filter(|&&c| c > 0) {
+	let mut entropy: f32 = 0.0;
+	for &count in freq.values() {
 		let p = count as f32 / len;
 		entropy -= p * p.log2();
 	}

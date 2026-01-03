@@ -3,7 +3,6 @@
 
 [workspace]
 resolver = "2"
-exclude = ["crates/loom-weaver-ebpf"]
 members = [
 	"crates/loom-cli-acp",
 	"crates/loom-server-auth",
@@ -43,39 +42,12 @@ members = [
 	"crates/loom-server-scm",
 	"crates/loom-server-scm-mirror",
 	"crates/loom-server-db",
-	"crates/loom-server-docs",
 	"crates/loom-server-api",
 	"crates/loom-server-audit",
 	"crates/loom-server-config",
-	"crates/loom-server-secrets",
-	"crates/loom-weaver-secrets",
 	"crates/loom-common-spool",
 	"crates/loom-cli-spool",
-	"crates/loom-tui-component",
-	"crates/loom-tui-core",
-	"crates/loom-tui-testing",
-	"crates/loom-tui-theme",
-	"crates/loom-tui-widget-header",
-	"crates/loom-tui-widget-scrollable",
-	"crates/loom-tui-widget-status-bar",
-	"crates/loom-tui-widget-input-box",
-	"crates/loom-tui-widget-spinner",
-	"crates/loom-tui-widget-message-list",
-	"crates/loom-tui-widget-modal",
-	"crates/loom-tui-widget-thread-list",
-	"crates/loom-tui-widget-tool-panel",
-	"crates/loom-tui-widget-markdown",
-	"crates/loom-tui-app",
-	"crates/loom-tui-storybook",
-	"crates/loom-wgtunnel-common",
-	"crates/loom-wgtunnel-conn",
-	"crates/loom-wgtunnel-derp",
-	"crates/loom-wgtunnel-engine",
-	"crates/loom-server-wgtunnel",
-	"crates/loom-cli-wgtunnel",
-	"crates/loom-weaver-wgtunnel",
-	"crates/loom-weaver-ebpf-common",
-	"crates/loom-weaver-audit-sidecar",
+	"crates/loom-redact",
 	]
 
 [workspace.package]
@@ -171,42 +143,6 @@ loom-common-version = { path = "crates/loom-common-version" }
 loom-server-k8s = { path = "crates/loom-server-k8s" }
 loom-server-geoip = { path = "crates/loom-server-geoip" }
 loom-server-jobs = { path = "crates/loom-server-jobs" }
-
-# WireGuard
-boringtun = "0.6"
-defguard_wireguard_rs = "0.5"
-
-# Crypto (for WireGuard keys)
-x25519-dalek = { version = "2.0", features = ["static_secrets"] }
-base64 = "0.22"
-
-# Virtual network stack
-smoltcp = { version = "0.11", default-features = false, features = ["medium-ip", "proto-ipv6", "socket-tcp"] }
-
-# TLS for DERP
-tokio-rustls = "0.26"
-rustls = { version = "0.23", default-features = false, features = ["std", "tls12"] }
-webpki-roots = "0.26"
-
-# Networking
-ipnet = "2"
-url = "2"
-
-# Terminal (for CLI)
-console = "0.15"
-indicatif = "0.17"
-
-# SSE for peer streaming
-eventsource-client = "0.13"
-
-# Internal wgtunnel crates
-loom-wgtunnel-common = { path = "crates/loom-wgtunnel-common" }
-loom-wgtunnel-derp = { path = "crates/loom-wgtunnel-derp" }
-loom-wgtunnel-conn = { path = "crates/loom-wgtunnel-conn" }
-loom-wgtunnel-engine = { path = "crates/loom-wgtunnel-engine" }
-loom-server-wgtunnel = { path = "crates/loom-server-wgtunnel" }
-loom-cli-wgtunnel = { path = "crates/loom-cli-wgtunnel" }
-loom-weaver-wgtunnel = { path = "crates/loom-weaver-wgtunnel" }
 
 # Build profile optimizations for faster development builds
 [profile.dev]
