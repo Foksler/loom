@@ -3,6 +3,7 @@
 
 //! Authentication API types.
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "openapi")]
 use utoipa::ToSchema;
@@ -24,6 +25,8 @@ pub struct CurrentUserResponse {
 	pub email: Option<String>,
 	pub avatar_url: Option<String>,
 	pub locale: Option<String>,
+	pub global_roles: Vec<String>,
+	pub created_at: DateTime<Utc>,
 }
 
 /// Generic success response for auth operations.
