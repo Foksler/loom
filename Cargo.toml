@@ -45,6 +45,8 @@ members = [
 	"crates/loom-server-api",
 	"crates/loom-server-audit",
 	"crates/loom-server-config",
+	"crates/loom-common-spool",
+	"crates/loom-cli-spool",
 	]
 
 [workspace.package]

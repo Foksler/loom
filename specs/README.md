@@ -62,6 +62,12 @@ Design documentation for Loom, an AI-powered coding agent in Rust.
 |------|------|---------|
 | [scm-system.md](./scm-system.md) | [loom-scm](../crates/loom-server-scm/), [loom-scm-mirror](../crates/loom-scm-mirror/) | Git hosting, mirroring, webhooks, branch protection |
 
+## Spool (Version Control)
+
+| Spec | Code | Purpose |
+|------|------|---------|
+| [spool-system.md](./spool-system.md) | [loom-common-spool](../crates/loom-common-spool/), [loom-cli-spool](../crates/loom-cli-spool/) | jj-based VCS with tapestry naming (stitch, pin, tangle) |
+
 ## Git & Search
 
 | Spec | Code | Purpose |

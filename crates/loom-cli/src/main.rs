@@ -222,6 +222,11 @@ enum Command {
 	///   git config --global credential.https://loom.ghuntley.com.helper 'loom credential-helper'
 	#[command(name = "credential-helper")]
 	CredentialHelper(credential_helper::CredentialHelperArgs),
+	/// Spool version control (jj-based VCS with tapestry naming)
+	Spool {
+		#[command(subcommand)]
+		command: loom_cli_spool::SpoolCommands,
+	},
 }
 
 impl From<&Args> for CliOverrides {
@@ -1229,6 +1234,7 @@ async fn main() -> Result<()> {
 				run_weaver_delete(&args.server_url, token, weaver_id).await
 			}
 		}
+		Some(Command::Spool { command }) => loom_cli_spool::run(command).await,
 		None => {
 			let thread = create_new_thread(&config, &args)?;
 			start_repl_session(&config, &args, thread_store, thread).await
