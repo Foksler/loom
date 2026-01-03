@@ -397,6 +397,18 @@ async fn initialize_weaver_infrastructure(config: &ServerConfig) -> WeaverInfras
 		image_pull_secrets: config.weaver.image_pull_secrets.clone(),
 		secrets_server_url: config.weaver.secrets_server_url.clone(),
 		secrets_allow_insecure: config.weaver.secrets_allow_insecure,
+		audit_enabled: config.audit.enabled,
+		audit_image: std::env::var("LOOM_SERVER_WEAVER_AUDIT_IMAGE")
+			.unwrap_or_else(|_| "ghcr.io/ghuntley/loom-audit-sidecar:latest".to_string()),
+		audit_batch_interval_ms: std::env::var("LOOM_SERVER_WEAVER_AUDIT_BATCH_INTERVAL_MS")
+			.ok()
+			.and_then(|v| v.parse().ok())
+			.unwrap_or(100),
+		audit_buffer_max_bytes: std::env::var("LOOM_SERVER_WEAVER_AUDIT_BUFFER_MAX_BYTES")
+			.ok()
+			.and_then(|v| v.parse().ok())
+			.unwrap_or(256 * 1024 * 1024),
+		server_url: config.http.base_url.clone(),
 	};
 
 	let kube_client = match KubeClient::new().await {
@@ -658,6 +670,11 @@ pub fn create_router(state: AppState) -> Router {
 		.route(
 			"/internal/weaver-secrets/v1/secrets/{scope}/{name}",
 			get(routes::weaver_secrets::get_secret),
+		)
+		// Internal weaver audit endpoint (SPIFFE/SVID auth verified in handler)
+		.route(
+			"/internal/weaver-audit/events",
+			post(routes::weaver_audit::submit_events),
 		)
 		// Documentation search
 		.route("/docs/search", get(routes::docs::search_handler))

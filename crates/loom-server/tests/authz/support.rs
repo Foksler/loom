@@ -124,6 +124,11 @@ pub fn create_mock_provisioner() -> Arc<Provisioner> {
 		cleanup_interval_secs: 3600,
 		webhooks: vec![],
 		image_pull_secrets: vec![],
+		audit_enabled: false,
+		audit_image: String::new(),
+		audit_batch_interval_ms: 100,
+		audit_buffer_max_bytes: 256 * 1024 * 1024,
+		server_url: String::new(),
 	};
 	Arc::new(Provisioner::new(client, config))
 }

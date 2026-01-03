@@ -3,6 +3,7 @@
 
 [workspace]
 resolver = "2"
+exclude = ["crates/loom-weaver-ebpf"]
 members = [
 	"crates/loom-cli-acp",
 	"crates/loom-server-auth",
@@ -66,6 +67,8 @@ members = [
 	"crates/loom-tui-widget-markdown",
 	"crates/loom-tui-app",
 	"crates/loom-tui-storybook",
+	"crates/loom-weaver-ebpf-common",
+	"crates/loom-weaver-audit-sidecar",
 	]
 
 [workspace.package]

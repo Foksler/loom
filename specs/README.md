@@ -88,8 +88,9 @@ Design documentation for Loom, an AI-powered coding agent in Rust.
 
 | Spec | Code | Purpose |
 |------|------|---------|
-| [weaver-provisioner.md](./weaver-provisioner.md) | [loom-weaver](../crates/loom-weaver/), [loom-k8s](../crates/loom-k8s/) | K8s pod provisioning |
+| [weaver-provisioner.md](./weaver-provisioner.md) | [loom-server-weaver](../crates/loom-server-weaver/), [loom-server-k8s](../crates/loom-server-k8s/) | K8s pod provisioning |
 | [weaver-cli.md](./weaver-cli.md) | [loom-cli](../crates/loom-cli/) | CLI for weaver management |
+| [weaver-ebpf-audit.md](./weaver-ebpf-audit.md) | [loom-weaver-ebpf](../crates/loom-weaver-ebpf/), [loom-weaver-audit-sidecar](../crates/loom-weaver-audit-sidecar/) | eBPF syscall auditing sidecar |
 
 ## Build & Performance
 

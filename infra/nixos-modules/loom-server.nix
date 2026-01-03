@@ -536,6 +536,40 @@ in
         description = "List of Kubernetes secret names for pulling private container images.";
         example = [ "ghcr-secret" ];
       };
+
+      audit = {
+        enable = mkEnableOption "eBPF audit sidecar for weavers";
+
+        image = mkOption {
+          type = types.str;
+          default = "ghcr.io/ghuntley/loom-audit-sidecar:latest";
+          description = "Container image for the audit sidecar.";
+        };
+
+        batchIntervalMs = mkOption {
+          type = types.int;
+          default = 100;
+          description = "Event batch interval in milliseconds.";
+        };
+
+        bufferMaxBytes = mkOption {
+          type = types.int;
+          default = 268435456;  # 256 MB
+          description = "Maximum local buffer size in bytes.";
+        };
+
+        metricsPort = mkOption {
+          type = types.port;
+          default = 9090;
+          description = "Prometheus metrics port.";
+        };
+
+        healthPort = mkOption {
+          type = types.port;
+          default = 9091;
+          description = "Health endpoint port.";
+        };
+      };
     };
 
     jobs = {
@@ -711,6 +745,12 @@ in
           LOOM_SERVER_WEAVER_READY_TIMEOUT_SECS = toString cfg.weaver.readyTimeoutSecs;
           LOOM_SERVER_WEAVER_WEBHOOKS = cfg.weaver.webhooks;
           LOOM_SERVER_WEAVER_IMAGE_PULL_SECRETS = lib.concatStringsSep "," cfg.weaver.imagePullSecrets;
+          LOOM_SERVER_WEAVER_AUDIT_ENABLED = if cfg.weaver.audit.enable then "true" else "false";
+          LOOM_SERVER_WEAVER_AUDIT_IMAGE = cfg.weaver.audit.image;
+          LOOM_SERVER_WEAVER_AUDIT_BATCH_INTERVAL_MS = toString cfg.weaver.audit.batchIntervalMs;
+          LOOM_SERVER_WEAVER_AUDIT_BUFFER_MAX_BYTES = toString cfg.weaver.audit.bufferMaxBytes;
+          LOOM_SERVER_WEAVER_AUDIT_METRICS_PORT = toString cfg.weaver.audit.metricsPort;
+          LOOM_SERVER_WEAVER_AUDIT_HEALTH_PORT = toString cfg.weaver.audit.healthPort;
           KUBECONFIG = toString cfg.weaver.kubeconfigPath;
         })
         (mkIf cfg.secrets.enable {

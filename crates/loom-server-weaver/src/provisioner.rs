@@ -12,8 +12,8 @@ use k8s_openapi::api::core::v1::Capabilities;
 use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
 use loom_server_k8s::{
-    AttachedProcess, Container, EnvVar, K8sClient, LocalObjectReference, LogOptions, LogStream,
-    Pod, PodSpec, ResourceRequirements, SecurityContext,
+    AttachedProcess, Container, ContainerPort, EnvVar, K8sClient, LocalObjectReference,
+    LogOptions, LogStream, Pod, PodSpec, ResourceRequirements, SecurityContext,
 };
 
 use crate::config::WeaverConfig;
@@ -31,6 +31,8 @@ const LABEL_IMAGE_NAME: &str = "loom.dev/image-name";
 const TAGS_ANNOTATION: &str = "loom.dev/tags";
 const LIFETIME_ANNOTATION: &str = "loom.dev/lifetime-hours";
 const CONTAINER_NAME: &str = "weaver";
+const SIDECAR_CONTAINER_NAME: &str = "audit-sidecar";
+const SIDECAR_IMAGE_DEFAULT: &str = "ghcr.io/ghuntley/loom-audit-sidecar:latest";
 const DEFAULT_MEMORY_LIMIT: &str = "16Gi";
 const POLL_INTERVAL_MS: u64 = 500;
 const MAX_LABEL_LENGTH: usize = 63;
@@ -584,6 +586,90 @@ fn build_pod_spec(
         )
     };
 
+    let mut init_containers = None;
+    let mut share_process_namespace = None;
+
+    if config.audit_enabled {
+        let sidecar_image = if config.audit_image.is_empty() {
+            SIDECAR_IMAGE_DEFAULT.to_string()
+        } else {
+            config.audit_image.clone()
+        };
+
+        let sidecar_env = vec![
+            EnvVar {
+                name: "LOOM_WEAVER_ID".to_string(),
+                value: Some(id.to_string()),
+                value_from: None,
+            },
+            EnvVar {
+                name: "LOOM_ORG_ID".to_string(),
+                value: Some(req.org_id.clone()),
+                value_from: None,
+            },
+            EnvVar {
+                name: "LOOM_OWNER_USER_ID".to_string(),
+                value: Some(req.owner_user_id.clone().unwrap_or_default()),
+                value_from: None,
+            },
+            EnvVar {
+                name: "LOOM_SERVER_URL".to_string(),
+                value: Some(config.server_url.clone()),
+                value_from: None,
+            },
+            EnvVar {
+                name: "LOOM_AUDIT_BATCH_INTERVAL_MS".to_string(),
+                value: Some(config.audit_batch_interval_ms.to_string()),
+                value_from: None,
+            },
+            EnvVar {
+                name: "LOOM_AUDIT_BUFFER_MAX_BYTES".to_string(),
+                value: Some(config.audit_buffer_max_bytes.to_string()),
+                value_from: None,
+            },
+        ];
+
+        let sidecar_security_context = SecurityContext {
+            run_as_user: Some(0),
+            run_as_non_root: Some(false),
+            read_only_root_filesystem: Some(true),
+            allow_privilege_escalation: Some(false),
+            capabilities: Some(Capabilities {
+                drop: Some(vec!["ALL".to_string()]),
+                add: Some(vec!["BPF".to_string(), "PERFMON".to_string()]),
+            }),
+            ..Default::default()
+        };
+
+        let sidecar_ports = vec![
+            ContainerPort {
+                container_port: 9090,
+                name: Some("metrics".to_string()),
+                protocol: Some("TCP".to_string()),
+                ..Default::default()
+            },
+            ContainerPort {
+                container_port: 9091,
+                name: Some("health".to_string()),
+                protocol: Some("TCP".to_string()),
+                ..Default::default()
+            },
+        ];
+
+        let sidecar_container = Container {
+            name: SIDECAR_CONTAINER_NAME.to_string(),
+            image: Some(sidecar_image),
+            env: Some(sidecar_env),
+            ports: Some(sidecar_ports),
+            security_context: Some(sidecar_security_context),
+            restart_policy: Some("Always".to_string()),
+            ..Default::default()
+        };
+
+        init_containers = Some(vec![sidecar_container]);
+        share_process_namespace = Some(true);
+    }
+
     Pod {
         metadata: ObjectMeta {
             name: Some(pod_name),
@@ -594,8 +680,10 @@ fn build_pod_spec(
         },
         spec: Some(PodSpec {
             containers: vec![container],
+            init_containers,
             restart_policy: Some("Never".to_string()),
             image_pull_secrets,
+            share_process_namespace,
             ..Default::default()
         }),
         status: None,
