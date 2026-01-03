@@ -39,6 +39,7 @@ loom-common-secret = { path = "../loom-common-secret" }
 loom-common-thread = { path = "../loom-common-thread" }
 loom-cli-spool = { path = "../loom-cli-spool" }
 loom-cli-tools = { path = "../loom-cli-tools" }
+loom-cli-wgtunnel = { path = "../loom-cli-wgtunnel" }
 loom-common-version = { workspace = true }
 reqwest = { workspace = true }
 self-replace = "1"

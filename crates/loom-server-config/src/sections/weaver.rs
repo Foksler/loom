@@ -77,6 +77,10 @@ pub struct WeaverConfigLayer {
 	pub secrets_server_url: Option<String>,
 	/// Allow insecure (HTTP) connections to secrets server (for in-cluster use)
 	pub secrets_allow_insecure: Option<bool>,
+	/// Enable WireGuard tunnel for weaver pods
+	pub wg_enabled: Option<bool>,
+	/// URL to loom-server for WireGuard registration
+	pub wg_server_url: Option<String>,
 }
 
 impl std::fmt::Debug for WeaverConfigLayer {
@@ -93,6 +97,8 @@ impl std::fmt::Debug for WeaverConfigLayer {
 			.field("image_pull_secrets", &self.image_pull_secrets)
 			.field("secrets_server_url", &self.secrets_server_url)
 			.field("secrets_allow_insecure", &self.secrets_allow_insecure)
+			.field("wg_enabled", &self.wg_enabled)
+			.field("wg_server_url", &self.wg_server_url)
 			.finish()
 	}
 }
@@ -134,6 +140,12 @@ impl WeaverConfigLayer {
 		if other.secrets_allow_insecure.is_some() {
 			self.secrets_allow_insecure = other.secrets_allow_insecure;
 		}
+		if other.wg_enabled.is_some() {
+			self.wg_enabled = other.wg_enabled;
+		}
+		if other.wg_server_url.is_some() {
+			self.wg_server_url = other.wg_server_url;
+		}
 	}
 
 	/// Resolves this layer into a runtime configuration.
@@ -171,6 +183,8 @@ impl WeaverConfigLayer {
 			image_pull_secrets: self.image_pull_secrets.unwrap_or_default(),
 			secrets_server_url: self.secrets_server_url,
 			secrets_allow_insecure: self.secrets_allow_insecure.unwrap_or(false),
+			wg_enabled: self.wg_enabled,
+			wg_server_url: self.wg_server_url,
 		})
 	}
 }
@@ -191,6 +205,10 @@ pub struct WeaverConfig {
 	pub secrets_server_url: Option<String>,
 	/// Allow insecure (HTTP) connections to secrets server (for in-cluster use)
 	pub secrets_allow_insecure: bool,
+	/// Enable WireGuard tunnel for weaver pods
+	pub wg_enabled: Option<bool>,
+	/// URL to loom-server for WireGuard registration
+	pub wg_server_url: Option<String>,
 }
 
 impl std::fmt::Debug for WeaverConfig {
@@ -207,6 +225,8 @@ impl std::fmt::Debug for WeaverConfig {
 			.field("image_pull_secrets", &self.image_pull_secrets)
 			.field("secrets_server_url", &self.secrets_server_url)
 			.field("secrets_allow_insecure", &self.secrets_allow_insecure)
+			.field("wg_enabled", &self.wg_enabled)
+			.field("wg_server_url", &self.wg_server_url)
 			.finish()
 	}
 }
@@ -225,6 +245,8 @@ impl Default for WeaverConfig {
 			image_pull_secrets: Vec::new(),
 			secrets_server_url: None,
 			secrets_allow_insecure: false,
+			wg_enabled: None,
+			wg_server_url: None,
 		}
 	}
 }

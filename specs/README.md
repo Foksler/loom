@@ -90,6 +90,8 @@ Design documentation for Loom, an AI-powered coding agent in Rust.
 |------|------|---------|
 | [weaver-provisioner.md](./weaver-provisioner.md) | [loom-weaver](../crates/loom-weaver/), [loom-k8s](../crates/loom-k8s/) | K8s pod provisioning |
 | [weaver-cli.md](./weaver-cli.md) | [loom-cli](../crates/loom-cli/) | CLI for weaver management |
+| [weaver-secrets-system.md](./weaver-secrets-system.md) | [loom-server-secrets](../crates/loom-server-secrets/), [loom-weaver-secrets](../crates/loom-weaver-secrets/) | SPIFFE-style identity and secret management |
+| [wgtunnel-system.md](./wgtunnel-system.md) | [loom-wgtunnel-*](../crates/), [loom-server-wgtunnel](../crates/loom-server-wgtunnel/) | WireGuard tunnels with DERP relay for SSH/TCP access to weavers |
 
 ## Build & Performance
 

@@ -20,6 +20,7 @@ use loom_server_search_serper::SerperClient;
 use loom_server_k8s::{K8sClient, KubeClient};
 use loom_server_llm_service::LlmService;
 use loom_server_secrets::{SecretsService, SoftwareKeyBackend, SqliteSecretStore, SvidIssuer};
+use loom_server_wgtunnel::WgTunnelServices;
 use loom_server_smtp::SmtpClient;
 use loom_server_weaver::{Provisioner, WeaverConfig, WebhookConfig, WebhookDispatcher};
 use std::sync::Arc;
@@ -91,6 +92,7 @@ pub struct AppState {
 	pub k8s_client: Option<Arc<dyn K8sClient>>,
 	pub svid_issuer: Option<Arc<SvidIssuer<SoftwareKeyBackend>>>,
 	pub secrets_service: Option<Arc<SecretsService<SoftwareKeyBackend, SqliteSecretStore>>>,
+	pub wg_tunnel_services: Option<WgTunnelServices>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -205,6 +207,9 @@ pub async fn create_app_state(
 	// Initialize SVID issuer and secrets service for weaver auth/secrets
 	let (svid_issuer, secrets_service) = initialize_secrets_infrastructure(pool.clone());
 
+	// Initialize WireGuard tunnel services if enabled
+	let wg_tunnel_services = initialize_wgtunnel_services(pool.clone()).await;
+
 	// Initialize SMTP client if configured
 	let smtp_client = initialize_smtp_client(config);
 
@@ -280,6 +285,44 @@ pub async fn create_app_state(
 		k8s_client,
 		svid_issuer,
 		secrets_service,
+		wg_tunnel_services,
+	}
+}
+
+/// Initialize WireGuard tunnel services if enabled.
+async fn initialize_wgtunnel_services(pool: SqlitePool) -> Option<WgTunnelServices> {
+	use loom_server_wgtunnel::WgTunnelConfig;
+
+	match WgTunnelConfig::from_env() {
+		Ok(mut config) => {
+			if !config.enabled {
+				tracing::info!("WireGuard tunnel disabled");
+				return None;
+			}
+
+			if let Err(e) = config.load_derp_map().await {
+				tracing::warn!(error = %e, "Failed to load DERP map, WG tunnel disabled");
+				return None;
+			}
+
+			match WgTunnelServices::new(pool, config).await {
+				Ok(services) => {
+					tracing::info!(
+						ip_prefix = %services.config.ip_prefix,
+						"WireGuard tunnel services initialized"
+					);
+					Some(services)
+				}
+				Err(e) => {
+					tracing::warn!(error = %e, "Failed to initialize WG tunnel services");
+					None
+				}
+			}
+		}
+		Err(e) => {
+			tracing::info!(error = %e, "WireGuard tunnel not configured");
+			None
+		}
 	}
 }
 
@@ -397,6 +440,8 @@ async fn initialize_weaver_infrastructure(config: &ServerConfig) -> WeaverInfras
 		image_pull_secrets: config.weaver.image_pull_secrets.clone(),
 		secrets_server_url: config.weaver.secrets_server_url.clone(),
 		secrets_allow_insecure: config.weaver.secrets_allow_insecure,
+		wg_enabled: config.weaver.wg_enabled.unwrap_or(true),
+		wg_server_url: config.weaver.wg_server_url.clone(),
 	};
 
 	let kube_client = match KubeClient::new().await {
@@ -605,6 +650,7 @@ pub fn create_router(state: AppState) -> Router {
 	let bin_dir = std::env::var("LOOM_SERVER_BIN_DIR").unwrap_or_else(|_| "./bin".to_string());
 	let web_dir = std::env::var("LOOM_SERVER_WEB_DIR").ok();
 	let has_provisioner = state.provisioner.is_some();
+	let has_wg_tunnel = state.wg_tunnel_services.is_some();
 
 	// Public routes - no authentication required
 	let public = PublicRouter::new()
@@ -658,6 +704,23 @@ pub fn create_router(state: AppState) -> Router {
 		.route(
 			"/internal/weaver-secrets/v1/secrets/{scope}/{name}",
 			get(routes::weaver_secrets::get_secret),
+		)
+		// WireGuard tunnel internal routes (public - auth via Weaver SVID)
+		.route(
+			"/internal/wg/weavers",
+			post(routes::wgtunnel::register_weaver),
+		)
+		.route(
+			"/internal/wg/weavers/{id}",
+			delete(routes::wgtunnel::unregister_weaver),
+		)
+		.route(
+			"/internal/wg/weavers/{id}",
+			get(routes::wgtunnel::get_weaver),
+		)
+		.route(
+			"/internal/wg/weavers/{id}/peers",
+			get(routes::wgtunnel::stream_peers),
 		)
 		// Documentation search
 		.route("/docs/search", get(routes::docs::search_handler))
@@ -1067,6 +1130,18 @@ pub fn create_router(state: AppState) -> Router {
 				"/api/weavers/cleanup",
 				post(routes::weaver::trigger_cleanup),
 			);
+	}
+
+	// Add WireGuard tunnel routes if enabled
+	if has_wg_tunnel {
+		authed = authed
+			.route("/api/wg/devices", post(routes::wgtunnel::register_device))
+			.route("/api/wg/devices", get(routes::wgtunnel::list_devices))
+			.route("/api/wg/devices/{id}", delete(routes::wgtunnel::revoke_device))
+			.route("/api/wg/sessions", post(routes::wgtunnel::create_session))
+			.route("/api/wg/sessions", get(routes::wgtunnel::list_sessions))
+			.route("/api/wg/sessions/{id}", delete(routes::wgtunnel::terminate_session))
+			.route("/api/wg/derp-map", get(routes::wgtunnel::get_derp_map));
 	}
 
 	// Build the authenticated router with auth middleware

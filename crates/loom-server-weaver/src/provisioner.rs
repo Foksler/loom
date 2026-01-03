@@ -28,6 +28,7 @@ const LABEL_REPO_ID: &str = "loom.dev/repo-id";
 const LABEL_IMAGE: &str = "loom.dev/image";
 const LABEL_IMAGE_REGISTRY: &str = "loom.dev/image-registry";
 const LABEL_IMAGE_NAME: &str = "loom.dev/image-name";
+const LABEL_WG_ENABLED: &str = "loom.dev/wg-enabled";
 const TAGS_ANNOTATION: &str = "loom.dev/tags";
 const LIFETIME_ANNOTATION: &str = "loom.dev/lifetime-hours";
 const CONTAINER_NAME: &str = "weaver";
@@ -468,6 +469,9 @@ fn build_pod_spec(
         LABEL_IMAGE_NAME.to_string(),
         sanitize_label_value(&image_parts.name),
     );
+    if config.wg_enabled {
+        labels.insert(LABEL_WG_ENABLED.to_string(), "true".to_string());
+    }
 
     let mut annotations = BTreeMap::new();
     if !req.tags.is_empty() {
@@ -515,6 +519,26 @@ fn build_pod_spec(
             value: Some("1".to_string()),
             value_from: None,
         });
+    }
+
+    if config.wg_enabled {
+        env_vars.push(EnvVar {
+            name: "LOOM_WG_ENABLED".to_string(),
+            value: Some("true".to_string()),
+            value_from: None,
+        });
+        env_vars.push(EnvVar {
+            name: "LOOM_WEAVER_ID".to_string(),
+            value: Some(id.to_string()),
+            value_from: None,
+        });
+        if let Some(ref wg_server_url) = config.wg_server_url {
+            env_vars.push(EnvVar {
+                name: "LOOM_SERVER_URL".to_string(),
+                value: Some(wg_server_url.clone()),
+                value_from: None,
+            });
+        }
     }
 
     let mut limits = BTreeMap::new();

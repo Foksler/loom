@@ -34,6 +34,7 @@ pub mod weaver;
 pub mod weaver_auth;
 pub mod weaver_secrets;
 pub mod webhooks;
+pub mod wgtunnel;
 
 // Re-export all API types from loom-server-api for backward compatibility
 pub use loom_server_api::admin::*;

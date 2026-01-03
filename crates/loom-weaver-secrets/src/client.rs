@@ -219,6 +219,14 @@ impl SecretsClient {
         }
     }
 
+    /// Get a valid SVID token, obtaining one if needed.
+    ///
+    /// This is useful for other services that need to authenticate with SVID,
+    /// such as the WireGuard tunnel registration.
+    pub async fn get_svid(&self) -> SecretsClientResult<SecretString> {
+        self.ensure_svid().await
+    }
+
     /// Ensure we have a valid SVID, obtaining one if needed.
     async fn ensure_svid(&self) -> SecretsClientResult<SecretString> {
         // Check cache

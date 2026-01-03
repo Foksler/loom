@@ -260,6 +260,8 @@ fn load_weaver_from_env() -> Result<WeaverConfigLayer, ConfigError> {
 		image_pull_secrets,
 		secrets_server_url: env_var("LOOM_SERVER_WEAVER_SECRETS_SERVER_URL"),
 		secrets_allow_insecure: env_bool("LOOM_SERVER_WEAVER_SECRETS_ALLOW_INSECURE"),
+		wg_enabled: env_bool("LOOM_SERVER_WEAVER_WG_ENABLED"),
+		wg_server_url: env_var("LOOM_SERVER_WEAVER_WG_SERVER_URL"),
 	})
 }
 

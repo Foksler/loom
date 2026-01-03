@@ -624,9 +624,76 @@ services.loom-server.weaver = {
 
 ---
 
-## 16. Future Considerations
+## 16. WireGuard Tunnel Support
 
-### 16.1 Potential Extensions
+### 16.1 Overview
+
+Weavers can be configured to register with the wgtunnel server, enabling SSH access to weaver pods via a WireGuard VPN tunnel. This allows secure remote access to weaver containers without exposing SSH ports publicly.
+
+### 16.2 Configuration
+
+Enable WireGuard tunnel support in the weaver provisioner config:
+
+```nix
+services.loom-server.weaver = {
+  wgEnabled = true;
+  wgServerUrl = "https://loom.ghuntley.com";
+};
+```
+
+### 16.3 Environment Variables
+
+When `wg_enabled` is true, the following environment variables are injected into weaver pods:
+
+| Variable | Description |
+|----------|-------------|
+| `LOOM_WG_ENABLED` | Set to `"true"` when WireGuard is enabled |
+| `LOOM_WEAVER_ID` | The weaver's UUID7 identifier |
+| `LOOM_SERVER_URL` | URL to the loom server for WG registration |
+
+### 16.4 Pod Labels
+
+WireGuard-enabled pods include an additional label for identification:
+
+```yaml
+labels:
+  loom.dev/wg-enabled: "true"
+```
+
+### 16.5 Container Image Requirements
+
+For WireGuard tunnel SSH access to work, the weaver container image **MUST** include:
+
+1. **OpenSSH server (`sshd`)** - installed and configured
+2. **WireGuard client integration** - the weaver entrypoint should initialize the WG tunnel
+
+Example additions to `Dockerfile.weaver`:
+
+```dockerfile
+# Install sshd for remote access via WireGuard tunnel
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Configure sshd to listen on internal port (accessed via WG tunnel)
+RUN echo "Port 22" >> /etc/ssh/sshd_config \
+    && echo "PermitRootLogin no" >> /etc/ssh/sshd_config \
+    && echo "PasswordAuthentication no" >> /etc/ssh/sshd_config \
+    && echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
+```
+
+The entrypoint script should:
+1. Check if `LOOM_WG_ENABLED=true`
+2. Initialize the WireGuard tunnel client to register with `$LOOM_SERVER_URL`
+3. Start `sshd` in the background
+4. Continue with the normal weaver workload
+
+---
+
+## 17. Future Considerations
+
+### 17.1 Potential Extensions
 
 - Multi-namespace support
 - Weaver exec (interactive shell)
@@ -635,7 +702,7 @@ services.loom-server.weaver = {
 - Webhook retry with backoff
 - Weaver templates/presets
 
-### 16.2 Not Planned
+### 17.2 Not Planned
 
 - Multi-cluster support
 - Persistent volumes

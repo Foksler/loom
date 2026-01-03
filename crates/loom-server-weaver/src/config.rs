@@ -28,6 +28,10 @@ pub struct WeaverConfig {
     pub secrets_server_url: Option<String>,
     /// Allow insecure (HTTP) connections to secrets server (for in-cluster use)
     pub secrets_allow_insecure: bool,
+    /// Enable WireGuard tunnel for weaver pods (for SSH access via wgtunnel)
+    pub wg_enabled: bool,
+    /// Loom server URL for WireGuard registration (e.g., https://loom.ghuntley.com)
+    pub wg_server_url: Option<String>,
 }
 
 impl Default for WeaverConfig {
@@ -43,6 +47,8 @@ impl Default for WeaverConfig {
             image_pull_secrets: Vec::new(),
             secrets_server_url: None,
             secrets_allow_insecure: false,
+            wg_enabled: false,
+            wg_server_url: None,
         }
     }
 }

@@ -43,6 +43,7 @@ loom-server-geoip = { path = "../loom-server-geoip" }
 loom-server-github-app = { path = "../loom-server-github-app", features = ["openapi"] }
 loom-server-scm = { path = "../loom-server-scm" }
 loom-server-scm-mirror = { path = "../loom-server-scm-mirror" }
+loom-server-wgtunnel = { path = "../loom-server-wgtunnel" }
 gix = { version = "0.68", default-features = false, features = ["revision"] }
 loom-server-search-google-cse = { path = "../loom-server-search-google-cse", features = ["openapi"] }
 loom-server-search-serper = { path = "../loom-server-search-serper", features = ["openapi"] }
@@ -73,6 +74,9 @@ sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
 
 # Time
 chrono = { version = "0.4", features = ["serde"] }
+
+# SSE streaming
+async-stream = "0.3"
 
 # From workspace
 serde.workspace = true

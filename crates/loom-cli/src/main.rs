@@ -229,6 +229,27 @@ enum Command {
 		#[command(subcommand)]
 		command: loom_cli_spool::SpoolCommands,
 	},
+	/// WireGuard tunnel management
+	Tunnel {
+		#[command(subcommand)]
+		command: loom_cli_wgtunnel::TunnelCommands,
+	},
+	/// SSH to a weaver through WireGuard tunnel
+	Ssh(loom_cli_wgtunnel::SshArgs),
+	/// WireGuard device management
+	Wg {
+		#[command(subcommand)]
+		command: WgCommand,
+	},
+}
+
+#[derive(Subcommand, Debug)]
+enum WgCommand {
+	/// Device management subcommands
+	Devices {
+		#[command(subcommand)]
+		command: loom_cli_wgtunnel::DevicesCommands,
+	},
 }
 
 impl From<&Args> for CliOverrides {
@@ -1239,6 +1260,41 @@ async fn main() -> Result<()> {
 			}
 		}
 		Some(Command::Spool { command }) => loom_cli_spool::run(command).await,
+		Some(Command::Tunnel { command }) => {
+			let ctx = create_wgtunnel_context(&args).await?;
+			match command {
+				loom_cli_wgtunnel::TunnelCommands::Up(ref up_args) => {
+					loom_cli_wgtunnel::handle_tunnel_up(up_args.clone(), &ctx).await
+				}
+				loom_cli_wgtunnel::TunnelCommands::Down => {
+					loom_cli_wgtunnel::handle_tunnel_down(&ctx).await
+				}
+				loom_cli_wgtunnel::TunnelCommands::Status => {
+					loom_cli_wgtunnel::handle_tunnel_status(&ctx).await
+				}
+			}
+		}
+		Some(Command::Ssh(ref ssh_args)) => {
+			let ctx = create_wgtunnel_context(&args).await?;
+			loom_cli_wgtunnel::handle_ssh(ssh_args.clone(), &ctx).await
+		}
+		Some(Command::Wg { command }) => {
+			let ctx = create_wgtunnel_context(&args).await?;
+			match command {
+				WgCommand::Devices { command: dev_cmd } => match dev_cmd {
+					loom_cli_wgtunnel::DevicesCommands::List => {
+						loom_cli_wgtunnel::handle_devices_list(&ctx).await
+					}
+					loom_cli_wgtunnel::DevicesCommands::Register(ref register_args) => {
+						loom_cli_wgtunnel::handle_devices_register(register_args.clone(), &ctx)
+							.await
+					}
+					loom_cli_wgtunnel::DevicesCommands::Revoke(ref revoke_args) => {
+						loom_cli_wgtunnel::handle_devices_revoke(revoke_args.clone(), &ctx).await
+					}
+				},
+			}
+		}
 		None => {
 			let thread = create_new_thread(&config, &args)?;
 			start_repl_session(&config, &args, thread_store, thread).await
@@ -1321,6 +1377,25 @@ fn setup_ctrlc_handler(shutdown_tx: watch::Sender<bool>) -> Result<()> {
 	.context("failed to set Ctrl+C handler")?;
 
 	Ok(())
+}
+
+async fn create_wgtunnel_context(args: &Args) -> Result<loom_cli_wgtunnel::CliContext> {
+	let server_url: Url = args.server_url.parse().context("invalid server URL")?;
+
+	let token = auth::load_token(&args.server_url)
+		.await
+		.ok_or_else(|| anyhow::anyhow!("not logged in, run 'loom login' first"))?;
+
+	let config_dir = dirs::config_dir()
+		.unwrap_or_else(|| PathBuf::from("."))
+		.join("loom")
+		.join("wgtunnel");
+
+	tokio::fs::create_dir_all(&config_dir)
+		.await
+		.context("failed to create wgtunnel config directory")?;
+
+	Ok(loom_cli_wgtunnel::CliContext::new(server_url, token, config_dir))
 }
 
 async fn run_weaver_new(
