@@ -335,7 +335,7 @@
   # Automatic Nix garbage collection based on disk space
   services.automatic-nix-gc = {
     enable = true;
-    interval = "1h";
+    interval = "1min";
     diskThreshold = 64;
     maxFreed = 32;
     preserveGenerations = "1d";
