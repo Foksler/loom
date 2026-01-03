@@ -12,7 +12,7 @@
 ### Implementation Notes
 
 CLI authentication is implemented in `loom-cli/src/auth.rs` using:
-- **Device code flow**: `POST /api/auth/device/start` and `POST /api/auth/device/poll`
+- **Device code flow**: `POST /auth/device/start` and `POST /auth/device/poll`
 - **Token storage**: `loom-credentials` crate with `KeyringThenFileStore` (keychain → file fallback)
 - **Automatic token loading**: All CLI commands auto-load token from credential store
 
@@ -95,7 +95,7 @@ OAuth providers require the following environment variables:
 ├─────────────────────────────────────────────────────────────────────────┤
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐          │
 │  │  Auth Routes    │  │ Auth Middleware │  │  ABAC Engine    │          │
-│  │  /api/auth/*    │  │ Session/Token   │  │  Policy Eval    │          │
+│  │  /auth/*    │  │ Session/Token   │  │  Policy Eval    │          │
 │  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘          │
 │           │                    │                    │                    │
 │           └────────────────────┼────────────────────┘                    │
@@ -136,7 +136,7 @@ OAuth providers require the following environment variables:
 User clicks "Login with GitHub"
   → Redirect to GitHub authorization
   → User approves
-  → Callback to /api/auth/callback/github
+  → Callback to /auth/callback/github
   → Exchange code for tokens
   → Fetch user info (email, name, avatar)
   → Upsert user + identity
@@ -148,9 +148,9 @@ User clicks "Login with GitHub"
 
 ```
 User enters email
-  → POST /api/auth/magic-link
+  → POST /auth/magic-link
   → Generate single-use token (stored hashed)
-  → Send email with link: /api/auth/magic-link/verify?token=xxx
+  → Send email with link: /auth/magic-link/verify?token=xxx
   → User clicks link within 10 minutes
   → Verify token, invalidate it
   → Upsert user
@@ -251,7 +251,7 @@ Each session stores:
 ### Flow
 
 ```
-1. CLI: POST /api/auth/device/start
+1. CLI: POST /auth/device/start
    → Response: { device_code, user_code: "123-456-789", verification_url }
 
 2. CLI displays: "Visit https://loom.example/device and enter code: 123-456-789"
@@ -259,9 +259,9 @@ Each session stores:
 3. User visits URL in browser (/device?code=XXX)
    → If not authenticated, redirected to /login?redirectTo=/device?code=XXX
    → After login, user is returned to /device with the code preserved
-   → User submits code via POST /api/auth/device/complete (requires auth)
+   → User submits code via POST /auth/device/complete (requires auth)
 
-4. CLI polls: POST /api/auth/device/poll { device_code }
+4. CLI polls: POST /auth/device/poll { device_code }
    → Polling interval: 1 second
    → On success: { access_token }
    → On pending: { status: "pending" }
@@ -1093,19 +1093,19 @@ CREATE INDEX idx_audit_logs_event_type ON audit_logs(event_type);
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/auth/providers` | List available auth providers |
-| GET | `/api/auth/login/github` | Initiate GitHub OAuth |
-| GET | `/api/auth/login/google` | Initiate Google OAuth |
-| GET | `/api/auth/callback/github` | GitHub OAuth callback |
-| GET | `/api/auth/callback/google` | Google OAuth callback |
-| POST | `/api/auth/magic-link` | Request magic link |
-| GET | `/api/auth/magic-link/verify` | Verify magic link |
-| POST | `/api/auth/device/start` | Start device code flow |
-| POST | `/api/auth/device/poll` | Poll device code status |
-| POST | `/api/auth/device/complete` | Complete device code (requires auth) |
+| GET | `/auth/providers` | List available auth providers |
+| GET | `/auth/login/github` | Initiate GitHub OAuth |
+| GET | `/auth/login/google` | Initiate Google OAuth |
+| GET | `/auth/callback/github` | GitHub OAuth callback |
+| GET | `/auth/callback/google` | Google OAuth callback |
+| POST | `/auth/magic-link` | Request magic link |
+| GET | `/auth/magic-link/verify` | Verify magic link |
+| POST | `/auth/device/start` | Start device code flow |
+| POST | `/auth/device/poll` | Poll device code status |
+| POST | `/auth/device/complete` | Complete device code (requires auth) |
 | GET | `/device` | Device code entry page (requires auth, redirects to login) |
-| POST | `/api/auth/logout` | Logout (invalidate session) |
-| GET | `/api/auth/me` | Get current user |
+| POST | `/auth/logout` | Logout (invalidate session) |
+| GET | `/auth/me` | Get current user |
 
 ### Sessions
 
@@ -1261,8 +1261,8 @@ crates/loom-auth/
 - [ ] GitHub OAuth login
 - [ ] Google OAuth login
 - [ ] Session cookie management
-- [ ] `/api/auth/me` endpoint
-- [ ] `/api/auth/logout` endpoint
+- [ ] `/auth/me` endpoint
+- [ ] `/auth/logout` endpoint
 - [ ] Auto-create personal org on signup
 
 ### Phase 2: Magic Link (2-3 days)

@@ -64,7 +64,7 @@
 		try {
 			const params = new URLSearchParams();
 			params.set('redirect', redirectTo);
-			const response = await fetch(`/api/auth/login/${provider}?${params.toString()}`);
+			const response = await fetch(`/auth/login/${provider}?${params.toString()}`);
 			const data = await response.json();
 
 			if (!response.ok) {

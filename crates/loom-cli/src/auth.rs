@@ -59,7 +59,7 @@ fn get_credential_store() -> KeyringThenFileStore {
 pub async fn login(server_url: &str) -> Result<()> {
 	let client = loom_common_http::new_client();
 	let base = normalize_base(server_url);
-	let start_url = format!("{base}/api/auth/device/start");
+	let start_url = format!("{base}/auth/device/start");
 
 	debug!("initiating device code flow");
 	let resp = client
@@ -97,7 +97,7 @@ pub async fn login(server_url: &str) -> Result<()> {
 		eprintln!("{}", loom_common_i18n::t(get_locale(), "client.auth.browser_failed"));
 	}
 
-	let poll_url = format!("{base}/api/auth/device/poll");
+	let poll_url = format!("{base}/auth/device/poll");
 	let timeout = Duration::from_secs(start.expires_in.max(0) as u64);
 	let poll_interval = Duration::from_secs(1);
 	let started = Instant::now();
@@ -186,7 +186,7 @@ pub async fn logout(server_url: &str) -> Result<()> {
 		store.load(&key).await.context("failed to load credentials")?
 	{
 		let client = loom_common_http::new_client();
-		let logout_url = format!("{base}/api/auth/logout");
+		let logout_url = format!("{base}/auth/logout");
 		debug!("calling logout endpoint");
 		let _ = client
 			.post(&logout_url)

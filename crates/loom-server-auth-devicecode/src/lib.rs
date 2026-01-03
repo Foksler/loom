@@ -18,7 +18,7 @@
 //! ┌─────────┐                              ┌─────────┐                    ┌─────────┐
 //! │   CLI   │                              │ Server  │                    │ Browser │
 //! └────┬────┘                              └────┬────┘                    └────┬────┘
-//!      │  POST /api/auth/device/start           │                              │
+//!      │  POST /auth/device/start               │                              │
 //!      │───────────────────────────────────────>│                              │
 //!      │                                        │                              │
 //!      │  {device_code, user_code, expires_at}  │                              │
@@ -33,7 +33,7 @@
 //!      │                                        │   User enters code & logs in │
 //!      │                                        │<─────────────────────────────│
 //!      │                                        │                              │
-//!      │  POST /api/auth/device/poll            │                              │
+//!      │  POST /auth/device/poll               │                              │
 //!      │───────────────────────────────────────>│                              │
 //!      │                                        │                              │
 //!      │  {status: "completed", token: "..."}   │                              │

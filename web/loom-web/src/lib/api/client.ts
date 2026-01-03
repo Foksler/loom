@@ -144,37 +144,37 @@ export class LoomApiClient {
 
 	// Auth operations
 	async getAuthProviders(): Promise<AuthProvidersResponse> {
-		return this.request<AuthProvidersResponse>('/api/auth/providers');
+		return this.request<AuthProvidersResponse>('/auth/providers');
 	}
 
 	async getCurrentUser(): Promise<CurrentUser> {
-		return this.request<CurrentUser>('/api/auth/me');
+		return this.request<CurrentUser>('/auth/me');
 	}
 
 	async getWsToken(): Promise<WsTokenResponse> {
-		return this.request<WsTokenResponse>('/api/auth/ws-token');
+		return this.request<WsTokenResponse>('/auth/ws-token');
 	}
 
 	async requestMagicLink(email: string): Promise<AuthSuccessResponse> {
 		const body: MagicLinkRequest = { email };
-		return this.request<AuthSuccessResponse>('/api/auth/magic-link', {
+		return this.request<AuthSuccessResponse>('/auth/magic-link', {
 			method: 'POST',
 			body: JSON.stringify(body),
 		});
 	}
 
 	async logout(): Promise<void> {
-		await this.request<void>('/api/auth/logout', { method: 'POST' });
+		await this.request<void>('/auth/logout', { method: 'POST' });
 	}
 
 	async startDeviceCode(): Promise<DeviceCodeStartResponse> {
-		return this.request<DeviceCodeStartResponse>('/api/auth/device/start', {
+		return this.request<DeviceCodeStartResponse>('/auth/device/start', {
 			method: 'POST',
 		});
 	}
 
 	async pollDeviceCode(deviceCode: string): Promise<DeviceCodePollResponse> {
-		return this.request<DeviceCodePollResponse>('/api/auth/device/poll', {
+		return this.request<DeviceCodePollResponse>('/auth/device/poll', {
 			method: 'POST',
 			body: JSON.stringify({ device_code: deviceCode }),
 		});
@@ -182,7 +182,7 @@ export class LoomApiClient {
 
 	async completeDeviceCode(userCode: string): Promise<AuthSuccessResponse> {
 		const body: DeviceCodeCompleteRequest = { user_code: userCode };
-		return this.request<AuthSuccessResponse>('/api/auth/device/complete', {
+		return this.request<AuthSuccessResponse>('/auth/device/complete', {
 			method: 'POST',
 			body: JSON.stringify(body),
 		});

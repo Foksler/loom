@@ -45,7 +45,7 @@ use crate::{
 
 #[utoipa::path(
     get,
-    path = "/api/auth/providers",
+    path = "/auth/providers",
     responses(
         (status = 200, description = "List of available auth providers", body = AuthProvidersResponse)
     ),
@@ -78,7 +78,7 @@ pub async fn get_providers(State(state): State<AppState>) -> impl IntoResponse {
 
 #[utoipa::path(
     get,
-    path = "/api/auth/me",
+    path = "/auth/me",
     responses(
         (status = 200, description = "Current authenticated user", body = CurrentUserResponse),
         (status = 401, description = "Not authenticated", body = AuthErrorResponse)
@@ -109,7 +109,7 @@ pub async fn get_current_user(RequireAuth(current_user): RequireAuth) -> impl In
 
 #[utoipa::path(
     get,
-    path = "/api/auth/ws-token",
+    path = "/auth/ws-token",
     responses(
         (status = 200, description = "WebSocket authentication token", body = WsTokenResponse),
         (status = 401, description = "Not authenticated", body = AuthErrorResponse)
@@ -167,7 +167,7 @@ pub async fn get_ws_token(
 
 #[utoipa::path(
     post,
-    path = "/api/auth/logout",
+    path = "/auth/logout",
     responses(
         (status = 200, description = "Logout successful", body = AuthSuccessResponse)
     ),
@@ -221,7 +221,7 @@ pub async fn logout(
 
 #[utoipa::path(
     post,
-    path = "/api/auth/magic-link",
+    path = "/auth/magic-link",
     request_body = MagicLinkRequest,
     responses(
         (status = 200, description = "Magic link sent", body = AuthSuccessResponse),
@@ -295,7 +295,7 @@ pub async fn request_magic_link(
 	};
 
 	let verification_url = format!(
-		"{}/api/auth/magic-link/verify?token={}",
+		"{}/auth/magic-link/verify?token={}",
 		state.base_url, plaintext_token
 	);
 
@@ -363,7 +363,7 @@ fn render_magic_link_email(verification_url: &str, locale: &str) -> (String, Str
 
 #[utoipa::path(
     post,
-    path = "/api/auth/device/start",
+    path = "/auth/device/start",
     responses(
         (status = 200, description = "Device code flow started", body = DeviceCodeStartResponse),
         (status = 500, description = "Internal error", body = AuthErrorResponse)
@@ -419,7 +419,7 @@ pub async fn device_start(State(state): State<AppState>) -> impl IntoResponse {
 
 #[utoipa::path(
     post,
-    path = "/api/auth/device/poll",
+    path = "/auth/device/poll",
     request_body = DeviceCodePollRequest,
     responses(
         (status = 200, description = "Device code status", body = DeviceCodePollResponse),
@@ -518,7 +518,7 @@ pub async fn device_poll(
 
 #[utoipa::path(
     post,
-    path = "/api/auth/device/complete",
+    path = "/auth/device/complete",
     request_body = DeviceCodeCompleteRequest,
     responses(
         (status = 200, description = "Device code completed", body = DeviceCodeCompleteResponse),
@@ -627,7 +627,7 @@ pub struct OAuthLoginQuery {
 
 #[utoipa::path(
     get,
-    path = "/api/auth/login/github",
+    path = "/auth/login/github",
     params(
         ("redirect" = Option<String>, Query, description = "Redirect URL after successful authentication")
     ),
@@ -676,7 +676,7 @@ pub async fn login_github(
 
 #[utoipa::path(
     get,
-    path = "/api/auth/login/google",
+    path = "/auth/login/google",
     params(
         ("redirect" = Option<String>, Query, description = "Redirect URL after successful authentication")
     ),
@@ -726,7 +726,7 @@ pub async fn login_google(
 
 #[utoipa::path(
     get,
-    path = "/api/auth/login/okta",
+    path = "/auth/login/okta",
     params(
         ("redirect" = Option<String>, Query, description = "Redirect URL after successful authentication")
     ),
@@ -1345,7 +1345,7 @@ async fn complete_oauth_login(
 
 #[utoipa::path(
     get,
-    path = "/api/auth/magic-link/verify",
+    path = "/auth/magic-link/verify",
     params(
         ("token" = String, Query, description = "Magic link token from email")
     ),
@@ -1555,7 +1555,7 @@ fn hash_token(token: &str) -> String {
 
 #[utoipa::path(
     get,
-    path = "/api/auth/device",
+    path = "/auth/device",
     responses(
         (status = 200, description = "Device code entry page")
     ),
@@ -1705,7 +1705,7 @@ pub async fn device_page(
             submitBtn.textContent = MSGS.authorizing;
             messageDiv.className = 'message hidden';
             try {{
-                const response = await fetch('/api/auth/device/complete', {{
+                const response = await fetch('/auth/device/complete', {{
                     method: 'POST',
                     headers: {{ 'Content-Type': 'application/json' }},
                     body: JSON.stringify({{ user_code: userCode }}),

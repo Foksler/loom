@@ -16,7 +16,7 @@ export const load: LayoutLoad = async ({ url, fetch }) => {
 	}
 
 	try {
-		const response = await fetch('/api/auth/me');
+		const response = await fetch('/auth/me');
 
 		if (!response.ok) {
 			const redirectTo = url.pathname + url.search;

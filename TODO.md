@@ -37,9 +37,9 @@ Implementation checklist for the Authentication and ABAC system. See
 - [x] Create `src/user.rs` - User struct, Identity, Provider enum
 - [x] Create `src/middleware.rs` - CurrentUser, AuthContext, token extraction
 - [x] Create auth routes in loom-server:
-  - [x] `GET /api/auth/providers`
-  - [x] `GET /api/auth/me`
-  - [x] `POST /api/auth/logout`
+  - [x] `GET /auth/providers`
+  - [x] `GET /auth/me`
+  - [x] `POST /auth/logout`
 
 ---
 
@@ -48,8 +48,8 @@ Implementation checklist for the Authentication and ABAC system. See
 - [x] Create `src/magic_link.rs` - 10-minute single-use tokens
 - [x] Create `src/email.rs` - SMTP config, email templates
 - [x] Create routes:
-  - [x] `POST /api/auth/magic-link`
-  - [x] `GET /api/auth/magic-link/verify`
+  - [x] `POST /auth/magic-link`
+  - [x] `GET /auth/magic-link/verify`
 
 ---
 
@@ -58,8 +58,8 @@ Implementation checklist for the Authentication and ABAC system. See
 - [x] Create `src/device_code.rs` - Device code flow (123-456-789 format)
 - [x] Create `src/access_token.rs` - Bearer tokens with 60-day sliding expiry
 - [x] Create routes:
-  - [x] `POST /api/auth/device/start`
-  - [x] `POST /api/auth/device/poll`
+  - [x] `POST /auth/device/start`
+  - [x] `POST /auth/device/poll`
 
 ---
 

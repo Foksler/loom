@@ -29,7 +29,7 @@ describe('LoomApiClient auth methods', () => {
 			const result = await client.getAuthProviders();
 
 			expect(mockFetch).toHaveBeenCalledWith(
-				'http://localhost:3000/api/auth/providers',
+				'http://localhost:3000/auth/providers',
 				expect.objectContaining({
 					headers: { 'Content-Type': 'application/json' },
 				})
@@ -58,7 +58,7 @@ describe('LoomApiClient auth methods', () => {
 			const result = await client.getCurrentUser();
 
 			expect(mockFetch).toHaveBeenCalledWith(
-				'http://localhost:3000/api/auth/me',
+				'http://localhost:3000/auth/me',
 				expect.objectContaining({
 					headers: { 'Content-Type': 'application/json' },
 				})
@@ -95,7 +95,7 @@ describe('LoomApiClient auth methods', () => {
 			const result = await client.requestMagicLink('test@example.com');
 
 			expect(mockFetch).toHaveBeenCalledWith(
-				'http://localhost:3000/api/auth/magic-link',
+				'http://localhost:3000/auth/magic-link',
 				expect.objectContaining({
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
@@ -116,7 +116,7 @@ describe('LoomApiClient auth methods', () => {
 			await client.logout();
 
 			expect(mockFetch).toHaveBeenCalledWith(
-				'http://localhost:3000/api/auth/logout',
+				'http://localhost:3000/auth/logout',
 				expect.objectContaining({
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },

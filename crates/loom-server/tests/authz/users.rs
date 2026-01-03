@@ -145,8 +145,8 @@ async fn auth_me_returns_locale_after_update() {
 		.await;
 	assert_eq!(update_response.status(), StatusCode::OK);
 
-	// Then verify /api/auth/me returns the updated locale
-	let me_response = app.get("/api/auth/me", Some(owner)).await;
+	// Then verify /auth/me returns the updated locale
+	let me_response = app.get("/auth/me", Some(owner)).await;
 	assert_eq!(me_response.status(), StatusCode::OK);
 
 	let body = axum::body::to_bytes(me_response.into_body(), usize::MAX)
@@ -156,7 +156,7 @@ async fn auth_me_returns_locale_after_update() {
 
 	assert_eq!(
 		json["locale"], "ja",
-		"/api/auth/me should return the user's locale preference"
+		"/auth/me should return the user's locale preference"
 	);
 }
 

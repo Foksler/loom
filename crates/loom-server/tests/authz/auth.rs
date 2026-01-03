@@ -15,12 +15,12 @@ use super::support::TestApp;
 async fn get_ws_token_requires_auth() {
 	let app = TestApp::new().await;
 
-	let response = app.get("/api/auth/ws-token", None).await;
+	let response = app.get("/auth/ws-token", None).await;
 
 	assert_eq!(
 		response.status(),
 		StatusCode::UNAUTHORIZED,
-		"GET /api/auth/ws-token should require authentication"
+		"GET /auth/ws-token should require authentication"
 	);
 }
 
@@ -29,7 +29,7 @@ async fn get_ws_token_returns_token_for_authenticated_user() {
 	let app = TestApp::new().await;
 	let owner = &app.fixtures.org_a.owner;
 
-	let response = app.get("/api/auth/ws-token", Some(owner)).await;
+	let response = app.get("/auth/ws-token", Some(owner)).await;
 
 	assert_eq!(
 		response.status(),
@@ -67,7 +67,7 @@ async fn ws_token_is_single_use() {
 	let app = TestApp::new().await;
 	let owner = &app.fixtures.org_a.owner;
 
-	let response = app.get("/api/auth/ws-token", Some(owner)).await;
+	let response = app.get("/auth/ws-token", Some(owner)).await;
 	assert_eq!(response.status(), StatusCode::OK);
 
 	let body = axum::body::to_bytes(response.into_body(), usize::MAX)
@@ -112,8 +112,8 @@ async fn different_users_get_different_tokens() {
 	let owner = &app.fixtures.org_a.owner;
 	let member = &app.fixtures.org_a.member;
 
-	let response1 = app.get("/api/auth/ws-token", Some(owner)).await;
-	let response2 = app.get("/api/auth/ws-token", Some(member)).await;
+	let response1 = app.get("/auth/ws-token", Some(owner)).await;
+	let response2 = app.get("/auth/ws-token", Some(member)).await;
 
 	assert_eq!(response1.status(), StatusCode::OK);
 	assert_eq!(response2.status(), StatusCode::OK);
@@ -139,8 +139,8 @@ async fn same_user_can_get_multiple_tokens() {
 	let app = TestApp::new().await;
 	let owner = &app.fixtures.org_a.owner;
 
-	let response1 = app.get("/api/auth/ws-token", Some(owner)).await;
-	let response2 = app.get("/api/auth/ws-token", Some(owner)).await;
+	let response1 = app.get("/auth/ws-token", Some(owner)).await;
+	let response2 = app.get("/auth/ws-token", Some(owner)).await;
 
 	assert_eq!(response1.status(), StatusCode::OK);
 	assert_eq!(response2.status(), StatusCode::OK);

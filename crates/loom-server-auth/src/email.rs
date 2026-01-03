@@ -194,7 +194,7 @@ pub fn render_email(template: &EmailTemplate, locale: &str) -> (String, String) 
         } => {
             let subject = t(locale, "server.email.magic_link.subject");
             let body = format!(
-                "{}\n\nhttps://loom.example/api/auth/magic-link/verify?token={}\n\n{}\n\n{}",
+                "{}\n\nhttps://loom.example/auth/magic-link/verify?token={}\n\n{}\n\n{}",
                 t(locale, "server.email.magic_link.body"),
                 token,
                 t_fmt(locale, "server.email.magic_link.expires", &[

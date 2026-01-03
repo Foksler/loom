@@ -683,23 +683,23 @@ pub fn create_router(state: AppState) -> Router {
 		.route("/health", get(routes::health::health_check))
 		.route("/metrics", get(routes::health::prometheus_metrics))
 		// Auth routes (public)
-		.route("/api/auth/providers", get(routes::auth::get_providers))
+		.route("/auth/providers", get(routes::auth::get_providers))
 		.route(
-			"/api/auth/magic-link",
+			"/auth/magic-link",
 			post(routes::auth::request_magic_link),
 		)
 		.route(
-			"/api/auth/magic-link/verify",
+			"/auth/magic-link/verify",
 			get(routes::auth::verify_magic_link),
 		)
-		.route("/api/auth/device/start", post(routes::auth::device_start))
-		.route("/api/auth/device/poll", post(routes::auth::device_poll))
+		.route("/auth/device/start", post(routes::auth::device_start))
+		.route("/auth/device/poll", post(routes::auth::device_poll))
 		// OAuth login/callback routes
-		.route("/api/auth/login/github", get(routes::auth::login_github))
+		.route("/auth/login/github", get(routes::auth::login_github))
 		.route("/auth/github/callback", get(routes::auth::callback_github))
-		.route("/api/auth/login/google", get(routes::auth::login_google))
+		.route("/auth/login/google", get(routes::auth::login_google))
 		.route("/auth/google/callback", get(routes::auth::callback_google))
-		.route("/api/auth/login/okta", get(routes::auth::login_okta))
+		.route("/auth/login/okta", get(routes::auth::login_okta))
 		.route("/auth/okta/callback", get(routes::auth::callback_okta))
 		// Public invitation view (GET only)
 		.route(
@@ -797,11 +797,11 @@ pub fn create_router(state: AppState) -> Router {
 			delete(routes::share::revoke_support_access),
 		)
 		// Auth routes (authenticated)
-		.route("/api/auth/me", get(routes::auth::get_current_user))
-		.route("/api/auth/ws-token", get(routes::auth::get_ws_token))
-		.route("/api/auth/logout", post(routes::auth::logout))
+		.route("/auth/me", get(routes::auth::get_current_user))
+		.route("/auth/ws-token", get(routes::auth::get_ws_token))
+		.route("/auth/logout", post(routes::auth::logout))
 		.route(
-			"/api/auth/device/complete",
+			"/auth/device/complete",
 			post(routes::auth::device_complete),
 		)
 		// Session routes
@@ -1453,7 +1453,7 @@ mod tests {
 			.oneshot(
 				Request::builder()
 					.method("POST")
-					.uri("/api/auth/logout")
+					.uri("/auth/logout")
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -1469,7 +1469,7 @@ mod tests {
 			.oneshot(
 				Request::builder()
 					.method("GET")
-					.uri("/api/auth/providers")
+					.uri("/auth/providers")
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -1485,7 +1485,7 @@ mod tests {
 			.oneshot(
 				Request::builder()
 					.method("GET")
-					.uri("/api/auth/me")
+					.uri("/auth/me")
 					.body(Body::empty())
 					.unwrap(),
 			)
@@ -1501,7 +1501,7 @@ mod tests {
 			.oneshot(
 				Request::builder()
 					.method("POST")
-					.uri("/api/auth/device/start")
+					.uri("/auth/device/start")
 					.body(Body::empty())
 					.unwrap(),
 			)

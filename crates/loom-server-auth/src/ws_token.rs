@@ -9,7 +9,7 @@
 //!
 //! # Flow
 //!
-//! 1. Client calls GET /api/auth/ws-token (authenticated via session cookie)
+//! 1. Client calls GET /auth/ws-token (authenticated via session cookie)
 //! 2. Server generates a short-lived token, stores hash, returns plaintext
 //! 3. Client connects to WebSocket and sends {"type": "auth", "token": "ws_xxx"}
 //! 4. Server validates token (single-use), establishes authenticated connection

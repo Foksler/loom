@@ -106,7 +106,7 @@ async fn test_providers_endpoint_returns_available_providers() {
 	let response = app
 		.oneshot(
 			Request::builder()
-				.uri("/api/auth/providers")
+				.uri("/auth/providers")
 				.body(Body::empty())
 				.unwrap(),
 		)
@@ -134,7 +134,7 @@ async fn test_magic_link_request_accepts_any_email() {
 	let response = app
 		.oneshot(
 			Request::builder()
-				.uri("/api/auth/magic-link")
+				.uri("/auth/magic-link")
 				.method("POST")
 				.header("content-type", "application/json")
 				.body(Body::from(body))
@@ -158,7 +158,7 @@ async fn test_magic_link_request_missing_email_returns_422() {
 	let response = app
 		.oneshot(
 			Request::builder()
-				.uri("/api/auth/magic-link")
+				.uri("/auth/magic-link")
 				.method("POST")
 				.header("content-type", "application/json")
 				.body(Body::from(body))
@@ -182,7 +182,7 @@ async fn test_device_start_returns_codes() {
 	let response = app
 		.oneshot(
 			Request::builder()
-				.uri("/api/auth/device/start")
+				.uri("/auth/device/start")
 				.method("POST")
 				.header("content-type", "application/json")
 				.body(Body::empty())
@@ -211,7 +211,7 @@ async fn test_device_poll_pending_initially() {
 		.clone()
 		.oneshot(
 			Request::builder()
-				.uri("/api/auth/device/start")
+				.uri("/auth/device/start")
 				.method("POST")
 				.header("content-type", "application/json")
 				.body(Body::empty())
@@ -230,7 +230,7 @@ async fn test_device_poll_pending_initially() {
 	let poll_response = app
 		.oneshot(
 			Request::builder()
-				.uri("/api/auth/device/poll")
+				.uri("/auth/device/poll")
 				.method("POST")
 				.header("content-type", "application/json")
 				.body(Body::from(poll_body))
@@ -259,7 +259,7 @@ async fn test_session_cookie_has_http_only() {
 	let start_response = app
 		.oneshot(
 			Request::builder()
-				.uri("/api/auth/device/start")
+				.uri("/auth/device/start")
 				.method("POST")
 				.body(Body::empty())
 				.unwrap(),
@@ -284,7 +284,7 @@ async fn test_session_cookie_has_same_site() {
 	let start_response = app
 		.oneshot(
 			Request::builder()
-				.uri("/api/auth/device/start")
+				.uri("/auth/device/start")
 				.method("POST")
 				.body(Body::empty())
 				.unwrap(),
@@ -580,7 +580,7 @@ const PROTECTED_GET_ROUTES: &[&str] = &[
 	// Invitation routes (invitations.rs uses RequireAuth)
 	"/api/orgs/test-org/invitations",
 	// User routes (auth.rs get_current_user uses RequireAuth)
-	"/api/auth/me",
+	"/auth/me",
 	// Weaver routes (weaver.rs uses RequireAuth, may 404 if K8s not configured)
 	"/api/weavers",
 	"/api/weaver/test-id",
@@ -592,8 +592,8 @@ const PROTECTED_GET_ROUTES: &[&str] = &[
 
 const PROTECTED_POST_ROUTES: &[&str] = &[
 	// Auth routes that need session (auth.rs uses RequireAuth)
-	"/api/auth/logout",
-	"/api/auth/device/complete",
+	"/auth/logout",
+	"/auth/device/complete",
 	// Org routes (orgs.rs uses RequireAuth)
 	"/api/orgs",
 	"/api/orgs/test-id/members",
@@ -732,7 +732,7 @@ async fn test_routes_process_bearer_token() {
 
 	// Sample of PROTECTED routes to test with invalid bearer token
 	// (thread routes are public, so they're not included here)
-	let sample_routes = ["/api/orgs", "/api/weavers", "/api/sessions", "/api/auth/me"];
+	let sample_routes = ["/api/orgs", "/api/weavers", "/api/sessions", "/auth/me"];
 
 	for route in sample_routes {
 		let response = app
