@@ -27,8 +27,11 @@ pub mod share;
 pub mod teams;
 pub mod threads;
 pub mod repos;
+pub mod secrets;
 pub mod users;
 pub mod weaver;
+pub mod weaver_auth;
+pub mod weaver_secrets;
 pub mod webhooks;
 
 // Re-export all API types from loom-server-api for backward compatibility
@@ -44,6 +47,7 @@ pub use loom_server_api::mirrors::*;
 pub use loom_server_api::orgs::*;
 pub use loom_server_api::protection::*;
 pub use loom_server_api::repos::*;
+pub use loom_server_api::secrets::*;
 pub use loom_server_api::sessions::*;
 pub use loom_server_api::share::*;
 pub use loom_server_api::teams::*;

@@ -153,6 +153,7 @@ pub async fn create_weaver(
 		branch: None,
 		owner_user_id: Some(actor_id.clone()),
 		org_id: request.org_id,
+		repo_id: request.repo_id,
 	};
 
 	let weaver = provisioner.create_weaver(create_request).await?;

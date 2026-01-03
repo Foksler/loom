@@ -34,6 +34,13 @@ pub fn generate_key() -> Zeroizing<[u8; KEY_SIZE]> {
 	key
 }
 
+/// Generate a new Data Encryption Key (DEK).
+///
+/// Alias for `generate_key()` with semantic naming for envelope encryption.
+pub fn generate_dek() -> Zeroizing<[u8; KEY_SIZE]> {
+	generate_key()
+}
+
 /// Generate a random nonce.
 ///
 /// Uses 96-bit random nonces from OsRng. For expected volumes of DEK/secret
@@ -125,12 +132,19 @@ pub fn decrypt_secret_value(dek: &[u8; KEY_SIZE], encrypted: &EncryptedData) -> 
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use proptest::prelude::*;
 
 	#[test]
 	fn key_generation_produces_unique_keys() {
 		let key1 = generate_key();
 		let key2 = generate_key();
 		assert_ne!(key1.as_slice(), key2.as_slice());
+	}
+
+	#[test]
+	fn generate_dek_produces_valid_key() {
+		let dek = generate_dek();
+		assert_eq!(dek.len(), KEY_SIZE);
 	}
 
 	#[test]
@@ -179,5 +193,77 @@ mod tests {
 
 		let result = decrypt_secret_value(&dek, &encrypted);
 		assert!(result.is_err());
+	}
+
+	proptest! {
+		#[test]
+		fn prop_dek_encryption_roundtrip(dek_bytes in proptest::collection::vec(any::<u8>(), KEY_SIZE)) {
+			let kek = generate_key();
+			let dek: [u8; KEY_SIZE] = dek_bytes.try_into().unwrap();
+
+			let encrypted = encrypt_dek(&kek, &dek).unwrap();
+			let decrypted = decrypt_dek(&kek, &encrypted).unwrap();
+
+			prop_assert_eq!(dek.as_slice(), decrypted.as_slice());
+		}
+
+		#[test]
+		fn prop_secret_encryption_roundtrip(plaintext in proptest::collection::vec(any::<u8>(), 0..10000)) {
+			let dek = generate_key();
+
+			let encrypted = encrypt_secret_value(&dek, &plaintext).unwrap();
+			let decrypted = decrypt_secret_value(&dek, &encrypted).unwrap();
+
+			prop_assert_eq!(plaintext, decrypted.as_slice());
+		}
+
+		#[test]
+		fn prop_encrypted_data_has_correct_nonce_size(plaintext in proptest::collection::vec(any::<u8>(), 0..1000)) {
+			let dek = generate_key();
+
+			let encrypted = encrypt_secret_value(&dek, &plaintext).unwrap();
+
+			prop_assert_eq!(encrypted.nonce.len(), NONCE_SIZE);
+		}
+
+		#[test]
+		fn prop_different_encryptions_produce_different_ciphertexts(plaintext in proptest::collection::vec(any::<u8>(), 1..1000)) {
+			let dek = generate_key();
+
+			let encrypted1 = encrypt_secret_value(&dek, &plaintext).unwrap();
+			let encrypted2 = encrypt_secret_value(&dek, &plaintext).unwrap();
+
+			prop_assert_ne!(encrypted1.nonce, encrypted2.nonce);
+			prop_assert_ne!(encrypted1.ciphertext, encrypted2.ciphertext);
+		}
+
+		#[test]
+		fn prop_tampered_ciphertext_fails_decryption(
+			plaintext in proptest::collection::vec(any::<u8>(), 1..1000),
+			tamper_idx in 0usize..1000usize,
+		) {
+			let dek = generate_key();
+
+			let mut encrypted = encrypt_secret_value(&dek, &plaintext).unwrap();
+			let idx = tamper_idx % encrypted.ciphertext.len();
+			encrypted.ciphertext[idx] ^= 0xFF;
+
+			let result = decrypt_secret_value(&dek, &encrypted);
+			prop_assert!(result.is_err());
+		}
+
+		#[test]
+		fn prop_wrong_key_fails_dek_decryption(
+			dek_bytes in proptest::collection::vec(any::<u8>(), KEY_SIZE)
+		) {
+			let kek1 = generate_key();
+			let kek2 = generate_key();
+			let dek: [u8; KEY_SIZE] = dek_bytes.try_into().unwrap();
+
+			let encrypted = encrypt_dek(&kek1, &dek).unwrap();
+			let result = decrypt_dek(&kek2, &encrypted);
+
+			prop_assert!(result.is_err());
+		}
 	}
 }

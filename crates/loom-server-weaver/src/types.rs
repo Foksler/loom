@@ -104,6 +104,8 @@ pub struct CreateWeaverRequest {
     pub owner_user_id: Option<String>,
     /// Organization ID that owns this weaver (required for billing/isolation).
     pub org_id: String,
+    /// Repository ID (optional, for repo-scoped secrets).
+    pub repo_id: Option<String>,
 }
 
 /// Options for streaming weaver logs.

@@ -3,16 +3,19 @@
 
 use async_trait::async_trait;
 use futures::StreamExt;
+use k8s_openapi::api::authentication::v1::{TokenReview, TokenReviewSpec, TokenReviewStatus};
+use std::collections::HashMap;
 use k8s_openapi::api::core::v1::{Namespace, Pod};
 use kube::{
 	api::{Api, AttachParams, DeleteParams, ListParams, LogParams, PostParams},
 	Client,
 };
 use tokio_util::compat::FuturesAsyncReadCompatExt;
-use tracing::debug;
+use tracing::{debug, instrument};
 
 use crate::client::K8sClient;
 use crate::error::K8sError;
+use crate::token_review::TokenReviewResult;
 use crate::types::{AttachedProcess, LogOptions, LogStream};
 
 /// Production K8s client implementation using the kube crate.
@@ -158,5 +161,67 @@ impl K8sClient for KubeClient {
 			stdin: Box::pin(stdin),
 			stdout: Box::pin(stdout),
 		})
+	}
+
+	#[instrument(skip(self, token), fields(audiences = ?audiences))]
+	async fn validate_token(
+		&self,
+		token: &str,
+		audiences: &[&str],
+	) -> Result<TokenReviewResult, K8sError> {
+		let token_review = TokenReview {
+			metadata: Default::default(),
+			spec: TokenReviewSpec {
+				audiences: if audiences.is_empty() {
+					None
+				} else {
+					Some(audiences.iter().map(|s| s.to_string()).collect())
+				},
+				token: Some(token.to_string()),
+			},
+			status: None,
+		};
+
+		let token_reviews: Api<TokenReview> = Api::all(self.client.clone());
+		let response = token_reviews
+			.create(&PostParams::default(), &token_review)
+			.await
+			.map_err(|e| K8sError::TokenReviewError {
+				message: e.to_string(),
+			})?;
+
+		let status = response.status.unwrap_or(TokenReviewStatus {
+			audiences: None,
+			authenticated: Some(false),
+			error: Some("No status in TokenReview response".to_string()),
+			user: None,
+		});
+
+		if status.authenticated != Some(true) {
+			debug!(error = ?status.error, "Token authentication failed");
+			return Ok(TokenReviewResult::unauthenticated(status.error));
+		}
+
+		let user_info = status.user.unwrap_or_default();
+		let username = user_info.username.unwrap_or_default();
+		let groups = user_info.groups.unwrap_or_default();
+		let audiences = status.audiences.unwrap_or_default();
+
+		let extra: HashMap<String, Vec<String>> = user_info
+			.extra
+			.unwrap_or_default()
+			.into_iter()
+			.map(|(k, v)| (k, v))
+			.collect();
+
+		debug!(
+			username = %username,
+			groups = ?groups,
+			"Token validated successfully"
+		);
+
+		Ok(TokenReviewResult::authenticated(
+			username, groups, extra, audiences,
+		))
 	}
 }

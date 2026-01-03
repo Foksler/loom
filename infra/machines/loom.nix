@@ -157,6 +157,19 @@
     mode = "0400";
   };
 
+  # Weaver secrets system keys
+  # Generate master key: openssl rand -base64 32 > loom-secrets-master-key
+  # Generate SVID key: openssl genpkey -algorithm Ed25519 -out loom-secrets-svid-signing-key.pem
+  sops.secrets.loom-secrets-master-key = {
+    owner = "loom-server";
+    mode = "0400";
+  };
+
+  sops.secrets.loom-secrets-svid-signing-key = {
+    owner = "loom-server";
+    mode = "0400";
+  };
+
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
   system.stateVersion = "25.11";
@@ -254,6 +267,14 @@
       enable = true;
       namespace = "loom-weavers";
       imagePullSecrets = [ "ghcr-secret" ];
+    };
+
+    secrets = {
+      enable = true;
+      masterKeyFile = config.sops.secrets.loom-secrets-master-key.path;
+      svidSigningKeyFile = config.sops.secrets.loom-secrets-svid-signing-key.path;
+      svidTtlSeconds = 900;  # 15 minutes
+      verifyPodExists = true;
     };
 
     jobs = {

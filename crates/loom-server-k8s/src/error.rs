@@ -26,6 +26,15 @@ pub enum K8sError {
 
 	#[error("Attach error: {message}")]
 	AttachError { message: String },
+
+	#[error("TokenReview failed: {message}")]
+	TokenReviewFailed { message: String },
+
+	#[error("Token validation failed: {message}")]
+	TokenValidationFailed { message: String },
+
+	#[error("TokenReview API error: {message}")]
+	TokenReviewError { message: String },
 }
 
 impl From<kube::Error> for K8sError {

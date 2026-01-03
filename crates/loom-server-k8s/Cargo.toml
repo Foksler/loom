@@ -17,6 +17,7 @@ futures = { workspace = true }
 k8s-openapi = { workspace = true }
 kube = { workspace = true }
 pin-project-lite = { workspace = true }
+serde = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 tokio-util = { workspace = true }

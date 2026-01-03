@@ -416,6 +416,11 @@ impl<K: KeyBackend> SvidIssuer<K> {
 	pub fn config(&self) -> &SvidConfig {
 		&self.config
 	}
+
+	/// Get a reference to the key backend.
+	pub fn key_backend(&self) -> &K {
+		&self.key_backend
+	}
 }
 
 #[cfg(test)]

@@ -24,6 +24,10 @@ pub struct WeaverConfig {
     pub webhooks: Vec<WebhookConfig>,
     /// Image pull secret names for private registries (e.g., ghcr.io)
     pub image_pull_secrets: Vec<String>,
+    /// URL to loom-server for secrets API (in-cluster: http://loom-server.loom.svc.cluster.local:8080)
+    pub secrets_server_url: Option<String>,
+    /// Allow insecure (HTTP) connections to secrets server (for in-cluster use)
+    pub secrets_allow_insecure: bool,
 }
 
 impl Default for WeaverConfig {
@@ -37,6 +41,8 @@ impl Default for WeaverConfig {
             ready_timeout_secs: 60,
             webhooks: Vec::new(),
             image_pull_secrets: Vec::new(),
+            secrets_server_url: None,
+            secrets_allow_insecure: false,
         }
     }
 }

@@ -4869,6 +4869,7 @@ dependencies = [
  "loom-server-scm-mirror",
  "loom-server-search-google-cse",
  "loom-server-search-serper",
+ "loom-server-secrets",
  "loom-server-smtp",
  "loom-server-weaver",
  "pin-project-lite",
@@ -4893,6 +4894,7 @@ dependencies = [
  "utoipa",
  "utoipa-swagger-ui",
  "uuid",
+ "uuid7",
 ]
 
 [[package]]
@@ -5162,6 +5164,7 @@ dependencies = [
  "k8s-openapi",
  "kube",
  "pin-project-lite",
+ "serde",
  "thiserror 1.0.69",
  "tokio",
  "tokio-test",

@@ -26,6 +26,7 @@ loom-server-logs = { path = "../loom-server-logs" }
 loom-server-weaver = { path = "../loom-server-weaver" }
 loom-common-core = { path = "../loom-common-core" }
 loom-server-k8s = { path = "../loom-server-k8s" }
+loom-server-secrets = { path = "../loom-server-secrets" }
 loom-common-secret = { path = "../loom-common-secret" }
 loom-server-auth = { path = "../loom-server-auth" }
 loom-server-audit = { path = "../loom-server-audit" }
@@ -91,6 +92,7 @@ humantime = "2"
 async-trait = { workspace = true }
 regex = "1"
 uuid = { version = "1", features = ["v4", "serde"] }
+uuid7.workspace = true
 
 # Metrics
 prometheus = "0.13"

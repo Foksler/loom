@@ -73,6 +73,10 @@ pub struct WeaverConfigLayer {
 	pub ready_timeout_secs: Option<u64>,
 	pub webhooks: Option<Vec<WebhookConfigLayer>>,
 	pub image_pull_secrets: Option<Vec<String>>,
+	/// URL to loom-server for secrets API (in-cluster: http://loom-server.loom.svc.cluster.local:8080)
+	pub secrets_server_url: Option<String>,
+	/// Allow insecure (HTTP) connections to secrets server (for in-cluster use)
+	pub secrets_allow_insecure: Option<bool>,
 }
 
 impl std::fmt::Debug for WeaverConfigLayer {
@@ -87,6 +91,8 @@ impl std::fmt::Debug for WeaverConfigLayer {
 			.field("ready_timeout_secs", &self.ready_timeout_secs)
 			.field("webhooks", &self.webhooks)
 			.field("image_pull_secrets", &self.image_pull_secrets)
+			.field("secrets_server_url", &self.secrets_server_url)
+			.field("secrets_allow_insecure", &self.secrets_allow_insecure)
 			.finish()
 	}
 }
@@ -121,6 +127,12 @@ impl WeaverConfigLayer {
 		}
 		if other.image_pull_secrets.is_some() {
 			self.image_pull_secrets = other.image_pull_secrets;
+		}
+		if other.secrets_server_url.is_some() {
+			self.secrets_server_url = other.secrets_server_url;
+		}
+		if other.secrets_allow_insecure.is_some() {
+			self.secrets_allow_insecure = other.secrets_allow_insecure;
 		}
 	}
 
@@ -157,6 +169,8 @@ impl WeaverConfigLayer {
 			ready_timeout_secs: self.ready_timeout_secs.unwrap_or(60),
 			webhooks,
 			image_pull_secrets: self.image_pull_secrets.unwrap_or_default(),
+			secrets_server_url: self.secrets_server_url,
+			secrets_allow_insecure: self.secrets_allow_insecure.unwrap_or(false),
 		})
 	}
 }
@@ -173,6 +187,10 @@ pub struct WeaverConfig {
 	pub ready_timeout_secs: u64,
 	pub webhooks: Vec<WebhookConfig>,
 	pub image_pull_secrets: Vec<String>,
+	/// URL to loom-server for secrets API (in-cluster: http://loom-server.loom.svc.cluster.local:8080)
+	pub secrets_server_url: Option<String>,
+	/// Allow insecure (HTTP) connections to secrets server (for in-cluster use)
+	pub secrets_allow_insecure: bool,
 }
 
 impl std::fmt::Debug for WeaverConfig {
@@ -187,6 +205,8 @@ impl std::fmt::Debug for WeaverConfig {
 			.field("ready_timeout_secs", &self.ready_timeout_secs)
 			.field("webhooks", &self.webhooks)
 			.field("image_pull_secrets", &self.image_pull_secrets)
+			.field("secrets_server_url", &self.secrets_server_url)
+			.field("secrets_allow_insecure", &self.secrets_allow_insecure)
 			.finish()
 	}
 }
@@ -203,6 +223,8 @@ impl Default for WeaverConfig {
 			ready_timeout_secs: 60,
 			webhooks: Vec::new(),
 			image_pull_secrets: Vec::new(),
+			secrets_server_url: None,
+			secrets_allow_insecure: false,
 		}
 	}
 }

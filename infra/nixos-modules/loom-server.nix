@@ -107,6 +107,54 @@ in
       description = "Whether to open the firewall port for loom-server.";
     };
 
+    # Weaver Secrets System Configuration
+    # See specs/weaver-secrets-system.md for full documentation
+    #
+    # Key generation commands:
+    #   # Generate master key (256-bit, base64-encoded)
+    #   openssl rand -base64 32 > /run/secrets/loom-master-key
+    #
+    #   # Generate SVID signing key (Ed25519)
+    #   openssl genpkey -algorithm Ed25519 -out /run/secrets/svid-signing-key.pem
+    secrets = {
+      enable = mkEnableOption "Weaver secrets system for secure secret management";
+
+      masterKeyFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = ''
+          Path to file containing the master encryption key (256-bit, base64-encoded).
+          Required when secrets.enable is true.
+          Generate with: openssl rand -base64 32 > /run/secrets/loom-master-key
+        '';
+      };
+
+      svidSigningKeyFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = ''
+          Path to file containing the SVID signing key (Ed25519 PEM).
+          If not set, a key will be auto-generated at startup.
+          Generate with: openssl genpkey -algorithm Ed25519 -out /run/secrets/svid-signing-key.pem
+        '';
+      };
+
+      svidTtlSeconds = mkOption {
+        type = types.int;
+        default = 900;
+        description = "TTL in seconds for issued SVID tokens (default: 15 minutes).";
+      };
+
+      verifyPodExists = mkOption {
+        type = types.bool;
+        default = true;
+        description = ''
+          Whether to verify weaver Pods exist in Kubernetes before issuing SVIDs.
+          Provides additional security but requires K8s API access.
+        '';
+      };
+    };
+
     baseUrl = mkOption {
       type = types.nullOr types.str;
       default = null;
@@ -562,6 +610,10 @@ in
         assertion = cfg.serper.enable -> cfg.serper.apiKeyFile != null;
         message = "services.loom-server.serper.apiKeyFile must be set when Serper is enabled.";
       }
+      {
+        assertion = cfg.secrets.enable -> cfg.secrets.masterKeyFile != null;
+        message = "services.loom-server.secrets.masterKeyFile must be set when secrets system is enabled.";
+      }
     ];
 
     users.users.loom-server = {
@@ -652,6 +704,10 @@ in
           LOOM_SERVER_WEAVER_IMAGE_PULL_SECRETS = lib.concatStringsSep "," cfg.weaver.imagePullSecrets;
           KUBECONFIG = toString cfg.weaver.kubeconfigPath;
         })
+        (mkIf cfg.secrets.enable {
+          LOOM_SECRETS_SVID_TTL_SECONDS = toString cfg.secrets.svidTtlSeconds;
+          LOOM_SECRETS_VERIFY_POD_EXISTS = if cfg.secrets.verifyPodExists then "true" else "false";
+        })
         (mkIf cfg.geoip.enable {
           LOOM_SERVER_GEOIP_DATABASE_PATH = toString cfg.geoip.databasePath;
         })
@@ -711,6 +767,14 @@ in
 
         # SMTP Secrets
         ${loadSecret cfg.smtp.passwordFile "LOOM_SERVER_SMTP_PASSWORD"}
+
+        # Weaver Secrets System (pass file paths, not contents)
+        ${optionalString (cfg.secrets.masterKeyFile != null) ''
+          export LOOM_SECRETS_MASTER_KEY_FILE="${cfg.secrets.masterKeyFile}"
+        ''}
+        ${optionalString (cfg.secrets.svidSigningKeyFile != null) ''
+          export LOOM_SECRETS_SVID_SIGNING_KEY_FILE="${cfg.secrets.svidSigningKeyFile}"
+        ''}
 
         exec ${cfg.package}/bin/loom-server
       '';

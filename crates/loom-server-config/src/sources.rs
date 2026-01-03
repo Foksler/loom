@@ -258,6 +258,8 @@ fn load_weaver_from_env() -> Result<WeaverConfigLayer, ConfigError> {
 		ready_timeout_secs: env_u64("LOOM_SERVER_WEAVER_READY_TIMEOUT_SECS")?,
 		webhooks,
 		image_pull_secrets,
+		secrets_server_url: env_var("LOOM_SERVER_WEAVER_SECRETS_SERVER_URL"),
+		secrets_allow_insecure: env_bool("LOOM_SERVER_WEAVER_SECRETS_ALLOW_INSECURE"),
 	})
 }
 

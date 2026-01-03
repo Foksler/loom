@@ -14,6 +14,7 @@ use loom_server_weaver::Provisioner;
 use loom_server_github_app::{GithubAppClient, GithubAppError};
 use loom_server_jobs::JobScheduler;
 use loom_server_llm_service::LlmService;
+use loom_server_secrets::KeyBackend;
 use loom_server_smtp::SmtpClient;
 
 use crate::db::ThreadRepository;
@@ -180,6 +181,18 @@ pub struct JobsHealth {
 	pub failing_jobs: Option<Vec<String>>,
 }
 
+/// Secrets system component health.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct SecretsHealth {
+	pub status: HealthStatus,
+	pub latency_ms: u64,
+	pub configured: bool,
+	pub master_key_present: bool,
+	pub svid_signing_key_present: bool,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub error: Option<String>,
+}
+
 /// Individual authentication provider health.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct AuthProviderHealth {
@@ -213,6 +226,8 @@ pub struct HealthComponents {
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub jobs: Option<JobsHealth>,
 	pub auth_providers: AuthProvidersHealth,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub secrets: Option<SecretsHealth>,
 }
 
 /// Complete health check response.
@@ -918,6 +933,73 @@ pub fn check_auth_providers(
 	AuthProvidersHealth { status, providers }
 }
 
+/// Check secrets system health.
+///
+/// Verifies that the secrets infrastructure is properly configured and functional:
+/// - Master key is present and can encrypt/decrypt
+/// - SVID signing key is present and can sign
+pub async fn check_secrets(
+	secrets_service: Option<&Arc<loom_server_secrets::SecretsService<loom_server_secrets::SoftwareKeyBackend, loom_server_secrets::SqliteSecretStore>>>,
+	svid_issuer: Option<&Arc<loom_server_secrets::SvidIssuer<loom_server_secrets::SoftwareKeyBackend>>>,
+) -> Option<SecretsHealth> {
+	let start = Instant::now();
+
+	let (configured, master_key_present, svid_signing_key_present, status, error) =
+		match (secrets_service, svid_issuer) {
+			(None, None) => (
+				false,
+				false,
+				false,
+				HealthStatus::Degraded,
+				Some("Secrets infrastructure not configured".to_string()),
+			),
+			(Some(_service), Some(issuer)) => {
+				let key_id = issuer.key_backend().svid_signing_key_id();
+				let svid_key_ok = !key_id.is_empty();
+
+				let kek_version = issuer.key_backend().kek_version();
+				let master_key_ok = kek_version > 0;
+
+				if master_key_ok && svid_key_ok {
+					(true, true, true, HealthStatus::Healthy, None)
+				} else {
+					let mut errors = Vec::new();
+					if !master_key_ok {
+						errors.push("master key not functional");
+					}
+					if !svid_key_ok {
+						errors.push("SVID signing key not functional");
+					}
+					(
+						true,
+						master_key_ok,
+						svid_key_ok,
+						HealthStatus::Unhealthy,
+						Some(errors.join("; ")),
+					)
+				}
+			}
+			_ => (
+				false,
+				false,
+				false,
+				HealthStatus::Unhealthy,
+				Some("Secrets infrastructure partially configured".to_string()),
+			),
+		};
+
+	let latency_ms = start.elapsed().as_millis() as u64;
+
+	Some(SecretsHealth {
+		status,
+		latency_ms,
+		configured,
+		master_key_present,
+		svid_signing_key_present,
+		error,
+	})
+}
+
 /// Aggregate component statuses into overall status.
 pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
 	let mut statuses = vec![
@@ -937,6 +1019,10 @@ pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
 
 	if let Some(ref jobs) = components.jobs {
 		statuses.push(jobs.status);
+	}
+
+	if let Some(ref secrets) = components.secrets {
+		statuses.push(secrets.status);
 	}
 
 	if statuses

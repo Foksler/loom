@@ -17,8 +17,9 @@ use loom_server_github_app::{GithubAppClient, GithubAppConfig};
 use loom_server_jobs::{JobRepository, JobScheduler};
 use loom_server_search_google_cse::CseClient;
 use loom_server_search_serper::SerperClient;
-use loom_server_k8s::KubeClient;
+use loom_server_k8s::{K8sClient, KubeClient};
 use loom_server_llm_service::LlmService;
+use loom_server_secrets::{SecretsService, SoftwareKeyBackend, SqliteSecretStore, SvidIssuer};
 use loom_server_smtp::SmtpClient;
 use loom_server_weaver::{Provisioner, WeaverConfig, WebhookConfig, WebhookDispatcher};
 use std::sync::Arc;
@@ -87,6 +88,9 @@ pub struct AppState {
 	pub external_mirror_store: Option<Arc<loom_server_scm_mirror::SqliteExternalMirrorStore>>,
 	pub log_buffer: loom_server_logs::LogBuffer,
 	pub audit_query_repo: Arc<AuditQueryRepository>,
+	pub k8s_client: Option<Arc<dyn K8sClient>>,
+	pub svid_issuer: Option<Arc<SvidIssuer<SoftwareKeyBackend>>>,
+	pub secrets_service: Option<Arc<SecretsService<SoftwareKeyBackend, SqliteSecretStore>>>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -127,7 +131,7 @@ pub async fn create_app_state(
 	let scm_team_access_store = Arc::new(loom_server_scm::SqliteRepoTeamAccessStore::new(pool.clone()));
 	let push_mirror_store = Arc::new(loom_server_scm_mirror::SqlitePushMirrorStore::new(pool.clone()));
 	let external_mirror_store = Arc::new(loom_server_scm_mirror::SqliteExternalMirrorStore::new(pool.clone()));
-	let audit_query_repo = Arc::new(AuditQueryRepository::new(pool));
+	let audit_query_repo = Arc::new(AuditQueryRepository::new(pool.clone()));
 	let auth_config = loom_server_auth::middleware::AuthConfig {
 		dev_mode: config.auth.dev_mode,
 		session_cookie_name: loom_server_auth::middleware::SESSION_COOKIE_NAME.to_string(),
@@ -192,8 +196,14 @@ pub async fn create_app_state(
 	let query_metrics = Arc::new(QueryMetrics::default());
 	let query_manager = Arc::new(ServerQueryManager::with_metrics(query_metrics.clone()));
 
-	// Initialize weaver provisioner if enabled
-	let (provisioner, webhook_dispatcher) = initialize_weaver_provisioner(config).await;
+	// Initialize weaver infrastructure (provisioner, webhook dispatcher, K8s client)
+	let weaver_infra = initialize_weaver_infrastructure(config).await;
+	let provisioner = weaver_infra.provisioner;
+	let webhook_dispatcher = weaver_infra.webhook_dispatcher;
+	let k8s_client = weaver_infra.k8s_client;
+
+	// Initialize SVID issuer and secrets service for weaver auth/secrets
+	let (svid_issuer, secrets_service) = initialize_secrets_infrastructure(pool.clone());
 
 	// Initialize SMTP client if configured
 	let smtp_client = initialize_smtp_client(config);
@@ -267,6 +277,9 @@ pub async fn create_app_state(
 		external_mirror_store: Some(external_mirror_store),
 		log_buffer: log_buffer.unwrap_or_default(),
 		audit_query_repo,
+		k8s_client,
+		svid_issuer,
+		secrets_service,
 	}
 }
 
@@ -312,29 +325,39 @@ pub async fn create_or_get_dev_user(
 	Ok(user)
 }
 
-/// Initialize the weaver provisioner and webhook dispatcher if enabled.
-async fn initialize_weaver_provisioner(
-	config: &ServerConfig,
-) -> (Option<Arc<Provisioner>>, Option<Arc<WebhookDispatcher>>) {
-	// Check if weaver provisioning is enabled
+/// Result of weaver infrastructure initialization.
+struct WeaverInfrastructure {
+	provisioner: Option<Arc<Provisioner>>,
+	webhook_dispatcher: Option<Arc<WebhookDispatcher>>,
+	k8s_client: Option<Arc<dyn K8sClient>>,
+}
+
+/// Initialize the weaver provisioner, webhook dispatcher, and K8s client.
+async fn initialize_weaver_infrastructure(config: &ServerConfig) -> WeaverInfrastructure {
 	if !config.weaver.enabled {
 		tracing::info!("Weaver provisioning disabled");
-		return (None, None);
+		return WeaverInfrastructure {
+			provisioner: None,
+			webhook_dispatcher: None,
+			k8s_client: None,
+		};
 	}
 
-	// Try to create K8s client
-	let k8s_client = match KubeClient::new().await {
+	let k8s_client: Arc<dyn K8sClient> = match KubeClient::new().await {
 		Ok(client) => Arc::new(client),
 		Err(e) => {
 			tracing::warn!(
 				error = %e,
 				"Failed to initialize K8s client, weaver provisioning disabled"
 			);
-			return (None, None);
+			return WeaverInfrastructure {
+				provisioner: None,
+				webhook_dispatcher: None,
+				k8s_client: None,
+			};
 		}
 	};
 
-	// Convert webhooks from config types to weaver types
 	let webhooks: Vec<WebhookConfig> = config
 		.weaver
 		.webhooks
@@ -363,7 +386,6 @@ async fn initialize_weaver_provisioner(
 		})
 		.collect();
 
-	// Create weaver config from server config
 	let weaver_config = WeaverConfig {
 		namespace: config.weaver.namespace.clone(),
 		cleanup_interval_secs: config.weaver.cleanup_interval_secs,
@@ -373,10 +395,22 @@ async fn initialize_weaver_provisioner(
 		ready_timeout_secs: config.weaver.ready_timeout_secs,
 		webhooks: webhooks.clone(),
 		image_pull_secrets: config.weaver.image_pull_secrets.clone(),
+		secrets_server_url: config.weaver.secrets_server_url.clone(),
+		secrets_allow_insecure: config.weaver.secrets_allow_insecure,
 	};
 
-	// Create provisioner and webhook dispatcher
-	let provisioner = Arc::new(Provisioner::new(k8s_client, weaver_config));
+	let kube_client = match KubeClient::new().await {
+		Ok(client) => Arc::new(client),
+		Err(e) => {
+			tracing::warn!(error = %e, "Failed to create provisioner K8s client");
+			return WeaverInfrastructure {
+				provisioner: None,
+				webhook_dispatcher: None,
+				k8s_client: Some(k8s_client),
+			};
+		}
+	};
+	let provisioner = Arc::new(Provisioner::new(kube_client, weaver_config));
 	let webhook_dispatcher = Arc::new(WebhookDispatcher::new(webhooks));
 
 	tracing::info!(
@@ -386,7 +420,48 @@ async fn initialize_weaver_provisioner(
 		"Weaver provisioning enabled"
 	);
 
-	(Some(provisioner), Some(webhook_dispatcher))
+	WeaverInfrastructure {
+		provisioner: Some(provisioner),
+		webhook_dispatcher: Some(webhook_dispatcher),
+		k8s_client: Some(k8s_client),
+	}
+}
+
+fn initialize_secrets_infrastructure(
+	pool: SqlitePool,
+) -> (
+	Option<Arc<SvidIssuer<SoftwareKeyBackend>>>,
+	Option<Arc<SecretsService<SoftwareKeyBackend, SqliteSecretStore>>>,
+) {
+	use loom_server_secrets::{SvidConfig, generate_key};
+
+	let backend = if let Ok(key_b64) = std::env::var("LOOM_SECRETS_MASTER_KEY") {
+		let svid_key = std::env::var("LOOM_SECRETS_SVID_SIGNING_KEY")
+			.ok()
+			.map(loom_common_secret::SecretString::new);
+
+		let secret = loom_common_secret::SecretString::new(key_b64);
+		match SoftwareKeyBackend::from_base64(&secret, svid_key.as_ref(), "loom-secrets".to_string(), "loom-secrets".to_string()) {
+			Ok(backend) => {
+				tracing::info!("Secrets infrastructure initialized from LOOM_SECRETS_MASTER_KEY");
+				Arc::new(backend)
+			}
+			Err(e) => {
+				tracing::warn!(error = %e, "Failed to create software key backend from LOOM_SECRETS_MASTER_KEY");
+				return (None, None);
+			}
+		}
+	} else {
+		tracing::info!("LOOM_SECRETS_MASTER_KEY not set, generating ephemeral key (for development only)");
+		let kek = generate_key();
+		Arc::new(SoftwareKeyBackend::new(kek, None, "loom-secrets".to_string(), "loom-secrets".to_string()))
+	};
+
+	let svid_issuer = Arc::new(SvidIssuer::new(backend.clone(), SvidConfig::default()));
+	let secret_store = Arc::new(SqliteSecretStore::new(pool));
+	let secrets_service = Arc::new(SecretsService::new(backend, secret_store));
+
+	(Some(svid_issuer), Some(secrets_service))
 }
 
 /// Initialize the SMTP client if configured.
@@ -569,6 +644,20 @@ pub fn create_router(state: AppState) -> Router {
 		.route(
 			"/api/github/webhook",
 			post(routes::github::github_webhook),
+		)
+		// Weaver auth routes (public - auth via K8s SA JWT)
+		.route(
+			"/internal/weaver-auth/token",
+			post(routes::weaver_auth::exchange_token),
+		)
+		.route(
+			"/internal/weaver-auth/.well-known/jwks.json",
+			get(routes::weaver_auth::get_jwks),
+		)
+		// Weaver secrets routes (public - auth via Weaver SVID)
+		.route(
+			"/internal/weaver-secrets/v1/secrets/{scope}/{name}",
+			get(routes::weaver_secrets::get_secret),
 		)
 		.build();
 
@@ -814,6 +903,48 @@ pub fn create_router(state: AppState) -> Router {
 		.route(
 			"/api/orgs/{id}/webhooks/{wid}",
 			delete(routes::webhooks::delete_org_webhook),
+		)
+		// Secrets routes (org-level)
+		.route(
+			"/api/orgs/{org_id}/secrets",
+			get(routes::secrets::list_org_secrets),
+		)
+		.route(
+			"/api/orgs/{org_id}/secrets",
+			post(routes::secrets::create_org_secret),
+		)
+		.route(
+			"/api/orgs/{org_id}/secrets/{name}",
+			get(routes::secrets::get_org_secret),
+		)
+		.route(
+			"/api/orgs/{org_id}/secrets/{name}",
+			put(routes::secrets::update_org_secret),
+		)
+		.route(
+			"/api/orgs/{org_id}/secrets/{name}",
+			delete(routes::secrets::delete_org_secret),
+		)
+		// Secrets routes (repo-level)
+		.route(
+			"/api/repos/{repo_id}/secrets",
+			get(routes::secrets::list_repo_secrets),
+		)
+		.route(
+			"/api/repos/{repo_id}/secrets",
+			post(routes::secrets::create_repo_secret),
+		)
+		.route(
+			"/api/repos/{repo_id}/secrets/{name}",
+			get(routes::secrets::get_repo_secret),
+		)
+		.route(
+			"/api/repos/{repo_id}/secrets/{name}",
+			put(routes::secrets::update_repo_secret),
+		)
+		.route(
+			"/api/repos/{repo_id}/secrets/{name}",
+			delete(routes::secrets::delete_repo_secret),
 		)
 		// Mirror routes
 		.route(

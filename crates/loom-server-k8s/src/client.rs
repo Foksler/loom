@@ -4,6 +4,7 @@
 use async_trait::async_trait;
 
 use crate::error::K8sError;
+use crate::token_review::TokenReviewResult;
 use crate::types::{AttachedProcess, LogOptions, LogStream, Namespace, Pod};
 
 /// Trait for K8s client operations.
@@ -48,4 +49,23 @@ pub trait K8sClient: Send + Sync {
 		namespace: &str,
 		container: &str,
 	) -> Result<AttachedProcess, K8sError>;
+
+	/// Validate a K8s service account token using the TokenReview API.
+	///
+	/// This is used to authenticate weavers presenting their K8s SA JWT.
+	/// The token is validated against the cluster's authentication system,
+	/// and if valid, returns information about the authenticated identity.
+	///
+	/// # Arguments
+	/// * `token` - The service account JWT to validate
+	/// * `audiences` - Expected audiences for the token (e.g., ["https://kubernetes.default.svc"])
+	///
+	/// # Returns
+	/// * `Ok(TokenReviewResult)` - The result of the token validation
+	/// * `Err(K8sError)` - If the API call fails
+	async fn validate_token(
+		&self,
+		token: &str,
+		audiences: &[&str],
+	) -> Result<TokenReviewResult, K8sError>;
 }

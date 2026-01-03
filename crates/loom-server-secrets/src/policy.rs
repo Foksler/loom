@@ -41,8 +41,7 @@ pub fn can_access_secret(principal: &WeaverPrincipal, secret: &Secret) -> bool {
     match &secret.scope {
         SecretScope::Org { org_id } => principal.org_id == *org_id,
         SecretScope::Repo { org_id, repo_id } => {
-            principal.org_id == *org_id
-                && principal.repo_id.as_ref().map_or(false, |r| r == repo_id)
+        	principal.org_id == *org_id && (principal.repo_id.as_ref() == Some(repo_id))
         }
         SecretScope::Weaver { weaver_id } => principal.weaver_id == *weaver_id,
     }

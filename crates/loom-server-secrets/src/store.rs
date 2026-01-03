@@ -522,7 +522,7 @@ impl SecretStore for SqliteSecretStore {
 		)
 		.bind(&dek.id)
 		.bind(&dek.encrypted_key)
-		.bind(&dek.nonce.to_vec())
+		.bind(dek.nonce.to_vec())
 		.bind(dek.kek_version as i32)
 		.bind(&now_str)
 		.execute(&self.pool)
@@ -702,6 +702,595 @@ fn is_unique_constraint_error(e: &sqlx::Error) -> bool {
 
 #[cfg(test)]
 mod tests {
-	// Tests would use an in-memory SQLite database
-	// with the migration applied
+	use super::*;
+	use loom_server_auth::types::OrgId;
+
+	async fn create_test_pool() -> SqlitePool {
+		let pool = SqlitePool::connect(":memory:").await.unwrap();
+		run_test_migrations(&pool).await.unwrap();
+		pool
+	}
+
+	async fn run_test_migrations(pool: &SqlitePool) -> Result<(), sqlx::Error> {
+		let migration = include_str!("../../loom-server/migrations/025_weaver_secrets.sql");
+		for stmt in migration.split(';').filter(|s| !s.trim().is_empty()) {
+			let trimmed = stmt.trim();
+			if !trimmed.is_empty() {
+				sqlx::query(trimmed).execute(pool).await?;
+			}
+		}
+		Ok(())
+	}
+
+	fn test_user_id() -> UserId {
+		UserId::new(Uuid::new_v4())
+	}
+
+	fn test_org_id() -> OrgId {
+		OrgId::new(Uuid::new_v4())
+	}
+
+	#[tokio::test]
+	async fn test_create_secret() {
+		let pool = create_test_pool().await;
+		let store = SqliteSecretStore::new(pool);
+
+		let org_id = test_org_id();
+		let user_id = test_user_id();
+		let dek_id = Uuid::new_v4().to_string();
+
+		store
+			.store_dek(&EncryptedDekData {
+				id: dek_id.clone(),
+				encrypted_key: vec![0u8; 32],
+				nonce: [1u8; 12],
+				kek_version: 1,
+			})
+			.await
+			.unwrap();
+
+		let request = CreateSecretRequest {
+			org_id,
+			scope: SecretScope::Org { org_id },
+			repo_id: None,
+			weaver_id: None,
+			name: "TEST_SECRET".to_string(),
+			description: Some("A test secret".to_string()),
+			ciphertext: vec![0u8; 16],
+			nonce: vec![0u8; 12],
+			dek_id: dek_id.clone(),
+			created_by: user_id,
+		};
+
+		let secret = store.create_secret(request).await.unwrap();
+		assert_eq!(secret.name, "TEST_SECRET");
+		assert_eq!(secret.current_version, 1);
+		assert_eq!(secret.org_id, org_id);
+	}
+
+	#[tokio::test]
+	async fn test_get_secret_by_id() {
+		let pool = create_test_pool().await;
+		let store = SqliteSecretStore::new(pool);
+
+		let org_id = test_org_id();
+		let user_id = test_user_id();
+		let dek_id = Uuid::new_v4().to_string();
+
+		store
+			.store_dek(&EncryptedDekData {
+				id: dek_id.clone(),
+				encrypted_key: vec![0u8; 32],
+				nonce: [1u8; 12],
+				kek_version: 1,
+			})
+			.await
+			.unwrap();
+
+		let request = CreateSecretRequest {
+			org_id,
+			scope: SecretScope::Org { org_id },
+			repo_id: None,
+			weaver_id: None,
+			name: "GET_TEST".to_string(),
+			description: None,
+			ciphertext: vec![0u8; 16],
+			nonce: vec![0u8; 12],
+			dek_id,
+			created_by: user_id,
+		};
+
+		let created = store.create_secret(request).await.unwrap();
+		let fetched = store.get_secret(created.id).await.unwrap();
+
+		assert!(fetched.is_some());
+		let fetched = fetched.unwrap();
+		assert_eq!(fetched.id, created.id);
+		assert_eq!(fetched.name, "GET_TEST");
+	}
+
+	#[tokio::test]
+	async fn test_get_secret_by_name() {
+		let pool = create_test_pool().await;
+		let store = SqliteSecretStore::new(pool);
+
+		let org_id = test_org_id();
+		let user_id = test_user_id();
+		let dek_id = Uuid::new_v4().to_string();
+
+		store
+			.store_dek(&EncryptedDekData {
+				id: dek_id.clone(),
+				encrypted_key: vec![0u8; 32],
+				nonce: [1u8; 12],
+				kek_version: 1,
+			})
+			.await
+			.unwrap();
+
+		let scope = SecretScope::Org { org_id };
+		let request = CreateSecretRequest {
+			org_id,
+			scope: scope.clone(),
+			repo_id: None,
+			weaver_id: None,
+			name: "API_KEY".to_string(),
+			description: None,
+			ciphertext: vec![0u8; 16],
+			nonce: vec![0u8; 12],
+			dek_id,
+			created_by: user_id,
+		};
+
+		let created = store.create_secret(request).await.unwrap();
+		let fetched = store
+			.get_secret_by_name(org_id, scope, None, None, "API_KEY")
+			.await
+			.unwrap();
+
+		assert!(fetched.is_some());
+		assert_eq!(fetched.unwrap().id, created.id);
+	}
+
+	#[tokio::test]
+	async fn test_list_secrets() {
+		let pool = create_test_pool().await;
+		let store = SqliteSecretStore::new(pool);
+
+		let org_id = test_org_id();
+		let user_id = test_user_id();
+
+		for i in 0..3 {
+			let dek_id = Uuid::new_v4().to_string();
+			store
+				.store_dek(&EncryptedDekData {
+					id: dek_id.clone(),
+					encrypted_key: vec![0u8; 32],
+					nonce: [1u8; 12],
+					kek_version: 1,
+				})
+				.await
+				.unwrap();
+
+			let request = CreateSecretRequest {
+				org_id,
+				scope: SecretScope::Org { org_id },
+				repo_id: None,
+				weaver_id: None,
+				name: format!("SECRET_{}", i),
+				description: None,
+				ciphertext: vec![0u8; 16],
+				nonce: vec![0u8; 12],
+				dek_id,
+				created_by: user_id,
+			};
+			store.create_secret(request).await.unwrap();
+		}
+
+		let filter = SecretFilter {
+			org_id: Some(org_id),
+			..Default::default()
+		};
+		let secrets = store.list_secrets(&filter).await.unwrap();
+		assert_eq!(secrets.len(), 3);
+	}
+
+	#[tokio::test]
+	async fn test_create_version() {
+		let pool = create_test_pool().await;
+		let store = SqliteSecretStore::new(pool);
+
+		let org_id = test_org_id();
+		let user_id = test_user_id();
+		let dek_id = Uuid::new_v4().to_string();
+
+		store
+			.store_dek(&EncryptedDekData {
+				id: dek_id.clone(),
+				encrypted_key: vec![0u8; 32],
+				nonce: [1u8; 12],
+				kek_version: 1,
+			})
+			.await
+			.unwrap();
+
+		let request = CreateSecretRequest {
+			org_id,
+			scope: SecretScope::Org { org_id },
+			repo_id: None,
+			weaver_id: None,
+			name: "VERSIONED_SECRET".to_string(),
+			description: None,
+			ciphertext: vec![0u8; 16],
+			nonce: vec![0u8; 12],
+			dek_id: dek_id.clone(),
+			created_by: user_id,
+		};
+
+		let secret = store.create_secret(request).await.unwrap();
+		assert_eq!(secret.current_version, 1);
+
+		let version_request = CreateVersionRequest {
+			secret_id: secret.id,
+			ciphertext: vec![1u8; 16],
+			nonce: vec![1u8; 12],
+			dek_id: dek_id.clone(),
+			created_by: user_id,
+			expires_at: None,
+		};
+
+		let version = store.create_version(version_request).await.unwrap();
+		assert_eq!(version.version, 2);
+
+		let updated = store.get_secret(secret.id).await.unwrap().unwrap();
+		assert_eq!(updated.current_version, 2);
+	}
+
+	#[tokio::test]
+	async fn test_get_current_version() {
+		let pool = create_test_pool().await;
+		let store = SqliteSecretStore::new(pool);
+
+		let org_id = test_org_id();
+		let user_id = test_user_id();
+		let dek_id = Uuid::new_v4().to_string();
+
+		store
+			.store_dek(&EncryptedDekData {
+				id: dek_id.clone(),
+				encrypted_key: vec![0u8; 32],
+				nonce: [1u8; 12],
+				kek_version: 1,
+			})
+			.await
+			.unwrap();
+
+		let request = CreateSecretRequest {
+			org_id,
+			scope: SecretScope::Org { org_id },
+			repo_id: None,
+			weaver_id: None,
+			name: "CURRENT_VERSION_TEST".to_string(),
+			description: None,
+			ciphertext: vec![0u8; 16],
+			nonce: vec![0u8; 12],
+			dek_id,
+			created_by: user_id,
+		};
+
+		let secret = store.create_secret(request).await.unwrap();
+		let current = store.get_current_version(secret.id).await.unwrap();
+
+		assert!(current.is_some());
+		let current = current.unwrap();
+		assert_eq!(current.version, 1);
+		assert_eq!(current.ciphertext, vec![0u8; 16]);
+	}
+
+	#[tokio::test]
+	async fn test_get_specific_version() {
+		let pool = create_test_pool().await;
+		let store = SqliteSecretStore::new(pool);
+
+		let org_id = test_org_id();
+		let user_id = test_user_id();
+		let dek_id = Uuid::new_v4().to_string();
+
+		store
+			.store_dek(&EncryptedDekData {
+				id: dek_id.clone(),
+				encrypted_key: vec![0u8; 32],
+				nonce: [1u8; 12],
+				kek_version: 1,
+			})
+			.await
+			.unwrap();
+
+		let request = CreateSecretRequest {
+			org_id,
+			scope: SecretScope::Org { org_id },
+			repo_id: None,
+			weaver_id: None,
+			name: "SPECIFIC_VERSION_TEST".to_string(),
+			description: None,
+			ciphertext: vec![1u8; 16],
+			nonce: vec![0u8; 12],
+			dek_id: dek_id.clone(),
+			created_by: user_id,
+		};
+
+		let secret = store.create_secret(request).await.unwrap();
+
+		store
+			.create_version(CreateVersionRequest {
+				secret_id: secret.id,
+				ciphertext: vec![2u8; 16],
+				nonce: vec![1u8; 12],
+				dek_id: dek_id.clone(),
+				created_by: user_id,
+				expires_at: None,
+			})
+			.await
+			.unwrap();
+
+		let v1 = store.get_version(secret.id, 1).await.unwrap().unwrap();
+		let v2 = store.get_version(secret.id, 2).await.unwrap().unwrap();
+
+		assert_eq!(v1.ciphertext, vec![1u8; 16]);
+		assert_eq!(v2.ciphertext, vec![2u8; 16]);
+	}
+
+	#[tokio::test]
+	async fn test_disable_version() {
+		let pool = create_test_pool().await;
+		let store = SqliteSecretStore::new(pool);
+
+		let org_id = test_org_id();
+		let user_id = test_user_id();
+		let dek_id = Uuid::new_v4().to_string();
+
+		store
+			.store_dek(&EncryptedDekData {
+				id: dek_id.clone(),
+				encrypted_key: vec![0u8; 32],
+				nonce: [1u8; 12],
+				kek_version: 1,
+			})
+			.await
+			.unwrap();
+
+		let request = CreateSecretRequest {
+			org_id,
+			scope: SecretScope::Org { org_id },
+			repo_id: None,
+			weaver_id: None,
+			name: "DISABLE_TEST".to_string(),
+			description: None,
+			ciphertext: vec![0u8; 16],
+			nonce: vec![0u8; 12],
+			dek_id,
+			created_by: user_id,
+		};
+
+		let secret = store.create_secret(request).await.unwrap();
+		let version = store.get_current_version(secret.id).await.unwrap().unwrap();
+
+		store.disable_version(version.id).await.unwrap();
+
+		let current = store.get_current_version(secret.id).await.unwrap();
+		assert!(current.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_delete_secret() {
+		let pool = create_test_pool().await;
+		let store = SqliteSecretStore::new(pool);
+
+		let org_id = test_org_id();
+		let user_id = test_user_id();
+		let dek_id = Uuid::new_v4().to_string();
+
+		store
+			.store_dek(&EncryptedDekData {
+				id: dek_id.clone(),
+				encrypted_key: vec![0u8; 32],
+				nonce: [1u8; 12],
+				kek_version: 1,
+			})
+			.await
+			.unwrap();
+
+		let request = CreateSecretRequest {
+			org_id,
+			scope: SecretScope::Org { org_id },
+			repo_id: None,
+			weaver_id: None,
+			name: "DELETE_TEST".to_string(),
+			description: None,
+			ciphertext: vec![0u8; 16],
+			nonce: vec![0u8; 12],
+			dek_id,
+			created_by: user_id,
+		};
+
+		let secret = store.create_secret(request).await.unwrap();
+		store.delete_secret(secret.id).await.unwrap();
+
+		let fetched = store.get_secret(secret.id).await.unwrap();
+		assert!(fetched.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_store_and_get_dek() {
+		let pool = create_test_pool().await;
+		let store = SqliteSecretStore::new(pool);
+
+		let dek = EncryptedDekData {
+			id: Uuid::new_v4().to_string(),
+			encrypted_key: vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32],
+			nonce: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+			kek_version: 1,
+		};
+
+		store.store_dek(&dek).await.unwrap();
+
+		let fetched = store.get_dek(&dek.id).await.unwrap();
+		assert!(fetched.is_some());
+		let fetched = fetched.unwrap();
+		assert_eq!(fetched.id, dek.id);
+		assert_eq!(fetched.encrypted_key, dek.encrypted_key);
+		assert_eq!(fetched.nonce, dek.nonce);
+		assert_eq!(fetched.kek_version, dek.kek_version);
+	}
+
+	#[tokio::test]
+	async fn test_secret_id_uniqueness() {
+		let pool = create_test_pool().await;
+		let store = SqliteSecretStore::new(pool);
+
+		let org_id = test_org_id();
+		let user_id = test_user_id();
+		let dek_id = Uuid::new_v4().to_string();
+
+		store
+			.store_dek(&EncryptedDekData {
+				id: dek_id.clone(),
+				encrypted_key: vec![0u8; 32],
+				nonce: [1u8; 12],
+				kek_version: 1,
+			})
+			.await
+			.unwrap();
+
+		let secret1 = store
+			.create_secret(CreateSecretRequest {
+				org_id,
+				scope: SecretScope::Org { org_id },
+				repo_id: None,
+				weaver_id: None,
+				name: "SECRET_A".to_string(),
+				description: None,
+				ciphertext: vec![0u8; 16],
+				nonce: vec![0u8; 12],
+				dek_id: dek_id.clone(),
+				created_by: user_id,
+			})
+			.await
+			.unwrap();
+
+		let secret2 = store
+			.create_secret(CreateSecretRequest {
+				org_id,
+				scope: SecretScope::Org { org_id },
+				repo_id: None,
+				weaver_id: None,
+				name: "SECRET_B".to_string(),
+				description: None,
+				ciphertext: vec![0u8; 16],
+				nonce: vec![0u8; 12],
+				dek_id: dek_id.clone(),
+				created_by: user_id,
+			})
+			.await
+			.unwrap();
+
+		assert_ne!(secret1.id, secret2.id);
+	}
+
+	#[tokio::test]
+	async fn test_repo_scoped_secret() {
+		let pool = create_test_pool().await;
+		let store = SqliteSecretStore::new(pool);
+
+		let org_id = test_org_id();
+		let user_id = test_user_id();
+		let repo_id = Uuid::new_v4();
+		let dek_id = Uuid::new_v4().to_string();
+
+		store
+			.store_dek(&EncryptedDekData {
+				id: dek_id.clone(),
+				encrypted_key: vec![0u8; 32],
+				nonce: [1u8; 12],
+				kek_version: 1,
+			})
+			.await
+			.unwrap();
+
+		let scope = SecretScope::Repo {
+			org_id,
+			repo_id: repo_id.to_string(),
+		};
+
+		let request = CreateSecretRequest {
+			org_id,
+			scope: scope.clone(),
+			repo_id: Some(repo_id),
+			weaver_id: None,
+			name: "REPO_SECRET".to_string(),
+			description: None,
+			ciphertext: vec![0u8; 16],
+			nonce: vec![0u8; 12],
+			dek_id,
+			created_by: user_id,
+		};
+
+		let secret = store.create_secret(request).await.unwrap();
+		assert_eq!(secret.repo_id, Some(repo_id));
+
+		let filter = SecretFilter {
+			org_id: Some(org_id),
+			repo_id: Some(repo_id),
+			..Default::default()
+		};
+		let secrets = store.list_secrets(&filter).await.unwrap();
+		assert_eq!(secrets.len(), 1);
+		assert_eq!(secrets[0].name, "REPO_SECRET");
+	}
+
+	#[tokio::test]
+	async fn test_weaver_scoped_secret() {
+		let pool = create_test_pool().await;
+		let store = SqliteSecretStore::new(pool);
+
+		let org_id = test_org_id();
+		let user_id = test_user_id();
+		let weaver_id = WeaverId::generate();
+		let dek_id = Uuid::new_v4().to_string();
+
+		store
+			.store_dek(&EncryptedDekData {
+				id: dek_id.clone(),
+				encrypted_key: vec![0u8; 32],
+				nonce: [1u8; 12],
+				kek_version: 1,
+			})
+			.await
+			.unwrap();
+
+		let scope = SecretScope::Weaver { weaver_id };
+
+		let request = CreateSecretRequest {
+			org_id,
+			scope,
+			repo_id: None,
+			weaver_id: Some(weaver_id.to_string()),
+			name: "WEAVER_SECRET".to_string(),
+			description: None,
+			ciphertext: vec![0u8; 16],
+			nonce: vec![0u8; 12],
+			dek_id,
+			created_by: user_id,
+		};
+
+		let secret = store.create_secret(request).await.unwrap();
+		assert_eq!(secret.weaver_id, Some(weaver_id.to_string()));
+
+		let filter = SecretFilter {
+			weaver_id: Some(weaver_id.to_string()),
+			..Default::default()
+		};
+		let secrets = store.list_secrets(&filter).await.unwrap();
+		assert_eq!(secrets.len(), 1);
+	}
 }

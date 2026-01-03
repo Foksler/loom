@@ -18,6 +18,8 @@ pub struct CreateWeaverApiRequest {
 	pub image: String,
 	/// Organization ID that owns this weaver
 	pub org_id: String,
+	/// Repository ID (optional, for repo-scoped secrets)
+	pub repo_id: Option<String>,
 	/// Environment variables
 	#[serde(default)]
 	pub env: HashMap<String, String>,

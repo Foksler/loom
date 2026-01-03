@@ -24,6 +24,7 @@ const MANAGED_LABEL: &str = "loom.dev/managed";
 const WEAVER_ID_LABEL: &str = "loom.dev/weaver-id";
 const LABEL_OWNER_USER_ID: &str = "loom.dev/owner-user-id";
 const LABEL_ORG_ID: &str = "loom.dev/org-id";
+const LABEL_REPO_ID: &str = "loom.dev/repo-id";
 const LABEL_IMAGE: &str = "loom.dev/image";
 const LABEL_IMAGE_REGISTRY: &str = "loom.dev/image-registry";
 const LABEL_IMAGE_NAME: &str = "loom.dev/image-name";
@@ -453,6 +454,9 @@ fn build_pod_spec(
         req.owner_user_id.clone().unwrap_or_default(),
     );
     labels.insert(LABEL_ORG_ID.to_string(), req.org_id.clone());
+    if let Some(ref repo_id) = req.repo_id {
+        labels.insert(LABEL_REPO_ID.to_string(), repo_id.clone());
+    }
     labels.insert(LABEL_IMAGE.to_string(), sanitize_label_value(&req.image));
 
     let image_parts = parse_image_parts(&req.image);
@@ -494,6 +498,21 @@ fn build_pod_spec(
         env_vars.push(EnvVar {
             name: "LOOM_BRANCH".to_string(),
             value: Some(branch.clone()),
+            value_from: None,
+        });
+    }
+
+    if let Some(ref secrets_url) = config.secrets_server_url {
+        env_vars.push(EnvVar {
+            name: "LOOM_SECRETS_SERVER_URL".to_string(),
+            value: Some(secrets_url.clone()),
+            value_from: None,
+        });
+    }
+    if config.secrets_allow_insecure {
+        env_vars.push(EnvVar {
+            name: "LOOM_SECRETS_ALLOW_INSECURE".to_string(),
+            value: Some("1".to_string()),
             value_from: None,
         });
     }
@@ -699,6 +718,7 @@ mod tests {
             branch: None,
             owner_user_id: None,
             org_id: TEST_ORG_ID.to_string(),
+            repo_id: None,
         };
         let config = WeaverConfig::default();
 
@@ -756,6 +776,7 @@ mod tests {
             branch: None,
             owner_user_id: None,
             org_id: TEST_ORG_ID.to_string(),
+            repo_id: None,
         };
         let config = WeaverConfig::default();
 
@@ -802,6 +823,7 @@ mod tests {
             branch: None,
             owner_user_id: None,
             org_id: TEST_ORG_ID.to_string(),
+            repo_id: None,
         };
         let config = WeaverConfig::default();
 
@@ -942,6 +964,7 @@ mod tests {
             branch: None,
             owner_user_id: None,
             org_id: TEST_ORG_ID.to_string(),
+            repo_id: None,
         };
         let config = WeaverConfig::default();
 
@@ -1184,6 +1207,7 @@ mod proptests {
                 branch: None,
                 owner_user_id: Some(owner_id.clone()),
                 org_id: org_id.clone(),
+                repo_id: None,
             };
             let config = WeaverConfig::default();
 

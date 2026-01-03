@@ -11,11 +11,13 @@
 mod client;
 mod error;
 mod kube_client;
+mod token_review;
 mod types;
 
 pub use client::K8sClient;
 pub use error::{K8sError, K8sResult};
 pub use kube_client::KubeClient;
+pub use token_review::{MockTokenReviewer, TokenReviewResult};
 pub use types::{
 	AttachedProcess, Container, ContainerPort, EnvVar, LocalObjectReference, LogOptions, LogStream,
 	Namespace, Pod, PodSpec, PodStatus, ResourceRequirements, SecurityContext,

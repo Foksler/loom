@@ -13,6 +13,7 @@ pub mod mirrors;
 pub mod orgs;
 pub mod protection;
 pub mod repos;
+pub mod secrets;
 pub mod sessions;
 pub mod share;
 pub mod teams;
@@ -101,4 +102,8 @@ pub use weaver::{
 pub use webhooks::{
 	CreateWebhookRequest, ListWebhooksResponse, PayloadFormatApi, WebhookErrorResponse,
 	WebhookResponse, WebhookSuccessResponse,
+};
+pub use secrets::{
+	CreateSecretRequest, ListSecretsResponse, SecretErrorResponse, SecretMetadataResponse,
+	SecretScopeApi, SecretSuccessResponse, UpdateSecretRequest,
 };
