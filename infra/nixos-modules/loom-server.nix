@@ -107,6 +107,15 @@ in
       description = "Whether to open the firewall port for loom-server.";
     };
 
+    docsIndexPath = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = ''
+        Path to docs-index.json for documentation search.
+        If null, defaults to the loom-web package's static/docs-index.json.
+      '';
+    };
+
     # Weaver Secrets System Configuration
     # See specs/weaver-secrets-system.md for full documentation
     #
@@ -728,6 +737,9 @@ in
           LOOM_SERVER_SESSION_CLEANUP_INTERVAL_SECS = toString cfg.jobs.sessionCleanupIntervalSecs;
           LOOM_SERVER_OAUTH_STATE_CLEANUP_INTERVAL_SECS = toString cfg.jobs.oauthStateCleanupIntervalSecs;
         }
+        (mkIf (cfg.docsIndexPath != null) {
+          LOOM_SERVER_DOCS_INDEX = toString cfg.docsIndexPath;
+        })
         cfg.extraEnvironment
       ];
 

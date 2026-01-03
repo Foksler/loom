@@ -298,6 +298,9 @@
       # Local smtprelay doesn't support STARTTLS - TLS is used by smtprelay to upstream
       useTLS = false;
     };
+
+    # Documentation search index from loom-web static files
+    docsIndexPath = "${pkgs.loom-web}/share/loom-web/docs-index.json";
   };
 
   # Loom Web - Web frontend
