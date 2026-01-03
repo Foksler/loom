@@ -173,7 +173,7 @@ msgstr "Jätka GitHubiga"
 
 #: auth.login.google
 msgid "auth.login.google"
-msgstr "Jätka Google\\"
+msgstr "Jätka Google'iga"
 
 #: auth.login.or
 msgid "auth.login.or"

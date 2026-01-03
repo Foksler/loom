@@ -133,7 +133,7 @@ msgstr "Benvenuto,"
 
 #: auth.dashboard.protectedPage
 msgid "auth.dashboard.protectedPage"
-msgstr "Questa è una pagina protetta. Devi aver effettuato l\\"
+msgstr "Questa è una pagina protetta. Devi aver effettuato l'accesso per vederla."
 
 #: general.loading
 msgid "general.loading"
@@ -205,7 +205,7 @@ msgstr "Abbiamo inviato un link di accesso a"
 
 #: auth.login.useDifferentEmail
 msgid "auth.login.useDifferentEmail"
-msgstr "Usa un\\"
+msgstr "Usa un'altra email"
 
 #: auth.login.error
 msgid "auth.login.error"
@@ -549,7 +549,7 @@ msgstr "Creazione in corso..."
 
 #: settings.orgs.new.error
 msgid "settings.orgs.new.error"
-msgstr "Impossibile creare l\\"
+msgstr "Impossibile creare l'organizzazione"
 
 #: settings.orgs.new.requiredFields
 msgid "settings.orgs.new.requiredFields"
@@ -665,7 +665,7 @@ msgstr "Membro"
 
 #: teams.backToOrg
 msgid "teams.backToOrg"
-msgstr "Torna all\\"
+msgstr "Torna all'organizzazione"
 
 #: teams.changeRole
 msgid "teams.changeRole"
@@ -725,7 +725,7 @@ msgstr "Aggiungi"
 
 #: teams.noAvailableMembers
 msgid "teams.noAvailableMembers"
-msgstr "Nessun membro dell\\"
+msgstr "Nessun membro dell'organizzazione disponibile"
 
 #: apiKeys.title
 msgid "apiKeys.title"
@@ -733,7 +733,7 @@ msgstr "Chiavi API"
 
 #: apiKeys.description
 msgid "apiKeys.description"
-msgstr "Gestisci le chiavi API per l\\"
+msgstr "Gestisci le chiavi API per l'accesso programmatico"
 
 #: apiKeys.create
 msgid "apiKeys.create"

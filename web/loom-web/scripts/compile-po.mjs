@@ -71,11 +71,9 @@ for (const locale of locales) {
 		const content = readFileSync(poPath, 'utf-8');
 		const messages = parsePo(content);
 
-		const entries = Object.entries(messages)
-			.map(([key, value]) => `"${escapeJsString(key)}":"${escapeJsString(value)}"`)
-			.join(',');
-
-		const output = `/*eslint-disable*/import type{Messages}from"@lingui/core";export const messages=JSON.parse("{${entries.replace(/"/g, '\\"').replace(/\\\\/g, '\\\\')}}") as Messages;`;
+		const jsonObj = JSON.stringify(messages);
+		const escapedJson = jsonObj.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+		const output = `/*eslint-disable*/import type{Messages}from"@lingui/core";export const messages=JSON.parse("${escapedJson}") as Messages;`;
 
 		writeFileSync(tsPath, output);
 		console.log(`Compiled ${locale}: ${Object.keys(messages).length} messages`);
