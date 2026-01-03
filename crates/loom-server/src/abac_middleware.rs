@@ -58,22 +58,20 @@ use axum::{
 use loom_server_auth::{
 	abac::{OrgMembershipAttr, TeamMembershipAttr},
 	middleware::{AuthContext, CurrentUser},
-	Action, AuditEventType, AuditLogEntry, GlobalRole, OrgId, ResourceAttrs, ResourceType,
+	Action, GlobalRole, OrgId, ResourceAttrs, ResourceType,
 	SubjectAttrs, TeamId, UserId, Visibility,
 };
 use pin_project_lite::pin_project;
 use serde::Serialize;
-use serde_json::json;
 use std::{
 	future::Future,
 	pin::Pin,
-	sync::Arc,
 	task::{Context, Poll},
 };
 use tower::{Layer, Service};
 use tracing::instrument;
 
-use crate::db::{AuditRepository, OrgRepository, TeamRepository};
+use crate::db::{OrgRepository, TeamRepository};
 use crate::error::ErrorResponse;
 
 // =============================================================================
@@ -103,7 +101,6 @@ use crate::error::ErrorResponse;
 pub struct RequireCapability {
 	action: Action,
 	resource_type: ResourceType,
-	audit_repo: Option<Arc<AuditRepository>>,
 }
 
 impl RequireCapability {
@@ -117,14 +114,7 @@ impl RequireCapability {
 		Self {
 			action,
 			resource_type,
-			audit_repo: None,
 		}
-	}
-
-	/// Add audit repository for logging access denials.
-	pub fn with_audit(mut self, audit_repo: Arc<AuditRepository>) -> Self {
-		self.audit_repo = Some(audit_repo);
-		self
 	}
 }
 
@@ -136,7 +126,6 @@ impl<S> Layer<S> for RequireCapability {
 			inner,
 			action: self.action,
 			resource_type: self.resource_type,
-			audit_repo: self.audit_repo.clone(),
 		}
 	}
 }
@@ -147,7 +136,6 @@ pub struct RequireCapabilityService<S> {
 	inner: S,
 	action: Action,
 	resource_type: ResourceType,
-	audit_repo: Option<Arc<AuditRepository>>,
 }
 
 impl<S> Service<Request<Body>> for RequireCapabilityService<S>
@@ -196,28 +184,6 @@ where
 				resource_type = ?self.resource_type,
 				"ABAC denied: capability check failed"
 			);
-
-			if let Some(audit_repo) = &self.audit_repo {
-				let audit_entry = AuditLogEntry::builder(AuditEventType::AccessDenied)
-					.actor(current_user.user.id)
-					.resource(
-						format!("{:?}", self.resource_type).to_lowercase(),
-						"capability_check",
-					)
-					.action(format!("{:?}", self.action).to_lowercase())
-					.details(json!({
-						"reason": "capability check failed",
-						"resource_type": format!("{:?}", self.resource_type),
-					}))
-					.build();
-
-				let audit_repo = audit_repo.clone();
-				tokio::spawn(async move {
-					if let Err(e) = audit_repo.log_event(&audit_entry).await {
-						tracing::warn!(error = %e, "Failed to log access denied audit event");
-					}
-				});
-			}
 
 			return RequireCapabilityFuture::Rejected { resp: Some(forbidden_response()) };
 		}
@@ -289,7 +255,6 @@ pub struct RequireRole {
 	require_admin: bool,
 	require_support: bool,
 	require_auditor: bool,
-	audit_repo: Option<Arc<AuditRepository>>,
 }
 
 impl RequireRole {
@@ -301,7 +266,6 @@ impl RequireRole {
 			require_admin: false,
 			require_support: false,
 			require_auditor: false,
-			audit_repo: None,
 		}
 	}
 
@@ -311,7 +275,6 @@ impl RequireRole {
 			require_admin: true,
 			require_support: false,
 			require_auditor: false,
-			audit_repo: None,
 		}
 	}
 
@@ -321,7 +284,6 @@ impl RequireRole {
 			require_admin: false,
 			require_support: true,
 			require_auditor: false,
-			audit_repo: None,
 		}
 	}
 
@@ -331,7 +293,6 @@ impl RequireRole {
 			require_admin: false,
 			require_support: false,
 			require_auditor: true,
-			audit_repo: None,
 		}
 	}
 
@@ -341,7 +302,6 @@ impl RequireRole {
 			require_admin: true,
 			require_support: true,
 			require_auditor: false,
-			audit_repo: None,
 		}
 	}
 
@@ -351,14 +311,7 @@ impl RequireRole {
 			require_admin: true,
 			require_support: false,
 			require_auditor: true,
-			audit_repo: None,
 		}
-	}
-
-	/// Add audit repository for logging access denials.
-	pub fn with_audit(mut self, audit_repo: Arc<AuditRepository>) -> Self {
-		self.audit_repo = Some(audit_repo);
-		self
 	}
 }
 
@@ -377,7 +330,6 @@ impl<S> Layer<S> for RequireRole {
 			require_admin: self.require_admin,
 			require_support: self.require_support,
 			require_auditor: self.require_auditor,
-			audit_repo: self.audit_repo.clone(),
 		}
 	}
 }
@@ -389,7 +341,6 @@ pub struct RequireRoleService<S> {
 	require_admin: bool,
 	require_support: bool,
 	require_auditor: bool,
-	audit_repo: Option<Arc<AuditRepository>>,
 }
 
 impl<S> Service<Request<Body>> for RequireRoleService<S>
@@ -442,36 +393,6 @@ where
 				is_auditor = is_auditor,
 				"Role check denied: insufficient privileges"
 			);
-
-			if let Some(audit_repo) = &self.audit_repo {
-				let mut required_roles = Vec::new();
-				if self.require_admin {
-					required_roles.push("system_admin");
-				}
-				if self.require_support {
-					required_roles.push("support");
-				}
-				if self.require_auditor {
-					required_roles.push("auditor");
-				}
-
-				let audit_entry = AuditLogEntry::builder(AuditEventType::AccessDenied)
-					.actor(current_user.user.id)
-					.resource("role", "role_check")
-					.action("role_check")
-					.details(json!({
-						"reason": "insufficient privileges",
-						"required_roles": required_roles,
-					}))
-					.build();
-
-				let audit_repo = audit_repo.clone();
-				tokio::spawn(async move {
-					if let Err(e) = audit_repo.log_event(&audit_entry).await {
-						tracing::warn!(error = %e, "Failed to log access denied audit event");
-					}
-				});
-			}
 
 			return RequireRoleFuture::Rejected { resp: Some(forbidden_response()) };
 		}
@@ -771,64 +692,6 @@ pub fn check_authorization(
 		Ok(())
 	} else {
 		tracing::info!("ABAC denied: fine-grained authorization check failed");
-		Err(AuthorizationError::forbidden("Insufficient permissions"))
-	}
-}
-
-/// Check authorization with audit logging for denied access.
-///
-/// This async version logs access denials to the audit database.
-///
-/// Returns `Ok(())` if allowed, `Err(AuthorizationError)` if denied.
-///
-/// # Example
-///
-/// ```ignore
-/// check_authorization_with_audit(&subject, Action::Write, &resource, &audit_repo).await?;
-/// ```
-#[instrument(
-	skip(subject, resource, audit_repo),
-	fields(
-		user_id = %subject.user_id,
-		action = ?action,
-		resource_type = ?resource.resource_type,
-	)
-)]
-pub async fn check_authorization_with_audit(
-	subject: &SubjectAttrs,
-	action: Action,
-	resource: &ResourceAttrs,
-	audit_repo: &AuditRepository,
-) -> Result<(), AuthorizationError> {
-	if loom_server_auth::is_allowed(subject, action, resource) {
-		tracing::debug!("Authorization check passed");
-		Ok(())
-	} else {
-		tracing::info!("ABAC denied: fine-grained authorization check failed");
-
-		let resource_id = resource
-			.owner_user_id
-			.map(|id| id.to_string())
-			.or_else(|| resource.org_id.map(|id| id.to_string()))
-			.or_else(|| resource.team_id.map(|id| id.to_string()))
-			.unwrap_or_else(|| "unknown".to_string());
-
-		let audit_entry = AuditLogEntry::builder(AuditEventType::AccessDenied)
-			.actor(subject.user_id)
-			.resource(format!("{:?}", resource.resource_type).to_lowercase(), resource_id)
-			.action(format!("{action:?}").to_lowercase())
-			.details(json!({
-				"reason": "authorization check failed",
-				"resource_type": format!("{:?}", resource.resource_type),
-				"owner_user_id": resource.owner_user_id.map(|id| id.to_string()),
-				"org_id": resource.org_id.map(|id| id.to_string()),
-			}))
-			.build();
-
-		if let Err(e) = audit_repo.log_event(&audit_entry).await {
-			tracing::warn!(error = %e, "Failed to log access denied audit event");
-		}
-
 		Err(AuthorizationError::forbidden("Insufficient permissions"))
 	}
 }

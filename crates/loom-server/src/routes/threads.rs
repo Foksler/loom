@@ -9,6 +9,7 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
+use loom_server_audit::{AuditEventType, AuditLogBuilder};
 pub use loom_server_api::threads::{
 	ListParams, ListResponse, SearchParams, SearchResponse, SearchResponseHit,
 	UpdateVisibilityRequest,
@@ -72,6 +73,16 @@ pub async fn upsert_thread(
 			thread_id = %id,
 			version = stored.version,
 			"thread upserted"
+	);
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::ThreadCreated)
+			.resource("thread", id.clone())
+			.details(serde_json::json!({
+				"version": stored.version,
+				"visibility": format!("{:?}", stored.visibility),
+			}))
+			.build(),
 	);
 
 	Ok((StatusCode::OK, Json(stored)))
@@ -176,6 +187,13 @@ pub async fn delete_thread(
 
 	if deleted {
 		tracing::info!(thread_id = %id, "thread deleted");
+
+		state.audit_service.log(
+			AuditLogBuilder::new(AuditEventType::ThreadDeleted)
+				.resource("thread", id.clone())
+				.build(),
+		);
+
 		Ok(StatusCode::NO_CONTENT)
 	} else {
 		Err(ServerError::NotFound(id))
@@ -248,6 +266,16 @@ pub async fn update_thread_visibility(
 			version = stored.version,
 			visibility = ?stored.visibility,
 			"thread visibility updated"
+	);
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::ThreadVisibilityChanged)
+			.resource("thread", id.clone())
+			.details(serde_json::json!({
+				"visibility": format!("{:?}", stored.visibility),
+				"version": stored.version,
+			}))
+			.build(),
 	);
 
 	Ok((StatusCode::OK, Json(stored)))

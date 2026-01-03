@@ -6,19 +6,22 @@
 //! This module re-exports repositories from loom-db and provides
 //! server-specific migrations.
 
+pub mod audit;
 pub mod cse;
 
 use sqlx::sqlite::SqlitePool;
 
+pub use audit::AuditQueryRepository;
+
 use crate::error::ServerError;
 
 pub use loom_server_db::{
-	ApiKeyRepository, AuditRepository, DbError, GithubInstallation, GithubInstallationInfo,
+	ApiKeyRepository, DbError, GithubInstallation, GithubInstallationInfo,
 	GithubRepo, OrgRepository, SessionRepository, ShareRepository, TeamRepository,
 	ThreadRepository, ThreadSearchHit, UserRepository, create_pool,
 };
 
-/// Run all database migrations (001-023).
+/// Run all database migrations (001-026).
 ///
 /// # Arguments
 /// * `pool` - SQLite connection pool
@@ -279,6 +282,26 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ServerError> {
 
 	let m24 = include_str!("../../migrations/024_ws_tokens.sql");
 	for stmt in m24.split(';').filter(|s| !s.trim().is_empty()) {
+		if let Err(e) = sqlx::query(stmt).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists") && !msg.contains("duplicate column") {
+				return Err(e.into());
+			}
+		}
+	}
+
+	let m25 = include_str!("../../migrations/025_weaver_secrets.sql");
+	for stmt in m25.split(';').filter(|s| !s.trim().is_empty()) {
+		if let Err(e) = sqlx::query(stmt).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists") && !msg.contains("duplicate column") {
+				return Err(e.into());
+			}
+		}
+	}
+
+	let m26 = include_str!("../../migrations/026_audit_enrichment.sql");
+	for stmt in m26.split(';').filter(|s| !s.trim().is_empty()) {
 		if let Err(e) = sqlx::query(stmt).execute(pool).await {
 			let msg = e.to_string();
 			if !msg.contains("already exists") && !msg.contains("duplicate column") {

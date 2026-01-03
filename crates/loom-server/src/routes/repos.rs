@@ -17,6 +17,7 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::types::{OrgId, OrgRole, UserId};
 use loom_server_scm::{validate_repo_name, GitRepository, OwnerType, RepoRole, RepoStore, RepoTeamAccessStore, Repository, Visibility};
 use std::path::PathBuf;
@@ -260,6 +261,19 @@ pub async fn create_repo(
 		owner_type = ?created_repo.owner_type,
 		created_by = %current_user.user.id,
 		"Repository created"
+	);
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::RepoCreated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("repo", created_repo.id.to_string())
+			.details(serde_json::json!({
+				"name": created_repo.name,
+				"owner_type": format!("{:?}", created_repo.owner_type),
+				"owner_id": created_repo.owner_id.to_string(),
+				"visibility": format!("{:?}", created_repo.visibility),
+			}))
+			.build(),
 	);
 
 	let clone_url = build_clone_url(&state.base_url, &owner_name, &created_repo.name);
@@ -537,6 +551,18 @@ pub async fn update_repo(
 		"Repository updated"
 	);
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::OrgUpdated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("repo", updated_repo.id.to_string())
+			.details(serde_json::json!({
+				"name": updated_repo.name,
+				"visibility": format!("{:?}", updated_repo.visibility),
+				"default_branch": updated_repo.default_branch,
+			}))
+			.build(),
+	);
+
 	let clone_url = build_clone_url(&state.base_url, &owner_name, &updated_repo.name);
 	let _ = locale;
 
@@ -642,6 +668,18 @@ pub async fn delete_repo(
 		repo_id = %id,
 		deleted_by = %current_user.user.id,
 		"Repository soft deleted"
+	);
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::RepoDeleted)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("repo", id.to_string())
+			.details(serde_json::json!({
+				"name": repo.name,
+				"owner_type": format!("{:?}", repo.owner_type),
+				"owner_id": repo.owner_id.to_string(),
+			}))
+			.build(),
 	);
 
 	StatusCode::NO_CONTENT.into_response()

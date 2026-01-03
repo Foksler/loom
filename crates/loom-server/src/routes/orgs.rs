@@ -16,6 +16,7 @@ use axum::{
 	Json,
 };
 use chrono::Utc;
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::{
 	is_username_reserved,
 	org::{OrgVisibility, Organization},
@@ -279,6 +280,18 @@ pub async fn create_org(
 
 	tracing::info!(%user_id, %org_id, "Organization created");
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::OrgCreated)
+			.actor(AuditUserId::new(user_id.into_inner()))
+			.resource("org", org.id.to_string())
+			.details(serde_json::json!({
+				"name": org.name,
+				"slug": org.slug,
+				"visibility": format!("{:?}", org.visibility),
+			}))
+			.build(),
+	);
+
 	(StatusCode::CREATED, Json(OrgResponse::from_org(org, Some(1)))).into_response()
 }
 
@@ -528,6 +541,18 @@ pub async fn update_org(
 
 	tracing::info!(%org_id, user_id = %current_user.user.id, "Organization updated");
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::OrgUpdated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("org", org.id.to_string())
+			.details(serde_json::json!({
+				"name": org.name,
+				"slug": org.slug,
+				"visibility": format!("{:?}", org.visibility),
+			}))
+			.build(),
+	);
+
 	let member_count = match state.org_repo.list_members(&org.id).await {
 		Ok(members) => Some(members.len() as i64),
 		Err(_) => None,
@@ -639,6 +664,17 @@ pub async fn delete_org(
 	}
 
 	tracing::info!(%org_id, user_id = %current_user.user.id, "Organization deleted");
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::OrgDeleted)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("org", org.id.to_string())
+			.details(serde_json::json!({
+				"name": org.name,
+				"slug": org.slug,
+			}))
+			.build(),
+	);
 
 	(
 		StatusCode::OK,
@@ -904,6 +940,17 @@ pub async fn add_org_member(
 
 	tracing::info!(%org_id, %target_user_id, added_by = %current_user.user.id, "Member added to organization");
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::MemberAdded)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("org", org_id.to_string())
+			.details(serde_json::json!({
+				"target_user_id": target_user_id.to_string(),
+				"role": format!("{:?}", role),
+			}))
+			.build(),
+	);
+
 	(
 		StatusCode::OK,
 		Json(OrgSuccessResponse {
@@ -1070,6 +1117,17 @@ pub async fn remove_org_member(
 	}
 
 	tracing::info!(%org_id, %target_user_id, removed_by = %current_user.user.id, is_self_removal, "Member removed from organization");
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::MemberRemoved)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("org", org_id.to_string())
+			.details(serde_json::json!({
+				"target_user_id": target_user_id.to_string(),
+				"is_self_removal": is_self_removal,
+			}))
+			.build(),
+	);
 
 	(
 		StatusCode::OK,
@@ -1927,6 +1985,18 @@ pub async fn update_org_member_role(
 		%new_role,
 		updated_by = %current_user.user.id,
 		"Member role updated"
+	);
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::RoleChanged)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("org", org_id.to_string())
+			.details(serde_json::json!({
+				"target_user_id": target_user_id.to_string(),
+				"old_role": format!("{:?}", target_membership.role),
+				"new_role": format!("{:?}", new_role),
+			}))
+			.build(),
 	);
 
 	let _ = org;

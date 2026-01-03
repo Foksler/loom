@@ -39,6 +39,7 @@ use axum::{
 	Json,
 };
 use chrono::Utc;
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::{
 	org::OrgVisibility, render_email, Action, EmailTemplate, OrgId, OrgRole, Visibility,
 };
@@ -406,6 +407,19 @@ pub async fn create_invitation(
 
 	let expires_at = Utc::now() + chrono::Duration::days(loom_server_auth::OrgInvitation::EXPIRY_DAYS);
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::MemberAdded)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("invitation", invitation_id.clone())
+			.details(serde_json::json!({
+				"action": "invitation_created",
+				"org_id": org_id.to_string(),
+				"email": &payload.email,
+				"role": role.to_string(),
+			}))
+			.build(),
+	);
+
 	tracing::info!(
 		actor_id = %current_user.user.id,
 		org_id = %org_id,
@@ -769,6 +783,18 @@ pub async fn accept_invitation(
 			"Failed to mark invitation as accepted"
 		);
 	}
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::MemberAdded)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("org", org.id.to_string())
+			.details(serde_json::json!({
+				"action": "invitation_accepted",
+				"invitation_id": invitation.id.to_string(),
+				"role": invitation.role.to_string(),
+			}))
+			.build(),
+	);
 
 	tracing::info!(
 		actor_id = %current_user.user.id,
@@ -1388,6 +1414,18 @@ pub async fn approve_join_request(
 			"Failed to mark join request as approved"
 		);
 	}
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::MemberAdded)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("org", org_id.to_string())
+			.details(serde_json::json!({
+				"action": "join_request_approved",
+				"request_id": &request_id,
+				"target_user_id": join_request.user_id.to_string(),
+			}))
+			.build(),
+	);
 
 	tracing::info!(
 		actor_id = %current_user.user.id,

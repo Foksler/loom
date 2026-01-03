@@ -15,6 +15,7 @@ use axum::{
 	Json,
 };
 use chrono::Utc;
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::{validate_username, Action, UserId, ACCOUNT_DELETION_GRACE_DAYS};
 use uuid::Uuid;
 
@@ -288,6 +289,19 @@ pub async fn update_current_user(
 
 	tracing::info!(%user_id, "User profile updated");
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::OrgUpdated)
+			.actor(AuditUserId::new(user_id.into_inner()))
+			.resource("user", user_id.to_string())
+			.details(serde_json::json!({
+				"action": "profile_updated",
+				"display_name": user.display_name,
+				"username": user.username,
+				"email_visible": user.email_visible,
+			}))
+			.build(),
+	);
+
 	(
 		StatusCode::OK,
 		Json(CurrentUserProfileResponse {
@@ -406,6 +420,17 @@ pub async fn request_account_deletion(
 
 	tracing::info!(%user_id, "Account deletion scheduled");
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::OrgDeleted)
+			.actor(AuditUserId::new(user_id.into_inner()))
+			.resource("user", user_id.to_string())
+			.details(serde_json::json!({
+				"action": "account_deletion_scheduled",
+				"grace_period_days": ACCOUNT_DELETION_GRACE_DAYS,
+			}))
+			.build(),
+	);
+
 	(
 		StatusCode::OK,
 		Json(AccountDeletionResponse {
@@ -492,6 +517,16 @@ pub async fn restore_account(
 	}
 
 	tracing::info!(%user_id, "Account restored");
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::OrgRestored)
+			.actor(AuditUserId::new(user_id.into_inner()))
+			.resource("user", user_id.to_string())
+			.details(serde_json::json!({
+				"action": "account_restored",
+			}))
+			.build(),
+	);
 
 	(
 		StatusCode::OK,
@@ -668,6 +703,17 @@ pub async fn unlink_identity(
 	}
 
 	tracing::info!(%user_id, %identity_id, "Identity unlinked");
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::MemberRemoved)
+			.actor(AuditUserId::new(user_id.into_inner()))
+			.resource("identity", identity_id.clone())
+			.details(serde_json::json!({
+				"action": "identity_unlinked",
+				"provider": target_identity.provider.to_string(),
+			}))
+			.build(),
+	);
 
 	(
 		StatusCode::OK,

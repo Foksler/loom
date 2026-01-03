@@ -49,6 +49,12 @@
 			descriptionKey: 'admin.logs.description',
 			icon: '📋',
 		},
+		{
+			href: '/admin/audit-logs',
+			titleKey: 'admin.audit.title',
+			descriptionKey: 'admin.audit.description',
+			icon: '🔒',
+		},
 	];
 
 	async function loadHealth() {

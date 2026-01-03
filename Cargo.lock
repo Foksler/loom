@@ -4849,6 +4849,7 @@ dependencies = [
  "loom-common-thread",
  "loom-common-version",
  "loom-server-api",
+ "loom-server-audit",
  "loom-server-auth",
  "loom-server-auth-devicecode",
  "loom-server-auth-github",

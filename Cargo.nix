@@ -45,9 +45,9 @@ args@{
     "loom-server-smtp/default"
     "loom-server-weaver/default"
     "loom-server-k8s/default"
+    "loom-server-audit/default"
     "loom-server-config/default"
     "loom-server-geoip/default"
-    "loom-server-audit/default"
     "loom-server-secrets/default"
     "loom-weaver-secrets/default"
     "loom-tui-component/default"
@@ -86,7 +86,7 @@ args@{
   cargoConfig ? {},
 }:
 let
-  nixifiedLockHash = "25e2c3955d81acf87189a0838ff5c43eae03bfaf868793a8d82ea529ad4ede76";
+  nixifiedLockHash = "f1d9b1d8a7b8aaef31b868da47926c50f898ce0c067c1e732967049f0f9a7908";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -158,9 +158,9 @@ in
     loom-server-smtp = rustPackages.unknown.loom-server-smtp."0.1.0";
     loom-server-weaver = rustPackages.unknown.loom-server-weaver."0.1.0";
     loom-server-k8s = rustPackages.unknown.loom-server-k8s."0.1.0";
+    loom-server-audit = rustPackages.unknown.loom-server-audit."0.1.0";
     loom-server-config = rustPackages.unknown.loom-server-config."0.1.0";
     loom-server-geoip = rustPackages.unknown.loom-server-geoip."0.1.0";
-    loom-server-audit = rustPackages.unknown.loom-server-audit."0.1.0";
     loom-server-secrets = rustPackages.unknown.loom-server-secrets."0.1.0";
     loom-weaver-secrets = rustPackages.unknown.loom-weaver-secrets."0.1.0";
     loom-tui-component = rustPackages.unknown.loom-tui-component."0.1.0";
@@ -6560,6 +6560,7 @@ in
       loom_common_thread = (rustPackages."unknown".loom-common-thread."0.1.0" { inherit profileName; }).out;
       loom_common_version = (rustPackages."unknown".loom-common-version."0.1.0" { inherit profileName; }).out;
       loom_server_api = (rustPackages."unknown".loom-server-api."0.1.0" { inherit profileName; }).out;
+      loom_server_audit = (rustPackages."unknown".loom-server-audit."0.1.0" { inherit profileName; }).out;
       loom_server_auth = (rustPackages."unknown".loom-server-auth."0.1.0" { inherit profileName; }).out;
       loom_server_auth_devicecode = (rustPackages."unknown".loom-server-auth-devicecode."0.1.0" { inherit profileName; }).out;
       loom_server_auth_github = (rustPackages."unknown".loom-server-auth-github."0.1.0" { inherit profileName; }).out;
@@ -6658,7 +6659,7 @@ in
     registry = "unknown";
     src = fetchCrateLocal workspaceSrc;
     features = builtins.concatLists [
-      (lib.optional (rootFeatures' ? "loom-server-audit/default") "default")
+      [ "default" ]
       (lib.optional (rootFeatures' ? "loom-server-audit/geo-ip") "geo-ip")
       (lib.optional (rootFeatures' ? "loom-server-audit/geo-ip" || rootFeatures' ? "loom-server-audit/maxminddb") "maxminddb")
       (lib.optional (rootFeatures' ? "loom-server-audit/rand" || rootFeatures' ? "loom-server-audit/sink-http") "rand")
@@ -6669,11 +6670,11 @@ in
       (lib.optional (rootFeatures' ? "loom-server-audit/sink-http") "sink-http")
       (lib.optional (rootFeatures' ? "loom-server-audit/sink-json-stream" || rootFeatures' ? "loom-server-audit/sink-json-stream-tls") "sink-json-stream")
       (lib.optional (rootFeatures' ? "loom-server-audit/sink-json-stream-tls") "sink-json-stream-tls")
-      (lib.optional (rootFeatures' ? "loom-server-audit/default" || rootFeatures' ? "loom-server-audit/sink-sqlite") "sink-sqlite")
+      [ "sink-sqlite" ]
       (lib.optional (rootFeatures' ? "loom-server-audit/sink-syslog" || rootFeatures' ? "loom-server-audit/sink-syslog-tls") "sink-syslog")
       (lib.optional (rootFeatures' ? "loom-server-audit/sink-syslog-tls") "sink-syslog-tls")
-      (lib.optional (rootFeatures' ? "loom-server-audit/default" || rootFeatures' ? "loom-server-audit/sink-tracing") "sink-tracing")
-      (lib.optional (rootFeatures' ? "loom-server-audit/default" || rootFeatures' ? "loom-server-audit/sink-sqlite" || rootFeatures' ? "loom-server-audit/sqlx") "sqlx")
+      [ "sink-tracing" ]
+      [ "sqlx" ]
       (lib.optional (rootFeatures' ? "loom-server-audit/sink-json-stream-tls" || rootFeatures' ? "loom-server-audit/sink-syslog-tls" || rootFeatures' ? "loom-server-audit/tokio-rustls") "tokio-rustls")
       (lib.optional (rootFeatures' ? "loom-server-audit/sink-json-stream-tls" || rootFeatures' ? "loom-server-audit/sink-syslog-tls" || rootFeatures' ? "loom-server-audit/webpki-roots") "webpki-roots")
     ];
@@ -6692,7 +6693,7 @@ in
       ${ if rootFeatures' ? "loom-server-audit/rustls-pki-types" || rootFeatures' ? "loom-server-audit/sink-json-stream-tls" || rootFeatures' ? "loom-server-audit/sink-syslog-tls" then "rustls_pki_types" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".rustls-pki-types."1.13.2" { inherit profileName; }).out;
       serde = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.228" { inherit profileName; }).out;
       serde_json = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.148" { inherit profileName; }).out;
-      ${ if rootFeatures' ? "loom-server-audit/default" || rootFeatures' ? "loom-server-audit/sink-sqlite" || rootFeatures' ? "loom-server-audit/sqlx" then "sqlx" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".sqlx."0.8.6" { inherit profileName; }).out;
+      sqlx = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".sqlx."0.8.6" { inherit profileName; }).out;
       thiserror = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."2.0.17" { inherit profileName; }).out;
       tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.48.0" { inherit profileName; }).out;
       ${ if rootFeatures' ? "loom-server-audit/sink-json-stream-tls" || rootFeatures' ? "loom-server-audit/sink-syslog-tls" || rootFeatures' ? "loom-server-audit/tokio-rustls" then "tokio_rustls" else null } = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio-rustls."0.26.4" { inherit profileName; }).out;

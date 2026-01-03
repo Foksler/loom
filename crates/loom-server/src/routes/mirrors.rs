@@ -9,6 +9,7 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::types::{OrgId, OrgRole};
 use loom_server_scm::{OwnerType, RepoStore};
 use loom_server_scm_mirror::{CreatePushMirror, PushMirrorStore};
@@ -345,6 +346,17 @@ pub async fn create_mirror(
 
 	match mirror_store.create(&create).await {
 		Ok(created) => {
+			state.audit_service.log(
+				AuditLogBuilder::new(AuditEventType::MirrorCreated)
+					.actor(AuditUserId::new(current_user.user.id.into_inner()))
+					.resource("mirror", created.id.to_string())
+					.details(serde_json::json!({
+						"repo_id": id.to_string(),
+						"remote_url": &created.remote_url,
+					}))
+					.build(),
+			);
+
 			tracing::info!(
 				repo_id = %id,
 				mirror_id = %created.id,
@@ -447,6 +459,17 @@ pub async fn delete_mirror(
 
 	match mirror_store.delete(mirror_id).await {
 		Ok(()) => {
+			state.audit_service.log(
+				AuditLogBuilder::new(AuditEventType::RepoDeleted)
+					.actor(AuditUserId::new(current_user.user.id.into_inner()))
+					.resource("mirror", mirror_id.to_string())
+					.details(serde_json::json!({
+						"repo_id": id.to_string(),
+						"action": "mirror_deleted",
+					}))
+					.build(),
+			);
+
 			tracing::info!(
 				repo_id = %id,
 				mirror_id = %mirror_id,
@@ -564,6 +587,16 @@ pub async fn trigger_sync(
 		)
 			.into_response();
 	}
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::MirrorSynced)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("mirror", mirror_id.to_string())
+			.details(serde_json::json!({
+				"repo_id": id.to_string(),
+			}))
+			.build(),
+	);
 
 	tracing::info!(
 		repo_id = %id,

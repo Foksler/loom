@@ -29,9 +29,12 @@ use utoipa_swagger_ui::SwaggerUi;
 use axum::Router;
 use loom_server_config::ServerConfig;
 
+use loom_server_audit::{AuditService, AuditFilterConfig, AuditSink, NoopEnricher, SqliteAuditSink};
+use loom_server_config::QueueOverflowPolicy;
+
 use crate::{
 	db::{
-		ApiKeyRepository, AuditRepository, OrgRepository, SessionRepository, ShareRepository,
+		ApiKeyRepository, AuditQueryRepository, OrgRepository, SessionRepository, ShareRepository,
 		TeamRepository, ThreadRepository, UserRepository,
 	},
 	llm_proxy,
@@ -52,7 +55,7 @@ pub struct AppState {
 	pub org_repo: Arc<OrgRepository>,
 	pub team_repo: Arc<TeamRepository>,
 	pub api_key_repo: Arc<ApiKeyRepository>,
-	pub audit_repo: Arc<AuditRepository>,
+	pub audit_service: Arc<AuditService>,
 	pub share_repo: Arc<ShareRepository>,
 	pub auth_config: loom_server_auth::middleware::AuthConfig,
 	pub dev_user: Option<loom_server_auth::User>,
@@ -83,6 +86,7 @@ pub struct AppState {
 	pub push_mirror_store: Option<Arc<loom_server_scm_mirror::SqlitePushMirrorStore>>,
 	pub external_mirror_store: Option<Arc<loom_server_scm_mirror::SqliteExternalMirrorStore>>,
 	pub log_buffer: loom_server_logs::LogBuffer,
+	pub audit_query_repo: Arc<AuditQueryRepository>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -101,7 +105,20 @@ pub async fn create_app_state(
 	let org_repo = Arc::new(OrgRepository::new(pool.clone()));
 	let team_repo = Arc::new(TeamRepository::new(pool.clone()));
 	let api_key_repo = Arc::new(ApiKeyRepository::new(pool.clone()));
-	let audit_repo = Arc::new(AuditRepository::new(pool.clone()));
+
+	// Create SQLite audit sink
+	let sqlite_audit_sink: Arc<dyn AuditSink> = Arc::new(SqliteAuditSink::new(
+		pool.clone(),
+		AuditFilterConfig::default(),
+	));
+
+	let audit_service = Arc::new(AuditService::new(
+		Arc::new(NoopEnricher),
+		AuditFilterConfig::default(),
+		10000,
+		QueueOverflowPolicy::DropNewest,
+		vec![sqlite_audit_sink],
+	));
 	let share_repo = Arc::new(ShareRepository::new(pool.clone()));
 	let scm_repo_store = Arc::new(loom_server_scm::SqliteRepoStore::new(pool.clone()));
 	let scm_protection_store = Arc::new(loom_server_scm::SqliteProtectionStore::new(pool.clone()));
@@ -109,7 +126,8 @@ pub async fn create_app_state(
 	let scm_maintenance_store = Arc::new(loom_server_scm::SqliteMaintenanceJobStore::new(pool.clone()));
 	let scm_team_access_store = Arc::new(loom_server_scm::SqliteRepoTeamAccessStore::new(pool.clone()));
 	let push_mirror_store = Arc::new(loom_server_scm_mirror::SqlitePushMirrorStore::new(pool.clone()));
-	let external_mirror_store = Arc::new(loom_server_scm_mirror::SqliteExternalMirrorStore::new(pool));
+	let external_mirror_store = Arc::new(loom_server_scm_mirror::SqliteExternalMirrorStore::new(pool.clone()));
+	let audit_query_repo = Arc::new(AuditQueryRepository::new(pool));
 	let auth_config = loom_server_auth::middleware::AuthConfig {
 		dev_mode: config.auth.dev_mode,
 		session_cookie_name: loom_server_auth::middleware::SESSION_COOKIE_NAME.to_string(),
@@ -217,7 +235,7 @@ pub async fn create_app_state(
 		org_repo,
 		team_repo,
 		api_key_repo,
-		audit_repo,
+		audit_service,
 		share_repo,
 		auth_config,
 		dev_user,
@@ -248,6 +266,7 @@ pub async fn create_app_state(
 		push_mirror_store: Some(push_mirror_store),
 		external_mirror_store: Some(external_mirror_store),
 		log_buffer: log_buffer.unwrap_or_default(),
+		audit_query_repo,
 	}
 }
 
@@ -501,7 +520,7 @@ fn admin_routes(state: AppState) -> Router<AppState> {
 		// Log streaming
 		.route("/logs", get(routes::admin_logs::list_logs))
 		.route("/logs/stream", get(routes::admin_logs::stream_logs))
-		.route_layer(RequireRole::admin().with_audit(state.audit_repo.clone()))
+		.route_layer(RequireRole::admin())
 		.layer(from_fn_with_state(state.clone(), require_auth_layer))
 		.layer(from_fn_with_state(state, auth_layer))
 }

@@ -13,6 +13,7 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::SessionId;
 use uuid::Uuid;
 
@@ -161,6 +162,16 @@ pub async fn revoke_session(
 	match state.session_repo.delete_session(&session_id).await {
 		Ok(deleted) => {
 			if deleted {
+				state.audit_service.log(
+					AuditLogBuilder::new(AuditEventType::SessionRevoked)
+						.actor(AuditUserId::new(current_user.user.id.into_inner()))
+						.resource("session", session_id.to_string())
+						.details(serde_json::json!({
+							"revoked_by": current_user.user.id.to_string(),
+						}))
+						.build(),
+				);
+
 				Json(SessionSuccessResponse {
 					message: t(locale, "server.api.session.revoked").to_string(),
 				})

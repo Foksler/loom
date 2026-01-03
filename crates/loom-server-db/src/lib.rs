@@ -3,7 +3,6 @@
 
 mod error;
 pub mod api_key;
-pub mod audit;
 pub mod org;
 pub mod pool;
 pub mod session;
@@ -14,7 +13,6 @@ pub mod types;
 pub mod user;
 
 pub use api_key::ApiKeyRepository;
-pub use audit::AuditRepository;
 pub use error::{DbError, Result};
 pub use org::OrgRepository;
 pub use pool::create_pool;

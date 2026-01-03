@@ -21,6 +21,7 @@ use axum::{
 	response::{IntoResponse, Redirect},
 	Json,
 };
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::{generate_access_token, generate_session_token, Session, SessionType};
 use loom_server_auth_devicecode::{DeviceCode, DEVICE_CODE_EXPIRY_MINUTES};
 use loom_server_auth_magiclink::{verify_magic_link_token, MagicLink};
@@ -183,6 +184,13 @@ pub async fn logout(
 	RequireAuth(current_user): RequireAuth,
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::Logout)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.build(),
+	);
+
 	tracing::info!(user_id = %current_user.user.id, "User logged out");
 	// If session-based auth, delete the session
 	if let Some(session_id) = current_user.session_id {
@@ -299,6 +307,14 @@ pub async fn request_magic_link(
 	{
 		tracing::error!(error = %e, email = %email, "Failed to send magic link email");
 	} else {
+		state.audit_service.log(
+			AuditLogBuilder::new(AuditEventType::MagicLinkRequested)
+				.details(serde_json::json!({
+					"email": &email,
+				}))
+				.build(),
+		);
+
 		tracing::info!(email = %email, "Magic link email sent");
 	}
 
@@ -384,6 +400,11 @@ pub async fn device_start(State(state): State<AppState>) -> impl IntoResponse {
 	}
 
 	let verification_url = format!("{}/device", state.base_url);
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::DeviceCodeStarted)
+			.build(),
+	);
 
 	Json(DeviceCodeStartResponse {
 		device_code: device_code.device_code,
@@ -472,6 +493,15 @@ pub async fn device_poll(
 				)
 					.into_response();
 			}
+
+			state.audit_service.log(
+				AuditLogBuilder::new(AuditEventType::DeviceCodeCompleted)
+					.actor(AuditUserId::new(user_id.into_inner()))
+					.details(serde_json::json!({
+						"session_type": "cli",
+					}))
+					.build(),
+			);
 
 			tracing::info!(user_id = %user_id, "Device code authentication completed");
 			return Json(DeviceCodePollResponse::Completed {
@@ -1253,6 +1283,27 @@ async fn complete_oauth_login(
 			.into_response();
 	}
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::Login)
+			.actor(AuditUserId::new(user.id.into_inner()))
+			.details(serde_json::json!({
+				"provider": provider,
+				"email": email,
+			}))
+			.build(),
+	);
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::SessionCreated)
+			.actor(AuditUserId::new(user.id.into_inner()))
+			.resource("session", session.id.to_string())
+			.details(serde_json::json!({
+				"session_type": "web",
+				"auth_method": provider,
+			}))
+			.build(),
+	);
+
 	tracing::info!(user_id = %user.id, email = %email, provider = %provider, "User authenticated via OAuth");
 
 	let cookie_name = &state.auth_config.session_cookie_name;
@@ -1418,6 +1469,26 @@ pub async fn verify_magic_link(
 		)
 			.into_response();
 	}
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::MagicLinkUsed)
+			.actor(AuditUserId::new(user.id.into_inner()))
+			.details(serde_json::json!({
+				"email": &email,
+			}))
+			.build(),
+	);
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::SessionCreated)
+			.actor(AuditUserId::new(user.id.into_inner()))
+			.resource("session", session.id.to_string())
+			.details(serde_json::json!({
+				"session_type": "web",
+				"auth_method": "magic_link",
+			}))
+			.build(),
+	);
 
 	tracing::info!(user_id = %user.id, email = %email, "User authenticated via magic link");
 

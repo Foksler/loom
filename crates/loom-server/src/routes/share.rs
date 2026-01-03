@@ -14,9 +14,10 @@ use axum::{
 	Json,
 };
 use chrono::{DateTime, Duration, Utc};
-use loom_server_auth::{AuditEventType, AuditLogEntry, GlobalRole, ShareLink, SupportAccess};
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
+use loom_server_auth::{GlobalRole, ShareLink, SupportAccess};
 use loom_common_thread::ThreadId;
-use serde_json::json;
+
 
 pub use loom_server_api::share::*;
 
@@ -186,19 +187,16 @@ pub async fn create_share_link(
 
 	let url = format!("{}/api/threads/{}/share/{}", state.base_url, id, plaintext_token);
 
-	let audit_entry = AuditLogEntry::builder(AuditEventType::ThreadShared)
-		.actor(current_user.user.id)
-		.resource("thread", &id)
-		.action("Created share link")
-		.details(json!({
-			"share_link_id": share_link.id.to_string(),
-			"expires_at": share_link.expires_at.map(|dt| dt.to_rfc3339()),
-		}))
-		.build();
-
-	if let Err(e) = state.audit_repo.log_event(&audit_entry).await {
-		tracing::warn!(error = %e, "Failed to log share link creation audit event");
-	}
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::ThreadShared)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("thread", id.clone())
+			.details(serde_json::json!({
+				"share_link_id": share_link.id.to_string(),
+				"expires_at": share_link.expires_at.map(|dt| dt.to_rfc3339()),
+			}))
+			.build(),
+	);
 
 	tracing::info!(
 		actor_id = %current_user.user.id,
@@ -360,18 +358,15 @@ pub async fn revoke_share_link(
 
 	match state.share_repo.revoke_share_link(&id).await {
 		Ok(count) if count > 0 => {
-			let audit_entry = AuditLogEntry::builder(AuditEventType::ThreadUnshared)
-				.actor(current_user.user.id)
-				.resource("thread", &id)
-				.action("Revoked share link")
-				.details(json!({
-					"share_link_id": existing_link.id.to_string(),
-				}))
-				.build();
-
-			if let Err(e) = state.audit_repo.log_event(&audit_entry).await {
-				tracing::warn!(error = %e, "Failed to log share link revocation audit event");
-			}
+			state.audit_service.log(
+				AuditLogBuilder::new(AuditEventType::ThreadUnshared)
+					.actor(AuditUserId::new(current_user.user.id.into_inner()))
+					.resource("thread", id.clone())
+					.details(serde_json::json!({
+						"share_link_id": existing_link.id.to_string(),
+					}))
+					.build(),
+			);
 
 			tracing::info!(
 				actor_id = %current_user.user.id,
@@ -688,18 +683,15 @@ pub async fn request_support_access(
 			.into_response();
 	}
 
-	let audit_entry = AuditLogEntry::builder(AuditEventType::SupportAccessRequested)
-		.actor(current_user.user.id)
-		.resource("thread", &id)
-		.action("Requested support access")
-		.details(json!({
-			"support_access_id": support_access.id.to_string(),
-		}))
-		.build();
-
-	if let Err(e) = state.audit_repo.log_event(&audit_entry).await {
-		tracing::warn!(error = %e, "Failed to log support access request audit event");
-	}
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::SupportAccessRequested)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("thread", id.clone())
+			.details(serde_json::json!({
+				"support_access_id": support_access.id.to_string(),
+			}))
+			.build(),
+	);
 
 	tracing::info!(
 		actor_id = %current_user.user.id,
@@ -881,20 +873,17 @@ pub async fn approve_support_access(
 		tracing::error!(error = %e, thread_id = %id, "Failed to set is_shared_with_support flag");
 	}
 
-	let audit_entry = AuditLogEntry::builder(AuditEventType::SupportAccessApproved)
-		.actor(current_user.user.id)
-		.resource("thread", &id)
-		.action("Approved support access")
-		.details(json!({
-			"support_access_id": pending_access.id.to_string(),
-			"granted_to": pending_access.requested_by.to_string(),
-			"expires_at": expires_at.to_rfc3339(),
-		}))
-		.build();
-
-	if let Err(e) = state.audit_repo.log_event(&audit_entry).await {
-		tracing::warn!(error = %e, "Failed to log support access approval audit event");
-	}
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::SupportAccessApproved)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("thread", id.clone())
+			.details(serde_json::json!({
+				"support_access_id": pending_access.id.to_string(),
+				"granted_to": pending_access.requested_by.to_string(),
+				"expires_at": expires_at.to_rfc3339(),
+			}))
+			.build(),
+	);
 
 	tracing::info!(
 		actor_id = %current_user.user.id,
@@ -1070,19 +1059,16 @@ pub async fn revoke_support_access(
 		tracing::error!(error = %e, thread_id = %id, "Failed to clear is_shared_with_support flag");
 	}
 
-	let audit_entry = AuditLogEntry::builder(AuditEventType::SupportAccessRevoked)
-		.actor(current_user.user.id)
-		.resource("thread", &id)
-		.action("Revoked support access")
-		.details(json!({
-			"support_access_id": active_access.id.to_string(),
-			"revoked_from": active_access.requested_by.to_string(),
-		}))
-		.build();
-
-	if let Err(e) = state.audit_repo.log_event(&audit_entry).await {
-		tracing::warn!(error = %e, "Failed to log support access revocation audit event");
-	}
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::SupportAccessRevoked)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("thread", id.clone())
+			.details(serde_json::json!({
+				"support_access_id": active_access.id.to_string(),
+				"revoked_from": active_access.requested_by.to_string(),
+			}))
+			.build(),
+	);
 
 	tracing::info!(
 		actor_id = %current_user.user.id,

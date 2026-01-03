@@ -20,6 +20,7 @@ use futures::{
 	stream::{Stream, StreamExt},
 	SinkExt,
 };
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::{CurrentUser, OrgId};
 use loom_server_weaver::{CreateWeaverRequest, LogStreamOptions, ResourceSpec, Weaver, WeaverId};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -132,6 +133,8 @@ pub async fn create_weaver(
 	}
 
 	let actor_id = current_user.user.id.to_string();
+	let image_for_audit = request.image.clone();
+	let org_id_for_audit = request.org_id.clone();
 	tracing::info!(image = %request.image, org_id = %request.org_id, actor_id = %actor_id, "Creating weaver");
 
 	let create_request = CreateWeaverRequest {
@@ -153,6 +156,18 @@ pub async fn create_weaver(
 	};
 
 	let weaver = provisioner.create_weaver(create_request).await?;
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::WeaverCreated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("weaver", weaver.id.to_string())
+			.details(serde_json::json!({
+				"image": &image_for_audit,
+				"org_id": &org_id_for_audit,
+				"pod_name": &weaver.pod_name,
+			}))
+			.build(),
+	);
 
 	tracing::info!(weaver_id = %weaver.id, pod_name = %weaver.pod_name, actor_id = %actor_id, "Weaver created");
 
@@ -318,6 +333,16 @@ pub async fn delete_weaver(
 	tracing::info!(weaver_id = %id, actor_id = %actor_id, "Deleting weaver");
 
 	provisioner.delete_weaver(&weaver_id).await?;
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::WeaverDeleted)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("weaver", id.clone())
+			.details(serde_json::json!({
+				"pod_name": &weaver.pod_name,
+			}))
+			.build(),
+	);
 
 	tracing::info!(weaver_id = %id, actor_id = %actor_id, "Weaver deleted");
 
@@ -523,6 +548,17 @@ pub async fn attach_weaver(
 	let read_only = access == WeaverAccess::ReadOnly;
 	let locale = locale.to_string();
 	let actor_id = current_user.user.id.to_string();
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::WeaverAttached)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("weaver", id.clone())
+			.details(serde_json::json!({
+				"read_only": read_only,
+			}))
+			.build(),
+	);
+
 	tracing::info!(
 		weaver_id = %id,
 		actor_id = %actor_id,

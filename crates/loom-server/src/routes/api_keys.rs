@@ -34,8 +34,9 @@ use axum::{
 	Json,
 };
 use chrono::Utc;
-use loom_server_auth::{Action, ApiKeyScope, AuditEventType, AuditLogEntry, OrgId, Visibility};
-use serde_json::json;
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
+use loom_server_auth::{Action, ApiKeyScope, OrgId, Visibility};
+
 use sha2::{Digest, Sha256};
 
 pub use loom_server_api::api_keys::*;
@@ -319,20 +320,17 @@ pub async fn create_api_key(
 		Ok(id) => {
 			let now = Utc::now();
 
-			let audit_entry = AuditLogEntry::builder(AuditEventType::ApiKeyCreated)
-				.actor(current_user.user.id)
-				.resource("api_key", &id)
-				.action("Created API key")
-				.details(json!({
-					"org_id": org_id.to_string(),
-					"name": payload.name,
-					"scopes": scopes.iter().map(|s| s.to_string()).collect::<Vec<_>>(),
-				}))
-				.build();
-
-			if let Err(e) = state.audit_repo.log_event(&audit_entry).await {
-				tracing::warn!(error = %e, "Failed to log API key creation audit event");
-			}
+			state.audit_service.log(
+				AuditLogBuilder::new(AuditEventType::ApiKeyCreated)
+					.actor(AuditUserId::new(current_user.user.id.into_inner()))
+					.resource("api_key", id.clone())
+					.details(serde_json::json!({
+						"org_id": org_id.to_string(),
+						"name": payload.name,
+						"scopes": scopes.iter().map(|s| s.to_string()).collect::<Vec<_>>(),
+					}))
+					.build(),
+			);
 
 			// NOTE: plaintext_key is intentionally NOT logged - it's a secret
 			tracing::info!(
@@ -527,19 +525,16 @@ pub async fn revoke_api_key(
 
 	match state.api_key_repo.revoke_api_key(&id, &current_user.user.id).await {
 		Ok(true) => {
-			let audit_entry = AuditLogEntry::builder(AuditEventType::ApiKeyRevoked)
-				.actor(current_user.user.id)
-				.resource("api_key", &id)
-				.action("Revoked API key")
-				.details(json!({
-					"org_id": org_id.to_string(),
-					"name": api_key.name,
-				}))
-				.build();
-
-			if let Err(e) = state.audit_repo.log_event(&audit_entry).await {
-				tracing::warn!(error = %e, "Failed to log API key revocation audit event");
-			}
+			state.audit_service.log(
+				AuditLogBuilder::new(AuditEventType::ApiKeyRevoked)
+					.actor(AuditUserId::new(current_user.user.id.into_inner()))
+					.resource("api_key", id.clone())
+					.details(serde_json::json!({
+						"org_id": org_id.to_string(),
+						"name": api_key.name.clone(),
+					}))
+					.build(),
+			);
 
 			tracing::info!(
 				actor_id = %current_user.user.id,

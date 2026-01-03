@@ -14,6 +14,7 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::{
 	team::Team,
 	types::{OrgId, TeamId, TeamRole, UserId},
@@ -347,6 +348,18 @@ pub async fn create_team(
 
 	tracing::info!(%org_id, %team_id, %user_id, "Team created");
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::TeamCreated)
+			.actor(AuditUserId::new(user_id.into_inner()))
+			.resource("team", team.id.to_string())
+			.details(serde_json::json!({
+				"org_id": org_id.to_string(),
+				"name": team.name,
+				"slug": team.slug,
+			}))
+			.build(),
+	);
+
 	(StatusCode::CREATED, Json(TeamResponse::from_team(team, Some(1)))).into_response()
 }
 
@@ -612,6 +625,18 @@ pub async fn update_team(
 
 	tracing::info!(%org_id, %team_id, user_id = %current_user.user.id, "Team updated");
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::TeamUpdated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("team", team.id.to_string())
+			.details(serde_json::json!({
+				"org_id": org_id.to_string(),
+				"name": team.name,
+				"slug": team.slug,
+			}))
+			.build(),
+	);
+
 	let member_count = match state.team_repo.list_members(&team.id).await {
 		Ok(members) => Some(members.len() as i64),
 		Err(_) => None,
@@ -731,6 +756,18 @@ pub async fn delete_team(
 	}
 
 	tracing::info!(%org_id, %team_id, user_id = %current_user.user.id, "Team deleted");
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::TeamDeleted)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("team", team.id.to_string())
+			.details(serde_json::json!({
+				"org_id": org_id.to_string(),
+				"name": team.name,
+				"slug": team.slug,
+			}))
+			.build(),
+	);
 
 	(
 		StatusCode::OK,
@@ -1042,6 +1079,18 @@ pub async fn add_team_member(
 
 	tracing::info!(%org_id, %team_id, %target_user_id, added_by = %current_user.user.id, "Team member added");
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::TeamMemberAdded)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("team", team.id.to_string())
+			.details(serde_json::json!({
+				"org_id": org_id.to_string(),
+				"target_user_id": target_user_id.to_string(),
+				"role": format!("{:?}", role),
+			}))
+			.build(),
+	);
+
 	(
 		StatusCode::OK,
 		Json(TeamSuccessResponse {
@@ -1233,6 +1282,18 @@ pub async fn remove_team_member(
 	}
 
 	tracing::info!(%org_id, %team_id, %target_user_id, removed_by = %current_user.user.id, is_self_removal, "Team member removed");
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::TeamMemberRemoved)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("team", team.id.to_string())
+			.details(serde_json::json!({
+				"org_id": org_id.to_string(),
+				"target_user_id": target_user_id.to_string(),
+				"is_self_removal": is_self_removal,
+			}))
+			.build(),
+	);
 
 	(
 		StatusCode::OK,

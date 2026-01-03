@@ -33,7 +33,8 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use loom_server_auth::{AuditEventType, AuditLogEntry, UserId};
+use loom_server_auth::UserId;
+use loom_server_audit::{AuditEventType, AuditLogBuilder, AuditSeverity, UserId as AuditUserId};
 use serde_json::json;
 use uuid::Uuid;
 
@@ -383,19 +384,17 @@ pub async fn update_user_roles(
 		"Admin updated user roles"
 	);
 
-	let audit_entry = AuditLogEntry::builder(AuditEventType::RoleChanged)
-		.actor(current_user.user.id)
-		.resource("user", target_user.id.to_string())
-		.action("Updated user roles")
-		.details(json!({
-			"old_roles": old_roles,
-			"new_roles": new_roles,
-		}))
-		.build();
-
-	if let Err(e) = state.audit_repo.log_event(&audit_entry).await {
-		tracing::warn!(error = %e, "Failed to log role change audit event");
-	}
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::GlobalRoleChanged)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.severity(AuditSeverity::Warning)
+			.resource("user", target_user.id.to_string())
+			.details(json!({
+				"old_roles": old_roles,
+				"new_roles": new_roles,
+			}))
+			.build()
+	);
 
 	(
 		StatusCode::OK,
@@ -589,20 +588,18 @@ pub async fn start_impersonation(
 		"Admin started impersonation"
 	);
 
-	let audit_entry = AuditLogEntry::builder(AuditEventType::ImpersonationStarted)
-		.actor(target_user_id)
-		.impersonating(current_user.user.id)
-		.resource("user", target_user.id.to_string())
-		.action("Started impersonating user")
-		.details(json!({
-			"reason": payload.reason,
-			"session_id": session_id,
-		}))
-		.build();
-
-	if let Err(e) = state.audit_repo.log_event(&audit_entry).await {
-		tracing::warn!(error = %e, "Failed to log impersonation start audit event");
-	}
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::ImpersonationStarted)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.severity(AuditSeverity::Warning)
+			.resource("user", target_user.id.to_string())
+			.details(json!({
+				"reason": payload.reason,
+				"session_id": session_id,
+				"target_user_id": target_user_id.to_string(),
+			}))
+			.build()
+	);
 
 	(
 		StatusCode::OK,
@@ -709,19 +706,16 @@ pub async fn stop_impersonation(
 		"Admin stopped impersonation"
 	);
 
-	let audit_entry = AuditLogEntry::builder(AuditEventType::ImpersonationEnded)
-		.actor(target_user_id)
-		.impersonating(current_user.user.id)
-		.resource("user", target_user_id.to_string())
-		.action("Stopped impersonating user")
-		.details(json!({
-			"session_id": session_id,
-		}))
-		.build();
-
-	if let Err(e) = state.audit_repo.log_event(&audit_entry).await {
-		tracing::warn!(error = %e, "Failed to log impersonation end audit event");
-	}
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::ImpersonationEnded)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.severity(AuditSeverity::Warning)
+			.resource("user", target_user_id.to_string())
+			.details(json!({
+				"session_id": session_id,
+			}))
+			.build()
+	);
 
 	(
 		StatusCode::OK,
@@ -808,33 +802,23 @@ pub async fn list_audit_logs(
 			.into_response();
 	}
 
-	let actor_id = params.actor_id.as_ref().and_then(|id| {
-		Uuid::parse_str(id)
-			.ok()
-			.map(UserId::new)
-	});
-
 	let (logs, total) = match state
-		.audit_repo
+		.audit_query_repo
 		.query_logs(
 			params.event_type.as_deref(),
-			actor_id.as_ref(),
+			params.actor_id.as_deref(),
 			params.resource_type.as_deref(),
 			params.resource_id.as_deref(),
 			params.from,
 			params.to,
-			params.limit,
-			params.offset,
+			Some(params.limit.into()),
+			Some(params.offset.into()),
 		)
 		.await
 	{
 		Ok(result) => result,
 		Err(e) => {
-			tracing::error!(
-				error = %e,
-				actor_id = %current_user.user.id,
-				"Failed to query audit logs"
-			);
+			tracing::error!(error = %e, "Failed to query audit logs");
 			return (
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(AdminErrorResponse {

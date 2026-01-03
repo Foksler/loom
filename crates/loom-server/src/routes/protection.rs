@@ -16,6 +16,7 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::types::{OrgId, OrgRole};
 use loom_server_scm::{BranchProtectionRule, OwnerType, ProtectionStore, RepoStore};
 use uuid::Uuid;
@@ -213,6 +214,18 @@ pub async fn create_protection_rule(
 
 	match protection_store.create(&rule).await {
 		Ok(created) => {
+			state.audit_service.log(
+				AuditLogBuilder::new(AuditEventType::AccessGranted)
+					.actor(AuditUserId::new(current_user.user.id.into_inner()))
+					.resource("protection_rule", created.id.to_string())
+					.details(serde_json::json!({
+						"action": "protection_rule_created",
+						"repo_id": id.to_string(),
+						"pattern": &created.pattern,
+					}))
+					.build(),
+			);
+
 			tracing::info!(
 				repo_id = %id,
 				rule_id = %created.id,
@@ -323,6 +336,18 @@ pub async fn delete_protection_rule(
 
 	match protection_store.delete(rule_id).await {
 		Ok(()) => {
+			state.audit_service.log(
+				AuditLogBuilder::new(AuditEventType::AccessDenied)
+					.actor(AuditUserId::new(current_user.user.id.into_inner()))
+					.resource("protection_rule", rule_id.to_string())
+					.details(serde_json::json!({
+						"action": "protection_rule_deleted",
+						"repo_id": id.to_string(),
+						"pattern": &rule.pattern,
+					}))
+					.build(),
+			);
+
 			tracing::info!(
 				repo_id = %id,
 				rule_id = %rule_id,
