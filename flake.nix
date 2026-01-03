@@ -250,6 +250,8 @@
           loom-server-scm-mirror-c2n = (rustPkgs.workspace.loom-server-scm-mirror {});
           loom-server-smtp-c2n = (rustPkgs.workspace.loom-server-smtp {});
           loom-server-weaver-c2n = (rustPkgs.workspace.loom-server-weaver {});
+          loom-common-spool-c2n = (rustPkgs.workspace.loom-common-spool {});
+          loom-cli-spool-c2n = (rustPkgs.workspace.loom-cli-spool {});
           
           # Combined workspace build for pre-commit validation
           loom-workspace-c2n = pkgsWithCargo2nix.symlinkJoin {
