@@ -1026,6 +1026,10 @@ msgstr "イメージ"
 msgid "weavers.imageName"
 msgstr "コンテナイメージ"
 
+#: weavers.organization
+msgid "weavers.organization"
+msgstr "組織"
+
 #: weavers.created
 msgid "weavers.created"
 msgstr "作成日時"

@@ -389,6 +389,7 @@ export interface ListWeaversResponse {
 
 export interface CreateWeaverRequest {
 	image: string;
+	org_id: string;
 	env?: Record<string, string>;
 	resources?: {
 		memory_limit?: string;

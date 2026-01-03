@@ -1026,6 +1026,10 @@ msgstr "Image"
 msgid "weavers.imageName"
 msgstr "Image du conteneur"
 
+#: weavers.organization
+msgid "weavers.organization"
+msgstr "Organisation"
+
 #: weavers.created
 msgid "weavers.created"
 msgstr "Créé"

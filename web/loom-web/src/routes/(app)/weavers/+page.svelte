@@ -6,12 +6,13 @@
 	import { goto } from '$app/navigation';
 	import { i18n } from '$lib/i18n';
 	import { getApiClient } from '$lib/api/client';
-	import type { Weaver, WeaverStatus } from '$lib/api/types';
+	import type { Weaver, WeaverStatus, Org } from '$lib/api/types';
 	import { Card, Badge, Button, Input, ThreadDivider } from '$lib/ui';
 
 	const client = getApiClient();
 
 	let weavers = $state<Weaver[]>([]);
+	let orgs = $state<Org[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let deletingId = $state<string | null>(null);
@@ -40,6 +41,7 @@
 
 	let newWeaver = $state({
 		image: DEFAULT_WEAVER_IMAGE,
+		org_id: '',
 		lifetime_hours: 24,
 		workdir: '',
 	});
@@ -49,8 +51,15 @@
 		loading = true;
 		error = null;
 		try {
-			const response = await client.listWeavers();
-			weavers = response.weavers;
+			const [weaversResponse, orgsResponse] = await Promise.all([
+				client.listWeavers(),
+				client.listOrgs(),
+			]);
+			weavers = weaversResponse.weavers;
+			orgs = orgsResponse.orgs;
+			if (orgs.length > 0 && !newWeaver.org_id) {
+				newWeaver.org_id = orgs[0].id;
+			}
 		} catch (e) {
 			error = e instanceof Error ? e.message : i18n._('general.error');
 		} finally {
@@ -123,7 +132,8 @@
 		creating = false;
 		createdWeaverId = null;
 		createLogLines = [];
-		newWeaver = { image: DEFAULT_WEAVER_IMAGE, lifetime_hours: 24, workdir: '' };
+		const defaultOrgId = orgs.length > 0 ? orgs[0].id : '';
+		newWeaver = { image: DEFAULT_WEAVER_IMAGE, org_id: defaultOrgId, lifetime_hours: 24, workdir: '' };
 		if (createEventSource) {
 			createEventSource.close();
 			createEventSource = null;
@@ -173,7 +183,8 @@
 			return;
 		}
 		showCreateModal = false;
-		newWeaver = { image: DEFAULT_WEAVER_IMAGE, lifetime_hours: 24, workdir: '' };
+		const defaultOrgId = orgs.length > 0 ? orgs[0].id : '';
+		newWeaver = { image: DEFAULT_WEAVER_IMAGE, org_id: defaultOrgId, lifetime_hours: 24, workdir: '' };
 		showImageDropdown = false;
 		createdWeaverId = null;
 		createLogLines = [];
@@ -430,6 +441,24 @@
 								{/if}
 							</div>
 						</div>
+
+						{#if orgs.length > 1}
+							<div class="form-field">
+								<label for="org" class="form-label">
+									{i18n._('weavers.organization')}
+								</label>
+								<select
+									id="org"
+									bind:value={newWeaver.org_id}
+									class="form-select"
+									required
+								>
+									{#each orgs as org}
+										<option value={org.id}>{org.name}</option>
+									{/each}
+								</select>
+							</div>
+						{/if}
 
 						<div class="form-field">
 							<label for="lifetime" class="form-label">

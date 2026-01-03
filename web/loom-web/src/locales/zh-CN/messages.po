@@ -1026,6 +1026,10 @@ msgstr "镜像"
 msgid "weavers.imageName"
 msgstr "容器镜像"
 
+#: weavers.organization
+msgid "weavers.organization"
+msgstr "组织"
+
 #: weavers.created
 msgid "weavers.created"
 msgstr "创建时间"

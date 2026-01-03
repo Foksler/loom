@@ -1026,6 +1026,10 @@ msgstr "الصورة"
 msgid "weavers.imageName"
 msgstr "صورة الحاوية"
 
+#: weavers.organization
+msgid "weavers.organization"
+msgstr "المنظمة"
+
 #: weavers.created
 msgid "weavers.created"
 msgstr "تم الإنشاء"

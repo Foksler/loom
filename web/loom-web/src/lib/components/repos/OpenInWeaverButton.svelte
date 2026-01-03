@@ -24,8 +24,19 @@
 
 		try {
 			const client = getApiClient();
+
+			let orgId = repo.owner_id;
+			if (repo.owner_type === 'user') {
+				const orgsResponse = await client.listOrgs();
+				if (orgsResponse.orgs.length === 0) {
+					throw new Error(i18n.t('client.repos.weaver.no_org'));
+				}
+				orgId = orgsResponse.orgs[0].id;
+			}
+
 			const weaver = await client.createWeaver({
 				image: 'ghcr.io/ghuntley/loom/weaver:latest',
+				org_id: orgId,
 				lifetime_hours: 24,
 				env: {
 					REPO_CLONE_URL: repo.clone_url,
