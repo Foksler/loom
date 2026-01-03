@@ -14,6 +14,7 @@ pub mod llm;
 pub mod logging;
 pub mod oauth;
 pub mod paths;
+pub mod scim;
 pub mod search;
 pub mod smtp;
 pub mod weaver;
@@ -36,6 +37,7 @@ pub use oauth::{
 	OAuthConfig, OAuthConfigLayer, OktaOAuthConfig, OktaOAuthConfigLayer,
 };
 pub use paths::{PathsConfig, PathsConfigLayer};
+pub use scim::{ScimConfig, ScimConfigLayer};
 pub use search::{GoogleCseConfig, GoogleCseConfigLayer, SearchConfig, SearchConfigLayer, SerperConfig, SerperConfigLayer};
 pub use smtp::{SmtpConfig, SmtpConfigLayer, TlsMode};
 pub use weaver::{WeaverConfig, WeaverConfigLayer, WebhookConfig, WebhookEvent};

@@ -10,6 +10,7 @@ use std::time::Duration;
 use tokio::time::{timeout, Instant};
 use utoipa::ToSchema;
 
+use loom_server_config::ScimConfig;
 use loom_server_weaver::Provisioner;
 use loom_server_github_app::{GithubAppClient, GithubAppError};
 use loom_server_jobs::JobScheduler;
@@ -17,7 +18,7 @@ use loom_server_llm_service::LlmService;
 use loom_server_secrets::KeyBackend;
 use loom_server_smtp::SmtpClient;
 
-use crate::db::ThreadRepository;
+use crate::db::{OrgRepository, ThreadRepository};
 
 /// Health status for components and overall system.
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq, ToSchema)]
@@ -193,6 +194,19 @@ pub struct SecretsHealth {
 	pub error: Option<String>,
 }
 
+/// SCIM component health.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ScimHealth {
+	pub status: HealthStatus,
+	pub enabled: bool,
+	pub configured: bool,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub org_id: Option<String>,
+	pub org_exists: bool,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub error: Option<String>,
+}
+
 /// Individual authentication provider health.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct AuthProviderHealth {
@@ -228,6 +242,7 @@ pub struct HealthComponents {
 	pub auth_providers: AuthProvidersHealth,
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub secrets: Option<SecretsHealth>,
+	pub scim: ScimHealth,
 }
 
 /// Complete health check response.
@@ -920,14 +935,12 @@ pub fn check_auth_providers(
 		},
 	});
 
-	// Overall status: healthy if at least one provider is configured, degraded otherwise
+	// Overall status: healthy if at least one provider is configured, unhealthy otherwise
 	let configured_count = providers.iter().filter(|p| p.configured).count();
 	let status = if configured_count == 0 {
 		HealthStatus::Unhealthy
-	} else if configured_count == providers.len() {
-		HealthStatus::Healthy
 	} else {
-		HealthStatus::Healthy // At least one provider is enough
+		HealthStatus::Healthy
 	};
 
 	AuthProvidersHealth { status, providers }
@@ -1000,6 +1013,58 @@ pub async fn check_secrets(
 	})
 }
 
+/// Check SCIM health.
+///
+/// Verifies that SCIM is properly configured:
+/// - Whether SCIM is enabled
+/// - Whether it's properly configured (token + org_id set)
+/// - Whether the configured org exists in the database
+pub async fn check_scim(scim_config: &ScimConfig, org_repo: &OrgRepository) -> ScimHealth {
+	if !scim_config.enabled {
+		return ScimHealth {
+			status: HealthStatus::Healthy,
+			enabled: false,
+			configured: false,
+			org_id: None,
+			org_exists: false,
+			error: None,
+		};
+	}
+
+	let configured = scim_config.token.is_some() && scim_config.org_id.is_some();
+
+	let (org_exists, error) = if let Some(ref org_id_str) = scim_config.org_id {
+		match uuid::Uuid::parse_str(org_id_str) {
+			Ok(uuid) => {
+				let org_id = loom_server_auth::OrgId::new(uuid);
+				match org_repo.get_org_by_id(&org_id).await {
+					Ok(Some(_)) => (true, None),
+					Ok(None) => (false, Some(format!("Organization {} not found", org_id_str))),
+					Err(e) => (false, Some(format!("Failed to check organization: {}", e))),
+				}
+			}
+			Err(e) => (false, Some(format!("Invalid org_id format: {}", e))),
+		}
+	} else {
+		(false, Some("org_id not configured".to_string()))
+	};
+
+	let status = if configured && org_exists {
+		HealthStatus::Healthy
+	} else {
+		HealthStatus::Degraded
+	};
+
+	ScimHealth {
+		status,
+		enabled: true,
+		configured,
+		org_id: scim_config.org_id.clone(),
+		org_exists,
+		error,
+	}
+}
+
 /// Aggregate component statuses into overall status.
 pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
 	let mut statuses = vec![
@@ -1023,6 +1088,10 @@ pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
 
 	if let Some(ref secrets) = components.secrets {
 		statuses.push(secrets.status);
+	}
+
+	if components.scim.enabled {
+		statuses.push(components.scim.status);
 	}
 
 	if statuses

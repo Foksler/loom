@@ -210,10 +210,9 @@ pub async fn resolve_stun_servers(servers: &[&str]) -> Vec<SocketAddr> {
 
 	for server in servers {
 		match tokio::net::lookup_host(server).await {
-			Ok(resolved) => {
-				for addr in resolved {
+			Ok(mut resolved) => {
+				if let Some(addr) = resolved.next() {
 					addrs.push(addr);
-					break;
 				}
 			}
 			Err(e) => {

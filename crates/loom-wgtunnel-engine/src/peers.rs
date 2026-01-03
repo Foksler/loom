@@ -87,7 +87,7 @@ impl PeerManager {
 
 	#[instrument(skip(self), fields(peer = %config.public_key))]
 	pub async fn add(&self, config: PeerConfig) -> Result<()> {
-		let public_key = config.public_key.clone();
+		let public_key = config.public_key;
 		let state = PeerState::new(config);
 
 		let mut peers = self.peers.write().await;
@@ -98,7 +98,7 @@ impl PeerManager {
 			)));
 		}
 
-		peers.insert(public_key.clone(), state);
+		peers.insert(public_key, state);
 		debug!("added peer");
 		Ok(())
 	}

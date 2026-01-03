@@ -30,7 +30,7 @@ pub use sources::{ConfigSource, DefaultsSource, EnvSource, Precedence, TomlSourc
 use tracing::{debug, info};
 
 /// Fully resolved server configuration.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ServerConfig {
 	pub http: HttpConfig,
 	pub database: DatabaseConfig,
@@ -46,6 +46,7 @@ pub struct ServerConfig {
 	pub paths: PathsConfig,
 	pub logging: LoggingConfig,
 	pub audit: AuditConfig,
+	pub scim: ScimConfig,
 }
 
 impl ServerConfig {
@@ -55,26 +56,7 @@ impl ServerConfig {
 	}
 }
 
-impl Default for ServerConfig {
-	fn default() -> Self {
-		Self {
-			http: HttpConfig::default(),
-			database: DatabaseConfig::default(),
-			auth: AuthConfig::default(),
-			llm: LlmConfig::default(),
-			weaver: WeaverConfig::default(),
-			smtp: None,
-			oauth: OAuthConfig::default(),
-			github_app: None,
-			geoip: None,
-			jobs: JobsConfig::default(),
-			search: SearchConfig::default(),
-			paths: PathsConfig::default(),
-			logging: LoggingConfig::default(),
-			audit: AuditConfig::default(),
-		}
-	}
-}
+
 
 /// Load configuration from all sources with standard precedence.
 ///
@@ -146,6 +128,10 @@ fn finalize(layer: ServerConfigLayer) -> Result<ServerConfig, ConfigError> {
 	let github_app = layer.github_app.and_then(|l| l.finalize());
 	let geoip = layer.geoip.and_then(|l| l.finalize());
 
+	let scim_token = loom_common_config::load_secret_env("LOOM_SERVER_SCIM_TOKEN")
+		.map_err(|e| ConfigError::Secret(e.to_string()))?;
+	let scim = layer.scim.unwrap_or_default().finalize(scim_token);
+
 	validate_config(&auth)?;
 
 	info!(
@@ -158,6 +144,7 @@ fn finalize(layer: ServerConfigLayer) -> Result<ServerConfig, ConfigError> {
 		github_app_configured = github_app.is_some(),
 		geoip_configured = geoip.is_some(),
 		audit_enabled = audit.enabled,
+		scim_enabled = scim.enabled,
 		"Server configuration loaded"
 	);
 
@@ -176,6 +163,7 @@ fn finalize(layer: ServerConfigLayer) -> Result<ServerConfig, ConfigError> {
 		paths,
 		logging,
 		audit,
+		scim,
 	})
 }
 
@@ -241,6 +229,7 @@ mod tests {
 			paths: PathsConfig::default(),
 			logging: LoggingConfig::default(),
 			audit: AuditConfig::default(),
+			scim: ScimConfig::default(),
 		};
 		assert_eq!(config.socket_addr(), "127.0.0.1:9000");
 	}

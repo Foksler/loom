@@ -67,7 +67,7 @@ impl ScrollableState {
 	}
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Scrollable {
 	show_scrollbar: bool,
 	track_style: Style,
@@ -76,17 +76,7 @@ pub struct Scrollable {
 	direction: TextDirection,
 }
 
-impl Default for Scrollable {
-	fn default() -> Self {
-		Self {
-			show_scrollbar: false,
-			track_style: Style::default(),
-			thumb_style: Style::default(),
-			theme: None,
-			direction: TextDirection::default(),
-		}
-	}
-}
+
 
 impl Scrollable {
 	pub fn new() -> Self {

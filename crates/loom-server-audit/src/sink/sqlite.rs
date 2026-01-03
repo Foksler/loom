@@ -1,8 +1,6 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
-#![cfg(feature = "sink-sqlite")]
-
 use std::sync::Arc;
 
 use async_trait::async_trait;
@@ -46,14 +44,14 @@ impl AuditSink for SqliteAuditSink {
 		let session_context_json = event
 			.session
 			.as_ref()
-			.map(|s| serde_json::to_string(s))
+			.map(serde_json::to_string)
 			.transpose()
 			.map_err(|e| AuditSinkError::Permanent(format!("failed to serialize session_context: {e}")))?;
 
 		let org_context_json = event
 			.org
 			.as_ref()
-			.map(|o| serde_json::to_string(o))
+			.map(serde_json::to_string)
 			.transpose()
 			.map_err(|e| AuditSinkError::Permanent(format!("failed to serialize org_context: {e}")))?;
 

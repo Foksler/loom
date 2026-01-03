@@ -207,12 +207,8 @@ impl K8sClient for KubeClient {
 		let groups = user_info.groups.unwrap_or_default();
 		let audiences = status.audiences.unwrap_or_default();
 
-		let extra: HashMap<String, Vec<String>> = user_info
-			.extra
-			.unwrap_or_default()
-			.into_iter()
-			.map(|(k, v)| (k, v))
-			.collect();
+		let extra: HashMap<String, Vec<String>> =
+			user_info.extra.unwrap_or_default().into_iter().collect();
 
 		debug!(
 			username = %username,

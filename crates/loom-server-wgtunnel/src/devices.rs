@@ -37,6 +37,8 @@ struct DeviceRow {
 	revoked_at: Option<String>,
 }
 
+type DeviceRowTuple = (String, String, Vec<u8>, Option<String>, String, Option<String>, Option<String>);
+
 impl TryFrom<DeviceRow> for Device {
 	type Error = WgError;
 
@@ -120,7 +122,7 @@ impl DeviceService {
 
 	#[instrument(skip(self), fields(%user_id))]
 	pub async fn list(&self, user_id: Uuid) -> Result<Vec<Device>> {
-		let rows: Vec<(String, String, Vec<u8>, Option<String>, String, Option<String>, Option<String>)> =
+		let rows: Vec<DeviceRowTuple> =
 			sqlx::query_as(
 				"SELECT id, user_id, public_key, name, created_at, last_seen_at, revoked_at
                  FROM wg_devices WHERE user_id = ? AND revoked_at IS NULL
@@ -148,7 +150,7 @@ impl DeviceService {
 
 	#[instrument(skip(self), fields(%id))]
 	pub async fn get(&self, id: Uuid) -> Result<Option<Device>> {
-		let row: Option<(String, String, Vec<u8>, Option<String>, String, Option<String>, Option<String>)> =
+		let row: Option<DeviceRowTuple> =
 			sqlx::query_as(
 				"SELECT id, user_id, public_key, name, created_at, last_seen_at, revoked_at
                  FROM wg_devices WHERE id = ?",
@@ -177,7 +179,7 @@ impl DeviceService {
 
 	#[instrument(skip(self, public_key))]
 	pub async fn get_by_public_key(&self, public_key: &[u8; 32]) -> Result<Option<Device>> {
-		let row: Option<(String, String, Vec<u8>, Option<String>, String, Option<String>, Option<String>)> =
+		let row: Option<DeviceRowTuple> =
 			sqlx::query_as(
 				"SELECT id, user_id, public_key, name, created_at, last_seen_at, revoked_at
                  FROM wg_devices WHERE public_key = ?",

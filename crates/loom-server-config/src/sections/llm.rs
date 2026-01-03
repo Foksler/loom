@@ -229,7 +229,7 @@ pub struct VertexConfig {
 }
 
 /// LLM configuration (runtime, resolved).
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct LlmConfig {
 	pub provider: LlmProvider,
 	pub anthropic_auth: Option<AnthropicAuth>,
@@ -250,17 +250,7 @@ impl std::fmt::Debug for LlmConfig {
 	}
 }
 
-impl Default for LlmConfig {
-	fn default() -> Self {
-		Self {
-			provider: LlmProvider::default(),
-			anthropic_auth: None,
-			anthropic_model: None,
-			openai: None,
-			vertex: None,
-		}
-	}
-}
+
 
 #[cfg(test)]
 mod tests {

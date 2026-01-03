@@ -40,6 +40,12 @@ Design documentation for Loom, an AI-powered coding agent in Rust.
 | [auth-abac-system.md](./auth-abac-system.md) | [loom-auth](../crates/loom-auth/), [loom-auth-*](../crates/) | OAuth, magic links, ABAC |
 | [audit-system.md](./audit-system.md) | [loom-server-audit](../crates/loom-server-audit/) | Audit logging with SIEM integration |
 
+## Identity & Provisioning
+
+| Spec | Code | Purpose |
+|------|------|---------|
+| [scim-system.md](./scim-system.md) | [loom-scim](../crates/loom-scim/), [loom-server-scim](../crates/loom-server-scim/) | RFC 7643/7644 SCIM for IdP user provisioning |
+
 ## Server & API
 
 | Spec | Code | Purpose |

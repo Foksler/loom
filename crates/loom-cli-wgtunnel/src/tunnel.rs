@@ -115,7 +115,7 @@ impl TunnelManager {
 		let weaver_public_key = WgPublicKey::from_base64(&session.weaver.public_key)
 			.map_err(|e| crate::error::CliError::Other(format!("invalid public key: {}", e)))?;
 
-		let peer_config = PeerConfig::new(weaver_public_key.clone())
+		let peer_config = PeerConfig::new(weaver_public_key)
 			.with_allowed_ip(weaver_ip)
 			.with_derp_region(session.weaver.derp_home_region)
 			.with_persistent_keepalive(25);

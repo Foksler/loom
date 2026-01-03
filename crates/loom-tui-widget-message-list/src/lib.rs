@@ -204,11 +204,7 @@ impl StatefulWidget for MessageList {
 						let ts_len = ts.len() + 2;
 						let role_len = role_label.len() + 2;
 						let total_len = ts_len + role_len;
-						let padding = if (area.width as usize) > total_len {
-							area.width as usize - total_len
-						} else {
-							0
-						};
+						let padding = (area.width as usize).saturating_sub(total_len);
 						Line::from(vec![ts_span, Span::raw(" ".repeat(padding)), role_span])
 					} else {
 						let padding = if (area.width as usize) > role_label.len() + 2 {
@@ -224,11 +220,7 @@ impl StatefulWidget for MessageList {
 						let header_len = role_label.len() + 2;
 						let ts_len = ts.len();
 						let total_len = header_len + ts_len;
-						let padding = if (area.width as usize) > total_len {
-							area.width as usize - total_len
-						} else {
-							0
-						};
+						let padding = (area.width as usize).saturating_sub(total_len);
 						Line::from(vec![
 							header_span,
 							Span::raw(" ".repeat(padding)),
@@ -255,11 +247,7 @@ impl StatefulWidget for MessageList {
 
 						let content_line = if is_rtl {
 							let line_len = line.len() + 2;
-							let padding = if (area.width as usize) > line_len {
-								area.width as usize - line_len
-							} else {
-								0
-							};
+							let padding = (area.width as usize).saturating_sub(line_len);
 							Line::from(vec![
 								Span::raw(" ".repeat(padding)),
 								Span::styled(line.to_string(), base_style),
@@ -289,11 +277,7 @@ impl StatefulWidget for MessageList {
 								spans.push(styled_span);
 							}
 							content_width += 2;
-							let padding = if (area.width as usize) > content_width {
-								area.width as usize - content_width
-							} else {
-								0
-							};
+							let padding = (area.width as usize).saturating_sub(content_width);
 							let mut result = vec![Span::raw(" ".repeat(padding))];
 							result.extend(spans);
 							result.push(Span::raw("  "));

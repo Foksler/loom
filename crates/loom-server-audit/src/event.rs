@@ -114,6 +114,19 @@ pub enum AuditEventType {
 	MirrorCreated,
 	MirrorSynced,
 	WebhookReceived,
+
+	// SCIM events
+	ScimUserCreated,
+	ScimUserUpdated,
+	ScimUserDeleted,
+	ScimUserDeprovisioned,
+	ScimGroupCreated,
+	ScimGroupUpdated,
+	ScimGroupDeleted,
+	ScimGroupMemberAdded,
+	ScimGroupMemberRemoved,
+	ScimBulkOperation,
+	ScimAuthFailure,
 }
 
 impl fmt::Display for AuditEventType {
@@ -209,9 +222,22 @@ impl fmt::Display for AuditEventType {
 			AuditEventType::MirrorSynced => "mirror_synced",
 			AuditEventType::WebhookReceived => "webhook_received",
 
-			// User management events
+// User management events
 			AuditEventType::UserDeleted => "user_deleted",
 			AuditEventType::UserRestored => "user_restored",
+
+			// SCIM events
+			AuditEventType::ScimUserCreated => "scim_user_created",
+			AuditEventType::ScimUserUpdated => "scim_user_updated",
+			AuditEventType::ScimUserDeleted => "scim_user_deleted",
+			AuditEventType::ScimUserDeprovisioned => "scim_user_deprovisioned",
+			AuditEventType::ScimGroupCreated => "scim_group_created",
+			AuditEventType::ScimGroupUpdated => "scim_group_updated",
+			AuditEventType::ScimGroupDeleted => "scim_group_deleted",
+			AuditEventType::ScimGroupMemberAdded => "scim_group_member_added",
+			AuditEventType::ScimGroupMemberRemoved => "scim_group_member_removed",
+			AuditEventType::ScimBulkOperation => "scim_bulk_operation",
+			AuditEventType::ScimAuthFailure => "scim_auth_failure",
 		};
 		write!(f, "{s}")
 	}
@@ -265,13 +291,20 @@ impl AuditEventType {
 			| AuditEventType::RepoCreated
 			| AuditEventType::MirrorCreated
 			| AuditEventType::MirrorSynced
-			| AuditEventType::WebhookReceived => AuditSeverity::Info,
+			| AuditEventType::WebhookReceived
+			| AuditEventType::ScimUserCreated
+			| AuditEventType::ScimUserUpdated
+			| AuditEventType::ScimGroupCreated
+			| AuditEventType::ScimGroupUpdated
+			| AuditEventType::ScimGroupMemberAdded
+			| AuditEventType::ScimBulkOperation => AuditSeverity::Info,
 
 			// Warning: Security-relevant failures
 			AuditEventType::LoginFailed
 			| AuditEventType::AccessDenied
 			| AuditEventType::WeaverPrivilegeChange
-			| AuditEventType::WeaverMemoryExec => AuditSeverity::Warning,
+			| AuditEventType::WeaverMemoryExec
+			| AuditEventType::ScimAuthFailure => AuditSeverity::Warning,
 
 			// Critical: Security breaches
 			AuditEventType::WeaverSandboxEscape => AuditSeverity::Critical,
@@ -298,7 +331,11 @@ impl AuditEventType {
 			| AuditEventType::UserDeleted
 			| AuditEventType::UserRestored
 			| AuditEventType::WeaverDeleted
-			| AuditEventType::RepoDeleted => AuditSeverity::Notice,
+			| AuditEventType::RepoDeleted
+			| AuditEventType::ScimUserDeleted
+			| AuditEventType::ScimUserDeprovisioned
+			| AuditEventType::ScimGroupDeleted
+			| AuditEventType::ScimGroupMemberRemoved => AuditSeverity::Notice,
 
 			// Error: Operation failures
 			AuditEventType::LlmRequestFailed => AuditSeverity::Error,
@@ -310,10 +347,11 @@ impl AuditEventType {
 ///
 /// The numeric values correspond to syslog severity codes, allowing
 /// direct mapping when forwarding to syslog-based SIEM systems.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum AuditSeverity {
 	Debug = 7,
+	#[default]
 	Info = 6,
 	Notice = 5,
 	Warning = 4,
@@ -367,11 +405,7 @@ impl fmt::Display for AuditSeverity {
 	}
 }
 
-impl Default for AuditSeverity {
-	fn default() -> Self {
-		AuditSeverity::Info
-	}
-}
+
 
 /// A unique identifier for a user.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

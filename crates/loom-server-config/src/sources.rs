@@ -14,8 +14,8 @@ use crate::sections::{
 	AuditConfigLayer, AuthConfigLayer, DatabaseConfigLayer, GeoIpConfigLayer,
 	GitHubAppConfigLayer, GoogleCseConfigLayer, HttpConfigLayer, JobsConfigLayer, LlmConfigLayer,
 	LlmProvider, LoggingConfigLayer, OAuthConfigLayer, OktaOAuthConfigLayer, PathsConfigLayer,
-	QueueOverflowPolicy, SearchConfigLayer, SerperConfigLayer, SmtpConfigLayer, SyslogConfigLayer,
-	SyslogProtocol, TlsMode, WeaverConfigLayer,
+	QueueOverflowPolicy, ScimConfigLayer, SearchConfigLayer, SerperConfigLayer, SmtpConfigLayer,
+	SyslogConfigLayer, SyslogProtocol, TlsMode, WeaverConfigLayer,
 };
 use crate::sections::{AnthropicAuthConfig, GitHubOAuthConfigLayer, GoogleOAuthConfigLayer};
 
@@ -115,24 +115,23 @@ impl ConfigSource for EnvSource {
 
 	fn load(&self) -> Result<ServerConfigLayer, ConfigError> {
 		debug!("loading environment variables");
-		let mut layer = ServerConfigLayer::default();
-
-		layer.http = Some(load_http_from_env()?);
-		layer.database = Some(load_database_from_env()?);
-		layer.auth = Some(load_auth_from_env()?);
-		layer.llm = Some(load_llm_from_env()?);
-		layer.weaver = Some(load_weaver_from_env()?);
-		layer.smtp = Some(load_smtp_from_env()?);
-		layer.oauth = Some(load_oauth_from_env()?);
-		layer.github_app = Some(load_github_app_from_env()?);
-		layer.geoip = Some(load_geoip_from_env()?);
-		layer.jobs = Some(load_jobs_from_env()?);
-		layer.search = Some(load_search_from_env()?);
-		layer.paths = Some(load_paths_from_env()?);
-		layer.logging = Some(load_logging_from_env()?);
-		layer.audit = Some(load_audit_from_env()?);
-
-		Ok(layer)
+		Ok(ServerConfigLayer {
+			http: Some(load_http_from_env()?),
+			database: Some(load_database_from_env()?),
+			auth: Some(load_auth_from_env()?),
+			llm: Some(load_llm_from_env()?),
+			weaver: Some(load_weaver_from_env()?),
+			smtp: Some(load_smtp_from_env()?),
+			oauth: Some(load_oauth_from_env()?),
+			github_app: Some(load_github_app_from_env()?),
+			geoip: Some(load_geoip_from_env()?),
+			jobs: Some(load_jobs_from_env()?),
+			search: Some(load_search_from_env()?),
+			paths: Some(load_paths_from_env()?),
+			logging: Some(load_logging_from_env()?),
+			audit: Some(load_audit_from_env()?),
+			scim: Some(load_scim_from_env()?),
+		})
 	}
 }
 
@@ -398,6 +397,13 @@ fn load_logging_from_env() -> Result<LoggingConfigLayer, ConfigError> {
 	Ok(LoggingConfigLayer {
 		level: env_var("LOOM_SERVER_LOG_LEVEL"),
 		locale: env_var("LOOM_SERVER_DEFAULT_LOCALE"),
+	})
+}
+
+fn load_scim_from_env() -> Result<ScimConfigLayer, ConfigError> {
+	Ok(ScimConfigLayer {
+		enabled: env_bool("LOOM_SERVER_SCIM_ENABLED"),
+		org_id: env_var("LOOM_SERVER_SCIM_ORG_ID"),
 	})
 }
 

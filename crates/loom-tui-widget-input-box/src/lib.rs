@@ -31,7 +31,7 @@ impl InputBoxState {
 		if self.cursor_position > 0 {
 			let prev_grapheme_start = self.content[..self.cursor_position]
 				.grapheme_indices(true)
-				.last()
+				.next_back()
 				.map(|(i, _)| i)
 				.unwrap_or(0);
 			self.content.drain(prev_grapheme_start..self.cursor_position);
@@ -52,7 +52,7 @@ impl InputBoxState {
 		if self.cursor_position > 0 {
 			self.cursor_position = self.content[..self.cursor_position]
 				.grapheme_indices(true)
-				.last()
+				.next_back()
 				.map(|(i, _)| i)
 				.unwrap_or(0);
 		}

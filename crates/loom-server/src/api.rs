@@ -12,6 +12,7 @@ use crate::{
 use loom_server_auth_github::{GitHubOAuthClient, GitHubOAuthConfig};
 use loom_server_auth_google::{GoogleOAuthClient, GoogleOAuthConfig};
 use loom_server_auth_okta::{OktaOAuthClient, OktaOAuthConfig};
+use loom_server_config::ScimConfig;
 use loom_server_geoip::GeoIpService;
 use loom_server_github_app::{GithubAppClient, GithubAppConfig};
 use loom_server_jobs::{JobRepository, JobScheduler};
@@ -93,6 +94,8 @@ pub struct AppState {
 	pub svid_issuer: Option<Arc<SvidIssuer<SoftwareKeyBackend>>>,
 	pub secrets_service: Option<Arc<SecretsService<SoftwareKeyBackend, SqliteSecretStore>>>,
 	pub wg_tunnel_services: Option<WgTunnelServices>,
+	pub scim_config: ScimConfig,
+	pub pool: SqlitePool,
 }
 
 /// Creates the application state, initializing optional components.
@@ -287,6 +290,8 @@ pub async fn create_app_state(
 		svid_issuer,
 		secrets_service,
 		wg_tunnel_services,
+		scim_config: config.scim.clone(),
+		pool,
 	}
 }
 
@@ -485,12 +490,12 @@ async fn initialize_weaver_infrastructure(config: &ServerConfig) -> WeaverInfras
 	}
 }
 
-fn initialize_secrets_infrastructure(
-	pool: SqlitePool,
-) -> (
+type SecretsInfrastructure = (
 	Option<Arc<SvidIssuer<SoftwareKeyBackend>>>,
 	Option<Arc<SecretsService<SoftwareKeyBackend, SqliteSecretStore>>>,
-) {
+);
+
+fn initialize_secrets_infrastructure(pool: SqlitePool) -> SecretsInfrastructure {
 	use loom_server_secrets::{SvidConfig, generate_key};
 
 	let backend = if let Ok(key_b64) = std::env::var("LOOM_SECRETS_MASTER_KEY") {
@@ -669,6 +674,8 @@ pub fn create_router(state: AppState) -> Router {
 	let web_dir = std::env::var("LOOM_SERVER_WEB_DIR").ok();
 	let has_provisioner = state.provisioner.is_some();
 	let has_wg_tunnel = state.wg_tunnel_services.is_some();
+	let scim_config = state.scim_config.clone();
+	let scim_pool = state.pool.clone();
 
 	// Public routes - no authentication required
 	let public = PublicRouter::new()
@@ -1199,6 +1206,29 @@ pub fn create_router(state: AppState) -> Router {
 				.precompressed_gzip()
 				.fallback(axum::routing::get(routes::bin::list_bin_directory)),
 		);
+
+	// Mount SCIM routes if enabled
+	if scim_config.enabled {
+		if let Some(org_id_str) = scim_config.org_id {
+			match uuid::Uuid::parse_str(&org_id_str) {
+				Ok(uuid) => {
+					let org_id = loom_server_auth::OrgId::new(uuid);
+					let scim_router = loom_server_scim::scim_routes(
+						scim_pool,
+						scim_config.token,
+						org_id,
+					);
+					router = router.nest("/api/scim", scim_router);
+					tracing::info!("SCIM endpoints enabled at /api/scim");
+				}
+				Err(e) => {
+					tracing::warn!(error = %e, org_id = %org_id_str, "SCIM enabled but LOOM_SERVER_SCIM_ORG_ID is not a valid UUID");
+				}
+			}
+		} else {
+			tracing::warn!("SCIM enabled but LOOM_SERVER_SCIM_ORG_ID not set");
+		}
+	}
 
 	// Add OpenAPI documentation
 	router = router

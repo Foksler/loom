@@ -378,7 +378,7 @@ impl VirtualTcpStream {
 			.device
 			.inner
 			.lock()
-			.map_err(|e| io::Error::new(io::ErrorKind::Other, format!("lock poisoned: {}", e)))?;
+			.map_err(|e| io::Error::other(format!("lock poisoned: {}", e)))?;
 
 		self.device.poll_iface(&mut inner);
 
@@ -387,7 +387,7 @@ impl VirtualTcpStream {
 		if socket.can_recv() {
 			match socket.recv_slice(buf) {
 				Ok(n) => Ok(n),
-				Err(e) => Err(io::Error::new(io::ErrorKind::Other, format!("{}", e))),
+				Err(e) => Err(io::Error::other(format!("{}", e))),
 			}
 		} else if socket.state() == TcpState::Established {
 			Err(io::Error::new(io::ErrorKind::WouldBlock, "no data"))
@@ -401,7 +401,7 @@ impl VirtualTcpStream {
 			.device
 			.inner
 			.lock()
-			.map_err(|e| io::Error::new(io::ErrorKind::Other, format!("lock poisoned: {}", e)))?;
+			.map_err(|e| io::Error::other(format!("lock poisoned: {}", e)))?;
 
 		let socket = inner.sockets.get_mut::<TcpSocket>(self.handle);
 
@@ -411,7 +411,7 @@ impl VirtualTcpStream {
 					self.device.poll_iface(&mut inner);
 					Ok(n)
 				}
-				Err(e) => Err(io::Error::new(io::ErrorKind::Other, format!("{}", e))),
+				Err(e) => Err(io::Error::other(format!("{}", e))),
 			}
 		} else if socket.state() == TcpState::Established {
 			Err(io::Error::new(io::ErrorKind::WouldBlock, "buffer full"))
@@ -470,16 +470,20 @@ impl AsyncWrite for VirtualTcpStream {
 	}
 
 	fn poll_shutdown(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-		let inner = self.device.inner.lock().map_err(|e| {
-			io::Error::new(io::ErrorKind::Other, format!("lock poisoned: {}", e))
-		})?;
+		let inner = self
+			.device
+			.inner
+			.lock()
+			.map_err(|e| io::Error::other(format!("lock poisoned: {}", e)))?;
 
 		let socket = inner.sockets.get::<TcpSocket>(self.handle);
 		if socket.state() == TcpState::Established {
 			drop(inner);
-			let mut inner = self.device.inner.lock().map_err(|e| {
-				io::Error::new(io::ErrorKind::Other, format!("lock poisoned: {}", e))
-			})?;
+			let mut inner = self
+				.device
+				.inner
+				.lock()
+				.map_err(|e| io::Error::other(format!("lock poisoned: {}", e)))?;
 			let socket = inner.sockets.get_mut::<TcpSocket>(self.handle);
 			socket.close();
 		}

@@ -91,7 +91,7 @@ pub async fn search_handler(
 		offset,
 	};
 
-	match search_docs(&pool, &params).await {
+	match search_docs(pool, &params).await {
 		Ok(hits) => Json(SearchResponse { hits, limit, offset }).into_response(),
 		Err(e) => {
 			tracing::error!("Docs search error: {}", e);

@@ -54,6 +54,8 @@ args@{
     "loom-server-config/default"
     "loom-server-docs/default"
     "loom-server-geoip/default"
+    "loom-server-scim/default"
+    "loom-scim/default"
     "loom-server-secrets/default"
     "loom-server-wgtunnel/default"
   ],
@@ -76,7 +78,7 @@ args@{
   cargoConfig ? {},
 }:
 let
-  nixifiedLockHash = "f58b261d5e53f7da504cab26e25c8399791c64bb1b4118162e53350fb1c55ba1";
+  nixifiedLockHash = "0a4f0b95f1028d2ece1e0b6402cffcb4b1d3e9687ced60a4ecea1f33dbb7c916";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -157,6 +159,8 @@ in
     loom-server-config = rustPackages.unknown.loom-server-config."0.1.0";
     loom-server-docs = rustPackages.unknown.loom-server-docs."0.1.0";
     loom-server-geoip = rustPackages.unknown.loom-server-geoip."0.1.0";
+    loom-server-scim = rustPackages.unknown.loom-server-scim."0.1.0";
+    loom-scim = rustPackages.unknown.loom-scim."0.1.0";
     loom-server-secrets = rustPackages.unknown.loom-server-secrets."0.1.0";
     loom-server-wgtunnel = rustPackages.unknown.loom-server-wgtunnel."0.1.0";
   };
@@ -6455,6 +6459,24 @@ in
     };
   });
   
+  "unknown".loom-scim."0.1.0" = overridableMkRustCrate (profileName: rec {
+    name = "loom-scim";
+    version = "0.1.0";
+    registry = "unknown";
+    src = fetchCrateLocal workspaceSrc;
+    dependencies = {
+      chrono = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".chrono."0.4.42" { inherit profileName; }).out;
+      serde = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.228" { inherit profileName; }).out;
+      serde_json = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.148" { inherit profileName; }).out;
+      thiserror = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."2.0.17" { inherit profileName; }).out;
+      uuid = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".uuid."1.19.0" { inherit profileName; }).out;
+      winnow = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".winnow."0.7.14" { inherit profileName; }).out;
+    };
+    devDependencies = {
+      proptest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proptest."1.9.0" { inherit profileName; }).out;
+    };
+  });
+  
   "unknown".loom-server."0.1.0" = overridableMkRustCrate (profileName: rec {
     name = "loom-server";
     version = "0.1.0";
@@ -6496,6 +6518,7 @@ in
       loom_server_llm_anthropic = (rustPackages."unknown".loom-server-llm-anthropic."0.1.0" { inherit profileName; }).out;
       loom_server_llm_service = (rustPackages."unknown".loom-server-llm-service."0.1.0" { inherit profileName; }).out;
       loom_server_logs = (rustPackages."unknown".loom-server-logs."0.1.0" { inherit profileName; }).out;
+      loom_server_scim = (rustPackages."unknown".loom-server-scim."0.1.0" { inherit profileName; }).out;
       loom_server_scm = (rustPackages."unknown".loom-server-scm."0.1.0" { inherit profileName; }).out;
       loom_server_scm_mirror = (rustPackages."unknown".loom-server-scm-mirror."0.1.0" { inherit profileName; }).out;
       loom_server_search_google_cse = (rustPackages."unknown".loom-server-search-google-cse."0.1.0" { inherit profileName; }).out;
@@ -7082,6 +7105,28 @@ in
       proptest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proptest."1.9.0" { inherit profileName; }).out;
       serde_json = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.148" { inherit profileName; }).out;
       tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.49.0" { inherit profileName; }).out;
+    };
+  });
+  
+  "unknown".loom-server-scim."0.1.0" = overridableMkRustCrate (profileName: rec {
+    name = "loom-server-scim";
+    version = "0.1.0";
+    registry = "unknown";
+    src = fetchCrateLocal workspaceSrc;
+    dependencies = {
+      axum = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".axum."0.8.8" { inherit profileName; }).out;
+      chrono = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".chrono."0.4.42" { inherit profileName; }).out;
+      loom_common_secret = (rustPackages."unknown".loom-common-secret."0.1.0" { inherit profileName; }).out;
+      loom_scim = (rustPackages."unknown".loom-scim."0.1.0" { inherit profileName; }).out;
+      loom_server_auth = (rustPackages."unknown".loom-server-auth."0.1.0" { inherit profileName; }).out;
+      serde = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.228" { inherit profileName; }).out;
+      serde_json = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.148" { inherit profileName; }).out;
+      sqlx = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".sqlx."0.8.6" { inherit profileName; }).out;
+      subtle = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".subtle."2.6.1" { inherit profileName; }).out;
+      thiserror = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."1.0.69" { inherit profileName; }).out;
+      tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.49.0" { inherit profileName; }).out;
+      tracing = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tracing."0.1.44" { inherit profileName; }).out;
+      uuid = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".uuid."1.19.0" { inherit profileName; }).out;
     };
   });
   
@@ -10271,6 +10316,11 @@ in
     version = "2.6.1";
     registry = "registry+https://github.com/rust-lang/crates.io-index";
     src = fetchCratesIo { inherit name version; sha256 = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"; };
+    features = builtins.concatLists [
+      [ "default" ]
+      [ "i128" ]
+      [ "std" ]
+    ];
   });
   
   "registry+https://github.com/rust-lang/crates.io-index".syn."2.0.112" = overridableMkRustCrate (profileName: rec {

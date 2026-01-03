@@ -23,7 +23,7 @@ impl TestHarness {
 		let terminal = Terminal::new(backend).expect("failed to create terminal");
 		Self {
 			terminal,
-			theme: Theme::default(),
+			theme: Theme,
 		}
 	}
 

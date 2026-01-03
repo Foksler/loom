@@ -702,14 +702,14 @@ fn parse_blame_output(output: &str) -> Result<Vec<BlameLine>, ServerError> {
 	let mut line_number = 0usize;
 
 	for line in output.lines() {
-		if line.starts_with('\t') {
+		if let Some(stripped) = line.strip_prefix('\t') {
 			lines.push(BlameLine {
 				line_number,
 				commit_sha: current_sha.clone(),
 				author_name: current_author.clone(),
 				author_email: current_email.clone(),
 				author_date: current_time.clone(),
-				content: line[1..].to_string(),
+				content: stripped.to_string(),
 			});
 		} else if line.len() >= 40 && line.chars().take(40).all(|c| c.is_ascii_hexdigit()) {
 			// This is a commit line: sha orig_line final_line [num_lines]

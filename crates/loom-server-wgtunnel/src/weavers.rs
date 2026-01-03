@@ -40,6 +40,8 @@ struct WeaverRow {
 	last_seen_at: Option<String>,
 }
 
+type WeaverRowTuple = (String, Vec<u8>, String, Option<i64>, Option<String>, String, Option<String>);
+
 impl TryFrom<WeaverRow> for WeaverWg {
 	type Error = WgError;
 
@@ -129,7 +131,7 @@ impl WeaverWgService {
 
 	#[instrument(skip(self), fields(%weaver_id))]
 	pub async fn get(&self, weaver_id: Uuid) -> Result<Option<WeaverWg>> {
-		let row: Option<(String, Vec<u8>, String, Option<i64>, Option<String>, String, Option<String>)> =
+		let row: Option<WeaverRowTuple> =
 			sqlx::query_as(
 				"SELECT weaver_id, public_key, assigned_ip, derp_home_region, endpoint, registered_at, last_seen_at
                  FROM wg_weavers WHERE weaver_id = ?",

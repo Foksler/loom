@@ -25,7 +25,7 @@ pub enum SpoolError {
 	NothingToUnpick,
 
 	#[error("git error: {0}")]
-	Git(#[from] gix::open::Error),
+	Git(#[from] Box<gix::open::Error>),
 
 	#[error("I/O error: {0}")]
 	Io(#[from] std::io::Error),

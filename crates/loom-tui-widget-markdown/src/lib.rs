@@ -113,11 +113,7 @@ impl Markdown {
 						let header_style = self.style.add_modifier(Modifier::BOLD);
 						style_stack.push(header_style);
 						let prefix = "#".repeat(level as usize) + " ";
-						if is_rtl {
-							current_spans.push(Span::styled(prefix, header_style));
-						} else {
-							current_spans.push(Span::styled(prefix, header_style));
-						}
+						current_spans.push(Span::styled(prefix, header_style));
 					}
 					Tag::Paragraph => {
 						if in_block_quote {

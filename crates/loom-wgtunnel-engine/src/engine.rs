@@ -253,7 +253,7 @@ impl WgEngine {
 						for state in tunnels.iter() {
 							let mut tunn = state.tunn.lock().await;
 							let result = tunn.update_timers(&mut dst_buf);
-							let peer_key = state.peer_key.clone();
+							let peer_key = state.peer_key;
 							drop(tunn);
 
 							match result {
@@ -278,7 +278,7 @@ impl WgEngine {
 
 	#[instrument(skip(self, peer), fields(peer = %peer.public_key))]
 	pub async fn add_peer(&self, peer: PeerConfig) -> Result<()> {
-		let peer_key = peer.public_key.clone();
+		let peer_key = peer.public_key;
 
 		let tunn = Tunn::new(
 			defguard_boringtun::x25519::StaticSecret::from(*self.config.private_key.private_key().expose_bytes()),
@@ -293,14 +293,14 @@ impl WgEngine {
 			let mut tunnels = self.tunnels.write().await;
 			tunnels.push(TunnelState {
 				tunn: Mutex::new(tunn),
-				peer_key: peer_key.clone(),
+				peer_key,
 			});
 		}
 
 		{
 			let mut router = self.router.write().await;
 			for ip in &peer.allowed_ips {
-				router.add_route(*ip, peer_key.clone());
+				router.add_route(*ip, peer_key);
 			}
 		}
 
@@ -312,7 +312,7 @@ impl WgEngine {
 			PeerEndpoint::new()
 		};
 
-		self.magic_conn.add_peer(peer_key.clone(), endpoint).await;
+		self.magic_conn.add_peer(peer_key, endpoint).await;
 
 		self.peers.add(peer).await?;
 
@@ -344,7 +344,7 @@ impl WgEngine {
 	}
 
 	pub fn public_key(&self) -> WgPublicKey {
-		self.config.private_key.public_key().clone()
+		*self.config.private_key.public_key()
 	}
 
 	pub fn address(&self) -> Ipv6Addr {

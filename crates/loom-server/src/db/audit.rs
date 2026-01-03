@@ -17,6 +17,7 @@ impl AuditQueryRepository {
 		Self { pool }
 	}
 
+	#[allow(clippy::too_many_arguments)]
 	pub async fn query_logs(
 		&self,
 		event_type: Option<&str>,

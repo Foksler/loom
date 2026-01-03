@@ -1398,6 +1398,7 @@ async fn create_wgtunnel_context(args: &Args) -> Result<loom_cli_wgtunnel::CliCo
 	Ok(loom_cli_wgtunnel::CliContext::new(server_url, token, config_dir))
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn run_weaver_new(
 	server_url: &str,
 	token: Option<loom_common_secret::SecretString>,
