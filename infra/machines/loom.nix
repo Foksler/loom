@@ -21,6 +21,7 @@
     ../nixos-modules/user.nix
     ../nixos-modules/vscode-server.nix
     ../nixos-modules/nixos-auto-update.nix
+    ../nixos-modules/automatic-nix-gc.nix
     ../nixos-modules/loom-server.nix
     ../nixos-modules/loom-web.nix
     ../nixos-modules/k3s.nix
@@ -305,6 +306,15 @@
     remoteAuthFile = config.sops.secrets.smtp-relay-auth.path;
     metricsListen = "";
     useTLS = true;
+  };
+
+  # Automatic Nix garbage collection based on disk space
+  services.automatic-nix-gc = {
+    enable = true;
+    interval = "1h";
+    diskThreshold = 64;
+    maxFreed = 32;
+    preserveGenerations = "1d";
   };
 
   # Podman container runtime (images built and pushed by GitHub Actions)
