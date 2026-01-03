@@ -211,6 +211,10 @@ msgstr "다른 이메일 사용"
 msgid "auth.login.error"
 msgstr "매직 링크를 보내지 못했습니다. 다시 시도해 주세요."
 
+#: auth.login.signups_disabled
+msgid "auth.login.signups_disabled"
+msgstr "현재 신규 사용자 가입이 비활성화되어 있습니다. 관리자에게 문의하세요."
+
 #: auth.device.title
 msgid "auth.device.title"
 msgstr "CLI 인증"

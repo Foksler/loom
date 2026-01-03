@@ -211,6 +211,10 @@ msgstr "Kasuta teist e-posti"
 msgid "auth.login.error"
 msgstr "Maagilise lingi saatmine ebaõnnestus. Palun proovi uuesti."
 
+#: auth.login.signups_disabled
+msgid "auth.login.signups_disabled"
+msgstr "Uute kasutajate registreerimine on hetkel keelatud. Palun võtke ühendust administraatoriga."
+
 #: auth.device.title
 msgid "auth.device.title"
 msgstr "Autoriseeri CLI"

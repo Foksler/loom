@@ -211,6 +211,10 @@ msgstr "Χρήση διαφορετικού email"
 msgid "auth.login.error"
 msgstr "Αδυναμία αποστολής magic link. Παρακαλώ δοκιμάστε ξανά."
 
+#: auth.login.signups_disabled
+msgid "auth.login.signups_disabled"
+msgstr "Οι εγγραφές νέων χρηστών είναι προς το παρόν απενεργοποιημένες. Παρακαλώ επικοινωνήστε με έναν διαχειριστή."
+
 #: auth.device.title
 msgid "auth.device.title"
 msgstr "Εξουσιοδότηση CLI"

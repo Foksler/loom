@@ -1243,26 +1243,12 @@ async fn complete_oauth_login(
 		match state.user_repo.get_user_by_email(email).await {
 			Ok(None) => {
 				tracing::warn!(email = %email, provider = %provider, "Signup rejected: signups are disabled");
-				return (
-					StatusCode::FORBIDDEN,
-					Json(AuthErrorResponse {
-						error: "signups_disabled".to_string(),
-						message: t(locale, "server.api.auth.signups_disabled").to_string(),
-					}),
-				)
-					.into_response();
+				return Redirect::to("/login?error=signups_disabled").into_response();
 			}
 			Ok(Some(_)) => {}
 			Err(e) => {
 				tracing::error!(error = %e, email = %email, "Failed to check if user exists");
-				return (
-					StatusCode::INTERNAL_SERVER_ERROR,
-					Json(AuthErrorResponse {
-						error: "internal_error".to_string(),
-						message: t(locale, "server.api.error.internal").to_string(),
-					}),
-				)
-					.into_response();
+				return Redirect::to("/login?error=internal_error").into_response();
 			}
 		}
 	}
@@ -1457,26 +1443,12 @@ pub async fn verify_magic_link(
 		match state.user_repo.get_user_by_email(&email).await {
 			Ok(None) => {
 				tracing::warn!(email = %email, "Signup rejected via magic link: signups are disabled");
-				return (
-					StatusCode::FORBIDDEN,
-					Json(AuthErrorResponse {
-						error: "signups_disabled".to_string(),
-						message: t(locale, "server.api.auth.signups_disabled").to_string(),
-					}),
-				)
-					.into_response();
+				return Redirect::to("/login?error=signups_disabled").into_response();
 			}
 			Ok(Some(_)) => {}
 			Err(e) => {
 				tracing::error!(error = %e, email = %email, "Failed to check if user exists");
-				return (
-					StatusCode::INTERNAL_SERVER_ERROR,
-					Json(AuthErrorResponse {
-						error: "internal_error".to_string(),
-						message: t(locale, "server.api.error.internal").to_string(),
-					}),
-				)
-					.into_response();
+				return Redirect::to("/login?error=internal_error").into_response();
 			}
 		}
 	}

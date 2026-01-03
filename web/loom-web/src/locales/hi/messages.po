@@ -211,6 +211,10 @@ msgstr "दूसरा ईमेल उपयोग करें"
 msgid "auth.login.error"
 msgstr "मैजिक लिंक भेजने में असमर्थ। कृपया पुनः प्रयास करें।"
 
+#: auth.login.signups_disabled
+msgid "auth.login.signups_disabled"
+msgstr "नए उपयोगकर्ता पंजीकरण वर्तमान में अक्षम हैं। कृपया किसी व्यवस्थापक से संपर्क करें।"
+
 #: auth.device.title
 msgid "auth.device.title"
 msgstr "CLI अधिकृत करें"

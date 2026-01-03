@@ -211,6 +211,10 @@ msgstr "استخدم بريدًا إلكترونيًا مختلفًا"
 msgid "auth.login.error"
 msgstr "تعذر إرسال الرابط السحري. يرجى المحاولة مرة أخرى."
 
+#: auth.login.signups_disabled
+msgid "auth.login.signups_disabled"
+msgstr "تسجيل المستخدمين الجدد معطل حالياً. يرجى التواصل مع المسؤول."
+
 #: auth.device.title
 msgid "auth.device.title"
 msgstr "تفويض CLI"

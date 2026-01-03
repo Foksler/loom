@@ -211,6 +211,10 @@ msgstr "অন্য ইমেইল ব্যবহার করুন"
 msgid "auth.login.error"
 msgstr "ম্যাজিক লিংক পাঠানো যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।"
 
+#: auth.login.signups_disabled
+msgid "auth.login.signups_disabled"
+msgstr "নতুন ব্যবহারকারী নিবন্ধন বর্তমানে অক্ষম করা আছে। অনুগ্রহ করে একজন প্রশাসকের সাথে যোগাযোগ করুন।"
+
 #: auth.device.title
 msgid "auth.device.title"
 msgstr "CLI অনুমোদন করুন"

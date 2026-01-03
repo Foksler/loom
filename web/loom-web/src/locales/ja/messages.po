@@ -211,6 +211,10 @@ msgstr "別のメールアドレスを使用"
 msgid "auth.login.error"
 msgstr "マジックリンクの送信に失敗しました。もう一度お試しください。"
 
+#: auth.login.signups_disabled
+msgid "auth.login.signups_disabled"
+msgstr "新規ユーザー登録は現在無効になっています。管理者にお問い合わせください。"
+
 #: auth.device.title
 msgid "auth.device.title"
 msgstr "CLIを認証"

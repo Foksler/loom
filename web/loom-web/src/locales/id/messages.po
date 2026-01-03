@@ -211,6 +211,10 @@ msgstr "Gunakan email lain"
 msgid "auth.login.error"
 msgstr "Tidak dapat mengirim tautan ajaib. Silakan coba lagi."
 
+#: auth.login.signups_disabled
+msgid "auth.login.signups_disabled"
+msgstr "Pendaftaran pengguna baru saat ini dinonaktifkan. Silakan hubungi administrator."
+
 #: auth.device.title
 msgid "auth.device.title"
 msgstr "Otorisasi CLI"

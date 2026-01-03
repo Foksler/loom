@@ -13,7 +13,22 @@
 	let magicLinkSent = $state(false);
 	let isSubmitting = $state(false);
 	let oauthLoading = $state<string | null>(null);
+
+	// Check for error in URL query params (e.g., from OAuth callback)
+	const urlError = $derived.by(() => {
+		const errorCode = $page.url.searchParams.get('error');
+		if (errorCode === 'signups_disabled') {
+			return i18n._('auth.login.signups_disabled');
+		} else if (errorCode === 'internal_error') {
+			return i18n._('auth.login.error');
+		}
+		return null;
+	});
+
 	let error = $state<string | null>(null);
+
+	// Combine URL error with form error
+	const displayError = $derived(error || urlError);
 
 	const redirectTo = $derived.by(() => {
 		const param = $page.url.searchParams.get('redirectTo') ?? '/';
@@ -163,8 +178,8 @@
 							/>
 						</div>
 
-						{#if error}
-							<p class="error-text">{error}</p>
+						{#if displayError}
+							<p class="error-text">{displayError}</p>
 						{/if}
 
 						<Button

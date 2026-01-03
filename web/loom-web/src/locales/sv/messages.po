@@ -211,6 +211,10 @@ msgstr "Använd en annan e-postadress"
 msgid "auth.login.error"
 msgstr "Kunde inte skicka magisk länk. Försök igen."
 
+#: auth.login.signups_disabled
+msgid "auth.login.signups_disabled"
+msgstr "Registrering av nya användare är för närvarande inaktiverad. Vänligen kontakta en administratör."
+
 #: auth.device.title
 msgid "auth.device.title"
 msgstr "Auktorisera CLI"

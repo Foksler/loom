@@ -215,6 +215,10 @@ msgstr "Use a different email"
 msgid "auth.login.error"
 msgstr "Unable to send magic link. Please try again."
 
+#: auth.login.signups_disabled
+msgid "auth.login.signups_disabled"
+msgstr "New user signups are currently disabled. Please contact an administrator."
+
 #: auth.device.title
 msgid "auth.device.title"
 msgstr "Authorize CLI"

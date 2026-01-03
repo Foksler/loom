@@ -211,6 +211,10 @@ msgstr "Usa un'altra email"
 msgid "auth.login.error"
 msgstr "Impossibile inviare il link magico. Riprova."
 
+#: auth.login.signups_disabled
+msgid "auth.login.signups_disabled"
+msgstr "Le registrazioni di nuovi utenti sono attualmente disabilitate. Si prega di contattare un amministratore."
+
 #: auth.device.title
 msgid "auth.device.title"
 msgstr "Autorizza CLI"

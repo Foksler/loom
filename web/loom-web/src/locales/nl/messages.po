@@ -211,6 +211,10 @@ msgstr "Gebruik een ander e-mailadres"
 msgid "auth.login.error"
 msgstr "Magic link versturen mislukt. Probeer het opnieuw."
 
+#: auth.login.signups_disabled
+msgid "auth.login.signups_disabled"
+msgstr "Registratie van nieuwe gebruikers is momenteel uitgeschakeld. Neem contact op met een beheerder."
+
 #: auth.device.title
 msgid "auth.device.title"
 msgstr "CLI autoriseren"

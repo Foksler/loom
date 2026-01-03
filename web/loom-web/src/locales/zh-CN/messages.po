@@ -211,6 +211,10 @@ msgstr "使用其他邮箱"
 msgid "auth.login.error"
 msgstr "无法发送魔法链接，请重试。"
 
+#: auth.login.signups_disabled
+msgid "auth.login.signups_disabled"
+msgstr "新用户注册目前已禁用。请联系管理员。"
+
 #: auth.device.title
 msgid "auth.device.title"
 msgstr "授权 CLI"
