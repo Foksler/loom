@@ -331,6 +331,34 @@ msgstr "邮箱"
 msgid "settings.profile.emailHint"
 msgstr "邮箱无法在此处更改"
 
+#: settings.profile.username
+msgid "settings.profile.username"
+msgstr "用户名"
+
+#: settings.profile.usernamePlaceholder
+msgid "settings.profile.usernamePlaceholder"
+msgstr "输入用户名"
+
+#: settings.profile.usernameHint
+msgid "settings.profile.usernameHint"
+msgstr "您的用户名用于 git 仓库 URL"
+
+#: settings.profile.usernameInvalid
+msgid "settings.profile.usernameInvalid"
+msgstr "用户名只能包含字母、数字和下划线"
+
+#: settings.profile.usernameTaken
+msgid "settings.profile.usernameTaken"
+msgstr "此用户名已被使用"
+
+#: settings.profile.usernameTooShort
+msgid "settings.profile.usernameTooShort"
+msgstr "用户名至少需要 3 个字符"
+
+#: settings.profile.usernameTooLong
+msgid "settings.profile.usernameTooLong"
+msgstr "用户名最多 39 个字符"
+
 #: settings.profile.locale
 msgid "settings.profile.locale"
 msgstr "语言"
@@ -827,6 +855,34 @@ msgstr "上次登录"
 msgid "admin.users.impersonate"
 msgstr "模拟用户"
 
+#: admin.users.updated
+msgid "admin.users.updated"
+msgstr "已更新"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "设为管理员"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "移除管理员"
+
+#: admin.users.makeSupport
+msgid "admin.users.makeSupport"
+msgstr "设为支持"
+
+#: admin.users.removeSupport
+msgid "admin.users.removeSupport"
+msgstr "移除支持"
+
+#: admin.users.makeAuditor
+msgid "admin.users.makeAuditor"
+msgstr "设为审计员"
+
+#: admin.users.removeAuditor
+msgid "admin.users.removeAuditor"
+msgstr "移除审计员"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "服务器日志"
@@ -1121,3 +1177,535 @@ msgstr "默认分支："
 #: client.repos.list.updated
 msgid "client.repos.list.updated"
 msgstr "更新于"
+
+#: admin.anthropic.title
+msgid "admin.anthropic.title"
+msgstr "Claude Max 账户"
+
+#: admin.anthropic.add_account
+msgid "admin.anthropic.add_account"
+msgstr "添加账户"
+
+#: admin.anthropic.remove
+msgid "admin.anthropic.remove"
+msgstr "删除"
+
+#: admin.anthropic.remove_confirm
+msgid "admin.anthropic.remove_confirm"
+msgstr "确定要从池中移除此账户吗？"
+
+#: admin.anthropic.status.available
+msgid "admin.anthropic.status.available"
+msgstr "可用"
+
+#: admin.anthropic.status.cooling_down
+msgid "admin.anthropic.status.cooling_down"
+msgstr "冷却中"
+
+#: admin.anthropic.status.disabled
+msgid "admin.anthropic.status.disabled"
+msgstr "已禁用"
+
+#: admin.anthropic.cooldown_remaining
+msgid "admin.anthropic.cooldown_remaining"
+msgstr "剩余 {time}"
+
+#: admin.anthropic.expires_at
+msgid "admin.anthropic.expires_at"
+msgstr "令牌过期时间: {time}"
+
+#: admin.anthropic.no_accounts
+msgid "admin.anthropic.no_accounts"
+msgstr "未配置账户。添加 Claude Max 账户以开始使用。"
+
+#: admin.anthropic.not_configured
+msgid "admin.anthropic.not_configured"
+msgstr "此服务器未配置 Anthropic OAuth 池。"
+
+#: admin.anthropic.account_added
+msgid "admin.anthropic.account_added"
+msgstr "账户 {id} 已成功添加"
+
+#: admin.anthropic.enter_code_title
+msgid "admin.anthropic.enter_code_title"
+msgstr "输入授权码"
+
+#: admin.anthropic.enter_code_description
+msgid "admin.anthropic.enter_code_description"
+msgstr "已打开新的浏览器标签页以进行 Claude 授权。授权后，请从 Anthropic 页面复制授权码并粘贴到下方。"
+
+#: admin.anthropic.authorization_code
+msgid "admin.anthropic.authorization_code"
+msgstr "授权码"
+
+#: admin.anthropic.code_placeholder
+msgid "admin.anthropic.code_placeholder"
+msgstr "在此粘贴来自 Anthropic 的授权码"
+
+#: admin.anthropic.submit_code
+msgid "admin.anthropic.submit_code"
+msgstr "添加账户"
+
+#: admin.dashboard.title
+msgid "admin.dashboard.title"
+msgstr "管理仪表板"
+
+#: admin.dashboard.description
+msgid "admin.dashboard.description"
+msgstr "服务器管理与监控"
+
+#: admin.dashboard.sections
+msgid "admin.dashboard.sections"
+msgstr "管理"
+
+#: admin.dashboard.anthropic_description
+msgid "admin.dashboard.anthropic_description"
+msgstr "管理 Claude Max OAuth 订阅池"
+
+#: admin.health.title
+msgid "admin.health.title"
+msgstr "服务器健康状态"
+
+#: admin.health.overall
+msgid "admin.health.overall"
+msgstr "总体状态"
+
+#: admin.health.version
+msgid "admin.health.version"
+msgstr "版本"
+
+#: admin.health.response_time
+msgid "admin.health.response_time"
+msgstr "响应时间"
+
+#: admin.health.configured
+msgid "admin.health.configured"
+msgstr "已配置"
+
+#: admin.health.not_configured
+msgid "admin.health.not_configured"
+msgstr "未配置"
+
+#: admin.health.status.healthy
+msgid "admin.health.status.healthy"
+msgstr "正常"
+
+#: admin.health.status.degraded
+msgid "admin.health.status.degraded"
+msgstr "降级"
+
+#: admin.health.status.unhealthy
+msgid "admin.health.status.unhealthy"
+msgstr "异常"
+
+#: admin.health.status.unknown
+msgid "admin.health.status.unknown"
+msgstr "未知"
+
+#: admin.health.database
+msgid "admin.health.database"
+msgstr "数据库"
+
+#: admin.health.bin_dir
+msgid "admin.health.bin_dir"
+msgstr "二进制目录"
+
+#: admin.health.llm_providers
+msgid "admin.health.llm_providers"
+msgstr "LLM 提供商"
+
+#: admin.health.google_cse
+msgid "admin.health.google_cse"
+msgstr "Google CSE"
+
+#: admin.health.serper
+msgid "admin.health.serper"
+msgstr "Serper"
+
+#: admin.health.github_app
+msgid "admin.health.github_app"
+msgstr "GitHub App"
+
+#: admin.health.kubernetes
+msgid "admin.health.kubernetes"
+msgstr "Kubernetes"
+
+#: admin.health.smtp
+msgid "admin.health.smtp"
+msgstr "SMTP"
+
+#: admin.health.geoip
+msgid "admin.health.geoip"
+msgstr "GeoIP"
+
+#: admin.health.jobs
+msgid "admin.health.jobs"
+msgstr "后台任务"
+
+#: admin.health.auth_providers
+msgid "admin.health.auth_providers"
+msgstr "认证提供商"
+
+#: jobs.title
+msgid "jobs.title"
+msgstr "后台作业"
+
+#: jobs.description
+msgid "jobs.description"
+msgstr "监控和管理计划任务"
+
+#: jobs.loading
+msgid "jobs.loading"
+msgstr "正在加载作业..."
+
+#: jobs.runNow
+msgid "jobs.runNow"
+msgstr "立即运行"
+
+#: jobs.running
+msgid "jobs.running"
+msgstr "运行中..."
+
+#: jobs.history
+msgid "jobs.history"
+msgstr "历史"
+
+#: jobs.hideHistory
+msgid "jobs.hideHistory"
+msgstr "隐藏历史"
+
+#: jobs.viewHistory
+msgid "jobs.viewHistory"
+msgstr "查看历史"
+
+#: jobs.noJobs
+msgid "jobs.noJobs"
+msgstr "未配置后台作业"
+
+#: jobs.never
+msgid "jobs.never"
+msgstr "从未运行"
+
+#: jobs.lastRun
+msgid "jobs.lastRun"
+msgstr "上次运行"
+
+#: jobs.duration
+msgid "jobs.duration"
+msgstr "耗时"
+
+#: jobs.interval
+msgid "jobs.interval"
+msgstr "间隔"
+
+#: jobs.type
+msgid "jobs.type"
+msgstr "类型"
+
+#: jobs.failures
+msgid "jobs.failures"
+msgstr "连续失败 {count} 次"
+
+#: jobs.status.healthy
+msgid "jobs.status.healthy"
+msgstr "正常"
+
+#: jobs.status.degraded
+msgid "jobs.status.degraded"
+msgstr "降级"
+
+#: jobs.status.unhealthy
+msgid "jobs.status.unhealthy"
+msgstr "异常"
+
+#: jobs.status.succeeded
+msgid "jobs.status.succeeded"
+msgstr "成功"
+
+#: jobs.status.failed
+msgid "jobs.status.failed"
+msgstr "失败"
+
+#: jobs.status.running
+msgid "jobs.status.running"
+msgstr "运行中"
+
+#: jobs.status.cancelled
+msgid "jobs.status.cancelled"
+msgstr "已取消"
+
+#: jobs.trigger.schedule
+msgid "jobs.trigger.schedule"
+msgstr "定时"
+
+#: jobs.trigger.manual
+msgid "jobs.trigger.manual"
+msgstr "手动"
+
+#: jobs.trigger.retry
+msgid "jobs.trigger.retry"
+msgstr "重试"
+
+#: jobs.history.title
+msgid "jobs.history.title"
+msgstr "运行历史"
+
+#: jobs.history.status
+msgid "jobs.history.status"
+msgstr "状态"
+
+#: jobs.history.started
+msgid "jobs.history.started"
+msgstr "开始时间"
+
+#: jobs.history.duration
+msgid "jobs.history.duration"
+msgstr "耗时"
+
+#: jobs.history.trigger
+msgid "jobs.history.trigger"
+msgstr "触发方式"
+
+#: jobs.history.details
+msgid "jobs.history.details"
+msgstr "详情"
+
+#: jobs.history.loadMore
+msgid "jobs.history.loadMore"
+msgstr "加载更多"
+
+#: jobs.history.noRuns
+msgid "jobs.history.noRuns"
+msgstr "暂无运行历史"
+
+#: jobs.time.justNow
+msgid "jobs.time.justNow"
+msgstr "刚刚"
+
+#: jobs.time.minutesAgo
+msgid "jobs.time.minutesAgo"
+msgstr "{count} 分钟前"
+
+#: jobs.time.hoursAgo
+msgid "jobs.time.hoursAgo"
+msgstr "{count} 小时前"
+
+#: jobs.time.daysAgo
+msgid "jobs.time.daysAgo"
+msgstr "{count} 天前"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "仓库"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "新建仓库"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "搜索仓库..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "重试"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "没有匹配的仓库"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "暂无仓库"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "创建您的第一个仓库"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "默认分支："
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "更新于"
+
+#: client.repos.header.clone
+msgid "client.repos.header.clone"
+msgstr "克隆"
+
+#: client.repos.header.clone_https
+msgid "client.repos.header.clone_https"
+msgstr "使用 HTTPS 克隆"
+
+#: client.repos.header.copied
+msgid "client.repos.header.copied"
+msgstr "已复制！"
+
+#: client.repos.header.copy
+msgid "client.repos.header.copy"
+msgstr "复制"
+
+#: client.repos.header.default_branch
+msgid "client.repos.header.default_branch"
+msgstr "默认分支"
+
+#: client.repos.nav.code
+msgid "client.repos.nav.code"
+msgstr "代码"
+
+#: client.repos.nav.commits
+msgid "client.repos.nav.commits"
+msgstr "提交"
+
+#: client.repos.nav.branches
+msgid "client.repos.nav.branches"
+msgstr "分支"
+
+#: client.repos.nav.settings
+msgid "client.repos.nav.settings"
+msgstr "设置"
+
+#: client.repos.tree.empty
+msgid "client.repos.tree.empty"
+msgstr "此目录为空"
+
+#: client.repos.blob.lines
+msgid "client.repos.blob.lines"
+msgstr "行"
+
+#: client.repos.blob.bytes
+msgid "client.repos.blob.bytes"
+msgstr "字节"
+
+#: client.repos.blob.blame
+msgid "client.repos.blob.blame"
+msgstr "追溯"
+
+#: client.repos.blob.copy
+msgid "client.repos.blob.copy"
+msgstr "复制"
+
+#: client.repos.blob.copied
+msgid "client.repos.blob.copied"
+msgstr "已复制！"
+
+#: client.repos.blob.raw
+msgid "client.repos.blob.raw"
+msgstr "原始文件"
+
+#: client.repos.blob.binary_not_shown
+msgid "client.repos.blob.binary_not_shown"
+msgstr "无法显示二进制文件"
+
+#: client.repos.weaver.open
+msgid "client.repos.weaver.open"
+msgstr "在 Weaver 中打开"
+
+#: client.repos.weaver.create_failed
+msgid "client.repos.weaver.create_failed"
+msgstr "创建 Weaver 失败"
+
+#: client.repos.branch.find
+msgid "client.repos.branch.find"
+msgstr "搜索分支..."
+
+#: client.repos.branch.not_found
+msgid "client.repos.branch.not_found"
+msgstr "未找到分支"
+
+#: client.repos.branch.default
+msgid "client.repos.branch.default"
+msgstr "默认"
+
+#: client.repos.commits.minutes_ago
+msgid "client.repos.commits.minutes_ago"
+msgstr "{count} 分钟前"
+
+#: client.repos.commits.hours_ago
+msgid "client.repos.commits.hours_ago"
+msgstr "{count} 小时前"
+
+#: client.repos.commits.days_ago
+msgid "client.repos.commits.days_ago"
+msgstr "{count} 天前"
+
+#: client.repos.commits.committed
+msgid "client.repos.commits.committed"
+msgstr "已提交"
+
+#: client.repos.commits.copy_sha
+msgid "client.repos.commits.copy_sha"
+msgstr "复制 SHA"
+
+#: client.repos.commits.empty
+msgid "client.repos.commits.empty"
+msgstr "没有提交记录"
+
+#: client.repos.diff.parent
+msgid "client.repos.diff.parent"
+msgstr "父提交"
+
+#: client.repos.diff.parents
+msgid "client.repos.diff.parents"
+msgstr "父提交"
+
+#: client.repos.diff.showing
+msgid "client.repos.diff.showing"
+msgstr "显示"
+
+#: client.repos.diff.changed_file
+msgid "client.repos.diff.changed_file"
+msgstr "个文件已更改"
+
+#: client.repos.diff.changed_files
+msgid "client.repos.diff.changed_files"
+msgstr "个文件已更改"
+
+#: client.repos.blame.lines
+msgid "client.repos.blame.lines"
+msgstr "行"
+
+#: client.repos.blame.today
+msgid "client.repos.blame.today"
+msgstr "今天"
+
+#: client.repos.blame.days_ago
+msgid "client.repos.blame.days_ago"
+msgstr "{count}天前"
+
+#: client.repos.blame.months_ago
+msgid "client.repos.blame.months_ago"
+msgstr "{count}个月前"
+
+#: client.repos.blame.years_ago
+msgid "client.repos.blame.years_ago"
+msgstr "{count}年前"
+
+#: client.repos.blame.empty
+msgid "client.repos.blame.empty"
+msgstr "没有追溯信息"
+
+#: client.repos.compare.ahead
+msgid "client.repos.compare.ahead"
+msgstr "领先"
+
+#: client.repos.compare.behind
+msgid "client.repos.compare.behind"
+msgstr "落后"
+
+#: client.repos.compare.commit
+msgid "client.repos.compare.commit"
+msgstr "个提交"
+
+#: client.repos.compare.commits
+msgid "client.repos.compare.commits"
+msgstr "个提交"
+
+#: client.repos.compare.commits_heading
+msgid "client.repos.compare.commits_heading"
+msgstr "提交"
+
+#: client.repos.compare.identical
+msgid "client.repos.compare.identical"
+msgstr "这些分支是相同的"

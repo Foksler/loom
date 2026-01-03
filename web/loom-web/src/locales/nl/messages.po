@@ -331,6 +331,34 @@ msgstr "E-mail"
 msgid "settings.profile.emailHint"
 msgstr "E-mail kan hier niet worden gewijzigd"
 
+#: settings.profile.username
+msgid "settings.profile.username"
+msgstr "Gebruikersnaam"
+
+#: settings.profile.usernamePlaceholder
+msgid "settings.profile.usernamePlaceholder"
+msgstr "Voer gebruikersnaam in"
+
+#: settings.profile.usernameHint
+msgid "settings.profile.usernameHint"
+msgstr "Je gebruikersnaam wordt gebruikt voor git repository URL's"
+
+#: settings.profile.usernameInvalid
+msgid "settings.profile.usernameInvalid"
+msgstr "Gebruikersnaam mag alleen letters, cijfers en underscores bevatten"
+
+#: settings.profile.usernameTaken
+msgid "settings.profile.usernameTaken"
+msgstr "Deze gebruikersnaam is al in gebruik"
+
+#: settings.profile.usernameTooShort
+msgid "settings.profile.usernameTooShort"
+msgstr "Gebruikersnaam moet minimaal 3 tekens zijn"
+
+#: settings.profile.usernameTooLong
+msgid "settings.profile.usernameTooLong"
+msgstr "Gebruikersnaam mag maximaal 39 tekens zijn"
+
 #: settings.profile.locale
 msgid "settings.profile.locale"
 msgstr "Taal"
@@ -825,7 +853,35 @@ msgstr "Last login"
 
 #: admin.users.impersonate
 msgid "admin.users.impersonate"
-msgstr "Impersonate"
+msgstr "Nabootsen"
+
+#: admin.users.updated
+msgid "admin.users.updated"
+msgstr "Bijgewerkt"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "Maak Beheerder"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "Verwijder Beheerder"
+
+#: admin.users.makeSupport
+msgid "admin.users.makeSupport"
+msgstr "Maak Support"
+
+#: admin.users.removeSupport
+msgid "admin.users.removeSupport"
+msgstr "Verwijder Support"
+
+#: admin.users.makeAuditor
+msgid "admin.users.makeAuditor"
+msgstr "Maak Auditor"
+
+#: admin.users.removeAuditor
+msgid "admin.users.removeAuditor"
+msgstr "Verwijder Auditor"
 
 #: admin.logs.title
 msgid "admin.logs.title"
@@ -917,6 +973,174 @@ msgstr "Admin {admin} impersonating {user}"
 #: admin.impersonation.stop
 msgid "admin.impersonation.stop"
 msgstr "Stop Impersonating"
+
+#: admin.anthropic.title
+msgid "admin.anthropic.title"
+msgstr "Claude Max-accounts"
+
+#: admin.anthropic.add_account
+msgid "admin.anthropic.add_account"
+msgstr "Account toevoegen"
+
+#: admin.anthropic.remove
+msgid "admin.anthropic.remove"
+msgstr "Verwijderen"
+
+#: admin.anthropic.remove_confirm
+msgid "admin.anthropic.remove_confirm"
+msgstr "Dit account uit de pool verwijderen?"
+
+#: admin.anthropic.status.available
+msgid "admin.anthropic.status.available"
+msgstr "Beschikbaar"
+
+#: admin.anthropic.status.cooling_down
+msgid "admin.anthropic.status.cooling_down"
+msgstr "Afkoelen"
+
+#: admin.anthropic.status.disabled
+msgid "admin.anthropic.status.disabled"
+msgstr "Uitgeschakeld"
+
+#: admin.anthropic.cooldown_remaining
+msgid "admin.anthropic.cooldown_remaining"
+msgstr "{time} resterend"
+
+#: admin.anthropic.expires_at
+msgid "admin.anthropic.expires_at"
+msgstr "Token verloopt: {time}"
+
+#: admin.anthropic.no_accounts
+msgid "admin.anthropic.no_accounts"
+msgstr "Geen accounts geconfigureerd. Voeg een Claude Max-account toe om te beginnen."
+
+#: admin.anthropic.not_configured
+msgid "admin.anthropic.not_configured"
+msgstr "Anthropic OAuth-pool is niet geconfigureerd op deze server."
+
+#: admin.anthropic.account_added
+msgid "admin.anthropic.account_added"
+msgstr "Account {id} succesvol toegevoegd"
+
+#: admin.anthropic.enter_code_title
+msgid "admin.anthropic.enter_code_title"
+msgstr "Voer autorisatiecode in"
+
+#: admin.anthropic.enter_code_description
+msgid "admin.anthropic.enter_code_description"
+msgstr "Er is een nieuw browsertabblad geopend om te autoriseren met Claude. Na autorisatie, kopieer de code van de Anthropic-pagina en plak deze hieronder."
+
+#: admin.anthropic.authorization_code
+msgid "admin.anthropic.authorization_code"
+msgstr "Autorisatiecode"
+
+#: admin.anthropic.code_placeholder
+msgid "admin.anthropic.code_placeholder"
+msgstr "Plak hier de code van Anthropic"
+
+#: admin.anthropic.submit_code
+msgid "admin.anthropic.submit_code"
+msgstr "Account toevoegen"
+
+#: admin.dashboard.title
+msgid "admin.dashboard.title"
+msgstr "Beheerderspaneel"
+
+#: admin.dashboard.description
+msgid "admin.dashboard.description"
+msgstr "Serverbeheer en monitoring"
+
+#: admin.dashboard.sections
+msgid "admin.dashboard.sections"
+msgstr "Beheer"
+
+#: admin.dashboard.anthropic_description
+msgid "admin.dashboard.anthropic_description"
+msgstr "Beheer Claude Max OAuth-abonnementenpool"
+
+#: admin.health.title
+msgid "admin.health.title"
+msgstr "Serverstatus"
+
+#: admin.health.overall
+msgid "admin.health.overall"
+msgstr "Algehele status"
+
+#: admin.health.version
+msgid "admin.health.version"
+msgstr "Versie"
+
+#: admin.health.response_time
+msgid "admin.health.response_time"
+msgstr "Responstijd"
+
+#: admin.health.configured
+msgid "admin.health.configured"
+msgstr "Geconfigureerd"
+
+#: admin.health.not_configured
+msgid "admin.health.not_configured"
+msgstr "Niet geconfigureerd"
+
+#: admin.health.status.healthy
+msgid "admin.health.status.healthy"
+msgstr "Gezond"
+
+#: admin.health.status.degraded
+msgid "admin.health.status.degraded"
+msgstr "Gedegradeerd"
+
+#: admin.health.status.unhealthy
+msgid "admin.health.status.unhealthy"
+msgstr "Ongezond"
+
+#: admin.health.status.unknown
+msgid "admin.health.status.unknown"
+msgstr "Onbekend"
+
+#: admin.health.database
+msgid "admin.health.database"
+msgstr "Database"
+
+#: admin.health.bin_dir
+msgid "admin.health.bin_dir"
+msgstr "Binaire map"
+
+#: admin.health.llm_providers
+msgid "admin.health.llm_providers"
+msgstr "LLM-providers"
+
+#: admin.health.google_cse
+msgid "admin.health.google_cse"
+msgstr "Google CSE"
+
+#: admin.health.serper
+msgid "admin.health.serper"
+msgstr "Serper"
+
+#: admin.health.github_app
+msgid "admin.health.github_app"
+msgstr "GitHub App"
+
+#: admin.health.kubernetes
+msgid "admin.health.kubernetes"
+msgstr "Kubernetes"
+
+#: admin.health.smtp
+msgid "admin.health.smtp"
+msgstr "SMTP"
+
+#: admin.health.geoip
+msgid "admin.health.geoip"
+msgstr "GeoIP"
+
+#: admin.health.jobs
+msgid "admin.health.jobs"
+msgstr "Achtergrondtaken"
+
+#: admin.health.auth_providers
+msgid "admin.health.auth_providers"
+msgstr "Authenticatieproviders"
 
 #: nav.weavers
 msgid "nav.weavers"
@@ -1121,3 +1345,367 @@ msgstr "Standaard branch:"
 #: client.repos.list.updated
 msgid "client.repos.list.updated"
 msgstr "Bijgewerkt"
+
+#: jobs.title
+msgid "jobs.title"
+msgstr "Achtergrondtaken"
+
+#: jobs.description
+msgid "jobs.description"
+msgstr "Beheer en monitor geplande achtergrondtaken"
+
+#: jobs.loading
+msgid "jobs.loading"
+msgstr "Taken laden..."
+
+#: jobs.runNow
+msgid "jobs.runNow"
+msgstr "Nu uitvoeren"
+
+#: jobs.running
+msgid "jobs.running"
+msgstr "Bezig..."
+
+#: jobs.history
+msgid "jobs.history"
+msgstr "Geschiedenis"
+
+#: jobs.hideHistory
+msgid "jobs.hideHistory"
+msgstr "Geschiedenis verbergen"
+
+#: jobs.viewHistory
+msgid "jobs.viewHistory"
+msgstr "Geschiedenis bekijken"
+
+#: jobs.noJobs
+msgid "jobs.noJobs"
+msgstr "Geen achtergrondtaken geconfigureerd"
+
+#: jobs.never
+msgid "jobs.never"
+msgstr "Nooit uitgevoerd"
+
+#: jobs.lastRun
+msgid "jobs.lastRun"
+msgstr "Laatste uitvoering"
+
+#: jobs.duration
+msgid "jobs.duration"
+msgstr "Duur"
+
+#: jobs.interval
+msgid "jobs.interval"
+msgstr "Interval"
+
+#: jobs.type
+msgid "jobs.type"
+msgstr "Type"
+
+#: jobs.failures
+msgid "jobs.failures"
+msgstr "{count} opeenvolgende fouten"
+
+#: jobs.status.healthy
+msgid "jobs.status.healthy"
+msgstr "Gezond"
+
+#: jobs.status.degraded
+msgid "jobs.status.degraded"
+msgstr "Verslechterd"
+
+#: jobs.status.unhealthy
+msgid "jobs.status.unhealthy"
+msgstr "Ongezond"
+
+#: jobs.status.succeeded
+msgid "jobs.status.succeeded"
+msgstr "Geslaagd"
+
+#: jobs.status.failed
+msgid "jobs.status.failed"
+msgstr "Mislukt"
+
+#: jobs.status.running
+msgid "jobs.status.running"
+msgstr "Actief"
+
+#: jobs.status.cancelled
+msgid "jobs.status.cancelled"
+msgstr "Geannuleerd"
+
+#: jobs.trigger.schedule
+msgid "jobs.trigger.schedule"
+msgstr "Gepland"
+
+#: jobs.trigger.manual
+msgid "jobs.trigger.manual"
+msgstr "Handmatig"
+
+#: jobs.trigger.retry
+msgid "jobs.trigger.retry"
+msgstr "Opnieuw geprobeerd"
+
+#: jobs.history.title
+msgid "jobs.history.title"
+msgstr "Uitvoeringsgeschiedenis"
+
+#: jobs.history.status
+msgid "jobs.history.status"
+msgstr "Status"
+
+#: jobs.history.started
+msgid "jobs.history.started"
+msgstr "Gestart"
+
+#: jobs.history.duration
+msgid "jobs.history.duration"
+msgstr "Duur"
+
+#: jobs.history.trigger
+msgid "jobs.history.trigger"
+msgstr "Trigger"
+
+#: jobs.history.details
+msgid "jobs.history.details"
+msgstr "Details"
+
+#: jobs.history.loadMore
+msgid "jobs.history.loadMore"
+msgstr "Meer laden"
+
+#: jobs.history.noRuns
+msgid "jobs.history.noRuns"
+msgstr "Geen uitvoeringsgeschiedenis beschikbaar"
+
+#: jobs.time.justNow
+msgid "jobs.time.justNow"
+msgstr "zojuist"
+
+#: jobs.time.minutesAgo
+msgid "jobs.time.minutesAgo"
+msgstr "{count} min geleden"
+
+#: jobs.time.hoursAgo
+msgid "jobs.time.hoursAgo"
+msgstr "{count} uur geleden"
+
+#: jobs.time.daysAgo
+msgid "jobs.time.daysAgo"
+msgstr "{count} dagen geleden"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "Repository's"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "Nieuwe repository"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "Zoek repository's..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "Opnieuw proberen"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "Geen repository's gevonden"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "Nog geen repository's"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "Maak je eerste repository"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "Standaard branch:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "Bijgewerkt"
+
+#: client.repos.header.clone
+msgid "client.repos.header.clone"
+msgstr "Klonen"
+
+#: client.repos.header.clone_https
+msgid "client.repos.header.clone_https"
+msgstr "Klonen met HTTPS"
+
+#: client.repos.header.copied
+msgid "client.repos.header.copied"
+msgstr "Gekopieerd!"
+
+#: client.repos.header.copy
+msgid "client.repos.header.copy"
+msgstr "Kopiëren"
+
+#: client.repos.header.default_branch
+msgid "client.repos.header.default_branch"
+msgstr "Standaard branch"
+
+#: client.repos.nav.code
+msgid "client.repos.nav.code"
+msgstr "Code"
+
+#: client.repos.nav.commits
+msgid "client.repos.nav.commits"
+msgstr "Commits"
+
+#: client.repos.nav.branches
+msgid "client.repos.nav.branches"
+msgstr "Branches"
+
+#: client.repos.nav.settings
+msgid "client.repos.nav.settings"
+msgstr "Instellingen"
+
+#: client.repos.tree.empty
+msgid "client.repos.tree.empty"
+msgstr "Deze map is leeg"
+
+#: client.repos.blob.lines
+msgid "client.repos.blob.lines"
+msgstr "regels"
+
+#: client.repos.blob.bytes
+msgid "client.repos.blob.bytes"
+msgstr "bytes"
+
+#: client.repos.blob.blame
+msgid "client.repos.blob.blame"
+msgstr "Blame"
+
+#: client.repos.blob.copy
+msgid "client.repos.blob.copy"
+msgstr "Kopiëren"
+
+#: client.repos.blob.copied
+msgid "client.repos.blob.copied"
+msgstr "Gekopieerd!"
+
+#: client.repos.blob.raw
+msgid "client.repos.blob.raw"
+msgstr "Raw"
+
+#: client.repos.blob.binary_not_shown
+msgid "client.repos.blob.binary_not_shown"
+msgstr "Binair bestand niet weergegeven"
+
+#: client.repos.weaver.open
+msgid "client.repos.weaver.open"
+msgstr "Openen in Weaver"
+
+#: client.repos.weaver.create_failed
+msgid "client.repos.weaver.create_failed"
+msgstr "Weaver aanmaken mislukt"
+
+#: client.repos.branch.find
+msgid "client.repos.branch.find"
+msgstr "Zoek een branch..."
+
+#: client.repos.branch.not_found
+msgid "client.repos.branch.not_found"
+msgstr "Geen branches gevonden"
+
+#: client.repos.branch.default
+msgid "client.repos.branch.default"
+msgstr "standaard"
+
+#: client.repos.commits.minutes_ago
+msgid "client.repos.commits.minutes_ago"
+msgstr "{count} minuten geleden"
+
+#: client.repos.commits.hours_ago
+msgid "client.repos.commits.hours_ago"
+msgstr "{count} uur geleden"
+
+#: client.repos.commits.days_ago
+msgid "client.repos.commits.days_ago"
+msgstr "{count} dagen geleden"
+
+#: client.repos.commits.committed
+msgid "client.repos.commits.committed"
+msgstr "gecommit"
+
+#: client.repos.commits.copy_sha
+msgid "client.repos.commits.copy_sha"
+msgstr "SHA kopiëren"
+
+#: client.repos.commits.empty
+msgid "client.repos.commits.empty"
+msgstr "Geen commits gevonden"
+
+#: client.repos.diff.parent
+msgid "client.repos.diff.parent"
+msgstr "Ouder"
+
+#: client.repos.diff.parents
+msgid "client.repos.diff.parents"
+msgstr "Ouders"
+
+#: client.repos.diff.showing
+msgid "client.repos.diff.showing"
+msgstr "Toont"
+
+#: client.repos.diff.changed_file
+msgid "client.repos.diff.changed_file"
+msgstr "gewijzigd bestand"
+
+#: client.repos.diff.changed_files
+msgid "client.repos.diff.changed_files"
+msgstr "gewijzigde bestanden"
+
+#: client.repos.blame.lines
+msgid "client.repos.blame.lines"
+msgstr "regels"
+
+#: client.repos.blame.today
+msgid "client.repos.blame.today"
+msgstr "vandaag"
+
+#: client.repos.blame.days_ago
+msgid "client.repos.blame.days_ago"
+msgstr "{count}d geleden"
+
+#: client.repos.blame.months_ago
+msgid "client.repos.blame.months_ago"
+msgstr "{count}m geleden"
+
+#: client.repos.blame.years_ago
+msgid "client.repos.blame.years_ago"
+msgstr "{count}j geleden"
+
+#: client.repos.blame.empty
+msgid "client.repos.blame.empty"
+msgstr "Geen blame-informatie beschikbaar"
+
+#: client.repos.compare.ahead
+msgid "client.repos.compare.ahead"
+msgstr "voor"
+
+#: client.repos.compare.behind
+msgid "client.repos.compare.behind"
+msgstr "achter"
+
+#: client.repos.compare.commit
+msgid "client.repos.compare.commit"
+msgstr "commit"
+
+#: client.repos.compare.commits
+msgid "client.repos.compare.commits"
+msgstr "commits"
+
+#: client.repos.compare.commits_heading
+msgid "client.repos.compare.commits_heading"
+msgstr "Commits"
+
+#: client.repos.compare.identical
+msgid "client.repos.compare.identical"
+msgstr "Deze branches zijn identiek"

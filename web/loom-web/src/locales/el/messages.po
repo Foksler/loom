@@ -331,6 +331,34 @@ msgstr "Email"
 msgid "settings.profile.emailHint"
 msgstr "Το email δεν μπορεί να αλλάξει εδώ"
 
+#: settings.profile.username
+msgid "settings.profile.username"
+msgstr "Όνομα χρήστη"
+
+#: settings.profile.usernamePlaceholder
+msgid "settings.profile.usernamePlaceholder"
+msgstr "Εισάγετε όνομα χρήστη"
+
+#: settings.profile.usernameHint
+msgid "settings.profile.usernameHint"
+msgstr "Το όνομα χρήστη σας χρησιμοποιείται για τα URL των αποθετηρίων git"
+
+#: settings.profile.usernameInvalid
+msgid "settings.profile.usernameInvalid"
+msgstr "Το όνομα χρήστη μπορεί να περιέχει μόνο γράμματα, αριθμούς και κάτω παύλες"
+
+#: settings.profile.usernameTaken
+msgid "settings.profile.usernameTaken"
+msgstr "Αυτό το όνομα χρήστη είναι ήδη κατειλημμένο"
+
+#: settings.profile.usernameTooShort
+msgid "settings.profile.usernameTooShort"
+msgstr "Το όνομα χρήστη πρέπει να έχει τουλάχιστον 3 χαρακτήρες"
+
+#: settings.profile.usernameTooLong
+msgid "settings.profile.usernameTooLong"
+msgstr "Το όνομα χρήστη πρέπει να έχει το πολύ 39 χαρακτήρες"
+
 #: settings.profile.locale
 msgid "settings.profile.locale"
 msgstr "Γλώσσα"
@@ -825,7 +853,35 @@ msgstr "Last login"
 
 #: admin.users.impersonate
 msgid "admin.users.impersonate"
-msgstr "Impersonate"
+msgstr "Υποδυθείτε"
+
+#: admin.users.updated
+msgid "admin.users.updated"
+msgstr "Ενημερώθηκε"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "Κάντε Διαχειριστή"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "Αφαίρεση Διαχειριστή"
+
+#: admin.users.makeSupport
+msgid "admin.users.makeSupport"
+msgstr "Κάντε Υποστήριξη"
+
+#: admin.users.removeSupport
+msgid "admin.users.removeSupport"
+msgstr "Αφαίρεση Υποστήριξης"
+
+#: admin.users.makeAuditor
+msgid "admin.users.makeAuditor"
+msgstr "Κάντε Ελεγκτή"
+
+#: admin.users.removeAuditor
+msgid "admin.users.removeAuditor"
+msgstr "Αφαίρεση Ελεγκτή"
 
 #: admin.logs.title
 msgid "admin.logs.title"
@@ -1121,3 +1177,535 @@ msgstr "Προεπιλεγμένος κλάδος:"
 #: client.repos.list.updated
 msgid "client.repos.list.updated"
 msgstr "Ενημερώθηκε"
+
+#: admin.anthropic.title
+msgid "admin.anthropic.title"
+msgstr "Λογαριασμοί Claude Max"
+
+#: admin.anthropic.add_account
+msgid "admin.anthropic.add_account"
+msgstr "Προσθήκη Λογαριασμού"
+
+#: admin.anthropic.remove
+msgid "admin.anthropic.remove"
+msgstr "Αφαίρεση"
+
+#: admin.anthropic.remove_confirm
+msgid "admin.anthropic.remove_confirm"
+msgstr "Αφαίρεση αυτού του λογαριασμού από το pool;"
+
+#: admin.anthropic.status.available
+msgid "admin.anthropic.status.available"
+msgstr "Διαθέσιμο"
+
+#: admin.anthropic.status.cooling_down
+msgid "admin.anthropic.status.cooling_down"
+msgstr "Σε Αναμονή"
+
+#: admin.anthropic.status.disabled
+msgid "admin.anthropic.status.disabled"
+msgstr "Απενεργοποιημένο"
+
+#: admin.anthropic.cooldown_remaining
+msgid "admin.anthropic.cooldown_remaining"
+msgstr "Απομένουν {time}"
+
+#: admin.anthropic.expires_at
+msgid "admin.anthropic.expires_at"
+msgstr "Λήξη token: {time}"
+
+#: admin.anthropic.no_accounts
+msgid "admin.anthropic.no_accounts"
+msgstr "Δεν έχουν ρυθμιστεί λογαριασμοί. Προσθέστε έναν λογαριασμό Claude Max για να ξεκινήσετε."
+
+#: admin.anthropic.not_configured
+msgid "admin.anthropic.not_configured"
+msgstr "Το pool OAuth της Anthropic δεν έχει ρυθμιστεί σε αυτόν τον διακομιστή."
+
+#: admin.anthropic.account_added
+msgid "admin.anthropic.account_added"
+msgstr "Ο λογαριασμός {id} προστέθηκε επιτυχώς"
+
+#: admin.anthropic.enter_code_title
+msgid "admin.anthropic.enter_code_title"
+msgstr "Εισαγωγή Κωδικού Εξουσιοδότησης"
+
+#: admin.anthropic.enter_code_description
+msgid "admin.anthropic.enter_code_description"
+msgstr "Ανοίχτηκε νέα καρτέλα για εξουσιοδότηση με το Claude. Μετά την εξουσιοδότηση, αντιγράψτε τον κωδικό από τη σελίδα Anthropic και επικολλήστε τον παρακάτω."
+
+#: admin.anthropic.authorization_code
+msgid "admin.anthropic.authorization_code"
+msgstr "Κωδικός Εξουσιοδότησης"
+
+#: admin.anthropic.code_placeholder
+msgid "admin.anthropic.code_placeholder"
+msgstr "Επικολλήστε τον κωδικό από το Anthropic εδώ"
+
+#: admin.anthropic.submit_code
+msgid "admin.anthropic.submit_code"
+msgstr "Προσθήκη Λογαριασμού"
+
+#: admin.dashboard.title
+msgid "admin.dashboard.title"
+msgstr "Πίνακας Διαχείρισης"
+
+#: admin.dashboard.description
+msgid "admin.dashboard.description"
+msgstr "Διαχείριση και παρακολούθηση διακομιστή"
+
+#: admin.dashboard.sections
+msgid "admin.dashboard.sections"
+msgstr "Διαχείριση"
+
+#: admin.dashboard.anthropic_description
+msgid "admin.dashboard.anthropic_description"
+msgstr "Διαχείριση pool συνδρομών OAuth Claude Max"
+
+#: admin.health.title
+msgid "admin.health.title"
+msgstr "Υγεία Διακομιστή"
+
+#: admin.health.overall
+msgid "admin.health.overall"
+msgstr "Συνολική Κατάσταση"
+
+#: admin.health.version
+msgid "admin.health.version"
+msgstr "Έκδοση"
+
+#: admin.health.response_time
+msgid "admin.health.response_time"
+msgstr "Χρόνος απόκρισης"
+
+#: admin.health.configured
+msgid "admin.health.configured"
+msgstr "Ρυθμισμένο"
+
+#: admin.health.not_configured
+msgid "admin.health.not_configured"
+msgstr "Δεν έχει ρυθμιστεί"
+
+#: admin.health.status.healthy
+msgid "admin.health.status.healthy"
+msgstr "Υγιές"
+
+#: admin.health.status.degraded
+msgid "admin.health.status.degraded"
+msgstr "Υποβαθμισμένο"
+
+#: admin.health.status.unhealthy
+msgid "admin.health.status.unhealthy"
+msgstr "Ανθυγιεινό"
+
+#: admin.health.status.unknown
+msgid "admin.health.status.unknown"
+msgstr "Άγνωστο"
+
+#: admin.health.database
+msgid "admin.health.database"
+msgstr "Βάση Δεδομένων"
+
+#: admin.health.bin_dir
+msgid "admin.health.bin_dir"
+msgstr "Κατάλογος Εκτελέσιμων"
+
+#: admin.health.llm_providers
+msgid "admin.health.llm_providers"
+msgstr "Πάροχοι LLM"
+
+#: admin.health.google_cse
+msgid "admin.health.google_cse"
+msgstr "Google CSE"
+
+#: admin.health.serper
+msgid "admin.health.serper"
+msgstr "Serper"
+
+#: admin.health.github_app
+msgid "admin.health.github_app"
+msgstr "GitHub App"
+
+#: admin.health.kubernetes
+msgid "admin.health.kubernetes"
+msgstr "Kubernetes"
+
+#: admin.health.smtp
+msgid "admin.health.smtp"
+msgstr "SMTP"
+
+#: admin.health.geoip
+msgid "admin.health.geoip"
+msgstr "GeoIP"
+
+#: admin.health.jobs
+msgid "admin.health.jobs"
+msgstr "Εργασίες Παρασκηνίου"
+
+#: admin.health.auth_providers
+msgid "admin.health.auth_providers"
+msgstr "Πάροχοι Ταυτοποίησης"
+
+#: jobs.title
+msgid "jobs.title"
+msgstr "Εργασίες Παρασκηνίου"
+
+#: jobs.description
+msgid "jobs.description"
+msgstr "Παρακολούθηση και διαχείριση προγραμματισμένων εργασιών παρασκηνίου"
+
+#: jobs.loading
+msgid "jobs.loading"
+msgstr "Φόρτωση εργασιών..."
+
+#: jobs.runNow
+msgid "jobs.runNow"
+msgstr "Εκτέλεση Τώρα"
+
+#: jobs.running
+msgid "jobs.running"
+msgstr "Εκτελείται..."
+
+#: jobs.history
+msgid "jobs.history"
+msgstr "Ιστορικό"
+
+#: jobs.hideHistory
+msgid "jobs.hideHistory"
+msgstr "Απόκρυψη Ιστορικού"
+
+#: jobs.viewHistory
+msgid "jobs.viewHistory"
+msgstr "Προβολή Ιστορικού"
+
+#: jobs.noJobs
+msgid "jobs.noJobs"
+msgstr "Δεν έχουν διαμορφωθεί εργασίες παρασκηνίου"
+
+#: jobs.never
+msgid "jobs.never"
+msgstr "Δεν εκτελέστηκε ποτέ"
+
+#: jobs.lastRun
+msgid "jobs.lastRun"
+msgstr "Τελευταία εκτέλεση"
+
+#: jobs.duration
+msgid "jobs.duration"
+msgstr "Διάρκεια"
+
+#: jobs.interval
+msgid "jobs.interval"
+msgstr "Διάστημα"
+
+#: jobs.type
+msgid "jobs.type"
+msgstr "Τύπος"
+
+#: jobs.failures
+msgid "jobs.failures"
+msgstr "{count} διαδοχικές αποτυχίες"
+
+#: jobs.status.healthy
+msgid "jobs.status.healthy"
+msgstr "Υγιής"
+
+#: jobs.status.degraded
+msgid "jobs.status.degraded"
+msgstr "Υποβαθμισμένη"
+
+#: jobs.status.unhealthy
+msgid "jobs.status.unhealthy"
+msgstr "Μη Υγιής"
+
+#: jobs.status.succeeded
+msgid "jobs.status.succeeded"
+msgstr "Επιτυχής"
+
+#: jobs.status.failed
+msgid "jobs.status.failed"
+msgstr "Απέτυχε"
+
+#: jobs.status.running
+msgid "jobs.status.running"
+msgstr "Εκτελείται"
+
+#: jobs.status.cancelled
+msgid "jobs.status.cancelled"
+msgstr "Ακυρώθηκε"
+
+#: jobs.trigger.schedule
+msgid "jobs.trigger.schedule"
+msgstr "Πρόγραμμα"
+
+#: jobs.trigger.manual
+msgid "jobs.trigger.manual"
+msgstr "Χειροκίνητα"
+
+#: jobs.trigger.retry
+msgid "jobs.trigger.retry"
+msgstr "Επανάληψη"
+
+#: jobs.history.title
+msgid "jobs.history.title"
+msgstr "Ιστορικό Εκτελέσεων"
+
+#: jobs.history.status
+msgid "jobs.history.status"
+msgstr "Κατάσταση"
+
+#: jobs.history.started
+msgid "jobs.history.started"
+msgstr "Ξεκίνησε"
+
+#: jobs.history.duration
+msgid "jobs.history.duration"
+msgstr "Διάρκεια"
+
+#: jobs.history.trigger
+msgid "jobs.history.trigger"
+msgstr "Ενεργοποίηση"
+
+#: jobs.history.details
+msgid "jobs.history.details"
+msgstr "Λεπτομέρειες"
+
+#: jobs.history.loadMore
+msgid "jobs.history.loadMore"
+msgstr "Φόρτωση Περισσότερων"
+
+#: jobs.history.noRuns
+msgid "jobs.history.noRuns"
+msgstr "Δεν υπάρχει διαθέσιμο ιστορικό εκτελέσεων"
+
+#: jobs.time.justNow
+msgid "jobs.time.justNow"
+msgstr "μόλις τώρα"
+
+#: jobs.time.minutesAgo
+msgid "jobs.time.minutesAgo"
+msgstr "{count} λεπτά πριν"
+
+#: jobs.time.hoursAgo
+msgid "jobs.time.hoursAgo"
+msgstr "{count} ώρες πριν"
+
+#: jobs.time.daysAgo
+msgid "jobs.time.daysAgo"
+msgstr "{count} ημέρες πριν"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "Αποθετήρια"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "Νέο Αποθετήριο"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "Αναζήτηση αποθετηρίων..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "Δοκιμάστε Ξανά"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "Κανένα αποθετήριο δεν ταιριάζει με την αναζήτησή σας"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "Δεν υπάρχουν αποθετήρια ακόμα"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "Δημιουργήστε το πρώτο σας αποθετήριο"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "Προεπιλεγμένος κλάδος:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "Ενημερώθηκε"
+
+#: client.repos.header.clone
+msgid "client.repos.header.clone"
+msgstr "Κλωνοποίηση"
+
+#: client.repos.header.clone_https
+msgid "client.repos.header.clone_https"
+msgstr "Κλωνοποίηση με HTTPS"
+
+#: client.repos.header.copied
+msgid "client.repos.header.copied"
+msgstr "Αντιγράφηκε!"
+
+#: client.repos.header.copy
+msgid "client.repos.header.copy"
+msgstr "Αντιγραφή"
+
+#: client.repos.header.default_branch
+msgid "client.repos.header.default_branch"
+msgstr "Προεπιλεγμένος κλάδος"
+
+#: client.repos.nav.code
+msgid "client.repos.nav.code"
+msgstr "Κώδικας"
+
+#: client.repos.nav.commits
+msgid "client.repos.nav.commits"
+msgstr "Commits"
+
+#: client.repos.nav.branches
+msgid "client.repos.nav.branches"
+msgstr "Κλάδοι"
+
+#: client.repos.nav.settings
+msgid "client.repos.nav.settings"
+msgstr "Ρυθμίσεις"
+
+#: client.repos.tree.empty
+msgid "client.repos.tree.empty"
+msgstr "Αυτός ο κατάλογος είναι κενός"
+
+#: client.repos.blob.lines
+msgid "client.repos.blob.lines"
+msgstr "γραμμές"
+
+#: client.repos.blob.bytes
+msgid "client.repos.blob.bytes"
+msgstr "bytes"
+
+#: client.repos.blob.blame
+msgid "client.repos.blob.blame"
+msgstr "Blame"
+
+#: client.repos.blob.copy
+msgid "client.repos.blob.copy"
+msgstr "Αντιγραφή"
+
+#: client.repos.blob.copied
+msgid "client.repos.blob.copied"
+msgstr "Αντιγράφηκε!"
+
+#: client.repos.blob.raw
+msgid "client.repos.blob.raw"
+msgstr "Ακατέργαστο"
+
+#: client.repos.blob.binary_not_shown
+msgid "client.repos.blob.binary_not_shown"
+msgstr "Το δυαδικό αρχείο δεν εμφανίζεται"
+
+#: client.repos.weaver.open
+msgid "client.repos.weaver.open"
+msgstr "Άνοιγμα στο Weaver"
+
+#: client.repos.weaver.create_failed
+msgid "client.repos.weaver.create_failed"
+msgstr "Αποτυχία δημιουργίας weaver"
+
+#: client.repos.branch.find
+msgid "client.repos.branch.find"
+msgstr "Εύρεση κλάδου..."
+
+#: client.repos.branch.not_found
+msgid "client.repos.branch.not_found"
+msgstr "Δεν βρέθηκαν κλάδοι"
+
+#: client.repos.branch.default
+msgid "client.repos.branch.default"
+msgstr "προεπιλογή"
+
+#: client.repos.commits.minutes_ago
+msgid "client.repos.commits.minutes_ago"
+msgstr "{count} λεπτά πριν"
+
+#: client.repos.commits.hours_ago
+msgid "client.repos.commits.hours_ago"
+msgstr "{count} ώρες πριν"
+
+#: client.repos.commits.days_ago
+msgid "client.repos.commits.days_ago"
+msgstr "{count} ημέρες πριν"
+
+#: client.repos.commits.committed
+msgid "client.repos.commits.committed"
+msgstr "δεσμεύτηκε"
+
+#: client.repos.commits.copy_sha
+msgid "client.repos.commits.copy_sha"
+msgstr "Αντιγραφή SHA"
+
+#: client.repos.commits.empty
+msgid "client.repos.commits.empty"
+msgstr "Δεν βρέθηκαν commits"
+
+#: client.repos.diff.parent
+msgid "client.repos.diff.parent"
+msgstr "Γονέας"
+
+#: client.repos.diff.parents
+msgid "client.repos.diff.parents"
+msgstr "Γονείς"
+
+#: client.repos.diff.showing
+msgid "client.repos.diff.showing"
+msgstr "Εμφάνιση"
+
+#: client.repos.diff.changed_file
+msgid "client.repos.diff.changed_file"
+msgstr "αλλαγμένο αρχείο"
+
+#: client.repos.diff.changed_files
+msgid "client.repos.diff.changed_files"
+msgstr "αλλαγμένα αρχεία"
+
+#: client.repos.blame.lines
+msgid "client.repos.blame.lines"
+msgstr "γραμμές"
+
+#: client.repos.blame.today
+msgid "client.repos.blame.today"
+msgstr "σήμερα"
+
+#: client.repos.blame.days_ago
+msgid "client.repos.blame.days_ago"
+msgstr "{count}η πριν"
+
+#: client.repos.blame.months_ago
+msgid "client.repos.blame.months_ago"
+msgstr "{count}μ πριν"
+
+#: client.repos.blame.years_ago
+msgid "client.repos.blame.years_ago"
+msgstr "{count}χρ πριν"
+
+#: client.repos.blame.empty
+msgid "client.repos.blame.empty"
+msgstr "Δεν υπάρχουν διαθέσιμες πληροφορίες blame"
+
+#: client.repos.compare.ahead
+msgid "client.repos.compare.ahead"
+msgstr "μπροστά"
+
+#: client.repos.compare.behind
+msgid "client.repos.compare.behind"
+msgstr "πίσω"
+
+#: client.repos.compare.commit
+msgid "client.repos.compare.commit"
+msgstr "commit"
+
+#: client.repos.compare.commits
+msgid "client.repos.compare.commits"
+msgstr "commits"
+
+#: client.repos.compare.commits_heading
+msgid "client.repos.compare.commits_heading"
+msgstr "Commits"
+
+#: client.repos.compare.identical
+msgid "client.repos.compare.identical"
+msgstr "Αυτοί οι κλάδοι είναι ίδιοι"

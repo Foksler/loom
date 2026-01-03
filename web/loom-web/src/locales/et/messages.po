@@ -331,6 +331,34 @@ msgstr "E-post"
 msgid "settings.profile.emailHint"
 msgstr "E-posti ei saa siin muuta"
 
+#: settings.profile.username
+msgid "settings.profile.username"
+msgstr "Kasutajanimi"
+
+#: settings.profile.usernamePlaceholder
+msgid "settings.profile.usernamePlaceholder"
+msgstr "Sisesta kasutajanimi"
+
+#: settings.profile.usernameHint
+msgid "settings.profile.usernameHint"
+msgstr "Sinu kasutajanime kasutatakse git hoidlate URL-ides"
+
+#: settings.profile.usernameInvalid
+msgid "settings.profile.usernameInvalid"
+msgstr "Kasutajanimi võib sisaldada ainult tähti, numbreid ja alakriipse"
+
+#: settings.profile.usernameTaken
+msgid "settings.profile.usernameTaken"
+msgstr "See kasutajanimi on juba võetud"
+
+#: settings.profile.usernameTooShort
+msgid "settings.profile.usernameTooShort"
+msgstr "Kasutajanimi peab olema vähemalt 3 tähemärki"
+
+#: settings.profile.usernameTooLong
+msgid "settings.profile.usernameTooLong"
+msgstr "Kasutajanimi tohib olla maksimaalselt 39 tähemärki"
+
 #: settings.profile.locale
 msgid "settings.profile.locale"
 msgstr "Keel"
@@ -825,7 +853,35 @@ msgstr "Last login"
 
 #: admin.users.impersonate
 msgid "admin.users.impersonate"
-msgstr "Impersonate"
+msgstr "Kehasta"
+
+#: admin.users.updated
+msgid "admin.users.updated"
+msgstr "Uuendatud"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "Tee Administraatoriks"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "Eemalda Administraator"
+
+#: admin.users.makeSupport
+msgid "admin.users.makeSupport"
+msgstr "Tee Toeks"
+
+#: admin.users.removeSupport
+msgid "admin.users.removeSupport"
+msgstr "Eemalda Tugi"
+
+#: admin.users.makeAuditor
+msgid "admin.users.makeAuditor"
+msgstr "Tee Audiitoriks"
+
+#: admin.users.removeAuditor
+msgid "admin.users.removeAuditor"
+msgstr "Eemalda Audiitor"
 
 #: admin.logs.title
 msgid "admin.logs.title"
@@ -1121,3 +1177,535 @@ msgstr "Vaikeharu:"
 #: client.repos.list.updated
 msgid "client.repos.list.updated"
 msgstr "Uuendatud"
+
+#: admin.anthropic.title
+msgid "admin.anthropic.title"
+msgstr "Claude Max kontod"
+
+#: admin.anthropic.add_account
+msgid "admin.anthropic.add_account"
+msgstr "Lisa konto"
+
+#: admin.anthropic.remove
+msgid "admin.anthropic.remove"
+msgstr "Eemalda"
+
+#: admin.anthropic.remove_confirm
+msgid "admin.anthropic.remove_confirm"
+msgstr "Eemaldada see konto kogumist?"
+
+#: admin.anthropic.status.available
+msgid "admin.anthropic.status.available"
+msgstr "Saadaval"
+
+#: admin.anthropic.status.cooling_down
+msgid "admin.anthropic.status.cooling_down"
+msgstr "Jahtub"
+
+#: admin.anthropic.status.disabled
+msgid "admin.anthropic.status.disabled"
+msgstr "Keelatud"
+
+#: admin.anthropic.cooldown_remaining
+msgid "admin.anthropic.cooldown_remaining"
+msgstr "{time} jäänud"
+
+#: admin.anthropic.expires_at
+msgid "admin.anthropic.expires_at"
+msgstr "Tokeni aegumine: {time}"
+
+#: admin.anthropic.no_accounts
+msgid "admin.anthropic.no_accounts"
+msgstr "Kontosid pole seadistatud. Alustamiseks lisage Claude Max konto."
+
+#: admin.anthropic.not_configured
+msgid "admin.anthropic.not_configured"
+msgstr "Anthropic OAuth kogum pole sellel serveril seadistatud."
+
+#: admin.anthropic.account_added
+msgid "admin.anthropic.account_added"
+msgstr "Konto {id} lisati edukalt"
+
+#: admin.anthropic.enter_code_title
+msgid "admin.anthropic.enter_code_title"
+msgstr "Sisesta autoriseerimiskood"
+
+#: admin.anthropic.enter_code_description
+msgid "admin.anthropic.enter_code_description"
+msgstr "Claude'iga autoriseerimiseks avanes uus brauseri vahekaart. Pärast autoriseerimist kopeerige kood Anthropic lehelt ja kleepige see allpool."
+
+#: admin.anthropic.authorization_code
+msgid "admin.anthropic.authorization_code"
+msgstr "Autoriseerimiskood"
+
+#: admin.anthropic.code_placeholder
+msgid "admin.anthropic.code_placeholder"
+msgstr "Kleepige Anthropicist saadud kood siia"
+
+#: admin.anthropic.submit_code
+msgid "admin.anthropic.submit_code"
+msgstr "Lisa konto"
+
+#: admin.dashboard.title
+msgid "admin.dashboard.title"
+msgstr "Adminipaneel"
+
+#: admin.dashboard.description
+msgid "admin.dashboard.description"
+msgstr "Serveri haldus ja jälgimine"
+
+#: admin.dashboard.sections
+msgid "admin.dashboard.sections"
+msgstr "Haldus"
+
+#: admin.dashboard.anthropic_description
+msgid "admin.dashboard.anthropic_description"
+msgstr "Halda Claude Max OAuth tellimuste kogumit"
+
+#: admin.health.title
+msgid "admin.health.title"
+msgstr "Serveri tervis"
+
+#: admin.health.overall
+msgid "admin.health.overall"
+msgstr "Üldine olek"
+
+#: admin.health.version
+msgid "admin.health.version"
+msgstr "Versioon"
+
+#: admin.health.response_time
+msgid "admin.health.response_time"
+msgstr "Vastuse aeg"
+
+#: admin.health.configured
+msgid "admin.health.configured"
+msgstr "Seadistatud"
+
+#: admin.health.not_configured
+msgid "admin.health.not_configured"
+msgstr "Seadistamata"
+
+#: admin.health.status.healthy
+msgid "admin.health.status.healthy"
+msgstr "Terve"
+
+#: admin.health.status.degraded
+msgid "admin.health.status.degraded"
+msgstr "Halvenenud"
+
+#: admin.health.status.unhealthy
+msgid "admin.health.status.unhealthy"
+msgstr "Ebaterve"
+
+#: admin.health.status.unknown
+msgid "admin.health.status.unknown"
+msgstr "Teadmata"
+
+#: admin.health.database
+msgid "admin.health.database"
+msgstr "Andmebaas"
+
+#: admin.health.bin_dir
+msgid "admin.health.bin_dir"
+msgstr "Binaarkataloog"
+
+#: admin.health.llm_providers
+msgid "admin.health.llm_providers"
+msgstr "LLM pakkujad"
+
+#: admin.health.google_cse
+msgid "admin.health.google_cse"
+msgstr "Google CSE"
+
+#: admin.health.serper
+msgid "admin.health.serper"
+msgstr "Serper"
+
+#: admin.health.github_app
+msgid "admin.health.github_app"
+msgstr "GitHub rakendus"
+
+#: admin.health.kubernetes
+msgid "admin.health.kubernetes"
+msgstr "Kubernetes"
+
+#: admin.health.smtp
+msgid "admin.health.smtp"
+msgstr "SMTP"
+
+#: admin.health.geoip
+msgid "admin.health.geoip"
+msgstr "GeoIP"
+
+#: admin.health.jobs
+msgid "admin.health.jobs"
+msgstr "Taustatööd"
+
+#: admin.health.auth_providers
+msgid "admin.health.auth_providers"
+msgstr "Autentimisteenuse pakkujad"
+
+#: jobs.title
+msgid "jobs.title"
+msgstr "Taustatööd"
+
+#: jobs.description
+msgid "jobs.description"
+msgstr "Jälgi ja halda ajastatud taustatöid"
+
+#: jobs.loading
+msgid "jobs.loading"
+msgstr "Tööde laadimine..."
+
+#: jobs.runNow
+msgid "jobs.runNow"
+msgstr "Käivita Kohe"
+
+#: jobs.running
+msgid "jobs.running"
+msgstr "Töötab..."
+
+#: jobs.history
+msgid "jobs.history"
+msgstr "Ajalugu"
+
+#: jobs.hideHistory
+msgid "jobs.hideHistory"
+msgstr "Peida Ajalugu"
+
+#: jobs.viewHistory
+msgid "jobs.viewHistory"
+msgstr "Vaata Ajalugu"
+
+#: jobs.noJobs
+msgid "jobs.noJobs"
+msgstr "Taustatöid pole seadistatud"
+
+#: jobs.never
+msgid "jobs.never"
+msgstr "Pole kunagi käivitatud"
+
+#: jobs.lastRun
+msgid "jobs.lastRun"
+msgstr "Viimati käivitatud"
+
+#: jobs.duration
+msgid "jobs.duration"
+msgstr "Kestus"
+
+#: jobs.interval
+msgid "jobs.interval"
+msgstr "Intervall"
+
+#: jobs.type
+msgid "jobs.type"
+msgstr "Tüüp"
+
+#: jobs.failures
+msgid "jobs.failures"
+msgstr "{count} järjestikust tõrget"
+
+#: jobs.status.healthy
+msgid "jobs.status.healthy"
+msgstr "Terve"
+
+#: jobs.status.degraded
+msgid "jobs.status.degraded"
+msgstr "Halvenenud"
+
+#: jobs.status.unhealthy
+msgid "jobs.status.unhealthy"
+msgstr "Ebaterve"
+
+#: jobs.status.succeeded
+msgid "jobs.status.succeeded"
+msgstr "Õnnestus"
+
+#: jobs.status.failed
+msgid "jobs.status.failed"
+msgstr "Ebaõnnestus"
+
+#: jobs.status.running
+msgid "jobs.status.running"
+msgstr "Töötab"
+
+#: jobs.status.cancelled
+msgid "jobs.status.cancelled"
+msgstr "Tühistatud"
+
+#: jobs.trigger.schedule
+msgid "jobs.trigger.schedule"
+msgstr "Ajakava"
+
+#: jobs.trigger.manual
+msgid "jobs.trigger.manual"
+msgstr "Käsitsi"
+
+#: jobs.trigger.retry
+msgid "jobs.trigger.retry"
+msgstr "Kordus"
+
+#: jobs.history.title
+msgid "jobs.history.title"
+msgstr "Käivituste Ajalugu"
+
+#: jobs.history.status
+msgid "jobs.history.status"
+msgstr "Olek"
+
+#: jobs.history.started
+msgid "jobs.history.started"
+msgstr "Alustatud"
+
+#: jobs.history.duration
+msgid "jobs.history.duration"
+msgstr "Kestus"
+
+#: jobs.history.trigger
+msgid "jobs.history.trigger"
+msgstr "Päästik"
+
+#: jobs.history.details
+msgid "jobs.history.details"
+msgstr "Üksikasjad"
+
+#: jobs.history.loadMore
+msgid "jobs.history.loadMore"
+msgstr "Laadi Rohkem"
+
+#: jobs.history.noRuns
+msgid "jobs.history.noRuns"
+msgstr "Käivituste ajalugu puudub"
+
+#: jobs.time.justNow
+msgid "jobs.time.justNow"
+msgstr "just praegu"
+
+#: jobs.time.minutesAgo
+msgid "jobs.time.minutesAgo"
+msgstr "{count} min tagasi"
+
+#: jobs.time.hoursAgo
+msgid "jobs.time.hoursAgo"
+msgstr "{count} tundi tagasi"
+
+#: jobs.time.daysAgo
+msgid "jobs.time.daysAgo"
+msgstr "{count} päeva tagasi"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "Hoidlad"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "Uus hoidla"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "Otsi hoidlaid..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "Proovi uuesti"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "Ühtegi hoidlat ei leitud"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "Hoidlaid pole veel"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "Loo oma esimene hoidla"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "Vaikeharu:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "Uuendatud"
+
+#: client.repos.header.clone
+msgid "client.repos.header.clone"
+msgstr "Klooni"
+
+#: client.repos.header.clone_https
+msgid "client.repos.header.clone_https"
+msgstr "Klooni HTTPS-iga"
+
+#: client.repos.header.copied
+msgid "client.repos.header.copied"
+msgstr "Kopeeritud!"
+
+#: client.repos.header.copy
+msgid "client.repos.header.copy"
+msgstr "Kopeeri"
+
+#: client.repos.header.default_branch
+msgid "client.repos.header.default_branch"
+msgstr "Vaikeharu"
+
+#: client.repos.nav.code
+msgid "client.repos.nav.code"
+msgstr "Kood"
+
+#: client.repos.nav.commits
+msgid "client.repos.nav.commits"
+msgstr "Commitid"
+
+#: client.repos.nav.branches
+msgid "client.repos.nav.branches"
+msgstr "Harud"
+
+#: client.repos.nav.settings
+msgid "client.repos.nav.settings"
+msgstr "Seaded"
+
+#: client.repos.tree.empty
+msgid "client.repos.tree.empty"
+msgstr "See kataloog on tühi"
+
+#: client.repos.blob.lines
+msgid "client.repos.blob.lines"
+msgstr "rida"
+
+#: client.repos.blob.bytes
+msgid "client.repos.blob.bytes"
+msgstr "baiti"
+
+#: client.repos.blob.blame
+msgid "client.repos.blob.blame"
+msgstr "Blame"
+
+#: client.repos.blob.copy
+msgid "client.repos.blob.copy"
+msgstr "Kopeeri"
+
+#: client.repos.blob.copied
+msgid "client.repos.blob.copied"
+msgstr "Kopeeritud!"
+
+#: client.repos.blob.raw
+msgid "client.repos.blob.raw"
+msgstr "Toores"
+
+#: client.repos.blob.binary_not_shown
+msgid "client.repos.blob.binary_not_shown"
+msgstr "Binaarfaili ei kuvata"
+
+#: client.repos.weaver.open
+msgid "client.repos.weaver.open"
+msgstr "Ava Weaveris"
+
+#: client.repos.weaver.create_failed
+msgid "client.repos.weaver.create_failed"
+msgstr "Weaveri loomine ebaõnnestus"
+
+#: client.repos.branch.find
+msgid "client.repos.branch.find"
+msgstr "Otsi haru..."
+
+#: client.repos.branch.not_found
+msgid "client.repos.branch.not_found"
+msgstr "Harusid ei leitud"
+
+#: client.repos.branch.default
+msgid "client.repos.branch.default"
+msgstr "vaikimisi"
+
+#: client.repos.commits.minutes_ago
+msgid "client.repos.commits.minutes_ago"
+msgstr "{count} minutit tagasi"
+
+#: client.repos.commits.hours_ago
+msgid "client.repos.commits.hours_ago"
+msgstr "{count} tundi tagasi"
+
+#: client.repos.commits.days_ago
+msgid "client.repos.commits.days_ago"
+msgstr "{count} päeva tagasi"
+
+#: client.repos.commits.committed
+msgid "client.repos.commits.committed"
+msgstr "committitud"
+
+#: client.repos.commits.copy_sha
+msgid "client.repos.commits.copy_sha"
+msgstr "Kopeeri SHA"
+
+#: client.repos.commits.empty
+msgid "client.repos.commits.empty"
+msgstr "Committe ei leitud"
+
+#: client.repos.diff.parent
+msgid "client.repos.diff.parent"
+msgstr "Vanem"
+
+#: client.repos.diff.parents
+msgid "client.repos.diff.parents"
+msgstr "Vanemad"
+
+#: client.repos.diff.showing
+msgid "client.repos.diff.showing"
+msgstr "Näitan"
+
+#: client.repos.diff.changed_file
+msgid "client.repos.diff.changed_file"
+msgstr "muudetud fail"
+
+#: client.repos.diff.changed_files
+msgid "client.repos.diff.changed_files"
+msgstr "muudetud faili"
+
+#: client.repos.blame.lines
+msgid "client.repos.blame.lines"
+msgstr "rida"
+
+#: client.repos.blame.today
+msgid "client.repos.blame.today"
+msgstr "täna"
+
+#: client.repos.blame.days_ago
+msgid "client.repos.blame.days_ago"
+msgstr "{count}p tagasi"
+
+#: client.repos.blame.months_ago
+msgid "client.repos.blame.months_ago"
+msgstr "{count}k tagasi"
+
+#: client.repos.blame.years_ago
+msgid "client.repos.blame.years_ago"
+msgstr "{count}a tagasi"
+
+#: client.repos.blame.empty
+msgid "client.repos.blame.empty"
+msgstr "Blame info pole saadaval"
+
+#: client.repos.compare.ahead
+msgid "client.repos.compare.ahead"
+msgstr "ees"
+
+#: client.repos.compare.behind
+msgid "client.repos.compare.behind"
+msgstr "taga"
+
+#: client.repos.compare.commit
+msgid "client.repos.compare.commit"
+msgstr "commit"
+
+#: client.repos.compare.commits
+msgid "client.repos.compare.commits"
+msgstr "commitit"
+
+#: client.repos.compare.commits_heading
+msgid "client.repos.compare.commits_heading"
+msgstr "Commitid"
+
+#: client.repos.compare.identical
+msgid "client.repos.compare.identical"
+msgstr "Need harud on identsed"

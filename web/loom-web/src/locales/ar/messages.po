@@ -331,6 +331,34 @@ msgstr "البريد الإلكتروني"
 msgid "settings.profile.emailHint"
 msgstr "لا يمكن تغيير البريد الإلكتروني هنا"
 
+#: settings.profile.username
+msgid "settings.profile.username"
+msgstr "اسم المستخدم"
+
+#: settings.profile.usernamePlaceholder
+msgid "settings.profile.usernamePlaceholder"
+msgstr "أدخل اسم المستخدم"
+
+#: settings.profile.usernameHint
+msgid "settings.profile.usernameHint"
+msgstr "يُستخدم اسم المستخدم الخاص بك لروابط مستودعات git"
+
+#: settings.profile.usernameInvalid
+msgid "settings.profile.usernameInvalid"
+msgstr "يمكن أن يحتوي اسم المستخدم على أحرف وأرقام وشرطات سفلية فقط"
+
+#: settings.profile.usernameTaken
+msgid "settings.profile.usernameTaken"
+msgstr "اسم المستخدم هذا مستخدم بالفعل"
+
+#: settings.profile.usernameTooShort
+msgid "settings.profile.usernameTooShort"
+msgstr "يجب أن يكون اسم المستخدم 3 أحرف على الأقل"
+
+#: settings.profile.usernameTooLong
+msgid "settings.profile.usernameTooLong"
+msgstr "يجب ألا يزيد اسم المستخدم عن 39 حرفًا"
+
 #: settings.profile.locale
 msgid "settings.profile.locale"
 msgstr "اللغة"
@@ -619,6 +647,86 @@ msgstr "مشرف"
 msgid "teams.roleMember"
 msgstr "عضو"
 
+#: teams.role.maintainer
+msgid "teams.role.maintainer"
+msgstr "مشرف"
+
+#: teams.role.member
+msgid "teams.role.member"
+msgstr "عضو"
+
+#: teams.backToOrg
+msgid "teams.backToOrg"
+msgstr "العودة إلى المنظمة"
+
+#: teams.changeRole
+msgid "teams.changeRole"
+msgstr "تغيير الدور"
+
+#: teams.settings
+msgid "teams.settings"
+msgstr "إعدادات الفريق"
+
+#: teams.teamName
+msgid "teams.teamName"
+msgstr "اسم الفريق"
+
+#: teams.save
+msgid "teams.save"
+msgstr "حفظ التغييرات"
+
+#: teams.saving
+msgid "teams.saving"
+msgstr "جارٍ الحفظ..."
+
+#: teams.saved
+msgid "teams.saved"
+msgstr "تم تحديث الفريق بنجاح"
+
+#: teams.deleteTeam
+msgid "teams.deleteTeam"
+msgstr "حذف الفريق"
+
+#: teams.deleteTeamConfirm
+msgid "teams.deleteTeamConfirm"
+msgstr "هل أنت متأكد من حذف هذا الفريق؟ لا يمكن التراجع عن هذا الإجراء."
+
+#: teams.deleteTeamWarning
+msgid "teams.deleteTeamWarning"
+msgstr "سيؤدي هذا إلى حذف الفريق نهائياً وإزالة جميع الأعضاء."
+
+#: teams.deleting
+msgid "teams.deleting"
+msgstr "جارٍ الحذف..."
+
+#: teams.selectMember
+msgid "teams.selectMember"
+msgstr "اختر عضواً للإضافة"
+
+#: teams.selectRole
+msgid "teams.selectRole"
+msgstr "اختر الدور"
+
+#: teams.adding
+msgid "teams.adding"
+msgstr "جارٍ الإضافة..."
+
+#: teams.add
+msgid "teams.add"
+msgstr "إضافة"
+
+#: teams.noAvailableMembers
+msgid "teams.noAvailableMembers"
+msgstr "لا يوجد أعضاء متاحون في المنظمة للإضافة"
+
+#: teams.noMembers
+msgid "teams.noMembers"
+msgstr "لا يوجد أعضاء في هذا الفريق"
+
+#: teams.removeMemberConfirm
+msgid "teams.removeMemberConfirm"
+msgstr "هل أنت متأكد من إزالة هذا العضو من الفريق؟"
+
 #: apiKeys.title
 msgid "apiKeys.title"
 msgstr "مفاتيح API"
@@ -746,6 +854,34 @@ msgstr "آخر تسجيل دخول"
 #: admin.users.impersonate
 msgid "admin.users.impersonate"
 msgstr "انتحال الشخصية"
+
+#: admin.users.updated
+msgid "admin.users.updated"
+msgstr "تم التحديث"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "جعله مسؤولاً"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "إزالة المسؤول"
+
+#: admin.users.makeSupport
+msgid "admin.users.makeSupport"
+msgstr "جعله دعم"
+
+#: admin.users.removeSupport
+msgid "admin.users.removeSupport"
+msgstr "إزالة الدعم"
+
+#: admin.users.makeAuditor
+msgid "admin.users.makeAuditor"
+msgstr "جعله مدقق"
+
+#: admin.users.removeAuditor
+msgid "admin.users.removeAuditor"
+msgstr "إزالة المدقق"
 
 #: admin.logs.title
 msgid "admin.logs.title"
@@ -1189,3 +1325,351 @@ msgstr "الفرع الافتراضي:"
 #: client.repos.list.updated
 msgid "client.repos.list.updated"
 msgstr "تم التحديث"
+
+#: client.repos.header.clone
+msgid "client.repos.header.clone"
+msgstr "استنساخ"
+
+#: client.repos.header.clone_https
+msgid "client.repos.header.clone_https"
+msgstr "استنساخ عبر HTTPS"
+
+#: client.repos.header.copied
+msgid "client.repos.header.copied"
+msgstr "تم النسخ!"
+
+#: client.repos.header.copy
+msgid "client.repos.header.copy"
+msgstr "نسخ"
+
+#: client.repos.header.default_branch
+msgid "client.repos.header.default_branch"
+msgstr "الفرع الافتراضي"
+
+#: client.repos.nav.code
+msgid "client.repos.nav.code"
+msgstr "الكود"
+
+#: client.repos.nav.commits
+msgid "client.repos.nav.commits"
+msgstr "الإيداعات"
+
+#: client.repos.nav.branches
+msgid "client.repos.nav.branches"
+msgstr "الفروع"
+
+#: client.repos.nav.settings
+msgid "client.repos.nav.settings"
+msgstr "الإعدادات"
+
+#: client.repos.tree.empty
+msgid "client.repos.tree.empty"
+msgstr "هذا المجلد فارغ"
+
+#: client.repos.blob.lines
+msgid "client.repos.blob.lines"
+msgstr "سطور"
+
+#: client.repos.blob.bytes
+msgid "client.repos.blob.bytes"
+msgstr "بايت"
+
+#: client.repos.blob.blame
+msgid "client.repos.blob.blame"
+msgstr "اللوم"
+
+#: client.repos.blob.copy
+msgid "client.repos.blob.copy"
+msgstr "نسخ"
+
+#: client.repos.blob.copied
+msgid "client.repos.blob.copied"
+msgstr "تم النسخ!"
+
+#: client.repos.blob.raw
+msgid "client.repos.blob.raw"
+msgstr "خام"
+
+#: client.repos.blob.binary_not_shown
+msgid "client.repos.blob.binary_not_shown"
+msgstr "لا يمكن عرض الملف الثنائي"
+
+#: client.repos.weaver.open
+msgid "client.repos.weaver.open"
+msgstr "فتح في Weaver"
+
+#: client.repos.weaver.create_failed
+msgid "client.repos.weaver.create_failed"
+msgstr "فشل إنشاء Weaver"
+
+#: client.repos.branch.find
+msgid "client.repos.branch.find"
+msgstr "البحث عن فرع..."
+
+#: client.repos.branch.not_found
+msgid "client.repos.branch.not_found"
+msgstr "لا توجد فروع"
+
+#: client.repos.branch.default
+msgid "client.repos.branch.default"
+msgstr "افتراضي"
+
+#: client.repos.commits.minutes_ago
+msgid "client.repos.commits.minutes_ago"
+msgstr "منذ {count} دقيقة"
+
+#: client.repos.commits.hours_ago
+msgid "client.repos.commits.hours_ago"
+msgstr "منذ {count} ساعات"
+
+#: client.repos.commits.days_ago
+msgid "client.repos.commits.days_ago"
+msgstr "منذ {count} أيام"
+
+#: client.repos.commits.committed
+msgid "client.repos.commits.committed"
+msgstr "تم الإيداع"
+
+#: client.repos.commits.copy_sha
+msgid "client.repos.commits.copy_sha"
+msgstr "نسخ SHA"
+
+#: client.repos.commits.empty
+msgid "client.repos.commits.empty"
+msgstr "لا توجد إيداعات"
+
+#: client.repos.diff.parent
+msgid "client.repos.diff.parent"
+msgstr "الأصل"
+
+#: client.repos.diff.parents
+msgid "client.repos.diff.parents"
+msgstr "الأصول"
+
+#: client.repos.diff.showing
+msgid "client.repos.diff.showing"
+msgstr "عرض"
+
+#: client.repos.diff.changed_file
+msgid "client.repos.diff.changed_file"
+msgstr "ملف تم تغييره"
+
+#: client.repos.diff.changed_files
+msgid "client.repos.diff.changed_files"
+msgstr "ملفات تم تغييرها"
+
+#: client.repos.blame.lines
+msgid "client.repos.blame.lines"
+msgstr "سطور"
+
+#: client.repos.blame.today
+msgid "client.repos.blame.today"
+msgstr "اليوم"
+
+#: client.repos.blame.days_ago
+msgid "client.repos.blame.days_ago"
+msgstr "منذ {count} يوم"
+
+#: client.repos.blame.months_ago
+msgid "client.repos.blame.months_ago"
+msgstr "منذ {count} شهر"
+
+#: client.repos.blame.years_ago
+msgid "client.repos.blame.years_ago"
+msgstr "منذ {count} سنة"
+
+#: client.repos.blame.empty
+msgid "client.repos.blame.empty"
+msgstr "لا تتوفر معلومات اللوم"
+
+#: client.repos.compare.ahead
+msgid "client.repos.compare.ahead"
+msgstr "متقدم"
+
+#: client.repos.compare.behind
+msgid "client.repos.compare.behind"
+msgstr "متأخر"
+
+#: client.repos.compare.commit
+msgid "client.repos.compare.commit"
+msgstr "إيداع"
+
+#: client.repos.compare.commits
+msgid "client.repos.compare.commits"
+msgstr "إيداعات"
+
+#: client.repos.compare.commits_heading
+msgid "client.repos.compare.commits_heading"
+msgstr "الإيداعات"
+
+#: client.repos.compare.identical
+msgid "client.repos.compare.identical"
+msgstr "هذه الفروع متطابقة"
+
+#: admin.anthropic.title
+msgid "admin.anthropic.title"
+msgstr "حسابات Claude Max"
+
+#: admin.anthropic.add_account
+msgid "admin.anthropic.add_account"
+msgstr "إضافة حساب"
+
+#: admin.anthropic.remove
+msgid "admin.anthropic.remove"
+msgstr "إزالة"
+
+#: admin.anthropic.remove_confirm
+msgid "admin.anthropic.remove_confirm"
+msgstr "هل تريد إزالة هذا الحساب من المجموعة؟"
+
+#: admin.anthropic.status.available
+msgid "admin.anthropic.status.available"
+msgstr "متاح"
+
+#: admin.anthropic.status.cooling_down
+msgid "admin.anthropic.status.cooling_down"
+msgstr "في فترة الانتظار"
+
+#: admin.anthropic.status.disabled
+msgid "admin.anthropic.status.disabled"
+msgstr "معطّل"
+
+#: admin.anthropic.cooldown_remaining
+msgid "admin.anthropic.cooldown_remaining"
+msgstr "متبقي {time}"
+
+#: admin.anthropic.expires_at
+msgid "admin.anthropic.expires_at"
+msgstr "تنتهي صلاحية الرمز: {time}"
+
+#: admin.anthropic.no_accounts
+msgid "admin.anthropic.no_accounts"
+msgstr "لا توجد حسابات مهيأة. أضف حساب Claude Max للبدء."
+
+#: admin.anthropic.not_configured
+msgid "admin.anthropic.not_configured"
+msgstr "مجموعة Anthropic OAuth غير مهيأة على هذا الخادم."
+
+#: admin.anthropic.account_added
+msgid "admin.anthropic.account_added"
+msgstr "تمت إضافة الحساب {id} بنجاح"
+
+#: admin.anthropic.enter_code_title
+msgid "admin.anthropic.enter_code_title"
+msgstr "أدخل رمز التفويض"
+
+#: admin.anthropic.enter_code_description
+msgid "admin.anthropic.enter_code_description"
+msgstr "تم فتح علامة تبويب جديدة في المتصفح للتفويض مع Claude. بعد التفويض، انسخ الرمز من صفحة Anthropic والصقه أدناه."
+
+#: admin.anthropic.authorization_code
+msgid "admin.anthropic.authorization_code"
+msgstr "رمز التفويض"
+
+#: admin.anthropic.code_placeholder
+msgid "admin.anthropic.code_placeholder"
+msgstr "الصق الرمز من Anthropic هنا"
+
+#: admin.anthropic.submit_code
+msgid "admin.anthropic.submit_code"
+msgstr "إضافة حساب"
+
+#: admin.dashboard.title
+msgid "admin.dashboard.title"
+msgstr "لوحة الإدارة"
+
+#: admin.dashboard.description
+msgid "admin.dashboard.description"
+msgstr "إدارة ومراقبة الخادم"
+
+#: admin.dashboard.sections
+msgid "admin.dashboard.sections"
+msgstr "الإدارة"
+
+#: admin.dashboard.anthropic_description
+msgid "admin.dashboard.anthropic_description"
+msgstr "إدارة مجموعة اشتراكات Claude Max OAuth"
+
+#: admin.health.title
+msgid "admin.health.title"
+msgstr "حالة الخادم"
+
+#: admin.health.overall
+msgid "admin.health.overall"
+msgstr "الحالة العامة"
+
+#: admin.health.version
+msgid "admin.health.version"
+msgstr "الإصدار"
+
+#: admin.health.response_time
+msgid "admin.health.response_time"
+msgstr "وقت الاستجابة"
+
+#: admin.health.configured
+msgid "admin.health.configured"
+msgstr "مهيأ"
+
+#: admin.health.not_configured
+msgid "admin.health.not_configured"
+msgstr "غير مهيأ"
+
+#: admin.health.status.healthy
+msgid "admin.health.status.healthy"
+msgstr "سليم"
+
+#: admin.health.status.degraded
+msgid "admin.health.status.degraded"
+msgstr "متدهور"
+
+#: admin.health.status.unhealthy
+msgid "admin.health.status.unhealthy"
+msgstr "غير سليم"
+
+#: admin.health.status.unknown
+msgid "admin.health.status.unknown"
+msgstr "غير معروف"
+
+#: admin.health.database
+msgid "admin.health.database"
+msgstr "قاعدة البيانات"
+
+#: admin.health.bin_dir
+msgid "admin.health.bin_dir"
+msgstr "مجلد الملفات التنفيذية"
+
+#: admin.health.llm_providers
+msgid "admin.health.llm_providers"
+msgstr "موفرو نماذج اللغة"
+
+#: admin.health.google_cse
+msgid "admin.health.google_cse"
+msgstr "محرك بحث Google المخصص"
+
+#: admin.health.serper
+msgid "admin.health.serper"
+msgstr "Serper"
+
+#: admin.health.github_app
+msgid "admin.health.github_app"
+msgstr "تطبيق GitHub"
+
+#: admin.health.kubernetes
+msgid "admin.health.kubernetes"
+msgstr "Kubernetes"
+
+#: admin.health.smtp
+msgid "admin.health.smtp"
+msgstr "SMTP"
+
+#: admin.health.geoip
+msgid "admin.health.geoip"
+msgstr "تحديد الموقع الجغرافي"
+
+#: admin.health.jobs
+msgid "admin.health.jobs"
+msgstr "المهام الخلفية"
+
+#: admin.health.auth_providers
+msgid "admin.health.auth_providers"
+msgstr "موفرو المصادقة"

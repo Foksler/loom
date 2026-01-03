@@ -331,6 +331,34 @@ msgstr "E-mail"
 msgid "settings.profile.emailHint"
 msgstr "L'e-mail ne peut pas être modifié ici"
 
+#: settings.profile.username
+msgid "settings.profile.username"
+msgstr "Nom d'utilisateur"
+
+#: settings.profile.usernamePlaceholder
+msgid "settings.profile.usernamePlaceholder"
+msgstr "Entrez le nom d'utilisateur"
+
+#: settings.profile.usernameHint
+msgid "settings.profile.usernameHint"
+msgstr "Votre nom d'utilisateur est utilisé pour les URLs des dépôts git"
+
+#: settings.profile.usernameInvalid
+msgid "settings.profile.usernameInvalid"
+msgstr "Le nom d'utilisateur ne peut contenir que des lettres, des chiffres et des underscores"
+
+#: settings.profile.usernameTaken
+msgid "settings.profile.usernameTaken"
+msgstr "Ce nom d'utilisateur est déjà pris"
+
+#: settings.profile.usernameTooShort
+msgid "settings.profile.usernameTooShort"
+msgstr "Le nom d'utilisateur doit comporter au moins 3 caractères"
+
+#: settings.profile.usernameTooLong
+msgid "settings.profile.usernameTooLong"
+msgstr "Le nom d'utilisateur doit comporter au maximum 39 caractères"
+
 #: settings.profile.locale
 msgid "settings.profile.locale"
 msgstr "Langue"
@@ -827,6 +855,34 @@ msgstr "Dernière connexion"
 msgid "admin.users.impersonate"
 msgstr "Usurper"
 
+#: admin.users.updated
+msgid "admin.users.updated"
+msgstr "Mis à jour"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "Nommer administrateur"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "Retirer administrateur"
+
+#: admin.users.makeSupport
+msgid "admin.users.makeSupport"
+msgstr "Nommer support"
+
+#: admin.users.removeSupport
+msgid "admin.users.removeSupport"
+msgstr "Retirer support"
+
+#: admin.users.makeAuditor
+msgid "admin.users.makeAuditor"
+msgstr "Nommer auditeur"
+
+#: admin.users.removeAuditor
+msgid "admin.users.removeAuditor"
+msgstr "Retirer auditeur"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "Journaux du Serveur"
@@ -1086,6 +1142,154 @@ msgstr "Le terminal sera disponible quand le weaver sera en cours"
 msgid "weavers.terminal.notRunning"
 msgstr "Le weaver ne fonctionne pas (statut: {status})"
 
+#: jobs.title
+msgid "jobs.title"
+msgstr "Tâches en arrière-plan"
+
+#: jobs.description
+msgid "jobs.description"
+msgstr "Surveiller et gérer les tâches planifiées en arrière-plan"
+
+#: jobs.loading
+msgid "jobs.loading"
+msgstr "Chargement des tâches..."
+
+#: jobs.runNow
+msgid "jobs.runNow"
+msgstr "Exécuter maintenant"
+
+#: jobs.running
+msgid "jobs.running"
+msgstr "En cours..."
+
+#: jobs.history
+msgid "jobs.history"
+msgstr "Historique"
+
+#: jobs.hideHistory
+msgid "jobs.hideHistory"
+msgstr "Masquer l'historique"
+
+#: jobs.viewHistory
+msgid "jobs.viewHistory"
+msgstr "Voir l'historique"
+
+#: jobs.noJobs
+msgid "jobs.noJobs"
+msgstr "Aucune tâche en arrière-plan configurée"
+
+#: jobs.never
+msgid "jobs.never"
+msgstr "Jamais exécuté"
+
+#: jobs.lastRun
+msgid "jobs.lastRun"
+msgstr "Dernière exécution"
+
+#: jobs.duration
+msgid "jobs.duration"
+msgstr "Durée"
+
+#: jobs.interval
+msgid "jobs.interval"
+msgstr "Intervalle"
+
+#: jobs.type
+msgid "jobs.type"
+msgstr "Type"
+
+#: jobs.failures
+msgid "jobs.failures"
+msgstr "{count} échecs consécutifs"
+
+#: jobs.status.healthy
+msgid "jobs.status.healthy"
+msgstr "Sain"
+
+#: jobs.status.degraded
+msgid "jobs.status.degraded"
+msgstr "Dégradé"
+
+#: jobs.status.unhealthy
+msgid "jobs.status.unhealthy"
+msgstr "Non sain"
+
+#: jobs.status.succeeded
+msgid "jobs.status.succeeded"
+msgstr "Réussi"
+
+#: jobs.status.failed
+msgid "jobs.status.failed"
+msgstr "Échoué"
+
+#: jobs.status.running
+msgid "jobs.status.running"
+msgstr "En cours"
+
+#: jobs.status.cancelled
+msgid "jobs.status.cancelled"
+msgstr "Annulé"
+
+#: jobs.trigger.schedule
+msgid "jobs.trigger.schedule"
+msgstr "Planifié"
+
+#: jobs.trigger.manual
+msgid "jobs.trigger.manual"
+msgstr "Manuel"
+
+#: jobs.trigger.retry
+msgid "jobs.trigger.retry"
+msgstr "Nouvelle tentative"
+
+#: jobs.history.title
+msgid "jobs.history.title"
+msgstr "Historique des exécutions"
+
+#: jobs.history.status
+msgid "jobs.history.status"
+msgstr "Statut"
+
+#: jobs.history.started
+msgid "jobs.history.started"
+msgstr "Démarré"
+
+#: jobs.history.duration
+msgid "jobs.history.duration"
+msgstr "Durée"
+
+#: jobs.history.trigger
+msgid "jobs.history.trigger"
+msgstr "Déclencheur"
+
+#: jobs.history.details
+msgid "jobs.history.details"
+msgstr "Détails"
+
+#: jobs.history.loadMore
+msgid "jobs.history.loadMore"
+msgstr "Charger plus"
+
+#: jobs.history.noRuns
+msgid "jobs.history.noRuns"
+msgstr "Aucun historique d'exécution disponible"
+
+#: jobs.time.justNow
+msgid "jobs.time.justNow"
+msgstr "à l'instant"
+
+#: jobs.time.minutesAgo
+msgid "jobs.time.minutesAgo"
+msgstr "il y a {count} min"
+
+#: jobs.time.hoursAgo
+msgid "jobs.time.hoursAgo"
+msgstr "il y a {count} heures"
+
+#: jobs.time.daysAgo
+msgid "jobs.time.daysAgo"
+msgstr "il y a {count} jours"
+
 #: client.repos.list.title
 msgid "client.repos.list.title"
 msgstr "Dépôts"
@@ -1121,3 +1325,351 @@ msgstr "Branche par défaut :"
 #: client.repos.list.updated
 msgid "client.repos.list.updated"
 msgstr "Mis à jour"
+
+#: client.repos.header.clone
+msgid "client.repos.header.clone"
+msgstr "Cloner"
+
+#: client.repos.header.clone_https
+msgid "client.repos.header.clone_https"
+msgstr "Cloner avec HTTPS"
+
+#: client.repos.header.copied
+msgid "client.repos.header.copied"
+msgstr "Copié !"
+
+#: client.repos.header.copy
+msgid "client.repos.header.copy"
+msgstr "Copier"
+
+#: client.repos.header.default_branch
+msgid "client.repos.header.default_branch"
+msgstr "Branche par défaut"
+
+#: client.repos.nav.code
+msgid "client.repos.nav.code"
+msgstr "Code"
+
+#: client.repos.nav.commits
+msgid "client.repos.nav.commits"
+msgstr "Commits"
+
+#: client.repos.nav.branches
+msgid "client.repos.nav.branches"
+msgstr "Branches"
+
+#: client.repos.nav.settings
+msgid "client.repos.nav.settings"
+msgstr "Paramètres"
+
+#: client.repos.tree.empty
+msgid "client.repos.tree.empty"
+msgstr "Ce répertoire est vide"
+
+#: client.repos.blob.lines
+msgid "client.repos.blob.lines"
+msgstr "lignes"
+
+#: client.repos.blob.bytes
+msgid "client.repos.blob.bytes"
+msgstr "octets"
+
+#: client.repos.blob.blame
+msgid "client.repos.blob.blame"
+msgstr "Blame"
+
+#: client.repos.blob.copy
+msgid "client.repos.blob.copy"
+msgstr "Copier"
+
+#: client.repos.blob.copied
+msgid "client.repos.blob.copied"
+msgstr "Copié !"
+
+#: client.repos.blob.raw
+msgid "client.repos.blob.raw"
+msgstr "Raw"
+
+#: client.repos.blob.binary_not_shown
+msgid "client.repos.blob.binary_not_shown"
+msgstr "Fichier binaire non affiché"
+
+#: client.repos.weaver.open
+msgid "client.repos.weaver.open"
+msgstr "Ouvrir dans Weaver"
+
+#: client.repos.weaver.create_failed
+msgid "client.repos.weaver.create_failed"
+msgstr "Échec de la création du weaver"
+
+#: client.repos.branch.find
+msgid "client.repos.branch.find"
+msgstr "Rechercher une branche..."
+
+#: client.repos.branch.not_found
+msgid "client.repos.branch.not_found"
+msgstr "Aucune branche trouvée"
+
+#: client.repos.branch.default
+msgid "client.repos.branch.default"
+msgstr "par défaut"
+
+#: client.repos.commits.minutes_ago
+msgid "client.repos.commits.minutes_ago"
+msgstr "il y a {count} minutes"
+
+#: client.repos.commits.hours_ago
+msgid "client.repos.commits.hours_ago"
+msgstr "il y a {count} heures"
+
+#: client.repos.commits.days_ago
+msgid "client.repos.commits.days_ago"
+msgstr "il y a {count} jours"
+
+#: client.repos.commits.committed
+msgid "client.repos.commits.committed"
+msgstr "commité"
+
+#: client.repos.commits.copy_sha
+msgid "client.repos.commits.copy_sha"
+msgstr "Copier SHA"
+
+#: client.repos.commits.empty
+msgid "client.repos.commits.empty"
+msgstr "Aucun commit trouvé"
+
+#: client.repos.diff.parent
+msgid "client.repos.diff.parent"
+msgstr "Parent"
+
+#: client.repos.diff.parents
+msgid "client.repos.diff.parents"
+msgstr "Parents"
+
+#: client.repos.diff.showing
+msgid "client.repos.diff.showing"
+msgstr "Affichage de"
+
+#: client.repos.diff.changed_file
+msgid "client.repos.diff.changed_file"
+msgstr "fichier modifié"
+
+#: client.repos.diff.changed_files
+msgid "client.repos.diff.changed_files"
+msgstr "fichiers modifiés"
+
+#: client.repos.blame.lines
+msgid "client.repos.blame.lines"
+msgstr "lignes"
+
+#: client.repos.blame.today
+msgid "client.repos.blame.today"
+msgstr "aujourd'hui"
+
+#: client.repos.blame.days_ago
+msgid "client.repos.blame.days_ago"
+msgstr "il y a {count}j"
+
+#: client.repos.blame.months_ago
+msgid "client.repos.blame.months_ago"
+msgstr "il y a {count}m"
+
+#: client.repos.blame.years_ago
+msgid "client.repos.blame.years_ago"
+msgstr "il y a {count}a"
+
+#: client.repos.blame.empty
+msgid "client.repos.blame.empty"
+msgstr "Aucune information de blame disponible"
+
+#: client.repos.compare.ahead
+msgid "client.repos.compare.ahead"
+msgstr "en avance"
+
+#: client.repos.compare.behind
+msgid "client.repos.compare.behind"
+msgstr "en retard"
+
+#: client.repos.compare.commit
+msgid "client.repos.compare.commit"
+msgstr "commit"
+
+#: client.repos.compare.commits
+msgid "client.repos.compare.commits"
+msgstr "commits"
+
+#: client.repos.compare.commits_heading
+msgid "client.repos.compare.commits_heading"
+msgstr "Commits"
+
+#: client.repos.compare.identical
+msgid "client.repos.compare.identical"
+msgstr "Ces branches sont identiques"
+
+#: admin.anthropic.title
+msgid "admin.anthropic.title"
+msgstr "Comptes Claude Max"
+
+#: admin.anthropic.add_account
+msgid "admin.anthropic.add_account"
+msgstr "Ajouter un compte"
+
+#: admin.anthropic.remove
+msgid "admin.anthropic.remove"
+msgstr "Supprimer"
+
+#: admin.anthropic.remove_confirm
+msgid "admin.anthropic.remove_confirm"
+msgstr "Supprimer ce compte du pool ?"
+
+#: admin.anthropic.status.available
+msgid "admin.anthropic.status.available"
+msgstr "Disponible"
+
+#: admin.anthropic.status.cooling_down
+msgid "admin.anthropic.status.cooling_down"
+msgstr "En refroidissement"
+
+#: admin.anthropic.status.disabled
+msgid "admin.anthropic.status.disabled"
+msgstr "Désactivé"
+
+#: admin.anthropic.cooldown_remaining
+msgid "admin.anthropic.cooldown_remaining"
+msgstr "{time} restant"
+
+#: admin.anthropic.expires_at
+msgid "admin.anthropic.expires_at"
+msgstr "Le jeton expire : {time}"
+
+#: admin.anthropic.no_accounts
+msgid "admin.anthropic.no_accounts"
+msgstr "Aucun compte configuré. Ajoutez un compte Claude Max pour commencer."
+
+#: admin.anthropic.not_configured
+msgid "admin.anthropic.not_configured"
+msgstr "Le pool OAuth Anthropic n'est pas configuré sur ce serveur."
+
+#: admin.anthropic.account_added
+msgid "admin.anthropic.account_added"
+msgstr "Compte {id} ajouté avec succès"
+
+#: admin.anthropic.enter_code_title
+msgid "admin.anthropic.enter_code_title"
+msgstr "Entrer le code d'autorisation"
+
+#: admin.anthropic.enter_code_description
+msgid "admin.anthropic.enter_code_description"
+msgstr "Un nouvel onglet du navigateur s'est ouvert pour vous permettre de vous autoriser avec Claude. Après l'autorisation, copiez le code de la page Anthropic et collez-le ci-dessous."
+
+#: admin.anthropic.authorization_code
+msgid "admin.anthropic.authorization_code"
+msgstr "Code d'autorisation"
+
+#: admin.anthropic.code_placeholder
+msgid "admin.anthropic.code_placeholder"
+msgstr "Collez le code d'Anthropic ici"
+
+#: admin.anthropic.submit_code
+msgid "admin.anthropic.submit_code"
+msgstr "Ajouter un compte"
+
+#: admin.dashboard.title
+msgid "admin.dashboard.title"
+msgstr "Tableau de bord Admin"
+
+#: admin.dashboard.description
+msgid "admin.dashboard.description"
+msgstr "Administration et surveillance du serveur"
+
+#: admin.dashboard.sections
+msgid "admin.dashboard.sections"
+msgstr "Administration"
+
+#: admin.dashboard.anthropic_description
+msgid "admin.dashboard.anthropic_description"
+msgstr "Gérer le pool d'abonnements OAuth Claude Max"
+
+#: admin.health.title
+msgid "admin.health.title"
+msgstr "État du serveur"
+
+#: admin.health.overall
+msgid "admin.health.overall"
+msgstr "État général"
+
+#: admin.health.version
+msgid "admin.health.version"
+msgstr "Version"
+
+#: admin.health.response_time
+msgid "admin.health.response_time"
+msgstr "Temps de réponse"
+
+#: admin.health.configured
+msgid "admin.health.configured"
+msgstr "Configuré"
+
+#: admin.health.not_configured
+msgid "admin.health.not_configured"
+msgstr "Non configuré"
+
+#: admin.health.status.healthy
+msgid "admin.health.status.healthy"
+msgstr "Sain"
+
+#: admin.health.status.degraded
+msgid "admin.health.status.degraded"
+msgstr "Dégradé"
+
+#: admin.health.status.unhealthy
+msgid "admin.health.status.unhealthy"
+msgstr "Non sain"
+
+#: admin.health.status.unknown
+msgid "admin.health.status.unknown"
+msgstr "Inconnu"
+
+#: admin.health.database
+msgid "admin.health.database"
+msgstr "Base de données"
+
+#: admin.health.bin_dir
+msgid "admin.health.bin_dir"
+msgstr "Répertoire des binaires"
+
+#: admin.health.llm_providers
+msgid "admin.health.llm_providers"
+msgstr "Fournisseurs LLM"
+
+#: admin.health.google_cse
+msgid "admin.health.google_cse"
+msgstr "Google CSE"
+
+#: admin.health.serper
+msgid "admin.health.serper"
+msgstr "Serper"
+
+#: admin.health.github_app
+msgid "admin.health.github_app"
+msgstr "Application GitHub"
+
+#: admin.health.kubernetes
+msgid "admin.health.kubernetes"
+msgstr "Kubernetes"
+
+#: admin.health.smtp
+msgid "admin.health.smtp"
+msgstr "SMTP"
+
+#: admin.health.geoip
+msgid "admin.health.geoip"
+msgstr "GeoIP"
+
+#: admin.health.jobs
+msgid "admin.health.jobs"
+msgstr "Tâches en arrière-plan"
+
+#: admin.health.auth_providers
+msgid "admin.health.auth_providers"
+msgstr "Fournisseurs d'authentification"

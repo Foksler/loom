@@ -331,6 +331,34 @@ msgstr "이메일"
 msgid "settings.profile.emailHint"
 msgstr "이메일은 여기서 변경할 수 없습니다"
 
+#: settings.profile.username
+msgid "settings.profile.username"
+msgstr "사용자명"
+
+#: settings.profile.usernamePlaceholder
+msgid "settings.profile.usernamePlaceholder"
+msgstr "사용자명 입력"
+
+#: settings.profile.usernameHint
+msgid "settings.profile.usernameHint"
+msgstr "사용자명은 git 저장소 URL에 사용됩니다"
+
+#: settings.profile.usernameInvalid
+msgid "settings.profile.usernameInvalid"
+msgstr "사용자명에는 영문, 숫자, 밑줄만 사용할 수 있습니다"
+
+#: settings.profile.usernameTaken
+msgid "settings.profile.usernameTaken"
+msgstr "이 사용자명은 이미 사용 중입니다"
+
+#: settings.profile.usernameTooShort
+msgid "settings.profile.usernameTooShort"
+msgstr "사용자명은 최소 3자 이상이어야 합니다"
+
+#: settings.profile.usernameTooLong
+msgid "settings.profile.usernameTooLong"
+msgstr "사용자명은 최대 39자까지 가능합니다"
+
 #: settings.profile.locale
 msgid "settings.profile.locale"
 msgstr "언어"
@@ -825,7 +853,35 @@ msgstr "Last login"
 
 #: admin.users.impersonate
 msgid "admin.users.impersonate"
-msgstr "Impersonate"
+msgstr "가장하기"
+
+#: admin.users.updated
+msgid "admin.users.updated"
+msgstr "업데이트됨"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "관리자로 지정"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "관리자 해제"
+
+#: admin.users.makeSupport
+msgid "admin.users.makeSupport"
+msgstr "지원으로 지정"
+
+#: admin.users.removeSupport
+msgid "admin.users.removeSupport"
+msgstr "지원 해제"
+
+#: admin.users.makeAuditor
+msgid "admin.users.makeAuditor"
+msgstr "감사자로 지정"
+
+#: admin.users.removeAuditor
+msgid "admin.users.removeAuditor"
+msgstr "감사자 해제"
 
 #: admin.logs.title
 msgid "admin.logs.title"
@@ -1121,3 +1177,535 @@ msgstr "기본 브랜치:"
 #: client.repos.list.updated
 msgid "client.repos.list.updated"
 msgstr "업데이트됨"
+
+#: admin.anthropic.title
+msgid "admin.anthropic.title"
+msgstr "Claude Max 계정"
+
+#: admin.anthropic.add_account
+msgid "admin.anthropic.add_account"
+msgstr "계정 추가"
+
+#: admin.anthropic.remove
+msgid "admin.anthropic.remove"
+msgstr "삭제"
+
+#: admin.anthropic.remove_confirm
+msgid "admin.anthropic.remove_confirm"
+msgstr "이 계정을 풀에서 삭제하시겠습니까?"
+
+#: admin.anthropic.status.available
+msgid "admin.anthropic.status.available"
+msgstr "사용 가능"
+
+#: admin.anthropic.status.cooling_down
+msgid "admin.anthropic.status.cooling_down"
+msgstr "쿨다운 중"
+
+#: admin.anthropic.status.disabled
+msgid "admin.anthropic.status.disabled"
+msgstr "비활성화됨"
+
+#: admin.anthropic.cooldown_remaining
+msgid "admin.anthropic.cooldown_remaining"
+msgstr "{time} 남음"
+
+#: admin.anthropic.expires_at
+msgid "admin.anthropic.expires_at"
+msgstr "토큰 만료: {time}"
+
+#: admin.anthropic.no_accounts
+msgid "admin.anthropic.no_accounts"
+msgstr "구성된 계정이 없습니다. 시작하려면 Claude Max 계정을 추가하세요."
+
+#: admin.anthropic.not_configured
+msgid "admin.anthropic.not_configured"
+msgstr "이 서버에 Anthropic OAuth 풀이 구성되어 있지 않습니다."
+
+#: admin.anthropic.account_added
+msgid "admin.anthropic.account_added"
+msgstr "계정 {id}이(가) 성공적으로 추가되었습니다"
+
+#: admin.anthropic.enter_code_title
+msgid "admin.anthropic.enter_code_title"
+msgstr "인증 코드 입력"
+
+#: admin.anthropic.enter_code_description
+msgid "admin.anthropic.enter_code_description"
+msgstr "Claude 인증을 위한 새 브라우저 탭이 열렸습니다. 인증 후 Anthropic 페이지에서 코드를 복사하여 아래에 붙여넣으세요."
+
+#: admin.anthropic.authorization_code
+msgid "admin.anthropic.authorization_code"
+msgstr "인증 코드"
+
+#: admin.anthropic.code_placeholder
+msgid "admin.anthropic.code_placeholder"
+msgstr "Anthropic에서 받은 코드를 여기에 붙여넣으세요"
+
+#: admin.anthropic.submit_code
+msgid "admin.anthropic.submit_code"
+msgstr "계정 추가"
+
+#: admin.dashboard.title
+msgid "admin.dashboard.title"
+msgstr "관리 대시보드"
+
+#: admin.dashboard.description
+msgid "admin.dashboard.description"
+msgstr "서버 관리 및 모니터링"
+
+#: admin.dashboard.sections
+msgid "admin.dashboard.sections"
+msgstr "관리"
+
+#: admin.dashboard.anthropic_description
+msgid "admin.dashboard.anthropic_description"
+msgstr "Claude Max OAuth 구독 풀 관리"
+
+#: admin.health.title
+msgid "admin.health.title"
+msgstr "서버 상태"
+
+#: admin.health.overall
+msgid "admin.health.overall"
+msgstr "전체 상태"
+
+#: admin.health.version
+msgid "admin.health.version"
+msgstr "버전"
+
+#: admin.health.response_time
+msgid "admin.health.response_time"
+msgstr "응답 시간"
+
+#: admin.health.configured
+msgid "admin.health.configured"
+msgstr "구성됨"
+
+#: admin.health.not_configured
+msgid "admin.health.not_configured"
+msgstr "구성되지 않음"
+
+#: admin.health.status.healthy
+msgid "admin.health.status.healthy"
+msgstr "정상"
+
+#: admin.health.status.degraded
+msgid "admin.health.status.degraded"
+msgstr "저하됨"
+
+#: admin.health.status.unhealthy
+msgid "admin.health.status.unhealthy"
+msgstr "비정상"
+
+#: admin.health.status.unknown
+msgid "admin.health.status.unknown"
+msgstr "알 수 없음"
+
+#: admin.health.database
+msgid "admin.health.database"
+msgstr "데이터베이스"
+
+#: admin.health.bin_dir
+msgid "admin.health.bin_dir"
+msgstr "바이너리 디렉토리"
+
+#: admin.health.llm_providers
+msgid "admin.health.llm_providers"
+msgstr "LLM 제공자"
+
+#: admin.health.google_cse
+msgid "admin.health.google_cse"
+msgstr "Google CSE"
+
+#: admin.health.serper
+msgid "admin.health.serper"
+msgstr "Serper"
+
+#: admin.health.github_app
+msgid "admin.health.github_app"
+msgstr "GitHub App"
+
+#: admin.health.kubernetes
+msgid "admin.health.kubernetes"
+msgstr "Kubernetes"
+
+#: admin.health.smtp
+msgid "admin.health.smtp"
+msgstr "SMTP"
+
+#: admin.health.geoip
+msgid "admin.health.geoip"
+msgstr "GeoIP"
+
+#: admin.health.jobs
+msgid "admin.health.jobs"
+msgstr "백그라운드 작업"
+
+#: admin.health.auth_providers
+msgid "admin.health.auth_providers"
+msgstr "인증 제공자"
+
+#: jobs.title
+msgid "jobs.title"
+msgstr "백그라운드 작업"
+
+#: jobs.description
+msgid "jobs.description"
+msgstr "예약된 백그라운드 작업 모니터링 및 관리"
+
+#: jobs.loading
+msgid "jobs.loading"
+msgstr "작업 로딩 중..."
+
+#: jobs.runNow
+msgid "jobs.runNow"
+msgstr "지금 실행"
+
+#: jobs.running
+msgid "jobs.running"
+msgstr "실행 중..."
+
+#: jobs.history
+msgid "jobs.history"
+msgstr "기록"
+
+#: jobs.hideHistory
+msgid "jobs.hideHistory"
+msgstr "기록 숨기기"
+
+#: jobs.viewHistory
+msgid "jobs.viewHistory"
+msgstr "기록 보기"
+
+#: jobs.noJobs
+msgid "jobs.noJobs"
+msgstr "구성된 백그라운드 작업이 없습니다"
+
+#: jobs.never
+msgid "jobs.never"
+msgstr "실행한 적 없음"
+
+#: jobs.lastRun
+msgid "jobs.lastRun"
+msgstr "마지막 실행"
+
+#: jobs.duration
+msgid "jobs.duration"
+msgstr "소요 시간"
+
+#: jobs.interval
+msgid "jobs.interval"
+msgstr "간격"
+
+#: jobs.type
+msgid "jobs.type"
+msgstr "유형"
+
+#: jobs.failures
+msgid "jobs.failures"
+msgstr "연속 {count}회 실패"
+
+#: jobs.status.healthy
+msgid "jobs.status.healthy"
+msgstr "정상"
+
+#: jobs.status.degraded
+msgid "jobs.status.degraded"
+msgstr "저하됨"
+
+#: jobs.status.unhealthy
+msgid "jobs.status.unhealthy"
+msgstr "비정상"
+
+#: jobs.status.succeeded
+msgid "jobs.status.succeeded"
+msgstr "성공"
+
+#: jobs.status.failed
+msgid "jobs.status.failed"
+msgstr "실패"
+
+#: jobs.status.running
+msgid "jobs.status.running"
+msgstr "실행 중"
+
+#: jobs.status.cancelled
+msgid "jobs.status.cancelled"
+msgstr "취소됨"
+
+#: jobs.trigger.schedule
+msgid "jobs.trigger.schedule"
+msgstr "예약"
+
+#: jobs.trigger.manual
+msgid "jobs.trigger.manual"
+msgstr "수동"
+
+#: jobs.trigger.retry
+msgid "jobs.trigger.retry"
+msgstr "재시도"
+
+#: jobs.history.title
+msgid "jobs.history.title"
+msgstr "실행 기록"
+
+#: jobs.history.status
+msgid "jobs.history.status"
+msgstr "상태"
+
+#: jobs.history.started
+msgid "jobs.history.started"
+msgstr "시작"
+
+#: jobs.history.duration
+msgid "jobs.history.duration"
+msgstr "소요 시간"
+
+#: jobs.history.trigger
+msgid "jobs.history.trigger"
+msgstr "트리거"
+
+#: jobs.history.details
+msgid "jobs.history.details"
+msgstr "상세 정보"
+
+#: jobs.history.loadMore
+msgid "jobs.history.loadMore"
+msgstr "더 불러오기"
+
+#: jobs.history.noRuns
+msgid "jobs.history.noRuns"
+msgstr "실행 기록이 없습니다"
+
+#: jobs.time.justNow
+msgid "jobs.time.justNow"
+msgstr "방금"
+
+#: jobs.time.minutesAgo
+msgid "jobs.time.minutesAgo"
+msgstr "{count}분 전"
+
+#: jobs.time.hoursAgo
+msgid "jobs.time.hoursAgo"
+msgstr "{count}시간 전"
+
+#: jobs.time.daysAgo
+msgid "jobs.time.daysAgo"
+msgstr "{count}일 전"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "저장소"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "새 저장소"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "저장소 검색..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "다시 시도"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "검색과 일치하는 저장소가 없습니다"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "저장소가 없습니다"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "첫 번째 저장소 만들기"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "기본 브랜치:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "업데이트됨"
+
+#: client.repos.header.clone
+msgid "client.repos.header.clone"
+msgstr "클론"
+
+#: client.repos.header.clone_https
+msgid "client.repos.header.clone_https"
+msgstr "HTTPS로 클론"
+
+#: client.repos.header.copied
+msgid "client.repos.header.copied"
+msgstr "복사됨!"
+
+#: client.repos.header.copy
+msgid "client.repos.header.copy"
+msgstr "복사"
+
+#: client.repos.header.default_branch
+msgid "client.repos.header.default_branch"
+msgstr "기본 브랜치"
+
+#: client.repos.nav.code
+msgid "client.repos.nav.code"
+msgstr "코드"
+
+#: client.repos.nav.commits
+msgid "client.repos.nav.commits"
+msgstr "커밋"
+
+#: client.repos.nav.branches
+msgid "client.repos.nav.branches"
+msgstr "브랜치"
+
+#: client.repos.nav.settings
+msgid "client.repos.nav.settings"
+msgstr "설정"
+
+#: client.repos.tree.empty
+msgid "client.repos.tree.empty"
+msgstr "이 디렉토리는 비어 있습니다"
+
+#: client.repos.blob.lines
+msgid "client.repos.blob.lines"
+msgstr "줄"
+
+#: client.repos.blob.bytes
+msgid "client.repos.blob.bytes"
+msgstr "바이트"
+
+#: client.repos.blob.blame
+msgid "client.repos.blob.blame"
+msgstr "Blame"
+
+#: client.repos.blob.copy
+msgid "client.repos.blob.copy"
+msgstr "복사"
+
+#: client.repos.blob.copied
+msgid "client.repos.blob.copied"
+msgstr "복사됨!"
+
+#: client.repos.blob.raw
+msgid "client.repos.blob.raw"
+msgstr "Raw"
+
+#: client.repos.blob.binary_not_shown
+msgid "client.repos.blob.binary_not_shown"
+msgstr "바이너리 파일은 표시되지 않습니다"
+
+#: client.repos.weaver.open
+msgid "client.repos.weaver.open"
+msgstr "Weaver에서 열기"
+
+#: client.repos.weaver.create_failed
+msgid "client.repos.weaver.create_failed"
+msgstr "Weaver 생성에 실패했습니다"
+
+#: client.repos.branch.find
+msgid "client.repos.branch.find"
+msgstr "브랜치 검색..."
+
+#: client.repos.branch.not_found
+msgid "client.repos.branch.not_found"
+msgstr "브랜치를 찾을 수 없습니다"
+
+#: client.repos.branch.default
+msgid "client.repos.branch.default"
+msgstr "기본"
+
+#: client.repos.commits.minutes_ago
+msgid "client.repos.commits.minutes_ago"
+msgstr "{count}분 전"
+
+#: client.repos.commits.hours_ago
+msgid "client.repos.commits.hours_ago"
+msgstr "{count}시간 전"
+
+#: client.repos.commits.days_ago
+msgid "client.repos.commits.days_ago"
+msgstr "{count}일 전"
+
+#: client.repos.commits.committed
+msgid "client.repos.commits.committed"
+msgstr "커밋됨"
+
+#: client.repos.commits.copy_sha
+msgid "client.repos.commits.copy_sha"
+msgstr "SHA 복사"
+
+#: client.repos.commits.empty
+msgid "client.repos.commits.empty"
+msgstr "커밋이 없습니다"
+
+#: client.repos.diff.parent
+msgid "client.repos.diff.parent"
+msgstr "부모"
+
+#: client.repos.diff.parents
+msgid "client.repos.diff.parents"
+msgstr "부모들"
+
+#: client.repos.diff.showing
+msgid "client.repos.diff.showing"
+msgstr "표시 중"
+
+#: client.repos.diff.changed_file
+msgid "client.repos.diff.changed_file"
+msgstr "개의 파일 변경됨"
+
+#: client.repos.diff.changed_files
+msgid "client.repos.diff.changed_files"
+msgstr "개의 파일 변경됨"
+
+#: client.repos.blame.lines
+msgid "client.repos.blame.lines"
+msgstr "줄"
+
+#: client.repos.blame.today
+msgid "client.repos.blame.today"
+msgstr "오늘"
+
+#: client.repos.blame.days_ago
+msgid "client.repos.blame.days_ago"
+msgstr "{count}일 전"
+
+#: client.repos.blame.months_ago
+msgid "client.repos.blame.months_ago"
+msgstr "{count}개월 전"
+
+#: client.repos.blame.years_ago
+msgid "client.repos.blame.years_ago"
+msgstr "{count}년 전"
+
+#: client.repos.blame.empty
+msgid "client.repos.blame.empty"
+msgstr "Blame 정보가 없습니다"
+
+#: client.repos.compare.ahead
+msgid "client.repos.compare.ahead"
+msgstr "앞서"
+
+#: client.repos.compare.behind
+msgid "client.repos.compare.behind"
+msgstr "뒤처짐"
+
+#: client.repos.compare.commit
+msgid "client.repos.compare.commit"
+msgstr "커밋"
+
+#: client.repos.compare.commits
+msgid "client.repos.compare.commits"
+msgstr "커밋"
+
+#: client.repos.compare.commits_heading
+msgid "client.repos.compare.commits_heading"
+msgstr "커밋"
+
+#: client.repos.compare.identical
+msgid "client.repos.compare.identical"
+msgstr "이 브랜치들은 동일합니다"

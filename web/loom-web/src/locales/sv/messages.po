@@ -331,6 +331,34 @@ msgstr "E-post"
 msgid "settings.profile.emailHint"
 msgstr "E-postadressen kan inte ändras här"
 
+#: settings.profile.username
+msgid "settings.profile.username"
+msgstr "Användarnamn"
+
+#: settings.profile.usernamePlaceholder
+msgid "settings.profile.usernamePlaceholder"
+msgstr "Ange användarnamn"
+
+#: settings.profile.usernameHint
+msgid "settings.profile.usernameHint"
+msgstr "Ditt användarnamn används för git-repositoriets URL:er"
+
+#: settings.profile.usernameInvalid
+msgid "settings.profile.usernameInvalid"
+msgstr "Användarnamn får endast innehålla bokstäver, siffror och understreck"
+
+#: settings.profile.usernameTaken
+msgid "settings.profile.usernameTaken"
+msgstr "Detta användarnamn är redan taget"
+
+#: settings.profile.usernameTooShort
+msgid "settings.profile.usernameTooShort"
+msgstr "Användarnamn måste vara minst 3 tecken"
+
+#: settings.profile.usernameTooLong
+msgid "settings.profile.usernameTooLong"
+msgstr "Användarnamn får vara högst 39 tecken"
+
 #: settings.profile.locale
 msgid "settings.profile.locale"
 msgstr "Språk"
@@ -825,7 +853,35 @@ msgstr "Last login"
 
 #: admin.users.impersonate
 msgid "admin.users.impersonate"
-msgstr "Impersonate"
+msgstr "Imitera"
+
+#: admin.users.updated
+msgid "admin.users.updated"
+msgstr "Uppdaterad"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "Gör till Admin"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "Ta bort Admin"
+
+#: admin.users.makeSupport
+msgid "admin.users.makeSupport"
+msgstr "Gör till Support"
+
+#: admin.users.removeSupport
+msgid "admin.users.removeSupport"
+msgstr "Ta bort Support"
+
+#: admin.users.makeAuditor
+msgid "admin.users.makeAuditor"
+msgstr "Gör till Granskare"
+
+#: admin.users.removeAuditor
+msgid "admin.users.removeAuditor"
+msgstr "Ta bort Granskare"
 
 #: admin.logs.title
 msgid "admin.logs.title"
@@ -917,6 +973,174 @@ msgstr "Admin {admin} impersonating {user}"
 #: admin.impersonation.stop
 msgid "admin.impersonation.stop"
 msgstr "Stop Impersonating"
+
+#: admin.anthropic.title
+msgid "admin.anthropic.title"
+msgstr "Claude Max-konton"
+
+#: admin.anthropic.add_account
+msgid "admin.anthropic.add_account"
+msgstr "Lägg till konto"
+
+#: admin.anthropic.remove
+msgid "admin.anthropic.remove"
+msgstr "Ta bort"
+
+#: admin.anthropic.remove_confirm
+msgid "admin.anthropic.remove_confirm"
+msgstr "Ta bort detta konto från poolen?"
+
+#: admin.anthropic.status.available
+msgid "admin.anthropic.status.available"
+msgstr "Tillgänglig"
+
+#: admin.anthropic.status.cooling_down
+msgid "admin.anthropic.status.cooling_down"
+msgstr "Avkylning"
+
+#: admin.anthropic.status.disabled
+msgid "admin.anthropic.status.disabled"
+msgstr "Inaktiverad"
+
+#: admin.anthropic.cooldown_remaining
+msgid "admin.anthropic.cooldown_remaining"
+msgstr "{time} kvar"
+
+#: admin.anthropic.expires_at
+msgid "admin.anthropic.expires_at"
+msgstr "Token går ut: {time}"
+
+#: admin.anthropic.no_accounts
+msgid "admin.anthropic.no_accounts"
+msgstr "Inga konton konfigurerade. Lägg till ett Claude Max-konto för att komma igång."
+
+#: admin.anthropic.not_configured
+msgid "admin.anthropic.not_configured"
+msgstr "Anthropic OAuth-pool är inte konfigurerad på denna server."
+
+#: admin.anthropic.account_added
+msgid "admin.anthropic.account_added"
+msgstr "Konto {id} har lagts till"
+
+#: admin.anthropic.enter_code_title
+msgid "admin.anthropic.enter_code_title"
+msgstr "Ange auktoriseringskod"
+
+#: admin.anthropic.enter_code_description
+msgid "admin.anthropic.enter_code_description"
+msgstr "En ny webbläsarflik har öppnats för att auktorisera med Claude. Efter auktorisering, kopiera koden från Anthropic-sidan och klistra in den nedan."
+
+#: admin.anthropic.authorization_code
+msgid "admin.anthropic.authorization_code"
+msgstr "Auktoriseringskod"
+
+#: admin.anthropic.code_placeholder
+msgid "admin.anthropic.code_placeholder"
+msgstr "Klistra in koden från Anthropic här"
+
+#: admin.anthropic.submit_code
+msgid "admin.anthropic.submit_code"
+msgstr "Lägg till konto"
+
+#: admin.dashboard.title
+msgid "admin.dashboard.title"
+msgstr "Administratörspanel"
+
+#: admin.dashboard.description
+msgid "admin.dashboard.description"
+msgstr "Serveradministration och övervakning"
+
+#: admin.dashboard.sections
+msgid "admin.dashboard.sections"
+msgstr "Administration"
+
+#: admin.dashboard.anthropic_description
+msgid "admin.dashboard.anthropic_description"
+msgstr "Hantera Claude Max OAuth-prenumerationspool"
+
+#: admin.health.title
+msgid "admin.health.title"
+msgstr "Serverstatus"
+
+#: admin.health.overall
+msgid "admin.health.overall"
+msgstr "Övergripande status"
+
+#: admin.health.version
+msgid "admin.health.version"
+msgstr "Version"
+
+#: admin.health.response_time
+msgid "admin.health.response_time"
+msgstr "Svarstid"
+
+#: admin.health.configured
+msgid "admin.health.configured"
+msgstr "Konfigurerad"
+
+#: admin.health.not_configured
+msgid "admin.health.not_configured"
+msgstr "Ej konfigurerad"
+
+#: admin.health.status.healthy
+msgid "admin.health.status.healthy"
+msgstr "Frisk"
+
+#: admin.health.status.degraded
+msgid "admin.health.status.degraded"
+msgstr "Försämrad"
+
+#: admin.health.status.unhealthy
+msgid "admin.health.status.unhealthy"
+msgstr "Ohälsosam"
+
+#: admin.health.status.unknown
+msgid "admin.health.status.unknown"
+msgstr "Okänd"
+
+#: admin.health.database
+msgid "admin.health.database"
+msgstr "Databas"
+
+#: admin.health.bin_dir
+msgid "admin.health.bin_dir"
+msgstr "Binärkatalog"
+
+#: admin.health.llm_providers
+msgid "admin.health.llm_providers"
+msgstr "LLM-leverantörer"
+
+#: admin.health.google_cse
+msgid "admin.health.google_cse"
+msgstr "Google CSE"
+
+#: admin.health.serper
+msgid "admin.health.serper"
+msgstr "Serper"
+
+#: admin.health.github_app
+msgid "admin.health.github_app"
+msgstr "GitHub App"
+
+#: admin.health.kubernetes
+msgid "admin.health.kubernetes"
+msgstr "Kubernetes"
+
+#: admin.health.smtp
+msgid "admin.health.smtp"
+msgstr "SMTP"
+
+#: admin.health.geoip
+msgid "admin.health.geoip"
+msgstr "GeoIP"
+
+#: admin.health.jobs
+msgid "admin.health.jobs"
+msgstr "Bakgrundsjobb"
+
+#: admin.health.auth_providers
+msgid "admin.health.auth_providers"
+msgstr "Autentiseringsleverantörer"
 
 #: nav.weavers
 msgid "nav.weavers"
@@ -1121,3 +1345,367 @@ msgstr "Standardgren:"
 #: client.repos.list.updated
 msgid "client.repos.list.updated"
 msgstr "Uppdaterad"
+
+#: jobs.title
+msgid "jobs.title"
+msgstr "Bakgrundsjobb"
+
+#: jobs.description
+msgid "jobs.description"
+msgstr "Övervaka och hantera schemalagda bakgrundsjobb"
+
+#: jobs.loading
+msgid "jobs.loading"
+msgstr "Laddar jobb..."
+
+#: jobs.runNow
+msgid "jobs.runNow"
+msgstr "Kör nu"
+
+#: jobs.running
+msgid "jobs.running"
+msgstr "Körs..."
+
+#: jobs.history
+msgid "jobs.history"
+msgstr "Historik"
+
+#: jobs.hideHistory
+msgid "jobs.hideHistory"
+msgstr "Dölj historik"
+
+#: jobs.viewHistory
+msgid "jobs.viewHistory"
+msgstr "Visa historik"
+
+#: jobs.noJobs
+msgid "jobs.noJobs"
+msgstr "Inga bakgrundsjobb konfigurerade"
+
+#: jobs.never
+msgid "jobs.never"
+msgstr "Aldrig körd"
+
+#: jobs.lastRun
+msgid "jobs.lastRun"
+msgstr "Senaste körning"
+
+#: jobs.duration
+msgid "jobs.duration"
+msgstr "Varaktighet"
+
+#: jobs.interval
+msgid "jobs.interval"
+msgstr "Intervall"
+
+#: jobs.type
+msgid "jobs.type"
+msgstr "Typ"
+
+#: jobs.failures
+msgid "jobs.failures"
+msgstr "{count} misslyckanden i rad"
+
+#: jobs.status.healthy
+msgid "jobs.status.healthy"
+msgstr "Felfri"
+
+#: jobs.status.degraded
+msgid "jobs.status.degraded"
+msgstr "Försämrad"
+
+#: jobs.status.unhealthy
+msgid "jobs.status.unhealthy"
+msgstr "Ohälsosam"
+
+#: jobs.status.succeeded
+msgid "jobs.status.succeeded"
+msgstr "Lyckades"
+
+#: jobs.status.failed
+msgid "jobs.status.failed"
+msgstr "Misslyckades"
+
+#: jobs.status.running
+msgid "jobs.status.running"
+msgstr "Körs"
+
+#: jobs.status.cancelled
+msgid "jobs.status.cancelled"
+msgstr "Avbruten"
+
+#: jobs.trigger.schedule
+msgid "jobs.trigger.schedule"
+msgstr "Schemalagd"
+
+#: jobs.trigger.manual
+msgid "jobs.trigger.manual"
+msgstr "Manuell"
+
+#: jobs.trigger.retry
+msgid "jobs.trigger.retry"
+msgstr "Omförsök"
+
+#: jobs.history.title
+msgid "jobs.history.title"
+msgstr "Körningshistorik"
+
+#: jobs.history.status
+msgid "jobs.history.status"
+msgstr "Status"
+
+#: jobs.history.started
+msgid "jobs.history.started"
+msgstr "Startad"
+
+#: jobs.history.duration
+msgid "jobs.history.duration"
+msgstr "Varaktighet"
+
+#: jobs.history.trigger
+msgid "jobs.history.trigger"
+msgstr "Utlösare"
+
+#: jobs.history.details
+msgid "jobs.history.details"
+msgstr "Detaljer"
+
+#: jobs.history.loadMore
+msgid "jobs.history.loadMore"
+msgstr "Ladda fler"
+
+#: jobs.history.noRuns
+msgid "jobs.history.noRuns"
+msgstr "Ingen körningshistorik tillgänglig"
+
+#: jobs.time.justNow
+msgid "jobs.time.justNow"
+msgstr "just nu"
+
+#: jobs.time.minutesAgo
+msgid "jobs.time.minutesAgo"
+msgstr "{count} min sedan"
+
+#: jobs.time.hoursAgo
+msgid "jobs.time.hoursAgo"
+msgstr "{count} timmar sedan"
+
+#: jobs.time.daysAgo
+msgid "jobs.time.daysAgo"
+msgstr "{count} dagar sedan"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "Repositorier"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "Nytt repositorium"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "Sök repositorier..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "Försök igen"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "Inga repositorier matchar din sökning"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "Inga repositorier ännu"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "Skapa ditt första repositorium"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "Standardgren:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "Uppdaterad"
+
+#: client.repos.header.clone
+msgid "client.repos.header.clone"
+msgstr "Klona"
+
+#: client.repos.header.clone_https
+msgid "client.repos.header.clone_https"
+msgstr "Klona med HTTPS"
+
+#: client.repos.header.copied
+msgid "client.repos.header.copied"
+msgstr "Kopierad!"
+
+#: client.repos.header.copy
+msgid "client.repos.header.copy"
+msgstr "Kopiera"
+
+#: client.repos.header.default_branch
+msgid "client.repos.header.default_branch"
+msgstr "Standardgren"
+
+#: client.repos.nav.code
+msgid "client.repos.nav.code"
+msgstr "Kod"
+
+#: client.repos.nav.commits
+msgid "client.repos.nav.commits"
+msgstr "Commits"
+
+#: client.repos.nav.branches
+msgid "client.repos.nav.branches"
+msgstr "Grenar"
+
+#: client.repos.nav.settings
+msgid "client.repos.nav.settings"
+msgstr "Inställningar"
+
+#: client.repos.tree.empty
+msgid "client.repos.tree.empty"
+msgstr "Den här mappen är tom"
+
+#: client.repos.blob.lines
+msgid "client.repos.blob.lines"
+msgstr "rader"
+
+#: client.repos.blob.bytes
+msgid "client.repos.blob.bytes"
+msgstr "byte"
+
+#: client.repos.blob.blame
+msgid "client.repos.blob.blame"
+msgstr "Blame"
+
+#: client.repos.blob.copy
+msgid "client.repos.blob.copy"
+msgstr "Kopiera"
+
+#: client.repos.blob.copied
+msgid "client.repos.blob.copied"
+msgstr "Kopierad!"
+
+#: client.repos.blob.raw
+msgid "client.repos.blob.raw"
+msgstr "Raw"
+
+#: client.repos.blob.binary_not_shown
+msgid "client.repos.blob.binary_not_shown"
+msgstr "Binär fil visas inte"
+
+#: client.repos.weaver.open
+msgid "client.repos.weaver.open"
+msgstr "Öppna i Weaver"
+
+#: client.repos.weaver.create_failed
+msgid "client.repos.weaver.create_failed"
+msgstr "Kunde inte skapa weaver"
+
+#: client.repos.branch.find
+msgid "client.repos.branch.find"
+msgstr "Hitta en gren..."
+
+#: client.repos.branch.not_found
+msgid "client.repos.branch.not_found"
+msgstr "Inga grenar hittades"
+
+#: client.repos.branch.default
+msgid "client.repos.branch.default"
+msgstr "standard"
+
+#: client.repos.commits.minutes_ago
+msgid "client.repos.commits.minutes_ago"
+msgstr "{count} minuter sedan"
+
+#: client.repos.commits.hours_ago
+msgid "client.repos.commits.hours_ago"
+msgstr "{count} timmar sedan"
+
+#: client.repos.commits.days_ago
+msgid "client.repos.commits.days_ago"
+msgstr "{count} dagar sedan"
+
+#: client.repos.commits.committed
+msgid "client.repos.commits.committed"
+msgstr "committad"
+
+#: client.repos.commits.copy_sha
+msgid "client.repos.commits.copy_sha"
+msgstr "Kopiera SHA"
+
+#: client.repos.commits.empty
+msgid "client.repos.commits.empty"
+msgstr "Inga commits hittades"
+
+#: client.repos.diff.parent
+msgid "client.repos.diff.parent"
+msgstr "Förälder"
+
+#: client.repos.diff.parents
+msgid "client.repos.diff.parents"
+msgstr "Föräldrar"
+
+#: client.repos.diff.showing
+msgid "client.repos.diff.showing"
+msgstr "Visar"
+
+#: client.repos.diff.changed_file
+msgid "client.repos.diff.changed_file"
+msgstr "ändrad fil"
+
+#: client.repos.diff.changed_files
+msgid "client.repos.diff.changed_files"
+msgstr "ändrade filer"
+
+#: client.repos.blame.lines
+msgid "client.repos.blame.lines"
+msgstr "rader"
+
+#: client.repos.blame.today
+msgid "client.repos.blame.today"
+msgstr "idag"
+
+#: client.repos.blame.days_ago
+msgid "client.repos.blame.days_ago"
+msgstr "{count}d sedan"
+
+#: client.repos.blame.months_ago
+msgid "client.repos.blame.months_ago"
+msgstr "{count}m sedan"
+
+#: client.repos.blame.years_ago
+msgid "client.repos.blame.years_ago"
+msgstr "{count}å sedan"
+
+#: client.repos.blame.empty
+msgid "client.repos.blame.empty"
+msgstr "Ingen blame-information tillgänglig"
+
+#: client.repos.compare.ahead
+msgid "client.repos.compare.ahead"
+msgstr "före"
+
+#: client.repos.compare.behind
+msgid "client.repos.compare.behind"
+msgstr "efter"
+
+#: client.repos.compare.commit
+msgid "client.repos.compare.commit"
+msgstr "commit"
+
+#: client.repos.compare.commits
+msgid "client.repos.compare.commits"
+msgstr "commits"
+
+#: client.repos.compare.commits_heading
+msgid "client.repos.compare.commits_heading"
+msgstr "Commits"
+
+#: client.repos.compare.identical
+msgid "client.repos.compare.identical"
+msgstr "Dessa grenar är identiska"

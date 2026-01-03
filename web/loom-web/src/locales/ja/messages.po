@@ -331,6 +331,34 @@ msgstr "メール"
 msgid "settings.profile.emailHint"
 msgstr "ここではメールアドレスを変更できません"
 
+#: settings.profile.username
+msgid "settings.profile.username"
+msgstr "ユーザー名"
+
+#: settings.profile.usernamePlaceholder
+msgid "settings.profile.usernamePlaceholder"
+msgstr "ユーザー名を入力"
+
+#: settings.profile.usernameHint
+msgid "settings.profile.usernameHint"
+msgstr "ユーザー名はgitリポジトリのURLに使用されます"
+
+#: settings.profile.usernameInvalid
+msgid "settings.profile.usernameInvalid"
+msgstr "ユーザー名には英字、数字、アンダースコアのみ使用できます"
+
+#: settings.profile.usernameTaken
+msgid "settings.profile.usernameTaken"
+msgstr "このユーザー名は既に使用されています"
+
+#: settings.profile.usernameTooShort
+msgid "settings.profile.usernameTooShort"
+msgstr "ユーザー名は3文字以上である必要があります"
+
+#: settings.profile.usernameTooLong
+msgid "settings.profile.usernameTooLong"
+msgstr "ユーザー名は39文字以下である必要があります"
+
 #: settings.profile.locale
 msgid "settings.profile.locale"
 msgstr "言語"
@@ -827,6 +855,34 @@ msgstr "最終ログイン"
 msgid "admin.users.impersonate"
 msgstr "なりすまし"
 
+#: admin.users.updated
+msgid "admin.users.updated"
+msgstr "更新済み"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "管理者にする"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "管理者を解除"
+
+#: admin.users.makeSupport
+msgid "admin.users.makeSupport"
+msgstr "サポートにする"
+
+#: admin.users.removeSupport
+msgid "admin.users.removeSupport"
+msgstr "サポートを解除"
+
+#: admin.users.makeAuditor
+msgid "admin.users.makeAuditor"
+msgstr "監査者にする"
+
+#: admin.users.removeAuditor
+msgid "admin.users.removeAuditor"
+msgstr "監査者を解除"
+
 #: admin.logs.title
 msgid "admin.logs.title"
 msgstr "サーバーログ"
@@ -1121,3 +1177,535 @@ msgstr "デフォルトブランチ:"
 #: client.repos.list.updated
 msgid "client.repos.list.updated"
 msgstr "更新日"
+
+#: admin.anthropic.title
+msgid "admin.anthropic.title"
+msgstr "Claude Max アカウント"
+
+#: admin.anthropic.add_account
+msgid "admin.anthropic.add_account"
+msgstr "アカウントを追加"
+
+#: admin.anthropic.remove
+msgid "admin.anthropic.remove"
+msgstr "削除"
+
+#: admin.anthropic.remove_confirm
+msgid "admin.anthropic.remove_confirm"
+msgstr "このアカウントをプールから削除しますか？"
+
+#: admin.anthropic.status.available
+msgid "admin.anthropic.status.available"
+msgstr "利用可能"
+
+#: admin.anthropic.status.cooling_down
+msgid "admin.anthropic.status.cooling_down"
+msgstr "クールダウン中"
+
+#: admin.anthropic.status.disabled
+msgid "admin.anthropic.status.disabled"
+msgstr "無効"
+
+#: admin.anthropic.cooldown_remaining
+msgid "admin.anthropic.cooldown_remaining"
+msgstr "残り {time}"
+
+#: admin.anthropic.expires_at
+msgid "admin.anthropic.expires_at"
+msgstr "トークン有効期限: {time}"
+
+#: admin.anthropic.no_accounts
+msgid "admin.anthropic.no_accounts"
+msgstr "アカウントが設定されていません。開始するには Claude Max アカウントを追加してください。"
+
+#: admin.anthropic.not_configured
+msgid "admin.anthropic.not_configured"
+msgstr "Anthropic OAuth プールはこのサーバーで設定されていません。"
+
+#: admin.anthropic.account_added
+msgid "admin.anthropic.account_added"
+msgstr "アカウント {id} が正常に追加されました"
+
+#: admin.anthropic.enter_code_title
+msgid "admin.anthropic.enter_code_title"
+msgstr "認証コードを入力"
+
+#: admin.anthropic.enter_code_description
+msgid "admin.anthropic.enter_code_description"
+msgstr "Claude で認証するための新しいブラウザタブが開きました。認証後、Anthropic ページからコードをコピーして下に貼り付けてください。"
+
+#: admin.anthropic.authorization_code
+msgid "admin.anthropic.authorization_code"
+msgstr "認証コード"
+
+#: admin.anthropic.code_placeholder
+msgid "admin.anthropic.code_placeholder"
+msgstr "Anthropic からのコードをここに貼り付け"
+
+#: admin.anthropic.submit_code
+msgid "admin.anthropic.submit_code"
+msgstr "アカウントを追加"
+
+#: admin.dashboard.title
+msgid "admin.dashboard.title"
+msgstr "管理ダッシュボード"
+
+#: admin.dashboard.description
+msgid "admin.dashboard.description"
+msgstr "サーバー管理とモニタリング"
+
+#: admin.dashboard.sections
+msgid "admin.dashboard.sections"
+msgstr "管理"
+
+#: admin.dashboard.anthropic_description
+msgid "admin.dashboard.anthropic_description"
+msgstr "Claude Max OAuth サブスクリプションプールを管理"
+
+#: admin.health.title
+msgid "admin.health.title"
+msgstr "サーバーヘルス"
+
+#: admin.health.overall
+msgid "admin.health.overall"
+msgstr "全体ステータス"
+
+#: admin.health.version
+msgid "admin.health.version"
+msgstr "バージョン"
+
+#: admin.health.response_time
+msgid "admin.health.response_time"
+msgstr "応答時間"
+
+#: admin.health.configured
+msgid "admin.health.configured"
+msgstr "設定済み"
+
+#: admin.health.not_configured
+msgid "admin.health.not_configured"
+msgstr "未設定"
+
+#: admin.health.status.healthy
+msgid "admin.health.status.healthy"
+msgstr "正常"
+
+#: admin.health.status.degraded
+msgid "admin.health.status.degraded"
+msgstr "低下"
+
+#: admin.health.status.unhealthy
+msgid "admin.health.status.unhealthy"
+msgstr "異常"
+
+#: admin.health.status.unknown
+msgid "admin.health.status.unknown"
+msgstr "不明"
+
+#: admin.health.database
+msgid "admin.health.database"
+msgstr "データベース"
+
+#: admin.health.bin_dir
+msgid "admin.health.bin_dir"
+msgstr "バイナリディレクトリ"
+
+#: admin.health.llm_providers
+msgid "admin.health.llm_providers"
+msgstr "LLM プロバイダー"
+
+#: admin.health.google_cse
+msgid "admin.health.google_cse"
+msgstr "Google CSE"
+
+#: admin.health.serper
+msgid "admin.health.serper"
+msgstr "Serper"
+
+#: admin.health.github_app
+msgid "admin.health.github_app"
+msgstr "GitHub App"
+
+#: admin.health.kubernetes
+msgid "admin.health.kubernetes"
+msgstr "Kubernetes"
+
+#: admin.health.smtp
+msgid "admin.health.smtp"
+msgstr "SMTP"
+
+#: admin.health.geoip
+msgid "admin.health.geoip"
+msgstr "GeoIP"
+
+#: admin.health.jobs
+msgid "admin.health.jobs"
+msgstr "バックグラウンドジョブ"
+
+#: admin.health.auth_providers
+msgid "admin.health.auth_providers"
+msgstr "認証プロバイダー"
+
+#: jobs.title
+msgid "jobs.title"
+msgstr "バックグラウンドジョブ"
+
+#: jobs.description
+msgid "jobs.description"
+msgstr "スケジュールされたバックグラウンドジョブの監視と管理"
+
+#: jobs.loading
+msgid "jobs.loading"
+msgstr "ジョブを読み込み中..."
+
+#: jobs.runNow
+msgid "jobs.runNow"
+msgstr "今すぐ実行"
+
+#: jobs.running
+msgid "jobs.running"
+msgstr "実行中..."
+
+#: jobs.history
+msgid "jobs.history"
+msgstr "履歴"
+
+#: jobs.hideHistory
+msgid "jobs.hideHistory"
+msgstr "履歴を非表示"
+
+#: jobs.viewHistory
+msgid "jobs.viewHistory"
+msgstr "履歴を表示"
+
+#: jobs.noJobs
+msgid "jobs.noJobs"
+msgstr "バックグラウンドジョブが設定されていません"
+
+#: jobs.never
+msgid "jobs.never"
+msgstr "未実行"
+
+#: jobs.lastRun
+msgid "jobs.lastRun"
+msgstr "最終実行"
+
+#: jobs.duration
+msgid "jobs.duration"
+msgstr "所要時間"
+
+#: jobs.interval
+msgid "jobs.interval"
+msgstr "間隔"
+
+#: jobs.type
+msgid "jobs.type"
+msgstr "タイプ"
+
+#: jobs.failures
+msgid "jobs.failures"
+msgstr "連続 {count} 回失敗"
+
+#: jobs.status.healthy
+msgid "jobs.status.healthy"
+msgstr "正常"
+
+#: jobs.status.degraded
+msgid "jobs.status.degraded"
+msgstr "低下"
+
+#: jobs.status.unhealthy
+msgid "jobs.status.unhealthy"
+msgstr "異常"
+
+#: jobs.status.succeeded
+msgid "jobs.status.succeeded"
+msgstr "成功"
+
+#: jobs.status.failed
+msgid "jobs.status.failed"
+msgstr "失敗"
+
+#: jobs.status.running
+msgid "jobs.status.running"
+msgstr "実行中"
+
+#: jobs.status.cancelled
+msgid "jobs.status.cancelled"
+msgstr "キャンセル"
+
+#: jobs.trigger.schedule
+msgid "jobs.trigger.schedule"
+msgstr "スケジュール"
+
+#: jobs.trigger.manual
+msgid "jobs.trigger.manual"
+msgstr "手動"
+
+#: jobs.trigger.retry
+msgid "jobs.trigger.retry"
+msgstr "リトライ"
+
+#: jobs.history.title
+msgid "jobs.history.title"
+msgstr "実行履歴"
+
+#: jobs.history.status
+msgid "jobs.history.status"
+msgstr "ステータス"
+
+#: jobs.history.started
+msgid "jobs.history.started"
+msgstr "開始"
+
+#: jobs.history.duration
+msgid "jobs.history.duration"
+msgstr "所要時間"
+
+#: jobs.history.trigger
+msgid "jobs.history.trigger"
+msgstr "トリガー"
+
+#: jobs.history.details
+msgid "jobs.history.details"
+msgstr "詳細"
+
+#: jobs.history.loadMore
+msgid "jobs.history.loadMore"
+msgstr "もっと読み込む"
+
+#: jobs.history.noRuns
+msgid "jobs.history.noRuns"
+msgstr "実行履歴がありません"
+
+#: jobs.time.justNow
+msgid "jobs.time.justNow"
+msgstr "たった今"
+
+#: jobs.time.minutesAgo
+msgid "jobs.time.minutesAgo"
+msgstr "{count} 分前"
+
+#: jobs.time.hoursAgo
+msgid "jobs.time.hoursAgo"
+msgstr "{count} 時間前"
+
+#: jobs.time.daysAgo
+msgid "jobs.time.daysAgo"
+msgstr "{count} 日前"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "リポジトリ"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "新規リポジトリ"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "リポジトリを検索..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "再試行"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "検索に一致するリポジトリがありません"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "リポジトリはまだありません"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "最初のリポジトリを作成"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "デフォルトブランチ："
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "更新日"
+
+#: client.repos.header.clone
+msgid "client.repos.header.clone"
+msgstr "クローン"
+
+#: client.repos.header.clone_https
+msgid "client.repos.header.clone_https"
+msgstr "HTTPSでクローン"
+
+#: client.repos.header.copied
+msgid "client.repos.header.copied"
+msgstr "コピーしました！"
+
+#: client.repos.header.copy
+msgid "client.repos.header.copy"
+msgstr "コピー"
+
+#: client.repos.header.default_branch
+msgid "client.repos.header.default_branch"
+msgstr "デフォルトブランチ"
+
+#: client.repos.nav.code
+msgid "client.repos.nav.code"
+msgstr "コード"
+
+#: client.repos.nav.commits
+msgid "client.repos.nav.commits"
+msgstr "コミット"
+
+#: client.repos.nav.branches
+msgid "client.repos.nav.branches"
+msgstr "ブランチ"
+
+#: client.repos.nav.settings
+msgid "client.repos.nav.settings"
+msgstr "設定"
+
+#: client.repos.tree.empty
+msgid "client.repos.tree.empty"
+msgstr "このディレクトリは空です"
+
+#: client.repos.blob.lines
+msgid "client.repos.blob.lines"
+msgstr "行"
+
+#: client.repos.blob.bytes
+msgid "client.repos.blob.bytes"
+msgstr "バイト"
+
+#: client.repos.blob.blame
+msgid "client.repos.blob.blame"
+msgstr "Blame"
+
+#: client.repos.blob.copy
+msgid "client.repos.blob.copy"
+msgstr "コピー"
+
+#: client.repos.blob.copied
+msgid "client.repos.blob.copied"
+msgstr "コピーしました！"
+
+#: client.repos.blob.raw
+msgid "client.repos.blob.raw"
+msgstr "Raw"
+
+#: client.repos.blob.binary_not_shown
+msgid "client.repos.blob.binary_not_shown"
+msgstr "バイナリファイルは表示できません"
+
+#: client.repos.weaver.open
+msgid "client.repos.weaver.open"
+msgstr "Weaverで開く"
+
+#: client.repos.weaver.create_failed
+msgid "client.repos.weaver.create_failed"
+msgstr "Weaverの作成に失敗しました"
+
+#: client.repos.branch.find
+msgid "client.repos.branch.find"
+msgstr "ブランチを検索..."
+
+#: client.repos.branch.not_found
+msgid "client.repos.branch.not_found"
+msgstr "ブランチが見つかりません"
+
+#: client.repos.branch.default
+msgid "client.repos.branch.default"
+msgstr "デフォルト"
+
+#: client.repos.commits.minutes_ago
+msgid "client.repos.commits.minutes_ago"
+msgstr "{count} 分前"
+
+#: client.repos.commits.hours_ago
+msgid "client.repos.commits.hours_ago"
+msgstr "{count} 時間前"
+
+#: client.repos.commits.days_ago
+msgid "client.repos.commits.days_ago"
+msgstr "{count} 日前"
+
+#: client.repos.commits.committed
+msgid "client.repos.commits.committed"
+msgstr "コミット"
+
+#: client.repos.commits.copy_sha
+msgid "client.repos.commits.copy_sha"
+msgstr "SHAをコピー"
+
+#: client.repos.commits.empty
+msgid "client.repos.commits.empty"
+msgstr "コミットが見つかりません"
+
+#: client.repos.diff.parent
+msgid "client.repos.diff.parent"
+msgstr "親"
+
+#: client.repos.diff.parents
+msgid "client.repos.diff.parents"
+msgstr "親"
+
+#: client.repos.diff.showing
+msgid "client.repos.diff.showing"
+msgstr "表示中"
+
+#: client.repos.diff.changed_file
+msgid "client.repos.diff.changed_file"
+msgstr "件のファイルが変更"
+
+#: client.repos.diff.changed_files
+msgid "client.repos.diff.changed_files"
+msgstr "件のファイルが変更"
+
+#: client.repos.blame.lines
+msgid "client.repos.blame.lines"
+msgstr "行"
+
+#: client.repos.blame.today
+msgid "client.repos.blame.today"
+msgstr "今日"
+
+#: client.repos.blame.days_ago
+msgid "client.repos.blame.days_ago"
+msgstr "{count}日前"
+
+#: client.repos.blame.months_ago
+msgid "client.repos.blame.months_ago"
+msgstr "{count}ヶ月前"
+
+#: client.repos.blame.years_ago
+msgid "client.repos.blame.years_ago"
+msgstr "{count}年前"
+
+#: client.repos.blame.empty
+msgid "client.repos.blame.empty"
+msgstr "Blame情報がありません"
+
+#: client.repos.compare.ahead
+msgid "client.repos.compare.ahead"
+msgstr "先行"
+
+#: client.repos.compare.behind
+msgid "client.repos.compare.behind"
+msgstr "遅延"
+
+#: client.repos.compare.commit
+msgid "client.repos.compare.commit"
+msgstr "コミット"
+
+#: client.repos.compare.commits
+msgid "client.repos.compare.commits"
+msgstr "コミット"
+
+#: client.repos.compare.commits_heading
+msgid "client.repos.compare.commits_heading"
+msgstr "コミット"
+
+#: client.repos.compare.identical
+msgid "client.repos.compare.identical"
+msgstr "これらのブランチは同一です"

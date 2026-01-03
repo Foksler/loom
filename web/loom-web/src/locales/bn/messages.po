@@ -331,6 +331,34 @@ msgstr "ইমেইল"
 msgid "settings.profile.emailHint"
 msgstr "ইমেইল এখানে পরিবর্তন করা যাবে না"
 
+#: settings.profile.username
+msgid "settings.profile.username"
+msgstr "ইউজারনেম"
+
+#: settings.profile.usernamePlaceholder
+msgid "settings.profile.usernamePlaceholder"
+msgstr "ইউজারনেম লিখুন"
+
+#: settings.profile.usernameHint
+msgid "settings.profile.usernameHint"
+msgstr "আপনার ইউজারনেম git রিপোজিটরি URL-এর জন্য ব্যবহৃত হয়"
+
+#: settings.profile.usernameInvalid
+msgid "settings.profile.usernameInvalid"
+msgstr "ইউজারনেমে শুধুমাত্র অক্ষর, সংখ্যা এবং আন্ডারস্কোর থাকতে পারে"
+
+#: settings.profile.usernameTaken
+msgid "settings.profile.usernameTaken"
+msgstr "এই ইউজারনেম ইতিমধ্যে ব্যবহৃত হয়েছে"
+
+#: settings.profile.usernameTooShort
+msgid "settings.profile.usernameTooShort"
+msgstr "ইউজারনেম কমপক্ষে ৩ অক্ষরের হতে হবে"
+
+#: settings.profile.usernameTooLong
+msgid "settings.profile.usernameTooLong"
+msgstr "ইউজারনেম সর্বাধিক ৩৯ অক্ষরের হতে হবে"
+
 #: settings.profile.locale
 msgid "settings.profile.locale"
 msgstr "ভাষা"
@@ -825,7 +853,35 @@ msgstr "Last login"
 
 #: admin.users.impersonate
 msgid "admin.users.impersonate"
-msgstr "Impersonate"
+msgstr "ছদ্মবেশ ধারণ"
+
+#: admin.users.updated
+msgid "admin.users.updated"
+msgstr "আপডেট হয়েছে"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "প্রশাসক করুন"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "প্রশাসক সরান"
+
+#: admin.users.makeSupport
+msgid "admin.users.makeSupport"
+msgstr "সাপোর্ট করুন"
+
+#: admin.users.removeSupport
+msgid "admin.users.removeSupport"
+msgstr "সাপোর্ট সরান"
+
+#: admin.users.makeAuditor
+msgid "admin.users.makeAuditor"
+msgstr "নিরীক্ষক করুন"
+
+#: admin.users.removeAuditor
+msgid "admin.users.removeAuditor"
+msgstr "নিরীক্ষক সরান"
 
 #: admin.logs.title
 msgid "admin.logs.title"
@@ -1121,3 +1177,535 @@ msgstr "ডিফল্ট ব্রাঞ্চ:"
 #: client.repos.list.updated
 msgid "client.repos.list.updated"
 msgstr "আপডেট হয়েছে"
+
+#: admin.anthropic.title
+msgid "admin.anthropic.title"
+msgstr "Claude Max অ্যাকাউন্ট"
+
+#: admin.anthropic.add_account
+msgid "admin.anthropic.add_account"
+msgstr "অ্যাকাউন্ট যোগ করুন"
+
+#: admin.anthropic.remove
+msgid "admin.anthropic.remove"
+msgstr "সরান"
+
+#: admin.anthropic.remove_confirm
+msgid "admin.anthropic.remove_confirm"
+msgstr "এই অ্যাকাউন্টটি পুল থেকে সরাতে চান?"
+
+#: admin.anthropic.status.available
+msgid "admin.anthropic.status.available"
+msgstr "উপলব্ধ"
+
+#: admin.anthropic.status.cooling_down
+msgid "admin.anthropic.status.cooling_down"
+msgstr "কুলিং ডাউন"
+
+#: admin.anthropic.status.disabled
+msgid "admin.anthropic.status.disabled"
+msgstr "নিষ্ক্রিয়"
+
+#: admin.anthropic.cooldown_remaining
+msgid "admin.anthropic.cooldown_remaining"
+msgstr "{time} বাকি"
+
+#: admin.anthropic.expires_at
+msgid "admin.anthropic.expires_at"
+msgstr "টোকেনের মেয়াদ: {time}"
+
+#: admin.anthropic.no_accounts
+msgid "admin.anthropic.no_accounts"
+msgstr "কোনো অ্যাকাউন্ট কনফিগার করা নেই। শুরু করতে একটি Claude Max অ্যাকাউন্ট যোগ করুন।"
+
+#: admin.anthropic.not_configured
+msgid "admin.anthropic.not_configured"
+msgstr "এই সার্ভারে Anthropic OAuth পুল কনফিগার করা নেই।"
+
+#: admin.anthropic.account_added
+msgid "admin.anthropic.account_added"
+msgstr "অ্যাকাউন্ট {id} সফলভাবে যোগ হয়েছে"
+
+#: admin.anthropic.enter_code_title
+msgid "admin.anthropic.enter_code_title"
+msgstr "অনুমোদন কোড লিখুন"
+
+#: admin.anthropic.enter_code_description
+msgid "admin.anthropic.enter_code_description"
+msgstr "Claude-এর সাথে অনুমোদনের জন্য একটি নতুন ব্রাউজার ট্যাব খোলা হয়েছে। অনুমোদনের পর, Anthropic পৃষ্ঠা থেকে কোডটি কপি করে নিচে পেস্ট করুন।"
+
+#: admin.anthropic.authorization_code
+msgid "admin.anthropic.authorization_code"
+msgstr "অনুমোদন কোড"
+
+#: admin.anthropic.code_placeholder
+msgid "admin.anthropic.code_placeholder"
+msgstr "Anthropic থেকে প্রাপ্ত কোড এখানে পেস্ট করুন"
+
+#: admin.anthropic.submit_code
+msgid "admin.anthropic.submit_code"
+msgstr "অ্যাকাউন্ট যোগ করুন"
+
+#: admin.dashboard.title
+msgid "admin.dashboard.title"
+msgstr "অ্যাডমিন ড্যাশবোর্ড"
+
+#: admin.dashboard.description
+msgid "admin.dashboard.description"
+msgstr "সার্ভার প্রশাসন ও পর্যবেক্ষণ"
+
+#: admin.dashboard.sections
+msgid "admin.dashboard.sections"
+msgstr "প্রশাসন"
+
+#: admin.dashboard.anthropic_description
+msgid "admin.dashboard.anthropic_description"
+msgstr "Claude Max OAuth সাবস্ক্রিপশন পুল পরিচালনা করুন"
+
+#: admin.health.title
+msgid "admin.health.title"
+msgstr "সার্ভার স্বাস্থ্য"
+
+#: admin.health.overall
+msgid "admin.health.overall"
+msgstr "সামগ্রিক অবস্থা"
+
+#: admin.health.version
+msgid "admin.health.version"
+msgstr "সংস্করণ"
+
+#: admin.health.response_time
+msgid "admin.health.response_time"
+msgstr "প্রতিক্রিয়া সময়"
+
+#: admin.health.configured
+msgid "admin.health.configured"
+msgstr "কনফিগার করা হয়েছে"
+
+#: admin.health.not_configured
+msgid "admin.health.not_configured"
+msgstr "কনফিগার করা হয়নি"
+
+#: admin.health.status.healthy
+msgid "admin.health.status.healthy"
+msgstr "সুস্থ"
+
+#: admin.health.status.degraded
+msgid "admin.health.status.degraded"
+msgstr "অবনমিত"
+
+#: admin.health.status.unhealthy
+msgid "admin.health.status.unhealthy"
+msgstr "অসুস্থ"
+
+#: admin.health.status.unknown
+msgid "admin.health.status.unknown"
+msgstr "অজানা"
+
+#: admin.health.database
+msgid "admin.health.database"
+msgstr "ডেটাবেস"
+
+#: admin.health.bin_dir
+msgid "admin.health.bin_dir"
+msgstr "বাইনারি ডিরেক্টরি"
+
+#: admin.health.llm_providers
+msgid "admin.health.llm_providers"
+msgstr "LLM প্রদানকারী"
+
+#: admin.health.google_cse
+msgid "admin.health.google_cse"
+msgstr "Google CSE"
+
+#: admin.health.serper
+msgid "admin.health.serper"
+msgstr "Serper"
+
+#: admin.health.github_app
+msgid "admin.health.github_app"
+msgstr "GitHub অ্যাপ"
+
+#: admin.health.kubernetes
+msgid "admin.health.kubernetes"
+msgstr "Kubernetes"
+
+#: admin.health.smtp
+msgid "admin.health.smtp"
+msgstr "SMTP"
+
+#: admin.health.geoip
+msgid "admin.health.geoip"
+msgstr "GeoIP"
+
+#: admin.health.jobs
+msgid "admin.health.jobs"
+msgstr "ব্যাকগ্রাউন্ড জব"
+
+#: admin.health.auth_providers
+msgid "admin.health.auth_providers"
+msgstr "প্রমাণীকরণ প্রদানকারী"
+
+#: jobs.title
+msgid "jobs.title"
+msgstr "ব্যাকগ্রাউন্ড জব"
+
+#: jobs.description
+msgid "jobs.description"
+msgstr "নির্ধারিত ব্যাকগ্রাউন্ড জব পর্যবেক্ষণ ও পরিচালনা করুন"
+
+#: jobs.loading
+msgid "jobs.loading"
+msgstr "জব লোড হচ্ছে..."
+
+#: jobs.runNow
+msgid "jobs.runNow"
+msgstr "এখনই চালান"
+
+#: jobs.running
+msgid "jobs.running"
+msgstr "চলছে..."
+
+#: jobs.history
+msgid "jobs.history"
+msgstr "ইতিহাস"
+
+#: jobs.hideHistory
+msgid "jobs.hideHistory"
+msgstr "ইতিহাস লুকান"
+
+#: jobs.viewHistory
+msgid "jobs.viewHistory"
+msgstr "ইতিহাস দেখুন"
+
+#: jobs.noJobs
+msgid "jobs.noJobs"
+msgstr "কোনো ব্যাকগ্রাউন্ড জব কনফিগার করা নেই"
+
+#: jobs.never
+msgid "jobs.never"
+msgstr "কখনো চালানো হয়নি"
+
+#: jobs.lastRun
+msgid "jobs.lastRun"
+msgstr "সর্বশেষ চালানো"
+
+#: jobs.duration
+msgid "jobs.duration"
+msgstr "সময়কাল"
+
+#: jobs.interval
+msgid "jobs.interval"
+msgstr "ব্যবধান"
+
+#: jobs.type
+msgid "jobs.type"
+msgstr "ধরন"
+
+#: jobs.failures
+msgid "jobs.failures"
+msgstr "{count}টি পরপর ব্যর্থতা"
+
+#: jobs.status.healthy
+msgid "jobs.status.healthy"
+msgstr "সুস্থ"
+
+#: jobs.status.degraded
+msgid "jobs.status.degraded"
+msgstr "অবনত"
+
+#: jobs.status.unhealthy
+msgid "jobs.status.unhealthy"
+msgstr "অসুস্থ"
+
+#: jobs.status.succeeded
+msgid "jobs.status.succeeded"
+msgstr "সফল"
+
+#: jobs.status.failed
+msgid "jobs.status.failed"
+msgstr "ব্যর্থ"
+
+#: jobs.status.running
+msgid "jobs.status.running"
+msgstr "চলছে"
+
+#: jobs.status.cancelled
+msgid "jobs.status.cancelled"
+msgstr "বাতিল"
+
+#: jobs.trigger.schedule
+msgid "jobs.trigger.schedule"
+msgstr "সময়সূচী"
+
+#: jobs.trigger.manual
+msgid "jobs.trigger.manual"
+msgstr "ম্যানুয়াল"
+
+#: jobs.trigger.retry
+msgid "jobs.trigger.retry"
+msgstr "পুনরায় চেষ্টা"
+
+#: jobs.history.title
+msgid "jobs.history.title"
+msgstr "রান ইতিহাস"
+
+#: jobs.history.status
+msgid "jobs.history.status"
+msgstr "অবস্থা"
+
+#: jobs.history.started
+msgid "jobs.history.started"
+msgstr "শুরু হয়েছে"
+
+#: jobs.history.duration
+msgid "jobs.history.duration"
+msgstr "সময়কাল"
+
+#: jobs.history.trigger
+msgid "jobs.history.trigger"
+msgstr "ট্রিগার"
+
+#: jobs.history.details
+msgid "jobs.history.details"
+msgstr "বিবরণ"
+
+#: jobs.history.loadMore
+msgid "jobs.history.loadMore"
+msgstr "আরো লোড করুন"
+
+#: jobs.history.noRuns
+msgid "jobs.history.noRuns"
+msgstr "কোনো রান ইতিহাস নেই"
+
+#: jobs.time.justNow
+msgid "jobs.time.justNow"
+msgstr "এইমাত্র"
+
+#: jobs.time.minutesAgo
+msgid "jobs.time.minutesAgo"
+msgstr "{count} মিনিট আগে"
+
+#: jobs.time.hoursAgo
+msgid "jobs.time.hoursAgo"
+msgstr "{count} ঘন্টা আগে"
+
+#: jobs.time.daysAgo
+msgid "jobs.time.daysAgo"
+msgstr "{count} দিন আগে"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "রিপোজিটরি"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "নতুন রিপোজিটরি"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "রিপোজিটরি খুঁজুন..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "আবার চেষ্টা করুন"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "আপনার অনুসন্ধানের সাথে কোনো রিপোজিটরি মেলেনি"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "এখনও কোনো রিপোজিটরি নেই"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "আপনার প্রথম রিপোজিটরি তৈরি করুন"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "ডিফল্ট ব্রাঞ্চ:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "আপডেট করা হয়েছে"
+
+#: client.repos.header.clone
+msgid "client.repos.header.clone"
+msgstr "ক্লোন"
+
+#: client.repos.header.clone_https
+msgid "client.repos.header.clone_https"
+msgstr "HTTPS দিয়ে ক্লোন করুন"
+
+#: client.repos.header.copied
+msgid "client.repos.header.copied"
+msgstr "কপি হয়েছে!"
+
+#: client.repos.header.copy
+msgid "client.repos.header.copy"
+msgstr "কপি করুন"
+
+#: client.repos.header.default_branch
+msgid "client.repos.header.default_branch"
+msgstr "ডিফল্ট ব্রাঞ্চ"
+
+#: client.repos.nav.code
+msgid "client.repos.nav.code"
+msgstr "কোড"
+
+#: client.repos.nav.commits
+msgid "client.repos.nav.commits"
+msgstr "কমিট"
+
+#: client.repos.nav.branches
+msgid "client.repos.nav.branches"
+msgstr "ব্রাঞ্চ"
+
+#: client.repos.nav.settings
+msgid "client.repos.nav.settings"
+msgstr "সেটিংস"
+
+#: client.repos.tree.empty
+msgid "client.repos.tree.empty"
+msgstr "এই ডিরেক্টরি খালি"
+
+#: client.repos.blob.lines
+msgid "client.repos.blob.lines"
+msgstr "লাইন"
+
+#: client.repos.blob.bytes
+msgid "client.repos.blob.bytes"
+msgstr "বাইট"
+
+#: client.repos.blob.blame
+msgid "client.repos.blob.blame"
+msgstr "ব্লেম"
+
+#: client.repos.blob.copy
+msgid "client.repos.blob.copy"
+msgstr "কপি করুন"
+
+#: client.repos.blob.copied
+msgid "client.repos.blob.copied"
+msgstr "কপি হয়েছে!"
+
+#: client.repos.blob.raw
+msgid "client.repos.blob.raw"
+msgstr "র"
+
+#: client.repos.blob.binary_not_shown
+msgid "client.repos.blob.binary_not_shown"
+msgstr "বাইনারি ফাইল দেখানো হয়নি"
+
+#: client.repos.weaver.open
+msgid "client.repos.weaver.open"
+msgstr "Weaver-এ খুলুন"
+
+#: client.repos.weaver.create_failed
+msgid "client.repos.weaver.create_failed"
+msgstr "Weaver তৈরি করতে ব্যর্থ"
+
+#: client.repos.branch.find
+msgid "client.repos.branch.find"
+msgstr "ব্রাঞ্চ খুঁজুন..."
+
+#: client.repos.branch.not_found
+msgid "client.repos.branch.not_found"
+msgstr "কোনো ব্রাঞ্চ পাওয়া যায়নি"
+
+#: client.repos.branch.default
+msgid "client.repos.branch.default"
+msgstr "ডিফল্ট"
+
+#: client.repos.commits.minutes_ago
+msgid "client.repos.commits.minutes_ago"
+msgstr "{count} মিনিট আগে"
+
+#: client.repos.commits.hours_ago
+msgid "client.repos.commits.hours_ago"
+msgstr "{count} ঘন্টা আগে"
+
+#: client.repos.commits.days_ago
+msgid "client.repos.commits.days_ago"
+msgstr "{count} দিন আগে"
+
+#: client.repos.commits.committed
+msgid "client.repos.commits.committed"
+msgstr "কমিট করা হয়েছে"
+
+#: client.repos.commits.copy_sha
+msgid "client.repos.commits.copy_sha"
+msgstr "SHA কপি করুন"
+
+#: client.repos.commits.empty
+msgid "client.repos.commits.empty"
+msgstr "কোনো কমিট পাওয়া যায়নি"
+
+#: client.repos.diff.parent
+msgid "client.repos.diff.parent"
+msgstr "প্যারেন্ট"
+
+#: client.repos.diff.parents
+msgid "client.repos.diff.parents"
+msgstr "প্যারেন্টস"
+
+#: client.repos.diff.showing
+msgid "client.repos.diff.showing"
+msgstr "দেখানো হচ্ছে"
+
+#: client.repos.diff.changed_file
+msgid "client.repos.diff.changed_file"
+msgstr "পরিবর্তিত ফাইল"
+
+#: client.repos.diff.changed_files
+msgid "client.repos.diff.changed_files"
+msgstr "পরিবর্তিত ফাইল"
+
+#: client.repos.blame.lines
+msgid "client.repos.blame.lines"
+msgstr "লাইন"
+
+#: client.repos.blame.today
+msgid "client.repos.blame.today"
+msgstr "আজ"
+
+#: client.repos.blame.days_ago
+msgid "client.repos.blame.days_ago"
+msgstr "{count} দিন আগে"
+
+#: client.repos.blame.months_ago
+msgid "client.repos.blame.months_ago"
+msgstr "{count} মাস আগে"
+
+#: client.repos.blame.years_ago
+msgid "client.repos.blame.years_ago"
+msgstr "{count} বছর আগে"
+
+#: client.repos.blame.empty
+msgid "client.repos.blame.empty"
+msgstr "ব্লেম তথ্য উপলব্ধ নেই"
+
+#: client.repos.compare.ahead
+msgid "client.repos.compare.ahead"
+msgstr "এগিয়ে"
+
+#: client.repos.compare.behind
+msgid "client.repos.compare.behind"
+msgstr "পিছিয়ে"
+
+#: client.repos.compare.commit
+msgid "client.repos.compare.commit"
+msgstr "কমিট"
+
+#: client.repos.compare.commits
+msgid "client.repos.compare.commits"
+msgstr "কমিট"
+
+#: client.repos.compare.commits_heading
+msgid "client.repos.compare.commits_heading"
+msgstr "কমিট"
+
+#: client.repos.compare.identical
+msgid "client.repos.compare.identical"
+msgstr "এই ব্রাঞ্চগুলো অভিন্ন"

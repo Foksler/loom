@@ -331,6 +331,34 @@ msgstr "Email"
 msgid "settings.profile.emailHint"
 msgstr "Email tidak dapat diubah di sini"
 
+#: settings.profile.username
+msgid "settings.profile.username"
+msgstr "Nama pengguna"
+
+#: settings.profile.usernamePlaceholder
+msgid "settings.profile.usernamePlaceholder"
+msgstr "Masukkan nama pengguna"
+
+#: settings.profile.usernameHint
+msgid "settings.profile.usernameHint"
+msgstr "Nama pengguna Anda digunakan untuk URL repositori git"
+
+#: settings.profile.usernameInvalid
+msgid "settings.profile.usernameInvalid"
+msgstr "Nama pengguna hanya boleh berisi huruf, angka, dan garis bawah"
+
+#: settings.profile.usernameTaken
+msgid "settings.profile.usernameTaken"
+msgstr "Nama pengguna ini sudah digunakan"
+
+#: settings.profile.usernameTooShort
+msgid "settings.profile.usernameTooShort"
+msgstr "Nama pengguna harus minimal 3 karakter"
+
+#: settings.profile.usernameTooLong
+msgid "settings.profile.usernameTooLong"
+msgstr "Nama pengguna maksimal 39 karakter"
+
 #: settings.profile.locale
 msgid "settings.profile.locale"
 msgstr "Bahasa"
@@ -825,7 +853,35 @@ msgstr "Last login"
 
 #: admin.users.impersonate
 msgid "admin.users.impersonate"
-msgstr "Impersonate"
+msgstr "Menyamar"
+
+#: admin.users.updated
+msgid "admin.users.updated"
+msgstr "Diperbarui"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "Jadikan Admin"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "Hapus Admin"
+
+#: admin.users.makeSupport
+msgid "admin.users.makeSupport"
+msgstr "Jadikan Support"
+
+#: admin.users.removeSupport
+msgid "admin.users.removeSupport"
+msgstr "Hapus Support"
+
+#: admin.users.makeAuditor
+msgid "admin.users.makeAuditor"
+msgstr "Jadikan Auditor"
+
+#: admin.users.removeAuditor
+msgid "admin.users.removeAuditor"
+msgstr "Hapus Auditor"
 
 #: admin.logs.title
 msgid "admin.logs.title"
@@ -1121,3 +1177,535 @@ msgstr "Branch default:"
 #: client.repos.list.updated
 msgid "client.repos.list.updated"
 msgstr "Diperbarui"
+
+#: admin.anthropic.title
+msgid "admin.anthropic.title"
+msgstr "Akun Claude Max"
+
+#: admin.anthropic.add_account
+msgid "admin.anthropic.add_account"
+msgstr "Tambah Akun"
+
+#: admin.anthropic.remove
+msgid "admin.anthropic.remove"
+msgstr "Hapus"
+
+#: admin.anthropic.remove_confirm
+msgid "admin.anthropic.remove_confirm"
+msgstr "Hapus akun ini dari pool?"
+
+#: admin.anthropic.status.available
+msgid "admin.anthropic.status.available"
+msgstr "Tersedia"
+
+#: admin.anthropic.status.cooling_down
+msgid "admin.anthropic.status.cooling_down"
+msgstr "Sedang Cooldown"
+
+#: admin.anthropic.status.disabled
+msgid "admin.anthropic.status.disabled"
+msgstr "Dinonaktifkan"
+
+#: admin.anthropic.cooldown_remaining
+msgid "admin.anthropic.cooldown_remaining"
+msgstr "{time} tersisa"
+
+#: admin.anthropic.expires_at
+msgid "admin.anthropic.expires_at"
+msgstr "Token kedaluwarsa: {time}"
+
+#: admin.anthropic.no_accounts
+msgid "admin.anthropic.no_accounts"
+msgstr "Tidak ada akun yang dikonfigurasi. Tambahkan akun Claude Max untuk memulai."
+
+#: admin.anthropic.not_configured
+msgid "admin.anthropic.not_configured"
+msgstr "Pool OAuth Anthropic tidak dikonfigurasi di server ini."
+
+#: admin.anthropic.account_added
+msgid "admin.anthropic.account_added"
+msgstr "Akun {id} berhasil ditambahkan"
+
+#: admin.anthropic.enter_code_title
+msgid "admin.anthropic.enter_code_title"
+msgstr "Masukkan Kode Otorisasi"
+
+#: admin.anthropic.enter_code_description
+msgid "admin.anthropic.enter_code_description"
+msgstr "Tab browser baru telah dibuka untuk otorisasi dengan Claude. Setelah mengotorisasi, salin kode dari halaman Anthropic dan tempel di bawah."
+
+#: admin.anthropic.authorization_code
+msgid "admin.anthropic.authorization_code"
+msgstr "Kode Otorisasi"
+
+#: admin.anthropic.code_placeholder
+msgid "admin.anthropic.code_placeholder"
+msgstr "Tempel kode dari Anthropic di sini"
+
+#: admin.anthropic.submit_code
+msgid "admin.anthropic.submit_code"
+msgstr "Tambah Akun"
+
+#: admin.dashboard.title
+msgid "admin.dashboard.title"
+msgstr "Dasbor Admin"
+
+#: admin.dashboard.description
+msgid "admin.dashboard.description"
+msgstr "Administrasi dan pemantauan server"
+
+#: admin.dashboard.sections
+msgid "admin.dashboard.sections"
+msgstr "Administrasi"
+
+#: admin.dashboard.anthropic_description
+msgid "admin.dashboard.anthropic_description"
+msgstr "Kelola pool langganan OAuth Claude Max"
+
+#: admin.health.title
+msgid "admin.health.title"
+msgstr "Kesehatan Server"
+
+#: admin.health.overall
+msgid "admin.health.overall"
+msgstr "Status Keseluruhan"
+
+#: admin.health.version
+msgid "admin.health.version"
+msgstr "Versi"
+
+#: admin.health.response_time
+msgid "admin.health.response_time"
+msgstr "Waktu respons"
+
+#: admin.health.configured
+msgid "admin.health.configured"
+msgstr "Dikonfigurasi"
+
+#: admin.health.not_configured
+msgid "admin.health.not_configured"
+msgstr "Tidak dikonfigurasi"
+
+#: admin.health.status.healthy
+msgid "admin.health.status.healthy"
+msgstr "Sehat"
+
+#: admin.health.status.degraded
+msgid "admin.health.status.degraded"
+msgstr "Terdegradasi"
+
+#: admin.health.status.unhealthy
+msgid "admin.health.status.unhealthy"
+msgstr "Tidak sehat"
+
+#: admin.health.status.unknown
+msgid "admin.health.status.unknown"
+msgstr "Tidak diketahui"
+
+#: admin.health.database
+msgid "admin.health.database"
+msgstr "Database"
+
+#: admin.health.bin_dir
+msgid "admin.health.bin_dir"
+msgstr "Direktori Biner"
+
+#: admin.health.llm_providers
+msgid "admin.health.llm_providers"
+msgstr "Penyedia LLM"
+
+#: admin.health.google_cse
+msgid "admin.health.google_cse"
+msgstr "Google CSE"
+
+#: admin.health.serper
+msgid "admin.health.serper"
+msgstr "Serper"
+
+#: admin.health.github_app
+msgid "admin.health.github_app"
+msgstr "GitHub App"
+
+#: admin.health.kubernetes
+msgid "admin.health.kubernetes"
+msgstr "Kubernetes"
+
+#: admin.health.smtp
+msgid "admin.health.smtp"
+msgstr "SMTP"
+
+#: admin.health.geoip
+msgid "admin.health.geoip"
+msgstr "GeoIP"
+
+#: admin.health.jobs
+msgid "admin.health.jobs"
+msgstr "Pekerjaan Latar Belakang"
+
+#: admin.health.auth_providers
+msgid "admin.health.auth_providers"
+msgstr "Penyedia Autentikasi"
+
+#: jobs.title
+msgid "jobs.title"
+msgstr "Pekerjaan Latar Belakang"
+
+#: jobs.description
+msgid "jobs.description"
+msgstr "Pantau dan kelola pekerjaan latar belakang terjadwal"
+
+#: jobs.loading
+msgid "jobs.loading"
+msgstr "Memuat pekerjaan..."
+
+#: jobs.runNow
+msgid "jobs.runNow"
+msgstr "Jalankan Sekarang"
+
+#: jobs.running
+msgid "jobs.running"
+msgstr "Berjalan..."
+
+#: jobs.history
+msgid "jobs.history"
+msgstr "Riwayat"
+
+#: jobs.hideHistory
+msgid "jobs.hideHistory"
+msgstr "Sembunyikan Riwayat"
+
+#: jobs.viewHistory
+msgid "jobs.viewHistory"
+msgstr "Lihat Riwayat"
+
+#: jobs.noJobs
+msgid "jobs.noJobs"
+msgstr "Tidak ada pekerjaan latar belakang yang dikonfigurasi"
+
+#: jobs.never
+msgid "jobs.never"
+msgstr "Belum pernah dijalankan"
+
+#: jobs.lastRun
+msgid "jobs.lastRun"
+msgstr "Terakhir dijalankan"
+
+#: jobs.duration
+msgid "jobs.duration"
+msgstr "Durasi"
+
+#: jobs.interval
+msgid "jobs.interval"
+msgstr "Interval"
+
+#: jobs.type
+msgid "jobs.type"
+msgstr "Tipe"
+
+#: jobs.failures
+msgid "jobs.failures"
+msgstr "{count} kegagalan berturut-turut"
+
+#: jobs.status.healthy
+msgid "jobs.status.healthy"
+msgstr "Sehat"
+
+#: jobs.status.degraded
+msgid "jobs.status.degraded"
+msgstr "Terdegradasi"
+
+#: jobs.status.unhealthy
+msgid "jobs.status.unhealthy"
+msgstr "Tidak Sehat"
+
+#: jobs.status.succeeded
+msgid "jobs.status.succeeded"
+msgstr "Berhasil"
+
+#: jobs.status.failed
+msgid "jobs.status.failed"
+msgstr "Gagal"
+
+#: jobs.status.running
+msgid "jobs.status.running"
+msgstr "Berjalan"
+
+#: jobs.status.cancelled
+msgid "jobs.status.cancelled"
+msgstr "Dibatalkan"
+
+#: jobs.trigger.schedule
+msgid "jobs.trigger.schedule"
+msgstr "Jadwal"
+
+#: jobs.trigger.manual
+msgid "jobs.trigger.manual"
+msgstr "Manual"
+
+#: jobs.trigger.retry
+msgid "jobs.trigger.retry"
+msgstr "Coba Lagi"
+
+#: jobs.history.title
+msgid "jobs.history.title"
+msgstr "Riwayat Eksekusi"
+
+#: jobs.history.status
+msgid "jobs.history.status"
+msgstr "Status"
+
+#: jobs.history.started
+msgid "jobs.history.started"
+msgstr "Dimulai"
+
+#: jobs.history.duration
+msgid "jobs.history.duration"
+msgstr "Durasi"
+
+#: jobs.history.trigger
+msgid "jobs.history.trigger"
+msgstr "Pemicu"
+
+#: jobs.history.details
+msgid "jobs.history.details"
+msgstr "Detail"
+
+#: jobs.history.loadMore
+msgid "jobs.history.loadMore"
+msgstr "Muat Lebih Banyak"
+
+#: jobs.history.noRuns
+msgid "jobs.history.noRuns"
+msgstr "Tidak ada riwayat eksekusi"
+
+#: jobs.time.justNow
+msgid "jobs.time.justNow"
+msgstr "baru saja"
+
+#: jobs.time.minutesAgo
+msgid "jobs.time.minutesAgo"
+msgstr "{count} menit yang lalu"
+
+#: jobs.time.hoursAgo
+msgid "jobs.time.hoursAgo"
+msgstr "{count} jam yang lalu"
+
+#: jobs.time.daysAgo
+msgid "jobs.time.daysAgo"
+msgstr "{count} hari yang lalu"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "Repositori"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "Repositori Baru"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "Cari repositori..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "Coba Lagi"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "Tidak ada repositori yang cocok dengan pencarian Anda"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "Belum ada repositori"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "Buat repositori pertama Anda"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "Cabang default:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "Diperbarui"
+
+#: client.repos.header.clone
+msgid "client.repos.header.clone"
+msgstr "Klon"
+
+#: client.repos.header.clone_https
+msgid "client.repos.header.clone_https"
+msgstr "Klon dengan HTTPS"
+
+#: client.repos.header.copied
+msgid "client.repos.header.copied"
+msgstr "Tersalin!"
+
+#: client.repos.header.copy
+msgid "client.repos.header.copy"
+msgstr "Salin"
+
+#: client.repos.header.default_branch
+msgid "client.repos.header.default_branch"
+msgstr "Cabang default"
+
+#: client.repos.nav.code
+msgid "client.repos.nav.code"
+msgstr "Kode"
+
+#: client.repos.nav.commits
+msgid "client.repos.nav.commits"
+msgstr "Komit"
+
+#: client.repos.nav.branches
+msgid "client.repos.nav.branches"
+msgstr "Cabang"
+
+#: client.repos.nav.settings
+msgid "client.repos.nav.settings"
+msgstr "Pengaturan"
+
+#: client.repos.tree.empty
+msgid "client.repos.tree.empty"
+msgstr "Direktori ini kosong"
+
+#: client.repos.blob.lines
+msgid "client.repos.blob.lines"
+msgstr "baris"
+
+#: client.repos.blob.bytes
+msgid "client.repos.blob.bytes"
+msgstr "byte"
+
+#: client.repos.blob.blame
+msgid "client.repos.blob.blame"
+msgstr "Blame"
+
+#: client.repos.blob.copy
+msgid "client.repos.blob.copy"
+msgstr "Salin"
+
+#: client.repos.blob.copied
+msgid "client.repos.blob.copied"
+msgstr "Tersalin!"
+
+#: client.repos.blob.raw
+msgid "client.repos.blob.raw"
+msgstr "Mentah"
+
+#: client.repos.blob.binary_not_shown
+msgid "client.repos.blob.binary_not_shown"
+msgstr "File biner tidak ditampilkan"
+
+#: client.repos.weaver.open
+msgid "client.repos.weaver.open"
+msgstr "Buka di Weaver"
+
+#: client.repos.weaver.create_failed
+msgid "client.repos.weaver.create_failed"
+msgstr "Gagal membuat weaver"
+
+#: client.repos.branch.find
+msgid "client.repos.branch.find"
+msgstr "Cari cabang..."
+
+#: client.repos.branch.not_found
+msgid "client.repos.branch.not_found"
+msgstr "Tidak ada cabang ditemukan"
+
+#: client.repos.branch.default
+msgid "client.repos.branch.default"
+msgstr "default"
+
+#: client.repos.commits.minutes_ago
+msgid "client.repos.commits.minutes_ago"
+msgstr "{count} menit yang lalu"
+
+#: client.repos.commits.hours_ago
+msgid "client.repos.commits.hours_ago"
+msgstr "{count} jam yang lalu"
+
+#: client.repos.commits.days_ago
+msgid "client.repos.commits.days_ago"
+msgstr "{count} hari yang lalu"
+
+#: client.repos.commits.committed
+msgid "client.repos.commits.committed"
+msgstr "dikomit"
+
+#: client.repos.commits.copy_sha
+msgid "client.repos.commits.copy_sha"
+msgstr "Salin SHA"
+
+#: client.repos.commits.empty
+msgid "client.repos.commits.empty"
+msgstr "Tidak ada komit ditemukan"
+
+#: client.repos.diff.parent
+msgid "client.repos.diff.parent"
+msgstr "Induk"
+
+#: client.repos.diff.parents
+msgid "client.repos.diff.parents"
+msgstr "Induk"
+
+#: client.repos.diff.showing
+msgid "client.repos.diff.showing"
+msgstr "Menampilkan"
+
+#: client.repos.diff.changed_file
+msgid "client.repos.diff.changed_file"
+msgstr "file diubah"
+
+#: client.repos.diff.changed_files
+msgid "client.repos.diff.changed_files"
+msgstr "file diubah"
+
+#: client.repos.blame.lines
+msgid "client.repos.blame.lines"
+msgstr "baris"
+
+#: client.repos.blame.today
+msgid "client.repos.blame.today"
+msgstr "hari ini"
+
+#: client.repos.blame.days_ago
+msgid "client.repos.blame.days_ago"
+msgstr "{count}h yang lalu"
+
+#: client.repos.blame.months_ago
+msgid "client.repos.blame.months_ago"
+msgstr "{count}bln yang lalu"
+
+#: client.repos.blame.years_ago
+msgid "client.repos.blame.years_ago"
+msgstr "{count}thn yang lalu"
+
+#: client.repos.blame.empty
+msgid "client.repos.blame.empty"
+msgstr "Informasi blame tidak tersedia"
+
+#: client.repos.compare.ahead
+msgid "client.repos.compare.ahead"
+msgstr "di depan"
+
+#: client.repos.compare.behind
+msgid "client.repos.compare.behind"
+msgstr "di belakang"
+
+#: client.repos.compare.commit
+msgid "client.repos.compare.commit"
+msgstr "komit"
+
+#: client.repos.compare.commits
+msgid "client.repos.compare.commits"
+msgstr "komit"
+
+#: client.repos.compare.commits_heading
+msgid "client.repos.compare.commits_heading"
+msgstr "Komit"
+
+#: client.repos.compare.identical
+msgid "client.repos.compare.identical"
+msgstr "Cabang-cabang ini identik"

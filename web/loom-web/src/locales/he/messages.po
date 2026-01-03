@@ -331,6 +331,34 @@ msgstr "אימייל"
 msgid "settings.profile.emailHint"
 msgstr "לא ניתן לשנות את האימייל כאן"
 
+#: settings.profile.username
+msgid "settings.profile.username"
+msgstr "שם משתמש"
+
+#: settings.profile.usernamePlaceholder
+msgid "settings.profile.usernamePlaceholder"
+msgstr "הזן שם משתמש"
+
+#: settings.profile.usernameHint
+msgid "settings.profile.usernameHint"
+msgstr "שם המשתמש שלך משמש לכתובות URL של מאגרי git"
+
+#: settings.profile.usernameInvalid
+msgid "settings.profile.usernameInvalid"
+msgstr "שם המשתמש יכול להכיל רק אותיות, מספרים וקווים תחתונים"
+
+#: settings.profile.usernameTaken
+msgid "settings.profile.usernameTaken"
+msgstr "שם המשתמש הזה כבר תפוס"
+
+#: settings.profile.usernameTooShort
+msgid "settings.profile.usernameTooShort"
+msgstr "שם המשתמש חייב להיות לפחות 3 תווים"
+
+#: settings.profile.usernameTooLong
+msgid "settings.profile.usernameTooLong"
+msgstr "שם המשתמש חייב להיות לכל היותר 39 תווים"
+
 #: settings.profile.locale
 msgid "settings.profile.locale"
 msgstr "שפה"
@@ -825,7 +853,35 @@ msgstr "Last login"
 
 #: admin.users.impersonate
 msgid "admin.users.impersonate"
-msgstr "Impersonate"
+msgstr "התחזות"
+
+#: admin.users.updated
+msgid "admin.users.updated"
+msgstr "עודכן"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "הפוך למנהל"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "הסר מנהל"
+
+#: admin.users.makeSupport
+msgid "admin.users.makeSupport"
+msgstr "הפוך לתמיכה"
+
+#: admin.users.removeSupport
+msgid "admin.users.removeSupport"
+msgstr "הסר תמיכה"
+
+#: admin.users.makeAuditor
+msgid "admin.users.makeAuditor"
+msgstr "הפוך למבקר"
+
+#: admin.users.removeAuditor
+msgid "admin.users.removeAuditor"
+msgstr "הסר מבקר"
 
 #: admin.logs.title
 msgid "admin.logs.title"
@@ -1086,6 +1142,154 @@ msgstr "The terminal will be available once the weaver is running"
 msgid "weavers.terminal.notRunning"
 msgstr "Weaver is not running (status: {status})"
 
+#: jobs.title
+msgid "jobs.title"
+msgstr "משימות רקע"
+
+#: jobs.description
+msgid "jobs.description"
+msgstr "ניטור וניהול משימות רקע מתוזמנות"
+
+#: jobs.loading
+msgid "jobs.loading"
+msgstr "טוען משימות..."
+
+#: jobs.runNow
+msgid "jobs.runNow"
+msgstr "הפעל עכשיו"
+
+#: jobs.running
+msgid "jobs.running"
+msgstr "רץ..."
+
+#: jobs.history
+msgid "jobs.history"
+msgstr "היסטוריה"
+
+#: jobs.hideHistory
+msgid "jobs.hideHistory"
+msgstr "הסתר היסטוריה"
+
+#: jobs.viewHistory
+msgid "jobs.viewHistory"
+msgstr "הצג היסטוריה"
+
+#: jobs.noJobs
+msgid "jobs.noJobs"
+msgstr "לא הוגדרו משימות רקע"
+
+#: jobs.never
+msgid "jobs.never"
+msgstr "מעולם לא הופעל"
+
+#: jobs.lastRun
+msgid "jobs.lastRun"
+msgstr "הרצה אחרונה"
+
+#: jobs.duration
+msgid "jobs.duration"
+msgstr "משך"
+
+#: jobs.interval
+msgid "jobs.interval"
+msgstr "תדירות"
+
+#: jobs.type
+msgid "jobs.type"
+msgstr "סוג"
+
+#: jobs.failures
+msgid "jobs.failures"
+msgstr "{count} כשלונות רצופים"
+
+#: jobs.status.healthy
+msgid "jobs.status.healthy"
+msgstr "תקין"
+
+#: jobs.status.degraded
+msgid "jobs.status.degraded"
+msgstr "פגום"
+
+#: jobs.status.unhealthy
+msgid "jobs.status.unhealthy"
+msgstr "לא תקין"
+
+#: jobs.status.succeeded
+msgid "jobs.status.succeeded"
+msgstr "הצליח"
+
+#: jobs.status.failed
+msgid "jobs.status.failed"
+msgstr "נכשל"
+
+#: jobs.status.running
+msgid "jobs.status.running"
+msgstr "רץ"
+
+#: jobs.status.cancelled
+msgid "jobs.status.cancelled"
+msgstr "בוטל"
+
+#: jobs.trigger.schedule
+msgid "jobs.trigger.schedule"
+msgstr "מתוזמן"
+
+#: jobs.trigger.manual
+msgid "jobs.trigger.manual"
+msgstr "ידני"
+
+#: jobs.trigger.retry
+msgid "jobs.trigger.retry"
+msgstr "ניסיון חוזר"
+
+#: jobs.history.title
+msgid "jobs.history.title"
+msgstr "היסטוריית הרצות"
+
+#: jobs.history.status
+msgid "jobs.history.status"
+msgstr "סטטוס"
+
+#: jobs.history.started
+msgid "jobs.history.started"
+msgstr "התחיל"
+
+#: jobs.history.duration
+msgid "jobs.history.duration"
+msgstr "משך"
+
+#: jobs.history.trigger
+msgid "jobs.history.trigger"
+msgstr "מפעיל"
+
+#: jobs.history.details
+msgid "jobs.history.details"
+msgstr "פרטים"
+
+#: jobs.history.loadMore
+msgid "jobs.history.loadMore"
+msgstr "טען עוד"
+
+#: jobs.history.noRuns
+msgid "jobs.history.noRuns"
+msgstr "אין היסטוריית הרצות"
+
+#: jobs.time.justNow
+msgid "jobs.time.justNow"
+msgstr "עכשיו"
+
+#: jobs.time.minutesAgo
+msgid "jobs.time.minutesAgo"
+msgstr "לפני {count} דקות"
+
+#: jobs.time.hoursAgo
+msgid "jobs.time.hoursAgo"
+msgstr "לפני {count} שעות"
+
+#: jobs.time.daysAgo
+msgid "jobs.time.daysAgo"
+msgstr "לפני {count} ימים"
+
 #: client.repos.list.title
 msgid "client.repos.list.title"
 msgstr "מאגרים"
@@ -1121,3 +1325,351 @@ msgstr "ענף ברירת מחדל:"
 #: client.repos.list.updated
 msgid "client.repos.list.updated"
 msgstr "עודכן"
+
+#: client.repos.header.clone
+msgid "client.repos.header.clone"
+msgstr "שכפול"
+
+#: client.repos.header.clone_https
+msgid "client.repos.header.clone_https"
+msgstr "שכפול עם HTTPS"
+
+#: client.repos.header.copied
+msgid "client.repos.header.copied"
+msgstr "הועתק!"
+
+#: client.repos.header.copy
+msgid "client.repos.header.copy"
+msgstr "העתק"
+
+#: client.repos.header.default_branch
+msgid "client.repos.header.default_branch"
+msgstr "ענף ברירת מחדל"
+
+#: client.repos.nav.code
+msgid "client.repos.nav.code"
+msgstr "קוד"
+
+#: client.repos.nav.commits
+msgid "client.repos.nav.commits"
+msgstr "קומיטים"
+
+#: client.repos.nav.branches
+msgid "client.repos.nav.branches"
+msgstr "ענפים"
+
+#: client.repos.nav.settings
+msgid "client.repos.nav.settings"
+msgstr "הגדרות"
+
+#: client.repos.tree.empty
+msgid "client.repos.tree.empty"
+msgstr "תיקייה זו ריקה"
+
+#: client.repos.blob.lines
+msgid "client.repos.blob.lines"
+msgstr "שורות"
+
+#: client.repos.blob.bytes
+msgid "client.repos.blob.bytes"
+msgstr "בתים"
+
+#: client.repos.blob.blame
+msgid "client.repos.blob.blame"
+msgstr "היסטוריה"
+
+#: client.repos.blob.copy
+msgid "client.repos.blob.copy"
+msgstr "העתק"
+
+#: client.repos.blob.copied
+msgid "client.repos.blob.copied"
+msgstr "הועתק!"
+
+#: client.repos.blob.raw
+msgid "client.repos.blob.raw"
+msgstr "גולמי"
+
+#: client.repos.blob.binary_not_shown
+msgid "client.repos.blob.binary_not_shown"
+msgstr "קובץ בינארי לא מוצג"
+
+#: client.repos.weaver.open
+msgid "client.repos.weaver.open"
+msgstr "פתח ב-Weaver"
+
+#: client.repos.weaver.create_failed
+msgid "client.repos.weaver.create_failed"
+msgstr "יצירת Weaver נכשלה"
+
+#: client.repos.branch.find
+msgid "client.repos.branch.find"
+msgstr "חפש ענף..."
+
+#: client.repos.branch.not_found
+msgid "client.repos.branch.not_found"
+msgstr "לא נמצאו ענפים"
+
+#: client.repos.branch.default
+msgid "client.repos.branch.default"
+msgstr "ברירת מחדל"
+
+#: client.repos.commits.minutes_ago
+msgid "client.repos.commits.minutes_ago"
+msgstr "לפני {count} דקות"
+
+#: client.repos.commits.hours_ago
+msgid "client.repos.commits.hours_ago"
+msgstr "לפני {count} שעות"
+
+#: client.repos.commits.days_ago
+msgid "client.repos.commits.days_ago"
+msgstr "לפני {count} ימים"
+
+#: client.repos.commits.committed
+msgid "client.repos.commits.committed"
+msgstr "בוצע"
+
+#: client.repos.commits.copy_sha
+msgid "client.repos.commits.copy_sha"
+msgstr "העתק SHA"
+
+#: client.repos.commits.empty
+msgid "client.repos.commits.empty"
+msgstr "לא נמצאו קומיטים"
+
+#: client.repos.diff.parent
+msgid "client.repos.diff.parent"
+msgstr "הורה"
+
+#: client.repos.diff.parents
+msgid "client.repos.diff.parents"
+msgstr "הורים"
+
+#: client.repos.diff.showing
+msgid "client.repos.diff.showing"
+msgstr "מציג"
+
+#: client.repos.diff.changed_file
+msgid "client.repos.diff.changed_file"
+msgstr "קובץ שהשתנה"
+
+#: client.repos.diff.changed_files
+msgid "client.repos.diff.changed_files"
+msgstr "קבצים שהשתנו"
+
+#: client.repos.blame.lines
+msgid "client.repos.blame.lines"
+msgstr "שורות"
+
+#: client.repos.blame.today
+msgid "client.repos.blame.today"
+msgstr "היום"
+
+#: client.repos.blame.days_ago
+msgid "client.repos.blame.days_ago"
+msgstr "לפני {count} ימים"
+
+#: client.repos.blame.months_ago
+msgid "client.repos.blame.months_ago"
+msgstr "לפני {count} חודשים"
+
+#: client.repos.blame.years_ago
+msgid "client.repos.blame.years_ago"
+msgstr "לפני {count} שנים"
+
+#: client.repos.blame.empty
+msgid "client.repos.blame.empty"
+msgstr "אין מידע היסטוריה זמין"
+
+#: client.repos.compare.ahead
+msgid "client.repos.compare.ahead"
+msgstr "לפני"
+
+#: client.repos.compare.behind
+msgid "client.repos.compare.behind"
+msgstr "מאחורי"
+
+#: client.repos.compare.commit
+msgid "client.repos.compare.commit"
+msgstr "קומיט"
+
+#: client.repos.compare.commits
+msgid "client.repos.compare.commits"
+msgstr "קומיטים"
+
+#: client.repos.compare.commits_heading
+msgid "client.repos.compare.commits_heading"
+msgstr "קומיטים"
+
+#: client.repos.compare.identical
+msgid "client.repos.compare.identical"
+msgstr "ענפים אלה זהים"
+
+#: admin.anthropic.title
+msgid "admin.anthropic.title"
+msgstr "חשבונות Claude Max"
+
+#: admin.anthropic.add_account
+msgid "admin.anthropic.add_account"
+msgstr "הוסף חשבון"
+
+#: admin.anthropic.remove
+msgid "admin.anthropic.remove"
+msgstr "הסר"
+
+#: admin.anthropic.remove_confirm
+msgid "admin.anthropic.remove_confirm"
+msgstr "להסיר חשבון זה מהמאגר?"
+
+#: admin.anthropic.status.available
+msgid "admin.anthropic.status.available"
+msgstr "זמין"
+
+#: admin.anthropic.status.cooling_down
+msgid "admin.anthropic.status.cooling_down"
+msgstr "בהמתנה"
+
+#: admin.anthropic.status.disabled
+msgid "admin.anthropic.status.disabled"
+msgstr "מושבת"
+
+#: admin.anthropic.cooldown_remaining
+msgid "admin.anthropic.cooldown_remaining"
+msgstr "נותרו {time}"
+
+#: admin.anthropic.expires_at
+msgid "admin.anthropic.expires_at"
+msgstr "תוקף האסימון פג: {time}"
+
+#: admin.anthropic.no_accounts
+msgid "admin.anthropic.no_accounts"
+msgstr "לא הוגדרו חשבונות. הוסף חשבון Claude Max כדי להתחיל."
+
+#: admin.anthropic.not_configured
+msgid "admin.anthropic.not_configured"
+msgstr "מאגר Anthropic OAuth לא מוגדר בשרת זה."
+
+#: admin.anthropic.account_added
+msgid "admin.anthropic.account_added"
+msgstr "חשבון {id} נוסף בהצלחה"
+
+#: admin.anthropic.enter_code_title
+msgid "admin.anthropic.enter_code_title"
+msgstr "הזן קוד הרשאה"
+
+#: admin.anthropic.enter_code_description
+msgid "admin.anthropic.enter_code_description"
+msgstr "נפתחה כרטיסייה חדשה בדפדפן להרשאה מול Claude. לאחר ההרשאה, העתק את הקוד מדף Anthropic והדבק אותו למטה."
+
+#: admin.anthropic.authorization_code
+msgid "admin.anthropic.authorization_code"
+msgstr "קוד הרשאה"
+
+#: admin.anthropic.code_placeholder
+msgid "admin.anthropic.code_placeholder"
+msgstr "הדבק כאן את הקוד מ-Anthropic"
+
+#: admin.anthropic.submit_code
+msgid "admin.anthropic.submit_code"
+msgstr "הוסף חשבון"
+
+#: admin.dashboard.title
+msgid "admin.dashboard.title"
+msgstr "לוח ניהול"
+
+#: admin.dashboard.description
+msgid "admin.dashboard.description"
+msgstr "ניהול וניטור השרת"
+
+#: admin.dashboard.sections
+msgid "admin.dashboard.sections"
+msgstr "ניהול"
+
+#: admin.dashboard.anthropic_description
+msgid "admin.dashboard.anthropic_description"
+msgstr "ניהול מאגר מנויי Claude Max OAuth"
+
+#: admin.health.title
+msgid "admin.health.title"
+msgstr "תקינות השרת"
+
+#: admin.health.overall
+msgid "admin.health.overall"
+msgstr "מצב כללי"
+
+#: admin.health.version
+msgid "admin.health.version"
+msgstr "גרסה"
+
+#: admin.health.response_time
+msgid "admin.health.response_time"
+msgstr "זמן תגובה"
+
+#: admin.health.configured
+msgid "admin.health.configured"
+msgstr "מוגדר"
+
+#: admin.health.not_configured
+msgid "admin.health.not_configured"
+msgstr "לא מוגדר"
+
+#: admin.health.status.healthy
+msgid "admin.health.status.healthy"
+msgstr "תקין"
+
+#: admin.health.status.degraded
+msgid "admin.health.status.degraded"
+msgstr "פגום"
+
+#: admin.health.status.unhealthy
+msgid "admin.health.status.unhealthy"
+msgstr "לא תקין"
+
+#: admin.health.status.unknown
+msgid "admin.health.status.unknown"
+msgstr "לא ידוע"
+
+#: admin.health.database
+msgid "admin.health.database"
+msgstr "בסיס נתונים"
+
+#: admin.health.bin_dir
+msgid "admin.health.bin_dir"
+msgstr "ספריית קבצים בינאריים"
+
+#: admin.health.llm_providers
+msgid "admin.health.llm_providers"
+msgstr "ספקי מודלי שפה"
+
+#: admin.health.google_cse
+msgid "admin.health.google_cse"
+msgstr "מנוע חיפוש מותאם של Google"
+
+#: admin.health.serper
+msgid "admin.health.serper"
+msgstr "Serper"
+
+#: admin.health.github_app
+msgid "admin.health.github_app"
+msgstr "אפליקציית GitHub"
+
+#: admin.health.kubernetes
+msgid "admin.health.kubernetes"
+msgstr "Kubernetes"
+
+#: admin.health.smtp
+msgid "admin.health.smtp"
+msgstr "SMTP"
+
+#: admin.health.geoip
+msgid "admin.health.geoip"
+msgstr "מיקום גיאוגרפי"
+
+#: admin.health.jobs
+msgid "admin.health.jobs"
+msgstr "משימות רקע"
+
+#: admin.health.auth_providers
+msgid "admin.health.auth_providers"
+msgstr "ספקי אימות"

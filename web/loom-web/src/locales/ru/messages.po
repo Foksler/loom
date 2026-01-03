@@ -331,6 +331,34 @@ msgstr "Email"
 msgid "settings.profile.emailHint"
 msgstr "Email нельзя изменить здесь"
 
+#: settings.profile.username
+msgid "settings.profile.username"
+msgstr "Имя пользователя"
+
+#: settings.profile.usernamePlaceholder
+msgid "settings.profile.usernamePlaceholder"
+msgstr "Введите имя пользователя"
+
+#: settings.profile.usernameHint
+msgid "settings.profile.usernameHint"
+msgstr "Ваше имя пользователя используется для URL-адресов git-репозиториев"
+
+#: settings.profile.usernameInvalid
+msgid "settings.profile.usernameInvalid"
+msgstr "Имя пользователя может содержать только буквы, цифры и подчёркивания"
+
+#: settings.profile.usernameTaken
+msgid "settings.profile.usernameTaken"
+msgstr "Это имя пользователя уже занято"
+
+#: settings.profile.usernameTooShort
+msgid "settings.profile.usernameTooShort"
+msgstr "Имя пользователя должно быть не менее 3 символов"
+
+#: settings.profile.usernameTooLong
+msgid "settings.profile.usernameTooLong"
+msgstr "Имя пользователя должно быть не более 39 символов"
+
 #: settings.profile.locale
 msgid "settings.profile.locale"
 msgstr "Язык"
@@ -825,7 +853,35 @@ msgstr "Last login"
 
 #: admin.users.impersonate
 msgid "admin.users.impersonate"
-msgstr "Impersonate"
+msgstr "Имперсонировать"
+
+#: admin.users.updated
+msgid "admin.users.updated"
+msgstr "Обновлено"
+
+#: admin.users.makeAdmin
+msgid "admin.users.makeAdmin"
+msgstr "Сделать администратором"
+
+#: admin.users.removeAdmin
+msgid "admin.users.removeAdmin"
+msgstr "Снять администратора"
+
+#: admin.users.makeSupport
+msgid "admin.users.makeSupport"
+msgstr "Сделать поддержкой"
+
+#: admin.users.removeSupport
+msgid "admin.users.removeSupport"
+msgstr "Снять поддержку"
+
+#: admin.users.makeAuditor
+msgid "admin.users.makeAuditor"
+msgstr "Сделать аудитором"
+
+#: admin.users.removeAuditor
+msgid "admin.users.removeAuditor"
+msgstr "Снять аудитора"
 
 #: admin.logs.title
 msgid "admin.logs.title"
@@ -917,6 +973,174 @@ msgstr "Admin {admin} impersonating {user}"
 #: admin.impersonation.stop
 msgid "admin.impersonation.stop"
 msgstr "Stop Impersonating"
+
+#: admin.anthropic.title
+msgid "admin.anthropic.title"
+msgstr "Аккаунты Claude Max"
+
+#: admin.anthropic.add_account
+msgid "admin.anthropic.add_account"
+msgstr "Добавить аккаунт"
+
+#: admin.anthropic.remove
+msgid "admin.anthropic.remove"
+msgstr "Удалить"
+
+#: admin.anthropic.remove_confirm
+msgid "admin.anthropic.remove_confirm"
+msgstr "Удалить этот аккаунт из пула?"
+
+#: admin.anthropic.status.available
+msgid "admin.anthropic.status.available"
+msgstr "Доступен"
+
+#: admin.anthropic.status.cooling_down
+msgid "admin.anthropic.status.cooling_down"
+msgstr "Охлаждение"
+
+#: admin.anthropic.status.disabled
+msgid "admin.anthropic.status.disabled"
+msgstr "Отключён"
+
+#: admin.anthropic.cooldown_remaining
+msgid "admin.anthropic.cooldown_remaining"
+msgstr "Осталось {time}"
+
+#: admin.anthropic.expires_at
+msgid "admin.anthropic.expires_at"
+msgstr "Токен истекает: {time}"
+
+#: admin.anthropic.no_accounts
+msgid "admin.anthropic.no_accounts"
+msgstr "Аккаунты не настроены. Добавьте аккаунт Claude Max, чтобы начать."
+
+#: admin.anthropic.not_configured
+msgid "admin.anthropic.not_configured"
+msgstr "Пул OAuth Anthropic не настроен на этом сервере."
+
+#: admin.anthropic.account_added
+msgid "admin.anthropic.account_added"
+msgstr "Аккаунт {id} успешно добавлен"
+
+#: admin.anthropic.enter_code_title
+msgid "admin.anthropic.enter_code_title"
+msgstr "Введите код авторизации"
+
+#: admin.anthropic.enter_code_description
+msgid "admin.anthropic.enter_code_description"
+msgstr "Открылась новая вкладка браузера для авторизации в Claude. После авторизации скопируйте код со страницы Anthropic и вставьте его ниже."
+
+#: admin.anthropic.authorization_code
+msgid "admin.anthropic.authorization_code"
+msgstr "Код авторизации"
+
+#: admin.anthropic.code_placeholder
+msgid "admin.anthropic.code_placeholder"
+msgstr "Вставьте код от Anthropic сюда"
+
+#: admin.anthropic.submit_code
+msgid "admin.anthropic.submit_code"
+msgstr "Добавить аккаунт"
+
+#: admin.dashboard.title
+msgid "admin.dashboard.title"
+msgstr "Панель администратора"
+
+#: admin.dashboard.description
+msgid "admin.dashboard.description"
+msgstr "Администрирование и мониторинг сервера"
+
+#: admin.dashboard.sections
+msgid "admin.dashboard.sections"
+msgstr "Администрирование"
+
+#: admin.dashboard.anthropic_description
+msgid "admin.dashboard.anthropic_description"
+msgstr "Управление пулом OAuth-подписок Claude Max"
+
+#: admin.health.title
+msgid "admin.health.title"
+msgstr "Состояние сервера"
+
+#: admin.health.overall
+msgid "admin.health.overall"
+msgstr "Общий статус"
+
+#: admin.health.version
+msgid "admin.health.version"
+msgstr "Версия"
+
+#: admin.health.response_time
+msgid "admin.health.response_time"
+msgstr "Время отклика"
+
+#: admin.health.configured
+msgid "admin.health.configured"
+msgstr "Настроено"
+
+#: admin.health.not_configured
+msgid "admin.health.not_configured"
+msgstr "Не настроено"
+
+#: admin.health.status.healthy
+msgid "admin.health.status.healthy"
+msgstr "Исправен"
+
+#: admin.health.status.degraded
+msgid "admin.health.status.degraded"
+msgstr "Деградирован"
+
+#: admin.health.status.unhealthy
+msgid "admin.health.status.unhealthy"
+msgstr "Неисправен"
+
+#: admin.health.status.unknown
+msgid "admin.health.status.unknown"
+msgstr "Неизвестно"
+
+#: admin.health.database
+msgid "admin.health.database"
+msgstr "База данных"
+
+#: admin.health.bin_dir
+msgid "admin.health.bin_dir"
+msgstr "Каталог бинарных файлов"
+
+#: admin.health.llm_providers
+msgid "admin.health.llm_providers"
+msgstr "Провайдеры LLM"
+
+#: admin.health.google_cse
+msgid "admin.health.google_cse"
+msgstr "Google CSE"
+
+#: admin.health.serper
+msgid "admin.health.serper"
+msgstr "Serper"
+
+#: admin.health.github_app
+msgid "admin.health.github_app"
+msgstr "GitHub App"
+
+#: admin.health.kubernetes
+msgid "admin.health.kubernetes"
+msgstr "Kubernetes"
+
+#: admin.health.smtp
+msgid "admin.health.smtp"
+msgstr "SMTP"
+
+#: admin.health.geoip
+msgid "admin.health.geoip"
+msgstr "GeoIP"
+
+#: admin.health.jobs
+msgid "admin.health.jobs"
+msgstr "Фоновые задания"
+
+#: admin.health.auth_providers
+msgid "admin.health.auth_providers"
+msgstr "Провайдеры аутентификации"
 
 #: nav.weavers
 msgid "nav.weavers"
@@ -1121,3 +1345,367 @@ msgstr "Ветка по умолчанию:"
 #: client.repos.list.updated
 msgid "client.repos.list.updated"
 msgstr "Обновлено"
+
+#: jobs.title
+msgid "jobs.title"
+msgstr "Фоновые задания"
+
+#: jobs.description
+msgid "jobs.description"
+msgstr "Мониторинг и управление фоновыми заданиями"
+
+#: jobs.loading
+msgid "jobs.loading"
+msgstr "Загрузка заданий..."
+
+#: jobs.runNow
+msgid "jobs.runNow"
+msgstr "Запустить сейчас"
+
+#: jobs.running
+msgid "jobs.running"
+msgstr "Выполняется..."
+
+#: jobs.history
+msgid "jobs.history"
+msgstr "История"
+
+#: jobs.hideHistory
+msgid "jobs.hideHistory"
+msgstr "Скрыть историю"
+
+#: jobs.viewHistory
+msgid "jobs.viewHistory"
+msgstr "Показать историю"
+
+#: jobs.noJobs
+msgid "jobs.noJobs"
+msgstr "Фоновые задания не настроены"
+
+#: jobs.never
+msgid "jobs.never"
+msgstr "Никогда не запускалось"
+
+#: jobs.lastRun
+msgid "jobs.lastRun"
+msgstr "Последний запуск"
+
+#: jobs.duration
+msgid "jobs.duration"
+msgstr "Длительность"
+
+#: jobs.interval
+msgid "jobs.interval"
+msgstr "Интервал"
+
+#: jobs.type
+msgid "jobs.type"
+msgstr "Тип"
+
+#: jobs.failures
+msgid "jobs.failures"
+msgstr "{count} подряд ошибок"
+
+#: jobs.status.healthy
+msgid "jobs.status.healthy"
+msgstr "Исправно"
+
+#: jobs.status.degraded
+msgid "jobs.status.degraded"
+msgstr "Деградация"
+
+#: jobs.status.unhealthy
+msgid "jobs.status.unhealthy"
+msgstr "Неисправно"
+
+#: jobs.status.succeeded
+msgid "jobs.status.succeeded"
+msgstr "Успешно"
+
+#: jobs.status.failed
+msgid "jobs.status.failed"
+msgstr "Ошибка"
+
+#: jobs.status.running
+msgid "jobs.status.running"
+msgstr "Выполняется"
+
+#: jobs.status.cancelled
+msgid "jobs.status.cancelled"
+msgstr "Отменено"
+
+#: jobs.trigger.schedule
+msgid "jobs.trigger.schedule"
+msgstr "По расписанию"
+
+#: jobs.trigger.manual
+msgid "jobs.trigger.manual"
+msgstr "Вручную"
+
+#: jobs.trigger.retry
+msgid "jobs.trigger.retry"
+msgstr "Повтор"
+
+#: jobs.history.title
+msgid "jobs.history.title"
+msgstr "История запусков"
+
+#: jobs.history.status
+msgid "jobs.history.status"
+msgstr "Статус"
+
+#: jobs.history.started
+msgid "jobs.history.started"
+msgstr "Запущено"
+
+#: jobs.history.duration
+msgid "jobs.history.duration"
+msgstr "Длительность"
+
+#: jobs.history.trigger
+msgid "jobs.history.trigger"
+msgstr "Триггер"
+
+#: jobs.history.details
+msgid "jobs.history.details"
+msgstr "Подробности"
+
+#: jobs.history.loadMore
+msgid "jobs.history.loadMore"
+msgstr "Загрузить ещё"
+
+#: jobs.history.noRuns
+msgid "jobs.history.noRuns"
+msgstr "История запусков отсутствует"
+
+#: jobs.time.justNow
+msgid "jobs.time.justNow"
+msgstr "только что"
+
+#: jobs.time.minutesAgo
+msgid "jobs.time.minutesAgo"
+msgstr "{count} мин назад"
+
+#: jobs.time.hoursAgo
+msgid "jobs.time.hoursAgo"
+msgstr "{count} ч назад"
+
+#: jobs.time.daysAgo
+msgid "jobs.time.daysAgo"
+msgstr "{count} дн назад"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "Репозитории"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "Новый репозиторий"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "Поиск репозиториев..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "Повторить"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "Репозитории не найдены"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "Репозиториев пока нет"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "Создайте свой первый репозиторий"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "Ветка по умолчанию:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "Обновлено"
+
+#: client.repos.header.clone
+msgid "client.repos.header.clone"
+msgstr "Клонировать"
+
+#: client.repos.header.clone_https
+msgid "client.repos.header.clone_https"
+msgstr "Клонировать через HTTPS"
+
+#: client.repos.header.copied
+msgid "client.repos.header.copied"
+msgstr "Скопировано!"
+
+#: client.repos.header.copy
+msgid "client.repos.header.copy"
+msgstr "Копировать"
+
+#: client.repos.header.default_branch
+msgid "client.repos.header.default_branch"
+msgstr "Ветка по умолчанию"
+
+#: client.repos.nav.code
+msgid "client.repos.nav.code"
+msgstr "Код"
+
+#: client.repos.nav.commits
+msgid "client.repos.nav.commits"
+msgstr "Коммиты"
+
+#: client.repos.nav.branches
+msgid "client.repos.nav.branches"
+msgstr "Ветки"
+
+#: client.repos.nav.settings
+msgid "client.repos.nav.settings"
+msgstr "Настройки"
+
+#: client.repos.tree.empty
+msgid "client.repos.tree.empty"
+msgstr "Эта директория пуста"
+
+#: client.repos.blob.lines
+msgid "client.repos.blob.lines"
+msgstr "строк"
+
+#: client.repos.blob.bytes
+msgid "client.repos.blob.bytes"
+msgstr "байт"
+
+#: client.repos.blob.blame
+msgid "client.repos.blob.blame"
+msgstr "Blame"
+
+#: client.repos.blob.copy
+msgid "client.repos.blob.copy"
+msgstr "Копировать"
+
+#: client.repos.blob.copied
+msgid "client.repos.blob.copied"
+msgstr "Скопировано!"
+
+#: client.repos.blob.raw
+msgid "client.repos.blob.raw"
+msgstr "Raw"
+
+#: client.repos.blob.binary_not_shown
+msgid "client.repos.blob.binary_not_shown"
+msgstr "Бинарный файл не отображается"
+
+#: client.repos.weaver.open
+msgid "client.repos.weaver.open"
+msgstr "Открыть в Weaver"
+
+#: client.repos.weaver.create_failed
+msgid "client.repos.weaver.create_failed"
+msgstr "Не удалось создать weaver"
+
+#: client.repos.branch.find
+msgid "client.repos.branch.find"
+msgstr "Найти ветку..."
+
+#: client.repos.branch.not_found
+msgid "client.repos.branch.not_found"
+msgstr "Ветки не найдены"
+
+#: client.repos.branch.default
+msgid "client.repos.branch.default"
+msgstr "по умолчанию"
+
+#: client.repos.commits.minutes_ago
+msgid "client.repos.commits.minutes_ago"
+msgstr "{count} минут назад"
+
+#: client.repos.commits.hours_ago
+msgid "client.repos.commits.hours_ago"
+msgstr "{count} часов назад"
+
+#: client.repos.commits.days_ago
+msgid "client.repos.commits.days_ago"
+msgstr "{count} дней назад"
+
+#: client.repos.commits.committed
+msgid "client.repos.commits.committed"
+msgstr "зафиксировано"
+
+#: client.repos.commits.copy_sha
+msgid "client.repos.commits.copy_sha"
+msgstr "Копировать SHA"
+
+#: client.repos.commits.empty
+msgid "client.repos.commits.empty"
+msgstr "Коммиты не найдены"
+
+#: client.repos.diff.parent
+msgid "client.repos.diff.parent"
+msgstr "Родитель"
+
+#: client.repos.diff.parents
+msgid "client.repos.diff.parents"
+msgstr "Родители"
+
+#: client.repos.diff.showing
+msgid "client.repos.diff.showing"
+msgstr "Показано"
+
+#: client.repos.diff.changed_file
+msgid "client.repos.diff.changed_file"
+msgstr "изменённый файл"
+
+#: client.repos.diff.changed_files
+msgid "client.repos.diff.changed_files"
+msgstr "изменённых файлов"
+
+#: client.repos.blame.lines
+msgid "client.repos.blame.lines"
+msgstr "строк"
+
+#: client.repos.blame.today
+msgid "client.repos.blame.today"
+msgstr "сегодня"
+
+#: client.repos.blame.days_ago
+msgid "client.repos.blame.days_ago"
+msgstr "{count}д назад"
+
+#: client.repos.blame.months_ago
+msgid "client.repos.blame.months_ago"
+msgstr "{count}мес назад"
+
+#: client.repos.blame.years_ago
+msgid "client.repos.blame.years_ago"
+msgstr "{count}г назад"
+
+#: client.repos.blame.empty
+msgid "client.repos.blame.empty"
+msgstr "Информация о blame недоступна"
+
+#: client.repos.compare.ahead
+msgid "client.repos.compare.ahead"
+msgstr "впереди"
+
+#: client.repos.compare.behind
+msgid "client.repos.compare.behind"
+msgstr "позади"
+
+#: client.repos.compare.commit
+msgid "client.repos.compare.commit"
+msgstr "коммит"
+
+#: client.repos.compare.commits
+msgid "client.repos.compare.commits"
+msgstr "коммитов"
+
+#: client.repos.compare.commits_heading
+msgid "client.repos.compare.commits_heading"
+msgstr "Коммиты"
+
+#: client.repos.compare.identical
+msgid "client.repos.compare.identical"
+msgstr "Эти ветки идентичны"
