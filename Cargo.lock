@@ -4858,6 +4858,7 @@ dependencies = [
  "loom-server-auth-okta",
  "loom-server-config",
  "loom-server-db",
+ "loom-server-docs",
  "loom-server-geoip",
  "loom-server-github-app",
  "loom-server-jobs",
@@ -5099,6 +5100,19 @@ dependencies = [
  "tokio-test",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "loom-server-docs"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "utoipa",
 ]
 
 [[package]]

@@ -12,6 +12,7 @@ pub mod auth;
 pub mod bin;
 pub mod cse;
 pub mod debug;
+pub mod docs;
 pub mod git;
 pub mod git_browser;
 pub mod github;

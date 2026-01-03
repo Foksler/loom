@@ -35,7 +35,7 @@ The documentation system provides a `/docs` route in loom-web for product docume
 
 ### Known Limitations
 
-- **Pagefind Search**: The main loom-web app uses SPA mode (`ssr = false` at root). This prevents Pagefind from indexing static HTML content since pages are rendered client-side. To enable Pagefind indexing, SSR would need to be enabled at the root level, which may affect other parts of the app. For now, search functionality is stubbed and will gracefully degrade.
+- **No offline search**: Search requires connectivity to loom-server
 
 ---
 
@@ -327,25 +327,97 @@ Format: `Docs / Tutorials / Getting Started`
 
 ## 6. Search
 
-### 6.1 Pagefind Integration
+### 6.1 Architecture
 
-Post-build static search indexing:
+Search uses server-side SQLite FTS5 instead of client-side Pagefind to work around SPA mode limitations:
+
+```
+┌─────────────────┐    build    ┌─────────────────┐
+│   loom-web      │ ─────────► │ docs-index.json │
+│   .svx files    │  export    │                 │
+└─────────────────┘            └────────┬────────┘
+                                        │ startup
+                                        ▼
+┌─────────────────┐   GET      ┌─────────────────┐
+│   DocSearch     │ ────────►  │  loom-server    │
+│   component     │ /docs/     │  SQLite FTS5    │
+│                 │  search    │  docs_fts table │
+└─────────────────┘            └─────────────────┘
+```
+
+### 6.2 Build-time Export
+
+At build time, `scripts/export-docs-index.ts` extracts doc content to JSON:
 
 ```json
-// package.json scripts
 {
-  "build": "vite build",
-  "postbuild": "pagefind --site .svelte-kit/output/client"
+  "version": 1,
+  "generated_at": "2026-01-03T...",
+  "docs": [
+    {
+      "doc_id": "tutorials/getting-started",
+      "path": "/docs/tutorials/getting-started",
+      "title": "Getting Started with Loom",
+      "summary": "Create your first thread...",
+      "diataxis": "tutorial",
+      "tags": ["onboarding", "beginner"],
+      "body": "Welcome to Loom! This tutorial..."
+    }
+  ]
 }
 ```
 
-### 6.2 Search UI
+Output: `static/docs-index.json` (bundled with loom-web build)
 
-- Keyboard shortcut: `Cmd/Ctrl + K`
-- Modal overlay with input
-- Real-time results with highlighting
-- Keyboard navigation (arrow keys, enter)
-- Category badges on results
+### 6.3 Server-side Indexing
+
+On startup, loom-server loads `docs-index.json` into SQLite FTS5:
+
+- **Table**: `docs_fts` (virtual FTS5 table)
+- **Tokenizer**: unicode61 with prefix indexing
+- **Ranking**: BM25
+- **Highlighting**: FTS5 `snippet()` function
+
+### 6.4 Search API
+
+**Endpoint**: `GET /docs/search`
+
+**Query Parameters**:
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `q` | string | yes | Search query |
+| `diataxis` | enum | no | Filter: `tutorial`, `how-to`, `reference`, `explanation` |
+| `limit` | u32 | no | Max results (default: 20, max: 50) |
+| `offset` | u32 | no | Pagination offset |
+
+**Response**:
+
+```json
+{
+  "hits": [
+    {
+      "path": "/docs/tutorials/getting-started",
+      "title": "Getting Started with Loom",
+      "summary": "Create your first thread...",
+      "diataxis": "tutorial",
+      "tags": "onboarding beginner",
+      "snippet": "A <mark>thread</mark> is a conversation with the Loom AI agent…",
+      "score": 0.89
+    }
+  ],
+  "limit": 20,
+  "offset": 0
+}
+```
+
+### 6.5 Search UI
+
+- **Keyboard shortcut**: `Cmd/Ctrl + K`
+- **Debounced input**: 200ms delay
+- **Keyboard navigation**: Arrow keys + Enter
+- **Category badges**: Shows Diátaxis type per result
+- **Highlighted excerpts**: `<mark>` tags around matches
 
 ---
 

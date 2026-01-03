@@ -92,6 +92,11 @@ in
         root = "${cfg.package}/share/loom-web";
 
         locations = {
+          # Docs search API - proxy to loom-server
+          "= /docs/search" = {
+            proxyPass = cfg.serverUrl;
+          };
+
           "/" = {
             tryFiles = "$uri /index.html";
             extraConfig = ''

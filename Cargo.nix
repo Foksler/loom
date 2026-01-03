@@ -47,6 +47,7 @@ args@{
     "loom-server-k8s/default"
     "loom-server-audit/default"
     "loom-server-config/default"
+    "loom-server-docs/default"
     "loom-server-geoip/default"
     "loom-server-secrets/default"
     "loom-weaver-secrets/default"
@@ -86,7 +87,7 @@ args@{
   cargoConfig ? {},
 }:
 let
-  nixifiedLockHash = "8f937eca94d002248b65a6505693da94b82736ec804cb0dc6e3aae3b368ae52b";
+  nixifiedLockHash = "1f9a604a3cb954d5b04863781592f9d960d17f2991d248423f0e21e5489361fc";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -160,6 +161,7 @@ in
     loom-server-k8s = rustPackages.unknown.loom-server-k8s."0.1.0";
     loom-server-audit = rustPackages.unknown.loom-server-audit."0.1.0";
     loom-server-config = rustPackages.unknown.loom-server-config."0.1.0";
+    loom-server-docs = rustPackages.unknown.loom-server-docs."0.1.0";
     loom-server-geoip = rustPackages.unknown.loom-server-geoip."0.1.0";
     loom-server-secrets = rustPackages.unknown.loom-server-secrets."0.1.0";
     loom-weaver-secrets = rustPackages.unknown.loom-weaver-secrets."0.1.0";
@@ -6569,6 +6571,7 @@ in
       loom_server_auth_okta = (rustPackages."unknown".loom-server-auth-okta."0.1.0" { inherit profileName; }).out;
       loom_server_config = (rustPackages."unknown".loom-server-config."0.1.0" { inherit profileName; }).out;
       loom_server_db = (rustPackages."unknown".loom-server-db."0.1.0" { inherit profileName; }).out;
+      loom_server_docs = (rustPackages."unknown".loom-server-docs."0.1.0" { inherit profileName; }).out;
       loom_server_geoip = (rustPackages."unknown".loom-server-geoip."0.1.0" { inherit profileName; }).out;
       loom_server_github_app = (rustPackages."unknown".loom-server-github-app."0.1.0" { inherit profileName; }).out;
       loom_server_jobs = (rustPackages."unknown".loom-server-jobs."0.1.0" { inherit profileName; }).out;
@@ -6890,6 +6893,26 @@ in
       sha2 = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".sha2."0.10.9" { inherit profileName; }).out;
       tempfile = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tempfile."3.24.0" { inherit profileName; }).out;
       tokio_test = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio-test."0.4.4" { inherit profileName; }).out;
+    };
+  });
+  
+  "unknown".loom-server-docs."0.1.0" = overridableMkRustCrate (profileName: rec {
+    name = "loom-server-docs";
+    version = "0.1.0";
+    registry = "unknown";
+    src = fetchCrateLocal workspaceSrc;
+    features = builtins.concatLists [
+      [ "default" ]
+      (lib.optional (rootFeatures' ? "loom-server-docs/openapi") "openapi")
+    ];
+    dependencies = {
+      serde = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.228" { inherit profileName; }).out;
+      serde_json = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.148" { inherit profileName; }).out;
+      sqlx = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".sqlx."0.8.6" { inherit profileName; }).out;
+      thiserror = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."1.0.69" { inherit profileName; }).out;
+      tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.48.0" { inherit profileName; }).out;
+      tracing = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tracing."0.1.44" { inherit profileName; }).out;
+      utoipa = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".utoipa."5.4.0" { inherit profileName; }).out;
     };
   });
   

@@ -20,6 +20,7 @@ path = "src/lib.rs"
 [dependencies]
 futures = { workspace = true }
 loom-server-config = { path = "../loom-server-config" }
+loom-server-docs = { path = "../loom-server-docs" }
 loom-server-db = { path = "../loom-server-db" }
 loom-server-jobs = { path = "../loom-server-jobs" }
 loom-server-logs = { path = "../loom-server-logs" }

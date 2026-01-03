@@ -81,6 +81,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let repo = Arc::new(ThreadRepository::new(pool.clone()));
 	let mut state = create_app_state(pool.clone(), repo, &config, Some(log_buffer)).await;
 
+	// Load docs search index
+	let docs_index_path =
+		std::env::var("LOOM_SERVER_DOCS_INDEX").unwrap_or_else(|_| "docs-index.json".to_string());
+	if let Err(e) = loom_server_docs::load_docs_index(&pool, &docs_index_path).await {
+		tracing::warn!(path = %docs_index_path, error = %e, "Failed to load docs index");
+	}
+
 	// Weaver provisioner startup lifecycle - validate namespace
 	if let Some(ref provisioner) = state.provisioner {
 		if let Err(e) = provisioner.validate_namespace().await {

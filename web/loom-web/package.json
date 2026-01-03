@@ -7,7 +7,8 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"postbuild": "pagefind --site build || echo 'Pagefind: No content indexed (SSR disabled in SPA mode)'",
+		"postbuild": "pnpm docs:index || echo 'Docs index: export failed'",
+		"docs:index": "tsx scripts/export-docs-index.ts",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -65,6 +66,7 @@
 		"storybook": "^10.1.11",
 		"svelte-check": "^4.3.5",
 		"tailwindcss": "^4.1.18",
+		"tsx": "^4.21.0",
 		"typescript": "^5.9.3",
 		"vite": "^7.3.0",
 		"vitest": "^4.0.16"

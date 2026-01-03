@@ -659,6 +659,8 @@ pub fn create_router(state: AppState) -> Router {
 			"/internal/weaver-secrets/v1/secrets/{scope}/{name}",
 			get(routes::weaver_secrets::get_secret),
 		)
+		// Documentation search
+		.route("/docs/search", get(routes::docs::search_handler))
 		.build();
 
 	// Authenticated routes - require valid session/token

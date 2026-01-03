@@ -7,35 +7,31 @@
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 
-	interface SearchResult {
-		url: string;
-		meta: {
-			title?: string;
-		};
-		excerpt: string;
+	interface SearchHit {
+		path: string;
+		title: string;
+		summary: string;
+		diataxis: string;
+		tags: string;
+		snippet: string;
+		score: number;
+	}
+
+	interface SearchResponse {
+		hits: SearchHit[];
+		limit: number;
+		offset: number;
 	}
 
 	let isOpen = $state(false);
 	let query = $state('');
-	let results = $state<SearchResult[]>([]);
+	let results = $state<SearchHit[]>([]);
 	let selectedIndex = $state(0);
-	let pagefind: any = null;
-	let inputRef: HTMLInputElement;
+	let loading = $state(false);
+	let inputRef = $state<HTMLInputElement | null>(null);
+	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 	onMount(() => {
-		if (browser) {
-			(async () => {
-				try {
-					// Pagefind is generated at postbuild, use dynamic URL to avoid Vite analysis
-					const pagefindUrl = '/pagefind/pagefind.js';
-					pagefind = await import(/* @vite-ignore */ pagefindUrl);
-					await pagefind.init();
-				} catch (e) {
-					console.warn('Pagefind not available (run build first):', e);
-				}
-			})();
-		}
-
 		function handleKeydown(e: KeyboardEvent) {
 			if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
 				e.preventDefault();
@@ -46,7 +42,7 @@
 			}
 
 			if (e.key === 'Escape' && isOpen) {
-				isOpen = false;
+				close();
 			}
 		}
 
@@ -55,20 +51,38 @@
 	});
 
 	async function search() {
-		if (!pagefind || !query.trim()) {
+		const q = query.trim();
+		if (!q) {
 			results = [];
 			return;
 		}
 
-		const searchResults = await pagefind.search(query);
-		const data = await Promise.all(
-			searchResults.results.slice(0, 10).map((r: any) => r.data())
-		);
-		results = data;
-		selectedIndex = 0;
+		loading = true;
+		try {
+			const res = await fetch(`/docs/search?q=${encodeURIComponent(q)}&limit=10`);
+			if (res.ok) {
+				const data: SearchResponse = await res.json();
+				results = data.hits;
+				selectedIndex = 0;
+			} else {
+				results = [];
+			}
+		} catch (e) {
+			console.error('Search failed:', e);
+			results = [];
+		} finally {
+			loading = false;
+		}
 	}
 
-	function handleKeydown(e: KeyboardEvent) {
+	function debouncedSearch() {
+		if (debounceTimer) clearTimeout(debounceTimer);
+		debounceTimer = setTimeout(() => {
+			search();
+		}, 200);
+	}
+
+	function handleInputKeydown(e: KeyboardEvent) {
 		if (e.key === 'ArrowDown') {
 			e.preventDefault();
 			selectedIndex = Math.min(selectedIndex + 1, results.length - 1);
@@ -77,30 +91,36 @@
 			selectedIndex = Math.max(selectedIndex - 1, 0);
 		} else if (e.key === 'Enter' && results[selectedIndex]) {
 			e.preventDefault();
-			navigateTo(results[selectedIndex].url);
+			navigateTo(results[selectedIndex].path);
 		}
 	}
 
-	function navigateTo(url: string) {
-		isOpen = false;
-		query = '';
-		results = [];
-		goto(url);
+	function navigateTo(path: string) {
+		close();
+		goto(path);
 	}
 
 	function close() {
 		isOpen = false;
 		query = '';
 		results = [];
+		selectedIndex = 0;
 	}
 
 	$effect(() => {
 		if (query) {
-			search();
+			debouncedSearch();
 		} else {
 			results = [];
 		}
 	});
+
+	const diataxisLabels: Record<string, string> = {
+		tutorial: 'Tutorial',
+		'how-to': 'How-to',
+		reference: 'Reference',
+		explanation: 'Explanation',
+	};
 </script>
 
 <button class="search-trigger" onclick={() => (isOpen = true)}>
@@ -119,12 +139,15 @@
 				<input
 					bind:this={inputRef}
 					bind:value={query}
-					onkeydown={handleKeydown}
+					onkeydown={handleInputKeydown}
 					type="text"
 					class="search-input"
 					placeholder="Search documentation..."
 					aria-label="Search query"
 				/>
+				{#if loading}
+					<span class="search-loading">...</span>
+				{/if}
 				<button class="search-close" onclick={close}>
 					<kbd>Esc</kbd>
 				</button>
@@ -137,20 +160,23 @@
 							<button
 								class="search-result"
 								class:selected={i === selectedIndex}
-								onclick={() => navigateTo(result.url)}
+								onclick={() => navigateTo(result.path)}
 								onmouseenter={() => (selectedIndex = i)}
 							>
-								<span class="result-title">{result.meta?.title ?? 'Untitled'}</span>
-								<span class="result-excerpt">{@html result.excerpt}</span>
+								<div class="result-header">
+									<span class="result-title">{result.title}</span>
+									<span class="result-badge">{diataxisLabels[result.diataxis] ?? result.diataxis}</span>
+								</div>
+								<span class="result-excerpt">{@html result.snippet}</span>
 							</button>
 						</li>
 					{/each}
 				</ul>
-			{:else if query.trim()}
+			{:else if query.trim() && !loading}
 				<div class="search-empty">
 					<p>No results found for "{query}"</p>
 				</div>
-			{:else}
+			{:else if !query.trim()}
 				<div class="search-empty">
 					<p>Type to search documentation</p>
 				</div>
@@ -262,6 +288,21 @@
 		color: var(--color-fg-subtle);
 	}
 
+	.search-loading {
+		color: var(--color-fg-muted);
+		animation: pulse 1s infinite;
+	}
+
+	@keyframes pulse {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.5;
+		}
+	}
+
 	.search-close {
 		background: none;
 		border: none;
@@ -303,12 +344,25 @@
 		background: var(--color-bg-muted);
 	}
 
+	.result-header {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin-bottom: var(--space-1);
+	}
+
 	.result-title {
-		display: block;
 		font-size: var(--text-sm);
 		font-weight: 500;
 		color: var(--color-fg);
-		margin-bottom: var(--space-1);
+	}
+
+	.result-badge {
+		font-size: var(--text-xs);
+		padding: 1px 6px;
+		background: var(--color-accent-soft);
+		color: var(--color-accent);
+		border-radius: var(--radius-sm);
 	}
 
 	.result-excerpt {
