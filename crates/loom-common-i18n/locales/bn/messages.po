@@ -1295,3 +1295,51 @@ msgstr "জব {job_id} সক্রিয় করা হয়েছে"
 #: Jobs: API - Job disabled
 msgid "server.jobs.success.disabled"
 msgstr "জব {job_id} নিষ্ক্রিয় করা হয়েছে"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - User deleted
+msgid "server.api.admin.user_deleted"
+msgstr "ব্যবহারকারী সফলভাবে মুছে ফেলা হয়েছে"
+
+#: API: Admin - Cannot delete self
+msgid "server.api.admin.cannot_delete_self"
+msgstr "নিজের অ্যাকাউন্ট মুছে ফেলা যাবে না"
+
+#: API: Admin - User not found
+msgid "server.api.admin.user_not_found"
+msgstr "ব্যবহারকারী পাওয়া যায়নি"
+
+# ============================================================================
+# Admin Users UI
+# ============================================================================
+
+#: Admin Users - Delete button
+msgid "admin.users.delete"
+msgstr "মুছুন"
+
+#: Admin Users - Delete user title
+msgid "admin.users.deleteUser"
+msgstr "ব্যবহারকারী মুছুন"
+
+#: Admin Users - Delete confirm title
+msgid "admin.users.deleteConfirmTitle"
+msgstr "ব্যবহারকারী মুছুন"
+
+#: Admin Users - Delete confirm message
+msgid "admin.users.deleteConfirmMessage"
+msgstr "আপনি কি নিশ্চিত যে আপনি এই ব্যবহারকারীকে মুছে ফেলতে চান? এই ক্রিয়াটি অ্যাকাউন্টটি সফট-ডিলিট করবে।"
+
+#: Admin Users - Delete success
+msgid "admin.users.deleteSuccess"
+msgstr "ব্যবহারকারী সফলভাবে মুছে ফেলা হয়েছে"
+
+#: Admin Users - Cancel button
+msgid "admin.users.cancel"
+msgstr "বাতিল"
+
+#: Admin Users - Confirm delete button
+msgid "admin.users.confirm"
+msgstr "মুছে ফেলা নিশ্চিত করুন"

@@ -1295,3 +1295,51 @@ msgstr "המשימה {job_id} הופעלה"
 #: Jobs: API - Job disabled
 msgid "server.jobs.success.disabled"
 msgstr "המשימה {job_id} הושבתה"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - User deleted
+msgid "server.api.admin.user_deleted"
+msgstr "המשתמש נמחק בהצלחה"
+
+#: API: Admin - Cannot delete self
+msgid "server.api.admin.cannot_delete_self"
+msgstr "לא ניתן למחוק את החשבון שלך"
+
+#: API: Admin - User not found
+msgid "server.api.admin.user_not_found"
+msgstr "המשתמש לא נמצא"
+
+# ============================================================================
+# Admin Users UI
+# ============================================================================
+
+#: Admin Users - Delete button
+msgid "admin.users.delete"
+msgstr "מחק"
+
+#: Admin Users - Delete user title
+msgid "admin.users.deleteUser"
+msgstr "מחק משתמש"
+
+#: Admin Users - Delete confirm title
+msgid "admin.users.deleteConfirmTitle"
+msgstr "מחק משתמש"
+
+#: Admin Users - Delete confirm message
+msgid "admin.users.deleteConfirmMessage"
+msgstr "האם אתה בטוח שברצונך למחוק משתמש זה? פעולה זו תבצע מחיקה רכה של החשבון."
+
+#: Admin Users - Delete success
+msgid "admin.users.deleteSuccess"
+msgstr "המשתמש נמחק בהצלחה"
+
+#: Admin Users - Cancel button
+msgid "admin.users.cancel"
+msgstr "ביטול"
+
+#: Admin Users - Confirm delete button
+msgid "admin.users.confirm"
+msgstr "אשר מחיקה"

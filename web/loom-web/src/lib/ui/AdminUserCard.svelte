@@ -17,8 +17,10 @@
 		onToggleSupport?: (userId: string, currentValue: boolean) => void;
 		onToggleAuditor?: (userId: string, currentValue: boolean) => void;
 		onImpersonate?: (userId: string) => void;
+		onDelete?: (userId: string) => void;
 		isUpdating?: boolean;
 		isImpersonating?: boolean;
+		isDeleting?: boolean;
 	}
 
 	let {
@@ -28,8 +30,10 @@
 		onToggleSupport,
 		onToggleAuditor,
 		onImpersonate,
+		onDelete,
 		isUpdating = false,
 		isImpersonating = false,
+		isDeleting = false,
 	}: Props = $props();
 
 	const isCurrentUser = $derived(user.id === currentUserId);
@@ -139,6 +143,17 @@
 						onclick={() => onImpersonate?.(user.id)}
 					>
 						{i18n._('admin.users.impersonate')}
+					</Button>
+				{/if}
+				{#if onDelete}
+					<Button
+						variant="danger"
+						size="sm"
+						disabled={isDeleting || isCurrentUser}
+						loading={isDeleting}
+						onclick={() => onDelete?.(user.id)}
+					>
+						{i18n._('admin.users.delete')}
 					</Button>
 				{/if}
 			</div>

@@ -555,6 +555,7 @@ fn admin_routes(state: AppState) -> Router<AppState> {
 
 	Router::new()
 		.route("/users", get(routes::admin::list_users))
+		.route("/users/{id}", delete(routes::admin::delete_user))
 		.route(
 			"/users/{id}/roles",
 			patch(routes::admin::update_user_roles),

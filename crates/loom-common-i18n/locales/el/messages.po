@@ -1295,3 +1295,51 @@ msgstr "Η εργασία {job_id} ενεργοποιήθηκε"
 #: Jobs: API - Job disabled
 msgid "server.jobs.success.disabled"
 msgstr "Η εργασία {job_id} απενεργοποιήθηκε"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - User deleted
+msgid "server.api.admin.user_deleted"
+msgstr "Ο χρήστης διαγράφηκε με επιτυχία"
+
+#: API: Admin - Cannot delete self
+msgid "server.api.admin.cannot_delete_self"
+msgstr "Δεν μπορείτε να διαγράψετε τον δικό σας λογαριασμό"
+
+#: API: Admin - User not found
+msgid "server.api.admin.user_not_found"
+msgstr "Ο χρήστης δεν βρέθηκε"
+
+# ============================================================================
+# Admin Users UI
+# ============================================================================
+
+#: Admin Users - Delete button
+msgid "admin.users.delete"
+msgstr "Διαγραφή"
+
+#: Admin Users - Delete user title
+msgid "admin.users.deleteUser"
+msgstr "Διαγραφή χρήστη"
+
+#: Admin Users - Delete confirm title
+msgid "admin.users.deleteConfirmTitle"
+msgstr "Διαγραφή χρήστη"
+
+#: Admin Users - Delete confirm message
+msgid "admin.users.deleteConfirmMessage"
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτόν τον χρήστη; Αυτή η ενέργεια θα απενεργοποιήσει προσωρινά τον λογαριασμό."
+
+#: Admin Users - Delete success
+msgid "admin.users.deleteSuccess"
+msgstr "Ο χρήστης διαγράφηκε με επιτυχία"
+
+#: Admin Users - Cancel button
+msgid "admin.users.cancel"
+msgstr "Ακύρωση"
+
+#: Admin Users - Confirm delete button
+msgid "admin.users.confirm"
+msgstr "Επιβεβαίωση διαγραφής"

@@ -78,6 +78,8 @@ pub enum AuditEventType {
 	ImpersonationStarted,
 	ImpersonationEnded,
 	GlobalRoleChanged,
+	UserDeleted,
+	UserRestored,
 
 	// Weaver events
 	WeaverCreated,
@@ -206,6 +208,10 @@ impl fmt::Display for AuditEventType {
 			AuditEventType::MirrorCreated => "mirror_created",
 			AuditEventType::MirrorSynced => "mirror_synced",
 			AuditEventType::WebhookReceived => "webhook_received",
+
+			// User management events
+			AuditEventType::UserDeleted => "user_deleted",
+			AuditEventType::UserRestored => "user_restored",
 		};
 		write!(f, "{s}")
 	}
@@ -289,6 +295,8 @@ impl AuditEventType {
 			| AuditEventType::ImpersonationStarted
 			| AuditEventType::ImpersonationEnded
 			| AuditEventType::GlobalRoleChanged
+			| AuditEventType::UserDeleted
+			| AuditEventType::UserRestored
 			| AuditEventType::WeaverDeleted
 			| AuditEventType::RepoDeleted => AuditSeverity::Notice,
 

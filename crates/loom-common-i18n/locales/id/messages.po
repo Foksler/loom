@@ -1295,3 +1295,51 @@ msgstr "Tugas {job_id} diaktifkan"
 #: Jobs: API - Job disabled
 msgid "server.jobs.success.disabled"
 msgstr "Tugas {job_id} dinonaktifkan"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - User deleted
+msgid "server.api.admin.user_deleted"
+msgstr "Pengguna berhasil dihapus"
+
+#: API: Admin - Cannot delete self
+msgid "server.api.admin.cannot_delete_self"
+msgstr "Tidak dapat menghapus akun Anda sendiri"
+
+#: API: Admin - User not found
+msgid "server.api.admin.user_not_found"
+msgstr "Pengguna tidak ditemukan"
+
+# ============================================================================
+# Admin Users UI
+# ============================================================================
+
+#: Admin Users - Delete button
+msgid "admin.users.delete"
+msgstr "Hapus"
+
+#: Admin Users - Delete user title
+msgid "admin.users.deleteUser"
+msgstr "Hapus Pengguna"
+
+#: Admin Users - Delete confirm title
+msgid "admin.users.deleteConfirmTitle"
+msgstr "Hapus Pengguna"
+
+#: Admin Users - Delete confirm message
+msgid "admin.users.deleteConfirmMessage"
+msgstr "Apakah Anda yakin ingin menghapus pengguna ini? Tindakan ini akan menghapus akun secara lunak."
+
+#: Admin Users - Delete success
+msgid "admin.users.deleteSuccess"
+msgstr "Pengguna berhasil dihapus"
+
+#: Admin Users - Cancel button
+msgid "admin.users.cancel"
+msgstr "Batal"
+
+#: Admin Users - Confirm delete button
+msgid "admin.users.confirm"
+msgstr "Konfirmasi Hapus"

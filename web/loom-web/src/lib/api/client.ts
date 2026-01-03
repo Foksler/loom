@@ -43,6 +43,7 @@ import type {
 	AdminUserListResponse,
 	UpdateUserRolesRequest,
 	UpdateUserRolesResponse,
+	DeleteUserResponse,
 	Weaver,
 	ListWeaversResponse,
 	CreateWeaverRequest,
@@ -380,6 +381,13 @@ export class LoomApiClient {
 				method: 'PATCH',
 				body: JSON.stringify(data),
 			}
+		);
+	}
+
+	async deleteUser(userId: string): Promise<DeleteUserResponse> {
+		return this.request<DeleteUserResponse>(
+			`/api/admin/users/${encodeURIComponent(userId)}`,
+			{ method: 'DELETE' }
 		);
 	}
 

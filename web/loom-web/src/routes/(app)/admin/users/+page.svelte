@@ -21,6 +21,9 @@
 
 	let updatingUserId = $state<string | null>(null);
 	let impersonatingId = $state<string | null>(null);
+	let deletingId = $state<string | null>(null);
+	let showDeleteConfirm = $state(false);
+	let userToDelete = $state<AdminUser | null>(null);
 
 	const currentUserId = $derived($page.data.user?.id ?? '');
 
@@ -123,6 +126,45 @@
 		}
 	}
 
+	function openDeleteConfirm(userId: string) {
+		const user = users.find(u => u.id === userId);
+		if (user) {
+			userToDelete = user;
+			showDeleteConfirm = true;
+		}
+	}
+
+	function closeDeleteConfirm() {
+		showDeleteConfirm = false;
+		userToDelete = null;
+	}
+
+	async function handleDelete() {
+		if (!userToDelete) return;
+
+		deletingId = userToDelete.id;
+		error = null;
+		try {
+			await client.deleteUser(userToDelete.id);
+			showDeleteConfirm = false;
+			userToDelete = null;
+			await loadUsers();
+		} catch (e) {
+			if (e instanceof Error) {
+				try {
+					const parsed = JSON.parse(e.message.replace(/^API Error \d+: /, ''));
+					error = parsed.message || e.message;
+				} catch {
+					error = e.message;
+				}
+			} else {
+				error = i18n._('general.error');
+			}
+		} finally {
+			deletingId = null;
+		}
+	}
+
 	$effect(() => {
 		loadUsers();
 	});
@@ -169,8 +211,10 @@
 					onToggleSupport={handleToggleSupport}
 					onToggleAuditor={handleToggleAuditor}
 					onImpersonate={handleImpersonate}
+					onDelete={openDeleteConfirm}
 					isUpdating={updatingUserId === user.id}
 					isImpersonating={impersonatingId === user.id}
+					isDeleting={deletingId === user.id}
 				/>
 			{/each}
 		</div>
@@ -202,5 +246,32 @@
 				</Button>
 			</div>
 		{/if}
+	{/if}
+
+	{#if showDeleteConfirm && userToDelete}
+		<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+			<div class="max-w-md w-full mx-4">
+				<Card>
+				<h2 class="text-lg font-bold text-fg mb-2">{i18n._('admin.users.deleteConfirmTitle')}</h2>
+				<p class="text-fg-muted mb-4">
+					{i18n._('admin.users.deleteConfirmMessage')}
+				</p>
+				<p class="text-sm text-fg mb-4">
+					<strong>{userToDelete.display_name}</strong>
+					{#if userToDelete.primary_email}
+						({userToDelete.primary_email})
+					{/if}
+				</p>
+				<div class="flex gap-2 justify-end">
+					<Button variant="secondary" onclick={closeDeleteConfirm} disabled={!!deletingId}>
+						{i18n._('admin.users.cancel')}
+					</Button>
+					<Button variant="danger" onclick={handleDelete} loading={!!deletingId}>
+						{i18n._('admin.users.confirm')}
+					</Button>
+				</div>
+				</Card>
+			</div>
+		</div>
 	{/if}
 </div>
