@@ -194,6 +194,7 @@ fn load_auth_from_env() -> Result<AuthConfigLayer, ConfigError> {
 		environment: env_var("LOOM_SERVER_ENV"),
 		session_cleanup_interval_secs: env_u64("LOOM_SERVER_SESSION_CLEANUP_INTERVAL_SECS")?,
 		oauth_state_cleanup_interval_secs: env_u64("LOOM_SERVER_OAUTH_STATE_CLEANUP_INTERVAL_SECS")?,
+		signups_disabled: env_bool("LOOM_SERVER_SIGNUPS_DISABLED"),
 	})
 }
 

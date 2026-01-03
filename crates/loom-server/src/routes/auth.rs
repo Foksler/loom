@@ -1238,6 +1238,35 @@ async fn complete_oauth_login(
 	preferred_username: Option<&str>,
 ) -> axum::response::Response {
 	let locale = state.default_locale.as_str();
+
+	if state.auth_config.signups_disabled {
+		match state.user_repo.get_user_by_email(email).await {
+			Ok(None) => {
+				tracing::warn!(email = %email, provider = %provider, "Signup rejected: signups are disabled");
+				return (
+					StatusCode::FORBIDDEN,
+					Json(AuthErrorResponse {
+						error: "signups_disabled".to_string(),
+						message: t(locale, "server.api.auth.signups_disabled").to_string(),
+					}),
+				)
+					.into_response();
+			}
+			Ok(Some(_)) => {}
+			Err(e) => {
+				tracing::error!(error = %e, email = %email, "Failed to check if user exists");
+				return (
+					StatusCode::INTERNAL_SERVER_ERROR,
+					Json(AuthErrorResponse {
+						error: "internal_error".to_string(),
+						message: t(locale, "server.api.error.internal").to_string(),
+					}),
+				)
+					.into_response();
+			}
+		}
+	}
+
 	let user = match state
 		.user_repo
 		.find_or_create_user_by_email(email, display_name, avatar_url.as_deref(), preferred_username)
@@ -1420,6 +1449,35 @@ pub async fn verify_magic_link(
 				}),
 			)
 				.into_response();
+		}
+	}
+
+	// Check if signups are disabled and user doesn't exist
+	if state.auth_config.signups_disabled {
+		match state.user_repo.get_user_by_email(&email).await {
+			Ok(None) => {
+				tracing::warn!(email = %email, "Signup rejected via magic link: signups are disabled");
+				return (
+					StatusCode::FORBIDDEN,
+					Json(AuthErrorResponse {
+						error: "signups_disabled".to_string(),
+						message: t(locale, "server.api.auth.signups_disabled").to_string(),
+					}),
+				)
+					.into_response();
+			}
+			Ok(Some(_)) => {}
+			Err(e) => {
+				tracing::error!(error = %e, email = %email, "Failed to check if user exists");
+				return (
+					StatusCode::INTERNAL_SERVER_ERROR,
+					Json(AuthErrorResponse {
+						error: "internal_error".to_string(),
+						message: t(locale, "server.api.error.internal").to_string(),
+					}),
+				)
+					.into_response();
+			}
 		}
 	}
 

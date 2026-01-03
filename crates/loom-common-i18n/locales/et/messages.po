@@ -172,6 +172,10 @@ msgstr "E-posti aadressi pole teenusepakkuja poolt kinnitatud"
 msgid "server.api.auth.no_verified_email"
 msgstr "Kinnitatud e-posti aadressi ei leitud. Palun kinnita oma e-post GitHubis ja proovi uuesti."
 
+#: API: Auth - Signups disabled
+msgid "server.api.auth.signups_disabled"
+msgstr "Uute kasutajate registreerimine on hetkel keelatud. Palun võtke ühendust administraatoriga."
+
 # ============================================================================
 # User API responses
 # ============================================================================

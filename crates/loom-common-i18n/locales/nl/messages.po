@@ -172,6 +172,10 @@ msgstr "E-mailadres is niet geverifieerd door de provider"
 msgid "server.api.auth.no_verified_email"
 msgstr "Geen geverifieerd e-mailadres gevonden. Verifieer je e-mail bij GitHub en probeer het opnieuw."
 
+#: API: Auth - Signups disabled
+msgid "server.api.auth.signups_disabled"
+msgstr "Registratie van nieuwe gebruikers is momenteel uitgeschakeld. Neem contact op met een beheerder."
+
 # ============================================================================
 # User API responses
 # ============================================================================

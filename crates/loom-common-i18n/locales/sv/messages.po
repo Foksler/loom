@@ -172,6 +172,10 @@ msgstr "E-postadressen har inte verifierats av leverantören"
 msgid "server.api.auth.no_verified_email"
 msgstr "Ingen verifierad e-postadress hittades. Verifiera din e-post hos GitHub och försök igen."
 
+#: API: Auth - Signups disabled
+msgid "server.api.auth.signups_disabled"
+msgstr "Registrering av nya användare är för närvarande inaktiverad. Kontakta en administratör."
+
 # ============================================================================
 # User API responses
 # ============================================================================

@@ -172,6 +172,10 @@ msgstr "Alamat email belum diverifikasi oleh penyedia"
 msgid "server.api.auth.no_verified_email"
 msgstr "Tidak ditemukan alamat email terverifikasi. Harap verifikasi email Anda dengan GitHub dan coba lagi."
 
+#: API: Auth - Signups disabled
+msgid "server.api.auth.signups_disabled"
+msgstr "Pendaftaran pengguna baru saat ini dinonaktifkan. Silakan hubungi administrator."
+
 # ============================================================================
 # User API responses
 # ============================================================================

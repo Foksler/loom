@@ -172,6 +172,10 @@ msgstr "邮箱地址尚未被提供商验证"
 msgid "server.api.auth.no_verified_email"
 msgstr "未找到已验证的邮箱地址。请先在 GitHub 验证您的邮箱后重试。"
 
+#: API: Auth - Signups disabled
+msgid "server.api.auth.signups_disabled"
+msgstr "新用户注册目前已禁用。请联系管理员。"
+
 # ============================================================================
 # User API responses
 # ============================================================================

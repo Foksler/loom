@@ -137,6 +137,7 @@ pub async fn create_app_state(
 	let auth_config = loom_server_auth::middleware::AuthConfig {
 		dev_mode: config.auth.dev_mode,
 		session_cookie_name: loom_server_auth::middleware::SESSION_COOKIE_NAME.to_string(),
+		signups_disabled: config.auth.signups_disabled,
 	};
 	let cse_client = match (
 		std::env::var("LOOM_SERVER_GOOGLE_CSE_API_KEY"),

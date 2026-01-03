@@ -183,6 +183,8 @@ pub struct AuthConfig {
     pub dev_mode: bool,
     /// Name of the session cookie.
     pub session_cookie_name: String,
+    /// Disable new user signups (existing users can still log in).
+    pub signups_disabled: bool,
 }
 
 impl Default for AuthConfig {
@@ -190,6 +192,7 @@ impl Default for AuthConfig {
         Self {
             dev_mode: false,
             session_cookie_name: SESSION_COOKIE_NAME.to_string(),
+            signups_disabled: false,
         }
     }
 }
@@ -238,6 +241,12 @@ impl AuthConfig {
     /// Set the session cookie name.
     pub fn with_session_cookie_name(mut self, name: impl Into<String>) -> Self {
         self.session_cookie_name = name.into();
+        self
+    }
+
+    /// Set signups disabled.
+    pub fn with_signups_disabled(mut self, disabled: bool) -> Self {
+        self.signups_disabled = disabled;
         self
     }
 }

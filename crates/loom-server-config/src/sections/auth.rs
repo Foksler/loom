@@ -12,6 +12,7 @@ pub struct AuthConfig {
     pub environment: String,
     pub session_cleanup_interval_secs: u64,
     pub oauth_state_cleanup_interval_secs: u64,
+    pub signups_disabled: bool,
 }
 
 impl Default for AuthConfig {
@@ -21,6 +22,7 @@ impl Default for AuthConfig {
             environment: "development".to_string(),
             session_cleanup_interval_secs: 3600,
             oauth_state_cleanup_interval_secs: 900,
+            signups_disabled: false,
         }
     }
 }
@@ -36,6 +38,8 @@ pub struct AuthConfigLayer {
     pub session_cleanup_interval_secs: Option<u64>,
     #[serde(default)]
     pub oauth_state_cleanup_interval_secs: Option<u64>,
+    #[serde(default)]
+    pub signups_disabled: Option<bool>,
 }
 
 impl AuthConfigLayer {
@@ -52,6 +56,9 @@ impl AuthConfigLayer {
         if other.oauth_state_cleanup_interval_secs.is_some() {
             self.oauth_state_cleanup_interval_secs = other.oauth_state_cleanup_interval_secs;
         }
+        if other.signups_disabled.is_some() {
+            self.signups_disabled = other.signups_disabled;
+        }
     }
 
     pub fn finalize(self) -> AuthConfig {
@@ -60,6 +67,7 @@ impl AuthConfigLayer {
             environment: self.environment.unwrap_or_else(|| "development".to_string()),
             session_cleanup_interval_secs: self.session_cleanup_interval_secs.unwrap_or(3600),
             oauth_state_cleanup_interval_secs: self.oauth_state_cleanup_interval_secs.unwrap_or(900),
+            signups_disabled: self.signups_disabled.unwrap_or(false),
         }
     }
 }
