@@ -1145,3 +1145,39 @@ msgstr "منذ {count} ساعات"
 #: jobs.time.daysAgo
 msgid "jobs.time.daysAgo"
 msgstr "منذ {count} أيام"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "المستودعات"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "مستودع جديد"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "البحث في المستودعات..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "حاول مرة أخرى"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "لا توجد مستودعات تطابق بحثك"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "لا توجد مستودعات بعد"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "أنشئ مستودعك الأول"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "الفرع الافتراضي:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "تم التحديث"

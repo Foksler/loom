@@ -1145,3 +1145,39 @@ msgstr "hace {count} horas"
 #: jobs.time.daysAgo
 msgid "jobs.time.daysAgo"
 msgstr "hace {count} días"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "Repositorios"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "Nuevo Repositorio"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "Buscar repositorios..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "Reintentar"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "No hay repositorios que coincidan"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "Aún no hay repositorios"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "Crea tu primer repositorio"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "Rama predeterminada:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "Actualizado"

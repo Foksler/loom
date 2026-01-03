@@ -1077,3 +1077,39 @@ msgstr "The terminal will be available once the weaver is running"
 #: weavers.terminal.notRunning
 msgid "weavers.terminal.notRunning"
 msgstr "Weaver is not running (status: {status})"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "저장소"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "새 저장소"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "저장소 검색..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "다시 시도"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "검색과 일치하는 저장소가 없습니다"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "아직 저장소가 없습니다"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "첫 번째 저장소 만들기"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "기본 브랜치:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "업데이트됨"

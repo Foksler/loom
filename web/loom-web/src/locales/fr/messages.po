@@ -1077,3 +1077,39 @@ msgstr "Le terminal sera disponible quand le weaver sera en cours"
 #: weavers.terminal.notRunning
 msgid "weavers.terminal.notRunning"
 msgstr "Le weaver ne fonctionne pas (statut: {status})"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "Dépôts"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "Nouveau dépôt"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "Rechercher des dépôts..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "Réessayer"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "Aucun dépôt ne correspond à votre recherche"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "Aucun dépôt pour le moment"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "Créez votre premier dépôt"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "Branche par défaut :"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "Mis à jour"

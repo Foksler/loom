@@ -1077,3 +1077,39 @@ msgstr "织机运行后终端将可用"
 #: weavers.terminal.notRunning
 msgid "weavers.terminal.notRunning"
 msgstr "织机未运行 (状态: {status})"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "仓库"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "新建仓库"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "搜索仓库..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "重试"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "没有匹配的仓库"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "暂无仓库"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "创建你的第一个仓库"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "默认分支："
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "更新于"

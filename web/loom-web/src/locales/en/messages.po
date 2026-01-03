@@ -1443,6 +1443,42 @@ msgstr "{count} hours ago"
 msgid "jobs.time.daysAgo"
 msgstr "{count} days ago"
 
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "Repositories"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "New Repository"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "Search repositories..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "Try Again"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "No repositories match your search"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "No repositories yet"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "Create your first repository"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "Default branch:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "Updated"
+
 #: client.repos.header.clone
 msgid "client.repos.header.clone"
 msgstr "Clone"

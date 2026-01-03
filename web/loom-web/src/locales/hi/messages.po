@@ -1077,3 +1077,39 @@ msgstr "The terminal will be available once the weaver is running"
 #: weavers.terminal.notRunning
 msgid "weavers.terminal.notRunning"
 msgstr "Weaver is not running (status: {status})"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "रिपॉजिटरी"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "नई रिपॉजिटरी"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "रिपॉजिटरी खोजें..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "पुनः प्रयास करें"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "कोई रिपॉजिटरी नहीं मिली"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "अभी तक कोई रिपॉजिटरी नहीं"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "अपनी पहली रिपॉजिटरी बनाएं"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "डिफ़ॉल्ट ब्रांच:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "अपडेट किया गया"

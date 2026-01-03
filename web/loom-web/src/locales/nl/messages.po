@@ -1077,3 +1077,39 @@ msgstr "The terminal will be available once the weaver is running"
 #: weavers.terminal.notRunning
 msgid "weavers.terminal.notRunning"
 msgstr "Weaver is not running (status: {status})"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "Repositories"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "Nieuwe repository"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "Zoek repositories..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "Probeer opnieuw"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "Geen repositories gevonden"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "Nog geen repositories"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "Maak je eerste repository"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "Standaard branch:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "Bijgewerkt"

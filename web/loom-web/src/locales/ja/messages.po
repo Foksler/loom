@@ -1077,3 +1077,39 @@ msgstr "ウィーバーが実行されるとターミナルが利用可能にな
 #: weavers.terminal.notRunning
 msgid "weavers.terminal.notRunning"
 msgstr "ウィーバーは実行されていません (ステータス: {status})"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "リポジトリ"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "新しいリポジトリ"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "リポジトリを検索..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "再試行"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "検索に一致するリポジトリはありません"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "リポジトリはまだありません"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "最初のリポジトリを作成"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "デフォルトブランチ:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "更新日"

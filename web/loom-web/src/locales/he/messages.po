@@ -1077,3 +1077,39 @@ msgstr "The terminal will be available once the weaver is running"
 #: weavers.terminal.notRunning
 msgid "weavers.terminal.notRunning"
 msgstr "Weaver is not running (status: {status})"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "מאגרים"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "מאגר חדש"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "חפש מאגרים..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "נסה שוב"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "לא נמצאו מאגרים תואמים"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "אין עדיין מאגרים"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "צור את המאגר הראשון שלך"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "ענף ברירת מחדל:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "עודכן"

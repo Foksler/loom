@@ -1077,3 +1077,39 @@ msgstr "The terminal will be available once the weaver is running"
 #: weavers.terminal.notRunning
 msgid "weavers.terminal.notRunning"
 msgstr "Weaver is not running (status: {status})"
+
+#: client.repos.list.title
+msgid "client.repos.list.title"
+msgstr "Hoidlad"
+
+#: client.repos.list.new
+msgid "client.repos.list.new"
+msgstr "Uus hoidla"
+
+#: client.repos.list.search_placeholder
+msgid "client.repos.list.search_placeholder"
+msgstr "Otsi hoidlaid..."
+
+#: client.repos.list.try_again
+msgid "client.repos.list.try_again"
+msgstr "Proovi uuesti"
+
+#: client.repos.list.no_match
+msgid "client.repos.list.no_match"
+msgstr "Ühtegi hoidlat ei leitud"
+
+#: client.repos.list.empty
+msgid "client.repos.list.empty"
+msgstr "Hoidlaid pole veel"
+
+#: client.repos.list.create_first
+msgid "client.repos.list.create_first"
+msgstr "Loo oma esimene hoidla"
+
+#: client.repos.list.default_branch
+msgid "client.repos.list.default_branch"
+msgstr "Vaikeharu:"
+
+#: client.repos.list.updated
+msgid "client.repos.list.updated"
+msgstr "Uuendatud"
