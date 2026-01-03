@@ -78,6 +78,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	// Create database pool and repository
 	let pool = loom_server::db::create_pool(&config.database.url).await?;
+
+	// Run database migrations
+	loom_server::db::run_migrations(&pool).await?;
+
 	let repo = Arc::new(ThreadRepository::new(pool.clone()));
 	let mut state = create_app_state(pool.clone(), repo, &config, Some(log_buffer)).await;
 
