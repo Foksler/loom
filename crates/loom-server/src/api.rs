@@ -923,12 +923,17 @@ pub fn create_router(state: AppState) -> Router {
 	// Git routes use optional auth (public repos allow anonymous access)
 	let git_routes = routes::git::router().build(state.clone());
 
+	// Git browser routes (repo browsing API for web UI)
+	let git_browser_routes = routes::git_browser::router();
+
 	// Merge public and authenticated routes
 	let mut router = Router::new()
 		.merge(public)
 		.merge(authed)
 		// Git HTTP smart protocol endpoints (optional auth)
 		.merge(git_routes)
+		// Git browser API endpoints (optional auth)
+		.merge(git_browser_routes)
 		// Admin routes (nested with role-based authorization layer, built on raw Router)
 		.nest("/api/admin", admin_routes(state.clone()))
 		// WebSocket endpoint - no auth middleware (uses first-message auth)

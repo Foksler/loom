@@ -194,7 +194,7 @@ fn get_repo_path(repo: &Repository) -> PathBuf {
 		.join("git")
 }
 
-fn get_repo_path_by_id(repo_id: uuid::Uuid) -> PathBuf {
+pub fn get_repo_path_by_id(repo_id: uuid::Uuid) -> PathBuf {
 	let id_str = repo_id.to_string();
 	let shard = &id_str[..2];
 	get_repos_base_dir()
@@ -237,7 +237,7 @@ fn is_mirror_path(owner: &str) -> bool {
 	owner.starts_with("mirrors/")
 }
 
-async fn resolve_repo(
+pub async fn resolve_repo(
 	owner: &str,
 	repo_name: &str,
 	state: &AppState,
@@ -250,6 +250,27 @@ async fn resolve_repo(
 		.as_ref()
 		.ok_or_else(|| ServerError::Internal(t(locale, "server.api.scm.not_configured").to_string()))?;
 
+	// Try parsing owner as UUID (owner_id) first
+	if let Ok(owner_id) = uuid::Uuid::parse_str(owner) {
+		// Try as user owner
+		if let Some(scm_repo) = scm_store
+			.get_by_owner_and_name(loom_server_scm::OwnerType::User, owner_id, repo_name)
+			.await
+			.map_err(|e| ServerError::Internal(e.to_string()))?
+		{
+			return Ok(scm_repo);
+		}
+		// Try as org owner
+		if let Some(scm_repo) = scm_store
+			.get_by_owner_and_name(loom_server_scm::OwnerType::Org, owner_id, repo_name)
+			.await
+			.map_err(|e| ServerError::Internal(e.to_string()))?
+		{
+			return Ok(scm_repo);
+		}
+	}
+
+	// Try looking up by org slug
 	if let Some(org) = state.org_repo.get_org_by_slug(owner).await? {
 		if let Some(scm_repo) = scm_store
 			.get_by_owner_and_name(loom_server_scm::OwnerType::Org, org.id.into(), repo_name)
@@ -260,6 +281,7 @@ async fn resolve_repo(
 		}
 	}
 
+	// Try looking up by username
 	if let Ok(Some(user)) = state.user_repo.get_user_by_username(owner).await {
 		if let Some(scm_repo) = scm_store
 			.get_by_owner_and_name(loom_server_scm::OwnerType::User, user.id.into_inner(), repo_name)
@@ -317,7 +339,7 @@ async fn get_direct_role(
 	}
 }
 
-async fn get_user_repo_role(
+pub async fn get_user_repo_role(
 	user: &CurrentUser,
 	repo: &Repository,
 	state: &AppState,
@@ -336,7 +358,7 @@ async fn get_user_repo_role(
 	higher_role(direct_role, team_role)
 }
 
-async fn check_read_access(
+pub async fn check_read_access(
 	repo: &Repository,
 	user: Option<&CurrentUser>,
 	state: &AppState,

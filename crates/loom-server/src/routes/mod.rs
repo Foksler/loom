@@ -13,6 +13,7 @@ pub mod bin;
 pub mod cse;
 pub mod debug;
 pub mod git;
+pub mod git_browser;
 pub mod github;
 pub mod health;
 pub mod invitations;
