@@ -105,6 +105,11 @@ in
             '';
           };
 
+          # Proxy OAuth callbacks to loom-server
+          "^~ /auth/" = {
+            proxyPass = cfg.serverUrl;
+          };
+
           "/proxy/" = {
             proxyPass = cfg.serverUrl;
             proxyWebsockets = true;
