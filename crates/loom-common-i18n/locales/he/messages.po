@@ -252,6 +252,10 @@ msgstr "שם המשתמש יכול להכיל עד 39 תווים"
 msgid "server.api.user.username_reserved"
 msgstr "שם משתמש זה שמור ולא ניתן להשתמש בו"
 
+#: API: User - Invalid locale
+msgid "server.api.user.invalid_locale"
+msgstr "הגדרות שפה לא תקינות"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================

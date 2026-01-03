@@ -258,6 +258,20 @@ pub async fn update_current_user(
 		user.email_visible = email_visible;
 	}
 
+	if let Some(ref new_locale) = payload.locale {
+		if !loom_common_i18n::is_supported(new_locale) {
+			return (
+				StatusCode::BAD_REQUEST,
+				Json(UserErrorResponse {
+					error: "bad_request".to_string(),
+					message: t(locale, "server.api.user.invalid_locale").to_string(),
+				}),
+			)
+				.into_response();
+		}
+		user.locale = Some(new_locale.clone());
+	}
+
 	user.updated_at = Utc::now();
 
 	if let Err(e) = state.user_repo.update_user(&user).await {
@@ -283,6 +297,7 @@ pub async fn update_current_user(
 			primary_email: user.primary_email,
 			avatar_url: user.avatar_url,
 			email_visible: user.email_visible,
+			locale: user.locale,
 			created_at: user.created_at,
 			updated_at: user.updated_at,
 		}),

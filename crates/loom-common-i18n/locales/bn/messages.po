@@ -252,6 +252,10 @@ msgstr "ব্যবহারকারীর নাম সর্বাধিক 
 msgid "server.api.user.username_reserved"
 msgstr "এই ব্যবহারকারীর নাম সংরক্ষিত এবং ব্যবহার করা যাবে না"
 
+#: API: User - Invalid locale
+msgid "server.api.user.invalid_locale"
+msgstr "অবৈধ ভাষা সেটিং"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================

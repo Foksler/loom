@@ -252,6 +252,10 @@ msgstr "उपयोगकर्ता नाम अधिकतम 39 अक्
 msgid "server.api.user.username_reserved"
 msgstr "यह उपयोगकर्ता नाम आरक्षित है और इसका उपयोग नहीं किया जा सकता"
 
+#: API: User - Invalid locale
+msgid "server.api.user.invalid_locale"
+msgstr "अमान्य भाषा सेटिंग"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================

@@ -252,6 +252,10 @@ msgstr "Nama pengguna maksimal 39 karakter"
 msgid "server.api.user.username_reserved"
 msgstr "Nama pengguna ini sudah dipesan dan tidak dapat digunakan"
 
+#: API: User - Invalid locale
+msgid "server.api.user.invalid_locale"
+msgstr "Pengaturan bahasa tidak valid"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================

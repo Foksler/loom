@@ -252,6 +252,10 @@ msgstr "사용자 이름은 39자 이하여야 합니다"
 msgid "server.api.user.username_reserved"
 msgstr "이 사용자 이름은 예약되어 있어 사용할 수 없습니다"
 
+#: API: User - Invalid locale
+msgid "server.api.user.invalid_locale"
+msgstr "잘못된 로케일"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================

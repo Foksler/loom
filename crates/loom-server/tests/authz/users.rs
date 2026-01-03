@@ -71,6 +71,64 @@ async fn user_can_update_own_profile() {
 }
 
 // ============================================================================
+// Locale Update Tests
+// ============================================================================
+
+#[tokio::test]
+async fn user_can_update_locale() {
+	let app = TestApp::new().await;
+	let owner = &app.fixtures.org_a.owner;
+
+	let response = app
+		.patch(
+			"/api/users/me",
+			Some(owner),
+			json!({
+				"locale": "es"
+			}),
+		)
+		.await;
+
+	assert_eq!(
+		response.status(),
+		StatusCode::OK,
+		"User should be able to update their locale"
+	);
+
+	let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+		.await
+		.unwrap();
+	let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+	assert_eq!(
+		json["locale"], "es",
+		"Response should contain the updated locale"
+	);
+}
+
+#[tokio::test]
+async fn user_cannot_set_invalid_locale() {
+	let app = TestApp::new().await;
+	let owner = &app.fixtures.org_a.owner;
+
+	let response = app
+		.patch(
+			"/api/users/me",
+			Some(owner),
+			json!({
+				"locale": "invalid_locale"
+			}),
+		)
+		.await;
+
+	assert_eq!(
+		response.status(),
+		StatusCode::BAD_REQUEST,
+		"Setting an invalid locale should return 400"
+	);
+}
+
+// ============================================================================
 // Account Deletion Tests
 // ============================================================================
 

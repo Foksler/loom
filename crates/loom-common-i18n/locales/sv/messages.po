@@ -252,6 +252,10 @@ msgstr "Användarnamnet får vara högst 39 tecken"
 msgid "server.api.user.username_reserved"
 msgstr "Detta användarnamn är reserverat och kan inte användas"
 
+#: API: User - Invalid locale
+msgid "server.api.user.invalid_locale"
+msgstr "Ogiltig språkinställning"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================

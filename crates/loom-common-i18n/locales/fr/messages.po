@@ -252,6 +252,10 @@ msgstr "Le nom d'utilisateur doit contenir au maximum 39 caractères"
 msgid "server.api.user.username_reserved"
 msgstr "Ce nom d'utilisateur est réservé et ne peut pas être utilisé"
 
+#: API: User - Invalid locale
+msgid "server.api.user.invalid_locale"
+msgstr "Paramètres régionaux non valides"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================

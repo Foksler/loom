@@ -252,6 +252,10 @@ msgstr "ユーザー名は39文字以下である必要があります"
 msgid "server.api.user.username_reserved"
 msgstr "このユーザー名は予約されており、使用できません"
 
+#: API: User - Invalid locale
+msgid "server.api.user.invalid_locale"
+msgstr "無効なロケール"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================

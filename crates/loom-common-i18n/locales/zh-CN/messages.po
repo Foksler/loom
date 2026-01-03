@@ -252,6 +252,10 @@ msgstr "用户名最多39个字符"
 msgid "server.api.user.username_reserved"
 msgstr "此用户名已被保留，无法使用"
 
+#: API: User - Invalid locale
+msgid "server.api.user.invalid_locale"
+msgstr "无效的语言设置"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================

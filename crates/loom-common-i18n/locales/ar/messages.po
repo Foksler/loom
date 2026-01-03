@@ -252,6 +252,10 @@ msgstr "يجب ألا يتجاوز اسم المستخدم 39 حرفًا"
 msgid "server.api.user.username_reserved"
 msgstr "اسم المستخدم هذا محجوز ولا يمكن استخدامه"
 
+#: API: User - Invalid locale
+msgid "server.api.user.invalid_locale"
+msgstr "إعداد اللغة غير صالح"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================

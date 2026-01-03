@@ -252,6 +252,10 @@ msgstr "Kasutajanimi võib olla kuni 39 tähemärki"
 msgid "server.api.user.username_reserved"
 msgstr "See kasutajanimi on reserveeritud ja seda ei saa kasutada"
 
+#: API: User - Invalid locale
+msgid "server.api.user.invalid_locale"
+msgstr "Kehtetu keel"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================

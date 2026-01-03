@@ -252,6 +252,10 @@ msgstr "Username must be at most 39 characters"
 msgid "server.api.user.username_reserved"
 msgstr "This username is reserved and cannot be used"
 
+#: API: User - Invalid locale
+msgid "server.api.user.invalid_locale"
+msgstr "Invalid locale"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================

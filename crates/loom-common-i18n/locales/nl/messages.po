@@ -252,6 +252,10 @@ msgstr "Gebruikersnaam mag maximaal 39 tekens bevatten"
 msgid "server.api.user.username_reserved"
 msgstr "Deze gebruikersnaam is gereserveerd en kan niet worden gebruikt"
 
+#: API: User - Invalid locale
+msgid "server.api.user.invalid_locale"
+msgstr "Ongeldige landinstellingen"
+
 # ============================================================================
 # Organization API responses
 # ============================================================================

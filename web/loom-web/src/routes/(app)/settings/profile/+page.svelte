@@ -59,6 +59,8 @@
 		successMessage = null;
 		errorMessage = null;
 
+		const previousLocale = (user?.locale as Locale) ?? 'en';
+
 		try {
 			const updatedUser = await client.updateProfile({
 				display_name: displayName,
@@ -67,13 +69,20 @@
 			});
 			authStore.loginSuccess(updatedUser);
 
-			// Apply locale change and reload page to show translated UI
+			// Apply locale change
 			setLocale(selectedLocale);
+
+			// Hard refresh if locale changed to ensure all translations reload
+			if (selectedLocale !== previousLocale) {
+				window.location.reload();
+				return;
+			}
+
+			// No locale change - just invalidate and show success
 			if (typeof document !== 'undefined') {
 				document.documentElement.dir = isRtl(selectedLocale) ? 'rtl' : 'ltr';
 				document.documentElement.lang = selectedLocale;
 			}
-			// Invalidate all data to re-render with new locale
 			await invalidateAll();
 			successMessage = i18n._('settings.profile.saved');
 		} catch (e) {

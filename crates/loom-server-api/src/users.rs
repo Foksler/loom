@@ -27,6 +27,7 @@ pub struct CurrentUserProfileResponse {
 	pub primary_email: Option<String>,
 	pub avatar_url: Option<String>,
 	pub email_visible: bool,
+	pub locale: Option<String>,
 	pub created_at: DateTime<Utc>,
 	pub updated_at: DateTime<Utc>,
 }
@@ -39,6 +40,7 @@ pub struct UpdateUserProfileRequest {
 	pub username: Option<String>,
 	pub avatar_url: Option<String>,
 	pub email_visible: Option<bool>,
+	pub locale: Option<String>,
 }
 
 /// Success response for user operations.
