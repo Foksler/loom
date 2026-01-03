@@ -94,6 +94,12 @@ in
         locations = {
           "/" = {
             tryFiles = "$uri /index.html";
+            extraConfig = ''
+              # Never cache HTML - always fetch fresh to get new JS chunk references
+              add_header Cache-Control "no-cache, no-store, must-revalidate";
+              add_header Pragma "no-cache";
+              add_header Expires "0";
+            '';
           };
 
           # Proxy API requests to loom-server
