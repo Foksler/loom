@@ -8,11 +8,23 @@
 
 use serde_json::Value;
 
+const MAX_DEPTH: usize = 128;
+
 /// Redacts secrets from a JSON value in-place.
 ///
 /// This recursively walks the JSON structure and applies secret detection
-/// to all string values, replacing detected secrets with `[REDACTED:<rule-id>]`.
+/// to all string values AND object keys, replacing detected secrets with `[REDACTED:<rule-id>]`.
+///
+/// Depth is limited to prevent stack overflow from maliciously nested JSON.
 pub fn redact_json_value(value: &mut Value) {
+	redact_json_value_with_depth(value, 0);
+}
+
+fn redact_json_value_with_depth(value: &mut Value, depth: usize) {
+	if depth > MAX_DEPTH {
+		return;
+	}
+
 	match value {
 		Value::String(s) => {
 			let redacted = loom_redact::redact(s);
@@ -22,12 +34,28 @@ pub fn redact_json_value(value: &mut Value) {
 		}
 		Value::Array(arr) => {
 			for item in arr {
-				redact_json_value(item);
+				redact_json_value_with_depth(item, depth + 1);
 			}
 		}
 		Value::Object(obj) => {
+			let keys_to_check: Vec<String> = obj.keys().cloned().collect();
+			let mut keys_to_rename: Vec<(String, String)> = Vec::new();
+
+			for key in &keys_to_check {
+				let redacted_key = loom_redact::redact(key);
+				if let std::borrow::Cow::Owned(new_key) = redacted_key {
+					keys_to_rename.push((key.clone(), new_key));
+				}
+			}
+
+			for (old_key, new_key) in keys_to_rename {
+				if let Some(val) = obj.remove(&old_key) {
+					obj.insert(new_key, val);
+				}
+			}
+
 			for (_, v) in obj.iter_mut() {
-				redact_json_value(v);
+				redact_json_value_with_depth(v, depth + 1);
 			}
 		}
 		_ => {}
@@ -41,6 +69,23 @@ pub fn redact_details(details: &Value) -> Value {
 	let mut cloned = details.clone();
 	redact_json_value(&mut cloned);
 	cloned
+}
+
+/// Redacts secrets from a string value.
+///
+/// Returns the redacted string (owned if changes were made, borrowed if not).
+pub fn redact_string(s: &str) -> std::borrow::Cow<'_, str> {
+	loom_redact::redact(s)
+}
+
+/// Redacts secrets from an optional string field in-place.
+pub fn redact_optional_string(s: &mut Option<String>) {
+	if let Some(ref mut val) = s {
+		let redacted = loom_redact::redact(val);
+		if let std::borrow::Cow::Owned(new_val) = redacted {
+			*val = new_val;
+		}
+	}
 }
 
 #[cfg(test)]
@@ -139,5 +184,40 @@ mod tests {
 			.as_str()
 			.unwrap()
 			.contains(&github_pat()));
+	}
+
+	#[test]
+	fn test_redact_secret_in_object_key() {
+		let pat = github_pat();
+		let mut value = json!({});
+		value
+			.as_object_mut()
+			.unwrap()
+			.insert(pat.clone(), json!("some value"));
+
+		redact_json_value(&mut value);
+
+		let keys: Vec<&String> = value.as_object().unwrap().keys().collect();
+		assert_eq!(keys.len(), 1);
+		assert!(
+			keys[0].contains("[REDACTED:"),
+			"Expected key to be redacted: {}",
+			keys[0]
+		);
+		assert!(!keys[0].contains(&pat));
+	}
+
+	#[test]
+	fn test_depth_limit_prevents_stack_overflow() {
+		fn deeply_nested(depth: usize) -> Value {
+			if depth == 0 {
+				json!("leaf")
+			} else {
+				json!({ "nested": deeply_nested(depth - 1) })
+			}
+		}
+
+		let mut value = deeply_nested(200);
+		redact_json_value(&mut value);
 	}
 }

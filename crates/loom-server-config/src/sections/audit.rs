@@ -203,15 +203,37 @@ impl HttpSinkConfigLayer {
 	}
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// HTTP sink configuration.
+///
+/// # Security Note
+///
+/// This struct intentionally does NOT derive Debug because `headers` may contain
+/// API keys, tokens, or other secrets. Use the manual Debug impl which redacts headers.
+#[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct HttpSinkConfig {
 	pub name: String,
 	pub url: String,
 	pub method: String,
+	/// Headers to send with each request. May contain secrets (API keys, tokens).
+	/// These are redacted in Debug output.
 	pub headers: Vec<(String, String)>,
 	pub timeout_ms: u64,
 	pub retry_max_attempts: u32,
 	pub min_severity: String,
+}
+
+impl std::fmt::Debug for HttpSinkConfig {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("HttpSinkConfig")
+			.field("name", &self.name)
+			.field("url", &self.url)
+			.field("method", &self.method)
+			.field("headers", &format!("[{} header(s) REDACTED]", self.headers.len()))
+			.field("timeout_ms", &self.timeout_ms)
+			.field("retry_max_attempts", &self.retry_max_attempts)
+			.field("min_severity", &self.min_severity)
+			.finish()
+	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

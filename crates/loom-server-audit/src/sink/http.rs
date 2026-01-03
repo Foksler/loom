@@ -8,6 +8,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use loom_server_config::HttpSinkConfig;
+use rand::Rng;
 use reqwest::{Client, Method, StatusCode};
 
 use crate::enrichment::EnrichedAuditEvent;
@@ -54,7 +55,10 @@ impl HttpAuditSink {
 
 		for attempt in 0..self.config.retry_max_attempts {
 			if attempt > 0 {
-				let backoff = Duration::from_millis(100 * 2u64.pow(attempt - 1));
+				// Exponential backoff with jitter to prevent timing attacks and thundering herd
+				let base_backoff_ms = 100 * 2u64.pow(attempt - 1);
+				let jitter_ms = rand::rng().random_range(0..=base_backoff_ms / 2);
+				let backoff = Duration::from_millis(base_backoff_ms + jitter_ms);
 				tokio::time::sleep(backoff).await;
 			}
 
@@ -76,12 +80,19 @@ impl HttpAuditSink {
 					}
 
 					if is_permanent_status(status) {
+						// Truncate response body to avoid logging potentially sensitive data
+						// reflected back from our request
 						let body = response.text().await.unwrap_or_default();
+						let truncated_body: String = body.chars().take(200).collect();
 						return Err(AuditSinkError::Permanent(format!(
-							"HTTP {} {}: {}",
+							"HTTP {} {}{}",
 							status.as_u16(),
 							status.canonical_reason().unwrap_or(""),
-							body
+							if truncated_body.is_empty() {
+								String::new()
+							} else {
+								format!(": {}", truncated_body)
+							}
 						)));
 					}
 

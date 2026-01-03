@@ -7,11 +7,32 @@ use tokio::sync::mpsc::{self, error::SendError};
 use tracing::{instrument, warn};
 
 use loom_server_config::QueueOverflowPolicy;
-use crate::enrichment::AuditEnricher;
+use crate::enrichment::{AuditEnricher, EnrichedAuditEvent};
 use crate::event::AuditLogEntry;
 use crate::filter::AuditFilterConfig;
-use crate::redaction::redact_json_value;
+use crate::redaction::{redact_json_value, redact_optional_string, redact_string};
 use crate::sink::AuditSink;
+
+/// Redacts secrets from all string fields in an enriched audit event.
+///
+/// This ensures no secrets leak through any field, not just the `details` JSON.
+fn redact_audit_event(event: &mut EnrichedAuditEvent) {
+	let base = &mut event.base;
+
+	redact_json_value(&mut base.details);
+
+	if let std::borrow::Cow::Owned(redacted) = redact_string(&base.action) {
+		base.action = redacted;
+	}
+
+	redact_optional_string(&mut base.resource_id);
+	redact_optional_string(&mut base.user_agent);
+
+	if let Some(ref mut session) = event.session {
+		redact_optional_string(&mut session.session_id);
+		redact_optional_string(&mut session.device_label);
+	}
+}
 
 pub struct AuditService {
 	tx: mpsc::Sender<AuditLogEntry>,
@@ -49,7 +70,7 @@ impl AuditService {
 				continue;
 			}
 
-			redact_json_value(&mut enriched.base.details);
+			redact_audit_event(&mut enriched);
 
 			let event = Arc::new(enriched);
 
