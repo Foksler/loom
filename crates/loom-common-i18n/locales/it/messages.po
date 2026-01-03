@@ -963,3 +963,331 @@ msgstr "Non sei membro di questa organizzazione"
 #: API: Weaver - Membership check failed
 msgid "server.api.weaver.membership_check_failed"
 msgstr "Verifica dell'appartenenza all'organizzazione non riuscita"
+
+# ============================================================================
+# Jobs: Scheduler
+# ============================================================================
+
+#: Jobs: Email Alert - Subject
+msgid "server.jobs.alert.subject"
+msgstr "[Loom] Attività fallita: {job_name}"
+
+#: Jobs: Email Alert - Body intro
+msgid "server.jobs.alert.body"
+msgstr "L'attività \"{job_name}\" è fallita {consecutive_failures} volte consecutive."
+
+#: Jobs: Email Alert - Job ID
+msgid "server.jobs.alert.job_id"
+msgstr "ID dell'attività: {job_id}"
+
+#: Jobs: Email Alert - Last error
+msgid "server.jobs.alert.last_error"
+msgstr "Ultimo errore: {error_message}"
+
+#: Jobs: Email Alert - Last run
+msgid "server.jobs.alert.last_run"
+msgstr "Ultima esecuzione: {last_run_at}"
+
+#: Jobs: Email Alert - View history link
+msgid "server.jobs.alert.view_history"
+msgstr "Visualizza cronologia dell'attività: {url}"
+
+#: Jobs: API - Job not found
+msgid "server.jobs.error.not_found"
+msgstr "Attività non trovata: {job_id}"
+
+#: Jobs: API - Scheduler not configured
+msgid "server.jobs.error.not_configured"
+msgstr "Pianificatore di attività non configurato"
+
+#: Jobs: API - Job triggered
+msgid "server.jobs.success.triggered"
+msgstr "Attività {job_id} eseguita con successo"
+
+#: Jobs: API - Job cancelled
+msgid "server.jobs.success.cancelled"
+msgstr "Attività {job_id} annullata"
+
+#: Jobs: API - Job enabled
+msgid "server.jobs.success.enabled"
+msgstr "Attività {job_id} abilitata"
+
+#: Jobs: API - Job disabled
+msgid "server.jobs.success.disabled"
+msgstr "Attività {job_id} disabilitata"
+
+# ============================================================================
+# Admin API responses (additional)
+# ============================================================================
+
+#: API: Admin - Cannot remove last admin
+msgid "server.api.admin.cannot_remove_last_admin"
+msgstr "Impossibile rimuovere l'ultimo amministratore di sistema"
+
+# ============================================================================
+# SCM: Core API responses
+# ============================================================================
+
+#: API: SCM - Internal error
+msgid "server.api.scm.internal_error"
+msgstr "Errore interno del server"
+
+#: API: SCM - Not configured
+msgid "server.api.scm.not_configured"
+msgstr "SCM non configurato"
+
+#: API: SCM - Repository not found
+msgid "server.api.scm.repo.not_found"
+msgstr "Repository non trovato"
+
+#: API: SCM - Repository not found (legacy)
+msgid "server.api.scm.repo_not_found"
+msgstr "Repository non trovato"
+
+#: API: SCM - Invalid repository name
+msgid "server.api.scm.invalid_repo_name"
+msgstr "Il nome del repository deve essere compreso tra 1 e 100 caratteri"
+
+#: API: SCM - Cannot create for other user
+msgid "server.api.scm.cannot_create_for_other_user"
+msgstr "Impossibile creare un repository per un altro utente"
+
+#: API: SCM - Not org member
+msgid "server.api.scm.not_org_member"
+msgstr "Non sei membro di questa organizzazione"
+
+#: API: SCM - Org admin required
+msgid "server.api.scm.org_admin_required"
+msgstr "Devi essere proprietario o amministratore dell'organizzazione per creare repository"
+
+#: API: SCM - Organization not found
+msgid "server.api.scm.org_not_found"
+msgstr "Organizzazione non trovata"
+
+#: API: SCM - Repository already exists
+msgid "server.api.scm.repo_already_exists"
+msgstr "Esiste già un repository con questo nome"
+
+#: API: SCM - Failed to create repository
+msgid "server.api.scm.failed_to_create_repo"
+msgstr "Impossibile creare il repository"
+
+#: API: SCM - Failed to initialize repo on disk
+msgid "server.api.scm.failed_to_init_repo_disk"
+msgstr "Impossibile inizializzare il repository su disco"
+
+#: API: SCM - Failed to initialize git repo
+msgid "server.api.scm.failed_to_init_git_repo"
+msgstr "Impossibile inizializzare il repository git"
+
+#: API: SCM - Access denied
+msgid "server.api.scm.access_denied"
+msgstr "Accesso negato"
+
+#: API: SCM - Admin required
+msgid "server.api.scm.admin_required"
+msgstr "Accesso amministratore richiesto"
+
+#: API: SCM - Invalid default branch
+msgid "server.api.scm.invalid_default_branch"
+msgstr "Il branch predefinito non può essere vuoto"
+
+#: API: SCM - Failed to update repository
+msgid "server.api.scm.failed_to_update_repo"
+msgstr "Impossibile aggiornare il repository"
+
+#: API: SCM - Failed to delete repository
+msgid "server.api.scm.failed_to_delete_repo"
+msgstr "Impossibile eliminare il repository"
+
+#: API: SCM - User not found
+msgid "server.api.scm.user_not_found"
+msgstr "Utente non trovato"
+
+#: API: SCM - Failed to list repositories
+msgid "server.api.scm.failed_to_list_repos"
+msgstr "Impossibile elencare i repository"
+
+# ============================================================================
+# SCM: Git API responses
+# ============================================================================
+
+#: API: SCM Git - Auth required for private repo
+msgid "server.api.scm.git.auth_required_private"
+msgstr "Autenticazione richiesta per repository privato"
+
+#: API: SCM Git - Auth required for push
+msgid "server.api.scm.git.auth_required_push"
+msgstr "Autenticazione richiesta per il push"
+
+#: API: SCM Git - Auth required
+msgid "server.api.scm.git.auth_required"
+msgstr "Autenticazione richiesta"
+
+#: API: SCM Git - Access denied
+msgid "server.api.scm.git.access_denied"
+msgstr "Accesso al repository negato"
+
+#: API: SCM Git - Write access denied
+msgid "server.api.scm.git.write_access_denied"
+msgstr "Accesso in scrittura al repository negato"
+
+# ============================================================================
+# SCM: Protection API responses
+# ============================================================================
+
+#: API: SCM Protection - Failed to load rules
+msgid "server.api.scm.protection.failed_to_load"
+msgstr "Impossibile caricare le regole di protezione"
+
+#: API: SCM Protection - Failed to list rules
+msgid "server.api.scm.protection.failed_to_list"
+msgstr "Impossibile elencare le regole di protezione"
+
+#: API: SCM Protection - Invalid pattern
+msgid "server.api.scm.protection.invalid_pattern"
+msgstr "Il pattern deve essere compreso tra 1 e 256 caratteri"
+
+#: API: SCM Protection - Rule already exists
+msgid "server.api.scm.protection.already_exists"
+msgstr "Esiste già una regola di protezione con questo pattern"
+
+#: API: SCM Protection - Failed to create rule
+msgid "server.api.scm.protection.failed_to_create"
+msgstr "Impossibile creare la regola di protezione"
+
+#: API: SCM Protection - Rule not found
+msgid "server.api.scm.protection.rule_not_found"
+msgstr "Regola di protezione non trovata"
+
+#: API: SCM Protection - Failed to delete rule
+msgid "server.api.scm.protection.failed_to_delete"
+msgstr "Impossibile eliminare la regola di protezione"
+
+# ============================================================================
+# SCM: Webhook API responses
+# ============================================================================
+
+#: API: SCM Webhook - Not found
+msgid "server.api.scm.webhook.not_found"
+msgstr "Webhook non trovato"
+
+#: API: SCM Webhook - Admin required
+msgid "server.api.scm.webhook.admin_required"
+msgstr "Accesso amministratore richiesto"
+
+#: API: SCM Webhook - URL required
+msgid "server.api.scm.webhook.url_required"
+msgstr "URL richiesto"
+
+#: API: SCM Webhook - URL invalid protocol
+msgid "server.api.scm.webhook.url_invalid_protocol"
+msgstr "L'URL deve iniziare con http:// o https://"
+
+#: API: SCM Webhook - URL too long
+msgid "server.api.scm.webhook.url_too_long"
+msgstr "L'URL deve essere inferiore a 2048 caratteri"
+
+#: API: SCM Webhook - Events required
+msgid "server.api.scm.webhook.events_required"
+msgstr "È richiesto almeno un evento"
+
+#: API: SCM Webhook - Invalid event
+msgid "server.api.scm.webhook.invalid_event"
+msgstr "Evento non valido '{event}'. Eventi validi: {valid_events}"
+
+#: API: SCM Webhook - Secret required
+msgid "server.api.scm.webhook.secret_required"
+msgstr "Secret richiesto"
+
+#: API: SCM Webhook - URL invalid
+msgid "server.api.scm.webhook.url_invalid"
+msgstr "Formato URL non valido"
+
+#: API: SCM Webhook - Localhost blocked
+msgid "server.api.scm.webhook.url_localhost_blocked"
+msgstr "Gli URL localhost non sono consentiti"
+
+#: API: SCM Webhook - Private IP blocked
+msgid "server.api.scm.webhook.url_private_ip_blocked"
+msgstr "Gli indirizzi IP privati o interni non sono consentiti"
+
+# ============================================================================
+# SCM: Maintenance API responses
+# ============================================================================
+
+#: API: SCM Maintenance - Not configured
+msgid "server.api.scm.maintenance.not_configured"
+msgstr "Manutenzione non configurata"
+
+#: API: SCM Maintenance - Job queued for repository
+msgid "server.api.scm.maintenance.job_queued"
+msgstr "Attività di manutenzione '{task}' in coda per il repository"
+
+#: API: SCM Maintenance - Global sweep queued
+msgid "server.api.scm.maintenance.sweep_queued"
+msgstr "Manutenzione globale '{task}' in coda"
+
+# ============================================================================
+# SCM: Mirror API responses
+# ============================================================================
+
+#: API: SCM Mirror - URL required
+msgid "server.api.scm.mirror.url_required"
+msgstr "URL del mirror richiesto"
+
+#: API: SCM Mirror - URL invalid protocol
+msgid "server.api.scm.mirror.url_invalid_protocol"
+msgstr "L'URL del mirror deve iniziare con http:// o https://"
+
+#: API: SCM Mirror - URL too long
+msgid "server.api.scm.mirror.url_too_long"
+msgstr "L'URL del mirror deve essere inferiore a 2048 caratteri"
+
+#: API: SCM Mirror - URL invalid
+msgid "server.api.scm.mirror.url_invalid"
+msgstr "Formato URL del mirror non valido"
+
+#: API: SCM Mirror - Localhost blocked
+msgid "server.api.scm.mirror.url_localhost_blocked"
+msgstr "Gli URL localhost non sono consentiti per i mirror"
+
+#: API: SCM Mirror - Private IP blocked
+msgid "server.api.scm.mirror.url_private_ip_blocked"
+msgstr "Gli indirizzi IP privati o interni non sono consentiti per i mirror"
+
+#: API: SCM Mirror - Not found
+msgid "server.api.scm.mirror.not_found"
+msgstr "Mirror non trovato"
+
+#: API: SCM Mirror - Disabled
+msgid "server.api.scm.mirror.disabled"
+msgstr "Mirror disabilitato"
+
+#: API: SCM Mirror - Sync queued
+msgid "server.api.scm.mirror.sync_queued"
+msgstr "Sincronizzazione del mirror in coda"
+
+#: API: SCM Mirror - Failed to delete
+msgid "server.api.scm.mirror.failed_to_delete"
+msgstr "Impossibile eliminare il mirror"
+
+#: API: SCM Mirror - Invalid path format
+msgid "server.api.scm.mirror.invalid_path"
+msgstr "Formato percorso mirror non valido. Atteso: mirrors/{platform}/{owner}/{repo}"
+
+#: API: SCM Mirror - Push not allowed
+msgid "server.api.scm.mirror.push_not_allowed"
+msgstr "Il push non è consentito ai repository mirror"
+
+#: API: SCM Mirror - Remote repository not found
+msgid "server.api.scm.mirror.remote_not_found"
+msgstr "Repository remoto non trovato"
+
+#: API: SCM Mirror - Mirrors org not found
+msgid "server.api.scm.mirror.mirrors_org_not_found"
+msgstr "Organizzazione mirrors non configurata. Crea un'organizzazione denominata 'mirrors'."
+
+#: API: SCM Mirror - Clone failed
+msgid "server.api.scm.mirror.clone_failed"
+msgstr "Impossibile clonare il repository remoto"

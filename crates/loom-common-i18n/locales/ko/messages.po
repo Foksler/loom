@@ -963,3 +963,327 @@ msgstr "이 조직의 회원이 아닙니다"
 #: API: Weaver - Membership check failed
 msgid "server.api.weaver.membership_check_failed"
 msgstr "조직 회원 자격 확인 실패"
+
+# ============================================================================
+# Jobs: Scheduler
+# ============================================================================
+
+#: Jobs: Email Alert - Subject
+msgid "server.jobs.alert.subject"
+msgstr "[Loom] 작업 실패: {job_name}"
+
+#: Jobs: Email Alert - Body intro
+msgid "server.jobs.alert.body"
+msgstr "작업 \"{job_name}\"이(가) 연속 {consecutive_failures}회 실패했습니다."
+
+#: Jobs: Email Alert - Job ID
+msgid "server.jobs.alert.job_id"
+msgstr "작업 ID: {job_id}"
+
+#: Jobs: Email Alert - Last error
+msgid "server.jobs.alert.last_error"
+msgstr "마지막 오류: {error_message}"
+
+#: Jobs: Email Alert - Last run
+msgid "server.jobs.alert.last_run"
+msgstr "마지막 실행: {last_run_at}"
+
+#: Jobs: Email Alert - View history link
+msgid "server.jobs.alert.view_history"
+msgstr "작업 이력 보기: {url}"
+
+#: Jobs: API - Job not found
+msgid "server.jobs.error.not_found"
+msgstr "작업을 찾을 수 없습니다: {job_id}"
+
+#: Jobs: API - Scheduler not configured
+msgid "server.jobs.error.not_configured"
+msgstr "작업 스케줄러가 구성되지 않았습니다"
+
+#: Jobs: API - Job triggered
+msgid "server.jobs.success.triggered"
+msgstr "작업 {job_id}이(가) 성공적으로 트리거되었습니다"
+
+#: Jobs: API - Job cancelled
+msgid "server.jobs.success.cancelled"
+msgstr "작업 {job_id}이(가) 취소되었습니다"
+
+#: Jobs: API - Job enabled
+msgid "server.jobs.success.enabled"
+msgstr "작업 {job_id}이(가) 활성화되었습니다"
+
+#: Jobs: API - Job disabled
+msgid "server.jobs.success.disabled"
+msgstr "작업 {job_id}이(가) 비활성화되었습니다"
+
+# ============================================================================
+# SCM: Repository API responses
+# ============================================================================
+
+#: API: SCM Repo - Not found
+msgid "server.api.scm.repo.not_found"
+msgstr "리포지토리를 찾을 수 없습니다"
+
+#: API: SCM - Not configured
+msgid "server.api.scm.not_configured"
+msgstr "SCM이 구성되지 않았습니다"
+
+#: API: SCM - Internal error
+msgid "server.api.scm.internal_error"
+msgstr "내부 서버 오류"
+
+#: API: Admin - Cannot remove last admin
+msgid "server.api.admin.cannot_remove_last_admin"
+msgstr "마지막 시스템 관리자는 제거할 수 없습니다"
+
+#: API: SCM - Repository not found
+msgid "server.api.scm.repo_not_found"
+msgstr "리포지토리를 찾을 수 없습니다"
+
+#: API: SCM - Invalid repository name
+msgid "server.api.scm.invalid_repo_name"
+msgstr "리포지토리 이름은 1~100자 사이여야 합니다"
+
+#: API: SCM - Cannot create for other user
+msgid "server.api.scm.cannot_create_for_other_user"
+msgstr "다른 사용자를 위한 리포지토리를 만들 수 없습니다"
+
+#: API: SCM - Not org member
+msgid "server.api.scm.not_org_member"
+msgstr "이 조직의 회원이 아닙니다"
+
+#: API: SCM - Org admin required
+msgid "server.api.scm.org_admin_required"
+msgstr "리포지토리를 만들려면 조직 소유자 또는 관리자여야 합니다"
+
+#: API: SCM - Organization not found
+msgid "server.api.scm.org_not_found"
+msgstr "조직을 찾을 수 없습니다"
+
+#: API: SCM - Repository already exists
+msgid "server.api.scm.repo_already_exists"
+msgstr "이 이름의 리포지토리가 이미 존재합니다"
+
+#: API: SCM - Failed to create repository
+msgid "server.api.scm.failed_to_create_repo"
+msgstr "리포지토리 생성에 실패했습니다"
+
+#: API: SCM - Failed to initialize repo on disk
+msgid "server.api.scm.failed_to_init_repo_disk"
+msgstr "디스크에서 리포지토리 초기화에 실패했습니다"
+
+#: API: SCM - Failed to initialize git repo
+msgid "server.api.scm.failed_to_init_git_repo"
+msgstr "Git 리포지토리 초기화에 실패했습니다"
+
+#: API: SCM - Access denied
+msgid "server.api.scm.access_denied"
+msgstr "접근이 거부되었습니다"
+
+#: API: SCM - Admin required
+msgid "server.api.scm.admin_required"
+msgstr "관리자 접근 권한이 필요합니다"
+
+#: API: SCM - Invalid default branch
+msgid "server.api.scm.invalid_default_branch"
+msgstr "기본 브랜치는 비워둘 수 없습니다"
+
+#: API: SCM - Failed to update repository
+msgid "server.api.scm.failed_to_update_repo"
+msgstr "리포지토리 업데이트에 실패했습니다"
+
+#: API: SCM - Failed to delete repository
+msgid "server.api.scm.failed_to_delete_repo"
+msgstr "리포지토리 삭제에 실패했습니다"
+
+#: API: SCM - User not found
+msgid "server.api.scm.user_not_found"
+msgstr "사용자를 찾을 수 없습니다"
+
+#: API: SCM - Failed to list repositories
+msgid "server.api.scm.failed_to_list_repos"
+msgstr "리포지토리 목록 조회에 실패했습니다"
+
+# ============================================================================
+# SCM: Git API responses
+# ============================================================================
+
+#: API: SCM Git - Auth required for private repo
+msgid "server.api.scm.git.auth_required_private"
+msgstr "비공개 리포지토리에는 인증이 필요합니다"
+
+#: API: SCM Git - Auth required for push
+msgid "server.api.scm.git.auth_required_push"
+msgstr "푸시하려면 인증이 필요합니다"
+
+#: API: SCM Git - Auth required
+msgid "server.api.scm.git.auth_required"
+msgstr "인증이 필요합니다"
+
+#: API: SCM Git - Access denied
+msgid "server.api.scm.git.access_denied"
+msgstr "리포지토리 접근이 거부되었습니다"
+
+#: API: SCM Git - Write access denied
+msgid "server.api.scm.git.write_access_denied"
+msgstr "리포지토리 쓰기 접근이 거부되었습니다"
+
+# ============================================================================
+# SCM: Protection API responses
+# ============================================================================
+
+#: API: SCM Protection - Failed to load rules
+msgid "server.api.scm.protection.failed_to_load"
+msgstr "보호 규칙 로드에 실패했습니다"
+
+#: API: SCM Protection - Failed to list rules
+msgid "server.api.scm.protection.failed_to_list"
+msgstr "보호 규칙 목록 조회에 실패했습니다"
+
+#: API: SCM Protection - Invalid pattern
+msgid "server.api.scm.protection.invalid_pattern"
+msgstr "패턴은 1~256자 사이여야 합니다"
+
+#: API: SCM Protection - Rule already exists
+msgid "server.api.scm.protection.already_exists"
+msgstr "이 패턴의 보호 규칙이 이미 존재합니다"
+
+#: API: SCM Protection - Failed to create rule
+msgid "server.api.scm.protection.failed_to_create"
+msgstr "보호 규칙 생성에 실패했습니다"
+
+#: API: SCM Protection - Rule not found
+msgid "server.api.scm.protection.rule_not_found"
+msgstr "보호 규칙을 찾을 수 없습니다"
+
+#: API: SCM Protection - Failed to delete rule
+msgid "server.api.scm.protection.failed_to_delete"
+msgstr "보호 규칙 삭제에 실패했습니다"
+
+# ============================================================================
+# SCM: Webhook API responses
+# ============================================================================
+
+#: API: SCM Webhook - Not found
+msgid "server.api.scm.webhook.not_found"
+msgstr "웹훅을 찾을 수 없습니다"
+
+#: API: SCM Webhook - Admin required
+msgid "server.api.scm.webhook.admin_required"
+msgstr "관리자 접근 권한이 필요합니다"
+
+#: API: SCM Webhook - URL required
+msgid "server.api.scm.webhook.url_required"
+msgstr "URL이 필요합니다"
+
+#: API: SCM Webhook - URL invalid protocol
+msgid "server.api.scm.webhook.url_invalid_protocol"
+msgstr "URL은 http:// 또는 https://로 시작해야 합니다"
+
+#: API: SCM Webhook - URL too long
+msgid "server.api.scm.webhook.url_too_long"
+msgstr "URL은 2048자 미만이어야 합니다"
+
+#: API: SCM Webhook - Events required
+msgid "server.api.scm.webhook.events_required"
+msgstr "최소 하나의 이벤트가 필요합니다"
+
+#: API: SCM Webhook - Invalid event
+msgid "server.api.scm.webhook.invalid_event"
+msgstr "잘못된 이벤트 '{event}'. 유효한 이벤트: {valid_events}"
+
+#: API: SCM Webhook - Secret required
+msgid "server.api.scm.webhook.secret_required"
+msgstr "시크릿이 필요합니다"
+
+#: API: SCM Webhook - URL invalid
+msgid "server.api.scm.webhook.url_invalid"
+msgstr "잘못된 URL 형식입니다"
+
+#: API: SCM Webhook - Localhost blocked
+msgid "server.api.scm.webhook.url_localhost_blocked"
+msgstr "로컬호스트 URL은 허용되지 않습니다"
+
+#: API: SCM Webhook - Private IP blocked
+msgid "server.api.scm.webhook.url_private_ip_blocked"
+msgstr "비공개 또는 내부 IP 주소는 허용되지 않습니다"
+
+# ============================================================================
+# SCM: Maintenance API responses
+# ============================================================================
+
+#: API: SCM Maintenance - Not configured
+msgid "server.api.scm.maintenance.not_configured"
+msgstr "유지 관리가 구성되지 않았습니다"
+
+#: API: SCM Maintenance - Job queued for repository
+msgid "server.api.scm.maintenance.job_queued"
+msgstr "리포지토리의 유지 관리 작업 '{task}'이(가) 대기열에 추가되었습니다"
+
+#: API: SCM Maintenance - Global sweep queued
+msgid "server.api.scm.maintenance.sweep_queued"
+msgstr "전체 유지 관리 스윕 '{task}'이(가) 대기열에 추가되었습니다"
+
+# ============================================================================
+# SCM: Mirror API responses
+# ============================================================================
+
+#: API: SCM Mirror - URL required
+msgid "server.api.scm.mirror.url_required"
+msgstr "미러 URL이 필요합니다"
+
+#: API: SCM Mirror - URL invalid protocol
+msgid "server.api.scm.mirror.url_invalid_protocol"
+msgstr "미러 URL은 http:// 또는 https://로 시작해야 합니다"
+
+#: API: SCM Mirror - URL too long
+msgid "server.api.scm.mirror.url_too_long"
+msgstr "미러 URL은 2048자 미만이어야 합니다"
+
+#: API: SCM Mirror - URL invalid
+msgid "server.api.scm.mirror.url_invalid"
+msgstr "잘못된 미러 URL 형식입니다"
+
+#: API: SCM Mirror - Localhost blocked
+msgid "server.api.scm.mirror.url_localhost_blocked"
+msgstr "로컬호스트 URL은 미러에 허용되지 않습니다"
+
+#: API: SCM Mirror - Private IP blocked
+msgid "server.api.scm.mirror.url_private_ip_blocked"
+msgstr "비공개 또는 내부 IP 주소는 미러에 허용되지 않습니다"
+
+#: API: SCM Mirror - Not found
+msgid "server.api.scm.mirror.not_found"
+msgstr "미러를 찾을 수 없습니다"
+
+#: API: SCM Mirror - Disabled
+msgid "server.api.scm.mirror.disabled"
+msgstr "미러가 비활성화되어 있습니다"
+
+#: API: SCM Mirror - Sync queued
+msgid "server.api.scm.mirror.sync_queued"
+msgstr "미러 동기화가 대기열에 추가되었습니다"
+
+#: API: SCM Mirror - Failed to delete
+msgid "server.api.scm.mirror.failed_to_delete"
+msgstr "미러 삭제에 실패했습니다"
+
+#: API: SCM Mirror - Invalid path format
+msgid "server.api.scm.mirror.invalid_path"
+msgstr "잘못된 미러 경로 형식입니다. 예상 형식: mirrors/{platform}/{owner}/{repo}"
+
+#: API: SCM Mirror - Push not allowed
+msgid "server.api.scm.mirror.push_not_allowed"
+msgstr "미러 리포지토리에는 푸시가 허용되지 않습니다"
+
+#: API: SCM Mirror - Remote repository not found
+msgid "server.api.scm.mirror.remote_not_found"
+msgstr "원격 리포지토리를 찾을 수 없습니다"
+
+#: API: SCM Mirror - Mirrors org not found
+msgid "server.api.scm.mirror.mirrors_org_not_found"
+msgstr "미러 조직이 구성되지 않았습니다. 'mirrors'라는 이름의 조직을 만들어 주세요."
+
+#: API: SCM Mirror - Clone failed
+msgid "server.api.scm.mirror.clone_failed"
+msgstr "원격 리포지토리 복제에 실패했습니다"

@@ -963,3 +963,331 @@ msgstr "Δεν είστε μέλος αυτού του οργανισμού"
 #: API: Weaver - Membership check failed
 msgid "server.api.weaver.membership_check_failed"
 msgstr "Αποτυχία επαλήθευσης συμμετοχής στον οργανισμό"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - Cannot remove last admin
+msgid "server.api.admin.cannot_remove_last_admin"
+msgstr "Δεν είναι δυνατή η αφαίρεση του τελευταίου διαχειριστή συστήματος"
+
+# ============================================================================
+# SCM: Repository API responses
+# ============================================================================
+
+#: API: SCM Repo - Not found
+msgid "server.api.scm.repo.not_found"
+msgstr "Το αποθετήριο δεν βρέθηκε"
+
+#: API: SCM - Not configured
+msgid "server.api.scm.not_configured"
+msgstr "Το SCM δεν έχει ρυθμιστεί"
+
+#: API: SCM - Internal error
+msgid "server.api.scm.internal_error"
+msgstr "Εσωτερικό σφάλμα διακομιστή"
+
+#: API: SCM - Repository not found
+msgid "server.api.scm.repo_not_found"
+msgstr "Το αποθετήριο δεν βρέθηκε"
+
+#: API: SCM - Invalid repository name
+msgid "server.api.scm.invalid_repo_name"
+msgstr "Το όνομα του αποθετηρίου πρέπει να είναι μεταξύ 1 και 100 χαρακτήρων"
+
+#: API: SCM - Cannot create for other user
+msgid "server.api.scm.cannot_create_for_other_user"
+msgstr "Δεν είναι δυνατή η δημιουργία αποθετηρίου για άλλον χρήστη"
+
+#: API: SCM - Not org member
+msgid "server.api.scm.not_org_member"
+msgstr "Δεν είστε μέλος αυτού του οργανισμού"
+
+#: API: SCM - Org admin required
+msgid "server.api.scm.org_admin_required"
+msgstr "Πρέπει να είστε ιδιοκτήτης ή διαχειριστής του οργανισμού για να δημιουργήσετε αποθετήρια"
+
+#: API: SCM - Organization not found
+msgid "server.api.scm.org_not_found"
+msgstr "Ο οργανισμός δεν βρέθηκε"
+
+#: API: SCM - Repository already exists
+msgid "server.api.scm.repo_already_exists"
+msgstr "Ένα αποθετήριο με αυτό το όνομα υπάρχει ήδη"
+
+#: API: SCM - Failed to create repository
+msgid "server.api.scm.failed_to_create_repo"
+msgstr "Αποτυχία δημιουργίας αποθετηρίου"
+
+#: API: SCM - Failed to initialize repo on disk
+msgid "server.api.scm.failed_to_init_repo_disk"
+msgstr "Αποτυχία αρχικοποίησης αποθετηρίου στο δίσκο"
+
+#: API: SCM - Failed to initialize git repo
+msgid "server.api.scm.failed_to_init_git_repo"
+msgstr "Αποτυχία αρχικοποίησης αποθετηρίου git"
+
+#: API: SCM - Access denied
+msgid "server.api.scm.access_denied"
+msgstr "Δεν επιτρέπεται η πρόσβαση"
+
+#: API: SCM - Admin required
+msgid "server.api.scm.admin_required"
+msgstr "Απαιτείται πρόσβαση διαχειριστή"
+
+#: API: SCM - Invalid default branch
+msgid "server.api.scm.invalid_default_branch"
+msgstr "Ο προεπιλεγμένος κλάδος δεν μπορεί να είναι κενός"
+
+#: API: SCM - Failed to update repository
+msgid "server.api.scm.failed_to_update_repo"
+msgstr "Αποτυχία ενημέρωσης αποθετηρίου"
+
+#: API: SCM - Failed to delete repository
+msgid "server.api.scm.failed_to_delete_repo"
+msgstr "Αποτυχία διαγραφής αποθετηρίου"
+
+#: API: SCM - User not found
+msgid "server.api.scm.user_not_found"
+msgstr "Ο χρήστης δεν βρέθηκε"
+
+#: API: SCM - Failed to list repositories
+msgid "server.api.scm.failed_to_list_repos"
+msgstr "Αποτυχία λίστας αποθετηρίων"
+
+# ============================================================================
+# SCM: Git API responses
+# ============================================================================
+
+#: API: SCM Git - Auth required for private repo
+msgid "server.api.scm.git.auth_required_private"
+msgstr "Απαιτείται ταυτοποίηση για ιδιωτικό αποθετήριο"
+
+#: API: SCM Git - Auth required for push
+msgid "server.api.scm.git.auth_required_push"
+msgstr "Απαιτείται ταυτοποίηση για push"
+
+#: API: SCM Git - Auth required
+msgid "server.api.scm.git.auth_required"
+msgstr "Απαιτείται ταυτοποίηση"
+
+#: API: SCM Git - Access denied
+msgid "server.api.scm.git.access_denied"
+msgstr "Δεν επιτρέπεται η πρόσβαση στο αποθετήριο"
+
+#: API: SCM Git - Write access denied
+msgid "server.api.scm.git.write_access_denied"
+msgstr "Δεν επιτρέπεται η πρόσβαση εγγραφής στο αποθετήριο"
+
+# ============================================================================
+# SCM: Protection API responses
+# ============================================================================
+
+#: API: SCM Protection - Failed to load rules
+msgid "server.api.scm.protection.failed_to_load"
+msgstr "Αποτυχία φόρτωσης κανόνων προστασίας"
+
+#: API: SCM Protection - Failed to list rules
+msgid "server.api.scm.protection.failed_to_list"
+msgstr "Αποτυχία λίστας κανόνων προστασίας"
+
+#: API: SCM Protection - Invalid pattern
+msgid "server.api.scm.protection.invalid_pattern"
+msgstr "Το μοτίβο πρέπει να είναι μεταξύ 1 και 256 χαρακτήρων"
+
+#: API: SCM Protection - Rule already exists
+msgid "server.api.scm.protection.already_exists"
+msgstr "Ένας κανόνας προστασίας με αυτό το μοτίβο υπάρχει ήδη"
+
+#: API: SCM Protection - Failed to create rule
+msgid "server.api.scm.protection.failed_to_create"
+msgstr "Αποτυχία δημιουργίας κανόνα προστασίας"
+
+#: API: SCM Protection - Rule not found
+msgid "server.api.scm.protection.rule_not_found"
+msgstr "Ο κανόνας προστασίας δεν βρέθηκε"
+
+#: API: SCM Protection - Failed to delete rule
+msgid "server.api.scm.protection.failed_to_delete"
+msgstr "Αποτυχία διαγραφής κανόνα προστασίας"
+
+# ============================================================================
+# SCM: Webhook API responses
+# ============================================================================
+
+#: API: SCM Webhook - Not found
+msgid "server.api.scm.webhook.not_found"
+msgstr "Το webhook δεν βρέθηκε"
+
+#: API: SCM Webhook - Admin required
+msgid "server.api.scm.webhook.admin_required"
+msgstr "Απαιτείται πρόσβαση διαχειριστή"
+
+#: API: SCM Webhook - URL required
+msgid "server.api.scm.webhook.url_required"
+msgstr "Απαιτείται URL"
+
+#: API: SCM Webhook - URL invalid protocol
+msgid "server.api.scm.webhook.url_invalid_protocol"
+msgstr "Το URL πρέπει να αρχίζει με http:// ή https://"
+
+#: API: SCM Webhook - URL too long
+msgid "server.api.scm.webhook.url_too_long"
+msgstr "Το URL πρέπει να είναι λιγότερο από 2048 χαρακτήρες"
+
+#: API: SCM Webhook - Events required
+msgid "server.api.scm.webhook.events_required"
+msgstr "Απαιτείται τουλάχιστον ένα συμβάν"
+
+#: API: SCM Webhook - Invalid event
+msgid "server.api.scm.webhook.invalid_event"
+msgstr "Μη έγκυρο συμβάν '{event}'. Έγκυρα συμβάντα: {valid_events}"
+
+#: API: SCM Webhook - Secret required
+msgid "server.api.scm.webhook.secret_required"
+msgstr "Απαιτείται μυστικό"
+
+#: API: SCM Webhook - URL invalid
+msgid "server.api.scm.webhook.url_invalid"
+msgstr "Μη έγκυρη μορφή URL"
+
+#: API: SCM Webhook - Localhost blocked
+msgid "server.api.scm.webhook.url_localhost_blocked"
+msgstr "Τα URL localhost δεν επιτρέπονται"
+
+#: API: SCM Webhook - Private IP blocked
+msgid "server.api.scm.webhook.url_private_ip_blocked"
+msgstr "Οι ιδιωτικές ή εσωτερικές διευθύνσεις IP δεν επιτρέπονται"
+
+# ============================================================================
+# SCM: Maintenance API responses
+# ============================================================================
+
+#: API: SCM Maintenance - Not configured
+msgid "server.api.scm.maintenance.not_configured"
+msgstr "Η συντήρηση δεν έχει ρυθμιστεί"
+
+#: API: SCM Maintenance - Job queued for repository
+msgid "server.api.scm.maintenance.job_queued"
+msgstr "Η εργασία συντήρησης '{task}' τέθηκε στην ουρά για το αποθετήριο"
+
+#: API: SCM Maintenance - Global sweep queued
+msgid "server.api.scm.maintenance.sweep_queued"
+msgstr "Η καθολική σάρωση συντήρησης '{task}' τέθηκε στην ουρά"
+
+# ============================================================================
+# SCM: Mirror API responses
+# ============================================================================
+
+#: API: SCM Mirror - URL required
+msgid "server.api.scm.mirror.url_required"
+msgstr "Απαιτείται URL καθρέφτη"
+
+#: API: SCM Mirror - URL invalid protocol
+msgid "server.api.scm.mirror.url_invalid_protocol"
+msgstr "Το URL καθρέφτη πρέπει να αρχίζει με http:// ή https://"
+
+#: API: SCM Mirror - URL too long
+msgid "server.api.scm.mirror.url_too_long"
+msgstr "Το URL καθρέφτη πρέπει να είναι λιγότερο από 2048 χαρακτήρες"
+
+#: API: SCM Mirror - URL invalid
+msgid "server.api.scm.mirror.url_invalid"
+msgstr "Μη έγκυρη μορφή URL καθρέφτη"
+
+#: API: SCM Mirror - Localhost blocked
+msgid "server.api.scm.mirror.url_localhost_blocked"
+msgstr "Τα URL localhost δεν επιτρέπονται για καθρέφτες"
+
+#: API: SCM Mirror - Private IP blocked
+msgid "server.api.scm.mirror.url_private_ip_blocked"
+msgstr "Οι ιδιωτικές ή εσωτερικές διευθύνσεις IP δεν επιτρέπονται για καθρέφτες"
+
+#: API: SCM Mirror - Not found
+msgid "server.api.scm.mirror.not_found"
+msgstr "Ο καθρέφτης δεν βρέθηκε"
+
+#: API: SCM Mirror - Disabled
+msgid "server.api.scm.mirror.disabled"
+msgstr "Ο καθρέφτης είναι απενεργοποιημένος"
+
+#: API: SCM Mirror - Sync queued
+msgid "server.api.scm.mirror.sync_queued"
+msgstr "Ο συγχρονισμός καθρέφτη τέθηκε στην ουρά"
+
+#: API: SCM Mirror - Failed to delete
+msgid "server.api.scm.mirror.failed_to_delete"
+msgstr "Αποτυχία διαγραφής καθρέφτη"
+
+#: API: SCM Mirror - Invalid path format
+msgid "server.api.scm.mirror.invalid_path"
+msgstr "Μη έγκυρη μορφή διαδρομής καθρέφτη. Αναμενόμενο: mirrors/{platform}/{owner}/{repo}"
+
+#: API: SCM Mirror - Push not allowed
+msgid "server.api.scm.mirror.push_not_allowed"
+msgstr "Το push δεν επιτρέπεται σε αποθετήρια καθρέφτη"
+
+#: API: SCM Mirror - Remote repository not found
+msgid "server.api.scm.mirror.remote_not_found"
+msgstr "Το απομακρυσμένο αποθετήριο δεν βρέθηκε"
+
+#: API: SCM Mirror - Mirrors org not found
+msgid "server.api.scm.mirror.mirrors_org_not_found"
+msgstr "Ο οργανισμός καθρεφτών δεν έχει ρυθμιστεί. Δημιουργήστε έναν οργανισμό με όνομα 'mirrors'."
+
+#: API: SCM Mirror - Clone failed
+msgid "server.api.scm.mirror.clone_failed"
+msgstr "Αποτυχία κλωνοποίησης απομακρυσμένου αποθετηρίου"
+
+# ============================================================================
+# Jobs: Scheduler
+# ============================================================================
+
+#: Jobs: Email Alert - Subject
+msgid "server.jobs.alert.subject"
+msgstr "[Loom] Αποτυχία εργασίας: {job_name}"
+
+#: Jobs: Email Alert - Body intro
+msgid "server.jobs.alert.body"
+msgstr "Η εργασία \"{job_name}\" απέτυχε {consecutive_failures} φορές συνεχόμενα."
+
+#: Jobs: Email Alert - Job ID
+msgid "server.jobs.alert.job_id"
+msgstr "ID εργασίας: {job_id}"
+
+#: Jobs: Email Alert - Last error
+msgid "server.jobs.alert.last_error"
+msgstr "Τελευταίο σφάλμα: {error_message}"
+
+#: Jobs: Email Alert - Last run
+msgid "server.jobs.alert.last_run"
+msgstr "Τελευταία εκτέλεση: {last_run_at}"
+
+#: Jobs: Email Alert - View history link
+msgid "server.jobs.alert.view_history"
+msgstr "Δείτε το ιστορικό εργασιών: {url}"
+
+#: Jobs: API - Job not found
+msgid "server.jobs.error.not_found"
+msgstr "Η εργασία δεν βρέθηκε: {job_id}"
+
+#: Jobs: API - Scheduler not configured
+msgid "server.jobs.error.not_configured"
+msgstr "Ο προγραμματιστής εργασιών δεν έχει ρυθμιστεί"
+
+#: Jobs: API - Job triggered
+msgid "server.jobs.success.triggered"
+msgstr "Η εργασία {job_id} ενεργοποιήθηκε επιτυχώς"
+
+#: Jobs: API - Job cancelled
+msgid "server.jobs.success.cancelled"
+msgstr "Η εργασία {job_id} ακυρώθηκε"
+
+#: Jobs: API - Job enabled
+msgid "server.jobs.success.enabled"
+msgstr "Η εργασία {job_id} ενεργοποιήθηκε"
+
+#: Jobs: API - Job disabled
+msgid "server.jobs.success.disabled"
+msgstr "Η εργασία {job_id} απενεργοποιήθηκε"

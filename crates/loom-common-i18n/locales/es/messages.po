@@ -296,6 +296,78 @@ msgstr "Error al crear la organización"
 msgid "server.api.org.not_a_member"
 msgstr "No eres miembro de esta organización"
 
+#: API: Org - Already member
+msgid "server.api.org.already_member"
+msgstr "El usuario ya es miembro de esta organización"
+
+#: API: Org - Member added
+msgid "server.api.org.member_added"
+msgstr "Miembro agregado a la organización"
+
+#: API: Org - Member removed
+msgid "server.api.org.member_removed"
+msgstr "Miembro eliminado de la organización"
+
+#: API: Org - Member not found
+msgid "server.api.org.member_not_found"
+msgstr "Miembro no encontrado en esta organización"
+
+#: API: Org - Last owner
+msgid "server.api.org.last_owner"
+msgstr "No se puede eliminar o degradar al último propietario"
+
+#: API: Org - Cannot delete personal
+msgid "server.api.org.cannot_delete_personal"
+msgstr "No se puede eliminar la organización personal"
+
+#: API: Org - Deleted
+msgid "server.api.org.deleted"
+msgstr "Organización eliminada"
+
+#: API: Org - Restored
+msgid "server.api.org.restored"
+msgstr "Organización restaurada"
+
+#: API: Org - Not deleted
+msgid "server.api.org.not_deleted"
+msgstr "La organización no está eliminada"
+
+#: API: Org - Grace period expired
+msgid "server.api.org.grace_period_expired"
+msgstr "El período de gracia ha expirado y esta organización no puede ser restaurada"
+
+#: API: Org - Owner required
+msgid "server.api.org.owner_required"
+msgstr "Solo los propietarios pueden realizar esta acción"
+
+#: API: Org - Role updated
+msgid "server.api.org.role_updated"
+msgstr "Rol del miembro actualizado"
+
+#: API: Org - Join request private
+msgid "server.api.org.join_request_private"
+msgstr "No se puede solicitar unirse a una organización privada"
+
+#: API: Org - Join request pending
+msgid "server.api.org.join_request_pending"
+msgstr "Ya tienes una solicitud pendiente para esta organización"
+
+#: API: Org - Join request created
+msgid "server.api.org.join_request_created"
+msgstr "Solicitud de unión enviada"
+
+#: API: Org - Join request not found
+msgid "server.api.org.join_request_not_found"
+msgstr "Solicitud de unión no encontrada"
+
+#: API: Org - Join request approved
+msgid "server.api.org.join_request_approved"
+msgstr "Solicitud de unión aprobada"
+
+#: API: Org - Join request rejected
+msgid "server.api.org.join_request_rejected"
+msgstr "Solicitud de unión rechazada"
+
 # ============================================================================
 # Team API responses
 # ============================================================================

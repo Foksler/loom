@@ -963,3 +963,327 @@ msgstr "この組織のメンバーではありません"
 #: API: Weaver - Membership check failed
 msgid "server.api.weaver.membership_check_failed"
 msgstr "組織メンバーシップの確認に失敗しました"
+
+# ============================================================================
+# Jobs: Scheduler
+# ============================================================================
+
+#: Jobs: Email Alert - Subject
+msgid "server.jobs.alert.subject"
+msgstr "[Loom] ジョブ失敗：{job_name}"
+
+#: Jobs: Email Alert - Body intro
+msgid "server.jobs.alert.body"
+msgstr "ジョブ「{job_name}」が連続で{consecutive_failures}回失敗しました。"
+
+#: Jobs: Email Alert - Job ID
+msgid "server.jobs.alert.job_id"
+msgstr "ジョブID：{job_id}"
+
+#: Jobs: Email Alert - Last error
+msgid "server.jobs.alert.last_error"
+msgstr "最後のエラー：{error_message}"
+
+#: Jobs: Email Alert - Last run
+msgid "server.jobs.alert.last_run"
+msgstr "最終実行：{last_run_at}"
+
+#: Jobs: Email Alert - View history link
+msgid "server.jobs.alert.view_history"
+msgstr "ジョブ履歴を表示：{url}"
+
+#: Jobs: API - Job not found
+msgid "server.jobs.error.not_found"
+msgstr "ジョブが見つかりません：{job_id}"
+
+#: Jobs: API - Scheduler not configured
+msgid "server.jobs.error.not_configured"
+msgstr "ジョブスケジューラが設定されていません"
+
+#: Jobs: API - Job triggered
+msgid "server.jobs.success.triggered"
+msgstr "ジョブ{job_id}が正常にトリガーされました"
+
+#: Jobs: API - Job cancelled
+msgid "server.jobs.success.cancelled"
+msgstr "ジョブ{job_id}がキャンセルされました"
+
+#: Jobs: API - Job enabled
+msgid "server.jobs.success.enabled"
+msgstr "ジョブ{job_id}が有効になりました"
+
+#: Jobs: API - Job disabled
+msgid "server.jobs.success.disabled"
+msgstr "ジョブ{job_id}が無効になりました"
+
+# ============================================================================
+# SCM: Repository API responses
+# ============================================================================
+
+#: API: SCM Repo - Not found
+msgid "server.api.scm.repo.not_found"
+msgstr "リポジトリが見つかりません"
+
+#: API: SCM - Not configured
+msgid "server.api.scm.not_configured"
+msgstr "SCMが設定されていません"
+
+#: API: SCM - Internal error
+msgid "server.api.scm.internal_error"
+msgstr "内部サーバーエラー"
+
+#: API: Admin - Cannot remove last admin
+msgid "server.api.admin.cannot_remove_last_admin"
+msgstr "最後のシステム管理者は削除できません"
+
+#: API: SCM - Repository not found
+msgid "server.api.scm.repo_not_found"
+msgstr "リポジトリが見つかりません"
+
+#: API: SCM - Invalid repository name
+msgid "server.api.scm.invalid_repo_name"
+msgstr "リポジトリ名は1〜100文字である必要があります"
+
+#: API: SCM - Cannot create for other user
+msgid "server.api.scm.cannot_create_for_other_user"
+msgstr "他のユーザーのためにリポジトリを作成することはできません"
+
+#: API: SCM - Not org member
+msgid "server.api.scm.not_org_member"
+msgstr "この組織のメンバーではありません"
+
+#: API: SCM - Org admin required
+msgid "server.api.scm.org_admin_required"
+msgstr "リポジトリを作成するには組織のオーナーまたは管理者である必要があります"
+
+#: API: SCM - Organization not found
+msgid "server.api.scm.org_not_found"
+msgstr "組織が見つかりません"
+
+#: API: SCM - Repository already exists
+msgid "server.api.scm.repo_already_exists"
+msgstr "この名前のリポジトリは既に存在します"
+
+#: API: SCM - Failed to create repository
+msgid "server.api.scm.failed_to_create_repo"
+msgstr "リポジトリの作成に失敗しました"
+
+#: API: SCM - Failed to initialize repo on disk
+msgid "server.api.scm.failed_to_init_repo_disk"
+msgstr "ディスク上のリポジトリの初期化に失敗しました"
+
+#: API: SCM - Failed to initialize git repo
+msgid "server.api.scm.failed_to_init_git_repo"
+msgstr "Gitリポジトリの初期化に失敗しました"
+
+#: API: SCM - Access denied
+msgid "server.api.scm.access_denied"
+msgstr "アクセスが拒否されました"
+
+#: API: SCM - Admin required
+msgid "server.api.scm.admin_required"
+msgstr "管理者アクセスが必要です"
+
+#: API: SCM - Invalid default branch
+msgid "server.api.scm.invalid_default_branch"
+msgstr "デフォルトブランチを空にすることはできません"
+
+#: API: SCM - Failed to update repository
+msgid "server.api.scm.failed_to_update_repo"
+msgstr "リポジトリの更新に失敗しました"
+
+#: API: SCM - Failed to delete repository
+msgid "server.api.scm.failed_to_delete_repo"
+msgstr "リポジトリの削除に失敗しました"
+
+#: API: SCM - User not found
+msgid "server.api.scm.user_not_found"
+msgstr "ユーザーが見つかりません"
+
+#: API: SCM - Failed to list repositories
+msgid "server.api.scm.failed_to_list_repos"
+msgstr "リポジトリの一覧取得に失敗しました"
+
+# ============================================================================
+# SCM: Git API responses
+# ============================================================================
+
+#: API: SCM Git - Auth required for private repo
+msgid "server.api.scm.git.auth_required_private"
+msgstr "プライベートリポジトリには認証が必要です"
+
+#: API: SCM Git - Auth required for push
+msgid "server.api.scm.git.auth_required_push"
+msgstr "プッシュには認証が必要です"
+
+#: API: SCM Git - Auth required
+msgid "server.api.scm.git.auth_required"
+msgstr "認証が必要です"
+
+#: API: SCM Git - Access denied
+msgid "server.api.scm.git.access_denied"
+msgstr "リポジトリへのアクセスが拒否されました"
+
+#: API: SCM Git - Write access denied
+msgid "server.api.scm.git.write_access_denied"
+msgstr "リポジトリへの書き込みアクセスが拒否されました"
+
+# ============================================================================
+# SCM: Protection API responses
+# ============================================================================
+
+#: API: SCM Protection - Failed to load rules
+msgid "server.api.scm.protection.failed_to_load"
+msgstr "保護ルールの読み込みに失敗しました"
+
+#: API: SCM Protection - Failed to list rules
+msgid "server.api.scm.protection.failed_to_list"
+msgstr "保護ルールの一覧取得に失敗しました"
+
+#: API: SCM Protection - Invalid pattern
+msgid "server.api.scm.protection.invalid_pattern"
+msgstr "パターンは1〜256文字である必要があります"
+
+#: API: SCM Protection - Rule already exists
+msgid "server.api.scm.protection.already_exists"
+msgstr "このパターンの保護ルールは既に存在します"
+
+#: API: SCM Protection - Failed to create rule
+msgid "server.api.scm.protection.failed_to_create"
+msgstr "保護ルールの作成に失敗しました"
+
+#: API: SCM Protection - Rule not found
+msgid "server.api.scm.protection.rule_not_found"
+msgstr "保護ルールが見つかりません"
+
+#: API: SCM Protection - Failed to delete rule
+msgid "server.api.scm.protection.failed_to_delete"
+msgstr "保護ルールの削除に失敗しました"
+
+# ============================================================================
+# SCM: Webhook API responses
+# ============================================================================
+
+#: API: SCM Webhook - Not found
+msgid "server.api.scm.webhook.not_found"
+msgstr "Webhookが見つかりません"
+
+#: API: SCM Webhook - Admin required
+msgid "server.api.scm.webhook.admin_required"
+msgstr "管理者アクセスが必要です"
+
+#: API: SCM Webhook - URL required
+msgid "server.api.scm.webhook.url_required"
+msgstr "URLが必要です"
+
+#: API: SCM Webhook - URL invalid protocol
+msgid "server.api.scm.webhook.url_invalid_protocol"
+msgstr "URLはhttp://またはhttps://で始まる必要があります"
+
+#: API: SCM Webhook - URL too long
+msgid "server.api.scm.webhook.url_too_long"
+msgstr "URLは2048文字未満である必要があります"
+
+#: API: SCM Webhook - Events required
+msgid "server.api.scm.webhook.events_required"
+msgstr "少なくとも1つのイベントが必要です"
+
+#: API: SCM Webhook - Invalid event
+msgid "server.api.scm.webhook.invalid_event"
+msgstr "無効なイベント「{event}」。有効なイベント：{valid_events}"
+
+#: API: SCM Webhook - Secret required
+msgid "server.api.scm.webhook.secret_required"
+msgstr "シークレットが必要です"
+
+#: API: SCM Webhook - URL invalid
+msgid "server.api.scm.webhook.url_invalid"
+msgstr "URLの形式が無効です"
+
+#: API: SCM Webhook - Localhost blocked
+msgid "server.api.scm.webhook.url_localhost_blocked"
+msgstr "ローカルホストのURLは許可されていません"
+
+#: API: SCM Webhook - Private IP blocked
+msgid "server.api.scm.webhook.url_private_ip_blocked"
+msgstr "プライベートまたは内部IPアドレスは許可されていません"
+
+# ============================================================================
+# SCM: Maintenance API responses
+# ============================================================================
+
+#: API: SCM Maintenance - Not configured
+msgid "server.api.scm.maintenance.not_configured"
+msgstr "メンテナンスが設定されていません"
+
+#: API: SCM Maintenance - Job queued for repository
+msgid "server.api.scm.maintenance.job_queued"
+msgstr "リポジトリのメンテナンスタスク「{task}」がキューに追加されました"
+
+#: API: SCM Maintenance - Global sweep queued
+msgid "server.api.scm.maintenance.sweep_queued"
+msgstr "グローバルメンテナンススイープ「{task}」がキューに追加されました"
+
+# ============================================================================
+# SCM: Mirror API responses
+# ============================================================================
+
+#: API: SCM Mirror - URL required
+msgid "server.api.scm.mirror.url_required"
+msgstr "ミラーURLが必要です"
+
+#: API: SCM Mirror - URL invalid protocol
+msgid "server.api.scm.mirror.url_invalid_protocol"
+msgstr "ミラーURLはhttp://またはhttps://で始まる必要があります"
+
+#: API: SCM Mirror - URL too long
+msgid "server.api.scm.mirror.url_too_long"
+msgstr "ミラーURLは2048文字未満である必要があります"
+
+#: API: SCM Mirror - URL invalid
+msgid "server.api.scm.mirror.url_invalid"
+msgstr "ミラーURLの形式が無効です"
+
+#: API: SCM Mirror - Localhost blocked
+msgid "server.api.scm.mirror.url_localhost_blocked"
+msgstr "ローカルホストのURLはミラーに使用できません"
+
+#: API: SCM Mirror - Private IP blocked
+msgid "server.api.scm.mirror.url_private_ip_blocked"
+msgstr "プライベートまたは内部IPアドレスはミラーに使用できません"
+
+#: API: SCM Mirror - Not found
+msgid "server.api.scm.mirror.not_found"
+msgstr "ミラーが見つかりません"
+
+#: API: SCM Mirror - Disabled
+msgid "server.api.scm.mirror.disabled"
+msgstr "ミラーは無効になっています"
+
+#: API: SCM Mirror - Sync queued
+msgid "server.api.scm.mirror.sync_queued"
+msgstr "ミラー同期がキューに追加されました"
+
+#: API: SCM Mirror - Failed to delete
+msgid "server.api.scm.mirror.failed_to_delete"
+msgstr "ミラーの削除に失敗しました"
+
+#: API: SCM Mirror - Invalid path format
+msgid "server.api.scm.mirror.invalid_path"
+msgstr "ミラーパスの形式が無効です。期待される形式：mirrors/{platform}/{owner}/{repo}"
+
+#: API: SCM Mirror - Push not allowed
+msgid "server.api.scm.mirror.push_not_allowed"
+msgstr "ミラーリポジトリへのプッシュは許可されていません"
+
+#: API: SCM Mirror - Remote repository not found
+msgid "server.api.scm.mirror.remote_not_found"
+msgstr "リモートリポジトリが見つかりません"
+
+#: API: SCM Mirror - Mirrors org not found
+msgid "server.api.scm.mirror.mirrors_org_not_found"
+msgstr "ミラー組織が設定されていません。「mirrors」という名前の組織を作成してください。"
+
+#: API: SCM Mirror - Clone failed
+msgid "server.api.scm.mirror.clone_failed"
+msgstr "リモートリポジトリのクローンに失敗しました"

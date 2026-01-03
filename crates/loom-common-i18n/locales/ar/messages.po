@@ -278,7 +278,7 @@ msgstr "توجد منظمة بهذا الرابط المختصر بالفعل"
 
 #: API: Org - Slug reserved
 msgid "server.api.org.slug_reserved"
-msgstr "This organization slug is reserved"
+msgstr "هذا الرابط المختصر للمنظمة محجوز"
 
 #: API: Org - Invalid role
 msgid "server.api.org.invalid_role"
@@ -295,6 +295,78 @@ msgstr "فشل في إنشاء المنظمة"
 #: API: Org - Not a member
 msgid "server.api.org.not_a_member"
 msgstr "أنت لست عضوًا في هذه المنظمة"
+
+#: API: Org - Already a member
+msgid "server.api.org.already_member"
+msgstr "المستخدم عضو بالفعل في هذه المنظمة"
+
+#: API: Org - Member added
+msgid "server.api.org.member_added"
+msgstr "تمت إضافة العضو إلى المنظمة"
+
+#: API: Org - Member removed
+msgid "server.api.org.member_removed"
+msgstr "تم إزالة العضو من المنظمة"
+
+#: API: Org - Member not found
+msgid "server.api.org.member_not_found"
+msgstr "العضو غير موجود في هذه المنظمة"
+
+#: API: Org - Last owner
+msgid "server.api.org.last_owner"
+msgstr "لا يمكن إزالة أو تخفيض رتبة المالك الأخير"
+
+#: API: Org - Cannot delete personal org
+msgid "server.api.org.cannot_delete_personal"
+msgstr "لا يمكن حذف المنظمة الشخصية"
+
+#: API: Org - Deleted
+msgid "server.api.org.deleted"
+msgstr "تم حذف المنظمة"
+
+#: API: Org - Restored
+msgid "server.api.org.restored"
+msgstr "تم استعادة المنظمة"
+
+#: API: Org - Not deleted
+msgid "server.api.org.not_deleted"
+msgstr "المنظمة ليست محذوفة"
+
+#: API: Org - Grace period expired
+msgid "server.api.org.grace_period_expired"
+msgstr "انتهت فترة السماح ولا يمكن استعادة هذه المنظمة"
+
+#: API: Org - Owner required
+msgid "server.api.org.owner_required"
+msgstr "يمكن للمالكين فقط تنفيذ هذا الإجراء"
+
+#: API: Org - Role updated
+msgid "server.api.org.role_updated"
+msgstr "تم تحديث دور العضو"
+
+#: API: Org - Join request for private org
+msgid "server.api.org.join_request_private"
+msgstr "لا يمكن طلب الانضمام إلى منظمة خاصة"
+
+#: API: Org - Join request pending
+msgid "server.api.org.join_request_pending"
+msgstr "لديك طلب انضمام معلق بالفعل لهذه المنظمة"
+
+#: API: Org - Join request created
+msgid "server.api.org.join_request_created"
+msgstr "تم تقديم طلب الانضمام"
+
+#: API: Org - Join request not found
+msgid "server.api.org.join_request_not_found"
+msgstr "طلب الانضمام غير موجود"
+
+#: API: Org - Join request approved
+msgid "server.api.org.join_request_approved"
+msgstr "تم الموافقة على طلب الانضمام"
+
+#: API: Org - Join request rejected
+msgid "server.api.org.join_request_rejected"
+msgstr "تم رفض طلب الانضمام"
 
 # ============================================================================
 # Team API responses
@@ -939,6 +1011,138 @@ msgstr "تم تعطيل المهمة {job_id}"
 #: API: SCM Repo - Not found
 msgid "server.api.scm.repo.not_found"
 msgstr "المستودع غير موجود"
+
+#: API: SCM - Repository not found
+msgid "server.api.scm.repo_not_found"
+msgstr "المستودع غير موجود"
+
+#: API: SCM - Invalid repository name
+msgid "server.api.scm.invalid_repo_name"
+msgstr "يجب أن يكون اسم المستودع بين 1 و 100 حرف"
+
+#: API: SCM - Cannot create for other user
+msgid "server.api.scm.cannot_create_for_other_user"
+msgstr "لا يمكن إنشاء مستودع لمستخدم آخر"
+
+#: API: SCM - Not org member
+msgid "server.api.scm.not_org_member"
+msgstr "لست عضوًا في هذه المنظمة"
+
+#: API: SCM - Org admin required
+msgid "server.api.scm.org_admin_required"
+msgstr "يجب أن تكون مالكًا أو مسؤولًا في المنظمة لإنشاء المستودعات"
+
+#: API: SCM - Organization not found
+msgid "server.api.scm.org_not_found"
+msgstr "المنظمة غير موجودة"
+
+#: API: SCM - Repository already exists
+msgid "server.api.scm.repo_already_exists"
+msgstr "يوجد مستودع بهذا الاسم بالفعل"
+
+#: API: SCM - Failed to create repository
+msgid "server.api.scm.failed_to_create_repo"
+msgstr "فشل في إنشاء المستودع"
+
+#: API: SCM - Failed to initialize repo on disk
+msgid "server.api.scm.failed_to_init_repo_disk"
+msgstr "فشل في تهيئة المستودع على القرص"
+
+#: API: SCM - Failed to initialize git repo
+msgid "server.api.scm.failed_to_init_git_repo"
+msgstr "فشل في تهيئة مستودع git"
+
+#: API: SCM - Access denied
+msgid "server.api.scm.access_denied"
+msgstr "الوصول مرفوض"
+
+#: API: SCM - Admin required
+msgid "server.api.scm.admin_required"
+msgstr "مطلوب صلاحية المسؤول"
+
+#: API: SCM - Invalid default branch
+msgid "server.api.scm.invalid_default_branch"
+msgstr "لا يمكن أن يكون الفرع الافتراضي فارغًا"
+
+#: API: SCM - Failed to update repository
+msgid "server.api.scm.failed_to_update_repo"
+msgstr "فشل في تحديث المستودع"
+
+#: API: SCM - Failed to delete repository
+msgid "server.api.scm.failed_to_delete_repo"
+msgstr "فشل في حذف المستودع"
+
+#: API: SCM - User not found
+msgid "server.api.scm.user_not_found"
+msgstr "المستخدم غير موجود"
+
+#: API: SCM - Failed to list repositories
+msgid "server.api.scm.failed_to_list_repos"
+msgstr "فشل في سرد المستودعات"
+
+#: API: SCM - Not configured
+msgid "server.api.scm.not_configured"
+msgstr "إدارة الكود المصدري غير مُعدة"
+
+#: API: SCM - Internal error
+msgid "server.api.scm.internal_error"
+msgstr "حدث خطأ داخلي"
+
+# ============================================================================
+# SCM: Git API responses
+# ============================================================================
+
+#: API: SCM Git - Auth required for private repo
+msgid "server.api.scm.git.auth_required_private"
+msgstr "المصادقة مطلوبة للمستودع الخاص"
+
+#: API: SCM Git - Auth required for push
+msgid "server.api.scm.git.auth_required_push"
+msgstr "المصادقة مطلوبة للدفع"
+
+#: API: SCM Git - Auth required
+msgid "server.api.scm.git.auth_required"
+msgstr "المصادقة مطلوبة"
+
+#: API: SCM Git - Access denied
+msgid "server.api.scm.git.access_denied"
+msgstr "الوصول إلى المستودع مرفوض"
+
+#: API: SCM Git - Write access denied
+msgid "server.api.scm.git.write_access_denied"
+msgstr "صلاحية الكتابة للمستودع مرفوضة"
+
+# ============================================================================
+# SCM: Protection API responses
+# ============================================================================
+
+#: API: SCM Protection - Failed to load rules
+msgid "server.api.scm.protection.failed_to_load"
+msgstr "فشل في تحميل قواعد الحماية"
+
+#: API: SCM Protection - Failed to list rules
+msgid "server.api.scm.protection.failed_to_list"
+msgstr "فشل في سرد قواعد الحماية"
+
+#: API: SCM Protection - Invalid pattern
+msgid "server.api.scm.protection.invalid_pattern"
+msgstr "يجب أن يكون النمط بين 1 و 256 حرفًا"
+
+#: API: SCM Protection - Rule already exists
+msgid "server.api.scm.protection.already_exists"
+msgstr "توجد قاعدة حماية بهذا النمط بالفعل"
+
+#: API: SCM Protection - Failed to create rule
+msgid "server.api.scm.protection.failed_to_create"
+msgstr "فشل في إنشاء قاعدة الحماية"
+
+#: API: SCM Protection - Rule not found
+msgid "server.api.scm.protection.rule_not_found"
+msgstr "قاعدة الحماية غير موجودة"
+
+#: API: SCM Protection - Failed to delete rule
+msgid "server.api.scm.protection.failed_to_delete"
+msgstr "فشل في حذف قاعدة الحماية"
 
 # ============================================================================
 # SCM: Webhook API responses

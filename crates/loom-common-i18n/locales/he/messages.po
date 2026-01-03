@@ -963,3 +963,331 @@ msgstr "אינך חבר בארגון זה"
 #: API: Weaver - Membership check failed
 msgid "server.api.weaver.membership_check_failed"
 msgstr "נכשל האימות של חברות בארגון"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - Cannot remove last admin
+msgid "server.api.admin.cannot_remove_last_admin"
+msgstr "לא ניתן להסיר את מנהל המערכת האחרון"
+
+# ============================================================================
+# SCM: Repository API responses
+# ============================================================================
+
+#: API: SCM Repo - Not found
+msgid "server.api.scm.repo.not_found"
+msgstr "המאגר לא נמצא"
+
+#: API: SCM - Not configured
+msgid "server.api.scm.not_configured"
+msgstr "SCM לא הוגדר"
+
+#: API: SCM - Internal error
+msgid "server.api.scm.internal_error"
+msgstr "שגיאת שרת פנימית"
+
+#: API: SCM - Repository not found
+msgid "server.api.scm.repo_not_found"
+msgstr "המאגר לא נמצא"
+
+#: API: SCM - Invalid repository name
+msgid "server.api.scm.invalid_repo_name"
+msgstr "שם המאגר חייב להיות בין 1 ל-100 תווים"
+
+#: API: SCM - Cannot create for other user
+msgid "server.api.scm.cannot_create_for_other_user"
+msgstr "לא ניתן ליצור מאגר עבור משתמש אחר"
+
+#: API: SCM - Not org member
+msgid "server.api.scm.not_org_member"
+msgstr "אינך חבר בארגון זה"
+
+#: API: SCM - Org admin required
+msgid "server.api.scm.org_admin_required"
+msgstr "יש להיות בעלים או מנהל של הארגון כדי ליצור מאגרים"
+
+#: API: SCM - Organization not found
+msgid "server.api.scm.org_not_found"
+msgstr "הארגון לא נמצא"
+
+#: API: SCM - Repository already exists
+msgid "server.api.scm.repo_already_exists"
+msgstr "מאגר עם שם זה כבר קיים"
+
+#: API: SCM - Failed to create repository
+msgid "server.api.scm.failed_to_create_repo"
+msgstr "יצירת המאגר נכשלה"
+
+#: API: SCM - Failed to initialize repo on disk
+msgid "server.api.scm.failed_to_init_repo_disk"
+msgstr "אתחול המאגר בדיסק נכשל"
+
+#: API: SCM - Failed to initialize git repo
+msgid "server.api.scm.failed_to_init_git_repo"
+msgstr "אתחול מאגר git נכשל"
+
+#: API: SCM - Access denied
+msgid "server.api.scm.access_denied"
+msgstr "הגישה נדחתה"
+
+#: API: SCM - Admin required
+msgid "server.api.scm.admin_required"
+msgstr "נדרשת גישת מנהל"
+
+#: API: SCM - Invalid default branch
+msgid "server.api.scm.invalid_default_branch"
+msgstr "ענף ברירת המחדל לא יכול להיות ריק"
+
+#: API: SCM - Failed to update repository
+msgid "server.api.scm.failed_to_update_repo"
+msgstr "עדכון המאגר נכשל"
+
+#: API: SCM - Failed to delete repository
+msgid "server.api.scm.failed_to_delete_repo"
+msgstr "מחיקת המאגר נכשלה"
+
+#: API: SCM - User not found
+msgid "server.api.scm.user_not_found"
+msgstr "המשתמש לא נמצא"
+
+#: API: SCM - Failed to list repositories
+msgid "server.api.scm.failed_to_list_repos"
+msgstr "הצגת רשימת המאגרים נכשלה"
+
+# ============================================================================
+# SCM: Git API responses
+# ============================================================================
+
+#: API: SCM Git - Auth required for private repo
+msgid "server.api.scm.git.auth_required_private"
+msgstr "נדרש אימות למאגר פרטי"
+
+#: API: SCM Git - Auth required for push
+msgid "server.api.scm.git.auth_required_push"
+msgstr "נדרש אימות לדחיפה"
+
+#: API: SCM Git - Auth required
+msgid "server.api.scm.git.auth_required"
+msgstr "נדרש אימות"
+
+#: API: SCM Git - Access denied
+msgid "server.api.scm.git.access_denied"
+msgstr "הגישה למאגר נדחתה"
+
+#: API: SCM Git - Write access denied
+msgid "server.api.scm.git.write_access_denied"
+msgstr "גישת כתיבה למאגר נדחתה"
+
+# ============================================================================
+# SCM: Protection API responses
+# ============================================================================
+
+#: API: SCM Protection - Failed to load rules
+msgid "server.api.scm.protection.failed_to_load"
+msgstr "טעינת כללי ההגנה נכשלה"
+
+#: API: SCM Protection - Failed to list rules
+msgid "server.api.scm.protection.failed_to_list"
+msgstr "הצגת רשימת כללי ההגנה נכשלה"
+
+#: API: SCM Protection - Invalid pattern
+msgid "server.api.scm.protection.invalid_pattern"
+msgstr "התבנית חייבת להיות בין 1 ל-256 תווים"
+
+#: API: SCM Protection - Rule already exists
+msgid "server.api.scm.protection.already_exists"
+msgstr "כלל הגנה עם תבנית זו כבר קיים"
+
+#: API: SCM Protection - Failed to create rule
+msgid "server.api.scm.protection.failed_to_create"
+msgstr "יצירת כלל ההגנה נכשלה"
+
+#: API: SCM Protection - Rule not found
+msgid "server.api.scm.protection.rule_not_found"
+msgstr "כלל ההגנה לא נמצא"
+
+#: API: SCM Protection - Failed to delete rule
+msgid "server.api.scm.protection.failed_to_delete"
+msgstr "מחיקת כלל ההגנה נכשלה"
+
+# ============================================================================
+# SCM: Webhook API responses
+# ============================================================================
+
+#: API: SCM Webhook - Not found
+msgid "server.api.scm.webhook.not_found"
+msgstr "ה-Webhook לא נמצא"
+
+#: API: SCM Webhook - Admin required
+msgid "server.api.scm.webhook.admin_required"
+msgstr "נדרשת גישת מנהל"
+
+#: API: SCM Webhook - URL required
+msgid "server.api.scm.webhook.url_required"
+msgstr "נדרש URL"
+
+#: API: SCM Webhook - URL invalid protocol
+msgid "server.api.scm.webhook.url_invalid_protocol"
+msgstr "ה-URL חייב להתחיל ב-http:// או https://"
+
+#: API: SCM Webhook - URL too long
+msgid "server.api.scm.webhook.url_too_long"
+msgstr "ה-URL חייב להיות פחות מ-2048 תווים"
+
+#: API: SCM Webhook - Events required
+msgid "server.api.scm.webhook.events_required"
+msgstr "נדרש לפחות אירוע אחד"
+
+#: API: SCM Webhook - Invalid event
+msgid "server.api.scm.webhook.invalid_event"
+msgstr "אירוע לא חוקי '{event}'. אירועים חוקיים: {valid_events}"
+
+#: API: SCM Webhook - Secret required
+msgid "server.api.scm.webhook.secret_required"
+msgstr "נדרש סוד"
+
+#: API: SCM Webhook - URL invalid
+msgid "server.api.scm.webhook.url_invalid"
+msgstr "פורמט URL לא חוקי"
+
+#: API: SCM Webhook - Localhost blocked
+msgid "server.api.scm.webhook.url_localhost_blocked"
+msgstr "כתובות localhost אינן מותרות"
+
+#: API: SCM Webhook - Private IP blocked
+msgid "server.api.scm.webhook.url_private_ip_blocked"
+msgstr "כתובות IP פרטיות או פנימיות אינן מותרות"
+
+# ============================================================================
+# SCM: Maintenance API responses
+# ============================================================================
+
+#: API: SCM Maintenance - Not configured
+msgid "server.api.scm.maintenance.not_configured"
+msgstr "תחזוקה לא הוגדרה"
+
+#: API: SCM Maintenance - Job queued for repository
+msgid "server.api.scm.maintenance.job_queued"
+msgstr "משימת התחזוקה '{task}' הועמדה בתור למאגר"
+
+#: API: SCM Maintenance - Global sweep queued
+msgid "server.api.scm.maintenance.sweep_queued"
+msgstr "סריקת התחזוקה הגלובלית '{task}' הועמדה בתור"
+
+# ============================================================================
+# SCM: Mirror API responses
+# ============================================================================
+
+#: API: SCM Mirror - URL required
+msgid "server.api.scm.mirror.url_required"
+msgstr "נדרש URL של מראה"
+
+#: API: SCM Mirror - URL invalid protocol
+msgid "server.api.scm.mirror.url_invalid_protocol"
+msgstr "URL של מראה חייב להתחיל ב-http:// או https://"
+
+#: API: SCM Mirror - URL too long
+msgid "server.api.scm.mirror.url_too_long"
+msgstr "URL של מראה חייב להיות פחות מ-2048 תווים"
+
+#: API: SCM Mirror - URL invalid
+msgid "server.api.scm.mirror.url_invalid"
+msgstr "פורמט URL של מראה לא חוקי"
+
+#: API: SCM Mirror - Localhost blocked
+msgid "server.api.scm.mirror.url_localhost_blocked"
+msgstr "כתובות localhost אינן מותרות למראות"
+
+#: API: SCM Mirror - Private IP blocked
+msgid "server.api.scm.mirror.url_private_ip_blocked"
+msgstr "כתובות IP פרטיות או פנימיות אינן מותרות למראות"
+
+#: API: SCM Mirror - Not found
+msgid "server.api.scm.mirror.not_found"
+msgstr "המראה לא נמצאה"
+
+#: API: SCM Mirror - Disabled
+msgid "server.api.scm.mirror.disabled"
+msgstr "המראה מושבתת"
+
+#: API: SCM Mirror - Sync queued
+msgid "server.api.scm.mirror.sync_queued"
+msgstr "סנכרון המראה הועמד בתור"
+
+#: API: SCM Mirror - Failed to delete
+msgid "server.api.scm.mirror.failed_to_delete"
+msgstr "מחיקת המראה נכשלה"
+
+#: API: SCM Mirror - Invalid path format
+msgid "server.api.scm.mirror.invalid_path"
+msgstr "פורמט נתיב מראה לא חוקי. צפוי: mirrors/{platform}/{owner}/{repo}"
+
+#: API: SCM Mirror - Push not allowed
+msgid "server.api.scm.mirror.push_not_allowed"
+msgstr "דחיפה למאגרי מראה אינה מותרת"
+
+#: API: SCM Mirror - Remote repository not found
+msgid "server.api.scm.mirror.remote_not_found"
+msgstr "המאגר המרוחק לא נמצא"
+
+#: API: SCM Mirror - Mirrors org not found
+msgid "server.api.scm.mirror.mirrors_org_not_found"
+msgstr "ארגון המראות לא הוגדר. אנא צור ארגון בשם 'mirrors'."
+
+#: API: SCM Mirror - Clone failed
+msgid "server.api.scm.mirror.clone_failed"
+msgstr "שיבוט המאגר המרוחק נכשל"
+
+# ============================================================================
+# Jobs: Scheduler
+# ============================================================================
+
+#: Jobs: Email Alert - Subject
+msgid "server.jobs.alert.subject"
+msgstr "[Loom] משימה נכשלה: {job_name}"
+
+#: Jobs: Email Alert - Body intro
+msgid "server.jobs.alert.body"
+msgstr "המשימה \"{job_name}\" נכשלה {consecutive_failures} פעמים ברצף."
+
+#: Jobs: Email Alert - Job ID
+msgid "server.jobs.alert.job_id"
+msgstr "מזהה משימה: {job_id}"
+
+#: Jobs: Email Alert - Last error
+msgid "server.jobs.alert.last_error"
+msgstr "שגיאה אחרונה: {error_message}"
+
+#: Jobs: Email Alert - Last run
+msgid "server.jobs.alert.last_run"
+msgstr "הרצה אחרונה: {last_run_at}"
+
+#: Jobs: Email Alert - View history link
+msgid "server.jobs.alert.view_history"
+msgstr "צפה בהיסטוריית המשימות: {url}"
+
+#: Jobs: API - Job not found
+msgid "server.jobs.error.not_found"
+msgstr "המשימה לא נמצאה: {job_id}"
+
+#: Jobs: API - Scheduler not configured
+msgid "server.jobs.error.not_configured"
+msgstr "מתזמן המשימות לא הוגדר"
+
+#: Jobs: API - Job triggered
+msgid "server.jobs.success.triggered"
+msgstr "המשימה {job_id} הופעלה בהצלחה"
+
+#: Jobs: API - Job cancelled
+msgid "server.jobs.success.cancelled"
+msgstr "המשימה {job_id} בוטלה"
+
+#: Jobs: API - Job enabled
+msgid "server.jobs.success.enabled"
+msgstr "המשימה {job_id} הופעלה"
+
+#: Jobs: API - Job disabled
+msgid "server.jobs.success.disabled"
+msgstr "המשימה {job_id} הושבתה"

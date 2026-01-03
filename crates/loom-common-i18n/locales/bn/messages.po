@@ -963,3 +963,331 @@ msgstr "আপনি এই সংস্থার সদস্য নন"
 #: API: Weaver - Membership check failed
 msgid "server.api.weaver.membership_check_failed"
 msgstr "সংস্থার সদস্যপদ যাচাই করতে ব্যর্থ"
+
+# ============================================================================
+# Admin API responses
+# ============================================================================
+
+#: API: Admin - Cannot remove last admin
+msgid "server.api.admin.cannot_remove_last_admin"
+msgstr "শেষ সিস্টেম অ্যাডমিনিস্ট্রেটর সরানো যাবে না"
+
+# ============================================================================
+# SCM: Repository API responses
+# ============================================================================
+
+#: API: SCM Repo - Not found
+msgid "server.api.scm.repo.not_found"
+msgstr "রিপোজিটরি পাওয়া যায়নি"
+
+#: API: SCM - Not configured
+msgid "server.api.scm.not_configured"
+msgstr "SCM কনফিগার করা হয়নি"
+
+#: API: SCM - Internal error
+msgid "server.api.scm.internal_error"
+msgstr "অভ্যন্তরীণ সার্ভার ত্রুটি"
+
+#: API: SCM - Repository not found
+msgid "server.api.scm.repo_not_found"
+msgstr "রিপোজিটরি পাওয়া যায়নি"
+
+#: API: SCM - Invalid repository name
+msgid "server.api.scm.invalid_repo_name"
+msgstr "রিপোজিটরির নাম ১ থেকে ১০০ অক্ষরের মধ্যে হতে হবে"
+
+#: API: SCM - Cannot create for other user
+msgid "server.api.scm.cannot_create_for_other_user"
+msgstr "অন্য ব্যবহারকারীর জন্য রিপোজিটরি তৈরি করা যাবে না"
+
+#: API: SCM - Not org member
+msgid "server.api.scm.not_org_member"
+msgstr "এই সংস্থার সদস্য নন"
+
+#: API: SCM - Org admin required
+msgid "server.api.scm.org_admin_required"
+msgstr "রিপোজিটরি তৈরি করতে সংস্থার মালিক বা অ্যাডমিন হতে হবে"
+
+#: API: SCM - Organization not found
+msgid "server.api.scm.org_not_found"
+msgstr "সংস্থা পাওয়া যায়নি"
+
+#: API: SCM - Repository already exists
+msgid "server.api.scm.repo_already_exists"
+msgstr "এই নামের একটি রিপোজিটরি ইতিমধ্যে বিদ্যমান"
+
+#: API: SCM - Failed to create repository
+msgid "server.api.scm.failed_to_create_repo"
+msgstr "রিপোজিটরি তৈরি করতে ব্যর্থ"
+
+#: API: SCM - Failed to initialize repo on disk
+msgid "server.api.scm.failed_to_init_repo_disk"
+msgstr "ডিস্কে রিপোজিটরি ইনিশিয়ালাইজ করতে ব্যর্থ"
+
+#: API: SCM - Failed to initialize git repo
+msgid "server.api.scm.failed_to_init_git_repo"
+msgstr "গিট রিপোজিটরি ইনিশিয়ালাইজ করতে ব্যর্থ"
+
+#: API: SCM - Access denied
+msgid "server.api.scm.access_denied"
+msgstr "অ্যাক্সেস অস্বীকৃত"
+
+#: API: SCM - Admin required
+msgid "server.api.scm.admin_required"
+msgstr "অ্যাডমিন অ্যাক্সেস প্রয়োজন"
+
+#: API: SCM - Invalid default branch
+msgid "server.api.scm.invalid_default_branch"
+msgstr "ডিফল্ট ব্রাঞ্চ খালি হতে পারে না"
+
+#: API: SCM - Failed to update repository
+msgid "server.api.scm.failed_to_update_repo"
+msgstr "রিপোজিটরি আপডেট করতে ব্যর্থ"
+
+#: API: SCM - Failed to delete repository
+msgid "server.api.scm.failed_to_delete_repo"
+msgstr "রিপোজিটরি মুছে ফেলতে ব্যর্থ"
+
+#: API: SCM - User not found
+msgid "server.api.scm.user_not_found"
+msgstr "ব্যবহারকারী পাওয়া যায়নি"
+
+#: API: SCM - Failed to list repositories
+msgid "server.api.scm.failed_to_list_repos"
+msgstr "রিপোজিটরি তালিকা করতে ব্যর্থ"
+
+# ============================================================================
+# SCM: Git API responses
+# ============================================================================
+
+#: API: SCM Git - Auth required for private repo
+msgid "server.api.scm.git.auth_required_private"
+msgstr "প্রাইভেট রিপোজিটরির জন্য প্রমাণীকরণ প্রয়োজন"
+
+#: API: SCM Git - Auth required for push
+msgid "server.api.scm.git.auth_required_push"
+msgstr "পুশের জন্য প্রমাণীকরণ প্রয়োজন"
+
+#: API: SCM Git - Auth required
+msgid "server.api.scm.git.auth_required"
+msgstr "প্রমাণীকরণ প্রয়োজন"
+
+#: API: SCM Git - Access denied
+msgid "server.api.scm.git.access_denied"
+msgstr "রিপোজিটরিতে অ্যাক্সেস অস্বীকৃত"
+
+#: API: SCM Git - Write access denied
+msgid "server.api.scm.git.write_access_denied"
+msgstr "রিপোজিটরিতে লেখার অ্যাক্সেস অস্বীকৃত"
+
+# ============================================================================
+# SCM: Protection API responses
+# ============================================================================
+
+#: API: SCM Protection - Failed to load rules
+msgid "server.api.scm.protection.failed_to_load"
+msgstr "প্রোটেকশন নিয়ম লোড করতে ব্যর্থ"
+
+#: API: SCM Protection - Failed to list rules
+msgid "server.api.scm.protection.failed_to_list"
+msgstr "প্রোটেকশন নিয়ম তালিকা করতে ব্যর্থ"
+
+#: API: SCM Protection - Invalid pattern
+msgid "server.api.scm.protection.invalid_pattern"
+msgstr "প্যাটার্ন ১ থেকে ২৫৬ অক্ষরের মধ্যে হতে হবে"
+
+#: API: SCM Protection - Rule already exists
+msgid "server.api.scm.protection.already_exists"
+msgstr "এই প্যাটার্নের একটি প্রোটেকশন নিয়ম ইতিমধ্যে বিদ্যমান"
+
+#: API: SCM Protection - Failed to create rule
+msgid "server.api.scm.protection.failed_to_create"
+msgstr "প্রোটেকশন নিয়ম তৈরি করতে ব্যর্থ"
+
+#: API: SCM Protection - Rule not found
+msgid "server.api.scm.protection.rule_not_found"
+msgstr "প্রোটেকশন নিয়ম পাওয়া যায়নি"
+
+#: API: SCM Protection - Failed to delete rule
+msgid "server.api.scm.protection.failed_to_delete"
+msgstr "প্রোটেকশন নিয়ম মুছে ফেলতে ব্যর্থ"
+
+# ============================================================================
+# SCM: Webhook API responses
+# ============================================================================
+
+#: API: SCM Webhook - Not found
+msgid "server.api.scm.webhook.not_found"
+msgstr "ওয়েবহুক পাওয়া যায়নি"
+
+#: API: SCM Webhook - Admin required
+msgid "server.api.scm.webhook.admin_required"
+msgstr "অ্যাডমিন অ্যাক্সেস প্রয়োজন"
+
+#: API: SCM Webhook - URL required
+msgid "server.api.scm.webhook.url_required"
+msgstr "URL প্রয়োজন"
+
+#: API: SCM Webhook - URL invalid protocol
+msgid "server.api.scm.webhook.url_invalid_protocol"
+msgstr "URL http:// বা https:// দিয়ে শুরু হতে হবে"
+
+#: API: SCM Webhook - URL too long
+msgid "server.api.scm.webhook.url_too_long"
+msgstr "URL ২০৪৮ অক্ষরের কম হতে হবে"
+
+#: API: SCM Webhook - Events required
+msgid "server.api.scm.webhook.events_required"
+msgstr "অন্তত একটি ইভেন্ট প্রয়োজন"
+
+#: API: SCM Webhook - Invalid event
+msgid "server.api.scm.webhook.invalid_event"
+msgstr "অবৈধ ইভেন্ট '{event}'। বৈধ ইভেন্ট: {valid_events}"
+
+#: API: SCM Webhook - Secret required
+msgid "server.api.scm.webhook.secret_required"
+msgstr "সিক্রেট প্রয়োজন"
+
+#: API: SCM Webhook - URL invalid
+msgid "server.api.scm.webhook.url_invalid"
+msgstr "অবৈধ URL ফরম্যাট"
+
+#: API: SCM Webhook - Localhost blocked
+msgid "server.api.scm.webhook.url_localhost_blocked"
+msgstr "লোকালহোস্ট URL অনুমোদিত নয়"
+
+#: API: SCM Webhook - Private IP blocked
+msgid "server.api.scm.webhook.url_private_ip_blocked"
+msgstr "প্রাইভেট বা অভ্যন্তরীণ IP ঠিকানা অনুমোদিত নয়"
+
+# ============================================================================
+# SCM: Maintenance API responses
+# ============================================================================
+
+#: API: SCM Maintenance - Not configured
+msgid "server.api.scm.maintenance.not_configured"
+msgstr "মেইনটেন্যান্স কনফিগার করা হয়নি"
+
+#: API: SCM Maintenance - Job queued for repository
+msgid "server.api.scm.maintenance.job_queued"
+msgstr "রিপোজিটরির জন্য মেইনটেন্যান্স টাস্ক '{task}' সারিবদ্ধ করা হয়েছে"
+
+#: API: SCM Maintenance - Global sweep queued
+msgid "server.api.scm.maintenance.sweep_queued"
+msgstr "গ্লোবাল মেইনটেন্যান্স সুইপ '{task}' সারিবদ্ধ করা হয়েছে"
+
+# ============================================================================
+# SCM: Mirror API responses
+# ============================================================================
+
+#: API: SCM Mirror - URL required
+msgid "server.api.scm.mirror.url_required"
+msgstr "মিরর URL প্রয়োজন"
+
+#: API: SCM Mirror - URL invalid protocol
+msgid "server.api.scm.mirror.url_invalid_protocol"
+msgstr "মিরর URL http:// বা https:// দিয়ে শুরু হতে হবে"
+
+#: API: SCM Mirror - URL too long
+msgid "server.api.scm.mirror.url_too_long"
+msgstr "মিরর URL ২০৪৮ অক্ষরের কম হতে হবে"
+
+#: API: SCM Mirror - URL invalid
+msgid "server.api.scm.mirror.url_invalid"
+msgstr "অবৈধ মিরর URL ফরম্যাট"
+
+#: API: SCM Mirror - Localhost blocked
+msgid "server.api.scm.mirror.url_localhost_blocked"
+msgstr "মিররের জন্য লোকালহোস্ট URL অনুমোদিত নয়"
+
+#: API: SCM Mirror - Private IP blocked
+msgid "server.api.scm.mirror.url_private_ip_blocked"
+msgstr "মিররের জন্য প্রাইভেট বা অভ্যন্তরীণ IP ঠিকানা অনুমোদিত নয়"
+
+#: API: SCM Mirror - Not found
+msgid "server.api.scm.mirror.not_found"
+msgstr "মিরর পাওয়া যায়নি"
+
+#: API: SCM Mirror - Disabled
+msgid "server.api.scm.mirror.disabled"
+msgstr "মিরর নিষ্ক্রিয়"
+
+#: API: SCM Mirror - Sync queued
+msgid "server.api.scm.mirror.sync_queued"
+msgstr "মিরর সিঙ্ক সারিবদ্ধ করা হয়েছে"
+
+#: API: SCM Mirror - Failed to delete
+msgid "server.api.scm.mirror.failed_to_delete"
+msgstr "মিরর মুছে ফেলতে ব্যর্থ"
+
+#: API: SCM Mirror - Invalid path format
+msgid "server.api.scm.mirror.invalid_path"
+msgstr "অবৈধ মিরর পাথ ফরম্যাট। প্রত্যাশিত: mirrors/{platform}/{owner}/{repo}"
+
+#: API: SCM Mirror - Push not allowed
+msgid "server.api.scm.mirror.push_not_allowed"
+msgstr "মিরর রিপোজিটরিতে পুশ অনুমোদিত নয়"
+
+#: API: SCM Mirror - Remote repository not found
+msgid "server.api.scm.mirror.remote_not_found"
+msgstr "রিমোট রিপোজিটরি পাওয়া যায়নি"
+
+#: API: SCM Mirror - Mirrors org not found
+msgid "server.api.scm.mirror.mirrors_org_not_found"
+msgstr "মিররস সংস্থা কনফিগার করা হয়নি। অনুগ্রহ করে 'mirrors' নামে একটি সংস্থা তৈরি করুন।"
+
+#: API: SCM Mirror - Clone failed
+msgid "server.api.scm.mirror.clone_failed"
+msgstr "রিমোট রিপোজিটরি ক্লোন করতে ব্যর্থ"
+
+# ============================================================================
+# Jobs: Scheduler
+# ============================================================================
+
+#: Jobs: Email Alert - Subject
+msgid "server.jobs.alert.subject"
+msgstr "[Loom] জব ব্যর্থ: {job_name}"
+
+#: Jobs: Email Alert - Body intro
+msgid "server.jobs.alert.body"
+msgstr "\"{job_name}\" জবটি পরপর {consecutive_failures} বার ব্যর্থ হয়েছে।"
+
+#: Jobs: Email Alert - Job ID
+msgid "server.jobs.alert.job_id"
+msgstr "জব ID: {job_id}"
+
+#: Jobs: Email Alert - Last error
+msgid "server.jobs.alert.last_error"
+msgstr "শেষ ত্রুটি: {error_message}"
+
+#: Jobs: Email Alert - Last run
+msgid "server.jobs.alert.last_run"
+msgstr "শেষ রান: {last_run_at}"
+
+#: Jobs: Email Alert - View history link
+msgid "server.jobs.alert.view_history"
+msgstr "জবের ইতিহাস দেখুন: {url}"
+
+#: Jobs: API - Job not found
+msgid "server.jobs.error.not_found"
+msgstr "জব পাওয়া যায়নি: {job_id}"
+
+#: Jobs: API - Scheduler not configured
+msgid "server.jobs.error.not_configured"
+msgstr "জব শিডিউলার কনফিগার করা হয়নি"
+
+#: Jobs: API - Job triggered
+msgid "server.jobs.success.triggered"
+msgstr "জব {job_id} সফলভাবে ট্রিগার করা হয়েছে"
+
+#: Jobs: API - Job cancelled
+msgid "server.jobs.success.cancelled"
+msgstr "জব {job_id} বাতিল করা হয়েছে"
+
+#: Jobs: API - Job enabled
+msgid "server.jobs.success.enabled"
+msgstr "জব {job_id} সক্রিয় করা হয়েছে"
+
+#: Jobs: API - Job disabled
+msgid "server.jobs.success.disabled"
+msgstr "জব {job_id} নিষ্ক্রিয় করা হয়েছে"
