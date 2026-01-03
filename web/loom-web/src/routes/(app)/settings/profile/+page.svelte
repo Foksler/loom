@@ -4,7 +4,8 @@
 -->
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { i18n, locales, localeNames, setLocale, type Locale } from '$lib/i18n';
+	import { i18n, locales, localeNames, setLocale, isRtl, type Locale } from '$lib/i18n';
+	import { invalidateAll } from '$app/navigation';
 	import { getApiClient } from '$lib/api/client';
 	import { authStore } from '$lib/auth';
 	import { Card, Button, Input, ThreadDivider } from '$lib/ui';
@@ -65,7 +66,15 @@
 				locale: selectedLocale,
 			});
 			authStore.loginSuccess(updatedUser);
+
+			// Apply locale change and reload page to show translated UI
 			setLocale(selectedLocale);
+			if (typeof document !== 'undefined') {
+				document.documentElement.dir = isRtl(selectedLocale) ? 'rtl' : 'ltr';
+				document.documentElement.lang = selectedLocale;
+			}
+			// Invalidate all data to re-render with new locale
+			await invalidateAll();
 			successMessage = i18n._('settings.profile.saved');
 		} catch (e) {
 			if (e instanceof Error && e.message.includes('taken')) {

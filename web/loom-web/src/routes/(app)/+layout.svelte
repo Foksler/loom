@@ -6,7 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/auth';
 	import { getApiClient } from '$lib/api/client';
-	import { i18n } from '$lib/i18n';
+	import { i18n, setLocale, getCurrentLocale, isRtl, type Locale, locales } from '$lib/i18n';
 	import { ImpersonationBanner, ThreadDivider } from '$lib/ui';
 	import type { Snippet } from 'svelte';
 	import type { CurrentUser, ImpersonationState } from '$lib/api/types';
@@ -25,6 +25,19 @@
 	$effect(() => {
 		authStore.start();
 		authStore.loginSuccess(data.user);
+
+		// Sync locale from user profile if set and different from current
+		if (data.user?.locale && locales.includes(data.user.locale as Locale)) {
+			const userLocale = data.user.locale as Locale;
+			if (getCurrentLocale() !== userLocale) {
+				setLocale(userLocale);
+				// Update document direction for RTL languages
+				if (typeof document !== 'undefined') {
+					document.documentElement.dir = isRtl(userLocale) ? 'rtl' : 'ltr';
+					document.documentElement.lang = userLocale;
+				}
+			}
+		}
 	});
 
 	$effect(() => {
