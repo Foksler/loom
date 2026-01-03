@@ -45,6 +45,8 @@ members = [
 	"crates/loom-server-api",
 	"crates/loom-server-audit",
 	"crates/loom-server-config",
+	"crates/loom-server-secrets",
+	"crates/loom-weaver-secrets",
 	"crates/loom-common-spool",
 	"crates/loom-cli-spool",
 	"crates/loom-tui-component",

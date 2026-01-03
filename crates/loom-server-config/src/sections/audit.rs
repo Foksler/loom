@@ -133,6 +133,8 @@ pub enum SyslogProtocol {
 	#[default]
 	Udp,
 	Tcp,
+	/// TCP with TLS encryption (requires sink-syslog-tls feature in loom-server-audit)
+	Tls,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
@@ -217,6 +219,8 @@ pub struct HttpSinkConfig {
 pub enum StreamProtocol {
 	Tcp,
 	Udp,
+	/// TCP with TLS encryption (requires sink-json-stream-tls feature in loom-server-audit)
+	Tls,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]

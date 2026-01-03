@@ -6,6 +6,7 @@ pub mod error;
 pub mod event;
 pub mod filter;
 pub mod pipeline;
+pub mod redaction;
 pub mod sink;
 
 pub use enrichment::{

@@ -11,17 +11,37 @@ use tokio::io::AsyncWriteExt;
 use tokio::net::{TcpStream, UdpSocket};
 use tokio::sync::Mutex;
 
+#[cfg(feature = "sink-syslog-tls")]
+use rustls::ClientConfig as TlsClientConfig;
+#[cfg(feature = "sink-syslog-tls")]
+use rustls_pki_types::ServerName;
+#[cfg(feature = "sink-syslog-tls")]
+use std::sync::Arc as StdArc;
+#[cfg(feature = "sink-syslog-tls")]
+use tokio_rustls::client::TlsStream;
+#[cfg(feature = "sink-syslog-tls")]
+use tokio_rustls::TlsConnector;
+
 use super::{AuditSink, AuditSinkError};
 use crate::enrichment::EnrichedAuditEvent;
 use crate::event::AuditSeverity;
 use crate::filter::AuditFilterConfig;
 
+/// Enum to hold different stream types for polymorphic handling.
+enum SyslogStream {
+	Tcp(TcpStream),
+	#[cfg(feature = "sink-syslog-tls")]
+	Tls(TlsStream<TcpStream>),
+}
+
 pub struct SyslogAuditSink {
 	config: SyslogConfig,
 	filter: AuditFilterConfig,
 	udp_socket: Option<UdpSocket>,
-	tcp_stream: Mutex<Option<TcpStream>>,
+	stream: Mutex<Option<SyslogStream>>,
 	target_addr: SocketAddr,
+	#[cfg(feature = "sink-syslog-tls")]
+	tls_connector: Option<TlsConnector>,
 }
 
 impl SyslogAuditSink {
@@ -39,12 +59,33 @@ impl SyslogAuditSink {
 			None
 		};
 
+		#[cfg(feature = "sink-syslog-tls")]
+		let tls_connector = if config.protocol == SyslogProtocol::Tls {
+			let root_store =
+				rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+			let tls_config = TlsClientConfig::builder()
+				.with_root_certificates(root_store)
+				.with_no_client_auth();
+			Some(TlsConnector::from(StdArc::new(tls_config)))
+		} else {
+			None
+		};
+
+		#[cfg(not(feature = "sink-syslog-tls"))]
+		if config.protocol == SyslogProtocol::Tls {
+			return Err(AuditSinkError::Permanent(
+				"TLS protocol requires the sink-syslog-tls feature".to_string(),
+			));
+		}
+
 		Ok(Self {
 			config,
 			filter,
 			udp_socket,
-			tcp_stream: Mutex::new(None),
+			stream: Mutex::new(None),
 			target_addr,
+			#[cfg(feature = "sink-syslog-tls")]
+			tls_connector,
 		})
 	}
 
@@ -52,6 +93,7 @@ impl SyslogAuditSink {
 		match self.config.protocol {
 			SyslogProtocol::Udp => self.send_udp(message).await,
 			SyslogProtocol::Tcp => self.send_tcp(message).await,
+			SyslogProtocol::Tls => self.send_tls(message).await,
 		}
 	}
 
@@ -69,30 +111,98 @@ impl SyslogAuditSink {
 	}
 
 	async fn send_tcp(&self, message: &[u8]) -> Result<(), AuditSinkError> {
-		let mut stream_guard = self.tcp_stream.lock().await;
+		let mut stream_guard = self.stream.lock().await;
 
 		if stream_guard.is_none() {
 			let stream = TcpStream::connect(self.target_addr)
 				.await
 				.map_err(|e| AuditSinkError::Transient(format!("TCP connect failed: {e}")))?;
-			*stream_guard = Some(stream);
+			*stream_guard = Some(SyslogStream::Tcp(stream));
 		}
 
-		let stream = stream_guard.as_mut().unwrap();
+		let framed_message = self.frame_message(message)?;
 
+		match stream_guard.as_mut() {
+			Some(SyslogStream::Tcp(stream)) => {
+				if let Err(e) = stream.write_all(&framed_message).await {
+					*stream_guard = None;
+					return Err(AuditSinkError::Transient(format!(
+						"TCP write failed (will reconnect): {e}"
+					)));
+				}
+			}
+			#[cfg(feature = "sink-syslog-tls")]
+			Some(SyslogStream::Tls(_)) => {
+				return Err(AuditSinkError::Permanent(
+					"stream type mismatch: expected TCP".to_string(),
+				));
+			}
+			None => unreachable!(),
+		}
+
+		Ok(())
+	}
+
+	#[cfg(feature = "sink-syslog-tls")]
+	async fn send_tls(&self, message: &[u8]) -> Result<(), AuditSinkError> {
+		let mut stream_guard = self.stream.lock().await;
+
+		if stream_guard.is_none() {
+			let connector = self
+				.tls_connector
+				.as_ref()
+				.ok_or_else(|| AuditSinkError::Permanent("TLS connector not initialized".to_string()))?;
+
+			let tcp_stream = TcpStream::connect(self.target_addr)
+				.await
+				.map_err(|e| AuditSinkError::Transient(format!("TCP connect failed: {e}")))?;
+
+			let server_name = ServerName::try_from(self.config.host.clone())
+				.map_err(|e| AuditSinkError::Permanent(format!("invalid server name: {e}")))?;
+
+			let tls_stream = connector
+				.connect(server_name, tcp_stream)
+				.await
+				.map_err(|e| AuditSinkError::Transient(format!("TLS handshake failed: {e}")))?;
+
+			*stream_guard = Some(SyslogStream::Tls(tls_stream));
+		}
+
+		let framed_message = self.frame_message(message)?;
+
+		match stream_guard.as_mut() {
+			Some(SyslogStream::Tls(stream)) => {
+				if let Err(e) = stream.write_all(&framed_message).await {
+					*stream_guard = None;
+					return Err(AuditSinkError::Transient(format!(
+						"TLS write failed (will reconnect): {e}"
+					)));
+				}
+			}
+			Some(SyslogStream::Tcp(_)) => {
+				return Err(AuditSinkError::Permanent(
+					"stream type mismatch: expected TLS".to_string(),
+				));
+			}
+			None => unreachable!(),
+		}
+
+		Ok(())
+	}
+
+	#[cfg(not(feature = "sink-syslog-tls"))]
+	async fn send_tls(&self, _message: &[u8]) -> Result<(), AuditSinkError> {
+		Err(AuditSinkError::Permanent(
+			"TLS protocol requires the sink-syslog-tls feature".to_string(),
+		))
+	}
+
+	fn frame_message(&self, message: &[u8]) -> Result<Vec<u8>, AuditSinkError> {
 		let mut framed_message = Vec::with_capacity(message.len() + 10);
 		write!(&mut framed_message, "{} ", message.len())
 			.map_err(|e| AuditSinkError::Transient(format!("framing error: {e}")))?;
 		framed_message.extend_from_slice(message);
-
-		if let Err(e) = stream.write_all(&framed_message).await {
-			*stream_guard = None;
-			return Err(AuditSinkError::Transient(format!(
-				"TCP write failed (will reconnect): {e}"
-			)));
-		}
-
-		Ok(())
+		Ok(framed_message)
 	}
 }
 
@@ -120,14 +230,46 @@ impl AuditSink for SyslogAuditSink {
 		match self.config.protocol {
 			SyslogProtocol::Udp => Ok(()),
 			SyslogProtocol::Tcp => {
-				let mut stream_guard = self.tcp_stream.lock().await;
+				let mut stream_guard = self.stream.lock().await;
 				if stream_guard.is_none() {
 					let stream = TcpStream::connect(self.target_addr)
 						.await
 						.map_err(|e| AuditSinkError::Transient(format!("TCP connect failed: {e}")))?;
-					*stream_guard = Some(stream);
+					*stream_guard = Some(SyslogStream::Tcp(stream));
 				}
 				Ok(())
+			}
+			SyslogProtocol::Tls => {
+				#[cfg(feature = "sink-syslog-tls")]
+				{
+					let mut stream_guard = self.stream.lock().await;
+					if stream_guard.is_none() {
+						let connector = self.tls_connector.as_ref().ok_or_else(|| {
+							AuditSinkError::Permanent("TLS connector not initialized".to_string())
+						})?;
+
+						let tcp_stream = TcpStream::connect(self.target_addr)
+							.await
+							.map_err(|e| AuditSinkError::Transient(format!("TCP connect failed: {e}")))?;
+
+						let server_name = ServerName::try_from(self.config.host.clone())
+							.map_err(|e| AuditSinkError::Permanent(format!("invalid server name: {e}")))?;
+
+						let tls_stream = connector
+							.connect(server_name, tcp_stream)
+							.await
+							.map_err(|e| AuditSinkError::Transient(format!("TLS handshake failed: {e}")))?;
+
+						*stream_guard = Some(SyslogStream::Tls(tls_stream));
+					}
+					Ok(())
+				}
+				#[cfg(not(feature = "sink-syslog-tls"))]
+				{
+					Err(AuditSinkError::Permanent(
+						"TLS protocol requires the sink-syslog-tls feature".to_string(),
+					))
+				}
 			}
 		}
 	}

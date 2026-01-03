@@ -19,9 +19,17 @@ tokio = { version = "1", features = ["sync", "net", "io-util"] }
 tracing = "0.1"
 uuid = { version = "1", features = ["v4", "serde"] }
 
+loom-common-http = { path = "../loom-common-http" }
 loom-common-secret = { path = "../loom-common-secret" }
+loom-redact = { path = "../loom-redact" }
 loom-server-auth = { path = "../loom-server-auth" }
 loom-server-config = { path = "../loom-server-config" }
+
+# TLS support for sinks
+tokio-rustls = { version = "0.26", optional = true }
+rustls = { version = "0.23", optional = true }
+rustls-pki-types = { version = "1", optional = true }
+webpki-roots = { version = "0.26", optional = true }
 
 # Optional dependencies for specific sinks
 sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"], optional = true }
@@ -37,7 +45,9 @@ default = ["sink-sqlite", "sink-tracing"]
 sink-sqlite = ["sqlx"]
 sink-tracing = []
 sink-syslog = []
+sink-syslog-tls = ["sink-syslog", "tokio-rustls", "rustls", "rustls-pki-types", "webpki-roots"]
 sink-http = ["reqwest"]
 sink-json-stream = []
+sink-json-stream-tls = ["sink-json-stream", "tokio-rustls", "rustls", "rustls-pki-types", "webpki-roots"]
 sink-file = []
 geo-ip = ["maxminddb"]

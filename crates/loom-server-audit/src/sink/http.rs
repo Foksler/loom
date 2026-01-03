@@ -15,6 +15,13 @@ use crate::error::AuditSinkError;
 use crate::filter::AuditFilterConfig;
 use crate::sink::AuditSink;
 
+/// HTTP audit sink for sending events to external SIEM/logging systems.
+///
+/// # Security Note
+///
+/// Header values may contain secrets (API keys, tokens). The config struct
+/// intentionally does not derive Debug to avoid accidental logging of secrets.
+/// When logging errors, never include the raw header values.
 pub struct HttpAuditSink {
 	config: HttpSinkConfig,
 	filter: AuditFilterConfig,
@@ -25,7 +32,7 @@ impl HttpAuditSink {
 	pub fn new(config: HttpSinkConfig, filter: AuditFilterConfig) -> Result<Self, AuditSinkError> {
 		validate_config(&config)?;
 
-		let client = Client::builder()
+		let client = loom_common_http::builder()
 			.timeout(Duration::from_millis(config.timeout_ms))
 			.build()
 			.map_err(|e| AuditSinkError::Permanent(format!("failed to create HTTP client: {e}")))?;

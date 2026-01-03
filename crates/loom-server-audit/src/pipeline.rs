@@ -10,6 +10,7 @@ use loom_server_config::QueueOverflowPolicy;
 use crate::enrichment::AuditEnricher;
 use crate::event::AuditLogEntry;
 use crate::filter::AuditFilterConfig;
+use crate::redaction::redact_json_value;
 use crate::sink::AuditSink;
 
 pub struct AuditService {
@@ -42,11 +43,13 @@ impl AuditService {
 		sinks: Vec<Arc<dyn AuditSink>>,
 	) {
 		while let Some(entry) = rx.recv().await {
-			let enriched = enricher.enrich(entry).await;
+			let mut enriched = enricher.enrich(entry).await;
 
 			if !global_filter.allows(&enriched) {
 				continue;
 			}
+
+			redact_json_value(&mut enriched.base.details);
 
 			let event = Arc::new(enriched);
 
@@ -67,6 +70,16 @@ impl AuditService {
 		}
 	}
 
+	/// Log an audit event to the queue for processing.
+	///
+	/// Returns `true` if the event was successfully queued, `false` if dropped.
+	///
+	/// # Overflow Policy Behavior
+	///
+	/// - `Block`: Spawns an async task to send (non-blocking to caller, but event will be sent)
+	/// - `DropNewest`: Uses try_send, drops new events when queue is full
+	/// - `DropOldest`: Currently behaves like DropNewest (drops new events when full).
+	///   True ring buffer behavior (dropping oldest) would require a different queue implementation.
 	#[instrument(skip(self, entry), fields(event_type = %entry.event_type))]
 	pub fn log(&self, entry: AuditLogEntry) -> bool {
 		match self.overflow_policy {
