@@ -40,8 +40,9 @@ use uuid::Uuid;
 
 pub use loom_server_api::admin::{
 	AdminErrorResponse, AdminSuccessResponse, AdminUserResponse, AuditLogEntryResponse,
-	ImpersonateRequest, ImpersonateResponse, ListAuditLogsParams, ListAuditLogsResponse,
-	ListUsersParams, ListUsersResponse, UpdateRolesRequest,
+	ImpersonateRequest, ImpersonateResponse, ImpersonationState, ImpersonationUserInfo,
+	ListAuditLogsParams, ListAuditLogsResponse, ListUsersParams, ListUsersResponse,
+	UpdateRolesRequest,
 };
 
 use crate::{api::AppState, auth_middleware::RequireAuth, i18n::{resolve_user_locale, t}};
@@ -412,6 +413,117 @@ pub async fn update_user_roles(
 		}),
 	)
 		.into_response()
+}
+
+/// Get current impersonation state.
+///
+/// Returns the current impersonation state for the authenticated admin user.
+/// If the admin is currently impersonating another user, returns details about
+/// both the original admin and the impersonated user.
+///
+/// Requires `system_admin` role.
+#[utoipa::path(
+    get,
+    path = "/api/admin/impersonate/state",
+    responses(
+        (status = 200, description = "Impersonation state", body = ImpersonationState),
+        (status = 401, description = "Not authenticated", body = AdminErrorResponse),
+        (status = 403, description = "Not authorized (system_admin required)", body = AdminErrorResponse)
+    ),
+    tag = "admin"
+)]
+#[tracing::instrument(
+    skip(state),
+    fields(actor_id = %current_user.user.id)
+)]
+pub async fn get_impersonation_state(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	if !current_user.user.is_system_admin {
+		tracing::warn!(
+			actor_id = %current_user.user.id,
+			"Unauthorized impersonation state access attempt"
+		);
+		return (
+			StatusCode::FORBIDDEN,
+			Json(AdminErrorResponse {
+				error: "forbidden".to_string(),
+				message: t(locale, "server.api.admin.system_admin_required").to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	match state
+		.session_repo
+		.get_active_impersonation_session(&current_user.user.id)
+		.await
+	{
+		Ok(Some((_session_id, target_user_id))) => {
+			match state.user_repo.get_user_by_id(&target_user_id).await {
+				Ok(Some(target_user)) => {
+					Json(ImpersonationState {
+						is_impersonating: true,
+						original_user: Some(ImpersonationUserInfo {
+							id: current_user.user.id.to_string(),
+							display_name: current_user.user.display_name.clone(),
+						}),
+						impersonated_user: Some(ImpersonationUserInfo {
+							id: target_user.id.to_string(),
+							display_name: target_user.display_name,
+						}),
+					})
+					.into_response()
+				}
+				Ok(None) => {
+					tracing::warn!(
+						actor_id = %current_user.user.id,
+						target_id = %target_user_id,
+						"Impersonation session refers to missing user"
+					);
+					Json(ImpersonationState {
+						is_impersonating: false,
+						original_user: None,
+						impersonated_user: None,
+					})
+					.into_response()
+				}
+				Err(e) => {
+					tracing::error!(error = %e, "Failed to fetch impersonated user");
+					(
+						StatusCode::INTERNAL_SERVER_ERROR,
+						Json(AdminErrorResponse {
+							error: "internal_error".to_string(),
+							message: t(locale, "server.api.error.internal").to_string(),
+						}),
+					)
+						.into_response()
+				}
+			}
+		}
+		Ok(None) => {
+			Json(ImpersonationState {
+				is_impersonating: false,
+				original_user: None,
+				impersonated_user: None,
+			})
+			.into_response()
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to check impersonation state");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(AdminErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+				.into_response()
+		}
+	}
 }
 
 /// Start impersonating a user.
