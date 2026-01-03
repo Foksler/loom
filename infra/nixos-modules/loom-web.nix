@@ -50,6 +50,19 @@ in
       description = "Email address for ACME certificate registration.";
     };
 
+    acmeDnsProvider = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      example = "cloudflare";
+      description = "DNS provider for DNS-01 ACME challenge (e.g., cloudflare). If null, uses HTTP-01.";
+    };
+
+    acmeDnsCredentialsFile = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = "Path to file containing DNS provider credentials for ACME DNS-01 challenge.";
+    };
+
     serverUrl = mkOption {
       type = types.str;
       default = "http://127.0.0.1:8080";
@@ -179,6 +192,11 @@ in
     security.acme = mkIf (cfg.enableSSL && cfg.domain != null) {
       acceptTerms = true;
       defaults.email = cfg.acmeEmail;
+      certs.${cfg.domain} = mkIf (cfg.acmeDnsProvider != null) {
+        dnsProvider = cfg.acmeDnsProvider;
+        credentialsFile = cfg.acmeDnsCredentialsFile;
+        dnsPropagationCheck = true;
+      };
     };
 
     networking.firewall = mkIf cfg.openFirewall {

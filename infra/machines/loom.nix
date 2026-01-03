@@ -170,6 +170,12 @@
     mode = "0400";
   };
 
+  sops.secrets.cloudflare-dns-api-token = {
+    owner = "acme";
+    group = "acme";
+    mode = "0400";
+  };
+
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
   system.stateVersion = "25.11";
@@ -312,6 +318,8 @@
     domain = "loom.ghuntley.com";
     enableSSL = true;
     acmeEmail = "ghuntley@ghuntley.com";
+    acmeDnsProvider = "cloudflare";
+    acmeDnsCredentialsFile = config.sops.secrets.cloudflare-dns-api-token.path;
   };
 
   # MaxMind GeoIP database updates
