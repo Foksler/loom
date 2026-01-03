@@ -212,7 +212,7 @@
     port = 8080;
     databasePath = "/var/lib/loom-server/loom.db";
     logLevel = "trace";
-    baseUrl = "https://loom.ghuntley.com";
+    baseUrl = "https://loomery.ghuntley.com";
     signupsDisabled = true;
     
     # CLI binary platforms to build for self-update distribution
@@ -249,14 +249,14 @@
       enable = true;
       clientIdFile = config.sops.secrets.loom-github-app-client-id.path;
       clientSecretFile = config.sops.secrets.loom-github-app-client-secret.path;
-      redirectUri = "https://loom.ghuntley.com/auth/github/callback";
+      redirectUri = "https://loomery.ghuntley.com/auth/github/callback";
     };
 
     googleOAuth = {
       enable = true;
       clientIdFile = config.sops.secrets.loom-google-oauth-client-id.path;
       clientSecretFile = config.sops.secrets.loom-google-oauth-client-secret.path;
-      redirectUri = "https://loom.ghuntley.com/auth/google/callback";
+      redirectUri = "https://loomery.ghuntley.com/auth/google/callback";
     };
 
     googleCse = {
@@ -315,7 +315,7 @@
     enable = true;
     port = 443;
     serverUrl = "http://127.0.0.1:8080";
-    domain = "loom.ghuntley.com";
+    domain = "loomery.ghuntley.com";
     enableSSL = true;
     acmeEmail = "ghuntley@ghuntley.com";
     acmeDnsProvider = "cloudflare";
@@ -333,7 +333,7 @@
   services.loom-smtprelay = {
     enable = true;
     listenAddress = "127.0.0.1:2525";
-    hostname = "loom.ghuntley.com";
+    hostname = "loomery.ghuntley.com";
     remoteSender = "noreply@loom.ghuntley.com";
     remoteHost = "mail-au.smtp2go.com:2525";
     remoteAuthFile = config.sops.secrets.smtp-relay-auth.path;
