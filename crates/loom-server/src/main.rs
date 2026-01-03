@@ -54,7 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	// Create log buffer for admin UI streaming (must be created before tracing init)
 	let log_buffer = loom_server_logs::LogBuffer::with_default_capacity();
-	let log_layer = loom_server_logs::BroadcastLogLayer::new(log_buffer.clone());
+	let log_layer = loom_server_logs::RedactingLayer::new(log_buffer.clone());
 
 	// Setup tracing with both stdout and buffer layers
 	tracing_subscriber::registry()
@@ -62,7 +62,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 			tracing_subscriber::EnvFilter::try_from_default_env()
 				.unwrap_or_else(|_| config.logging.level.clone().into()),
 		)
-		.with(tracing_subscriber::fmt::layer())
+		.with(
+			tracing_subscriber::fmt::layer()
+				.with_writer(loom_server_logs::RedactingMakeWriter::new(std::io::stdout)),
+		)
 		.with(log_layer)
 		.init();
 

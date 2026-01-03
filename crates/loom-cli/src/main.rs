@@ -19,6 +19,8 @@ use clap::{Parser, Subcommand};
 use tracing::{debug, error, info, instrument, warn};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
+use loom_server_logs::RedactingMakeWriter;
+
 use loom_cli_auto_commit::{AutoCommitConfig, AutoCommitResult, AutoCommitService, CompletedToolInfo};
 use loom_cli_config::{
 	load_config_with_cli,
@@ -260,23 +262,25 @@ fn init_tracing(logging: &loom_cli_config::runtime::LoggingConfig) {
 	let filter = EnvFilter::try_from_default_env()
 		.unwrap_or_else(|_| EnvFilter::new(format!("loom={}", log_level_to_tracing(logging.level))));
 
+	let redacting_writer = RedactingMakeWriter::new(std::io::stdout);
+
 	match logging.format {
 		LogFormat::Json => {
 			tracing_subscriber::registry()
 				.with(filter)
-				.with(fmt::layer().json())
+				.with(fmt::layer().json().with_writer(redacting_writer))
 				.init();
 		}
 		LogFormat::Compact => {
 			tracing_subscriber::registry()
 				.with(filter)
-				.with(fmt::layer().compact())
+				.with(fmt::layer().compact().with_writer(redacting_writer))
 				.init();
 		}
 		LogFormat::Pretty => {
 			tracing_subscriber::registry()
 				.with(filter)
-				.with(fmt::layer())
+				.with(fmt::layer().with_writer(redacting_writer))
 				.init();
 		}
 	}

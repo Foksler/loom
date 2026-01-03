@@ -26,7 +26,11 @@
 mod buffer;
 mod entry;
 mod layer;
+mod redacting_layer;
+mod redacting_writer;
 
 pub use buffer::LogBuffer;
 pub use entry::{LogEntry, LogLevel};
 pub use layer::BroadcastLogLayer;
+pub use redacting_layer::RedactingLayer;
+pub use redacting_writer::{RedactingMakeWriter, RedactingWriter};

@@ -34,6 +34,7 @@ loom-cli-git = { path = "../loom-cli-git" }
 loom-common-http = { path = "../loom-common-http" }
 loom-common-i18n = { path = "../loom-common-i18n" }
 loom-server-llm-proxy = { path = "../loom-server-llm-proxy" }
+loom-server-logs = { path = "../loom-server-logs" }
 loom-common-secret = { path = "../loom-common-secret" }
 loom-common-thread = { path = "../loom-common-thread" }
 loom-cli-spool = { path = "../loom-cli-spool" }

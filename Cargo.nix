@@ -27,6 +27,8 @@ args@{
     "loom-cli-credentials/default"
     "loom-cli-spool/default"
     "loom-common-spool/default"
+    "loom-server-logs/default"
+    "loom-redact/default"
     "loom-server-github-app/default"
     "loom-server-search-google-cse/default"
     "loom-server-search-serper/default"
@@ -45,9 +47,7 @@ args@{
     "loom-server-k8s/default"
     "loom-server-config/default"
     "loom-server-geoip/default"
-    "loom-server-logs/default"
     "loom-server-audit/default"
-    "loom-redact/default"
   ],
   rustPackages,
   buildRustPackages,
@@ -68,7 +68,7 @@ args@{
   cargoConfig ? {},
 }:
 let
-  nixifiedLockHash = "f46ff444108a18d1fde47132387e7d4f7cb3fcb7707ee8ecd92f1ea9ee899183";
+  nixifiedLockHash = "1b0cdb788963042fe3959e146cb9979a21e4ac2ebdb8ba4621c4903a7d5cc57a";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -122,6 +122,8 @@ in
     loom-cli-credentials = rustPackages.unknown.loom-cli-credentials."0.1.0";
     loom-cli-spool = rustPackages.unknown.loom-cli-spool."0.1.0";
     loom-common-spool = rustPackages.unknown.loom-common-spool."0.1.0";
+    loom-server-logs = rustPackages.unknown.loom-server-logs."0.1.0";
+    loom-redact = rustPackages.unknown.loom-redact."0.1.0";
     loom-server-github-app = rustPackages.unknown.loom-server-github-app."0.1.0";
     loom-server-search-google-cse = rustPackages.unknown.loom-server-search-google-cse."0.1.0";
     loom-server-search-serper = rustPackages.unknown.loom-server-search-serper."0.1.0";
@@ -140,9 +142,7 @@ in
     loom-server-k8s = rustPackages.unknown.loom-server-k8s."0.1.0";
     loom-server-config = rustPackages.unknown.loom-server-config."0.1.0";
     loom-server-geoip = rustPackages.unknown.loom-server-geoip."0.1.0";
-    loom-server-logs = rustPackages.unknown.loom-server-logs."0.1.0";
     loom-server-audit = rustPackages.unknown.loom-server-audit."0.1.0";
-    loom-redact = rustPackages.unknown.loom-redact."0.1.0";
   };
   "registry+https://github.com/rust-lang/crates.io-index".adler2."2.0.1" = overridableMkRustCrate (profileName: rec {
     name = "adler2";
@@ -5456,6 +5456,7 @@ in
       loom_common_thread = (rustPackages."unknown".loom-common-thread."0.1.0" { inherit profileName; }).out;
       loom_common_version = (rustPackages."unknown".loom-common-version."0.1.0" { inherit profileName; }).out;
       loom_server_llm_proxy = (rustPackages."unknown".loom-server-llm-proxy."0.1.0" { inherit profileName; }).out;
+      loom_server_logs = (rustPackages."unknown".loom-server-logs."0.1.0" { inherit profileName; }).out;
       reqwest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".reqwest."0.12.28" { inherit profileName; }).out;
       self_replace = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".self-replace."1.5.0" { inherit profileName; }).out;
       serde = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.228" { inherit profileName; }).out;
@@ -6392,6 +6393,7 @@ in
     src = fetchCrateLocal workspaceSrc;
     dependencies = {
       chrono = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".chrono."0.4.42" { inherit profileName; }).out;
+      loom_redact = (rustPackages."unknown".loom-redact."0.1.0" { inherit profileName; }).out;
       parking_lot = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".parking_lot."0.12.5" { inherit profileName; }).out;
       serde = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.228" { inherit profileName; }).out;
       tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.48.0" { inherit profileName; }).out;

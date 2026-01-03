@@ -12,6 +12,7 @@ description = "Server log buffering and streaming for Loom admin panel"
 
 [dependencies]
 chrono.workspace = true
+loom-redact = { path = "../loom-redact" }
 parking_lot = "0.12"
 serde = { workspace = true, features = ["derive"] }
 tokio = { workspace = true, features = ["sync"] }
