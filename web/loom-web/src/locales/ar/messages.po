@@ -846,6 +846,14 @@ msgstr "الحائكون"
 msgid "weavers.title"
 msgstr "الحائكون"
 
+#: weavers.subtitle
+msgid "weavers.subtitle"
+msgstr "إدارة بيئات التطوير المؤقتة"
+
+#: weavers.new
+msgid "weavers.new"
+msgstr "نسّاج جديد"
+
 #: weavers.description
 msgid "weavers.description"
 msgstr "إدارة بيئات التطوير المؤقتة"

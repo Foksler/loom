@@ -926,6 +926,14 @@ msgstr "Weavers"
 msgid "weavers.title"
 msgstr "Weavers"
 
+#: weavers.subtitle
+msgid "weavers.subtitle"
+msgstr "Halda ajutisi arenduskeskkondi"
+
+#: weavers.new
+msgid "weavers.new"
+msgstr "Uus Weaver"
+
 #: weavers.description
 msgid "weavers.description"
 msgstr "Manage ephemeral development environments"

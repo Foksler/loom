@@ -926,6 +926,14 @@ msgstr "ウィーバー"
 msgid "weavers.title"
 msgstr "ウィーバー"
 
+#: weavers.subtitle
+msgid "weavers.subtitle"
+msgstr "一時的な開発環境を管理"
+
+#: weavers.new
+msgid "weavers.new"
+msgstr "新規Weaver"
+
 #: weavers.description
 msgid "weavers.description"
 msgstr "一時的な開発環境を管理"

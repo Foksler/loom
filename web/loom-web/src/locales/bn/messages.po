@@ -926,6 +926,14 @@ msgstr "Weavers"
 msgid "weavers.title"
 msgstr "Weavers"
 
+#: weavers.subtitle
+msgid "weavers.subtitle"
+msgstr "অস্থায়ী উন্নয়ন পরিবেশ পরিচালনা করুন"
+
+#: weavers.new
+msgid "weavers.new"
+msgstr "নতুন Weaver"
+
 #: weavers.description
 msgid "weavers.description"
 msgstr "Manage ephemeral development environments"

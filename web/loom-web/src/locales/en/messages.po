@@ -1143,6 +1143,14 @@ msgstr "Add Account"
 msgid "weavers.title"
 msgstr "Weavers"
 
+#: weavers.subtitle
+msgid "weavers.subtitle"
+msgstr "Manage ephemeral development environments"
+
+#: weavers.new
+msgid "weavers.new"
+msgstr "New Weaver"
+
 #: weavers.description
 msgid "weavers.description"
 msgstr "Manage ephemeral development environments"

@@ -926,6 +926,14 @@ msgstr "织机"
 msgid "weavers.title"
 msgstr "织机"
 
+#: weavers.subtitle
+msgid "weavers.subtitle"
+msgstr "管理临时开发环境"
+
+#: weavers.new
+msgid "weavers.new"
+msgstr "新建 Weaver"
+
 #: weavers.description
 msgid "weavers.description"
 msgstr "管理临时开发环境"
