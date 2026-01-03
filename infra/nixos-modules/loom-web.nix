@@ -100,7 +100,9 @@ in
         ];
 
         forceSSL = cfg.enableSSL && cfg.domain != null;
-        enableACME = cfg.enableSSL && cfg.domain != null;
+        # Use enableACME for HTTP-01, useACMEHost for DNS-01
+        enableACME = cfg.enableSSL && cfg.domain != null && cfg.acmeDnsProvider == null;
+        useACMEHost = if (cfg.enableSSL && cfg.domain != null && cfg.acmeDnsProvider != null) then cfg.domain else null;
 
         root = "${cfg.package}/share/loom-web";
 
@@ -196,8 +198,12 @@ in
         dnsProvider = cfg.acmeDnsProvider;
         credentialsFile = cfg.acmeDnsCredentialsFile;
         dnsPropagationCheck = true;
+        group = "nginx";
       };
     };
+
+    # Allow nginx to read ACME certs when using DNS-01
+    users.users.nginx.extraGroups = mkIf (cfg.acmeDnsProvider != null) [ "acme" ];
 
     networking.firewall = mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ] ++ (optionals cfg.enableSSL [ 443 80 ]);
