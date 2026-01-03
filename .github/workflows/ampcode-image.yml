@@ -20,8 +20,8 @@ jobs:
     steps:
       - name: Create Dockerfile
         run: |
-          cat > Dockerfile <<'EOF'
-          FROM debian:bookworm-slim
+          cat > Dockerfile << 'EOF'
+          FROM ubuntu:24.04
 
           RUN apt-get update && apt-get install -y \
               curl \
@@ -31,9 +31,9 @@ jobs:
 
           RUN curl -fsSL https://ampcode.com/install.sh | bash
 
-          ENV PATH="/root/.amp/bin:$PATH"
+          ENV PATH="/root/.amp/bin:${PATH}"
 
-          CMD ["amp"]
+          CMD ["bash"]
           EOF
 
       - name: Set up Docker Buildx
