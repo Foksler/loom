@@ -108,15 +108,15 @@ class ReposApiClient {
 		return response.json();
 	}
 
-	async listRepos(owner: string, params: ListReposParams = {}): Promise<ListReposResponse> {
+	async listRepos(userId: string, params: ListReposParams = {}): Promise<ListReposResponse> {
 		const query = new URLSearchParams();
 		if (params.limit) query.set('limit', String(params.limit));
 		if (params.offset) query.set('offset', String(params.offset));
 
 		const queryStr = query.toString();
 		const path = queryStr
-			? `/api/repos/${encodeURIComponent(owner)}?${queryStr}`
-			: `/api/repos/${encodeURIComponent(owner)}`;
+			? `/api/users/${encodeURIComponent(userId)}/repos?${queryStr}`
+			: `/api/users/${encodeURIComponent(userId)}/repos`;
 		return this.request<ListReposResponse>(path);
 	}
 
