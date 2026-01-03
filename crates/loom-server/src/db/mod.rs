@@ -21,7 +21,7 @@ pub use loom_server_db::{
 	ThreadRepository, ThreadSearchHit, UserRepository, create_pool,
 };
 
-/// Run all database migrations (001-026).
+/// Run all database migrations (001-027).
 ///
 /// # Arguments
 /// * `pool` - SQLite connection pool
@@ -307,6 +307,14 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ServerError> {
 			if !msg.contains("already exists") && !msg.contains("duplicate column") {
 				return Err(e.into());
 			}
+		}
+	}
+
+	let m27 = include_str!("../../migrations/027_docs_fts.sql");
+	if let Err(e) = sqlx::query(m27).execute(pool).await {
+		let msg = e.to_string();
+		if !msg.contains("already exists") && !msg.contains("table docs_fts already exists") {
+			tracing::warn!(error = %e, "docs_fts table creation failed");
 		}
 	}
 
