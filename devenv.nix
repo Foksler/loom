@@ -207,6 +207,136 @@ in
       files = "(^Cargo\\.lock$|^crates/loom-server/migrations/)";
     };
     
+    # Check i18n translation coverage for loom-web when English locale changes
+    i18n-coverage-web = {
+      enable = true;
+      name = "Check i18n translation coverage (web)";
+      entry = "${pkgs.writeShellScript "check-i18n-coverage-web" ''
+        set -euo pipefail
+        
+        LOCALES_DIR="web/loom-web/src/locales"
+        EN_FILE="$LOCALES_DIR/en/messages.po"
+        
+        if [[ ! -f "$EN_FILE" ]]; then
+            echo "❌ English locale file not found: $EN_FILE"
+            exit 1
+        fi
+        
+        # Extract all msgid keys from English (excluding empty msgid)
+        EN_KEYS=$(${pkgs.gnugrep}/bin/grep '^msgid "' "$EN_FILE" | ${pkgs.gnused}/bin/sed 's/msgid "//' | ${pkgs.gnused}/bin/sed 's/"$//' | ${pkgs.gnugrep}/bin/grep -v '^$' | ${pkgs.coreutils}/bin/sort)
+        EN_COUNT=$(echo "$EN_KEYS" | ${pkgs.coreutils}/bin/wc -l)
+        
+        echo "📋 English has $EN_COUNT translation keys (loom-web)"
+        echo ""
+        
+        MISSING_FOUND=0
+        
+        for locale in ar bn el es et fr he hi id it ja ko nl pt ru sv zh-CN; do
+            LOCALE_FILE="$LOCALES_DIR/$locale/messages.po"
+            
+            if [[ ! -f "$LOCALE_FILE" ]]; then
+                echo "⚠️  Locale file not found: $LOCALE_FILE"
+                continue
+            fi
+            
+            # Extract keys from this locale
+            LOCALE_KEYS=$(${pkgs.gnugrep}/bin/grep '^msgid "' "$LOCALE_FILE" | ${pkgs.gnused}/bin/sed 's/msgid "//' | ${pkgs.gnused}/bin/sed 's/"$//' | ${pkgs.gnugrep}/bin/grep -v '^$' | ${pkgs.coreutils}/bin/sort)
+            
+            # Find keys in English but not in this locale
+            MISSING=$(${pkgs.coreutils}/bin/comm -23 <(echo "$EN_KEYS") <(echo "$LOCALE_KEYS") || true)
+            MISSING_COUNT=$(echo "$MISSING" | ${pkgs.gnugrep}/bin/grep -c . || true)
+            
+            if [[ $MISSING_COUNT -gt 0 ]]; then
+                echo "❌ $locale: missing $MISSING_COUNT translations:"
+                echo "$MISSING" | ${pkgs.gnused}/bin/sed 's/^/   - /'
+                echo ""
+                MISSING_FOUND=1
+            else
+                echo "✅ $locale: complete"
+            fi
+        done
+        
+        echo ""
+        
+        if [[ $MISSING_FOUND -eq 1 ]]; then
+            echo "❌ FAILED: Some locales are missing translations!"
+            echo "Add the missing keys to the affected locale files."
+            exit 1
+        else
+            echo "✅ All locales have complete translation coverage."
+            exit 0
+        fi
+      ''}";
+      pass_filenames = false;
+      # Only run when English locale changes
+      files = "^web/loom-web/src/locales/en/messages\\.po$";
+    };
+    
+    # Check i18n translation coverage for loom-common-i18n when English locale changes
+    i18n-coverage-rust = {
+      enable = true;
+      name = "Check i18n translation coverage (rust)";
+      entry = "${pkgs.writeShellScript "check-i18n-coverage-rust" ''
+        set -euo pipefail
+        
+        LOCALES_DIR="crates/loom-common-i18n/locales"
+        EN_FILE="$LOCALES_DIR/en/messages.po"
+        
+        if [[ ! -f "$EN_FILE" ]]; then
+            echo "❌ English locale file not found: $EN_FILE"
+            exit 1
+        fi
+        
+        # Extract all msgid keys from English (excluding empty msgid)
+        EN_KEYS=$(${pkgs.gnugrep}/bin/grep '^msgid "' "$EN_FILE" | ${pkgs.gnused}/bin/sed 's/msgid "//' | ${pkgs.gnused}/bin/sed 's/"$//' | ${pkgs.gnugrep}/bin/grep -v '^$' | ${pkgs.coreutils}/bin/sort)
+        EN_COUNT=$(echo "$EN_KEYS" | ${pkgs.coreutils}/bin/wc -l)
+        
+        echo "📋 English has $EN_COUNT translation keys (loom-common-i18n)"
+        echo ""
+        
+        MISSING_FOUND=0
+        
+        for locale in ar bn el es et fr he hi id it ja ko nl pt ru sv zh-CN; do
+            LOCALE_FILE="$LOCALES_DIR/$locale/messages.po"
+            
+            if [[ ! -f "$LOCALE_FILE" ]]; then
+                echo "⚠️  Locale file not found: $LOCALE_FILE"
+                continue
+            fi
+            
+            # Extract keys from this locale
+            LOCALE_KEYS=$(${pkgs.gnugrep}/bin/grep '^msgid "' "$LOCALE_FILE" | ${pkgs.gnused}/bin/sed 's/msgid "//' | ${pkgs.gnused}/bin/sed 's/"$//' | ${pkgs.gnugrep}/bin/grep -v '^$' | ${pkgs.coreutils}/bin/sort)
+            
+            # Find keys in English but not in this locale
+            MISSING=$(${pkgs.coreutils}/bin/comm -23 <(echo "$EN_KEYS") <(echo "$LOCALE_KEYS") || true)
+            MISSING_COUNT=$(echo "$MISSING" | ${pkgs.gnugrep}/bin/grep -c . || true)
+            
+            if [[ $MISSING_COUNT -gt 0 ]]; then
+                echo "❌ $locale: missing $MISSING_COUNT translations:"
+                echo "$MISSING" | ${pkgs.gnused}/bin/sed 's/^/   - /'
+                echo ""
+                MISSING_FOUND=1
+            else
+                echo "✅ $locale: complete"
+            fi
+        done
+        
+        echo ""
+        
+        if [[ $MISSING_FOUND -eq 1 ]]; then
+            echo "❌ FAILED: Some locales are missing translations!"
+            echo "Add the missing keys to the affected locale files."
+            exit 1
+        else
+            echo "✅ All locales have complete translation coverage."
+            exit 0
+        fi
+      ''}";
+      pass_filenames = false;
+      # Only run when English locale changes
+      files = "^crates/loom-common-i18n/locales/en/messages\\.po$";
+    };
+    
     # Ensure loom-web flake package compiles (fast - Node.js cached build)
     loom-web-build = {
       enable = true;
