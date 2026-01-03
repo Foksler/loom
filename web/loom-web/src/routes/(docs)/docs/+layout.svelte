@@ -3,9 +3,15 @@
  SPDX-License-Identifier: Proprietary
 -->
 <script lang="ts">
-	import { DocSearch } from '$lib/docs/components';
+	import { DocSearch, Sidebar } from '$lib/docs/components';
+	import type { LayoutData } from './$types';
 
-	let { children } = $props();
+	interface Props {
+		data: LayoutData;
+		children: import('svelte').Snippet;
+	}
+
+	let { data, children }: Props = $props();
 </script>
 
 <div class="docs-layout">
@@ -16,6 +22,7 @@
 				<DocSearch />
 			</div>
 		</div>
+		<Sidebar sections={data.sections} />
 	</aside>
 
 	<main class="docs-content" data-pagefind-body>
@@ -63,5 +70,18 @@
 	.docs-content {
 		padding: var(--space-8);
 		max-width: 900px;
+	}
+
+	@media (max-width: 768px) {
+		.docs-layout {
+			grid-template-columns: 1fr;
+		}
+
+		.sidebar {
+			position: relative;
+			height: auto;
+			border-right: none;
+			border-bottom: 1px solid var(--color-border);
+		}
 	}
 </style>
