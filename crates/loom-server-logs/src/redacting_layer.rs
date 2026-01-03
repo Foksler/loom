@@ -98,19 +98,27 @@ impl Visit for RedactingVisitor {
 	}
 
 	fn record_i64(&mut self, field: &Field, value: i64) {
-		self.fields.push((field.name().to_string(), value.to_string()));
+		let s = value.to_string();
+		let redacted = self.redact_value(&s);
+		self.fields.push((field.name().to_string(), redacted));
 	}
 
 	fn record_u64(&mut self, field: &Field, value: u64) {
-		self.fields.push((field.name().to_string(), value.to_string()));
+		let s = value.to_string();
+		let redacted = self.redact_value(&s);
+		self.fields.push((field.name().to_string(), redacted));
 	}
 
 	fn record_bool(&mut self, field: &Field, value: bool) {
-		self.fields.push((field.name().to_string(), value.to_string()));
+		let s = value.to_string();
+		let redacted = self.redact_value(&s);
+		self.fields.push((field.name().to_string(), redacted));
 	}
 
 	fn record_f64(&mut self, field: &Field, value: f64) {
-		self.fields.push((field.name().to_string(), value.to_string()));
+		let s = value.to_string();
+		let redacted = self.redact_value(&s);
+		self.fields.push((field.name().to_string(), redacted));
 	}
 
 	fn record_error(&mut self, field: &Field, value: &(dyn std::error::Error + 'static)) {

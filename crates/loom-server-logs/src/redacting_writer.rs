@@ -26,7 +26,10 @@ impl<W: Write> Write for RedactingWriter<W> {
 				let redacted = loom_redact::redact(s);
 				self.inner.write_all(redacted.as_bytes())?;
 			} else {
-				self.inner.write_all(line)?;
+				// Non-UTF8: use lossy decoding to still redact ASCII secrets
+				let s = String::from_utf8_lossy(line);
+				let redacted = loom_redact::redact(&s);
+				self.inner.write_all(redacted.as_bytes())?;
 			}
 			self.buffer.drain(..=newline_pos);
 		}
@@ -40,7 +43,9 @@ impl<W: Write> Write for RedactingWriter<W> {
 				let redacted = loom_redact::redact(s);
 				self.inner.write_all(redacted.as_bytes())?;
 			} else {
-				self.inner.write_all(&self.buffer)?;
+				let s = String::from_utf8_lossy(&self.buffer);
+				let redacted = loom_redact::redact(&s);
+				self.inner.write_all(redacted.as_bytes())?;
 			}
 			self.buffer.clear();
 		}

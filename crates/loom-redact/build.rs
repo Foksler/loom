@@ -75,6 +75,13 @@ fn has_unsupported_regex_features(pattern: &str) -> bool {
 		|| pattern.contains("(?<!")
 }
 
+fn wrap_raw(s: &str) -> String {
+	if s.contains("\"#") {
+		panic!("Pattern contains unsupported sequence \\\"#: {}", s);
+	}
+	format!("r#\"{}\"#", s)
+}
+
 fn escape_literal_braces(pattern: &str) -> String {
 	use regex::Regex;
 
@@ -233,7 +240,7 @@ pub static GENERATED_RULES: &[GeneratedRule] = &["
 			if skip_rule {
 				break;
 			}
-			all_allowlist_stopwords.extend(allowlist.stopwords.clone());
+			all_allowlist_stopwords.extend(allowlist.stopwords.iter().map(|s| s.to_lowercase()));
 		}
 
 		if skip_rule {
@@ -244,7 +251,7 @@ pub static GENERATED_RULES: &[GeneratedRule] = &["
 		let secret_group = rule.secret_group.unwrap_or(0);
 
 		let entropy_str = match rule.entropy {
-			Some(e) => format!("Some({:.1}_f32)", e),
+			Some(e) => format!("Some({e:?}_f32)"),
 			None => "None".to_string(),
 		};
 
@@ -255,7 +262,7 @@ pub static GENERATED_RULES: &[GeneratedRule] = &["
 				"&[{}]",
 				rule.keywords
 					.iter()
-					.map(|k| format!("r#\"{}\"#", k))
+					.map(|k| wrap_raw(&k.to_lowercase()))
 					.collect::<Vec<_>>()
 					.join(", ")
 			)
@@ -268,7 +275,7 @@ pub static GENERATED_RULES: &[GeneratedRule] = &["
 				"&[{}]",
 				all_allowlist_patterns
 					.iter()
-					.map(|p| format!("r#\"{}\"#", p))
+					.map(|p| wrap_raw(p))
 					.collect::<Vec<_>>()
 					.join(", ")
 			)
@@ -281,7 +288,7 @@ pub static GENERATED_RULES: &[GeneratedRule] = &["
 				"&[{}]",
 				all_allowlist_stopwords
 					.iter()
-					.map(|s| format!("r#\"{}\"#", s))
+					.map(|s| wrap_raw(s))
 					.collect::<Vec<_>>()
 					.join(", ")
 			)
@@ -290,16 +297,16 @@ pub static GENERATED_RULES: &[GeneratedRule] = &["
 		writeln!(
 			file,
 			"\tGeneratedRule {{
-\t\tid: r#\"{}\"#,
-\t\tregex: r#\"{}\"#,
+\t\tid: {},
+\t\tregex: {},
 \t\tsecret_group: {},
 \t\tentropy: {},
 \t\tkeywords: {},
 \t\tallowlist_patterns: {},
 \t\tallowlist_stopwords: {},
 \t}},",
-			rule.id,
-			escaped_regex,
+			wrap_raw(&rule.id),
+			wrap_raw(&escaped_regex),
 			secret_group,
 			entropy_str,
 			keywords_str,
