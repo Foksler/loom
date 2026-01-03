@@ -212,6 +212,8 @@ use utoipa::OpenApi;
             crate::routes::admin::UpdateRolesRequest,
             crate::routes::admin::ImpersonateRequest,
             crate::routes::admin::ImpersonateResponse,
+            crate::routes::admin::ImpersonationState,
+            crate::routes::admin::ImpersonationUserInfo,
             crate::routes::admin::AuditLogEntryResponse,
             crate::routes::admin::ListAuditLogsResponse,
             crate::routes::admin::AdminSuccessResponse,

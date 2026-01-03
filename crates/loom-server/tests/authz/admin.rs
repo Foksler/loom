@@ -143,6 +143,38 @@ async fn non_admin_cannot_stop_impersonation() {
 }
 
 #[tokio::test]
+async fn admin_can_get_impersonation_state() {
+	let app = TestApp::new().await;
+
+	let cases = vec![AuthzCase {
+		name: "admin_can_get_impersonation_state",
+		method: Method::GET,
+		path: "/api/admin/impersonate/state".to_string(),
+		user: Some(app.fixtures.admin.clone()),
+		body: None,
+		expected_status: StatusCode::OK,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn non_admin_cannot_get_impersonation_state() {
+	let app = TestApp::new().await;
+
+	let cases = vec![AuthzCase {
+		name: "non_admin_cannot_get_impersonation_state",
+		method: Method::GET,
+		path: "/api/admin/impersonate/state".to_string(),
+		user: Some(app.fixtures.org_a.owner.clone()),
+		body: None,
+		expected_status: StatusCode::FORBIDDEN,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
 async fn admin_can_list_audit_logs() {
 	let app = TestApp::new().await;
 

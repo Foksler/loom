@@ -560,6 +560,10 @@ fn admin_routes(state: AppState) -> Router<AppState> {
 			patch(routes::admin::update_user_roles),
 		)
 		.route(
+			"/impersonate/state",
+			get(routes::admin::get_impersonation_state),
+		)
+		.route(
 			"/users/{id}/impersonate",
 			post(routes::admin::start_impersonation),
 		)

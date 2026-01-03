@@ -73,6 +73,23 @@ pub struct ImpersonateResponse {
 	pub message: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct ImpersonationUserInfo {
+	pub id: String,
+	pub display_name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct ImpersonationState {
+	pub is_impersonating: bool,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub original_user: Option<ImpersonationUserInfo>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub impersonated_user: Option<ImpersonationUserInfo>,
+}
+
 /// An audit log entry.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
