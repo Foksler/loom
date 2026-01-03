@@ -236,17 +236,26 @@ pub async fn get_tree(
 		ServerError::Internal("Failed to open repository".to_string())
 	})?;
 
+	// Check if the repository is empty (no commits)
+	if is_repo_empty(&git_repo) {
+		return Ok(Json(Vec::<TreeEntry>::new()));
+	}
+
 	// Parse ref and path from the combined path segment
 	// Format: {ref} or {ref}/{path...}
 	let (git_ref, tree_path) = parse_ref_and_path(&ref_and_path, &git_repo)?;
 
-	let commit = git_repo
-		.rev_parse_single(git_ref.as_bytes())
-		.map_err(|e| ServerError::NotFound(format!("Ref not found: {}", e)))?
-		.object()
-		.map_err(|e| ServerError::Internal(format!("Failed to get object: {}", e)))?
-		.peel_to_commit()
-		.map_err(|e| ServerError::Internal(format!("Failed to peel to commit: {}", e)))?;
+	let commit = match git_repo.rev_parse_single(git_ref.as_bytes()) {
+		Ok(rev) => rev
+			.object()
+			.map_err(|e| ServerError::Internal(format!("Failed to get object: {}", e)))?
+			.peel_to_commit()
+			.map_err(|e| ServerError::Internal(format!("Failed to peel to commit: {}", e)))?,
+		Err(_) => {
+			// If ref resolution fails, return empty array for empty repos
+			return Ok(Json(Vec::<TreeEntry>::new()));
+		}
+	};
 
 	let tree = commit
 		.tree()
@@ -642,6 +651,18 @@ pub async fn compare_refs(
 		ahead_by,
 		behind_by,
 	}))
+}
+
+/// Check if a repository is empty (has no commits).
+fn is_repo_empty(repo: &gix::Repository) -> bool {
+	// A repo is empty if HEAD is unborn (points to a ref that doesn't exist)
+	match repo.head() {
+		Ok(head) => {
+			// If HEAD can't be peeled to a commit, the repo is empty
+			head.into_peeled_id().is_err()
+		}
+		Err(_) => true,
+	}
 }
 
 fn parse_ref_and_path(combined: &str, repo: &gix::Repository) -> Result<(String, String), ServerError> {
