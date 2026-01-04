@@ -16,7 +16,7 @@
     pkgs.direnv # Per-directory environment variable manager
     pkgs.elinks # Text-based web browser
     pkgs.gh # GitHub CLI tool
-    pkgs.gitAndTools.gitFull # Distributed version control system
+    pkgs.gitFull # Distributed version control system
     pkgs.iftop # Network bandwidth monitoring tool
     pkgs.inetutils # Collection of common network utilities
     pkgs.iotop # I/O monitoring tool
