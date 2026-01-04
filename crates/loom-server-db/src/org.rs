@@ -260,6 +260,45 @@ impl OrgRepository {
 		Ok(orgs)
 	}
 
+	/// Ensure a personal organization exists for the given user.
+	///
+	/// If the user already has a personal org, returns it. Otherwise, creates one
+	/// and adds the user as owner.
+	///
+	/// # Arguments
+	/// * `user_id` - The user's UUID
+	///
+	/// # Returns
+	/// The personal organization (existing or newly created).
+	#[tracing::instrument(skip(self), fields(user_id = %user_id))]
+	pub async fn ensure_personal_org(&self, user_id: &UserId) -> Result<Organization, DbError> {
+		let existing = sqlx::query(
+			r#"
+			SELECT o.id, o.name, o.slug, o.visibility, o.is_personal, o.created_at, o.updated_at, o.deleted_at
+			FROM organizations o
+			INNER JOIN org_memberships m ON o.id = m.org_id
+			WHERE m.user_id = ? AND o.is_personal = 1 AND o.deleted_at IS NULL
+			LIMIT 1
+			"#,
+		)
+		.bind(user_id.to_string())
+		.fetch_optional(&self.pool)
+		.await?;
+
+		if let Some(row) = existing {
+			let org = self.row_to_org(&row)?;
+			tracing::debug!(user_id = %user_id, org_id = %org.id, "personal org already exists");
+			return Ok(org);
+		}
+
+		let org = Organization::new_personal(user_id);
+		self.create_org(&org).await?;
+		self.add_member(&org.id, user_id, OrgRole::Owner).await?;
+
+		tracing::info!(user_id = %user_id, org_id = %org.id, "created personal org for user");
+		Ok(org)
+	}
+
 	/// List public organizations with pagination.
 	///
 	/// # Arguments

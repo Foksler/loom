@@ -58,6 +58,7 @@ pub struct AppState {
 	pub org_repo: Arc<OrgRepository>,
 	pub team_repo: Arc<TeamRepository>,
 	pub api_key_repo: Arc<ApiKeyRepository>,
+	pub user_provisioning: Arc<loom_server_provisioning::UserProvisioningService>,
 	pub audit_service: Arc<AuditService>,
 	pub share_repo: Arc<ShareRepository>,
 	pub auth_config: loom_server_auth::middleware::AuthConfig,
@@ -114,6 +115,13 @@ pub async fn create_app_state(
 	let org_repo = Arc::new(OrgRepository::new(pool.clone()));
 	let team_repo = Arc::new(TeamRepository::new(pool.clone()));
 	let api_key_repo = Arc::new(ApiKeyRepository::new(pool.clone()));
+
+	// Create user provisioning service
+	let user_provisioning = Arc::new(loom_server_provisioning::UserProvisioningService::new(
+		pool.clone(),
+		user_repo.clone(),
+		org_repo.clone(),
+	));
 
 	// Create SQLite audit sink
 	let sqlite_audit_sink: Arc<dyn AuditSink> = Arc::new(SqliteAuditSink::new(
@@ -254,6 +262,7 @@ pub async fn create_app_state(
 		org_repo,
 		team_repo,
 		api_key_repo,
+		user_provisioning,
 		audit_service,
 		share_repo,
 		auth_config,
@@ -676,6 +685,7 @@ pub fn create_router(state: AppState) -> Router {
 	let has_wg_tunnel = state.wg_tunnel_services.is_some();
 	let scim_config = state.scim_config.clone();
 	let scim_pool = state.pool.clone();
+	let scim_provisioning = state.user_provisioning.clone();
 
 	// Public routes - no authentication required
 	let public = PublicRouter::new()
@@ -1217,6 +1227,7 @@ pub fn create_router(state: AppState) -> Router {
 						scim_pool,
 						scim_config.token,
 						org_id,
+						scim_provisioning,
 					);
 					router = router.nest("/api/scim", scim_router);
 					tracing::info!("SCIM endpoints enabled at /api/scim");

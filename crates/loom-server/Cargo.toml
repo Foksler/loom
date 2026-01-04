@@ -22,6 +22,7 @@ futures = { workspace = true }
 loom-server-config = { path = "../loom-server-config" }
 loom-server-docs = { path = "../loom-server-docs" }
 loom-server-db = { path = "../loom-server-db" }
+loom-server-provisioning = { path = "../loom-server-provisioning" }
 loom-server-jobs = { path = "../loom-server-jobs" }
 loom-server-logs = { path = "../loom-server-logs" }
 loom-server-weaver = { path = "../loom-server-weaver" }

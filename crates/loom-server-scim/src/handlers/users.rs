@@ -10,8 +10,10 @@ use chrono::{DateTime, Utc};
 use loom_scim::patch::PatchRequest;
 use loom_scim::{ListResponse, ScimUser};
 use loom_server_auth::{OrgId, UserId};
+use loom_server_provisioning::UserProvisioningService;
 use serde::Deserialize;
 use sqlx::{Row, SqlitePool};
+use std::sync::Arc;
 use tracing::info;
 use uuid::Uuid;
 
@@ -45,6 +47,7 @@ fn default_count() -> i64 {
 pub struct ScimState {
 	pub pool: SqlitePool,
 	pub org_id: OrgId,
+	pub provisioning: Arc<UserProvisioningService>,
 }
 
 pub async fn list_users(
@@ -106,82 +109,25 @@ pub async fn create_user(
 ) -> Result<(StatusCode, Json<ScimUser>), ScimApiError> {
 	let email = scim_user_to_email(&scim_user)
 		.ok_or_else(|| ScimApiError::BadRequest("userName or email required".to_string()))?;
-	let display_name = scim_user_to_display_name(&scim_user);
-	let external_id = scim_user.external_id.clone();
-	let locale = scim_user.locale.clone();
-	let org_id_str = state.org_id.to_string();
+	let display_name = scim_user_to_display_name(&scim_user).unwrap_or_else(|| email.clone());
 
-	let existing = sqlx::query("SELECT id FROM users WHERE primary_email = ?")
-		.bind(&email)
-		.fetch_optional(&state.pool)
-		.await?;
+	let request = loom_server_provisioning::ProvisioningRequest::scim(
+		&email,
+		&display_name,
+		scim_user.external_id.clone(),
+		scim_user.locale.clone(),
+		state.org_id,
+	);
 
-	let user_id = if let Some(row) = existing {
-		let id: String = row.get("id");
-		let uid = parse_user_id(&id)?;
+	let user = state
+		.provisioning
+		.provision_user(request)
+		.await
+		.map_err(|e| ScimApiError::Internal(format!("Provisioning failed: {}", e)))?;
 
-		sqlx::query("UPDATE users SET scim_external_id = ?, provisioned_by_scim = 1 WHERE id = ?")
-			.bind(&external_id)
-			.bind(&id)
-			.execute(&state.pool)
-			.await?;
+	info!(user_id = %user.id, email = %email, "SCIM: provisioned user");
 
-		let membership_exists =
-			sqlx::query("SELECT 1 FROM org_memberships WHERE user_id = ? AND org_id = ?")
-				.bind(&id)
-				.bind(&org_id_str)
-				.fetch_optional(&state.pool)
-				.await?;
-
-		if membership_exists.is_none() {
-			let membership_id = Uuid::new_v4().to_string();
-			sqlx::query(
-				"INSERT INTO org_memberships (id, user_id, org_id, role, provisioned_by, created_at, updated_at)
-				 VALUES (?, ?, ?, 'member', 'scim', datetime('now'), datetime('now'))",
-			)
-			.bind(&membership_id)
-			.bind(&id)
-			.bind(&org_id_str)
-			.execute(&state.pool)
-			.await?;
-		}
-
-		info!(user_id = %uid, email = %email, "SCIM: linked existing user");
-		uid
-	} else {
-		let new_id = UserId::generate();
-		let id_str = new_id.to_string();
-
-		sqlx::query(
-			r#"
-			INSERT INTO users (id, primary_email, display_name, locale, scim_external_id, provisioned_by_scim, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, 1, datetime('now'), datetime('now'))
-			"#,
-		)
-		.bind(&id_str)
-		.bind(&email)
-		.bind(&display_name)
-		.bind(&locale)
-		.bind(&external_id)
-		.execute(&state.pool)
-		.await?;
-
-		let membership_id = Uuid::new_v4().to_string();
-		sqlx::query(
-			"INSERT INTO org_memberships (id, user_id, org_id, role, provisioned_by, created_at, updated_at)
-			 VALUES (?, ?, ?, 'member', 'scim', datetime('now'), datetime('now'))",
-		)
-		.bind(&membership_id)
-		.bind(&id_str)
-		.bind(&org_id_str)
-		.execute(&state.pool)
-		.await?;
-
-		info!(user_id = %new_id, email = %email, "SCIM: created new user");
-		new_id
-	};
-
-	let user_id_str = user_id.to_string();
+	let user_id_str = user.id.to_string();
 	let row = sqlx::query(
 		r#"
 		SELECT id, primary_email, display_name, avatar_url, locale,

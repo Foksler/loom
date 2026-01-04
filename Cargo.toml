@@ -41,6 +41,7 @@ members = [
 	"crates/loom-server-logs",
 	"crates/loom-scim",
 	"crates/loom-server-scim",
+	"crates/loom-server-provisioning",
 	"crates/loom-server-scm",
 	"crates/loom-server-scm-mirror",
 	"crates/loom-server-db",

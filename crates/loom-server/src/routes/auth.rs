@@ -1256,14 +1256,16 @@ async fn complete_oauth_login(
 		}
 	}
 
-	let user = match state
-		.user_repo
-		.find_or_create_user_by_email(email, display_name, avatar_url.as_deref(), preferred_username)
-		.await
-	{
+	let request = loom_server_provisioning::ProvisioningRequest::oauth(
+		email,
+		display_name,
+		avatar_url,
+		preferred_username.map(|s| s.to_string()),
+	);
+	let user = match state.user_provisioning.provision_user(request).await {
 		Ok(user) => user,
 		Err(e) => {
-			tracing::error!(error = %e, email = %email, "Failed to find or create user");
+			tracing::error!(error = %e, email = %email, "Failed to provision user");
 			return (
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(AuthErrorResponse {
@@ -1458,15 +1460,12 @@ pub async fn verify_magic_link(
 		}
 	}
 
-	// Find or create user by email
-	let user = match state
-		.user_repo
-		.find_or_create_user_by_email(&email, &email, None, None)
-		.await
-	{
+	// Provision user
+	let request = loom_server_provisioning::ProvisioningRequest::magic_link(&email);
+	let user = match state.user_provisioning.provision_user(request).await {
 		Ok(user) => user,
 		Err(e) => {
-			tracing::error!(error = %e, email = %email, "Failed to find or create user");
+			tracing::error!(error = %e, email = %email, "Failed to provision user");
 			return (
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(AuthErrorResponse {
