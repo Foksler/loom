@@ -20,8 +20,8 @@ pub use peer_stream::{PeerEvent, PeerNotifier};
 pub use sessions::{CreateSessionRequest, CreateSessionResponse, Session, SessionService};
 pub use types::{
 	CreateSessionRequest as CreateSessionApiRequest, DeviceResponse, RegisterDeviceRequest,
-	RegisterWeaverRequest, RegisterWeaverResponse, SessionListItem, SessionResponse, UpdateEndpointRequest,
-	WeaverResponse,
+	RegisterWeaverRequest, RegisterWeaverResponse, SessionListItem, SessionResponse,
+	UpdateEndpointRequest, WeaverResponse,
 };
 pub use weavers::{WeaverWg, WeaverWgService};
 

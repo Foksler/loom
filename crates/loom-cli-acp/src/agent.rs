@@ -15,12 +15,12 @@ use agent_client_protocol::{
 	PromptResponse, ProtocolVersion, SessionId, SessionNotification, SessionUpdate,
 	SetSessionModeRequest, SetSessionModeResponse, StopReason,
 };
+use loom_cli_tools::ToolRegistry;
 use loom_common_core::{
 	LlmClient, LlmEvent, LlmRequest, Message, ServerQuery, ServerQueryError, ServerQueryHandler,
 	ServerQueryKind, ServerQueryResponse, ServerQueryResult, ToolCall, ToolContext, ToolDefinition,
 };
 use loom_common_thread::{AgentStateKind, AgentStateSnapshot, Thread, ThreadStore};
-use loom_cli_tools::ToolRegistry;
 use serde_json::value::RawValue;
 use tokio::sync::{mpsc, oneshot};
 use tracing::{debug, error, info, instrument, warn};

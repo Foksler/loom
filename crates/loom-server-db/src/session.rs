@@ -51,11 +51,7 @@ impl SessionRepository {
 	/// - `id` must be unique
 	/// - `user_id` must reference an existing user
 	#[tracing::instrument(skip(self, session, token_hash), fields(session_id = %session.id, user_id = %session.user_id))]
-	pub async fn create_session(
-		&self,
-		session: &Session,
-		token_hash: &str,
-	) -> Result<(), DbError> {
+	pub async fn create_session(&self, session: &Session, token_hash: &str) -> Result<(), DbError> {
 		sqlx::query(
 			r#"
 			INSERT INTO sessions (
@@ -129,10 +125,7 @@ impl SessionRepository {
 	/// # Returns
 	/// List of sessions ordered by most recently used first.
 	#[tracing::instrument(skip(self), fields(user_id = %user_id))]
-	pub async fn get_sessions_for_user(
-		&self,
-		user_id: &UserId,
-	) -> Result<Vec<Session>, DbError> {
+	pub async fn get_sessions_for_user(&self, user_id: &UserId) -> Result<Vec<Session>, DbError> {
 		let rows = sqlx::query(
 			r#"
 			SELECT id, user_id, session_type, created_at, last_used_at, expires_at,
@@ -516,11 +509,7 @@ impl SessionRepository {
 	/// # Note
 	/// Magic links expire after `MAGIC_LINK_EXPIRY_MINUTES`.
 	#[tracing::instrument(skip(self, email, token_hash))]
-	pub async fn create_magic_link(
-		&self,
-		email: &str,
-		token_hash: &str,
-	) -> Result<String, DbError> {
+	pub async fn create_magic_link(&self, email: &str, token_hash: &str) -> Result<String, DbError> {
 		let id = Uuid::new_v4().to_string();
 		let now = Utc::now();
 		let expires_at = now + Duration::minutes(MAGIC_LINK_EXPIRY_MINUTES);
@@ -589,9 +578,7 @@ impl SessionRepository {
 	/// # Security Note
 	/// This returns token hashes for verification purposes only.
 	#[tracing::instrument(skip(self))]
-	pub async fn get_pending_magic_links(
-		&self,
-	) -> Result<Vec<(String, String, String)>, DbError> {
+	pub async fn get_pending_magic_links(&self) -> Result<Vec<(String, String, String)>, DbError> {
 		let now = Utc::now().to_rfc3339();
 
 		let rows = sqlx::query(

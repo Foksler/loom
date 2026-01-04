@@ -50,7 +50,9 @@ impl GitHubOAuthConfigLayer {
 		};
 
 		let client_secret = self.client_secret.ok_or_else(|| {
-			ConfigError::Validation("GitHub OAuth client_secret is required when client_id is set".to_string())
+			ConfigError::Validation(
+				"GitHub OAuth client_secret is required when client_id is set".to_string(),
+			)
 		})?;
 
 		if client_secret.expose().is_empty() {
@@ -60,7 +62,9 @@ impl GitHubOAuthConfigLayer {
 		}
 
 		let redirect_uri = self.redirect_uri.ok_or_else(|| {
-			ConfigError::Validation("GitHub OAuth redirect_uri is required when client_id is set".to_string())
+			ConfigError::Validation(
+				"GitHub OAuth redirect_uri is required when client_id is set".to_string(),
+			)
 		})?;
 
 		if redirect_uri.is_empty() {
@@ -145,7 +149,9 @@ impl GoogleOAuthConfigLayer {
 		};
 
 		let client_secret = self.client_secret.ok_or_else(|| {
-			ConfigError::Validation("Google OAuth client_secret is required when client_id is set".to_string())
+			ConfigError::Validation(
+				"Google OAuth client_secret is required when client_id is set".to_string(),
+			)
 		})?;
 
 		if client_secret.expose().is_empty() {
@@ -155,7 +161,9 @@ impl GoogleOAuthConfigLayer {
 		}
 
 		let redirect_uri = self.redirect_uri.ok_or_else(|| {
-			ConfigError::Validation("Google OAuth redirect_uri is required when client_id is set".to_string())
+			ConfigError::Validation(
+				"Google OAuth redirect_uri is required when client_id is set".to_string(),
+			)
 		})?;
 
 		if redirect_uri.is_empty() {
@@ -254,17 +262,19 @@ impl OktaOAuthConfigLayer {
 			return Ok(None);
 		}
 
-		let domain = self.domain.filter(|s| !s.is_empty()).ok_or_else(|| {
-			ConfigError::Validation("Okta OAuth domain is required".to_string())
-		})?;
+		let domain = self
+			.domain
+			.filter(|s| !s.is_empty())
+			.ok_or_else(|| ConfigError::Validation("Okta OAuth domain is required".to_string()))?;
 
-		let client_id = self.client_id.filter(|s| !s.is_empty()).ok_or_else(|| {
-			ConfigError::Validation("Okta OAuth client_id is required".to_string())
-		})?;
+		let client_id = self
+			.client_id
+			.filter(|s| !s.is_empty())
+			.ok_or_else(|| ConfigError::Validation("Okta OAuth client_id is required".to_string()))?;
 
-		let client_secret = self.client_secret.ok_or_else(|| {
-			ConfigError::Validation("Okta OAuth client_secret is required".to_string())
-		})?;
+		let client_secret = self
+			.client_secret
+			.ok_or_else(|| ConfigError::Validation("Okta OAuth client_secret is required".to_string()))?;
 
 		if client_secret.expose().is_empty() {
 			return Err(ConfigError::Validation(
@@ -272,9 +282,10 @@ impl OktaOAuthConfigLayer {
 			));
 		}
 
-		let redirect_uri = self.redirect_uri.filter(|s| !s.is_empty()).ok_or_else(|| {
-			ConfigError::Validation("Okta OAuth redirect_uri is required".to_string())
-		})?;
+		let redirect_uri = self
+			.redirect_uri
+			.filter(|s| !s.is_empty())
+			.ok_or_else(|| ConfigError::Validation("Okta OAuth redirect_uri is required".to_string()))?;
 
 		let scopes = self.scopes.unwrap_or_else(|| {
 			vec![

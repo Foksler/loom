@@ -38,7 +38,11 @@ impl HttpAuditSink {
 			.build()
 			.map_err(|e| AuditSinkError::Permanent(format!("failed to create HTTP client: {e}")))?;
 
-		Ok(Self { config, filter, client })
+		Ok(Self {
+			config,
+			filter,
+			client,
+		})
 	}
 
 	fn parse_method(&self) -> Method {
@@ -114,7 +118,9 @@ impl HttpAuditSink {
 
 pub fn validate_config(config: &HttpSinkConfig) -> Result<(), AuditSinkError> {
 	if config.name.is_empty() {
-		return Err(AuditSinkError::Permanent("name cannot be empty".to_string()));
+		return Err(AuditSinkError::Permanent(
+			"name cannot be empty".to_string(),
+		));
 	}
 	if config.url.is_empty() {
 		return Err(AuditSinkError::Permanent("url cannot be empty".to_string()));

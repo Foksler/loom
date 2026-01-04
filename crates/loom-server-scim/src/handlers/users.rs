@@ -6,13 +6,13 @@ use axum::{
 	http::StatusCode,
 	Json,
 };
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use loom_scim::patch::PatchRequest;
 use loom_scim::{ListResponse, ScimUser};
 use loom_server_auth::{OrgId, UserId};
+use loom_server_db::{ScimUserRow, TeamRepository, UserRepository};
 use loom_server_provisioning::UserProvisioningService;
 use serde::Deserialize;
-use sqlx::{Row, SqlitePool};
 use std::sync::Arc;
 use tracing::info;
 use uuid::Uuid;
@@ -45,9 +45,10 @@ fn default_count() -> i64 {
 
 #[derive(Clone)]
 pub struct ScimState {
-	pub pool: SqlitePool,
 	pub org_id: OrgId,
 	pub provisioning: Arc<UserProvisioningService>,
+	pub user_repo: Arc<UserRepository>,
+	pub team_repo: Arc<TeamRepository>,
 }
 
 pub async fn list_users(
@@ -56,44 +57,14 @@ pub async fn list_users(
 ) -> Result<Json<ListResponse<ScimUser>>, ScimApiError> {
 	let count = query.count.min(1000);
 	let offset = (query.start_index - 1).max(0);
-	let org_id_str = state.org_id.to_string();
 
-	let rows = sqlx::query(
-		r#"
-		SELECT u.id, u.primary_email, u.display_name, u.avatar_url, u.locale,
-			   u.scim_external_id, u.deleted_at,
-			   u.created_at, u.updated_at
-		FROM users u
-		JOIN org_memberships om ON u.id = om.user_id
-		WHERE om.org_id = ?
-		ORDER BY u.id ASC
-		LIMIT ? OFFSET ?
-		"#,
-	)
-	.bind(&org_id_str)
-	.bind(count)
-	.bind(offset)
-	.fetch_all(&state.pool)
-	.await?;
+	let rows = state
+		.user_repo
+		.list_users_in_org(&state.org_id, count, offset)
+		.await?;
+	let total = state.user_repo.count_users_in_org(&state.org_id).await?;
 
-	let total_row = sqlx::query(
-		r#"
-		SELECT COUNT(*) as count
-		FROM users u
-		JOIN org_memberships om ON u.id = om.user_id
-		WHERE om.org_id = ?
-		"#,
-	)
-	.bind(&org_id_str)
-	.fetch_one(&state.pool)
-	.await?;
-
-	let total: i64 = total_row.get("count");
-
-	let users: Vec<ScimUser> = rows
-		.into_iter()
-		.filter_map(|r| row_to_scim_user(&r).ok())
-		.collect();
+	let users: Vec<ScimUser> = rows.into_iter().map(scim_user_row_to_scim_user).collect();
 
 	Ok(Json(ListResponse::new(
 		users,
@@ -127,19 +98,15 @@ pub async fn create_user(
 
 	info!(user_id = %user.id, email = %email, "SCIM: provisioned user");
 
-	let user_id_str = user.id.to_string();
-	let row = sqlx::query(
-		r#"
-		SELECT id, primary_email, display_name, avatar_url, locale,
-			   scim_external_id, deleted_at, created_at, updated_at
-		FROM users WHERE id = ?
-		"#,
-	)
-	.bind(&user_id_str)
-	.fetch_one(&state.pool)
-	.await?;
+	let row = state
+		.user_repo
+		.get_user_in_org(&user.id, &state.org_id)
+		.await?
+		.ok_or_else(|| {
+			ScimApiError::Internal(format!("User {} not found after provisioning", user.id))
+		})?;
 
-	let scim_user = row_to_scim_user(&row)?;
+	let scim_user = scim_user_row_to_scim_user(row);
 	Ok((StatusCode::CREATED, Json(scim_user)))
 }
 
@@ -147,23 +114,15 @@ pub async fn get_user(
 	State(state): State<ScimState>,
 	Path(id): Path<String>,
 ) -> Result<Json<ScimUser>, ScimApiError> {
-	let org_id_str = state.org_id.to_string();
-	let row = sqlx::query(
-		r#"
-		SELECT u.id, u.primary_email, u.display_name, u.avatar_url, u.locale,
-			   u.scim_external_id, u.deleted_at, u.created_at, u.updated_at
-		FROM users u
-		JOIN org_memberships om ON u.id = om.user_id
-		WHERE u.id = ? AND om.org_id = ?
-		"#,
-	)
-	.bind(&id)
-	.bind(&org_id_str)
-	.fetch_optional(&state.pool)
-	.await?
-	.ok_or_else(|| ScimApiError::NotFound(format!("User {} not found", id)))?;
+	let user_id = parse_user_id(&id)?;
 
-	let scim_user = row_to_scim_user(&row)?;
+	let row = state
+		.user_repo
+		.get_user_in_org(&user_id, &state.org_id)
+		.await?
+		.ok_or_else(|| ScimApiError::NotFound(format!("User {} not found", id)))?;
+
+	let scim_user = scim_user_row_to_scim_user(row);
 	Ok(Json(scim_user))
 }
 
@@ -172,9 +131,10 @@ pub async fn replace_user(
 	Path(id): Path<String>,
 	Json(scim_user): Json<ScimUser>,
 ) -> Result<Json<ScimUser>, ScimApiError> {
+	let user_id = parse_user_id(&id)?;
 	let display_name = scim_user_to_display_name(&scim_user);
-	let external_id = scim_user.external_id.clone();
-	let locale = scim_user.locale.clone();
+	let external_id = scim_user.external_id.as_deref();
+	let locale = scim_user.locale.as_deref();
 	let active = scim_user.active;
 
 	let deleted_at: Option<String> = if active {
@@ -183,19 +143,16 @@ pub async fn replace_user(
 		Some(Utc::now().to_rfc3339())
 	};
 
-	sqlx::query(
-		r#"
-		UPDATE users SET display_name = ?, scim_external_id = ?, locale = ?, deleted_at = ?, updated_at = datetime('now')
-		WHERE id = ?
-		"#,
-	)
-	.bind(&display_name)
-	.bind(&external_id)
-	.bind(&locale)
-	.bind(&deleted_at)
-	.bind(&id)
-	.execute(&state.pool)
-	.await?;
+	state
+		.user_repo
+		.update_user_for_scim(
+			&user_id,
+			display_name.as_deref(),
+			external_id,
+			locale,
+			deleted_at.as_deref(),
+		)
+		.await?;
 
 	get_user(State(state), Path(id)).await
 }
@@ -206,6 +163,7 @@ pub async fn patch_user(
 	Json(patch): Json<PatchRequest>,
 ) -> Result<Json<ScimUser>, ScimApiError> {
 	patch.validate()?;
+	let user_id = parse_user_id(&id)?;
 
 	for op in &patch.operations {
 		match op.path.as_deref() {
@@ -216,26 +174,15 @@ pub async fn patch_user(
 					.and_then(|v| v.get("active"))
 					.and_then(|v| v.as_bool())
 					.unwrap_or(true);
-				let deleted_at: Option<String> = if active {
-					None
+				if active {
+					state.user_repo.restore_user(&user_id).await?;
 				} else {
-					Some(Utc::now().to_rfc3339())
-				};
-				sqlx::query("UPDATE users SET deleted_at = ?, updated_at = datetime('now') WHERE id = ?")
-					.bind(&deleted_at)
-					.bind(&id)
-					.execute(&state.pool)
-					.await?;
+					state.user_repo.soft_delete_user(&user_id).await?;
+				}
 			}
 			Some("displayName") => {
 				if let Some(value) = op.value.as_ref().and_then(|v| v.as_str()) {
-					sqlx::query(
-						"UPDATE users SET display_name = ?, updated_at = datetime('now') WHERE id = ?",
-					)
-					.bind(value)
-					.bind(&id)
-					.execute(&state.pool)
-					.await?;
+					state.user_repo.update_display_name(&user_id, value).await?;
 				}
 			}
 			_ => {}
@@ -251,12 +198,7 @@ pub async fn delete_user(
 ) -> Result<StatusCode, ScimApiError> {
 	let user_id = parse_user_id(&id)?;
 
-	let now = Utc::now().to_rfc3339();
-	sqlx::query("UPDATE users SET deleted_at = ?, updated_at = datetime('now') WHERE id = ?")
-		.bind(&now)
-		.bind(&id)
-		.execute(&state.pool)
-		.await?;
+	state.user_repo.soft_delete_user(&user_id).await?;
 
 	state
 		.provisioning
@@ -268,38 +210,20 @@ pub async fn delete_user(
 	Ok(StatusCode::NO_CONTENT)
 }
 
-fn row_to_scim_user(row: &sqlx::sqlite::SqliteRow) -> Result<ScimUser, ScimApiError> {
-	let id: String = row.get("id");
-	let email: String = row.get("primary_email");
-	let display_name: Option<String> = row.get("display_name");
-	let avatar_url: Option<String> = row.get("avatar_url");
-	let locale: Option<String> = row.get("locale");
-	let scim_external_id: Option<String> = row.get("scim_external_id");
-	let deleted_at: Option<String> = row.get("deleted_at");
-	let created_at_str: String = row.get("created_at");
-	let updated_at_str: String = row.get("updated_at");
-
-	let user_id = parse_user_id(&id)?;
-	let active = deleted_at.is_none();
-
-	let created_at = DateTime::parse_from_rfc3339(&created_at_str)
-		.map(|d| d.with_timezone(&Utc))
-		.unwrap_or_else(|_| Utc::now());
-	let updated_at = DateTime::parse_from_rfc3339(&updated_at_str)
-		.map(|d| d.with_timezone(&Utc))
-		.unwrap_or_else(|_| Utc::now());
+fn scim_user_row_to_scim_user(row: ScimUserRow) -> ScimUser {
+	let active = row.deleted_at.is_none();
 
 	let loom_user = LoomUser {
-		id: user_id,
-		email,
-		display_name,
-		avatar_url,
-		locale,
-		scim_external_id,
+		id: row.id,
+		email: row.primary_email,
+		display_name: row.display_name,
+		avatar_url: row.avatar_url,
+		locale: row.locale,
+		scim_external_id: row.scim_external_id,
 		active,
-		created_at,
-		updated_at,
+		created_at: row.created_at,
+		updated_at: row.updated_at,
 	};
 
-	Ok(loom_user.into())
+	loom_user.into()
 }

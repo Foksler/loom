@@ -42,7 +42,9 @@ impl GitRepository {
 	#[instrument(skip(self))]
 	pub fn default_branch(&self) -> Result<String> {
 		let repo = self.repo()?;
-		let head = repo.head_ref().map_err(|e| ScmError::GitError(e.to_string()))?;
+		let head = repo
+			.head_ref()
+			.map_err(|e| ScmError::GitError(e.to_string()))?;
 		match head {
 			Some(r) => {
 				let name = r.name().shorten().to_string();
@@ -99,8 +101,7 @@ impl GitRepository {
 	#[instrument(skip(self), fields(sha = %sha))]
 	pub fn get_commit(&self, sha: &str) -> Result<CommitInfo> {
 		let repo = self.repo()?;
-		let oid = ObjectId::from_hex(sha.as_bytes())
-			.map_err(|e| ScmError::GitError(e.to_string()))?;
+		let oid = ObjectId::from_hex(sha.as_bytes()).map_err(|e| ScmError::GitError(e.to_string()))?;
 		let object = repo
 			.find_object(oid)
 			.map_err(|_| ScmError::ObjectNotFound(sha.to_string()))?;
@@ -140,7 +141,9 @@ impl GitRepository {
 			.find_object(oid)
 			.map_err(|e| ScmError::GitError(e.to_string()))?;
 		let commit = object.into_commit();
-		let tree_id = commit.tree_id().map_err(|e| ScmError::GitError(e.to_string()))?;
+		let tree_id = commit
+			.tree_id()
+			.map_err(|e| ScmError::GitError(e.to_string()))?;
 		let tree_obj = repo
 			.find_object(tree_id)
 			.map_err(|e| ScmError::GitError(e.to_string()))?;
@@ -170,8 +173,9 @@ impl GitRepository {
 			};
 			let kind = match entry.mode().kind() {
 				gix::object::tree::EntryKind::Tree => TreeEntryKind::Directory,
-				gix::object::tree::EntryKind::Blob
-				| gix::object::tree::EntryKind::BlobExecutable => TreeEntryKind::File,
+				gix::object::tree::EntryKind::Blob | gix::object::tree::EntryKind::BlobExecutable => {
+					TreeEntryKind::File
+				}
 				gix::object::tree::EntryKind::Link => TreeEntryKind::Symlink,
 				gix::object::tree::EntryKind::Commit => TreeEntryKind::Submodule,
 			};
@@ -193,7 +197,9 @@ impl GitRepository {
 			.find_object(oid)
 			.map_err(|e| ScmError::GitError(e.to_string()))?;
 		let commit = object.into_commit();
-		let tree_id = commit.tree_id().map_err(|e| ScmError::GitError(e.to_string()))?;
+		let tree_id = commit
+			.tree_id()
+			.map_err(|e| ScmError::GitError(e.to_string()))?;
 		let tree_obj = repo
 			.find_object(tree_id)
 			.map_err(|e| ScmError::GitError(e.to_string()))?;
@@ -303,10 +309,10 @@ impl GitRepository {
 			.map_err(|e| ScmError::GitError(e.to_string()))?;
 		let author_time = decoded.author.time;
 		let committer_time = decoded.committer.time;
-		let author_date = chrono::DateTime::from_timestamp(author_time.seconds, 0)
-			.unwrap_or_else(chrono::Utc::now);
-		let committer_date = chrono::DateTime::from_timestamp(committer_time.seconds, 0)
-			.unwrap_or_else(chrono::Utc::now);
+		let author_date =
+			chrono::DateTime::from_timestamp(author_time.seconds, 0).unwrap_or_else(chrono::Utc::now);
+		let committer_date =
+			chrono::DateTime::from_timestamp(committer_time.seconds, 0).unwrap_or_else(chrono::Utc::now);
 		let parent_shas = decoded.parents().map(|id| id.to_string()).collect();
 		Ok(CommitInfo {
 			sha: commit.id.to_string(),
@@ -327,10 +333,10 @@ impl GitRepository {
 			.map_err(|e| ScmError::GitError(e.to_string()))?;
 		let author_time = decoded.author.time;
 		let committer_time = decoded.committer.time;
-		let author_date = chrono::DateTime::from_timestamp(author_time.seconds, 0)
-			.unwrap_or_else(chrono::Utc::now);
-		let committer_date = chrono::DateTime::from_timestamp(committer_time.seconds, 0)
-			.unwrap_or_else(chrono::Utc::now);
+		let author_date =
+			chrono::DateTime::from_timestamp(author_time.seconds, 0).unwrap_or_else(chrono::Utc::now);
+		let committer_date =
+			chrono::DateTime::from_timestamp(committer_time.seconds, 0).unwrap_or_else(chrono::Utc::now);
 		let parent_shas = decoded.parents().map(|id| id.to_string()).collect();
 		Ok(CommitInfo {
 			sha: object.id.to_string(),

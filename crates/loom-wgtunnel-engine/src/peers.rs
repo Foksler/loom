@@ -170,8 +170,8 @@ mod tests {
 		let keypair = WgKeyPair::generate();
 		let public_key = keypair.public_key().clone();
 
-		let config = PeerConfig::new(public_key.clone())
-			.with_allowed_ip("fd7a:115c:a1e0::2".parse().unwrap());
+		let config =
+			PeerConfig::new(public_key.clone()).with_allowed_ip("fd7a:115c:a1e0::2".parse().unwrap());
 
 		manager.add(config).await.unwrap();
 

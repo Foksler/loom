@@ -14,7 +14,9 @@ pub use cleanup::{
 	CleanupDecision, CleanupResult, ExternalMirrorStore,
 };
 pub use error::{MirrorError, Result};
-pub use pull::{check_repo_exists, get_clone_url, pull_mirror, pull_mirror_with_recovery, PullResult};
+pub use pull::{
+	check_repo_exists, get_clone_url, pull_mirror, pull_mirror_with_recovery, PullResult,
+};
 pub use push::push_mirror;
 pub use store::{PushMirrorStore, SqliteExternalMirrorStore, SqlitePushMirrorStore};
 pub use types::{

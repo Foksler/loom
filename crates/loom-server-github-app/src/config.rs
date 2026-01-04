@@ -117,13 +117,15 @@ impl GithubAppConfig {
 		let app_id_str = env::var("LOOM_SERVER_GITHUB_APP_ID")
 			.map_err(|_| GithubAppError::Config("LOOM_SERVER_GITHUB_APP_ID not set".to_string()))?;
 
-		let app_id: u64 = app_id_str
-			.parse()
-			.map_err(|_| GithubAppError::Config(format!("Invalid LOOM_SERVER_GITHUB_APP_ID: {app_id_str}")))?;
+		let app_id: u64 = app_id_str.parse().map_err(|_| {
+			GithubAppError::Config(format!("Invalid LOOM_SERVER_GITHUB_APP_ID: {app_id_str}"))
+		})?;
 
 		let private_key_pem = load_secret_env("LOOM_SERVER_GITHUB_APP_PRIVATE_KEY")
 			.map_err(|e| GithubAppError::Config(e.to_string()))?
-			.ok_or_else(|| GithubAppError::Config("LOOM_SERVER_GITHUB_APP_PRIVATE_KEY not set".to_string()))?;
+			.ok_or_else(|| {
+				GithubAppError::Config("LOOM_SERVER_GITHUB_APP_PRIVATE_KEY not set".to_string())
+			})?;
 
 		if private_key_pem.expose().is_empty() {
 			return Err(GithubAppError::Config(

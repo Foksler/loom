@@ -20,7 +20,10 @@ pub enum PeerEvent {
 		session_id: String,
 	},
 	#[serde(rename = "peer_removed")]
-	PeerRemoved { public_key: String, session_id: String },
+	PeerRemoved {
+		public_key: String,
+		session_id: String,
+	},
 }
 
 #[derive(Clone)]

@@ -57,7 +57,10 @@ pub trait KeyBackend: Send + Sync {
 	async fn encrypt_dek(&self, dek: &[u8; KEY_SIZE]) -> SecretsResult<EncryptedDekData>;
 
 	/// Decrypt a DEK using the master key.
-	async fn decrypt_dek(&self, encrypted: &EncryptedDekData) -> SecretsResult<Zeroizing<[u8; KEY_SIZE]>>;
+	async fn decrypt_dek(
+		&self,
+		encrypted: &EncryptedDekData,
+	) -> SecretsResult<Zeroizing<[u8; KEY_SIZE]>>;
 
 	/// Sign a Weaver SVID JWT.
 	async fn sign_weaver_svid(&self, claims: &WeaverClaims) -> SecretsResult<String>;
@@ -195,10 +198,10 @@ impl SoftwareKeyBackend {
 			kid: &self.svid_key_id,
 		};
 
-		let header_json =
-			serde_json::to_vec(&header).map_err(|e| SecretsError::SvidSigning(format!("header encoding failed: {e}")))?;
-		let claims_json =
-			serde_json::to_vec(claims).map_err(|e| SecretsError::SvidSigning(format!("claims encoding failed: {e}")))?;
+		let header_json = serde_json::to_vec(&header)
+			.map_err(|e| SecretsError::SvidSigning(format!("header encoding failed: {e}")))?;
+		let claims_json = serde_json::to_vec(claims)
+			.map_err(|e| SecretsError::SvidSigning(format!("claims encoding failed: {e}")))?;
 
 		let header_b64 = BASE64URL.encode(&header_json);
 		let claims_b64 = BASE64URL.encode(&claims_json);
@@ -229,7 +232,10 @@ impl KeyBackend for SoftwareKeyBackend {
 		})
 	}
 
-	async fn decrypt_dek(&self, encrypted: &EncryptedDekData) -> SecretsResult<Zeroizing<[u8; KEY_SIZE]>> {
+	async fn decrypt_dek(
+		&self,
+		encrypted: &EncryptedDekData,
+	) -> SecretsResult<Zeroizing<[u8; KEY_SIZE]>> {
 		if encrypted.kek_version != self.kek_version {
 			return Err(SecretsError::KeyVersionMismatch {
 				expected: self.kek_version,
@@ -298,10 +304,14 @@ impl KeyBackend for SoftwareKeyBackend {
 		match &header.kid {
 			Some(kid) if kid == &self.svid_key_id => {}
 			Some(_) => {
-				return Err(SecretsError::SvidValidation("token signed by unknown key".into()));
+				return Err(SecretsError::SvidValidation(
+					"token signed by unknown key".into(),
+				));
 			}
 			None => {
-				return Err(SecretsError::SvidValidation("token missing kid header".into()));
+				return Err(SecretsError::SvidValidation(
+					"token missing kid header".into(),
+				));
 			}
 		}
 
@@ -314,7 +324,8 @@ impl KeyBackend for SoftwareKeyBackend {
 		let signature = Signature::from_slice(&sig_bytes)
 			.map_err(|e| SecretsError::SvidValidation(format!("invalid signature format: {e}")))?;
 
-		self.svid_signing_key
+		self
+			.svid_signing_key
 			.verifying_key()
 			.verify(signing_input.as_bytes(), &signature)
 			.map_err(|_| SecretsError::SvidInvalidSignature)?;
@@ -400,7 +411,12 @@ mod tests {
 
 	fn create_test_backend() -> SoftwareKeyBackend {
 		let kek = generate_key();
-		SoftwareKeyBackend::new(kek, None, "test-issuer".to_string(), "test-audience".to_string())
+		SoftwareKeyBackend::new(
+			kek,
+			None,
+			"test-issuer".to_string(),
+			"test-audience".to_string(),
+		)
 	}
 
 	#[tokio::test]

@@ -122,7 +122,6 @@ pub async fn create_app_state(
 
 	// Create user provisioning service
 	let user_provisioning = Arc::new(loom_server_provisioning::UserProvisioningService::new(
-		pool.clone(),
 		user_repo.clone(),
 		org_repo.clone(),
 		config.auth.signups_disabled,
@@ -716,8 +715,9 @@ pub fn create_router(state: AppState) -> Router {
 	let has_provisioner = state.provisioner.is_some();
 	let has_wg_tunnel = state.wg_tunnel_services.is_some();
 	let scim_config = state.scim_config.clone();
-	let scim_pool = state.pool.clone();
 	let scim_provisioning = state.user_provisioning.clone();
+	let scim_user_repo = state.user_repo.clone();
+	let scim_team_repo = state.team_repo.clone();
 
 	// Public routes - no authentication required
 	let public = PublicRouter::new()
@@ -1261,8 +1261,13 @@ pub fn create_router(state: AppState) -> Router {
 			match uuid::Uuid::parse_str(&org_id_str) {
 				Ok(uuid) => {
 					let org_id = loom_server_auth::OrgId::new(uuid);
-					let scim_router =
-						loom_server_scim::scim_routes(scim_pool, scim_config.token, org_id, scim_provisioning);
+					let scim_router = loom_server_scim::scim_routes(
+						scim_config.token,
+						org_id,
+						scim_provisioning,
+						scim_user_repo,
+						scim_team_repo,
+					);
 					router = router.nest("/api/scim", scim_router);
 					tracing::info!("SCIM endpoints enabled at /api/scim");
 				}

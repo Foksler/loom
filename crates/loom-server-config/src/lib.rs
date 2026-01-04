@@ -56,8 +56,6 @@ impl ServerConfig {
 	}
 }
 
-
-
 /// Load configuration from all sources with standard precedence.
 ///
 /// Precedence (highest to lowest):
@@ -91,7 +89,9 @@ pub fn load_config_from_env() -> Result<ServerConfig, ConfigError> {
 }
 
 /// Load configuration with a custom config file path.
-pub fn load_config_with_file(config_path: impl Into<std::path::PathBuf>) -> Result<ServerConfig, ConfigError> {
+pub fn load_config_with_file(
+	config_path: impl Into<std::path::PathBuf>,
+) -> Result<ServerConfig, ConfigError> {
 	let mut sources: Vec<Box<dyn ConfigSource>> = vec![
 		Box::new(DefaultsSource),
 		Box::new(TomlSource::new(config_path)),

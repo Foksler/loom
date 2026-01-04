@@ -237,10 +237,7 @@ impl OrgRepository {
 	/// # Returns
 	/// List of organizations the user is a member of, ordered by name.
 	#[tracing::instrument(skip(self), fields(user_id = %user_id))]
-	pub async fn list_orgs_for_user(
-		&self,
-		user_id: &UserId,
-	) -> Result<Vec<Organization>, DbError> {
+	pub async fn list_orgs_for_user(&self, user_id: &UserId) -> Result<Vec<Organization>, DbError> {
 		let rows = sqlx::query(
 			r#"
 			SELECT o.id, o.name, o.slug, o.visibility, o.is_personal, o.created_at, o.updated_at, o.deleted_at
@@ -355,7 +352,9 @@ impl OrgRepository {
 		user_id: &UserId,
 		role: OrgRole,
 	) -> Result<(), DbError> {
-		self.add_member_with_provenance(org_id, user_id, role, None).await
+		self
+			.add_member_with_provenance(org_id, user_id, role, None)
+			.await
 	}
 
 	/// Add a member to an organization with provenance tracking.
@@ -468,11 +467,7 @@ impl OrgRepository {
 	/// # Returns
 	/// `true` if a member was removed, `false` if not found.
 	#[tracing::instrument(skip(self), fields(org_id = %org_id, user_id = %user_id))]
-	pub async fn remove_member(
-		&self,
-		org_id: &OrgId,
-		user_id: &UserId,
-	) -> Result<bool, DbError> {
+	pub async fn remove_member(&self, org_id: &OrgId, user_id: &UserId) -> Result<bool, DbError> {
 		let result = sqlx::query(
 			r#"
 			DELETE FROM org_memberships
@@ -499,10 +494,7 @@ impl OrgRepository {
 	/// # Returns
 	/// List of (membership, user) tuples ordered by join date.
 	#[tracing::instrument(skip(self), fields(org_id = %org_id))]
-	pub async fn list_members(
-		&self,
-		org_id: &OrgId,
-	) -> Result<Vec<(OrgMembership, User)>, DbError> {
+	pub async fn list_members(&self, org_id: &OrgId) -> Result<Vec<(OrgMembership, User)>, DbError> {
 		let rows = sqlx::query(
 			r#"
 			SELECT 
@@ -661,10 +653,7 @@ impl OrgRepository {
 	/// # Arguments
 	/// * `id` - The invitation's UUID
 	#[tracing::instrument(skip(self), fields(invitation_id = %id))]
-	pub async fn get_invitation_by_id(
-		&self,
-		id: &str,
-	) -> Result<Option<OrgInvitation>, DbError> {
+	pub async fn get_invitation_by_id(&self, id: &str) -> Result<Option<OrgInvitation>, DbError> {
 		let row = sqlx::query(
 			r#"
 			SELECT id, org_id, email, role, invited_by, token_hash, created_at, expires_at, accepted_at
@@ -899,11 +888,7 @@ impl OrgRepository {
 	/// * `id` - The join request's UUID
 	/// * `handled_by` - The approving user's UUID
 	#[tracing::instrument(skip(self), fields(join_request_id = %id, handled_by = %handled_by))]
-	pub async fn approve_join_request(
-		&self,
-		id: &str,
-		handled_by: &UserId,
-	) -> Result<(), DbError> {
+	pub async fn approve_join_request(&self, id: &str, handled_by: &UserId) -> Result<(), DbError> {
 		let now = Utc::now().to_rfc3339();
 		sqlx::query(
 			r#"
@@ -928,11 +913,7 @@ impl OrgRepository {
 	/// * `id` - The join request's UUID
 	/// * `handled_by` - The rejecting user's UUID
 	#[tracing::instrument(skip(self), fields(join_request_id = %id, handled_by = %handled_by))]
-	pub async fn reject_join_request(
-		&self,
-		id: &str,
-		handled_by: &UserId,
-	) -> Result<(), DbError> {
+	pub async fn reject_join_request(&self, id: &str, handled_by: &UserId) -> Result<(), DbError> {
 		let now = Utc::now().to_rfc3339();
 		sqlx::query(
 			r#"
@@ -999,8 +980,8 @@ impl OrgRepository {
 		let updated_at: String = row.get("updated_at");
 		let deleted_at: Option<String> = row.get("deleted_at");
 
-		let id = Uuid::parse_str(&id_str)
-			.map_err(|e| DbError::Internal(format!("Invalid org ID: {e}")))?;
+		let id =
+			Uuid::parse_str(&id_str).map_err(|e| DbError::Internal(format!("Invalid org ID: {e}")))?;
 		let visibility = match visibility_str.as_str() {
 			"public" => OrgVisibility::Public,
 			"unlisted" => OrgVisibility::Unlisted,
@@ -1020,19 +1001,15 @@ impl OrgRepository {
 			updated_at: chrono::DateTime::parse_from_rfc3339(&updated_at)
 				.map_err(|e| DbError::Internal(format!("Invalid updated_at: {e}")))?
 				.with_timezone(&Utc),
-			deleted_at: deleted_at
-				.and_then(|d| {
-					chrono::DateTime::parse_from_rfc3339(&d)
-						.map(|dt| dt.with_timezone(&Utc))
-						.ok()
-				}),
+			deleted_at: deleted_at.and_then(|d| {
+				chrono::DateTime::parse_from_rfc3339(&d)
+					.map(|dt| dt.with_timezone(&Utc))
+					.ok()
+			}),
 		})
 	}
 
-	fn row_to_membership(
-		&self,
-		row: &sqlx::sqlite::SqliteRow,
-	) -> Result<OrgMembership, DbError> {
+	fn row_to_membership(&self, row: &sqlx::sqlite::SqliteRow) -> Result<OrgMembership, DbError> {
 		let org_id_str: String = row.get("org_id");
 		let user_id_str: String = row.get("user_id");
 		let role_str: String = row.get("role");
@@ -1068,8 +1045,8 @@ impl OrgRepository {
 		let is_auditor: i32 = row.get("is_auditor");
 		let email_visible: i32 = row.get("email_visible");
 
-		let id = Uuid::parse_str(&id_str)
-			.map_err(|e| DbError::Internal(format!("Invalid user ID: {e}")))?;
+		let id =
+			Uuid::parse_str(&id_str).map_err(|e| DbError::Internal(format!("Invalid user ID: {e}")))?;
 
 		Ok(User {
 			id: UserId::new(id),
@@ -1087,20 +1064,16 @@ impl OrgRepository {
 			updated_at: chrono::DateTime::parse_from_rfc3339(&updated_at)
 				.map_err(|e| DbError::Internal(format!("Invalid updated_at: {e}")))?
 				.with_timezone(&Utc),
-			deleted_at: deleted_at
-				.and_then(|d| {
-					chrono::DateTime::parse_from_rfc3339(&d)
-						.map(|dt| dt.with_timezone(&Utc))
-						.ok()
-				}),
+			deleted_at: deleted_at.and_then(|d| {
+				chrono::DateTime::parse_from_rfc3339(&d)
+					.map(|dt| dt.with_timezone(&Utc))
+					.ok()
+			}),
 			locale: row.get("locale"),
 		})
 	}
 
-	fn row_to_invitation(
-		&self,
-		row: &sqlx::sqlite::SqliteRow,
-	) -> Result<OrgInvitation, DbError> {
+	fn row_to_invitation(&self, row: &sqlx::sqlite::SqliteRow) -> Result<OrgInvitation, DbError> {
 		let id_str: String = row.get("id");
 		let org_id_str: String = row.get("org_id");
 		let invited_by_str: String = row.get("invited_by");
@@ -1134,19 +1107,15 @@ impl OrgRepository {
 			expires_at: chrono::DateTime::parse_from_rfc3339(&expires_at)
 				.map_err(|e| DbError::Internal(format!("Invalid expires_at: {e}")))?
 				.with_timezone(&Utc),
-			accepted_at: accepted_at
-				.and_then(|d| {
-					chrono::DateTime::parse_from_rfc3339(&d)
-						.map(|dt| dt.with_timezone(&Utc))
-						.ok()
-				}),
+			accepted_at: accepted_at.and_then(|d| {
+				chrono::DateTime::parse_from_rfc3339(&d)
+					.map(|dt| dt.with_timezone(&Utc))
+					.ok()
+			}),
 		})
 	}
 
-	fn row_to_join_request(
-		&self,
-		row: &sqlx::sqlite::SqliteRow,
-	) -> Result<OrgJoinRequest, DbError> {
+	fn row_to_join_request(&self, row: &sqlx::sqlite::SqliteRow) -> Result<OrgJoinRequest, DbError> {
 		let org_id_str: String = row.get("org_id");
 		let user_id_str: String = row.get("user_id");
 		let created_at: String = row.get("created_at");
@@ -1165,18 +1134,12 @@ impl OrgRepository {
 			created_at: chrono::DateTime::parse_from_rfc3339(&created_at)
 				.map_err(|e| DbError::Internal(format!("Invalid created_at: {e}")))?
 				.with_timezone(&Utc),
-			handled_at: handled_at
-				.and_then(|d| {
-					chrono::DateTime::parse_from_rfc3339(&d)
-						.map(|dt| dt.with_timezone(&Utc))
-						.ok()
-				}),
-			handled_by: handled_by
-				.and_then(|h| {
-					Uuid::parse_str(&h)
-						.map(UserId::new)
-						.ok()
-				}),
+			handled_at: handled_at.and_then(|d| {
+				chrono::DateTime::parse_from_rfc3339(&d)
+					.map(|dt| dt.with_timezone(&Utc))
+					.ok()
+			}),
+			handled_by: handled_by.and_then(|h| Uuid::parse_str(&h).map(UserId::new).ok()),
 			approved: approved.map(|a| a != 0),
 		})
 	}
@@ -1205,18 +1168,12 @@ impl OrgRepository {
 			created_at: chrono::DateTime::parse_from_rfc3339(&created_at)
 				.map_err(|e| DbError::Internal(format!("Invalid created_at: {e}")))?
 				.with_timezone(&Utc),
-			handled_at: handled_at
-				.and_then(|d| {
-					chrono::DateTime::parse_from_rfc3339(&d)
-						.map(|dt| dt.with_timezone(&Utc))
-						.ok()
-				}),
-			handled_by: handled_by
-				.and_then(|h| {
-					Uuid::parse_str(&h)
-						.map(UserId::new)
-						.ok()
-				}),
+			handled_at: handled_at.and_then(|d| {
+				chrono::DateTime::parse_from_rfc3339(&d)
+					.map(|dt| dt.with_timezone(&Utc))
+					.ok()
+			}),
+			handled_by: handled_by.and_then(|h| Uuid::parse_str(&h).map(UserId::new).ok()),
 			approved: approved.map(|a| a != 0),
 		})
 	}

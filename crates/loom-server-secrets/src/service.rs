@@ -20,7 +20,9 @@ use crate::encryption::{self, EncryptedData};
 use crate::error::{SecretsError, SecretsResult};
 use crate::key_backend::KeyBackend;
 use crate::policy::{can_access_secret, WeaverPrincipal};
-use crate::store::{CreateSecretRequest, CreateVersionRequest, SecretFilter, SecretStore, StoredSecret};
+use crate::store::{
+	CreateSecretRequest, CreateVersionRequest, SecretFilter, SecretStore, StoredSecret,
+};
 use crate::svid::WeaverClaims;
 use crate::types::{Secret, SecretId, SecretScope, WeaverId};
 
@@ -168,10 +170,9 @@ impl<K: KeyBackend, S: SecretStore> SecretsService<K, S> {
 
 		let repo_id = match scope {
 			SecretScope::Repo { .. } => {
-				let repo = claims
-					.repo_id
-					.as_ref()
-					.ok_or_else(|| SecretsError::AccessDenied("weaver has no repo_id for repo-scoped secret".into()))?;
+				let repo = claims.repo_id.as_ref().ok_or_else(|| {
+					SecretsError::AccessDenied("weaver has no repo_id for repo-scoped secret".into())
+				})?;
 				Some(Uuid::parse_str(repo).map_err(|_| SecretsError::InvalidClaim("repo_id".into()))?)
 			}
 			_ => None,
@@ -213,7 +214,9 @@ impl<K: KeyBackend, S: SecretStore> SecretsService<K, S> {
 			return Err(SecretsError::SecretDisabled(name.into()));
 		}
 
-		let value = self.decrypt_version(&version.dek_id, &version.ciphertext, &version.nonce).await?;
+		let value = self
+			.decrypt_version(&version.dek_id, &version.ciphertext, &version.nonce)
+			.await?;
 
 		info!(
 			weaver_id = %claims.weaver_id,
@@ -278,7 +281,12 @@ impl<K: KeyBackend, S: SecretStore> SecretsService<K, S> {
 		self.store.delete_secret(secret_id).await
 	}
 
-	async fn decrypt_version(&self, dek_id: &str, ciphertext: &[u8], nonce: &[u8]) -> SecretsResult<SecretString> {
+	async fn decrypt_version(
+		&self,
+		dek_id: &str,
+		ciphertext: &[u8],
+		nonce: &[u8],
+	) -> SecretsResult<SecretString> {
 		let encrypted_dek = self
 			.store
 			.get_dek(dek_id)
@@ -305,8 +313,8 @@ impl<K: KeyBackend, S: SecretStore> SecretsService<K, S> {
 			warn!(dek_id = %dek_id, "Failed to decrypt secret version: {e}");
 			SecretsError::Decryption("failed to decrypt secret".into())
 		})?;
-		let value_str =
-			String::from_utf8(plaintext.to_vec()).map_err(|e| SecretsError::Decryption(format!("invalid UTF-8: {e}")))?;
+		let value_str = String::from_utf8(plaintext.to_vec())
+			.map_err(|e| SecretsError::Decryption(format!("invalid UTF-8: {e}")))?;
 
 		Ok(SecretString::new(value_str))
 	}
@@ -347,7 +355,9 @@ fn build_weaver_principal(claims: &WeaverClaims) -> SecretsResult<WeaverPrincipa
 
 fn validate_secret_name(name: &str) -> SecretsResult<()> {
 	if name.is_empty() || name.len() > 128 {
-		return Err(SecretsError::InvalidSecretName("name must be 1-128 characters".into()));
+		return Err(SecretsError::InvalidSecretName(
+			"name must be 1-128 characters".into(),
+		));
 	}
 
 	let first_char = name.chars().next().unwrap();
@@ -357,7 +367,10 @@ fn validate_secret_name(name: &str) -> SecretsResult<()> {
 		));
 	}
 
-	if !name.chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_') {
+	if !name
+		.chars()
+		.all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
+	{
 		return Err(SecretsError::InvalidSecretName(
 			"name must contain only uppercase letters, digits, and underscores".into(),
 		));

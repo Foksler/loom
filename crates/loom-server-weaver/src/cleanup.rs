@@ -13,32 +13,35 @@ use crate::provisioner::Provisioner;
 /// This task runs cleanup immediately on start (for reconciliation after restart),
 /// then loops at the configured interval.
 pub async fn start_cleanup_task(provisioner: Arc<Provisioner>) {
-    tracing::info!("Starting cleanup task");
+	tracing::info!("Starting cleanup task");
 
-    // Run cleanup immediately on start for reconciliation
-    run_cleanup(&provisioner).await;
+	// Run cleanup immediately on start for reconciliation
+	run_cleanup(&provisioner).await;
 
-    let interval = Duration::from_secs(provisioner.cleanup_interval_secs());
+	let interval = Duration::from_secs(provisioner.cleanup_interval_secs());
 
-    loop {
-        tokio::time::sleep(interval).await;
-        run_cleanup(&provisioner).await;
-    }
+	loop {
+		tokio::time::sleep(interval).await;
+		run_cleanup(&provisioner).await;
+	}
 }
 
 async fn run_cleanup(provisioner: &Provisioner) {
-    tracing::debug!("Running expired weaver cleanup");
+	tracing::debug!("Running expired weaver cleanup");
 
-    match provisioner.cleanup_expired_weavers().await {
-        Ok(result) => {
-            if result.count > 0 {
-                tracing::info!(count = result.count, "Cleanup completed, deleted expired weavers");
-            } else {
-                tracing::debug!("Cleanup completed, no expired weavers found");
-            }
-        }
-        Err(e) => {
-            tracing::error!(error = %e, "Cleanup task failed");
-        }
-    }
+	match provisioner.cleanup_expired_weavers().await {
+		Ok(result) => {
+			if result.count > 0 {
+				tracing::info!(
+					count = result.count,
+					"Cleanup completed, deleted expired weavers"
+				);
+			} else {
+				tracing::debug!("Cleanup completed, no expired weavers found");
+			}
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Cleanup task failed");
+		}
+	}
 }

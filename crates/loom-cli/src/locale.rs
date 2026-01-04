@@ -8,18 +8,13 @@ static DETECTED_LOCALE: OnceLock<String> = OnceLock::new();
 /// Get the user's locale, detected from the operating system.
 /// Falls back to "en" if detection fails or the locale is unsupported.
 pub fn get_locale() -> &'static str {
-	DETECTED_LOCALE.get_or_init(|| {
-		detect_locale().unwrap_or_else(|| "en".to_string())
-	})
+	DETECTED_LOCALE.get_or_init(|| detect_locale().unwrap_or_else(|| "en".to_string()))
 }
 
 fn detect_locale() -> Option<String> {
 	let system_locale = sys_locale::get_locale()?;
 
-	let lang_code = system_locale
-		.split(['_', '-'])
-		.next()?
-		.to_lowercase();
+	let lang_code = system_locale.split(['_', '-']).next()?.to_lowercase();
 
 	if loom_common_i18n::is_supported(&lang_code) {
 		Some(lang_code)

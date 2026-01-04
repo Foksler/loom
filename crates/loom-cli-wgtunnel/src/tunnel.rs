@@ -101,11 +101,7 @@ impl TunnelManager {
 	}
 
 	#[instrument(skip(self, session), fields(weaver_id = %weaver_id))]
-	pub async fn add_weaver(
-		&self,
-		weaver_id: &str,
-		session: &CreateSessionResponse,
-	) -> Result<()> {
+	pub async fn add_weaver(&self, weaver_id: &str, session: &CreateSessionResponse) -> Result<()> {
 		let weaver_ip: Ipv6Addr = session
 			.weaver
 			.ip

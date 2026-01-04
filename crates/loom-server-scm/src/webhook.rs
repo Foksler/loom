@@ -381,8 +381,8 @@ impl WebhookStore for SqliteWebhookStore {
 	}
 
 	async fn create_delivery(&self, delivery: &WebhookDelivery) -> Result<WebhookDelivery> {
-		let payload_json = serde_json::to_string(&delivery.payload)
-			.map_err(|e| ScmError::GitError(e.to_string()))?;
+		let payload_json =
+			serde_json::to_string(&delivery.payload).map_err(|e| ScmError::GitError(e.to_string()))?;
 
 		sqlx::query(
 			r#"
@@ -495,7 +495,12 @@ pub mod payload {
 		owner_name: &str,
 	) -> serde_json::Value {
 		let full_name = format!("{}/{}", owner_name, repo.name);
-		let clone_url = format!("{}/git/{}/{}.git", base_url.trim_end_matches('/'), owner_name, repo.name);
+		let clone_url = format!(
+			"{}/git/{}/{}.git",
+			base_url.trim_end_matches('/'),
+			owner_name,
+			repo.name
+		);
 
 		let commits: Vec<serde_json::Value> = event
 			.commits
@@ -584,7 +589,12 @@ pub mod payload {
 		sender_name: &str,
 	) -> serde_json::Value {
 		let full_name = format!("{}/{}", owner_name, repo.name);
-		let clone_url = format!("{}/git/{}/{}.git", base_url.trim_end_matches('/'), owner_name, repo.name);
+		let clone_url = format!(
+			"{}/git/{}/{}.git",
+			base_url.trim_end_matches('/'),
+			owner_name,
+			repo.name
+		);
 
 		serde_json::json!({
 			"action": "created",
@@ -631,7 +641,12 @@ pub mod payload {
 		sender_name: &str,
 	) -> serde_json::Value {
 		let full_name = format!("{}/{}", owner_name, repo.name);
-		let clone_url = format!("{}/git/{}/{}.git", base_url.trim_end_matches('/'), owner_name, repo.name);
+		let clone_url = format!(
+			"{}/git/{}/{}.git",
+			base_url.trim_end_matches('/'),
+			owner_name,
+			repo.name
+		);
 
 		serde_json::json!({
 			"action": "deleted",
@@ -732,7 +747,10 @@ mod tests {
 	fn test_webhook_owner_type_conversion() {
 		assert_eq!(WebhookOwnerType::Repo.as_str(), "repo");
 		assert_eq!(WebhookOwnerType::Org.as_str(), "org");
-		assert_eq!("repo".parse::<WebhookOwnerType>(), Ok(WebhookOwnerType::Repo));
+		assert_eq!(
+			"repo".parse::<WebhookOwnerType>(),
+			Ok(WebhookOwnerType::Repo)
+		);
 		assert_eq!("org".parse::<WebhookOwnerType>(), Ok(WebhookOwnerType::Org));
 		assert!("invalid".parse::<WebhookOwnerType>().is_err());
 	}
@@ -741,8 +759,14 @@ mod tests {
 	fn test_payload_format_conversion() {
 		assert_eq!(PayloadFormat::GitHubCompat.as_str(), "github-compat");
 		assert_eq!(PayloadFormat::LoomV1.as_str(), "loom-v1");
-		assert_eq!("github-compat".parse::<PayloadFormat>(), Ok(PayloadFormat::GitHubCompat));
-		assert_eq!("loom-v1".parse::<PayloadFormat>(), Ok(PayloadFormat::LoomV1));
+		assert_eq!(
+			"github-compat".parse::<PayloadFormat>(),
+			Ok(PayloadFormat::GitHubCompat)
+		);
+		assert_eq!(
+			"loom-v1".parse::<PayloadFormat>(),
+			Ok(PayloadFormat::LoomV1)
+		);
 		assert!("invalid".parse::<PayloadFormat>().is_err());
 	}
 
@@ -751,9 +775,18 @@ mod tests {
 		assert_eq!(DeliveryStatus::Pending.as_str(), "pending");
 		assert_eq!(DeliveryStatus::Success.as_str(), "success");
 		assert_eq!(DeliveryStatus::Failed.as_str(), "failed");
-		assert_eq!("pending".parse::<DeliveryStatus>(), Ok(DeliveryStatus::Pending));
-		assert_eq!("success".parse::<DeliveryStatus>(), Ok(DeliveryStatus::Success));
-		assert_eq!("failed".parse::<DeliveryStatus>(), Ok(DeliveryStatus::Failed));
+		assert_eq!(
+			"pending".parse::<DeliveryStatus>(),
+			Ok(DeliveryStatus::Pending)
+		);
+		assert_eq!(
+			"success".parse::<DeliveryStatus>(),
+			Ok(DeliveryStatus::Success)
+		);
+		assert_eq!(
+			"failed".parse::<DeliveryStatus>(),
+			Ok(DeliveryStatus::Failed)
+		);
 		assert!("invalid".parse::<DeliveryStatus>().is_err());
 	}
 

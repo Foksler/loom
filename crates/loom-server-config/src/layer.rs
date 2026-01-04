@@ -6,10 +6,9 @@
 use serde::Deserialize;
 
 use crate::sections::{
-	AuditConfigLayer, AuthConfigLayer, DatabaseConfigLayer, GeoIpConfigLayer,
-	GitHubAppConfigLayer, HttpConfigLayer, JobsConfigLayer, LlmConfigLayer, LoggingConfigLayer,
-	OAuthConfigLayer, PathsConfigLayer, ScimConfigLayer, SearchConfigLayer, SmtpConfigLayer,
-	WeaverConfigLayer,
+	AuditConfigLayer, AuthConfigLayer, DatabaseConfigLayer, GeoIpConfigLayer, GitHubAppConfigLayer,
+	HttpConfigLayer, JobsConfigLayer, LlmConfigLayer, LoggingConfigLayer, OAuthConfigLayer,
+	PathsConfigLayer, ScimConfigLayer, SearchConfigLayer, SmtpConfigLayer, WeaverConfigLayer,
 };
 
 /// Server configuration layer - all fields are Option for merging.
@@ -51,13 +50,21 @@ impl ServerConfigLayer {
 	/// Merge another layer into this one. Other layer takes precedence.
 	pub fn merge(&mut self, other: ServerConfigLayer) {
 		merge_option(&mut self.http, other.http, HttpConfigLayer::merge);
-		merge_option(&mut self.database, other.database, DatabaseConfigLayer::merge);
+		merge_option(
+			&mut self.database,
+			other.database,
+			DatabaseConfigLayer::merge,
+		);
 		merge_option(&mut self.auth, other.auth, AuthConfigLayer::merge);
 		merge_option(&mut self.llm, other.llm, LlmConfigLayer::merge);
 		merge_option(&mut self.weaver, other.weaver, WeaverConfigLayer::merge);
 		merge_option(&mut self.smtp, other.smtp, SmtpConfigLayer::merge);
 		merge_option(&mut self.oauth, other.oauth, OAuthConfigLayer::merge);
-		merge_option(&mut self.github_app, other.github_app, GitHubAppConfigLayer::merge);
+		merge_option(
+			&mut self.github_app,
+			other.github_app,
+			GitHubAppConfigLayer::merge,
+		);
 		merge_option(&mut self.geoip, other.geoip, GeoIpConfigLayer::merge);
 		merge_option(&mut self.jobs, other.jobs, JobsConfigLayer::merge);
 		merge_option(&mut self.search, other.search, SearchConfigLayer::merge);
@@ -124,7 +131,10 @@ mod tests {
 		};
 		base.merge(other);
 		assert_eq!(base.http.as_ref().unwrap().port, Some(8080));
-		assert_eq!(base.http.as_ref().unwrap().host, Some("127.0.0.1".to_string()));
+		assert_eq!(
+			base.http.as_ref().unwrap().host,
+			Some("127.0.0.1".to_string())
+		);
 	}
 
 	#[test]

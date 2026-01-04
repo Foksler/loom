@@ -94,7 +94,10 @@ pub async fn login(server_url: &str) -> Result<()> {
 
 	if let Err(e) = webbrowser::open(&start.verification_url) {
 		debug!(error = %e, "failed to open browser");
-		eprintln!("{}", loom_common_i18n::t(get_locale(), "client.auth.browser_failed"));
+		eprintln!(
+			"{}",
+			loom_common_i18n::t(get_locale(), "client.auth.browser_failed")
+		);
 	}
 
 	let poll_url = format!("{base}/auth/device/poll");
@@ -102,12 +105,18 @@ pub async fn login(server_url: &str) -> Result<()> {
 	let poll_interval = Duration::from_secs(1);
 	let started = Instant::now();
 
-	eprint!("{}", loom_common_i18n::t(get_locale(), "client.auth.waiting"));
+	eprint!(
+		"{}",
+		loom_common_i18n::t(get_locale(), "client.auth.waiting")
+	);
 	io::stderr().flush().ok();
 
 	loop {
 		if started.elapsed() > timeout {
-			eprintln!("\n{}", loom_common_i18n::t(get_locale(), "client.auth.timed_out"));
+			eprintln!(
+				"\n{}",
+				loom_common_i18n::t(get_locale(), "client.auth.timed_out")
+			);
 			return Err(anyhow!("device code expired"));
 		}
 
@@ -160,16 +169,26 @@ pub async fn login(server_url: &str) -> Result<()> {
 				let creds = CredentialValue::ApiKey {
 					key: SecretString::new(access_token),
 				};
-				store.save(&key, &creds).await.context("failed to save credentials")?;
+				store
+					.save(&key, &creds)
+					.await
+					.context("failed to save credentials")?;
 				info!("login successful");
 				eprintln!(
 					"{}",
-					loom_common_i18n::t_fmt(get_locale(), "client.auth.login_success", &[("server", server_url)])
+					loom_common_i18n::t_fmt(
+						get_locale(),
+						"client.auth.login_success",
+						&[("server", server_url)]
+					)
 				);
 				return Ok(());
 			}
 			DevicePollResponse::Expired => {
-				eprintln!("\n{}", loom_common_i18n::t(get_locale(), "client.auth.device_expired"));
+				eprintln!(
+					"\n{}",
+					loom_common_i18n::t(get_locale(), "client.auth.device_expired")
+				);
 				return Err(anyhow!("device code expired"));
 			}
 		}
@@ -182,8 +201,10 @@ pub async fn logout(server_url: &str) -> Result<()> {
 	let key = sanitize_server_key(server_url);
 	let base = normalize_base(server_url);
 
-	if let Some(CredentialValue::ApiKey { key: token }) =
-		store.load(&key).await.context("failed to load credentials")?
+	if let Some(CredentialValue::ApiKey { key: token }) = store
+		.load(&key)
+		.await
+		.context("failed to load credentials")?
 	{
 		let client = loom_common_http::new_client();
 		let logout_url = format!("{base}/auth/logout");
@@ -202,7 +223,11 @@ pub async fn logout(server_url: &str) -> Result<()> {
 	info!("logout complete");
 	eprintln!(
 		"{}",
-		loom_common_i18n::t_fmt(get_locale(), "client.auth.logged_out", &[("server", server_url)])
+		loom_common_i18n::t_fmt(
+			get_locale(),
+			"client.auth.logged_out",
+			&[("server", server_url)]
+		)
 	);
 	Ok(())
 }
@@ -248,13 +273,19 @@ mod tests {
 
 	#[test]
 	fn test_normalize_base_strips_trailing_slash() {
-		assert_eq!(normalize_base("https://example.com/"), "https://example.com");
+		assert_eq!(
+			normalize_base("https://example.com/"),
+			"https://example.com"
+		);
 		assert_eq!(normalize_base("https://example.com"), "https://example.com");
 	}
 
 	#[test]
 	fn test_normalize_base_strips_multiple_slashes() {
-		assert_eq!(normalize_base("https://example.com///"), "https://example.com");
+		assert_eq!(
+			normalize_base("https://example.com///"),
+			"https://example.com"
+		);
 	}
 
 	#[test]

@@ -133,20 +133,32 @@ pub fn format_cef(event: &EnrichedAuditEvent) -> String {
 	}
 
 	if let Some(ref resource_type) = event.base.resource_type {
-		extensions.push(format!("cs1Label=resourceType cs1={}", escape_cef_value(resource_type)));
+		extensions.push(format!(
+			"cs1Label=resourceType cs1={}",
+			escape_cef_value(resource_type)
+		));
 	}
 
 	if let Some(ref resource_id) = event.base.resource_id {
-		extensions.push(format!("cs2Label=resourceId cs2={}", escape_cef_value(resource_id)));
+		extensions.push(format!(
+			"cs2Label=resourceId cs2={}",
+			escape_cef_value(resource_id)
+		));
 	}
 
 	if let Some(ref trace_id) = event.base.trace_id {
-		extensions.push(format!("cs3Label=traceId cs3={}", escape_cef_value(trace_id)));
+		extensions.push(format!(
+			"cs3Label=traceId cs3={}",
+			escape_cef_value(trace_id)
+		));
 	}
 
 	if let Some(ref session) = event.session {
 		if let Some(ref session_id) = session.session_id {
-			extensions.push(format!("cs4Label=sessionId cs4={}", escape_cef_value(session_id)));
+			extensions.push(format!(
+				"cs4Label=sessionId cs4={}",
+				escape_cef_value(session_id)
+			));
 		}
 	}
 
@@ -158,15 +170,14 @@ pub fn format_cef(event: &EnrichedAuditEvent) -> String {
 
 	let extension_str = extensions.join(" ");
 
-	format!(
-		"CEF:0|Loom|Loom Server|1.0|{event_type}|{action}|{severity}|{extension_str}\n"
-	)
+	format!("CEF:0|Loom|Loom Server|1.0|{event_type}|{action}|{severity}|{extension_str}\n")
 }
 
 pub fn expand_path(path: &str) -> String {
 	let now = Utc::now();
 
-	path.replace("%Y", &format!("{:04}", now.year()))
+	path
+		.replace("%Y", &format!("{:04}", now.year()))
 		.replace("%m", &format!("{:02}", now.month()))
 		.replace("%d", &format!("{:02}", now.day()))
 		.replace("%H", &format!("{:02}", now.hour()))
@@ -228,7 +239,10 @@ mod tests {
 		let event = make_test_event();
 		let line = format_json_line(&event).unwrap();
 		let trimmed = line.trim_end_matches('\n');
-		assert!(!trimmed.contains('\n'), "JSON line should not contain embedded newlines");
+		assert!(
+			!trimmed.contains('\n'),
+			"JSON line should not contain embedded newlines"
+		);
 	}
 
 	#[test]
@@ -245,10 +259,22 @@ mod tests {
 		let event = make_test_event();
 		let cef = format_cef(&event);
 
-		assert!(cef.contains("src=192.168.1.1"), "CEF should contain source IP");
-		assert!(cef.contains("cs1Label=resourceType cs1=session"), "CEF should contain resource type");
-		assert!(cef.contains("cs2Label=resourceId cs2=sess-123"), "CEF should contain resource ID");
-		assert!(cef.contains("cs3Label=traceId cs3=trace-abc"), "CEF should contain trace ID");
+		assert!(
+			cef.contains("src=192.168.1.1"),
+			"CEF should contain source IP"
+		);
+		assert!(
+			cef.contains("cs1Label=resourceType cs1=session"),
+			"CEF should contain resource type"
+		);
+		assert!(
+			cef.contains("cs2Label=resourceId cs2=sess-123"),
+			"CEF should contain resource ID"
+		);
+		assert!(
+			cef.contains("cs3Label=traceId cs3=trace-abc"),
+			"CEF should contain trace ID"
+		);
 	}
 
 	#[test]

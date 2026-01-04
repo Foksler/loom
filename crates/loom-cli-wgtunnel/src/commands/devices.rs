@@ -81,10 +81,7 @@ pub async fn handle_register(args: RegisterArgs, ctx: &CliContext) -> anyhow::Re
 		.register_device(&device_id, keypair.public_key(), args.name.as_deref())
 		.await?;
 
-	println!(
-		"{} Device registered",
-		style("✓").green().bold()
-	);
+	println!("{} Device registered", style("✓").green().bold());
 	println!("  ID:         {}", style(&device.id).cyan());
 	println!("  Public Key: {}", style(&device.public_key).dim());
 	if let Some(name) = &device.name {

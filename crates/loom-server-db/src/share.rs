@@ -142,10 +142,7 @@ impl ShareRepository {
 
 	/// Create a new support access request.
 	#[tracing::instrument(skip(self, support_access), fields(support_access_id = %support_access.id, thread_id = %support_access.thread_id))]
-	pub async fn create_support_access(
-		&self,
-		support_access: &SupportAccess,
-	) -> Result<(), DbError> {
+	pub async fn create_support_access(&self, support_access: &SupportAccess) -> Result<(), DbError> {
 		sqlx::query(
 			r#"
 			INSERT INTO support_access (

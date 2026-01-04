@@ -20,9 +20,9 @@ pub mod smtp;
 pub mod weaver;
 
 pub use audit::{
-	AuditConfig, AuditConfigLayer, FileFormat, FileSinkConfig, FileSinkConfigLayer,
-	HttpSinkConfig, HttpSinkConfigLayer, JsonStreamConfig, JsonStreamConfigLayer,
-	QueueOverflowPolicy, StreamProtocol, SyslogConfig, SyslogConfigLayer, SyslogProtocol,
+	AuditConfig, AuditConfigLayer, FileFormat, FileSinkConfig, FileSinkConfigLayer, HttpSinkConfig,
+	HttpSinkConfigLayer, JsonStreamConfig, JsonStreamConfigLayer, QueueOverflowPolicy,
+	StreamProtocol, SyslogConfig, SyslogConfigLayer, SyslogProtocol,
 };
 pub use auth::{AuthConfig, AuthConfigLayer};
 pub use database::{DatabaseConfig, DatabaseConfigLayer};
@@ -38,6 +38,9 @@ pub use oauth::{
 };
 pub use paths::{PathsConfig, PathsConfigLayer};
 pub use scim::{ScimConfig, ScimConfigLayer};
-pub use search::{GoogleCseConfig, GoogleCseConfigLayer, SearchConfig, SearchConfigLayer, SerperConfig, SerperConfigLayer};
+pub use search::{
+	GoogleCseConfig, GoogleCseConfigLayer, SearchConfig, SearchConfigLayer, SerperConfig,
+	SerperConfigLayer,
+};
 pub use smtp::{SmtpConfig, SmtpConfigLayer, TlsMode};
 pub use weaver::{WeaverConfig, WeaverConfigLayer, WebhookConfig, WebhookEvent};

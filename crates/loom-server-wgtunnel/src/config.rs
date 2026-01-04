@@ -55,7 +55,9 @@ impl WgTunnelConfig {
 		let derp_map_url =
 			std::env::var("LOOM_WG_DERP_MAP_URL").unwrap_or_else(|_| DEFAULT_DERP_MAP_URL.to_string());
 
-		let derp_overlay_file = std::env::var("LOOM_WG_DERP_OVERLAY_FILE").ok().map(PathBuf::from);
+		let derp_overlay_file = std::env::var("LOOM_WG_DERP_OVERLAY_FILE")
+			.ok()
+			.map(PathBuf::from);
 
 		Ok(Self {
 			enabled,

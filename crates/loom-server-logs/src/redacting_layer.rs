@@ -165,7 +165,11 @@ mod tests {
 		assert_eq!(entries.len(), 1);
 
 		let message = &entries[0].message;
-		assert!(!message.contains("ghp_"), "Secret should be redacted: {}", message);
+		assert!(
+			!message.contains("ghp_"),
+			"Secret should be redacted: {}",
+			message
+		);
 		assert!(
 			message.contains("[REDACTED:"),
 			"Should contain redaction marker: {}",
@@ -192,7 +196,11 @@ mod tests {
 			.fields
 			.iter()
 			.any(|(_, v)| v.contains("[REDACTED:"));
-		assert!(has_redacted, "Field value should be redacted: {:?}", entries[0].fields);
+		assert!(
+			has_redacted,
+			"Field value should be redacted: {:?}",
+			entries[0].fields
+		);
 	}
 
 	#[tokio::test]
@@ -221,8 +229,16 @@ mod tests {
 		let input = format!("token: {}", github_pat());
 		let redacted = visitor.redact_value(&input);
 
-		assert!(!redacted.contains("ghp_"), "Should not contain ghp_: {}", redacted);
-		assert!(redacted.contains("[REDACTED:"), "Should contain redaction marker: {}", redacted);
+		assert!(
+			!redacted.contains("ghp_"),
+			"Should not contain ghp_: {}",
+			redacted
+		);
+		assert!(
+			redacted.contains("[REDACTED:"),
+			"Should contain redaction marker: {}",
+			redacted
+		);
 	}
 
 	#[test]

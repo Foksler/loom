@@ -29,38 +29,38 @@ use argon2::{Algorithm, Params, Version};
 /// parameters for fast test execution.
 #[inline]
 pub(crate) fn argon2_instance() -> Argon2<'static> {
-    #[cfg(test)]
-    {
-        // Fast, insecure parameters for tests ONLY.
-        // Memory: 1024 KiB (1 MiB) vs ~19 MiB in production
-        // Iterations: 1 vs 2 in production
-        // Parallelism: 1
-        let params = Params::new(
-            1024, // memory_kib: 1 MiB
-            1,    // iterations
-            1,    // parallelism
-            None, // output length = default
-        )
-        .expect("valid Argon2 params for tests");
-        Argon2::new(Algorithm::Argon2id, Version::V0x13, params)
-    }
+	#[cfg(test)]
+	{
+		// Fast, insecure parameters for tests ONLY.
+		// Memory: 1024 KiB (1 MiB) vs ~19 MiB in production
+		// Iterations: 1 vs 2 in production
+		// Parallelism: 1
+		let params = Params::new(
+			1024, // memory_kib: 1 MiB
+			1,    // iterations
+			1,    // parallelism
+			None, // output length = default
+		)
+		.expect("valid Argon2 params for tests");
+		Argon2::new(Algorithm::Argon2id, Version::V0x13, params)
+	}
 
-    #[cfg(not(test))]
-    {
-        // Production: use strong defaults
-        // Argon2id with memory=19456 KiB, iterations=2, parallelism=1
-        Argon2::default()
-    }
+	#[cfg(not(test))]
+	{
+		// Production: use strong defaults
+		// Argon2id with memory=19456 KiB, iterations=2, parallelism=1
+		Argon2::default()
+	}
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+	use super::*;
 
-    #[test]
-    fn test_argon2_instance_returns_valid_hasher() {
-        let argon2 = argon2_instance();
-        // Just verify we can create an instance without panicking
-        let _ = format!("{argon2:?}");
-    }
+	#[test]
+	fn test_argon2_instance_returns_valid_hasher() {
+		let argon2 = argon2_instance();
+		// Just verify we can create an instance without panicking
+		let _ = format!("{argon2:?}");
+	}
 }

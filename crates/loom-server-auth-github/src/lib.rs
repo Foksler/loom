@@ -167,7 +167,9 @@ impl GitHubOAuthConfig {
 	/// Returns [`ConfigError::InvalidConfig`] if any field is empty.
 	pub fn validate(&self) -> Result<(), ConfigError> {
 		if self.client_id.is_empty() {
-			return Err(ConfigError::InvalidConfig("client_id cannot be empty".to_string()));
+			return Err(ConfigError::InvalidConfig(
+				"client_id cannot be empty".to_string(),
+			));
 		}
 		if self.client_secret.expose().is_empty() {
 			return Err(ConfigError::InvalidConfig(
@@ -353,7 +355,8 @@ impl GitHubOAuthClient {
 	pub fn authorization_url(&self, state: &str) -> String {
 		let mut url = Url::parse(GITHUB_AUTHORIZE_URL).expect("invalid authorize URL");
 
-		url.query_pairs_mut()
+		url
+			.query_pairs_mut()
 			.append_pair("client_id", &self.config.client_id)
 			.append_pair("redirect_uri", &self.config.redirect_uri)
 			.append_pair("scope", &self.config.scopes_string())

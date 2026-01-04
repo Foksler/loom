@@ -4,11 +4,11 @@
 pub mod commands;
 
 pub use commands::{
-	compare::CompareArgs, draw::DrawArgs, duplicate::DuplicateArgs, edit::EditArgs,
-	knot::KnotArgs, mark::MarkArgs, mend::MendArgs, pin::PinArgs, ply::PlyArgs,
-	rethread::RethreadArgs, show::ShowArgs, shuttle::ShuttleArgs, snip::SnipArgs,
-	stitch::StitchArgs, tension::TensionArgs, tension_log::TensionLogArgs, trace::TraceArgs,
-	unpick::UnpickArgs, unravel::UnravelArgs, untangle::UntangleArgs, wind::WindArgs,
+	compare::CompareArgs, draw::DrawArgs, duplicate::DuplicateArgs, edit::EditArgs, knot::KnotArgs,
+	mark::MarkArgs, mend::MendArgs, pin::PinArgs, ply::PlyArgs, rethread::RethreadArgs,
+	show::ShowArgs, shuttle::ShuttleArgs, snip::SnipArgs, stitch::StitchArgs, tension::TensionArgs,
+	tension_log::TensionLogArgs, trace::TraceArgs, unpick::UnpickArgs, unravel::UnravelArgs,
+	untangle::UntangleArgs, wind::WindArgs,
 };
 
 #[derive(Debug, clap::Subcommand)]

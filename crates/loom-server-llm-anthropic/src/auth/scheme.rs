@@ -111,18 +111,22 @@ impl<S: CredentialStore> AnthropicAuth<S> {
 		request: reqwest::RequestBuilder,
 	) -> Result<reqwest::RequestBuilder, AuthError> {
 		match self {
-			AnthropicAuth::ApiKey { key } => Ok(request
-				.header("x-api-key", key.expose())
-				.header("anthropic-beta", API_KEY_BETA_HEADERS)
-				.header("anthropic-dangerous-direct-browser-access", "true")
-				.header("user-agent", ANTHROPIC_USER_AGENT)),
+			AnthropicAuth::ApiKey { key } => Ok(
+				request
+					.header("x-api-key", key.expose())
+					.header("anthropic-beta", API_KEY_BETA_HEADERS)
+					.header("anthropic-dangerous-direct-browser-access", "true")
+					.header("user-agent", ANTHROPIC_USER_AGENT),
+			),
 			AnthropicAuth::OAuth { client } => {
 				let token = client.get_access_token().await?;
-				Ok(request
-					.bearer_auth(token)
-					.header("anthropic-beta", OAUTH_COMBINED_BETA_HEADERS)
-					.header("anthropic-dangerous-direct-browser-access", "true")
-					.header("user-agent", ANTHROPIC_USER_AGENT))
+				Ok(
+					request
+						.bearer_auth(token)
+						.header("anthropic-beta", OAUTH_COMBINED_BETA_HEADERS)
+						.header("anthropic-dangerous-direct-browser-access", "true")
+						.header("user-agent", ANTHROPIC_USER_AGENT),
+				)
 			}
 		}
 	}

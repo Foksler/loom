@@ -57,7 +57,13 @@ impl LogBuffer {
 	///
 	/// If the buffer is full, the oldest entry is evicted.
 	/// The entry is also broadcast to all subscribers.
-	pub fn push(&self, level: LogLevel, target: String, message: String, fields: Vec<(String, String)>) {
+	pub fn push(
+		&self,
+		level: LogLevel,
+		target: String,
+		message: String,
+		fields: Vec<(String, String)>,
+	) {
 		let id = {
 			let mut next_id = self.inner.next_id.write();
 			let id = *next_id;
@@ -211,9 +217,24 @@ mod tests {
 	fn test_target_filter() {
 		let buffer = LogBuffer::new(100);
 
-		buffer.push(LogLevel::Info, "loom_server::api".into(), "api log".into(), vec![]);
-		buffer.push(LogLevel::Info, "loom_server::db".into(), "db log".into(), vec![]);
-		buffer.push(LogLevel::Info, "hyper::client".into(), "hyper log".into(), vec![]);
+		buffer.push(
+			LogLevel::Info,
+			"loom_server::api".into(),
+			"api log".into(),
+			vec![],
+		);
+		buffer.push(
+			LogLevel::Info,
+			"loom_server::db".into(),
+			"db log".into(),
+			vec![],
+		);
+		buffer.push(
+			LogLevel::Info,
+			"hyper::client".into(),
+			"hyper log".into(),
+			vec![],
+		);
 
 		let entries = buffer.get_entries(10, None, Some("loom_server"), None);
 		assert_eq!(entries.len(), 2);
@@ -238,7 +259,12 @@ mod tests {
 		let buffer = LogBuffer::new(100);
 		let mut rx = buffer.subscribe();
 
-		buffer.push(LogLevel::Info, "test".into(), "broadcast test".into(), vec![]);
+		buffer.push(
+			LogLevel::Info,
+			"test".into(),
+			"broadcast test".into(),
+			vec![],
+		);
 
 		let entry = rx.recv().await.unwrap();
 		assert_eq!(entry.message, "broadcast test");

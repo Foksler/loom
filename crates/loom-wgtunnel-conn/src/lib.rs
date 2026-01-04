@@ -7,7 +7,7 @@ pub mod magic_conn;
 pub mod stun;
 pub mod upgrade;
 
-pub use endpoint::{DiscoveredEndpoint, EndpointSource, select_best_endpoint};
+pub use endpoint::{select_best_endpoint, DiscoveredEndpoint, EndpointSource};
 pub use error::{ConnError, Result};
 pub use magic_conn::{MagicConn, PathType, PeerEndpoint};
 pub use stun::{

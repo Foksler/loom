@@ -20,7 +20,10 @@ pub struct CreateShareLinkRequest {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 pub struct CreateShareLinkResponse {
 	/// The full shareable URL.
-	#[cfg_attr(feature = "openapi", schema(example = "https://loom.example/threads/T-123/share/abc123def456..."))]
+	#[cfg_attr(
+		feature = "openapi",
+		schema(example = "https://loom.example/threads/T-123/share/abc123def456...")
+	)]
 	pub url: String,
 	/// When the link expires, if set.
 	pub expires_at: Option<String>,

@@ -81,7 +81,10 @@ mod tests {
 		};
 		let config = layer.finalize();
 		assert!(config.alert_enabled);
-		assert_eq!(config.alert_recipients, vec!["admin@example.com".to_string()]);
+		assert_eq!(
+			config.alert_recipients,
+			vec!["admin@example.com".to_string()]
+		);
 		assert_eq!(config.history_retention_days, 30);
 	}
 
@@ -99,7 +102,10 @@ mod tests {
 		};
 		base.merge(overlay);
 		assert_eq!(base.alert_enabled, Some(true));
-		assert_eq!(base.alert_recipients, Some(vec!["old@example.com".to_string()]));
+		assert_eq!(
+			base.alert_recipients,
+			Some(vec!["old@example.com".to_string()])
+		);
 		assert_eq!(base.history_retention_days, Some(30));
 	}
 
@@ -107,7 +113,10 @@ mod tests {
 	fn test_serde_roundtrip() {
 		let config = JobsConfig {
 			alert_enabled: true,
-			alert_recipients: vec!["admin@example.com".to_string(), "ops@example.com".to_string()],
+			alert_recipients: vec![
+				"admin@example.com".to_string(),
+				"ops@example.com".to_string(),
+			],
 			history_retention_days: 30,
 		};
 		let toml_str = toml::to_string(&config).unwrap();

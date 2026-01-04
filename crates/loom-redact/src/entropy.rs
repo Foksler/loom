@@ -46,54 +46,90 @@ mod tests {
 	#[test]
 	fn test_two_equal_characters() {
 		let entropy = shannon_entropy("ab");
-		assert!((entropy - 1.0).abs() < 0.001, "Expected ~1.0, got {}", entropy);
+		assert!(
+			(entropy - 1.0).abs() < 0.001,
+			"Expected ~1.0, got {}",
+			entropy
+		);
 	}
 
 	#[test]
 	fn test_four_equal_characters() {
 		let entropy = shannon_entropy("abcd");
-		assert!((entropy - 2.0).abs() < 0.001, "Expected ~2.0, got {}", entropy);
+		assert!(
+			(entropy - 2.0).abs() < 0.001,
+			"Expected ~2.0, got {}",
+			entropy
+		);
 	}
 
 	#[test]
 	fn test_hex_string_high_entropy() {
 		let entropy = shannon_entropy("a1b2c3d4e5f6");
-		assert!(entropy > 3.0, "Hex string should have high entropy, got {}", entropy);
+		assert!(
+			entropy > 3.0,
+			"Hex string should have high entropy, got {}",
+			entropy
+		);
 	}
 
 	#[test]
 	fn test_base64_like_high_entropy() {
 		let entropy = shannon_entropy("aGVsbG8gd29ybGQh");
-		assert!(entropy > 3.5, "Base64-like string should have high entropy, got {}", entropy);
+		assert!(
+			entropy > 3.5,
+			"Base64-like string should have high entropy, got {}",
+			entropy
+		);
 	}
 
 	#[test]
 	fn test_random_api_key() {
 		let entropy = shannon_entropy("sk_live_51H8xK2C4mN7pQ9rS0tUvWxYz");
-		assert!(entropy > 4.0, "API key should have high entropy, got {}", entropy);
+		assert!(
+			entropy > 4.0,
+			"API key should have high entropy, got {}",
+			entropy
+		);
 	}
 
 	#[test]
 	fn test_english_text_lower_entropy() {
 		let entropy = shannon_entropy("the quick brown fox jumps over the lazy dog");
-		assert!(entropy > 3.0 && entropy < 4.5, "English text should have moderate entropy, got {}", entropy);
+		assert!(
+			entropy > 3.0 && entropy < 4.5,
+			"English text should have moderate entropy, got {}",
+			entropy
+		);
 	}
 
 	#[test]
 	fn test_simple_password_moderate_entropy() {
 		let entropy = shannon_entropy("password123");
-		assert!(entropy > 2.5 && entropy < 4.0, "Simple password should have moderate entropy, got {}", entropy);
+		assert!(
+			entropy > 2.5 && entropy < 4.0,
+			"Simple password should have moderate entropy, got {}",
+			entropy
+		);
 	}
 
 	#[test]
 	fn test_uuid_high_entropy() {
 		let entropy = shannon_entropy("550e8400-e29b-41d4-a716-446655440000");
-		assert!(entropy > 3.0, "UUID should have high entropy, got {}", entropy);
+		assert!(
+			entropy > 3.0,
+			"UUID should have high entropy, got {}",
+			entropy
+		);
 	}
 
 	#[test]
 	fn test_known_vector_uniform_distribution() {
 		let entropy = shannon_entropy("0123456789abcdef");
-		assert!((entropy - 4.0).abs() < 0.001, "16 unique chars should give ~4.0 bits, got {}", entropy);
+		assert!(
+			(entropy - 4.0).abs() < 0.001,
+			"16 unique chars should give ~4.0 bits, got {}",
+			entropy
+		);
 	}
 }

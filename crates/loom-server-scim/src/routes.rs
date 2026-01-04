@@ -10,20 +10,26 @@ use axum::{
 };
 use loom_common_secret::SecretString;
 use loom_server_auth::OrgId;
+use loom_server_db::{TeamRepository, UserRepository};
 use loom_server_provisioning::UserProvisioningService;
-use sqlx::SqlitePool;
 
 use crate::auth::scim_auth_middleware;
 use crate::handlers::users::ScimState;
 use crate::handlers::{bulk, groups, schemas, service_provider, users};
 
 pub fn scim_routes(
-	pool: SqlitePool,
 	token: Option<SecretString>,
 	org_id: OrgId,
 	provisioning: Arc<UserProvisioningService>,
+	user_repo: Arc<UserRepository>,
+	team_repo: Arc<TeamRepository>,
 ) -> Router {
-	let state = ScimState { pool, org_id, provisioning };
+	let state = ScimState {
+		org_id,
+		provisioning,
+		user_repo,
+		team_repo,
+	};
 
 	Router::new()
 		.route(

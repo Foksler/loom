@@ -94,7 +94,11 @@ async fn push_matching_refs(
 
 	let matching_branches: Vec<_> = branches
 		.iter()
-		.filter(|branch| rules.iter().any(|rule| matches_pattern(branch, &rule.pattern)))
+		.filter(|branch| {
+			rules
+				.iter()
+				.any(|rule| matches_pattern(branch, &rule.pattern))
+		})
 		.collect();
 
 	if matching_branches.is_empty() {
@@ -269,7 +273,11 @@ mod tests {
 		std::fs::create_dir_all(repo_path.join("refs/heads")).unwrap();
 
 		let dummy_sha = "0000000000000000000000000000000000000001";
-		std::fs::write(repo_path.join("refs/heads/main"), format!("{}\n", dummy_sha)).unwrap();
+		std::fs::write(
+			repo_path.join("refs/heads/main"),
+			format!("{}\n", dummy_sha),
+		)
+		.unwrap();
 		std::fs::write(
 			repo_path.join("refs/heads/feature-branch"),
 			format!("{}\n", dummy_sha),

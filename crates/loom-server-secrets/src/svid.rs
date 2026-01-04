@@ -37,7 +37,11 @@ impl ValidatedSaToken {
 	/// Create a new ValidatedSaToken. This should only be called after
 	/// successful K8s TokenReview validation.
 	pub fn new(pod_name: String, namespace: String, service_account: String) -> Self {
-		Self { pod_name, namespace, service_account }
+		Self {
+			pod_name,
+			namespace,
+			service_account,
+		}
 	}
 }
 
@@ -118,7 +122,9 @@ impl WeaverClaims {
 		ttl_seconds: Option<i64>,
 	) -> SecretsResult<Self> {
 		let now = Utc::now().timestamp();
-		let ttl = ttl_seconds.unwrap_or(Self::DEFAULT_TTL_SECONDS).min(Self::MAX_TTL_SECONDS);
+		let ttl = ttl_seconds
+			.unwrap_or(Self::DEFAULT_TTL_SECONDS)
+			.min(Self::MAX_TTL_SECONDS);
 		let spiffe_id = Self::spiffe_id(&weaver_id)?;
 
 		Ok(Self {
@@ -257,7 +263,10 @@ pub struct SvidIssuer<K: KeyBackend> {
 impl<K: KeyBackend> SvidIssuer<K> {
 	/// Create a new SVID issuer.
 	pub fn new(key_backend: Arc<K>, config: SvidConfig) -> Self {
-		Self { key_backend, config }
+		Self {
+			key_backend,
+			config,
+		}
 	}
 
 	/// Issue a Weaver SVID after validating the K8s SA token.
@@ -332,13 +341,17 @@ impl<K: KeyBackend> SvidIssuer<K> {
 				got = %request.pod_namespace,
 				"SVID request from unexpected namespace"
 			);
-			return Err(SecretsError::SvidValidation("pod not in weaver namespace".into()));
+			return Err(SecretsError::SvidValidation(
+				"pod not in weaver namespace".into(),
+			));
 		}
 
 		// Verify pod is managed by Loom
 		if !pod_metadata.is_managed {
 			warn!(pod_name = %request.pod_name, "SVID request from unmanaged pod");
-			return Err(SecretsError::SvidValidation("pod not managed by Loom".into()));
+			return Err(SecretsError::SvidValidation(
+				"pod not managed by Loom".into(),
+			));
 		}
 
 		// Extract required labels
@@ -500,7 +513,9 @@ mod tests {
 		pod_metadata.is_managed = false;
 		let validated_token = create_test_validated_token();
 
-		let result = issuer.issue_svid(&validated_token, &request, &pod_metadata).await;
+		let result = issuer
+			.issue_svid(&validated_token, &request, &pod_metadata)
+			.await;
 		assert!(matches!(result, Err(SecretsError::SvidValidation(_))));
 	}
 
@@ -518,7 +533,9 @@ mod tests {
 			"weaver-sa".to_string(),
 		);
 
-		let result = issuer.issue_svid(&validated_token, &request, &pod_metadata).await;
+		let result = issuer
+			.issue_svid(&validated_token, &request, &pod_metadata)
+			.await;
 		assert!(matches!(result, Err(SecretsError::PodMetadataMismatch(_))));
 	}
 
@@ -533,7 +550,9 @@ mod tests {
 		pod_metadata.weaver_id = None;
 		let validated_token = create_test_validated_token();
 
-		let result = issuer.issue_svid(&validated_token, &request, &pod_metadata).await;
+		let result = issuer
+			.issue_svid(&validated_token, &request, &pod_metadata)
+			.await;
 		assert!(matches!(result, Err(SecretsError::SvidValidation(_))));
 	}
 
@@ -548,7 +567,9 @@ mod tests {
 		pod_metadata.org_id = None;
 		let validated_token = create_test_validated_token();
 
-		let result = issuer.issue_svid(&validated_token, &request, &pod_metadata).await;
+		let result = issuer
+			.issue_svid(&validated_token, &request, &pod_metadata)
+			.await;
 		assert!(matches!(result, Err(SecretsError::SvidValidation(_))));
 	}
 
@@ -563,7 +584,9 @@ mod tests {
 		pod_metadata.owner_user_id = None;
 		let validated_token = create_test_validated_token();
 
-		let result = issuer.issue_svid(&validated_token, &request, &pod_metadata).await;
+		let result = issuer
+			.issue_svid(&validated_token, &request, &pod_metadata)
+			.await;
 		assert!(matches!(result, Err(SecretsError::SvidValidation(_))));
 	}
 
@@ -581,7 +604,9 @@ mod tests {
 			"weaver-sa".to_string(),
 		);
 
-		let result = issuer.issue_svid(&validated_token, &request, &pod_metadata).await;
+		let result = issuer
+			.issue_svid(&validated_token, &request, &pod_metadata)
+			.await;
 		assert!(matches!(result, Err(SecretsError::PodMetadataMismatch(_))));
 	}
 
@@ -599,7 +624,9 @@ mod tests {
 			"weaver-sa".to_string(),
 		);
 
-		let result = issuer.issue_svid(&validated_token, &request, &pod_metadata).await;
+		let result = issuer
+			.issue_svid(&validated_token, &request, &pod_metadata)
+			.await;
 		assert!(matches!(result, Err(SecretsError::PodMetadataMismatch(_))));
 	}
 

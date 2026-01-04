@@ -95,7 +95,9 @@ impl MagicConn {
 		if let Some(ep) = endpoint {
 			if let Some(direct) = ep.direct {
 				let should_try_direct = !ep.using_derp
-					|| ep.last_direct.is_some_and(|t| t.elapsed() < DIRECT_STALE_TIMEOUT);
+					|| ep
+						.last_direct
+						.is_some_and(|t| t.elapsed() < DIRECT_STALE_TIMEOUT);
 
 				if should_try_direct {
 					match self.udp.send_to(data, direct).await {
@@ -309,8 +311,7 @@ impl MagicConn {
 						};
 
 						if let Some(addr) = direct {
-							match crate::upgrade::probe_direct(&self.udp, addr, &self.our_key).await
-							{
+							match crate::upgrade::probe_direct(&self.udp, addr, &self.our_key).await {
 								Ok(true) => {
 									let mut endpoints = self.peer_endpoints.write().await;
 									if let Some(ep) = endpoints.get_mut(&peer) {

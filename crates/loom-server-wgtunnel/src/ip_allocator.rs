@@ -63,11 +63,12 @@ impl IpAllocator {
 
 	#[instrument(skip(self), fields(%weaver_id))]
 	pub async fn allocate_weaver_ip(&self, weaver_id: Uuid) -> Result<Ipv6Addr> {
-		let existing: Option<(String,)> =
-			sqlx::query_as("SELECT ip FROM wg_ip_allocations WHERE entity_id = ? AND released_at IS NULL")
-				.bind(weaver_id.to_string())
-				.fetch_optional(&self.db)
-				.await?;
+		let existing: Option<(String,)> = sqlx::query_as(
+			"SELECT ip FROM wg_ip_allocations WHERE entity_id = ? AND released_at IS NULL",
+		)
+		.bind(weaver_id.to_string())
+		.fetch_optional(&self.db)
+		.await?;
 
 		if let Some((ip_str,)) = existing {
 			return ip_str
@@ -77,7 +78,9 @@ impl IpAllocator {
 
 		let host = self.weaver_counter.fetch_add(1, Ordering::SeqCst);
 		if host as u128 > SUBNET_HOST_MASK {
-			return Err(WgError::IpAllocation("weaver IP pool exhausted".to_string()));
+			return Err(WgError::IpAllocation(
+				"weaver IP pool exhausted".to_string(),
+			));
 		}
 
 		let addr = Ipv6Addr::from(WEAVER_SUBNET_BASE | (host as u128));
@@ -97,11 +100,12 @@ impl IpAllocator {
 
 	#[instrument(skip(self), fields(%session_id))]
 	pub async fn allocate_client_ip(&self, session_id: Uuid) -> Result<Ipv6Addr> {
-		let existing: Option<(String,)> =
-			sqlx::query_as("SELECT ip FROM wg_ip_allocations WHERE entity_id = ? AND released_at IS NULL")
-				.bind(session_id.to_string())
-				.fetch_optional(&self.db)
-				.await?;
+		let existing: Option<(String,)> = sqlx::query_as(
+			"SELECT ip FROM wg_ip_allocations WHERE entity_id = ? AND released_at IS NULL",
+		)
+		.bind(session_id.to_string())
+		.fetch_optional(&self.db)
+		.await?;
 
 		if let Some((ip_str,)) = existing {
 			return ip_str
@@ -111,7 +115,9 @@ impl IpAllocator {
 
 		let host = self.client_counter.fetch_add(1, Ordering::SeqCst);
 		if host as u128 > SUBNET_HOST_MASK {
-			return Err(WgError::IpAllocation("client IP pool exhausted".to_string()));
+			return Err(WgError::IpAllocation(
+				"client IP pool exhausted".to_string(),
+			));
 		}
 
 		let addr = Ipv6Addr::from(CLIENT_SUBNET_BASE | (host as u128));

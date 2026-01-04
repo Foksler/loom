@@ -52,7 +52,9 @@ mod tests {
 
 	fn make_event(event_type: AuditEventType, severity: AuditSeverity) -> EnrichedAuditEvent {
 		EnrichedAuditEvent {
-			base: AuditLogEntry::builder(event_type).severity(severity).build(),
+			base: AuditLogEntry::builder(event_type)
+				.severity(severity)
+				.build(),
 			session: None,
 			org: None,
 		}
@@ -187,7 +189,9 @@ mod proptests {
 
 	fn make_event(event_type: AuditEventType, severity: AuditSeverity) -> EnrichedAuditEvent {
 		EnrichedAuditEvent {
-			base: AuditLogEntry::builder(event_type).severity(severity).build(),
+			base: AuditLogEntry::builder(event_type)
+				.severity(severity)
+				.build(),
 			session: None,
 			org: None,
 		}

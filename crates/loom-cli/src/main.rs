@@ -21,22 +21,24 @@ use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, Env
 
 use loom_server_logs::RedactingMakeWriter;
 
-use loom_cli_auto_commit::{AutoCommitConfig, AutoCommitResult, AutoCommitService, CompletedToolInfo};
+use loom_cli_auto_commit::{
+	AutoCommitConfig, AutoCommitResult, AutoCommitService, CompletedToolInfo,
+};
 use loom_cli_config::{
 	load_config_with_cli,
 	runtime::{LogFormat, LogLevel},
 	sources::CliOverrides,
 };
+use loom_cli_git::{detect_repo_status, CommandGitClient};
 use loom_common_core::{
 	LlmClient, LlmEvent, Message, ToolCall, ToolContext, ToolDefinition, ToolExecutionOutcome,
 };
-use loom_cli_git::{detect_repo_status, CommandGitClient};
-use loom_server_llm_proxy::{LlmProvider, ProxyLlmClient};
 use loom_common_thread::{
 	AgentStateKind, AgentStateSnapshot, LocalThreadStore, MessageRole, MessageSnapshot,
 	SyncingThreadStore, Thread, ThreadId, ThreadStore, ThreadSyncClient, ThreadVisibility,
 	ToolCallSnapshot,
 };
+use loom_server_llm_proxy::{LlmProvider, ProxyLlmClient};
 
 #[derive(clap::ValueEnum, Clone, Debug)]
 enum ShareVisibilityArg {
@@ -467,12 +469,22 @@ async fn run_repl(
 	let mut reader = BufReader::new(stdin);
 	let mut stdout = io::stdout();
 
-	println!("{}", loom_common_i18n::t(get_locale(), "client.repl.welcome"));
 	println!(
 		"{}",
-		loom_common_i18n::t_fmt(get_locale(), "client.repl.thread_id", &[("id", &thread.id.to_string())])
+		loom_common_i18n::t(get_locale(), "client.repl.welcome")
 	);
-	println!("{}\n", loom_common_i18n::t(get_locale(), "client.repl.instructions"));
+	println!(
+		"{}",
+		loom_common_i18n::t_fmt(
+			get_locale(),
+			"client.repl.thread_id",
+			&[("id", &thread.id.to_string())]
+		)
+	);
+	println!(
+		"{}\n",
+		loom_common_i18n::t(get_locale(), "client.repl.instructions")
+	);
 
 	let mut messages: Vec<Message> = Vec::new();
 
@@ -756,8 +768,6 @@ async fn start_repl_session(
 	.await
 }
 
-
-
 fn snapshot_git_state(thread: &mut Thread, workspace_path: &std::path::Path) {
 	match detect_repo_status(workspace_path) {
 		Ok(Some(status)) => {
@@ -881,7 +891,11 @@ fn print_search_results(results: &[serde_json::Value], query: &str) {
 	if results.is_empty() {
 		println!(
 			"{}",
-			loom_common_i18n::t_fmt(get_locale(), "client.search.no_results", &[("query", query)])
+			loom_common_i18n::t_fmt(
+				get_locale(),
+				"client.search.no_results",
+				&[("query", query)]
+			)
 		);
 		return;
 	}
@@ -930,7 +944,11 @@ fn print_local_search_results(results: &[loom_common_thread::ThreadSummary], que
 	if results.is_empty() {
 		println!(
 			"{}",
-			loom_common_i18n::t_fmt(get_locale(), "client.search.local_no_results", &[("query", query)])
+			loom_common_i18n::t_fmt(
+				get_locale(),
+				"client.search.local_no_results",
+				&[("query", query)]
+			)
 		);
 		return;
 	}
@@ -1007,10 +1025,7 @@ async fn main() -> Result<()> {
 			LocalThreadStore::from_xdg().context("failed to create local thread store")?;
 
 		// Use server_url for thread sync (append /api/ if needed)
-		let sync_url = format!(
-			"{}/api/",
-			args.server_url.trim_end_matches('/')
-		);
+		let sync_url = format!("{}/api/", args.server_url.trim_end_matches('/'));
 		let base_url = Url::parse(&sync_url).context("invalid server URL for thread sync")?;
 		let http_client = loom_common_http::new_client();
 
@@ -1036,7 +1051,10 @@ async fn main() -> Result<()> {
 				.context("failed to list threads")?;
 
 			if threads.is_empty() {
-				println!("{}", loom_common_i18n::t(get_locale(), "client.threads.no_threads"));
+				println!(
+					"{}",
+					loom_common_i18n::t(get_locale(), "client.threads.no_threads")
+				);
 			} else {
 				println!(
 					"{:<42} {:<30} {:>6} {:<20}",
@@ -1092,10 +1110,17 @@ async fn main() -> Result<()> {
 			thread.is_private = true;
 			thread.visibility = ThreadVisibility::Private;
 			info!(thread_id = %thread.id, "created new private (local-only) thread");
-			println!("{}", loom_common_i18n::t(get_locale(), "client.threads.private_session"));
 			println!(
 				"{}",
-				loom_common_i18n::t_fmt(get_locale(), "client.repl.thread_id", &[("id", &thread.id.to_string())])
+				loom_common_i18n::t(get_locale(), "client.threads.private_session")
+			);
+			println!(
+				"{}",
+				loom_common_i18n::t_fmt(
+					get_locale(),
+					"client.repl.thread_id",
+					&[("id", &thread.id.to_string())]
+				)
 			);
 			start_repl_session(&config, &args, thread_store, thread).await
 		}
@@ -1258,7 +1283,7 @@ async fn main() -> Result<()> {
 				let token = auth::load_token(&args.server_url).await;
 				run_weaver_delete(&args.server_url, token, weaver_id).await
 			}
-		}
+		},
 		Some(Command::Spool { command }) => loom_cli_spool::run(command).await,
 		Some(Command::Tunnel { command }) => {
 			let ctx = create_wgtunnel_context(&args).await?;
@@ -1286,8 +1311,7 @@ async fn main() -> Result<()> {
 						loom_cli_wgtunnel::handle_devices_list(&ctx).await
 					}
 					loom_cli_wgtunnel::DevicesCommands::Register(ref register_args) => {
-						loom_cli_wgtunnel::handle_devices_register(register_args.clone(), &ctx)
-							.await
+						loom_cli_wgtunnel::handle_devices_register(register_args.clone(), &ctx).await
 					}
 					loom_cli_wgtunnel::DevicesCommands::Revoke(ref revoke_args) => {
 						loom_cli_wgtunnel::handle_devices_revoke(revoke_args.clone(), &ctx).await
@@ -1395,7 +1419,9 @@ async fn create_wgtunnel_context(args: &Args) -> Result<loom_cli_wgtunnel::CliCo
 		.await
 		.context("failed to create wgtunnel config directory")?;
 
-	Ok(loom_cli_wgtunnel::CliContext::new(server_url, token, config_dir))
+	Ok(loom_cli_wgtunnel::CliContext::new(
+		server_url, token, config_dir,
+	))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1430,12 +1456,19 @@ async fn run_weaver_new(
 		lifetime_hours: ttl,
 	};
 
-	println!("{}", loom_common_i18n::t(get_locale(), "client.weaver.creating"));
+	println!(
+		"{}",
+		loom_common_i18n::t(get_locale(), "client.weaver.creating")
+	);
 	let weaver = client.create_weaver(&request).await?;
 
 	println!(
 		"{}",
-		loom_common_i18n::t_fmt(get_locale(), "client.weaver.created_id", &[("id", &weaver.id)])
+		loom_common_i18n::t_fmt(
+			get_locale(),
+			"client.weaver.created_id",
+			&[("id", &weaver.id)]
+		)
 	);
 	println!(
 		"{}",
@@ -1455,22 +1488,37 @@ async fn run_weaver_new(
 	);
 	println!();
 
-	println!("{}", loom_common_i18n::t(get_locale(), "client.weaver.attaching"));
+	println!(
+		"{}",
+		loom_common_i18n::t(get_locale(), "client.weaver.attaching")
+	);
 	client.attach_terminal(&weaver.id).await?;
 
 	println!(
 		"\n{}",
-		loom_common_i18n::t_fmt(get_locale(), "client.weaver.detached", &[("id", &weaver.id)])
+		loom_common_i18n::t_fmt(
+			get_locale(),
+			"client.weaver.detached",
+			&[("id", &weaver.id)]
+		)
 	);
 	println!(
 		"{}",
-		loom_common_i18n::t_fmt(get_locale(), "client.weaver.reattach_hint", &[("id", &weaver.id)])
+		loom_common_i18n::t_fmt(
+			get_locale(),
+			"client.weaver.reattach_hint",
+			&[("id", &weaver.id)]
+		)
 	);
 
 	Ok(())
 }
 
-async fn run_weaver_ps(server_url: &str, token: Option<loom_common_secret::SecretString>, json: bool) -> Result<()> {
+async fn run_weaver_ps(
+	server_url: &str,
+	token: Option<loom_common_secret::SecretString>,
+	json: bool,
+) -> Result<()> {
 	let mut client = weaver_client::WeaverClient::new(server_url)?;
 	if let Some(token) = token {
 		client = client.with_token(token);
@@ -1480,7 +1528,10 @@ async fn run_weaver_ps(server_url: &str, token: Option<loom_common_secret::Secre
 	if json {
 		println!("{}", serde_json::to_string_pretty(&list.weavers)?);
 	} else if list.weavers.is_empty() {
-		println!("{}", loom_common_i18n::t(get_locale(), "client.weaver.no_weavers"));
+		println!(
+			"{}",
+			loom_common_i18n::t(get_locale(), "client.weaver.no_weavers")
+		);
 	} else {
 		println!(
 			"{:<40} {:<30} {:<10} {:<8} {:<8}",
@@ -1512,7 +1563,11 @@ async fn run_weaver_ps(server_url: &str, token: Option<loom_common_secret::Secre
 	Ok(())
 }
 
-async fn run_weaver_delete(server_url: &str, token: Option<loom_common_secret::SecretString>, weaver_id: &str) -> Result<()> {
+async fn run_weaver_delete(
+	server_url: &str,
+	token: Option<loom_common_secret::SecretString>,
+	weaver_id: &str,
+) -> Result<()> {
 	let mut client = weaver_client::WeaverClient::new(server_url)?;
 	if let Some(token) = token {
 		client = client.with_token(token);
@@ -1523,12 +1578,19 @@ async fn run_weaver_delete(server_url: &str, token: Option<loom_common_secret::S
 		loom_common_i18n::t_fmt(get_locale(), "client.weaver.deleting", &[("id", weaver_id)])
 	);
 	client.delete_weaver(weaver_id).await?;
-	println!("{}", loom_common_i18n::t(get_locale(), "client.weaver.deleted"));
+	println!(
+		"{}",
+		loom_common_i18n::t(get_locale(), "client.weaver.deleted")
+	);
 
 	Ok(())
 }
 
-async fn run_weaver_attach(server_url: &str, token: Option<loom_common_secret::SecretString>, weaver_id: &str) -> Result<()> {
+async fn run_weaver_attach(
+	server_url: &str,
+	token: Option<loom_common_secret::SecretString>,
+	weaver_id: &str,
+) -> Result<()> {
 	let mut client = weaver_client::WeaverClient::new(server_url)?;
 	if let Some(token) = token {
 		client = client.with_token(token);
@@ -1536,7 +1598,11 @@ async fn run_weaver_attach(server_url: &str, token: Option<loom_common_secret::S
 
 	println!(
 		"{}",
-		loom_common_i18n::t_fmt(get_locale(), "client.weaver.attach_prefix", &[("id", weaver_id)])
+		loom_common_i18n::t_fmt(
+			get_locale(),
+			"client.weaver.attach_prefix",
+			&[("id", weaver_id)]
+		)
 	);
 	client.attach_terminal(weaver_id).await?;
 
@@ -1546,7 +1612,11 @@ async fn run_weaver_attach(server_url: &str, token: Option<loom_common_secret::S
 	);
 	println!(
 		"{}",
-		loom_common_i18n::t_fmt(get_locale(), "client.weaver.reattach_hint", &[("id", weaver_id)])
+		loom_common_i18n::t_fmt(
+			get_locale(),
+			"client.weaver.reattach_hint",
+			&[("id", weaver_id)]
+		)
 	);
 
 	Ok(())

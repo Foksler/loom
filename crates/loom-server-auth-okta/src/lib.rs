@@ -459,7 +459,8 @@ impl OktaOAuthClient {
 		let mut url =
 			Url::parse(&self.authorization_endpoint()).expect("invalid authorization endpoint");
 
-		url.query_pairs_mut()
+		url
+			.query_pairs_mut()
 			.append_pair("client_id", &self.config.client_id)
 			.append_pair("redirect_uri", &self.config.redirect_uri)
 			.append_pair("response_type", "code")
@@ -602,10 +603,7 @@ impl OktaOAuthClient {
 	/// - [`OAuthError::OktaError`]: Introspection endpoint error.
 	/// - [`OAuthError::ParseError`]: Unexpected response format.
 	#[tracing::instrument(skip(self, token), name = "OktaOAuthClient::introspect_token")]
-	pub async fn introspect_token(
-		&self,
-		token: &str,
-	) -> Result<OktaIntrospectResponse, OAuthError> {
+	pub async fn introspect_token(&self, token: &str) -> Result<OktaIntrospectResponse, OAuthError> {
 		tracing::debug!("introspecting token");
 
 		let response = self
@@ -625,9 +623,10 @@ impl OktaOAuthClient {
 			)));
 		}
 
-		response.json().await.map_err(|e| {
-			OAuthError::ParseError(format!("failed to parse introspect response: {e}"))
-		})
+		response
+			.json()
+			.await
+			.map_err(|e| OAuthError::ParseError(format!("failed to parse introspect response: {e}")))
 	}
 }
 

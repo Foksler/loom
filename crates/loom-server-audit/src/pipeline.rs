@@ -6,12 +6,12 @@ use std::sync::Arc;
 use tokio::sync::mpsc::{self, error::SendError};
 use tracing::{instrument, warn};
 
-use loom_server_config::QueueOverflowPolicy;
 use crate::enrichment::{AuditEnricher, EnrichedAuditEvent};
 use crate::event::AuditLogEntry;
 use crate::filter::AuditFilterConfig;
 use crate::redaction::{redact_json_value, redact_optional_string, redact_string};
 use crate::sink::AuditSink;
+use loom_server_config::QueueOverflowPolicy;
 
 /// Redacts secrets from all string fields in an enriched audit event.
 ///
@@ -117,10 +117,7 @@ impl AuditService {
 		}
 	}
 
-	pub async fn log_blocking(
-		&self,
-		entry: AuditLogEntry,
-	) -> Result<(), SendError<AuditLogEntry>> {
+	pub async fn log_blocking(&self, entry: AuditLogEntry) -> Result<(), SendError<AuditLogEntry>> {
 		self.tx.send(entry).await
 	}
 }

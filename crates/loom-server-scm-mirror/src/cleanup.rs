@@ -182,7 +182,10 @@ pub async fn run_cleanup_job(
 		}
 	};
 
-	info!(count = stale_mirrors.len(), "Found stale mirrors for cleanup");
+	info!(
+		count = stale_mirrors.len(),
+		"Found stale mirrors for cleanup"
+	);
 
 	let mut results = Vec::new();
 	for mirror in &stale_mirrors {
@@ -245,38 +248,44 @@ mod tests {
 	#[async_trait]
 	impl ExternalMirrorStore for FakeExternalMirrorStore {
 		async fn get_by_id(&self, id: Uuid) -> Result<Option<ExternalMirror>> {
-			Ok(self
-				.mirrors
-				.lock()
-				.unwrap()
-				.iter()
-				.find(|m| m.id == id)
-				.cloned())
+			Ok(
+				self
+					.mirrors
+					.lock()
+					.unwrap()
+					.iter()
+					.find(|m| m.id == id)
+					.cloned(),
+			)
 		}
 
 		async fn get_by_repo_id(&self, repo_id: Uuid) -> Result<Option<ExternalMirror>> {
-			Ok(self
-				.mirrors
-				.lock()
-				.unwrap()
-				.iter()
-				.find(|m| m.repo_id == repo_id)
-				.cloned())
+			Ok(
+				self
+					.mirrors
+					.lock()
+					.unwrap()
+					.iter()
+					.find(|m| m.repo_id == repo_id)
+					.cloned(),
+			)
 		}
 
 		async fn find_stale(&self, stale_threshold: DateTime<Utc>) -> Result<Vec<ExternalMirror>> {
-			Ok(self
-				.mirrors
-				.lock()
-				.unwrap()
-				.iter()
-				.filter(|m| {
-					m.last_accessed_at
-						.map(|t| t < stale_threshold)
-						.unwrap_or(true)
-				})
-				.cloned()
-				.collect())
+			Ok(
+				self
+					.mirrors
+					.lock()
+					.unwrap()
+					.iter()
+					.filter(|m| {
+						m.last_accessed_at
+							.map(|t| t < stale_threshold)
+							.unwrap_or(true)
+					})
+					.cloned()
+					.collect(),
+			)
 		}
 
 		async fn delete(&self, id: Uuid) -> Result<()> {
@@ -339,10 +348,7 @@ mod tests {
 		let never_accessed_id = Uuid::new_v4();
 
 		let fresh_mirror = make_mirror(fresh_id, Some(Utc::now()));
-		let stale_mirror = make_mirror(
-			stale_id,
-			Some(Utc::now() - chrono::Duration::days(10)),
-		);
+		let stale_mirror = make_mirror(stale_id, Some(Utc::now() - chrono::Duration::days(10)));
 		let never_accessed_mirror = make_mirror(never_accessed_id, None);
 
 		store.add_mirror(fresh_mirror);
@@ -402,7 +408,9 @@ mod tests {
 
 		let nonexistent_path = std::path::Path::new("/tmp/nonexistent-loom-test-path");
 
-		delete_mirror(&mirror, nonexistent_path, &store).await.unwrap();
+		delete_mirror(&mirror, nonexistent_path, &store)
+			.await
+			.unwrap();
 
 		assert!(store.was_deleted(mirror_id));
 	}

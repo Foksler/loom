@@ -71,7 +71,9 @@ impl SerperConfigLayer {
 	}
 
 	pub fn finalize(self) -> SerperConfig {
-		SerperConfig { api_key: self.api_key }
+		SerperConfig {
+			api_key: self.api_key,
+		}
 	}
 }
 

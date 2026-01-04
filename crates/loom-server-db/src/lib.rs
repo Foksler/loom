@@ -1,8 +1,8 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
-mod error;
 pub mod api_key;
+mod error;
 pub mod org;
 pub mod pool;
 pub mod session;
@@ -18,7 +18,7 @@ pub use org::OrgRepository;
 pub use pool::create_pool;
 pub use session::SessionRepository;
 pub use share::ShareRepository;
-pub use team::TeamRepository;
+pub use team::{ScimTeam, TeamRepository};
 pub use thread::{ThreadRepository, ThreadSearchHit};
 pub use types::{GithubInstallation, GithubInstallationInfo, GithubRepo};
-pub use user::UserRepository;
+pub use user::{ScimUserRow, UserRepository};

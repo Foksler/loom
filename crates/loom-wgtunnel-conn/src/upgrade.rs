@@ -34,7 +34,10 @@ pub async fn probe_direct(
 	let mut buf = [0u8; 128];
 	match timeout(PROBE_TIMEOUT, socket.recv_from(&mut buf)).await {
 		Ok(Ok((len, from))) => {
-			if from == peer_endpoint && len >= PROBE_MAGIC.len() && &buf[..PROBE_MAGIC.len()] == PROBE_MAGIC {
+			if from == peer_endpoint
+				&& len >= PROBE_MAGIC.len()
+				&& &buf[..PROBE_MAGIC.len()] == PROBE_MAGIC
+			{
 				debug!("received valid probe response");
 				Ok(true)
 			} else {
@@ -101,12 +104,20 @@ mod tests {
 	fn test_should_upgrade_when_using_derp() {
 		assert!(should_upgrade(true, None, None));
 		assert!(should_upgrade(true, None, Some(make_addr())));
-		assert!(should_upgrade(true, Some(Instant::now()), Some(make_addr())));
+		assert!(should_upgrade(
+			true,
+			Some(Instant::now()),
+			Some(make_addr())
+		));
 	}
 
 	#[test]
 	fn test_should_not_upgrade_when_direct() {
-		assert!(!should_upgrade(false, Some(Instant::now()), Some(make_addr())));
+		assert!(!should_upgrade(
+			false,
+			Some(Instant::now()),
+			Some(make_addr())
+		));
 	}
 
 	#[test]

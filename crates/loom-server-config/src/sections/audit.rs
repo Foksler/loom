@@ -228,7 +228,10 @@ impl std::fmt::Debug for HttpSinkConfig {
 			.field("name", &self.name)
 			.field("url", &self.url)
 			.field("method", &self.method)
-			.field("headers", &format!("[{} header(s) REDACTED]", self.headers.len()))
+			.field(
+				"headers",
+				&format!("[{} header(s) REDACTED]", self.headers.len()),
+			)
 			.field("timeout_ms", &self.timeout_ms)
 			.field("retry_max_attempts", &self.retry_max_attempts)
 			.field("min_severity", &self.min_severity)
@@ -324,7 +327,10 @@ mod tests {
 		assert!(config.enabled);
 		assert_eq!(config.retention_days, 90);
 		assert_eq!(config.queue_capacity, 10000);
-		assert_eq!(config.queue_overflow_policy, QueueOverflowPolicy::DropNewest);
+		assert_eq!(
+			config.queue_overflow_policy,
+			QueueOverflowPolicy::DropNewest
+		);
 		assert_eq!(config.min_severity, "info");
 		assert!(config.syslog.is_none());
 		assert!(config.http_sinks.is_empty());

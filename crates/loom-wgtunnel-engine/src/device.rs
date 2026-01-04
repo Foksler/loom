@@ -82,7 +82,10 @@ impl Device for InternalDevice {
 	type RxToken<'a> = InternalRxToken;
 	type TxToken<'a> = InternalTxToken<'a>;
 
-	fn receive(&mut self, _timestamp: SmoltcpInstant) -> Option<(Self::RxToken<'_>, Self::TxToken<'_>)> {
+	fn receive(
+		&mut self,
+		_timestamp: SmoltcpInstant,
+	) -> Option<(Self::RxToken<'_>, Self::TxToken<'_>)> {
 		if let Some(data) = self.rx_queue.pop_front() {
 			Some((
 				InternalRxToken { data },
@@ -132,7 +135,9 @@ impl VirtualDevice {
 
 		let smoltcp_addr = Ipv6Address::from_bytes(&address.octets());
 		iface.update_ip_addrs(|addrs| {
-			addrs.push(IpCidr::new(IpAddress::Ipv6(smoltcp_addr), 128)).ok();
+			addrs
+				.push(IpCidr::new(IpAddress::Ipv6(smoltcp_addr), 128))
+				.ok();
 		});
 
 		let sockets = SocketSet::new(vec![]);
@@ -273,8 +278,6 @@ impl VirtualDevice {
 			inner.wakers.push(waker);
 		}
 	}
-
-
 }
 
 impl Clone for VirtualDevice {
@@ -316,18 +319,10 @@ impl VirtualTcpListener {
 					if let Some(remote) = socket.remote_endpoint() {
 						let remote_addr = {
 							let IpAddress::Ipv6(v6) = remote.addr;
-							SocketAddrV6::new(
-								Ipv6Addr::from(v6.0),
-								remote.port,
-								0,
-								0,
-							)
+							SocketAddrV6::new(Ipv6Addr::from(v6.0), remote.port, 0, 0)
 						};
 
-						let stream = VirtualTcpStream::new(
-							self.device.clone(),
-							self.handle,
-						);
+						let stream = VirtualTcpStream::new(self.device.clone(), self.handle);
 						return Ok((stream, remote_addr));
 					}
 				}
@@ -416,10 +411,7 @@ impl VirtualTcpStream {
 		} else if socket.state() == TcpState::Established {
 			Err(io::Error::new(io::ErrorKind::WouldBlock, "buffer full"))
 		} else {
-			Err(io::Error::new(
-				io::ErrorKind::NotConnected,
-				"not connected",
-			))
+			Err(io::Error::new(io::ErrorKind::NotConnected, "not connected"))
 		}
 	}
 
@@ -450,11 +442,7 @@ impl AsyncRead for VirtualTcpStream {
 }
 
 impl AsyncWrite for VirtualTcpStream {
-	fn poll_write(
-		self: Pin<&mut Self>,
-		cx: &mut Context<'_>,
-		buf: &[u8],
-	) -> Poll<io::Result<usize>> {
+	fn poll_write(self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8]) -> Poll<io::Result<usize>> {
 		match self.poll_write_inner(buf) {
 			Ok(n) => Poll::Ready(Ok(n)),
 			Err(e) if e.kind() == io::ErrorKind::WouldBlock => {

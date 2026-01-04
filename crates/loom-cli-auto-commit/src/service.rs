@@ -4,8 +4,8 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use loom_common_core::llm::LlmClient;
 use loom_cli_git::GitClient;
+use loom_common_core::llm::LlmClient;
 use tracing::{debug, error, info, warn};
 
 use crate::config::AutoCommitConfig;

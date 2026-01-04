@@ -8,8 +8,8 @@ use async_trait::async_trait;
 
 #[async_trait]
 pub trait Job: Send + Sync {
-    fn id(&self) -> &str;
-    fn name(&self) -> &str;
-    fn description(&self) -> &str;
-    async fn run(&self, ctx: &JobContext) -> Result<JobOutput, JobError>;
+	fn id(&self) -> &str;
+	fn name(&self) -> &str;
+	fn description(&self) -> &str;
+	async fn run(&self, ctx: &JobContext) -> Result<JobOutput, JobError>;
 }

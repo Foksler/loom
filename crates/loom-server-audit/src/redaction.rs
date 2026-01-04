@@ -180,10 +180,7 @@ mod tests {
 			"Expected redaction in: {}",
 			redacted["secret"]
 		);
-		assert!(original["secret"]
-			.as_str()
-			.unwrap()
-			.contains(&github_pat()));
+		assert!(original["secret"].as_str().unwrap().contains(&github_pat()));
 	}
 
 	#[test]

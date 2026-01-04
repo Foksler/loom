@@ -168,7 +168,9 @@ impl GeoIpService {
 
 	#[tracing::instrument(level = "trace", skip(self), fields(ip = %ip_str))]
 	pub fn lookup_str(&self, ip_str: &str) -> Result<GeoLocation> {
-		let ip: IpAddr = ip_str.parse().map_err(|_| GeoIpError::InvalidIp(ip_str.to_string()))?;
+		let ip: IpAddr = ip_str
+			.parse()
+			.map_err(|_| GeoIpError::InvalidIp(ip_str.to_string()))?;
 		self.lookup(ip)
 	}
 
@@ -207,7 +209,10 @@ mod tests {
 			country: Some("United States".to_string()),
 			..Default::default()
 		};
-		assert_eq!(loc.display_string(), Some("Mountain View, United States".to_string()));
+		assert_eq!(
+			loc.display_string(),
+			Some("Mountain View, United States".to_string())
+		);
 
 		let loc = GeoLocation {
 			city: None,

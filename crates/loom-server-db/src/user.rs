@@ -7,11 +7,25 @@
 //! Users can have multiple identities (e.g., GitHub, Google, MagicLink).
 
 use chrono::{DateTime, Utc};
-use loom_server_auth::{Identity, IdentityId, Provider, User, UserId};
+use loom_server_auth::{Identity, IdentityId, OrgId, Provider, User, UserId};
+use serde::{Deserialize, Serialize};
 use sqlx::{sqlite::SqlitePool, Row};
 use uuid::Uuid;
 
 use crate::error::DbError;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScimUserRow {
+	pub id: UserId,
+	pub primary_email: String,
+	pub display_name: Option<String>,
+	pub avatar_url: Option<String>,
+	pub locale: Option<String>,
+	pub scim_external_id: Option<String>,
+	pub deleted_at: Option<DateTime<Utc>>,
+	pub created_at: DateTime<Utc>,
+	pub updated_at: DateTime<Utc>,
+}
 
 /// Repository for user database operations.
 ///
@@ -249,11 +263,7 @@ impl UserRepository {
 	/// * `id` - The user's UUID
 	/// * `locale` - The locale code (e.g., "en", "es", "ar") or None to clear
 	#[tracing::instrument(skip(self), fields(user_id = %id))]
-	pub async fn update_locale(
-		&self,
-		id: &UserId,
-		locale: Option<&str>,
-	) -> Result<(), DbError> {
+	pub async fn update_locale(&self, id: &UserId, locale: Option<&str>) -> Result<(), DbError> {
 		let now = Utc::now().to_rfc3339();
 		sqlx::query("UPDATE users SET locale = ?, updated_at = ? WHERE id = ?")
 			.bind(locale)
@@ -268,10 +278,7 @@ impl UserRepository {
 
 	/// Get a user by their username (case-insensitive).
 	#[tracing::instrument(skip(self))]
-	pub async fn get_user_by_username(
-		&self,
-		username: &str,
-	) -> Result<Option<User>, DbError> {
+	pub async fn get_user_by_username(&self, username: &str) -> Result<Option<User>, DbError> {
 		let row = sqlx::query(
 			r#"
 			SELECT id, display_name, username, primary_email, avatar_url,
@@ -332,11 +339,7 @@ impl UserRepository {
 
 	/// Update a user's username.
 	#[tracing::instrument(skip(self), fields(user_id = %user_id))]
-	pub async fn update_username(
-		&self,
-		user_id: &UserId,
-		username: &str,
-	) -> Result<(), DbError> {
+	pub async fn update_username(&self, user_id: &UserId, username: &str) -> Result<(), DbError> {
 		let now = Utc::now().to_rfc3339();
 		sqlx::query("UPDATE users SET username = ?, updated_at = ? WHERE id = ?")
 			.bind(username)
@@ -420,10 +423,9 @@ impl UserRepository {
 			.fetch_all(&self.pool)
 			.await?;
 
-			let count: (i64,) =
-				sqlx::query_as("SELECT COUNT(*) FROM users WHERE deleted_at IS NULL")
-					.fetch_one(&self.pool)
-					.await?;
+			let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM users WHERE deleted_at IS NULL")
+				.fetch_one(&self.pool)
+				.await?;
 
 			let users: Vec<User> = rows
 				.iter()
@@ -438,11 +440,10 @@ impl UserRepository {
 
 	#[tracing::instrument(skip(self))]
 	pub async fn count_system_admins(&self) -> Result<i64, DbError> {
-		let count: (i64,) = sqlx::query_as(
-			"SELECT COUNT(*) FROM users WHERE is_system_admin = 1 AND deleted_at IS NULL",
-		)
-		.fetch_one(&self.pool)
-		.await?;
+		let count: (i64,) =
+			sqlx::query_as("SELECT COUNT(*) FROM users WHERE is_system_admin = 1 AND deleted_at IS NULL")
+				.fetch_one(&self.pool)
+				.await?;
 
 		tracing::debug!(count = count.0, "counted system admins");
 		Ok(count.0)
@@ -489,10 +490,7 @@ impl UserRepository {
 	/// # Returns
 	/// List of all identities (GitHub, Google, etc.) linked to this user.
 	#[tracing::instrument(skip(self), fields(user_id = %user_id))]
-	pub async fn get_identities_for_user(
-		&self,
-		user_id: &UserId,
-	) -> Result<Vec<Identity>, DbError> {
+	pub async fn get_identities_for_user(&self, user_id: &UserId) -> Result<Vec<Identity>, DbError> {
 		let rows = sqlx::query(
 			r#"
 			SELECT id, user_id, provider, provider_user_id,
@@ -632,10 +630,9 @@ impl UserRepository {
 	/// Total count of active users in the system.
 	#[tracing::instrument(skip(self))]
 	pub async fn count_users(&self) -> Result<i64, DbError> {
-		let count: (i64,) =
-			sqlx::query_as("SELECT COUNT(*) FROM users WHERE deleted_at IS NULL")
-				.fetch_one(&self.pool)
-				.await?;
+		let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM users WHERE deleted_at IS NULL")
+			.fetch_one(&self.pool)
+			.await?;
 		Ok(count.0)
 	}
 
@@ -658,10 +655,182 @@ impl UserRepository {
 		Ok(())
 	}
 
+	#[tracing::instrument(skip(self), fields(org_id = %org_id))]
+	pub async fn list_users_in_org(
+		&self,
+		org_id: &OrgId,
+		limit: i64,
+		offset: i64,
+	) -> Result<Vec<ScimUserRow>, DbError> {
+		let rows = sqlx::query(
+			r#"
+			SELECT u.id, u.primary_email, u.display_name, u.avatar_url, u.locale,
+			       u.scim_external_id, u.deleted_at, u.created_at, u.updated_at
+			FROM users u
+			JOIN org_memberships om ON u.id = om.user_id
+			WHERE om.org_id = ?
+			ORDER BY u.id ASC
+			LIMIT ? OFFSET ?
+			"#,
+		)
+		.bind(org_id.to_string())
+		.bind(limit)
+		.bind(offset)
+		.fetch_all(&self.pool)
+		.await?;
+
+		rows
+			.into_iter()
+			.map(|r| self.row_to_scim_user(&r))
+			.collect()
+	}
+
+	#[tracing::instrument(skip(self), fields(org_id = %org_id))]
+	pub async fn count_users_in_org(&self, org_id: &OrgId) -> Result<i64, DbError> {
+		let row: (i64,) = sqlx::query_as(
+			r#"
+			SELECT COUNT(*)
+			FROM users u
+			JOIN org_memberships om ON u.id = om.user_id
+			WHERE om.org_id = ?
+			"#,
+		)
+		.bind(org_id.to_string())
+		.fetch_one(&self.pool)
+		.await?;
+
+		Ok(row.0)
+	}
+
+	#[tracing::instrument(skip(self), fields(user_id = %user_id, org_id = %org_id))]
+	pub async fn get_user_in_org(
+		&self,
+		user_id: &UserId,
+		org_id: &OrgId,
+	) -> Result<Option<ScimUserRow>, DbError> {
+		let row = sqlx::query(
+			r#"
+			SELECT u.id, u.primary_email, u.display_name, u.avatar_url, u.locale,
+			       u.scim_external_id, u.deleted_at, u.created_at, u.updated_at
+			FROM users u
+			JOIN org_memberships om ON u.id = om.user_id
+			WHERE u.id = ? AND om.org_id = ?
+			"#,
+		)
+		.bind(user_id.to_string())
+		.bind(org_id.to_string())
+		.fetch_optional(&self.pool)
+		.await?;
+
+		row.map(|r| self.row_to_scim_user(&r)).transpose()
+	}
+
+	#[tracing::instrument(skip(self), fields(user_id = %user_id))]
+	pub async fn update_scim_fields(
+		&self,
+		user_id: &UserId,
+		scim_external_id: Option<&str>,
+		provisioned_by_scim: bool,
+	) -> Result<(), DbError> {
+		let now = Utc::now().to_rfc3339();
+		sqlx::query(
+			"UPDATE users SET scim_external_id = ?, provisioned_by_scim = ?, updated_at = ? WHERE id = ?",
+		)
+		.bind(scim_external_id)
+		.bind(provisioned_by_scim as i32)
+		.bind(&now)
+		.bind(user_id.to_string())
+		.execute(&self.pool)
+		.await?;
+
+		tracing::debug!(user_id = %user_id, "SCIM fields updated");
+		Ok(())
+	}
+
+	#[tracing::instrument(skip(self), fields(user_id = %user_id))]
+	pub async fn update_display_name(
+		&self,
+		user_id: &UserId,
+		display_name: &str,
+	) -> Result<(), DbError> {
+		sqlx::query("UPDATE users SET display_name = ?, updated_at = datetime('now') WHERE id = ?")
+			.bind(display_name)
+			.bind(user_id.to_string())
+			.execute(&self.pool)
+			.await?;
+
+		tracing::debug!(user_id = %user_id, "display name updated");
+		Ok(())
+	}
+
+	#[tracing::instrument(skip(self), fields(user_id = %user_id))]
+	pub async fn update_user_for_scim(
+		&self,
+		user_id: &UserId,
+		display_name: Option<&str>,
+		scim_external_id: Option<&str>,
+		locale: Option<&str>,
+		deleted_at: Option<&str>,
+	) -> Result<(), DbError> {
+		sqlx::query(
+			r#"
+			UPDATE users SET display_name = ?, scim_external_id = ?, locale = ?, deleted_at = ?, updated_at = datetime('now')
+			WHERE id = ?
+			"#,
+		)
+		.bind(display_name)
+		.bind(scim_external_id)
+		.bind(locale)
+		.bind(deleted_at)
+		.bind(user_id.to_string())
+		.execute(&self.pool)
+		.await?;
+
+		tracing::debug!(user_id = %user_id, "user updated for SCIM");
+		Ok(())
+	}
+
+	fn row_to_scim_user(&self, row: &sqlx::sqlite::SqliteRow) -> Result<ScimUserRow, DbError> {
+		let id_str: String = row.get("id");
+		let id =
+			Uuid::parse_str(&id_str).map_err(|e| DbError::Internal(format!("Invalid user ID: {e}")))?;
+
+		let created_at_str: String = row.get("created_at");
+		let created_at = DateTime::parse_from_rfc3339(&created_at_str)
+			.map_err(|e| DbError::Internal(format!("Invalid created_at: {e}")))?
+			.with_timezone(&Utc);
+
+		let updated_at_str: String = row.get("updated_at");
+		let updated_at = DateTime::parse_from_rfc3339(&updated_at_str)
+			.map_err(|e| DbError::Internal(format!("Invalid updated_at: {e}")))?
+			.with_timezone(&Utc);
+
+		let deleted_at: Option<String> = row.get("deleted_at");
+		let deleted_at = deleted_at
+			.map(|s| {
+				DateTime::parse_from_rfc3339(&s)
+					.map(|dt| dt.with_timezone(&Utc))
+					.map_err(|e| DbError::Internal(format!("Invalid deleted_at: {e}")))
+			})
+			.transpose()?;
+
+		Ok(ScimUserRow {
+			id: UserId::new(id),
+			primary_email: row.get("primary_email"),
+			display_name: row.get("display_name"),
+			avatar_url: row.get("avatar_url"),
+			locale: row.get("locale"),
+			scim_external_id: row.get("scim_external_id"),
+			deleted_at,
+			created_at,
+			updated_at,
+		})
+	}
+
 	fn row_to_user(&self, row: &sqlx::sqlite::SqliteRow) -> Result<User, DbError> {
 		let id_str: String = row.get("id");
-		let id = Uuid::parse_str(&id_str)
-			.map_err(|e| DbError::Internal(format!("Invalid user ID: {e}")))?;
+		let id =
+			Uuid::parse_str(&id_str).map_err(|e| DbError::Internal(format!("Invalid user ID: {e}")))?;
 
 		let created_at_str: String = row.get("created_at");
 		let created_at = DateTime::parse_from_rfc3339(&created_at_str)
@@ -807,12 +976,7 @@ mod tests {
 		let repo = UserRepository::new(pool);
 
 		let user = repo
-			.find_or_create_user_by_email(
-				"first@example.com",
-				"First User",
-				None,
-				Some("firstuser"),
-			)
+			.find_or_create_user_by_email("first@example.com", "First User", None, Some("firstuser"))
 			.await
 			.unwrap();
 
@@ -828,12 +992,7 @@ mod tests {
 		let repo = UserRepository::new(pool);
 
 		let first = repo
-			.find_or_create_user_by_email(
-				"first@example.com",
-				"First User",
-				None,
-				Some("firstuser"),
-			)
+			.find_or_create_user_by_email("first@example.com", "First User", None, Some("firstuser"))
 			.await
 			.unwrap();
 
@@ -860,12 +1019,7 @@ mod tests {
 		let repo = UserRepository::new(pool);
 
 		let first = repo
-			.find_or_create_user_by_email(
-				"admin@example.com",
-				"Admin User",
-				None,
-				Some("adminuser"),
-			)
+			.find_or_create_user_by_email("admin@example.com", "Admin User", None, Some("adminuser"))
 			.await
 			.unwrap();
 

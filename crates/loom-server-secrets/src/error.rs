@@ -131,8 +131,7 @@ impl SecretsError {
 	pub fn status_code(&self) -> u16 {
 		match self {
 			// 400 Bad Request
-			SecretsError::Configuration(_)
-			| SecretsError::InvalidKeySize { .. } => 400,
+			SecretsError::Configuration(_) | SecretsError::InvalidKeySize { .. } => 400,
 
 			// 500 - Server misconfiguration
 			SecretsError::MasterKeyNotConfigured | SecretsError::SvidSigningKeyNotConfigured => 500,
@@ -193,7 +192,10 @@ mod tests {
 
 	#[test]
 	fn secret_not_found_is_404() {
-		assert_eq!(SecretsError::SecretNotFound("test".into()).status_code(), 404);
+		assert_eq!(
+			SecretsError::SecretNotFound("test".into()).status_code(),
+			404
+		);
 	}
 
 	#[test]

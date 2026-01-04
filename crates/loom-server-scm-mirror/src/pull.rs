@@ -77,8 +77,8 @@ async fn fetch_updates(target_path: &Path, clone_url: &str) -> Result<()> {
 	let path = target_path.to_path_buf();
 
 	tokio::task::spawn_blocking(move || {
-		let repo = gix::open(&path)
-			.map_err(|e| MirrorError::GitError(format!("Failed to open repo: {}", e)))?;
+		let repo =
+			gix::open(&path).map_err(|e| MirrorError::GitError(format!("Failed to open repo: {}", e)))?;
 
 		let remote_url = gix::url::parse(url.as_str().into())
 			.map_err(|e| MirrorError::GitError(format!("Invalid URL: {}", e)))?;
@@ -107,10 +107,7 @@ async fn fetch_updates(target_path: &Path, clone_url: &str) -> Result<()> {
 pub async fn check_repo_exists(platform: Platform, owner: &str, repo: &str) -> Result<bool> {
 	let url = match platform {
 		Platform::GitHub => format!("https://api.github.com/repos/{}/{}", owner, repo),
-		Platform::GitLab => format!(
-			"https://gitlab.com/api/v4/projects/{}%2F{}",
-			owner, repo
-		),
+		Platform::GitLab => format!("https://gitlab.com/api/v4/projects/{}%2F{}", owner, repo),
 	};
 
 	let client = loom_common_http::new_client();
@@ -164,7 +161,10 @@ pub async fn pull_mirror_with_recovery(
 
 			if let Err(e) = std::fs::remove_dir_all(target_path) {
 				error!(path = ?target_path, error = %e, "Failed to remove diverged repo");
-				return Ok(PullResult::Error(format!("Failed to remove diverged repo: {}", e)));
+				return Ok(PullResult::Error(format!(
+					"Failed to remove diverged repo: {}",
+					e
+				)));
 			}
 
 			clone_bare(target_path, &clone_url).await?;
@@ -189,7 +189,11 @@ fn get_refs_hash(repo_path: &Path) -> Result<String> {
 		ref_strings.push(format!("HEAD {}", head));
 	}
 
-	for r in refs.all().map_err(|e| MirrorError::GitError(e.to_string()))?.flatten() {
+	for r in refs
+		.all()
+		.map_err(|e| MirrorError::GitError(e.to_string()))?
+		.flatten()
+	{
 		if let Some(id) = r.try_id() {
 			ref_strings.push(format!("{} {}", id.detach(), r.name().as_bstr()));
 		}
@@ -217,28 +221,40 @@ mod tests {
 
 	#[test]
 	fn test_is_divergence_error_non_fast_forward() {
-		assert!(is_divergence_error("error: cannot fast-forward, non-fast-forward update"));
-		assert!(is_divergence_error(" ! [rejected]        main -> main (non-fast-forward)"));
+		assert!(is_divergence_error(
+			"error: cannot fast-forward, non-fast-forward update"
+		));
+		assert!(is_divergence_error(
+			" ! [rejected]        main -> main (non-fast-forward)"
+		));
 	}
 
 	#[test]
 	fn test_is_divergence_error_refusing_to_fetch() {
-		assert!(is_divergence_error("refusing to fetch into branch 'refs/heads/main'"));
+		assert!(is_divergence_error(
+			"refusing to fetch into branch 'refs/heads/main'"
+		));
 	}
 
 	#[test]
 	fn test_is_divergence_error_cannot_lock() {
-		assert!(is_divergence_error("error: cannot lock ref 'refs/heads/main'"));
+		assert!(is_divergence_error(
+			"error: cannot lock ref 'refs/heads/main'"
+		));
 	}
 
 	#[test]
 	fn test_is_divergence_error_unable_to_update() {
-		assert!(is_divergence_error("error: unable to update local ref 'refs/heads/main'"));
+		assert!(is_divergence_error(
+			"error: unable to update local ref 'refs/heads/main'"
+		));
 	}
 
 	#[test]
 	fn test_is_divergence_error_diverged() {
-		assert!(is_divergence_error("Your branch has diverged from 'origin/main'"));
+		assert!(is_divergence_error(
+			"Your branch has diverged from 'origin/main'"
+		));
 	}
 
 	#[test]
@@ -305,7 +321,15 @@ mod tests {
 			.expect("git add failed");
 
 		std::process::Command::new("git")
-			.args(["-c", "user.email=test@test.com", "-c", "user.name=Test", "commit", "-m", "initial"])
+			.args([
+				"-c",
+				"user.email=test@test.com",
+				"-c",
+				"user.name=Test",
+				"commit",
+				"-m",
+				"initial",
+			])
 			.current_dir(&work_path)
 			.output()
 			.expect("git commit failed");
@@ -328,7 +352,15 @@ mod tests {
 			.output()
 			.unwrap();
 		std::process::Command::new("git")
-			.args(["-c", "user.email=test@test.com", "-c", "user.name=Test", "commit", "-m", "update"])
+			.args([
+				"-c",
+				"user.email=test@test.com",
+				"-c",
+				"user.name=Test",
+				"commit",
+				"-m",
+				"update",
+			])
 			.current_dir(&work_path)
 			.output()
 			.unwrap();
@@ -343,7 +375,10 @@ mod tests {
 		clone_bare(&mirror_path, &source_url).await.unwrap();
 
 		let refs_after = get_refs_hash(&mirror_path).unwrap();
-		assert_ne!(refs_before, refs_after, "Refs should change after new commit");
+		assert_ne!(
+			refs_before, refs_after,
+			"Refs should change after new commit"
+		);
 	}
 
 	#[tokio::test]

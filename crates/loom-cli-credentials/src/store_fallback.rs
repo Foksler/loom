@@ -19,7 +19,10 @@ pub struct KeyringThenFileStore {
 
 impl KeyringThenFileStore {
 	pub fn new(service: impl Into<String>, file_path: impl Into<PathBuf>) -> Self {
-		Self { keyring: KeyringCredentialStore::new(service), file: FileCredentialStore::new(file_path) }
+		Self {
+			keyring: KeyringCredentialStore::new(service),
+			file: FileCredentialStore::new(file_path),
+		}
 	}
 }
 
@@ -76,7 +79,9 @@ mod tests {
 		let path = temp_dir.path().join("credentials.json");
 		let store = FileCredentialStore::new(&path);
 
-		let creds = CredentialValue::ApiKey { key: SecretString::new("test-token".to_string()) };
+		let creds = CredentialValue::ApiKey {
+			key: SecretString::new("test-token".to_string()),
+		};
 		store.save("test-provider", &creds).await.unwrap();
 
 		let loaded = store.load("test-provider").await.unwrap();

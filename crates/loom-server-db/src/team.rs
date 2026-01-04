@@ -6,15 +6,29 @@
 //! This module provides database access for team management within organizations.
 //! Teams group users for access control and collaboration.
 
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use loom_server_auth::{
 	team::{Team, TeamMembership},
 	types::{OrgId, TeamId, TeamRole, UserId},
 };
+use serde::{Deserialize, Serialize};
 use sqlx::{sqlite::SqlitePool, Row};
 use uuid::Uuid;
 
 use crate::error::DbError;
+
+/// A team with SCIM-specific fields for provisioning.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScimTeam {
+	pub id: TeamId,
+	pub org_id: OrgId,
+	pub name: String,
+	pub slug: String,
+	pub scim_external_id: Option<String>,
+	pub scim_managed: bool,
+	pub created_at: DateTime<Utc>,
+	pub updated_at: DateTime<Utc>,
+}
 
 /// Repository for team database operations.
 ///
@@ -212,6 +226,265 @@ impl TeamRepository {
 	}
 
 	// =========================================================================
+	// SCIM Operations
+	// =========================================================================
+
+	/// Create a SCIM-managed team.
+	///
+	/// # Arguments
+	/// * `org_id` - The organization's UUID
+	/// * `name` - Display name of the team
+	/// * `scim_external_id` - Optional external ID from SCIM provider
+	///
+	/// # Returns
+	/// The ID of the created team.
+	#[tracing::instrument(skip(self), fields(org_id = %org_id, name = %name))]
+	pub async fn create_scim_team(
+		&self,
+		org_id: &OrgId,
+		name: &str,
+		scim_external_id: Option<&str>,
+	) -> Result<TeamId, DbError> {
+		let team_id = TeamId::generate();
+		let now = Utc::now().to_rfc3339();
+
+		sqlx::query(
+			r#"
+			INSERT INTO teams (id, org_id, name, slug, scim_external_id, scim_managed, created_at, updated_at)
+			VALUES (?, ?, ?, ?, ?, 1, ?, ?)
+			"#,
+		)
+		.bind(team_id.to_string())
+		.bind(org_id.to_string())
+		.bind(name)
+		.bind(slug_from_name(name))
+		.bind(scim_external_id)
+		.bind(&now)
+		.bind(&now)
+		.execute(&self.pool)
+		.await?;
+
+		tracing::debug!(team_id = %team_id, org_id = %org_id, "SCIM team created");
+		Ok(team_id)
+	}
+
+	/// Update a SCIM-managed team.
+	///
+	/// # Arguments
+	/// * `team_id` - The team's UUID
+	/// * `name` - New display name
+	/// * `scim_external_id` - New external ID from SCIM provider
+	#[tracing::instrument(skip(self), fields(team_id = %team_id))]
+	pub async fn update_scim_team(
+		&self,
+		team_id: &TeamId,
+		name: &str,
+		scim_external_id: Option<&str>,
+	) -> Result<(), DbError> {
+		let now = Utc::now().to_rfc3339();
+
+		sqlx::query(
+			r#"
+			UPDATE teams SET name = ?, slug = ?, scim_external_id = ?, updated_at = ?
+			WHERE id = ?
+			"#,
+		)
+		.bind(name)
+		.bind(slug_from_name(name))
+		.bind(scim_external_id)
+		.bind(&now)
+		.bind(team_id.to_string())
+		.execute(&self.pool)
+		.await?;
+
+		tracing::debug!(team_id = %team_id, "SCIM team updated");
+		Ok(())
+	}
+
+	/// Delete a SCIM-managed team.
+	///
+	/// Only deletes teams that were created via SCIM (scim_managed = 1).
+	///
+	/// # Arguments
+	/// * `team_id` - The team's UUID
+	/// * `org_id` - The organization's UUID (for authorization)
+	///
+	/// # Returns
+	/// `true` if a team was deleted, `false` if not found or not SCIM-managed.
+	#[tracing::instrument(skip(self), fields(team_id = %team_id, org_id = %org_id))]
+	pub async fn delete_scim_team(&self, team_id: &TeamId, org_id: &OrgId) -> Result<bool, DbError> {
+		sqlx::query("DELETE FROM team_memberships WHERE team_id = ?")
+			.bind(team_id.to_string())
+			.execute(&self.pool)
+			.await?;
+
+		let result = sqlx::query("DELETE FROM teams WHERE id = ? AND org_id = ? AND scim_managed = 1")
+			.bind(team_id.to_string())
+			.bind(org_id.to_string())
+			.execute(&self.pool)
+			.await?;
+
+		let deleted = result.rows_affected() > 0;
+		if deleted {
+			tracing::debug!(team_id = %team_id, "SCIM team deleted");
+		}
+		Ok(deleted)
+	}
+
+	/// Replace all members of a team.
+	///
+	/// # Arguments
+	/// * `team_id` - The team's UUID
+	/// * `user_ids` - New list of user IDs to be members
+	#[tracing::instrument(skip(self, user_ids), fields(team_id = %team_id, member_count = user_ids.len()))]
+	pub async fn set_team_members(
+		&self,
+		team_id: &TeamId,
+		user_ids: &[UserId],
+	) -> Result<(), DbError> {
+		sqlx::query("DELETE FROM team_memberships WHERE team_id = ?")
+			.bind(team_id.to_string())
+			.execute(&self.pool)
+			.await?;
+
+		let now = Utc::now().to_rfc3339();
+		for user_id in user_ids {
+			let membership_id = Uuid::new_v4().to_string();
+			sqlx::query(
+				r#"
+				INSERT INTO team_memberships (id, team_id, user_id, role, created_at)
+				VALUES (?, ?, ?, 'member', ?)
+				"#,
+			)
+			.bind(&membership_id)
+			.bind(team_id.to_string())
+			.bind(user_id.to_string())
+			.bind(&now)
+			.execute(&self.pool)
+			.await?;
+		}
+
+		tracing::debug!(team_id = %team_id, count = user_ids.len(), "team members replaced");
+		Ok(())
+	}
+
+	/// List SCIM teams in an organization with pagination.
+	///
+	/// # Arguments
+	/// * `org_id` - The organization's UUID
+	/// * `limit` - Maximum number of teams to return
+	/// * `offset` - Number of teams to skip
+	///
+	/// # Returns
+	/// List of teams with SCIM fields, ordered by ID.
+	#[tracing::instrument(skip(self), fields(org_id = %org_id, limit = limit, offset = offset))]
+	pub async fn list_scim_teams(
+		&self,
+		org_id: &OrgId,
+		limit: i64,
+		offset: i64,
+	) -> Result<Vec<ScimTeam>, DbError> {
+		let rows = sqlx::query(
+			r#"
+			SELECT id, org_id, name, slug, scim_external_id, scim_managed, created_at, updated_at
+			FROM teams
+			WHERE org_id = ?
+			ORDER BY id ASC
+			LIMIT ? OFFSET ?
+			"#,
+		)
+		.bind(org_id.to_string())
+		.bind(limit)
+		.bind(offset)
+		.fetch_all(&self.pool)
+		.await?;
+
+		let teams: Result<Vec<_>, _> = rows.iter().map(|r| self.row_to_scim_team(r)).collect();
+		let teams = teams?;
+		tracing::debug!(org_id = %org_id, count = teams.len(), "listed SCIM teams");
+		Ok(teams)
+	}
+
+	/// Count total teams in an organization.
+	///
+	/// # Arguments
+	/// * `org_id` - The organization's UUID
+	#[tracing::instrument(skip(self), fields(org_id = %org_id))]
+	pub async fn count_teams_in_org(&self, org_id: &OrgId) -> Result<i64, DbError> {
+		let row = sqlx::query(r#"SELECT COUNT(*) as count FROM teams WHERE org_id = ?"#)
+			.bind(org_id.to_string())
+			.fetch_one(&self.pool)
+			.await?;
+
+		let count: i64 = row.get("count");
+		Ok(count)
+	}
+
+	/// Get a team by ID including SCIM fields.
+	///
+	/// # Arguments
+	/// * `team_id` - The team's UUID
+	/// * `org_id` - The organization's UUID (for authorization)
+	///
+	/// # Returns
+	/// `None` if no team exists with this ID in the organization.
+	#[tracing::instrument(skip(self), fields(team_id = %team_id, org_id = %org_id))]
+	pub async fn get_team_with_scim_fields(
+		&self,
+		team_id: &TeamId,
+		org_id: &OrgId,
+	) -> Result<Option<ScimTeam>, DbError> {
+		let row = sqlx::query(
+			r#"
+			SELECT id, org_id, name, slug, scim_external_id, scim_managed, created_at, updated_at
+			FROM teams
+			WHERE id = ? AND org_id = ?
+			"#,
+		)
+		.bind(team_id.to_string())
+		.bind(org_id.to_string())
+		.fetch_optional(&self.pool)
+		.await?;
+
+		row.map(|r| self.row_to_scim_team(&r)).transpose()
+	}
+
+	/// List group members with display names for SCIM response.
+	///
+	/// # Arguments
+	/// * `team_id` - The team's UUID
+	///
+	/// # Returns
+	/// List of (user_id, display_name) tuples.
+	#[tracing::instrument(skip(self), fields(team_id = %team_id))]
+	pub async fn list_scim_group_members(
+		&self,
+		team_id: &TeamId,
+	) -> Result<Vec<(UserId, Option<String>)>, DbError> {
+		let rows = sqlx::query(
+			r#"
+			SELECT u.id, u.display_name
+			FROM users u
+			JOIN team_memberships tm ON u.id = tm.user_id
+			WHERE tm.team_id = ?
+			"#,
+		)
+		.bind(team_id.to_string())
+		.fetch_all(&self.pool)
+		.await?;
+
+		let mut members = Vec::with_capacity(rows.len());
+		for row in rows {
+			let id_str: String = row.get("id");
+			let display_name: Option<String> = row.get("display_name");
+			let user_id =
+				Uuid::parse_str(&id_str).map_err(|e| DbError::Internal(format!("Invalid user ID: {e}")))?;
+			members.push((UserId::new(user_id), display_name));
+		}
+		Ok(members)
+	}
+
+	// =========================================================================
 	// Memberships
 	// =========================================================================
 
@@ -321,11 +594,7 @@ impl TeamRepository {
 	/// # Returns
 	/// `true` if a member was removed, `false` if not found.
 	#[tracing::instrument(skip(self), fields(team_id = %team_id, user_id = %user_id))]
-	pub async fn remove_member(
-		&self,
-		team_id: &TeamId,
-		user_id: &UserId,
-	) -> Result<bool, DbError> {
+	pub async fn remove_member(&self, team_id: &TeamId, user_id: &UserId) -> Result<bool, DbError> {
 		let result = sqlx::query(
 			r#"
 			DELETE FROM team_memberships
@@ -420,8 +689,8 @@ impl TeamRepository {
 		let created_at: String = row.get("created_at");
 		let updated_at: String = row.get("updated_at");
 
-		let id = Uuid::parse_str(&id_str)
-			.map_err(|e| DbError::Internal(format!("Invalid team ID: {e}")))?;
+		let id =
+			Uuid::parse_str(&id_str).map_err(|e| DbError::Internal(format!("Invalid team ID: {e}")))?;
 		let org_id = Uuid::parse_str(&org_id_str)
 			.map_err(|e| DbError::Internal(format!("Invalid org_id: {e}")))?;
 
@@ -439,10 +708,7 @@ impl TeamRepository {
 		})
 	}
 
-	fn row_to_membership(
-		&self,
-		row: &sqlx::sqlite::SqliteRow,
-	) -> Result<TeamMembership, DbError> {
+	fn row_to_membership(&self, row: &sqlx::sqlite::SqliteRow) -> Result<TeamMembership, DbError> {
 		let id_str: String = row.get("id");
 		let team_id_str: String = row.get("team_id");
 		let user_id_str: String = row.get("user_id");
@@ -470,6 +736,46 @@ impl TeamRepository {
 				.with_timezone(&Utc),
 		})
 	}
+
+	fn row_to_scim_team(&self, row: &sqlx::sqlite::SqliteRow) -> Result<ScimTeam, DbError> {
+		let id_str: String = row.get("id");
+		let org_id_str: String = row.get("org_id");
+		let created_at: String = row.get("created_at");
+		let updated_at: String = row.get("updated_at");
+		let scim_managed: i64 = row.get("scim_managed");
+
+		let id =
+			Uuid::parse_str(&id_str).map_err(|e| DbError::Internal(format!("Invalid team ID: {e}")))?;
+		let org_id = Uuid::parse_str(&org_id_str)
+			.map_err(|e| DbError::Internal(format!("Invalid org_id: {e}")))?;
+
+		Ok(ScimTeam {
+			id: TeamId::new(id),
+			org_id: OrgId::new(org_id),
+			name: row.get("name"),
+			slug: row.get("slug"),
+			scim_external_id: row.get("scim_external_id"),
+			scim_managed: scim_managed == 1,
+			created_at: chrono::DateTime::parse_from_rfc3339(&created_at)
+				.map_err(|e| DbError::Internal(format!("Invalid created_at: {e}")))?
+				.with_timezone(&Utc),
+			updated_at: chrono::DateTime::parse_from_rfc3339(&updated_at)
+				.map_err(|e| DbError::Internal(format!("Invalid updated_at: {e}")))?
+				.with_timezone(&Utc),
+		})
+	}
+}
+
+fn slug_from_name(name: &str) -> String {
+	name
+		.to_lowercase()
+		.chars()
+		.map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
+		.collect::<String>()
+		.split('-')
+		.filter(|s| !s.is_empty())
+		.collect::<Vec<_>>()
+		.join("-")
 }
 
 #[cfg(test)]

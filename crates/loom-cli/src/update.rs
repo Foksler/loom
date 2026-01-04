@@ -97,9 +97,16 @@ pub async fn run_update() -> Result<()> {
 	);
 	println!(
 		"{}",
-		loom_common_i18n::t_fmt(get_locale(), "client.update.platform", &[("platform", platform)])
+		loom_common_i18n::t_fmt(
+			get_locale(),
+			"client.update.platform",
+			&[("platform", platform)]
+		)
 	);
-	println!("{}", loom_common_i18n::t(get_locale(), "client.update.checking"));
+	println!(
+		"{}",
+		loom_common_i18n::t(get_locale(), "client.update.checking")
+	);
 
 	let current_exe = std::env::current_exe().context("failed to get current executable path")?;
 	debug!(path = %current_exe.display(), "current executable");
@@ -161,7 +168,10 @@ pub async fn run_update() -> Result<()> {
 		loom_common_i18n::t_fmt(
 			get_locale(),
 			"client.update.available",
-			&[("current", &current_sha[..12]), ("remote", &remote_sha[..12])]
+			&[
+				("current", &current_sha[..12]),
+				("remote", &remote_sha[..12])
+			]
 		)
 	);
 	println!(
@@ -227,7 +237,10 @@ pub async fn run_update() -> Result<()> {
 	let _ = std::fs::remove_file(&tmp_path);
 
 	info!("update complete");
-	println!("{}", loom_common_i18n::t(get_locale(), "client.update.complete"));
+	println!(
+		"{}",
+		loom_common_i18n::t(get_locale(), "client.update.complete")
+	);
 
 	Ok(())
 }
@@ -336,8 +349,10 @@ mod tests {
 	#[test]
 	fn test_verify_download_mismatch() {
 		let data = b"test binary content";
-		let result =
-			verify_download(data, "0000000000000000000000000000000000000000000000000000000000000000");
+		let result = verify_download(
+			data,
+			"0000000000000000000000000000000000000000000000000000000000000000",
+		);
 		assert!(result.is_err());
 	}
 }

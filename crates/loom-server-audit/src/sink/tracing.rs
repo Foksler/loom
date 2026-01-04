@@ -61,8 +61,14 @@ impl AuditSink for TracingAuditSink {
 		let request_id = base.request_id.as_deref();
 
 		let session_id = event.session.as_ref().and_then(|s| s.session_id.as_deref());
-		let session_type = event.session.as_ref().and_then(|s| s.session_type.as_deref());
-		let device_label = event.session.as_ref().and_then(|s| s.device_label.as_deref());
+		let session_type = event
+			.session
+			.as_ref()
+			.and_then(|s| s.session_type.as_deref());
+		let device_label = event
+			.session
+			.as_ref()
+			.and_then(|s| s.device_label.as_deref());
 		let geo_city = event
 			.session
 			.as_ref()

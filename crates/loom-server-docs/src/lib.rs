@@ -75,9 +75,7 @@ pub async fn load_docs_index(pool: &SqlitePool, index_path: &str) -> Result<usiz
 
 	let count = index.docs.len();
 
-	sqlx::query("DELETE FROM docs_fts")
-		.execute(pool)
-		.await?;
+	sqlx::query("DELETE FROM docs_fts").execute(pool).await?;
 
 	for entry in &index.docs {
 		let tags = entry.tags.join(" ");
@@ -140,33 +138,61 @@ pub async fn search_docs(pool: &SqlitePool, params: &DocSearchParams) -> Result<
 	};
 
 	let hits = if let Some(ref diataxis) = params.diataxis {
-		sqlx::query_as::<_, (String, String, String, String, String, Option<String>, Option<String>, f64)>(query)
-			.bind(&params.query)
-			.bind(diataxis)
-			.bind(params.limit)
-			.bind(params.offset)
-			.fetch_all(pool)
-			.await?
+		sqlx::query_as::<
+			_,
+			(
+				String,
+				String,
+				String,
+				String,
+				String,
+				Option<String>,
+				Option<String>,
+				f64,
+			),
+		>(query)
+		.bind(&params.query)
+		.bind(diataxis)
+		.bind(params.limit)
+		.bind(params.offset)
+		.fetch_all(pool)
+		.await?
 	} else {
-		sqlx::query_as::<_, (String, String, String, String, String, Option<String>, Option<String>, f64)>(query)
-			.bind(&params.query)
-			.bind(params.limit)
-			.bind(params.offset)
-			.fetch_all(pool)
-			.await?
+		sqlx::query_as::<
+			_,
+			(
+				String,
+				String,
+				String,
+				String,
+				String,
+				Option<String>,
+				Option<String>,
+				f64,
+			),
+		>(query)
+		.bind(&params.query)
+		.bind(params.limit)
+		.bind(params.offset)
+		.fetch_all(pool)
+		.await?
 	};
 
-	Ok(hits
-		.into_iter()
-		.map(|(doc_id, path, title, summary, snippet, diataxis, tags, rank)| DocSearchHit {
-			doc_id,
-			path,
-			title,
-			summary,
-			snippet,
-			diataxis,
-			tags,
-			rank,
-		})
-		.collect())
+	Ok(
+		hits
+			.into_iter()
+			.map(
+				|(doc_id, path, title, summary, snippet, diataxis, tags, rank)| DocSearchHit {
+					doc_id,
+					path,
+					title,
+					summary,
+					snippet,
+					diataxis,
+					tags,
+					rank,
+				},
+			)
+			.collect(),
+	)
 }

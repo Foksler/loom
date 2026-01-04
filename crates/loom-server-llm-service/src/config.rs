@@ -153,9 +153,7 @@ impl LlmServiceConfig {
 			let credential_file = env::var("LOOM_SERVER_ANTHROPIC_OAUTH_CREDENTIAL_FILE")
 				.map(PathBuf::from)
 				.map_err(|_| {
-					ConfigError::MissingEnvVar(
-						"LOOM_SERVER_ANTHROPIC_OAUTH_CREDENTIAL_FILE".to_string(),
-					)
+					ConfigError::MissingEnvVar("LOOM_SERVER_ANTHROPIC_OAUTH_CREDENTIAL_FILE".to_string())
 				})?;
 
 			let cooldown_secs = match env::var("LOOM_SERVER_ANTHROPIC_POOL_COOLDOWN_SECS") {

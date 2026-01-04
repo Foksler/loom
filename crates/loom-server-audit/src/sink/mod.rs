@@ -5,25 +5,25 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-pub use crate::error::AuditSinkError;
 use crate::enrichment::EnrichedAuditEvent;
+pub use crate::error::AuditSinkError;
 use crate::filter::AuditFilterConfig;
 
 #[async_trait]
 pub trait AuditSink: Send + Sync {
-    /// Unique name for this sink (used in logs/metrics).
-    fn name(&self) -> &str;
+	/// Unique name for this sink (used in logs/metrics).
+	fn name(&self) -> &str;
 
-    /// Per-sink filter configuration.
-    fn filter(&self) -> &AuditFilterConfig;
+	/// Per-sink filter configuration.
+	fn filter(&self) -> &AuditFilterConfig;
 
-    /// Publish an event to the sink.
-    async fn publish(&self, event: Arc<EnrichedAuditEvent>) -> Result<(), AuditSinkError>;
+	/// Publish an event to the sink.
+	async fn publish(&self, event: Arc<EnrichedAuditEvent>) -> Result<(), AuditSinkError>;
 
-    /// Health check (optional, default: Ok).
-    async fn health_check(&self) -> Result<(), AuditSinkError> {
-        Ok(())
-    }
+	/// Health check (optional, default: Ok).
+	async fn health_check(&self) -> Result<(), AuditSinkError> {
+		Ok(())
+	}
 }
 
 #[cfg(feature = "sink-sqlite")]

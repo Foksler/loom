@@ -108,74 +108,78 @@ jitter = true
 ///
 /// Returns `true` if a new config file was created, `false` if one already existed.
 pub fn ensure_default_config(config_file_path: &Path) -> Result<bool, ConfigError> {
-    if config_file_path.exists() {
-        debug!(path = %config_file_path.display(), "config file already exists");
-        return Ok(false);
-    }
+	if config_file_path.exists() {
+		debug!(path = %config_file_path.display(), "config file already exists");
+		return Ok(false);
+	}
 
-    if let Some(parent) = config_file_path.parent() {
-        if !parent.exists() {
-            debug!(path = %parent.display(), "creating config directory");
-            fs::create_dir_all(parent)?;
-        }
-    }
+	if let Some(parent) = config_file_path.parent() {
+		if !parent.exists() {
+			debug!(path = %parent.display(), "creating config directory");
+			fs::create_dir_all(parent)?;
+		}
+	}
 
-    info!(path = %config_file_path.display(), "creating default config file");
-    fs::write(config_file_path, DEFAULT_CONFIG_TEMPLATE)?;
+	info!(path = %config_file_path.display(), "creating default config file");
+	fs::write(config_file_path, DEFAULT_CONFIG_TEMPLATE)?;
 
-    Ok(true)
+	Ok(true)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use tempfile::tempdir;
+	use super::*;
+	use tempfile::tempdir;
 
-    #[test]
-    fn test_default_config_template_is_valid_toml() {
-        let result: Result<crate::layer::ConfigLayer, _> = toml::from_str(DEFAULT_CONFIG_TEMPLATE);
-        assert!(result.is_ok(), "Default config template should be valid TOML: {:?}", result.err());
-    }
+	#[test]
+	fn test_default_config_template_is_valid_toml() {
+		let result: Result<crate::layer::ConfigLayer, _> = toml::from_str(DEFAULT_CONFIG_TEMPLATE);
+		assert!(
+			result.is_ok(),
+			"Default config template should be valid TOML: {:?}",
+			result.err()
+		);
+	}
 
-    #[test]
-    fn test_ensure_default_config_creates_file() {
-        let dir = tempdir().unwrap();
-        let config_path = dir.path().join("loom/config.toml");
+	#[test]
+	fn test_ensure_default_config_creates_file() {
+		let dir = tempdir().unwrap();
+		let config_path = dir.path().join("loom/config.toml");
 
-        assert!(!config_path.exists());
+		assert!(!config_path.exists());
 
-        let created = ensure_default_config(&config_path).unwrap();
-        assert!(created);
-        assert!(config_path.exists());
+		let created = ensure_default_config(&config_path).unwrap();
+		assert!(created);
+		assert!(config_path.exists());
 
-        let contents = fs::read_to_string(&config_path).unwrap();
-        assert!(contents.contains("[global]"));
-        assert!(contents.contains("default_provider"));
-    }
+		let contents = fs::read_to_string(&config_path).unwrap();
+		assert!(contents.contains("[global]"));
+		assert!(contents.contains("default_provider"));
+	}
 
-    #[test]
-    fn test_ensure_default_config_does_not_overwrite() {
-        let dir = tempdir().unwrap();
-        let config_path = dir.path().join("config.toml");
+	#[test]
+	fn test_ensure_default_config_does_not_overwrite() {
+		let dir = tempdir().unwrap();
+		let config_path = dir.path().join("config.toml");
 
-        fs::write(&config_path, "# existing config\n").unwrap();
+		fs::write(&config_path, "# existing config\n").unwrap();
 
-        let created = ensure_default_config(&config_path).unwrap();
-        assert!(!created);
+		let created = ensure_default_config(&config_path).unwrap();
+		assert!(!created);
 
-        let contents = fs::read_to_string(&config_path).unwrap();
-        assert_eq!(contents, "# existing config\n");
-    }
+		let contents = fs::read_to_string(&config_path).unwrap();
+		assert_eq!(contents, "# existing config\n");
+	}
 
-    #[test]
-    fn test_ensure_default_config_creates_parent_dirs() {
-        let dir = tempdir().unwrap();
-        let config_path = dir.path().join("nested/deep/path/config.toml");
+	#[test]
+	fn test_ensure_default_config_creates_parent_dirs() {
+		let dir = tempdir().unwrap();
+		let config_path = dir.path().join("nested/deep/path/config.toml");
 
-        assert!(!config_path.parent().unwrap().exists());
+		assert!(!config_path.parent().unwrap().exists());
 
-        let created = ensure_default_config(&config_path).unwrap();
-        assert!(created);
-        assert!(config_path.exists());
-    }
+		let created = ensure_default_config(&config_path).unwrap();
+		assert!(created);
+		assert!(config_path.exists());
+	}
 }

@@ -257,7 +257,12 @@ pub trait MaintenanceJobStore: Send + Sync {
 		error: Option<String>,
 	) -> Result<()>;
 	async fn mark_started(&self, id: Uuid) -> Result<()>;
-	async fn mark_finished(&self, id: Uuid, status: MaintenanceJobStatus, error: Option<String>) -> Result<()>;
+	async fn mark_finished(
+		&self,
+		id: Uuid,
+		status: MaintenanceJobStatus,
+		error: Option<String>,
+	) -> Result<()>;
 }
 
 pub struct SqliteMaintenanceJobStore {
@@ -476,8 +481,14 @@ mod tests {
 		assert_eq!(MaintenanceTask::All.as_str(), "all");
 
 		assert_eq!("gc".parse::<MaintenanceTask>(), Ok(MaintenanceTask::Gc));
-		assert_eq!("prune".parse::<MaintenanceTask>(), Ok(MaintenanceTask::Prune));
-		assert_eq!("repack".parse::<MaintenanceTask>(), Ok(MaintenanceTask::Repack));
+		assert_eq!(
+			"prune".parse::<MaintenanceTask>(),
+			Ok(MaintenanceTask::Prune)
+		);
+		assert_eq!(
+			"repack".parse::<MaintenanceTask>(),
+			Ok(MaintenanceTask::Repack)
+		);
 		assert_eq!("fsck".parse::<MaintenanceTask>(), Ok(MaintenanceTask::Fsck));
 		assert_eq!("all".parse::<MaintenanceTask>(), Ok(MaintenanceTask::All));
 		assert!("invalid".parse::<MaintenanceTask>().is_err());
@@ -490,10 +501,22 @@ mod tests {
 		assert_eq!(MaintenanceJobStatus::Success.as_str(), "success");
 		assert_eq!(MaintenanceJobStatus::Failed.as_str(), "failed");
 
-		assert_eq!("pending".parse::<MaintenanceJobStatus>(), Ok(MaintenanceJobStatus::Pending));
-		assert_eq!("running".parse::<MaintenanceJobStatus>(), Ok(MaintenanceJobStatus::Running));
-		assert_eq!("success".parse::<MaintenanceJobStatus>(), Ok(MaintenanceJobStatus::Success));
-		assert_eq!("failed".parse::<MaintenanceJobStatus>(), Ok(MaintenanceJobStatus::Failed));
+		assert_eq!(
+			"pending".parse::<MaintenanceJobStatus>(),
+			Ok(MaintenanceJobStatus::Pending)
+		);
+		assert_eq!(
+			"running".parse::<MaintenanceJobStatus>(),
+			Ok(MaintenanceJobStatus::Running)
+		);
+		assert_eq!(
+			"success".parse::<MaintenanceJobStatus>(),
+			Ok(MaintenanceJobStatus::Success)
+		);
+		assert_eq!(
+			"failed".parse::<MaintenanceJobStatus>(),
+			Ok(MaintenanceJobStatus::Failed)
+		);
 		assert!("invalid".parse::<MaintenanceJobStatus>().is_err());
 	}
 

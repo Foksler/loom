@@ -113,7 +113,10 @@ pub fn build_binding_request(transaction_id: &[u8; 12]) -> Vec<u8> {
 	request
 }
 
-pub fn parse_binding_response(data: &[u8], expected_transaction_id: &[u8; 12]) -> Result<SocketAddr> {
+pub fn parse_binding_response(
+	data: &[u8],
+	expected_transaction_id: &[u8; 12],
+) -> Result<SocketAddr> {
 	if data.len() < 20 {
 		return Err(StunError::InvalidResponse);
 	}
@@ -236,10 +239,7 @@ mod tests {
 		assert_eq!(request.len(), 20);
 		assert_eq!(&request[0..2], &[0x00, 0x01]);
 		assert_eq!(&request[2..4], &[0x00, 0x00]);
-		assert_eq!(
-			&request[4..8],
-			&STUN_MAGIC_COOKIE.to_be_bytes()
-		);
+		assert_eq!(&request[4..8], &STUN_MAGIC_COOKIE.to_be_bytes());
 		assert_eq!(&request[8..20], &transaction_id);
 	}
 
@@ -273,9 +273,6 @@ mod tests {
 		response.extend_from_slice(&xor_ip);
 
 		let result = parse_binding_response(&response, &[0u8; 12]).unwrap();
-		assert_eq!(
-			result,
-			SocketAddr::V4(SocketAddrV4::new(ip, port))
-		);
+		assert_eq!(result, SocketAddr::V4(SocketAddrV4::new(ip, port)));
 	}
 }

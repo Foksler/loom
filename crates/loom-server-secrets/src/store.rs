@@ -141,8 +141,10 @@ pub trait SecretStore: Send + Sync {
 	async fn list_secrets(&self, filter: &SecretFilter) -> SecretsResult<Vec<StoredSecret>>;
 
 	/// Create a new version of a secret.
-	async fn create_version(&self, request: CreateVersionRequest)
-		-> SecretsResult<StoredSecretVersion>;
+	async fn create_version(
+		&self,
+		request: CreateVersionRequest,
+	) -> SecretsResult<StoredSecretVersion>;
 
 	/// Get the current version of a secret.
 	async fn get_current_version(
@@ -362,7 +364,10 @@ impl SecretStore for SqliteSecretStore {
 			q = q.bind(name);
 		}
 
-		let rows = q.fetch_all(&self.pool).await.map_err(SecretsError::Database)?;
+		let rows = q
+			.fetch_all(&self.pool)
+			.await
+			.map_err(SecretsError::Database)?;
 
 		rows.iter().map(parse_secret_row).collect()
 	}
@@ -409,14 +414,15 @@ impl SecretStore for SqliteSecretStore {
 
 		// Update secret's current_version within transaction
 		// Only update if secret is not soft-deleted (defense in depth)
-		let update_result =
-			sqlx::query("UPDATE secrets SET current_version = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL")
-				.bind(next_version)
-				.bind(&now_str)
-				.bind(request.secret_id.to_string())
-				.execute(&mut *tx)
-				.await
-				.map_err(SecretsError::Database)?;
+		let update_result = sqlx::query(
+			"UPDATE secrets SET current_version = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL",
+		)
+		.bind(next_version)
+		.bind(&now_str)
+		.bind(request.secret_id.to_string())
+		.execute(&mut *tx)
+		.await
+		.map_err(SecretsError::Database)?;
 
 		if update_result.rows_affected() == 0 {
 			return Err(SecretsError::SecretNotFoundById(request.secret_id));
@@ -569,8 +575,7 @@ fn parse_secret_row(row: &sqlx::sqlite::SqliteRow) -> SecretsResult<StoredSecret
 	let parsed_repo_id = repo_id
 		.as_ref()
 		.map(|s| {
-			Uuid::parse_str(s)
-				.map_err(|_| SecretsError::CorruptedData(format!("invalid repo id: {}", s)))
+			Uuid::parse_str(s).map_err(|_| SecretsError::CorruptedData(format!("invalid repo id: {}", s)))
 		})
 		.transpose()?;
 
@@ -591,9 +596,9 @@ fn parse_secret_row(row: &sqlx::sqlite::SqliteRow) -> SecretsResult<StoredSecret
 			let weaver_id_str = weaver_id
 				.as_ref()
 				.ok_or_else(|| SecretsError::CorruptedData("weaver scope requires weaver_id".into()))?;
-			let wid = weaver_id_str
-				.parse::<uuid7::Uuid>()
-				.map_err(|_| SecretsError::CorruptedData(format!("invalid weaver_id: {}", weaver_id_str)))?;
+			let wid = weaver_id_str.parse::<uuid7::Uuid>().map_err(|_| {
+				SecretsError::CorruptedData(format!("invalid weaver_id: {}", weaver_id_str))
+			})?;
 			SecretScope::Weaver {
 				weaver_id: WeaverId::new(wid),
 			}
@@ -618,11 +623,9 @@ fn parse_secret_row(row: &sqlx::sqlite::SqliteRow) -> SecretsResult<StoredSecret
 		name,
 		description,
 		current_version,
-		created_by: UserId::new(
-			Uuid::parse_str(&created_by).map_err(|_| {
-				SecretsError::CorruptedData(format!("invalid created_by id: {}", created_by))
-			})?,
-		),
+		created_by: UserId::new(Uuid::parse_str(&created_by).map_err(|_| {
+			SecretsError::CorruptedData(format!("invalid created_by id: {}", created_by))
+		})?),
 		created_at: DateTime::parse_from_rfc3339(&created_at)
 			.map(|dt| dt.with_timezone(&Utc))
 			.map_err(|_| {
@@ -654,19 +657,16 @@ fn parse_version_row(row: &sqlx::sqlite::SqliteRow) -> SecretsResult<StoredSecre
 				.map_err(|_| SecretsError::CorruptedData(format!("invalid version id: {}", id)))?,
 		),
 		secret_id: SecretId::new(
-			Uuid::parse_str(&secret_id).map_err(|_| {
-				SecretsError::CorruptedData(format!("invalid secret id: {}", secret_id))
-			})?,
+			Uuid::parse_str(&secret_id)
+				.map_err(|_| SecretsError::CorruptedData(format!("invalid secret id: {}", secret_id)))?,
 		),
 		version,
 		ciphertext,
 		nonce,
 		dek_id,
-		created_by: UserId::new(
-			Uuid::parse_str(&created_by).map_err(|_| {
-				SecretsError::CorruptedData(format!("invalid created_by id: {}", created_by))
-			})?,
-		),
+		created_by: UserId::new(Uuid::parse_str(&created_by).map_err(|_| {
+			SecretsError::CorruptedData(format!("invalid created_by id: {}", created_by))
+		})?),
 		created_at: DateTime::parse_from_rfc3339(&created_at)
 			.map(|dt| dt.with_timezone(&Utc))
 			.map_err(|_| {
@@ -676,18 +676,14 @@ fn parse_version_row(row: &sqlx::sqlite::SqliteRow) -> SecretsResult<StoredSecre
 			.map(|s| {
 				DateTime::parse_from_rfc3339(&s)
 					.map(|dt| dt.with_timezone(&Utc))
-					.map_err(|_| {
-						SecretsError::CorruptedData(format!("invalid expires_at timestamp: {}", s))
-					})
+					.map_err(|_| SecretsError::CorruptedData(format!("invalid expires_at timestamp: {}", s)))
 			})
 			.transpose()?,
 		disabled_at: disabled_at
 			.map(|s| {
 				DateTime::parse_from_rfc3339(&s)
 					.map(|dt| dt.with_timezone(&Utc))
-					.map_err(|_| {
-						SecretsError::CorruptedData(format!("invalid disabled_at timestamp: {}", s))
-					})
+					.map_err(|_| SecretsError::CorruptedData(format!("invalid disabled_at timestamp: {}", s)))
 			})
 			.transpose()?,
 	})
@@ -1127,7 +1123,10 @@ mod tests {
 
 		let dek = EncryptedDekData {
 			id: Uuid::new_v4().to_string(),
-			encrypted_key: vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32],
+			encrypted_key: vec![
+				1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+				26, 27, 28, 29, 30, 31, 32,
+			],
 			nonce: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
 			kek_version: 1,
 		};

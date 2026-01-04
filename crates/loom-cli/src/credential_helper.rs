@@ -48,7 +48,11 @@ pub struct CredentialHelperArgs {
 	pub operation: String,
 
 	/// Server URL to match credentials against
-	#[arg(long, env = "LOOM_SERVER_URL", default_value = "https://loom.ghuntley.com")]
+	#[arg(
+		long,
+		env = "LOOM_SERVER_URL",
+		default_value = "https://loom.ghuntley.com"
+	)]
 	pub server_url: String,
 }
 
@@ -57,7 +61,10 @@ pub async fn run(args: CredentialHelperArgs) -> Result<()> {
 	match args.operation.as_str() {
 		"get" => handle_get(&args.server_url).await,
 		"store" | "erase" => {
-			debug!("ignoring {} operation (credentials managed via loom login)", args.operation);
+			debug!(
+				"ignoring {} operation (credentials managed via loom login)",
+				args.operation
+			);
 			Ok(())
 		}
 		_ => Err(anyhow!("unknown operation: {}", args.operation)),
@@ -175,7 +182,10 @@ mod tests {
 
 	#[test]
 	fn test_is_matching_host_exact_match() {
-		assert!(is_matching_host("https://loom.ghuntley.com", "loom.ghuntley.com"));
+		assert!(is_matching_host(
+			"https://loom.ghuntley.com",
+			"loom.ghuntley.com"
+		));
 	}
 
 	#[test]
@@ -185,7 +195,10 @@ mod tests {
 
 	#[test]
 	fn test_is_matching_host_with_path() {
-		assert!(is_matching_host("https://loom.ghuntley.com/api", "loom.ghuntley.com"));
+		assert!(is_matching_host(
+			"https://loom.ghuntley.com/api",
+			"loom.ghuntley.com"
+		));
 	}
 
 	#[test]

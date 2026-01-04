@@ -9,8 +9,6 @@
 
 use std::collections::HashMap;
 
-
-
 /// Result of a TokenReview validation request.
 #[derive(Debug, Clone)]
 pub struct TokenReviewResult {
@@ -61,7 +59,8 @@ impl TokenReviewResult {
 
 	/// Get the pod name from the extra claims, if present.
 	pub fn pod_name(&self) -> Option<&str> {
-		self.extra
+		self
+			.extra
 			.get("authentication.kubernetes.io/pod-name")
 			.and_then(|v| v.first())
 			.map(|s| s.as_str())
@@ -69,7 +68,8 @@ impl TokenReviewResult {
 
 	/// Get the pod UID from the extra claims, if present.
 	pub fn pod_uid(&self) -> Option<&str> {
-		self.extra
+		self
+			.extra
 			.get("authentication.kubernetes.io/pod-uid")
 			.and_then(|v| v.first())
 			.map(|s| s.as_str())
@@ -111,7 +111,8 @@ impl TokenReviewResult {
 
 	/// Check if the token is for a service account.
 	pub fn is_service_account(&self) -> bool {
-		self.username
+		self
+			.username
 			.as_ref()
 			.is_some_and(|u| u.starts_with("system:serviceaccount:"))
 	}
@@ -253,12 +254,8 @@ mod tests {
 
 	#[test]
 	fn non_service_account_username() {
-		let result = TokenReviewResult::authenticated(
-			"admin".to_string(),
-			Vec::new(),
-			HashMap::new(),
-			Vec::new(),
-		);
+		let result =
+			TokenReviewResult::authenticated("admin".to_string(), Vec::new(), HashMap::new(), Vec::new());
 
 		assert!(!result.is_service_account());
 		assert!(result.namespace().is_none());
@@ -287,12 +284,8 @@ mod tests {
 	fn mock_token_reviewer_returns_configured_responses() {
 		let mock = MockTokenReviewer::new();
 
-		let response1 = TokenReviewResult::authenticated(
-			"user1".to_string(),
-			Vec::new(),
-			HashMap::new(),
-			Vec::new(),
-		);
+		let response1 =
+			TokenReviewResult::authenticated("user1".to_string(), Vec::new(), HashMap::new(), Vec::new());
 		let response2 = TokenReviewResult::unauthenticated(Some("expired".to_string()));
 
 		mock.add_response(response1);
@@ -335,7 +328,9 @@ mod tests {
 		assert_eq!(result.pod_uid(), Some("pod-uid-456"));
 		assert_eq!(result.service_account_name(), Some("weaver-sa"));
 		assert!(result.is_service_account());
-		assert!(result.groups.contains(&"system:serviceaccounts".to_string()));
+		assert!(result
+			.groups
+			.contains(&"system:serviceaccounts".to_string()));
 		assert!(result
 			.groups
 			.contains(&"system:serviceaccounts:loom-weavers".to_string()));

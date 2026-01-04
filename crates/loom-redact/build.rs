@@ -129,8 +129,7 @@ fn main() {
 	let toml_path = Path::new(&manifest_dir).join("third_party/gitleaks/gitleaks.toml");
 	println!("cargo:rerun-if-changed={}", toml_path.display());
 
-	let toml_content =
-		fs::read_to_string(&toml_path).expect("Failed to read gitleaks.toml");
+	let toml_content = fs::read_to_string(&toml_path).expect("Failed to read gitleaks.toml");
 
 	let config: GitleaksConfig =
 		toml::from_str(&toml_content).expect("Failed to parse gitleaks.toml");
@@ -253,7 +252,8 @@ pub static GENERATED_RULES: &[GeneratedRule] = &["
 		} else {
 			format!(
 				"&[{}]",
-				rule.keywords
+				rule
+					.keywords
 					.iter()
 					.map(|k| format!("r#\"{}\"#", k))
 					.collect::<Vec<_>>()

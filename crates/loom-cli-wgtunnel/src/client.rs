@@ -68,9 +68,7 @@ struct CreateSessionRequest<'a> {
 
 fn validate_https_url(url: &Url) -> Result<()> {
 	if url.scheme() != "https" {
-		return Err(CliError::Other(
-			"server URL must use https://".to_string(),
-		));
+		return Err(CliError::Other("server URL must use https://".to_string()));
 	}
 	Ok(())
 }
@@ -143,7 +141,8 @@ impl WgTunnelClient {
 		}
 
 		let device_id = uuid::Uuid::new_v4().to_string();
-		self.register_device(&device_id, keypair.public_key(), None)
+		self
+			.register_device(&device_id, keypair.public_key(), None)
 			.await
 	}
 

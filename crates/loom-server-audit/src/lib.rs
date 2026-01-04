@@ -12,18 +12,18 @@ pub mod sink;
 pub use enrichment::{
 	AuditEnricher, EnrichedAuditEvent, GeoIpInfo, NoopEnricher, OrgContext, SessionContext,
 };
+pub use error::{AuditError, AuditResult, AuditSinkError};
 pub use event::{
 	AuditEventType, AuditLogBuilder, AuditLogEntry, AuditSeverity, UserId,
 	DEFAULT_AUDIT_RETENTION_DAYS,
 };
-pub use error::{AuditError, AuditResult, AuditSinkError};
 pub use filter::AuditFilterConfig;
 pub use pipeline::AuditService;
 pub use sink::AuditSink;
 
 pub use loom_server_config::{
-	AuditConfig, FileFormat, FileSinkConfig, HttpSinkConfig, JsonStreamConfig,
-	QueueOverflowPolicy, StreamProtocol, SyslogConfig, SyslogProtocol,
+	AuditConfig, FileFormat, FileSinkConfig, HttpSinkConfig, JsonStreamConfig, QueueOverflowPolicy,
+	StreamProtocol, SyslogConfig, SyslogProtocol,
 };
 
 #[cfg(feature = "sink-sqlite")]

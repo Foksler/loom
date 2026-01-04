@@ -29,6 +29,7 @@ pub use error::ProvisionerError;
 pub use loom_server_k8s::{AttachedProcess, LogStream};
 pub use provisioner::Provisioner;
 pub use types::{
-    Weaver, WeaverId, WeaverStatus, CleanupResult, CreateWeaverRequest, LogStreamOptions, ResourceSpec,
+	CleanupResult, CreateWeaverRequest, LogStreamOptions, ResourceSpec, Weaver, WeaverId,
+	WeaverStatus,
 };
 pub use webhook::{WebhookDispatcher, WebhookPayload};

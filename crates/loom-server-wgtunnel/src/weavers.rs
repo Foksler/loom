@@ -40,7 +40,15 @@ struct WeaverRow {
 	last_seen_at: Option<String>,
 }
 
-type WeaverRowTuple = (String, Vec<u8>, String, Option<i64>, Option<String>, String, Option<String>);
+type WeaverRowTuple = (
+	String,
+	Vec<u8>,
+	String,
+	Option<i64>,
+	Option<String>,
+	String,
+	Option<String>,
+);
 
 impl TryFrom<WeaverRow> for WeaverWg {
 	type Error = WgError;
@@ -66,7 +74,11 @@ impl TryFrom<WeaverRow> for WeaverWg {
 			derp_home_region: row.derp_home_region.map(|r| r as u16),
 			endpoint: row.endpoint,
 			registered_at: parse_datetime(&row.registered_at)?,
-			last_seen_at: row.last_seen_at.as_ref().map(|s| parse_datetime(s)).transpose()?,
+			last_seen_at: row
+				.last_seen_at
+				.as_ref()
+				.map(|s| parse_datetime(s))
+				.transpose()?,
 		})
 	}
 }
@@ -141,7 +153,15 @@ impl WeaverWgService {
 			.await?;
 
 		match row {
-			Some((weaver_id, public_key, assigned_ip, derp_home_region, endpoint, registered_at, last_seen_at)) => {
+			Some((
+				weaver_id,
+				public_key,
+				assigned_ip,
+				derp_home_region,
+				endpoint,
+				registered_at,
+				last_seen_at,
+			)) => {
 				let weaver = WeaverRow {
 					weaver_id,
 					public_key,

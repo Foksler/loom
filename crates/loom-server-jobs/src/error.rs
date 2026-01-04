@@ -3,20 +3,20 @@
 
 #[derive(Debug, thiserror::Error)]
 pub enum JobError {
-    #[error("Job failed: {message}")]
-    Failed { message: String, retryable: bool },
+	#[error("Job failed: {message}")]
+	Failed { message: String, retryable: bool },
 
-    #[error("Job cancelled")]
-    Cancelled,
+	#[error("Job cancelled")]
+	Cancelled,
 
-    #[error("Database error: {0}")]
-    Database(#[from] sqlx::Error),
+	#[error("Database error: {0}")]
+	Database(#[from] sqlx::Error),
 
-    #[error("Repository error: {0}")]
-    Repository(String),
+	#[error("Repository error: {0}")]
+	Repository(String),
 
-    #[error("Job not found: {0}")]
-    NotFound(String),
+	#[error("Job not found: {0}")]
+	NotFound(String),
 }
 
 pub type Result<T> = std::result::Result<T, JobError>;

@@ -29,9 +29,7 @@ impl TlsMode {
 			"false" | "none" => Ok(TlsMode::None),
 			_ => Err(ConfigError::InvalidValue {
 				key: "tls_mode".to_string(),
-				message: format!(
-					"Invalid value: '{value}'. Expected: true, tls, starttls, false, none"
-				),
+				message: format!("Invalid value: '{value}'. Expected: true, tls, starttls, false, none"),
 			}),
 		}
 	}
@@ -104,9 +102,9 @@ impl SmtpConfigLayer {
 			return Ok(None);
 		};
 
-		let from_address = self.from_address.ok_or_else(|| ConfigError::Validation(
-			"SMTP from_address is required when host is configured".to_string(),
-		))?;
+		let from_address = self.from_address.ok_or_else(|| {
+			ConfigError::Validation("SMTP from_address is required when host is configured".to_string())
+		})?;
 
 		if from_address.is_empty() {
 			return Err(ConfigError::Validation(
@@ -178,8 +176,14 @@ mod tests {
 
 		#[test]
 		fn parses_starttls_variants() {
-			assert_eq!(TlsMode::from_str_value("starttls").unwrap(), TlsMode::StartTls);
-			assert_eq!(TlsMode::from_str_value("STARTTLS").unwrap(), TlsMode::StartTls);
+			assert_eq!(
+				TlsMode::from_str_value("starttls").unwrap(),
+				TlsMode::StartTls
+			);
+			assert_eq!(
+				TlsMode::from_str_value("STARTTLS").unwrap(),
+				TlsMode::StartTls
+			);
 		}
 
 		#[test]

@@ -27,9 +27,7 @@ pub fn validate_repo_name(name: &str) -> Result<()> {
 	}
 
 	if name.contains("..") {
-		return Err(ScmError::InvalidName(
-			"Name cannot contain '..'".into(),
-		));
+		return Err(ScmError::InvalidName("Name cannot contain '..'".into()));
 	}
 
 	if !name
@@ -54,8 +52,7 @@ pub trait RepoStore: Send + Sync {
 		owner_id: Uuid,
 		name: &str,
 	) -> Result<Option<Repository>>;
-	async fn list_by_owner(&self, owner_type: OwnerType, owner_id: Uuid)
-		-> Result<Vec<Repository>>;
+	async fn list_by_owner(&self, owner_type: OwnerType, owner_id: Uuid) -> Result<Vec<Repository>>;
 	async fn update(&self, repo: &Repository) -> Result<Repository>;
 	async fn soft_delete(&self, id: Uuid) -> Result<()>;
 	async fn hard_delete(&self, id: Uuid) -> Result<()>;
@@ -80,13 +77,21 @@ impl SqliteRepoStore {
 		let updated_at_str: String = row.get("updated_at");
 
 		Ok(Repository {
-			id: Uuid::parse_str(&id_str).map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			owner_type: owner_type_str.parse::<OwnerType>()
-				.map_err(|_| ScmError::Database(sqlx::Error::Decode(format!("invalid owner_type: {}", owner_type_str).into())))?,
-			owner_id: Uuid::parse_str(&owner_id_str).map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
+			id: Uuid::parse_str(&id_str)
+				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
+			owner_type: owner_type_str.parse::<OwnerType>().map_err(|_| {
+				ScmError::Database(sqlx::Error::Decode(
+					format!("invalid owner_type: {}", owner_type_str).into(),
+				))
+			})?,
+			owner_id: Uuid::parse_str(&owner_id_str)
+				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
 			name: row.get("name"),
-			visibility: visibility_str.parse::<Visibility>()
-				.map_err(|_| ScmError::Database(sqlx::Error::Decode(format!("invalid visibility: {}", visibility_str).into())))?,
+			visibility: visibility_str.parse::<Visibility>().map_err(|_| {
+				ScmError::Database(sqlx::Error::Decode(
+					format!("invalid visibility: {}", visibility_str).into(),
+				))
+			})?,
 			default_branch: row.get("default_branch"),
 			deleted_at: deleted_at_str
 				.map(|s| DateTime::parse_from_rfc3339(&s).map(|d| d.with_timezone(&Utc)))
@@ -168,11 +173,7 @@ impl RepoStore for SqliteRepoStore {
 		row.map(|r| self.row_to_repo(&r)).transpose()
 	}
 
-	async fn list_by_owner(
-		&self,
-		owner_type: OwnerType,
-		owner_id: Uuid,
-	) -> Result<Vec<Repository>> {
+	async fn list_by_owner(&self, owner_type: OwnerType, owner_id: Uuid) -> Result<Vec<Repository>> {
 		let rows = sqlx::query(
 			r#"
 			SELECT id, owner_type, owner_id, name, visibility, default_branch, deleted_at, created_at, updated_at
@@ -260,7 +261,8 @@ pub trait RepoTeamAccessStore: Send + Sync {
 	async fn grant_team_access(&self, repo_id: Uuid, team_id: Uuid, role: RepoRole) -> Result<()>;
 	async fn revoke_team_access(&self, repo_id: Uuid, team_id: Uuid) -> Result<()>;
 	async fn list_repo_team_access(&self, repo_id: Uuid) -> Result<Vec<RepoTeamAccess>>;
-	async fn get_user_role_via_teams(&self, user_id: Uuid, repo_id: Uuid) -> Result<Option<RepoRole>>;
+	async fn get_user_role_via_teams(&self, user_id: Uuid, repo_id: Uuid)
+		-> Result<Option<RepoRole>>;
 }
 
 pub struct SqliteRepoTeamAccessStore {
@@ -282,9 +284,11 @@ impl SqliteRepoTeamAccessStore {
 				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
 			team_id: Uuid::parse_str(&team_id_str)
 				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			role: role_str
-				.parse::<RepoRole>()
-				.map_err(|_| ScmError::Database(sqlx::Error::Decode(format!("invalid role: {}", role_str).into())))?,
+			role: role_str.parse::<RepoRole>().map_err(|_| {
+				ScmError::Database(sqlx::Error::Decode(
+					format!("invalid role: {}", role_str).into(),
+				))
+			})?,
 		})
 	}
 }
@@ -342,7 +346,11 @@ impl RepoTeamAccessStore for SqliteRepoTeamAccessStore {
 		rows.iter().map(|r| self.row_to_team_access(r)).collect()
 	}
 
-	async fn get_user_role_via_teams(&self, user_id: Uuid, repo_id: Uuid) -> Result<Option<RepoRole>> {
+	async fn get_user_role_via_teams(
+		&self,
+		user_id: Uuid,
+		repo_id: Uuid,
+	) -> Result<Option<RepoRole>> {
 		let rows = sqlx::query(
 			r#"
 			SELECT rta.role
@@ -360,7 +368,9 @@ impl RepoTeamAccessStore for SqliteRepoTeamAccessStore {
 		for row in &rows {
 			let role_str: String = row.get("role");
 			let role = role_str.parse::<RepoRole>().map_err(|_| {
-				ScmError::Database(sqlx::Error::Decode(format!("invalid role: {}", role_str).into()))
+				ScmError::Database(sqlx::Error::Decode(
+					format!("invalid role: {}", role_str).into(),
+				))
 			})?;
 
 			highest_role = Some(match highest_role {

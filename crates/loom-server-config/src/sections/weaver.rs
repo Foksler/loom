@@ -160,9 +160,9 @@ impl WeaverConfigLayer {
 			.unwrap_or_default()
 			.into_iter()
 			.map(|w| {
-				let url = w.url.ok_or_else(|| {
-					ConfigError::Validation("webhook url is required".to_string())
-				})?;
+				let url = w
+					.url
+					.ok_or_else(|| ConfigError::Validation("webhook url is required".to_string()))?;
 				Ok(WebhookConfig {
 					url,
 					events: w.events.unwrap_or_default(),
@@ -393,7 +393,10 @@ mod tests {
 				webhooks: Some(vec![
 					WebhookConfigLayer {
 						url: Some("https://hooks.example.com/weaver".to_string()),
-						events: Some(vec![WebhookEvent::WeaverCreated, WebhookEvent::WeaverDeleted]),
+						events: Some(vec![
+							WebhookEvent::WeaverCreated,
+							WebhookEvent::WeaverDeleted,
+						]),
 						secret: Some(Secret::new("webhook-secret".to_string())),
 					},
 					WebhookConfigLayer {

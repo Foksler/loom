@@ -58,7 +58,8 @@ impl Router {
 	}
 
 	pub fn routes_for_peer(&self, peer: &WgPublicKey) -> Vec<Ipv6Addr> {
-		self.routes
+		self
+			.routes
 			.iter()
 			.filter(|(_, p)| *p == peer)
 			.map(|(ip, _)| *ip)

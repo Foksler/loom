@@ -14,7 +14,9 @@ pub struct KeyringCredentialStore {
 
 impl KeyringCredentialStore {
 	pub fn new(service: impl Into<String>) -> Self {
-		Self { service: service.into() }
+		Self {
+			service: service.into(),
+		}
 	}
 }
 
@@ -30,8 +32,8 @@ impl CredentialStore for KeyringCredentialStore {
 
 			match entry.get_password() {
 				Ok(data) => {
-					let persisted: PersistedCredentialValue = serde_json::from_str(&data)
-						.map_err(|e| CredentialError::Parse(e.to_string()))?;
+					let persisted: PersistedCredentialValue =
+						serde_json::from_str(&data).map_err(|e| CredentialError::Parse(e.to_string()))?;
 					Ok(Some(CredentialValue::from(persisted)))
 				}
 				Err(keyring::Error::NoEntry) => Ok(None),

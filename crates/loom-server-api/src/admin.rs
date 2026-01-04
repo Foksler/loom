@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Proprietary
 
 use chrono::{DateTime, Utc};
-use loom_server_llm_anthropic::{AccountDetails as PoolAccountDetails, AccountHealthStatus as PoolAccountHealthStatus};
+use loom_server_llm_anthropic::{
+	AccountDetails as PoolAccountDetails, AccountHealthStatus as PoolAccountHealthStatus,
+};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "openapi")]

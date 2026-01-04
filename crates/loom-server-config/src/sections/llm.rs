@@ -51,14 +51,20 @@ impl std::str::FromStr for LlmProvider {
 #[serde(untagged)]
 pub enum AnthropicAuthConfig {
 	ApiKey(SecretString),
-	OAuthPool { credential_file: PathBuf, cooldown_secs: u64 },
+	OAuthPool {
+		credential_file: PathBuf,
+		cooldown_secs: u64,
+	},
 }
 
 impl std::fmt::Debug for AnthropicAuthConfig {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			AnthropicAuthConfig::ApiKey(key) => f.debug_tuple("ApiKey").field(key).finish(),
-			AnthropicAuthConfig::OAuthPool { credential_file, cooldown_secs } => f
+			AnthropicAuthConfig::OAuthPool {
+				credential_file,
+				cooldown_secs,
+			} => f
 				.debug_struct("OAuthPool")
 				.field("credential_file", credential_file)
 				.field("cooldown_secs", cooldown_secs)
@@ -139,9 +145,13 @@ impl LlmConfigLayer {
 
 		let anthropic_auth = self.anthropic_auth.map(|auth| match auth {
 			AnthropicAuthConfig::ApiKey(key) => AnthropicAuth::ApiKey(key),
-			AnthropicAuthConfig::OAuthPool { credential_file, cooldown_secs } => {
-				AnthropicAuth::OAuthPool(AnthropicOAuthPool { credential_file, cooldown_secs })
-			}
+			AnthropicAuthConfig::OAuthPool {
+				credential_file,
+				cooldown_secs,
+			} => AnthropicAuth::OAuthPool(AnthropicOAuthPool {
+				credential_file,
+				cooldown_secs,
+			}),
 		});
 
 		let openai = self.openai_api_key.map(|api_key| OpenAiConfig {
@@ -154,7 +164,9 @@ impl LlmConfigLayer {
 			Some(VertexConfig {
 				project: self.vertex_project.unwrap(),
 				location: self.vertex_location.unwrap(),
-				model: self.vertex_model.unwrap_or_else(|| "gemini-1.5-pro".to_string()),
+				model: self
+					.vertex_model
+					.unwrap_or_else(|| "gemini-1.5-pro".to_string()),
 			})
 		} else {
 			None
@@ -250,8 +262,6 @@ impl std::fmt::Debug for LlmConfig {
 	}
 }
 
-
-
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -263,12 +273,30 @@ mod tests {
 
 		#[test]
 		fn parsing_is_case_insensitive() {
-			assert_eq!("anthropic".parse::<LlmProvider>().unwrap(), LlmProvider::Anthropic);
-			assert_eq!("ANTHROPIC".parse::<LlmProvider>().unwrap(), LlmProvider::Anthropic);
-			assert_eq!("openai".parse::<LlmProvider>().unwrap(), LlmProvider::OpenAi);
-			assert_eq!("OPENAI".parse::<LlmProvider>().unwrap(), LlmProvider::OpenAi);
-			assert_eq!("vertex".parse::<LlmProvider>().unwrap(), LlmProvider::Vertex);
-			assert_eq!("VERTEX".parse::<LlmProvider>().unwrap(), LlmProvider::Vertex);
+			assert_eq!(
+				"anthropic".parse::<LlmProvider>().unwrap(),
+				LlmProvider::Anthropic
+			);
+			assert_eq!(
+				"ANTHROPIC".parse::<LlmProvider>().unwrap(),
+				LlmProvider::Anthropic
+			);
+			assert_eq!(
+				"openai".parse::<LlmProvider>().unwrap(),
+				LlmProvider::OpenAi
+			);
+			assert_eq!(
+				"OPENAI".parse::<LlmProvider>().unwrap(),
+				LlmProvider::OpenAi
+			);
+			assert_eq!(
+				"vertex".parse::<LlmProvider>().unwrap(),
+				LlmProvider::Vertex
+			);
+			assert_eq!(
+				"VERTEX".parse::<LlmProvider>().unwrap(),
+				LlmProvider::Vertex
+			);
 		}
 
 		#[test]
@@ -313,7 +341,9 @@ mod tests {
 		fn merge_preserves_base_when_overlay_is_none() {
 			let mut base = LlmConfigLayer {
 				provider: Some(LlmProvider::Anthropic),
-				anthropic_auth: Some(AnthropicAuthConfig::ApiKey(Secret::new("base-key".to_string()))),
+				anthropic_auth: Some(AnthropicAuthConfig::ApiKey(Secret::new(
+					"base-key".to_string(),
+				))),
 				anthropic_model: Some("claude-3".to_string()),
 				..Default::default()
 			};
@@ -331,7 +361,9 @@ mod tests {
 		#[test]
 		fn merge_anthropic_fields_individually() {
 			let mut base = LlmConfigLayer {
-				anthropic_auth: Some(AnthropicAuthConfig::ApiKey(Secret::new("base-key".to_string()))),
+				anthropic_auth: Some(AnthropicAuthConfig::ApiKey(Secret::new(
+					"base-key".to_string(),
+				))),
 				anthropic_model: Some("claude-2".to_string()),
 				..Default::default()
 			};
@@ -359,13 +391,18 @@ mod tests {
 		fn finalize_anthropic_api_key() {
 			let layer = LlmConfigLayer {
 				provider: Some(LlmProvider::Anthropic),
-				anthropic_auth: Some(AnthropicAuthConfig::ApiKey(Secret::new("test-key".to_string()))),
+				anthropic_auth: Some(AnthropicAuthConfig::ApiKey(Secret::new(
+					"test-key".to_string(),
+				))),
 				anthropic_model: Some("claude-3".to_string()),
 				..Default::default()
 			};
 
 			let config = layer.finalize();
-			assert!(matches!(config.anthropic_auth, Some(AnthropicAuth::ApiKey(_))));
+			assert!(matches!(
+				config.anthropic_auth,
+				Some(AnthropicAuth::ApiKey(_))
+			));
 			assert_eq!(config.anthropic_model, Some("claude-3".to_string()));
 		}
 

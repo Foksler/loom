@@ -222,7 +222,7 @@ impl fmt::Display for AuditEventType {
 			AuditEventType::MirrorSynced => "mirror_synced",
 			AuditEventType::WebhookReceived => "webhook_received",
 
-// User management events
+			// User management events
 			AuditEventType::UserDeleted => "user_deleted",
 			AuditEventType::UserRestored => "user_restored",
 
@@ -405,8 +405,6 @@ impl fmt::Display for AuditSeverity {
 	}
 }
 
-
-
 /// A unique identifier for a user.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -551,7 +549,11 @@ impl AuditLogBuilder {
 	}
 
 	/// Set the resource type and ID affected by this event.
-	pub fn resource(mut self, resource_type: impl Into<String>, resource_id: impl Into<String>) -> Self {
+	pub fn resource(
+		mut self,
+		resource_type: impl Into<String>,
+		resource_id: impl Into<String>,
+	) -> Self {
 		self.resource_type = Some(resource_type.into());
 		self.resource_id = Some(resource_id.into());
 		self
@@ -605,7 +607,9 @@ impl AuditLogBuilder {
 			id: Uuid::new_v4(),
 			timestamp: Utc::now(),
 			event_type: self.event_type,
-			severity: self.severity.unwrap_or_else(|| self.event_type.default_severity()),
+			severity: self
+				.severity
+				.unwrap_or_else(|| self.event_type.default_severity()),
 			actor_user_id: self.actor_user_id,
 			impersonating_user_id: self.impersonating_user_id,
 			resource_type: self.resource_type,
@@ -634,14 +638,35 @@ mod tests {
 		fn display_returns_snake_case() {
 			assert_eq!(AuditEventType::Login.to_string(), "login");
 			assert_eq!(AuditEventType::LoginFailed.to_string(), "login_failed");
-			assert_eq!(AuditEventType::SessionCreated.to_string(), "session_created");
-			assert_eq!(AuditEventType::ImpersonationStarted.to_string(), "impersonation_started");
-			assert_eq!(AuditEventType::SupportAccessApproved.to_string(), "support_access_approved");
-			assert_eq!(AuditEventType::MagicLinkRequested.to_string(), "magic_link_requested");
-			assert_eq!(AuditEventType::DeviceCodeCompleted.to_string(), "device_code_completed");
-			assert_eq!(AuditEventType::GlobalRoleChanged.to_string(), "global_role_changed");
+			assert_eq!(
+				AuditEventType::SessionCreated.to_string(),
+				"session_created"
+			);
+			assert_eq!(
+				AuditEventType::ImpersonationStarted.to_string(),
+				"impersonation_started"
+			);
+			assert_eq!(
+				AuditEventType::SupportAccessApproved.to_string(),
+				"support_access_approved"
+			);
+			assert_eq!(
+				AuditEventType::MagicLinkRequested.to_string(),
+				"magic_link_requested"
+			);
+			assert_eq!(
+				AuditEventType::DeviceCodeCompleted.to_string(),
+				"device_code_completed"
+			);
+			assert_eq!(
+				AuditEventType::GlobalRoleChanged.to_string(),
+				"global_role_changed"
+			);
 			assert_eq!(AuditEventType::WeaverCreated.to_string(), "weaver_created");
-			assert_eq!(AuditEventType::LlmRequestFailed.to_string(), "llm_request_failed");
+			assert_eq!(
+				AuditEventType::LlmRequestFailed.to_string(),
+				"llm_request_failed"
+			);
 			assert_eq!(AuditEventType::MirrorSynced.to_string(), "mirror_synced");
 		}
 
@@ -727,7 +752,8 @@ mod tests {
 					matches!(
 						severity,
 						AuditSeverity::Debug
-							| AuditSeverity::Info | AuditSeverity::Notice
+							| AuditSeverity::Info
+							| AuditSeverity::Notice
 							| AuditSeverity::Warning
 							| AuditSeverity::Error
 							| AuditSeverity::Critical
@@ -740,16 +766,46 @@ mod tests {
 
 		#[test]
 		fn default_severity_mapping() {
-			assert_eq!(AuditEventType::Login.default_severity(), AuditSeverity::Info);
-			assert_eq!(AuditEventType::SessionCreated.default_severity(), AuditSeverity::Info);
-			assert_eq!(AuditEventType::OrgCreated.default_severity(), AuditSeverity::Info);
-			assert_eq!(AuditEventType::LoginFailed.default_severity(), AuditSeverity::Warning);
-			assert_eq!(AuditEventType::AccessDenied.default_severity(), AuditSeverity::Warning);
-			assert_eq!(AuditEventType::SessionRevoked.default_severity(), AuditSeverity::Notice);
-			assert_eq!(AuditEventType::OrgDeleted.default_severity(), AuditSeverity::Notice);
-			assert_eq!(AuditEventType::ImpersonationStarted.default_severity(), AuditSeverity::Notice);
-			assert_eq!(AuditEventType::GlobalRoleChanged.default_severity(), AuditSeverity::Notice);
-			assert_eq!(AuditEventType::LlmRequestFailed.default_severity(), AuditSeverity::Error);
+			assert_eq!(
+				AuditEventType::Login.default_severity(),
+				AuditSeverity::Info
+			);
+			assert_eq!(
+				AuditEventType::SessionCreated.default_severity(),
+				AuditSeverity::Info
+			);
+			assert_eq!(
+				AuditEventType::OrgCreated.default_severity(),
+				AuditSeverity::Info
+			);
+			assert_eq!(
+				AuditEventType::LoginFailed.default_severity(),
+				AuditSeverity::Warning
+			);
+			assert_eq!(
+				AuditEventType::AccessDenied.default_severity(),
+				AuditSeverity::Warning
+			);
+			assert_eq!(
+				AuditEventType::SessionRevoked.default_severity(),
+				AuditSeverity::Notice
+			);
+			assert_eq!(
+				AuditEventType::OrgDeleted.default_severity(),
+				AuditSeverity::Notice
+			);
+			assert_eq!(
+				AuditEventType::ImpersonationStarted.default_severity(),
+				AuditSeverity::Notice
+			);
+			assert_eq!(
+				AuditEventType::GlobalRoleChanged.default_severity(),
+				AuditSeverity::Notice
+			);
+			assert_eq!(
+				AuditEventType::LlmRequestFailed.default_severity(),
+				AuditSeverity::Error
+			);
 		}
 	}
 
@@ -767,7 +823,10 @@ mod tests {
 
 		#[test]
 		fn ordering_same_severity_is_equal() {
-			assert_eq!(AuditSeverity::Warning.cmp(&AuditSeverity::Warning), Ordering::Equal);
+			assert_eq!(
+				AuditSeverity::Warning.cmp(&AuditSeverity::Warning),
+				Ordering::Equal
+			);
 		}
 
 		#[test]
@@ -792,8 +851,14 @@ mod tests {
 
 		#[test]
 		fn serializes_snake_case() {
-			assert_eq!(serde_json::to_string(&AuditSeverity::Warning).unwrap(), "\"warning\"");
-			assert_eq!(serde_json::to_string(&AuditSeverity::Critical).unwrap(), "\"critical\"");
+			assert_eq!(
+				serde_json::to_string(&AuditSeverity::Warning).unwrap(),
+				"\"warning\""
+			);
+			assert_eq!(
+				serde_json::to_string(&AuditSeverity::Critical).unwrap(),
+				"\"critical\""
+			);
 		}
 
 		#[test]
@@ -812,7 +877,12 @@ mod tests {
 			let all = AuditSeverity::all();
 			assert_eq!(all.len(), 6);
 			for i in 0..all.len() - 1 {
-				assert!(all[i] > all[i + 1], "Expected {:?} > {:?}", all[i], all[i + 1]);
+				assert!(
+					all[i] > all[i + 1],
+					"Expected {:?} > {:?}",
+					all[i],
+					all[i + 1]
+				);
 			}
 		}
 	}
@@ -950,7 +1020,10 @@ mod tests {
 			let entry = AuditLogBuilder::new(AuditEventType::ApiKeyRevoked)
 				.action("Admin revoked API key due to suspected compromise")
 				.build();
-			assert_eq!(entry.action, "Admin revoked API key due to suspected compromise");
+			assert_eq!(
+				entry.action,
+				"Admin revoked API key due to suspected compromise"
+			);
 		}
 
 		#[test]

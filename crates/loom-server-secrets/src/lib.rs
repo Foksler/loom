@@ -30,11 +30,15 @@ pub mod types;
 pub use config::SecretsConfig;
 pub use encryption::{generate_key, EncryptedData, KEY_SIZE, NONCE_SIZE};
 pub use error::{SecretsError, SecretsResult};
-pub use key_backend::{EncryptedDekData, JsonWebKey, JsonWebKeySet, KeyBackend, SoftwareKeyBackend};
+pub use key_backend::{
+	EncryptedDekData, JsonWebKey, JsonWebKeySet, KeyBackend, SoftwareKeyBackend,
+};
 pub use policy::{can_access_secret, WeaverPrincipal};
 pub use service::{CreateSecretInput, SecretMetadata, SecretValue, SecretsService};
 pub use store::{SecretStore, SqliteSecretStore};
 pub use svid::{
 	PodMetadata, SvidConfig, SvidIssuer, SvidRequest, ValidatedSaToken, WeaverClaims, WeaverSvid,
 };
-pub use types::{EncryptedDek, Secret, SecretId, SecretScope, SecretVersion, SecretVersionId, WeaverId};
+pub use types::{
+	EncryptedDek, Secret, SecretId, SecretScope, SecretVersion, SecretVersionId, WeaverId,
+};

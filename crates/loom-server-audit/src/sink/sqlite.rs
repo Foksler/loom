@@ -38,15 +38,17 @@ impl AuditSink for SqliteAuditSink {
 	}
 
 	async fn publish(&self, event: Arc<EnrichedAuditEvent>) -> Result<(), AuditSinkError> {
-		let details_json =
-			serde_json::to_string(&event.base.details).map_err(|e| AuditSinkError::Permanent(format!("failed to serialize details: {e}")))?;
+		let details_json = serde_json::to_string(&event.base.details)
+			.map_err(|e| AuditSinkError::Permanent(format!("failed to serialize details: {e}")))?;
 
 		let session_context_json = event
 			.session
 			.as_ref()
 			.map(serde_json::to_string)
 			.transpose()
-			.map_err(|e| AuditSinkError::Permanent(format!("failed to serialize session_context: {e}")))?;
+			.map_err(|e| {
+				AuditSinkError::Permanent(format!("failed to serialize session_context: {e}"))
+			})?;
 
 		let org_context_json = event
 			.org
@@ -72,7 +74,13 @@ impl AuditSink for SqliteAuditSink {
 		.bind(event.base.event_type.to_string())
 		.bind(event.base.severity.to_string())
 		.bind(event.base.actor_user_id.as_ref().map(|u| u.to_string()))
-		.bind(event.base.impersonating_user_id.as_ref().map(|u| u.to_string()))
+		.bind(
+			event
+				.base
+				.impersonating_user_id
+				.as_ref()
+				.map(|u| u.to_string()),
+		)
 		.bind(&event.base.resource_type)
 		.bind(&event.base.resource_id)
 		.bind(&event.base.action)

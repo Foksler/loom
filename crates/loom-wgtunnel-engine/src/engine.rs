@@ -83,10 +83,7 @@ impl WgEngine {
 
 	#[instrument(skip(self))]
 	pub async fn start(&self) -> Result<()> {
-		if self
-			.running
-			.swap(true, std::sync::atomic::Ordering::SeqCst)
-		{
+		if self.running.swap(true, std::sync::atomic::Ordering::SeqCst) {
 			return Err(EngineError::AlreadyRunning);
 		}
 
@@ -281,7 +278,9 @@ impl WgEngine {
 		let peer_key = peer.public_key;
 
 		let tunn = Tunn::new(
-			defguard_boringtun::x25519::StaticSecret::from(*self.config.private_key.private_key().expose_bytes()),
+			defguard_boringtun::x25519::StaticSecret::from(
+				*self.config.private_key.private_key().expose_bytes(),
+			),
 			defguard_boringtun::x25519::PublicKey::from(*peer_key.as_bytes()),
 			None,
 			peer.persistent_keepalive,
@@ -334,7 +333,8 @@ impl WgEngine {
 
 		self.magic_conn.remove_peer(public_key).await;
 
-		self.peers
+		self
+			.peers
 			.remove(public_key)
 			.await
 			.ok_or_else(|| EngineError::PeerNotFound(public_key.to_string()))?;
@@ -354,7 +354,11 @@ impl WgEngine {
 	#[instrument(skip(self), fields(port))]
 	pub async fn tcp_listener(&self, port: u16) -> Result<VirtualTcpListener> {
 		let (handle, local_addr) = self.device.listen(port)?;
-		Ok(VirtualTcpListener::new(self.device.clone(), handle, local_addr))
+		Ok(VirtualTcpListener::new(
+			self.device.clone(),
+			handle,
+			local_addr,
+		))
 	}
 
 	#[instrument(skip(self), fields(%addr))]
@@ -369,7 +373,8 @@ impl WgEngine {
 	pub async fn shutdown(&self) {
 		info!("shutting down WireGuard engine");
 		let _ = self.shutdown_tx.send(true);
-		self.running
+		self
+			.running
 			.store(false, std::sync::atomic::Ordering::SeqCst);
 
 		self.magic_conn.close().await;

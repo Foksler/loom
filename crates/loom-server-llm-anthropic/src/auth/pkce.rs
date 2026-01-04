@@ -29,7 +29,10 @@ impl Pkce {
 		let hash = hasher.finalize();
 		let challenge = URL_SAFE_NO_PAD.encode(hash);
 
-		Self { verifier, challenge }
+		Self {
+			verifier,
+			challenge,
+		}
 	}
 
 	/// Create a PKCE pair from an existing verifier (for testing or reconstruction).
@@ -40,7 +43,10 @@ impl Pkce {
 		let hash = hasher.finalize();
 		let challenge = URL_SAFE_NO_PAD.encode(hash);
 
-		Self { verifier, challenge }
+		Self {
+			verifier,
+			challenge,
+		}
 	}
 }
 

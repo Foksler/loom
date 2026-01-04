@@ -6,6 +6,7 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use loom_scim::error::ScimErrorResponse;
 use loom_scim::{ScimError, ScimErrorType};
+use loom_server_db::DbError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ScimApiError {
@@ -23,6 +24,18 @@ pub enum ScimApiError {
 	Scim(#[from] ScimError),
 	#[error(transparent)]
 	Database(#[from] sqlx::Error),
+}
+
+impl From<DbError> for ScimApiError {
+	fn from(e: DbError) -> Self {
+		match e {
+			DbError::NotFound(msg) => ScimApiError::NotFound(msg),
+			DbError::Conflict(msg) => ScimApiError::Conflict(msg),
+			DbError::Sqlx(e) => ScimApiError::Database(e),
+			DbError::Internal(msg) => ScimApiError::Internal(msg),
+			DbError::Serialization(e) => ScimApiError::Internal(e.to_string()),
+		}
+	}
 }
 
 impl IntoResponse for ScimApiError {

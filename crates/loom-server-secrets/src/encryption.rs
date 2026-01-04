@@ -74,7 +74,10 @@ pub fn encrypt_dek(kek: &[u8; KEY_SIZE], dek: &[u8; KEY_SIZE]) -> SecretsResult<
 }
 
 /// Decrypt a DEK with the KEK.
-pub fn decrypt_dek(kek: &[u8; KEY_SIZE], encrypted: &EncryptedData) -> SecretsResult<Zeroizing<[u8; KEY_SIZE]>> {
+pub fn decrypt_dek(
+	kek: &[u8; KEY_SIZE],
+	encrypted: &EncryptedData,
+) -> SecretsResult<Zeroizing<[u8; KEY_SIZE]>> {
 	let key = Key::<Aes256Gcm>::from_slice(kek);
 	let cipher = Aes256Gcm::new(key);
 	let nonce = Nonce::from_slice(&encrypted.nonce);
@@ -99,7 +102,10 @@ pub fn decrypt_dek(kek: &[u8; KEY_SIZE], encrypted: &EncryptedData) -> SecretsRe
 }
 
 /// Encrypt a secret value with a DEK.
-pub fn encrypt_secret_value(dek: &[u8; KEY_SIZE], plaintext: &[u8]) -> SecretsResult<EncryptedData> {
+pub fn encrypt_secret_value(
+	dek: &[u8; KEY_SIZE],
+	plaintext: &[u8],
+) -> SecretsResult<EncryptedData> {
 	let key = Key::<Aes256Gcm>::from_slice(dek);
 	let cipher = Aes256Gcm::new(key);
 
@@ -117,7 +123,10 @@ pub fn encrypt_secret_value(dek: &[u8; KEY_SIZE], plaintext: &[u8]) -> SecretsRe
 }
 
 /// Decrypt a secret value with a DEK.
-pub fn decrypt_secret_value(dek: &[u8; KEY_SIZE], encrypted: &EncryptedData) -> SecretsResult<Zeroizing<Vec<u8>>> {
+pub fn decrypt_secret_value(
+	dek: &[u8; KEY_SIZE],
+	encrypted: &EncryptedData,
+) -> SecretsResult<Zeroizing<Vec<u8>>> {
 	let key = Key::<Aes256Gcm>::from_slice(dek);
 	let cipher = Aes256Gcm::new(key);
 	let nonce = Nonce::from_slice(&encrypted.nonce);

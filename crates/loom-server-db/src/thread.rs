@@ -112,7 +112,8 @@ impl ThreadRepository {
 			self.insert(thread).await?;
 		}
 
-		self.get(&thread.id)
+		self
+			.get(&thread.id)
 			.await?
 			.ok_or_else(|| DbError::Internal("Thread not found after upsert".to_string()))
 	}
@@ -429,10 +430,7 @@ impl ThreadRepository {
 	}
 
 	/// Get the owner_user_id for a thread.
-	pub async fn get_thread_owner_user_id(
-		&self,
-		thread_id: &str,
-	) -> Result<Option<String>, DbError> {
+	pub async fn get_thread_owner_user_id(&self, thread_id: &str) -> Result<Option<String>, DbError> {
 		let row: Option<(Option<String>,)> = sqlx::query_as(
 			r#"
 			SELECT owner_user_id
@@ -800,10 +798,7 @@ impl ThreadRepository {
 	}
 
 	/// Delete a GitHub installation (cascades to repos).
-	pub async fn delete_github_installation(
-		&self,
-		installation_id: i64,
-	) -> Result<bool, DbError> {
+	pub async fn delete_github_installation(&self, installation_id: i64) -> Result<bool, DbError> {
 		let result = sqlx::query("DELETE FROM github_installations WHERE installation_id = ?")
 			.bind(installation_id)
 			.execute(&self.pool)
@@ -1047,8 +1042,6 @@ impl AgentStateKindExt for loom_common_thread::AgentStateKind {
 		}
 	}
 }
-
-
 
 #[cfg(test)]
 mod tests {

@@ -20,13 +20,25 @@ impl std::fmt::Display for ProtectionViolation {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			ProtectionViolation::DirectPushBlocked { branch, pattern } => {
-				write!(f, "Direct push to branch '{}' is blocked by protection rule '{}'", branch, pattern)
+				write!(
+					f,
+					"Direct push to branch '{}' is blocked by protection rule '{}'",
+					branch, pattern
+				)
 			}
 			ProtectionViolation::ForcePushBlocked { branch, pattern } => {
-				write!(f, "Force push to branch '{}' is blocked by protection rule '{}'", branch, pattern)
+				write!(
+					f,
+					"Force push to branch '{}' is blocked by protection rule '{}'",
+					branch, pattern
+				)
 			}
 			ProtectionViolation::DeletionBlocked { branch, pattern } => {
-				write!(f, "Deletion of branch '{}' is blocked by protection rule '{}'", branch, pattern)
+				write!(
+					f,
+					"Deletion of branch '{}' is blocked by protection rule '{}'",
+					branch, pattern
+				)
 			}
 		}
 	}
@@ -241,7 +253,10 @@ mod tests {
 
 	#[test]
 	fn test_check_push_allowed_admin_bypass() {
-		let rules = vec![BranchProtectionRule::new(Uuid::new_v4(), "cannon".to_string())];
+		let rules = vec![BranchProtectionRule::new(
+			Uuid::new_v4(),
+			"cannon".to_string(),
+		)];
 		let check = PushCheck {
 			branch: "cannon".to_string(),
 			is_force_push: true,
@@ -253,7 +268,10 @@ mod tests {
 
 	#[test]
 	fn test_check_push_allowed_direct_push_blocked() {
-		let rules = vec![BranchProtectionRule::new(Uuid::new_v4(), "cannon".to_string())];
+		let rules = vec![BranchProtectionRule::new(
+			Uuid::new_v4(),
+			"cannon".to_string(),
+		)];
 		let check = PushCheck {
 			branch: "cannon".to_string(),
 			is_force_push: false,
@@ -261,7 +279,10 @@ mod tests {
 			user_is_admin: false,
 		};
 		let result = check_push_allowed(&rules, &check);
-		assert!(matches!(result, Err(ProtectionViolation::DirectPushBlocked { .. })));
+		assert!(matches!(
+			result,
+			Err(ProtectionViolation::DirectPushBlocked { .. })
+		));
 	}
 
 	#[test]
@@ -276,7 +297,10 @@ mod tests {
 			user_is_admin: false,
 		};
 		let result = check_push_allowed(&rules, &check);
-		assert!(matches!(result, Err(ProtectionViolation::ForcePushBlocked { .. })));
+		assert!(matches!(
+			result,
+			Err(ProtectionViolation::ForcePushBlocked { .. })
+		));
 	}
 
 	#[test]
@@ -292,12 +316,18 @@ mod tests {
 			user_is_admin: false,
 		};
 		let result = check_push_allowed(&rules, &check);
-		assert!(matches!(result, Err(ProtectionViolation::DeletionBlocked { .. })));
+		assert!(matches!(
+			result,
+			Err(ProtectionViolation::DeletionBlocked { .. })
+		));
 	}
 
 	#[test]
 	fn test_check_push_allowed_unprotected_branch() {
-		let rules = vec![BranchProtectionRule::new(Uuid::new_v4(), "cannon".to_string())];
+		let rules = vec![BranchProtectionRule::new(
+			Uuid::new_v4(),
+			"cannon".to_string(),
+		)];
 		let check = PushCheck {
 			branch: "feature/new-thing".to_string(),
 			is_force_push: true,
@@ -309,7 +339,10 @@ mod tests {
 
 	#[test]
 	fn test_check_push_allowed_wildcard_pattern() {
-		let rules = vec![BranchProtectionRule::new(Uuid::new_v4(), "release/*".to_string())];
+		let rules = vec![BranchProtectionRule::new(
+			Uuid::new_v4(),
+			"release/*".to_string(),
+		)];
 		let check = PushCheck {
 			branch: "release/v1.0".to_string(),
 			is_force_push: false,
@@ -317,6 +350,9 @@ mod tests {
 			user_is_admin: false,
 		};
 		let result = check_push_allowed(&rules, &check);
-		assert!(matches!(result, Err(ProtectionViolation::DirectPushBlocked { .. })));
+		assert!(matches!(
+			result,
+			Err(ProtectionViolation::DirectPushBlocked { .. })
+		));
 	}
 }

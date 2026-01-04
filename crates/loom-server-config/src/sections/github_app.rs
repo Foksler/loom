@@ -58,7 +58,10 @@ impl GitHubAppConfigLayer {
 			|| self.private_key_pem.is_some()
 			|| self.webhook_secret.is_some()
 			|| self.app_slug.is_some()
-			|| self.base_url.as_ref().is_some_and(|s| s != DEFAULT_BASE_URL)
+			|| self
+				.base_url
+				.as_ref()
+				.is_some_and(|s| s != DEFAULT_BASE_URL)
 	}
 
 	/// Finalize the layer into a runtime configuration.
@@ -68,16 +71,15 @@ impl GitHubAppConfigLayer {
 
 	/// Build the final config, returning None if not configured.
 	pub fn build(self) -> Result<Option<GitHubAppConfig>, ConfigError> {
-		let has_any = self.app_id.is_some()
-			|| self.private_key_pem.is_some();
+		let has_any = self.app_id.is_some() || self.private_key_pem.is_some();
 
 		if !has_any {
 			return Ok(None);
 		}
 
-		let app_id = self.app_id.ok_or_else(|| {
-			ConfigError::Validation("GitHub App app_id is required".to_string())
-		})?;
+		let app_id = self
+			.app_id
+			.ok_or_else(|| ConfigError::Validation("GitHub App app_id is required".to_string()))?;
 
 		let private_key_pem = self.private_key_pem.ok_or_else(|| {
 			ConfigError::Validation(
@@ -170,7 +172,10 @@ impl GitHubAppConfig {
 	/// Get the installation URL for users to install the app.
 	pub fn installation_url(&self) -> String {
 		if self.base_url.starts_with(DEFAULT_BASE_URL) {
-			format!("https://github.com/apps/{}/installations/new", self.app_slug)
+			format!(
+				"https://github.com/apps/{}/installations/new",
+				self.app_slug
+			)
 		} else {
 			let base = self.base_url.trim_end_matches("/api/v3");
 			format!("{}/apps/{}/installations/new", base, self.app_slug)

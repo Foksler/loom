@@ -4,12 +4,12 @@
 use async_trait::async_trait;
 use futures::StreamExt;
 use k8s_openapi::api::authentication::v1::{TokenReview, TokenReviewSpec, TokenReviewStatus};
-use std::collections::HashMap;
 use k8s_openapi::api::core::v1::{Namespace, Pod};
 use kube::{
 	api::{Api, AttachParams, DeleteParams, ListParams, LogParams, PostParams},
 	Client,
 };
+use std::collections::HashMap;
 use tokio_util::compat::FuturesAsyncReadCompatExt;
 use tracing::{debug, instrument};
 
@@ -146,16 +146,12 @@ impl K8sClient for KubeClient {
 			},
 		})?;
 
-		let stdin = attached
-			.stdin()
-			.ok_or_else(|| K8sError::AttachError {
-				message: "stdin not available".into(),
-			})?;
-		let stdout = attached
-			.stdout()
-			.ok_or_else(|| K8sError::AttachError {
-				message: "stdout not available".into(),
-			})?;
+		let stdin = attached.stdin().ok_or_else(|| K8sError::AttachError {
+			message: "stdin not available".into(),
+		})?;
+		let stdout = attached.stdout().ok_or_else(|| K8sError::AttachError {
+			message: "stdout not available".into(),
+		})?;
 
 		Ok(AttachedProcess {
 			stdin: Box::pin(stdin),

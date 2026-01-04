@@ -53,8 +53,6 @@ impl<W: Write> Write for RedactingWriter<W> {
 	}
 }
 
-
-
 /// A MakeWriter that wraps another MakeWriter and redacts secrets.
 pub struct RedactingMakeWriter<M> {
 	inner: M,

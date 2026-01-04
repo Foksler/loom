@@ -10,14 +10,14 @@ use tracing::{debug, trace};
 
 use crate::error::ConfigError;
 use crate::layer::ServerConfigLayer;
+use crate::sections::{AnthropicAuthConfig, GitHubOAuthConfigLayer, GoogleOAuthConfigLayer};
 use crate::sections::{
-	AuditConfigLayer, AuthConfigLayer, DatabaseConfigLayer, GeoIpConfigLayer,
-	GitHubAppConfigLayer, GoogleCseConfigLayer, HttpConfigLayer, JobsConfigLayer, LlmConfigLayer,
-	LlmProvider, LoggingConfigLayer, OAuthConfigLayer, OktaOAuthConfigLayer, PathsConfigLayer,
+	AuditConfigLayer, AuthConfigLayer, DatabaseConfigLayer, GeoIpConfigLayer, GitHubAppConfigLayer,
+	GoogleCseConfigLayer, HttpConfigLayer, JobsConfigLayer, LlmConfigLayer, LlmProvider,
+	LoggingConfigLayer, OAuthConfigLayer, OktaOAuthConfigLayer, PathsConfigLayer,
 	QueueOverflowPolicy, ScimConfigLayer, SearchConfigLayer, SerperConfigLayer, SmtpConfigLayer,
 	SyslogConfigLayer, SyslogProtocol, TlsMode, WeaverConfigLayer,
 };
-use crate::sections::{AnthropicAuthConfig, GitHubOAuthConfigLayer, GoogleOAuthConfigLayer};
 
 /// Source precedence levels (higher = overrides lower).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -408,21 +408,19 @@ fn load_scim_from_env() -> Result<ScimConfigLayer, ConfigError> {
 }
 
 fn load_audit_from_env() -> Result<AuditConfigLayer, ConfigError> {
-	let queue_overflow_policy = env_var("LOOM_SERVER_AUDIT_QUEUE_OVERFLOW_POLICY").map(|v| {
-		match v.to_lowercase().as_str() {
+	let queue_overflow_policy =
+		env_var("LOOM_SERVER_AUDIT_QUEUE_OVERFLOW_POLICY").map(|v| match v.to_lowercase().as_str() {
 			"drop_oldest" => QueueOverflowPolicy::DropOldest,
 			"block" => QueueOverflowPolicy::Block,
 			_ => QueueOverflowPolicy::DropNewest,
-		}
-	});
+		});
 
 	let syslog = if env_bool("LOOM_SERVER_AUDIT_SYSLOG_ENABLED").unwrap_or(false) {
-		let protocol = env_var("LOOM_SERVER_AUDIT_SYSLOG_PROTOCOL").map(|v| {
-			match v.to_lowercase().as_str() {
+		let protocol =
+			env_var("LOOM_SERVER_AUDIT_SYSLOG_PROTOCOL").map(|v| match v.to_lowercase().as_str() {
 				"tcp" => SyslogProtocol::Tcp,
 				_ => SyslogProtocol::Udp,
-			}
-		});
+			});
 
 		Some(SyslogConfigLayer {
 			enabled: Some(true),

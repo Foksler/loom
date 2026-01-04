@@ -323,7 +323,9 @@ mod tests {
 	fn test_authorize_console_mode() {
 		let request = authorize(AuthMode::Console);
 
-		assert!(request.url.contains("console.anthropic.com/oauth/authorize"));
+		assert!(request
+			.url
+			.contains("console.anthropic.com/oauth/authorize"));
 	}
 
 	#[test]
@@ -334,7 +336,10 @@ mod tests {
 		let params: std::collections::HashMap<_, _> = url.query_pairs().collect();
 
 		assert_eq!(params.get("client_id").map(|s| s.as_ref()), Some(CLIENT_ID));
-		assert_eq!(params.get("response_type").map(|s| s.as_ref()), Some("code"));
+		assert_eq!(
+			params.get("response_type").map(|s| s.as_ref()),
+			Some("code")
+		);
 		assert_eq!(
 			params.get("redirect_uri").map(|s| s.as_ref()),
 			Some(REDIRECT_URI)

@@ -80,11 +80,9 @@ pub async fn handle_ssh(args: SshArgs, ctx: &CliContext) -> anyhow::Result<()> {
 	let ssh_target = format!("{}@{}", args.user, session.weaver.ip);
 
 	let mut cmd = Command::new("ssh");
-	cmd.arg("-o")
-		.arg(format!(
-			"UserKnownHostsFile={}",
-			known_hosts_path.display()
-		))
+	cmd
+		.arg("-o")
+		.arg(format!("UserKnownHostsFile={}", known_hosts_path.display()))
 		.arg("-o")
 		.arg("StrictHostKeyChecking=accept-new")
 		.arg("-p")
@@ -113,10 +111,7 @@ pub async fn handle_ssh(args: SshArgs, ctx: &CliContext) -> anyhow::Result<()> {
 		warn!("failed to delete session: {}", e);
 	}
 
-	println!(
-		"{} Disconnected",
-		style("✓").green().bold()
-	);
+	println!("{} Disconnected", style("✓").green().bold());
 
 	std::process::exit(status.code().unwrap_or(1))
 }

@@ -254,17 +254,22 @@ mod tests {
 
 	#[test]
 	fn test_variable_substitution() {
-		let result = t_fmt("en", "server.email.magic_link.expires", &[("minutes", "10")]);
+		let result = t_fmt(
+			"en",
+			"server.email.magic_link.expires",
+			&[("minutes", "10")],
+		);
 		assert!(result.contains("10"));
 		assert!(!result.contains("{minutes}"));
 	}
 
 	#[test]
 	fn test_multiple_variables() {
-		let result = t_fmt("en", "server.email.invitation.body", &[
-			("inviter_name", "Alice"),
-			("org_name", "Acme"),
-		]);
+		let result = t_fmt(
+			"en",
+			"server.email.invitation.body",
+			&[("inviter_name", "Alice"), ("org_name", "Acme")],
+		);
 		assert!(result.contains("Alice"));
 		assert!(result.contains("Acme"));
 	}

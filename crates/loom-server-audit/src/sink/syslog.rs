@@ -45,7 +45,10 @@ pub struct SyslogAuditSink {
 }
 
 impl SyslogAuditSink {
-	pub async fn new(config: SyslogConfig, filter: AuditFilterConfig) -> Result<Self, AuditSinkError> {
+	pub async fn new(
+		config: SyslogConfig,
+		filter: AuditFilterConfig,
+	) -> Result<Self, AuditSinkError> {
 		let target_addr = format!("{}:{}", config.host, config.port)
 			.parse()
 			.map_err(|e| AuditSinkError::Permanent(format!("invalid syslog address: {e}")))?;
@@ -103,9 +106,10 @@ impl SyslogAuditSink {
 			.as_ref()
 			.ok_or_else(|| AuditSinkError::Permanent("UDP socket not initialized".to_string()))?;
 
-		socket.send_to(message, self.target_addr).await.map_err(|e| {
-			AuditSinkError::Transient(format!("failed to send UDP message: {e}"))
-		})?;
+		socket
+			.send_to(message, self.target_addr)
+			.await
+			.map_err(|e| AuditSinkError::Transient(format!("failed to send UDP message: {e}")))?;
 
 		Ok(())
 	}
@@ -348,11 +352,7 @@ pub fn format_cef(event: &EnrichedAuditEvent, app_name: &str) -> String {
 	let base = &event.base;
 
 	let signature_id = base.event_type.to_string().to_uppercase();
-	let event_name = base
-		.event_type
-		.to_string()
-		.to_uppercase()
-		.replace('_', " ");
+	let event_name = base.event_type.to_string().to_uppercase().replace('_', " ");
 
 	let cef_severity = match base.severity {
 		AuditSeverity::Debug => 1,

@@ -23,18 +23,17 @@ pub fn select_best_endpoint(endpoints: &[DiscoveredEndpoint]) -> Option<&Discove
 		return None;
 	}
 
-	let with_latency: Vec<_> = endpoints
-		.iter()
-		.filter(|e| e.latency.is_some())
-		.collect();
+	let with_latency: Vec<_> = endpoints.iter().filter(|e| e.latency.is_some()).collect();
 
 	if !with_latency.is_empty() {
-		return with_latency
-			.into_iter()
-			.min_by_key(|e| e.latency.unwrap());
+		return with_latency.into_iter().min_by_key(|e| e.latency.unwrap());
 	}
 
-	for source in [EndpointSource::Direct, EndpointSource::Stun, EndpointSource::ServerHint] {
+	for source in [
+		EndpointSource::Direct,
+		EndpointSource::Stun,
+		EndpointSource::ServerHint,
+	] {
 		if let Some(ep) = endpoints.iter().find(|e| e.source == source) {
 			return Some(ep);
 		}

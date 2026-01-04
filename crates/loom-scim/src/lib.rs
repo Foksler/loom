@@ -12,6 +12,6 @@ pub use filter::{Filter, FilterParser};
 pub use patch::{PatchOp, PatchOperation};
 pub use schema::{Schema, SchemaAttribute};
 pub use types::{
-    ListResponse, Meta, Name, ScimEmail, ScimGroup, ScimPhoneNumber, ScimResource, ScimUser,
-    ServiceProviderConfig, ResourceType,
+	ListResponse, Meta, Name, ResourceType, ScimEmail, ScimGroup, ScimPhoneNumber, ScimResource,
+	ScimUser, ServiceProviderConfig,
 };

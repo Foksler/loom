@@ -18,7 +18,9 @@ impl GeoIpConfigLayer {
 	}
 
 	pub fn finalize(self) -> Option<GeoIpConfig> {
-		self.database_path.map(|database_path| GeoIpConfig { database_path })
+		self
+			.database_path
+			.map(|database_path| GeoIpConfig { database_path })
 	}
 }
 
@@ -56,7 +58,10 @@ mod tests {
 		};
 		let config = layer.finalize();
 		assert!(config.is_some());
-		assert_eq!(config.unwrap().database_path, "/var/lib/geoip/GeoLite2-City.mmdb");
+		assert_eq!(
+			config.unwrap().database_path,
+			"/var/lib/geoip/GeoLite2-City.mmdb"
+		);
 	}
 
 	#[test]
@@ -76,7 +81,9 @@ mod tests {
 		let mut base = GeoIpConfigLayer {
 			database_path: Some("/old/path.mmdb".to_string()),
 		};
-		let overlay = GeoIpConfigLayer { database_path: None };
+		let overlay = GeoIpConfigLayer {
+			database_path: None,
+		};
 		base.merge(overlay);
 		assert_eq!(base.database_path, Some("/old/path.mmdb".to_string()));
 	}

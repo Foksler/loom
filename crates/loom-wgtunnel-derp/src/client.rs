@@ -100,9 +100,7 @@ impl DerpClient {
 				break;
 			}
 			if total_read >= response_buf.len() {
-				return Err(DerpError::Handshake(
-					"HTTP response too large".to_string(),
-				));
+				return Err(DerpError::Handshake("HTTP response too large".to_string()));
 			}
 		}
 
@@ -185,7 +183,8 @@ impl DerpClient {
 			dst_key: *dst.as_bytes(),
 			data: data.to_vec(),
 		};
-		self.stream
+		self
+			.stream
 			.write_all(&frame.encode())
 			.await
 			.map_err(DerpError::Connection)
@@ -197,7 +196,8 @@ impl DerpClient {
 
 	pub async fn send_keepalive(&mut self) -> Result<()> {
 		let frame = DerpFrame::KeepAlive;
-		self.stream
+		self
+			.stream
 			.write_all(&frame.encode())
 			.await
 			.map_err(DerpError::Connection)
@@ -205,7 +205,8 @@ impl DerpClient {
 
 	pub async fn note_preferred(&mut self, preferred: bool) -> Result<()> {
 		let frame = DerpFrame::NotePreferred { preferred };
-		self.stream
+		self
+			.stream
 			.write_all(&frame.encode())
 			.await
 			.map_err(DerpError::Connection)
@@ -213,7 +214,8 @@ impl DerpClient {
 
 	pub async fn watch_conns(&mut self) -> Result<()> {
 		let frame = DerpFrame::WatchConns;
-		self.stream
+		self
+			.stream
 			.write_all(&frame.encode())
 			.await
 			.map_err(DerpError::Connection)
@@ -223,7 +225,8 @@ impl DerpClient {
 		let frame = DerpFrame::ClosePeer {
 			peer_key: *peer.as_bytes(),
 		};
-		self.stream
+		self
+			.stream
 			.write_all(&frame.encode())
 			.await
 			.map_err(DerpError::Connection)

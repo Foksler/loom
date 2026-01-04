@@ -37,7 +37,15 @@ struct DeviceRow {
 	revoked_at: Option<String>,
 }
 
-type DeviceRowTuple = (String, String, Vec<u8>, Option<String>, String, Option<String>, Option<String>);
+type DeviceRowTuple = (
+	String,
+	String,
+	Vec<u8>,
+	Option<String>,
+	String,
+	Option<String>,
+	Option<String>,
+);
 
 impl TryFrom<DeviceRow> for Device {
 	type Error = WgError;
@@ -49,7 +57,10 @@ impl TryFrom<DeviceRow> for Device {
 			.map_err(|_| WgError::InvalidPublicKey("invalid key length".to_string()))?;
 
 		Ok(Device {
-			id: row.id.parse().map_err(|_| WgError::Internal("invalid device id".to_string()))?,
+			id: row
+				.id
+				.parse()
+				.map_err(|_| WgError::Internal("invalid device id".to_string()))?,
 			user_id: row
 				.user_id
 				.parse()
@@ -57,8 +68,16 @@ impl TryFrom<DeviceRow> for Device {
 			public_key,
 			name: row.name,
 			created_at: parse_datetime(&row.created_at)?,
-			last_seen_at: row.last_seen_at.as_ref().map(|s| parse_datetime(s)).transpose()?,
-			revoked_at: row.revoked_at.as_ref().map(|s| parse_datetime(s)).transpose()?,
+			last_seen_at: row
+				.last_seen_at
+				.as_ref()
+				.map(|s| parse_datetime(s))
+				.transpose()?,
+			revoked_at: row
+				.revoked_at
+				.as_ref()
+				.map(|s| parse_datetime(s))
+				.transpose()?,
 		})
 	}
 }
@@ -122,42 +141,43 @@ impl DeviceService {
 
 	#[instrument(skip(self), fields(%user_id))]
 	pub async fn list(&self, user_id: Uuid) -> Result<Vec<Device>> {
-		let rows: Vec<DeviceRowTuple> =
-			sqlx::query_as(
-				"SELECT id, user_id, public_key, name, created_at, last_seen_at, revoked_at
+		let rows: Vec<DeviceRowTuple> = sqlx::query_as(
+			"SELECT id, user_id, public_key, name, created_at, last_seen_at, revoked_at
                  FROM wg_devices WHERE user_id = ? AND revoked_at IS NULL
                  ORDER BY created_at DESC",
-			)
-			.bind(user_id.to_string())
-			.fetch_all(&self.db)
-			.await?;
+		)
+		.bind(user_id.to_string())
+		.fetch_all(&self.db)
+		.await?;
 
-		rows.into_iter()
-			.map(|(id, user_id, public_key, name, created_at, last_seen_at, revoked_at)| {
-				DeviceRow {
-					id,
-					user_id,
-					public_key,
-					name,
-					created_at,
-					last_seen_at,
-					revoked_at,
-				}
-				.try_into()
-			})
+		rows
+			.into_iter()
+			.map(
+				|(id, user_id, public_key, name, created_at, last_seen_at, revoked_at)| {
+					DeviceRow {
+						id,
+						user_id,
+						public_key,
+						name,
+						created_at,
+						last_seen_at,
+						revoked_at,
+					}
+					.try_into()
+				},
+			)
 			.collect()
 	}
 
 	#[instrument(skip(self), fields(%id))]
 	pub async fn get(&self, id: Uuid) -> Result<Option<Device>> {
-		let row: Option<DeviceRowTuple> =
-			sqlx::query_as(
-				"SELECT id, user_id, public_key, name, created_at, last_seen_at, revoked_at
+		let row: Option<DeviceRowTuple> = sqlx::query_as(
+			"SELECT id, user_id, public_key, name, created_at, last_seen_at, revoked_at
                  FROM wg_devices WHERE id = ?",
-			)
-			.bind(id.to_string())
-			.fetch_optional(&self.db)
-			.await?;
+		)
+		.bind(id.to_string())
+		.fetch_optional(&self.db)
+		.await?;
 
 		match row {
 			Some((id, user_id, public_key, name, created_at, last_seen_at, revoked_at)) => {
@@ -179,14 +199,13 @@ impl DeviceService {
 
 	#[instrument(skip(self, public_key))]
 	pub async fn get_by_public_key(&self, public_key: &[u8; 32]) -> Result<Option<Device>> {
-		let row: Option<DeviceRowTuple> =
-			sqlx::query_as(
-				"SELECT id, user_id, public_key, name, created_at, last_seen_at, revoked_at
+		let row: Option<DeviceRowTuple> = sqlx::query_as(
+			"SELECT id, user_id, public_key, name, created_at, last_seen_at, revoked_at
                  FROM wg_devices WHERE public_key = ?",
-			)
-			.bind(public_key.as_slice())
-			.fetch_optional(&self.db)
-			.await?;
+		)
+		.bind(public_key.as_slice())
+		.fetch_optional(&self.db)
+		.await?;
 
 		match row {
 			Some((id, user_id, public_key, name, created_at, last_seen_at, revoked_at)) => {

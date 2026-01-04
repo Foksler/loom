@@ -3,8 +3,8 @@
 
 //! Anthropic-specific API types and conversions.
 
-use loom_common_core::{LlmError, LlmRequest, LlmResponse, Message, Role, ToolCall, Usage};
 use loom_cli_credentials::{CredentialStore, MemoryCredentialStore};
+use loom_common_core::{LlmError, LlmRequest, LlmResponse, Message, Role, ToolCall, Usage};
 use loom_common_secret::SecretString;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -387,13 +387,8 @@ mod tests {
 	#[test]
 	fn test_config_with_oauth() {
 		let store = Arc::new(MemoryCredentialStore::new());
-		let config = AnthropicConfig::new_with_oauth(
-			"anthropic",
-			"rt_refresh",
-			"at_access",
-			1735500000000,
-			store,
-		);
+		let config =
+			AnthropicConfig::new_with_oauth("anthropic", "rt_refresh", "at_access", 1735500000000, store);
 		assert!(config.auth.is_oauth());
 		assert!(!config.auth.is_api_key());
 	}
@@ -413,7 +408,10 @@ mod tests {
 		};
 
 		let updated = request.with_oauth_system_prompt();
-		assert_eq!(updated.system, Some(OAUTH_REQUIRED_SYSTEM_PROMPT_PREFIX.to_string()));
+		assert_eq!(
+			updated.system,
+			Some(OAUTH_REQUIRED_SYSTEM_PROMPT_PREFIX.to_string())
+		);
 	}
 
 	#[test]

@@ -79,7 +79,12 @@ pub async fn handle_up(args: TunnelUpArgs, ctx: &CliContext) -> anyhow::Result<(
 		.parse()
 		.map_err(|e| anyhow::anyhow!("invalid client IP: {}", e))?;
 
-	let tunnel_config = TunnelConfig::new(keypair, client_ip, derp_map, session.weaver.derp_home_region);
+	let tunnel_config = TunnelConfig::new(
+		keypair,
+		client_ip,
+		derp_map,
+		session.weaver.derp_home_region,
+	);
 
 	let manager = TunnelManager::start(tunnel_config).await?;
 	manager.add_weaver(weaver_id, &session).await?;
@@ -91,16 +96,10 @@ pub async fn handle_up(args: TunnelUpArgs, ctx: &CliContext) -> anyhow::Result<(
 		*tunnel_guard = Some(Arc::clone(&manager));
 	}
 
-	println!(
-		"{} Tunnel started",
-		style("✓").green().bold()
-	);
+	println!("{} Tunnel started", style("✓").green().bold());
 	println!("  Client IP: {}", style(&session.client_ip).cyan());
 	println!("  Weaver IP: {}", style(&session.weaver.ip).cyan());
-	println!(
-		"  Weaver:    {}",
-		style(weaver_id).cyan()
-	);
+	println!("  Weaver:    {}", style(weaver_id).cyan());
 
 	if args.detach {
 		println!("\nRunning in background. Use 'loom tunnel down' to stop.");
@@ -165,15 +164,9 @@ pub async fn handle_status(ctx: &CliContext) -> anyhow::Result<()> {
 						weaver.weaver_id,
 						weaver.ip
 					);
-					println!(
-						"      Path: {}",
-						style(&weaver.path_type).dim()
-					);
+					println!("      Path: {}", style(&weaver.path_type).dim());
 					if let Some(handshake) = &weaver.last_handshake {
-						println!(
-							"      Last handshake: {}",
-							style(handshake).dim()
-						);
+						println!("      Last handshake: {}", style(handshake).dim());
 					}
 				}
 			}

@@ -8,7 +8,9 @@ use uuid::Uuid;
 
 use crate::cleanup::ExternalMirrorStore;
 use crate::error::{MirrorError, Result};
-use crate::types::{CreateExternalMirror, CreatePushMirror, ExternalMirror, MirrorBranchRule, Platform, PushMirror};
+use crate::types::{
+	CreateExternalMirror, CreatePushMirror, ExternalMirror, MirrorBranchRule, Platform, PushMirror,
+};
 
 #[async_trait]
 pub trait PushMirrorStore: Send + Sync {
@@ -183,7 +185,8 @@ impl PushMirrorStore for SqlitePushMirrorStore {
 		.fetch_all(&self.pool)
 		.await?;
 
-		rows.into_iter()
+		rows
+			.into_iter()
 			.map(|(mirror_id, pattern, enabled)| {
 				Ok(MirrorBranchRule {
 					mirror_id: Uuid::parse_str(&mirror_id)
@@ -418,7 +421,9 @@ mod tests {
 		let pool = create_test_pool().await;
 		let store = SqlitePushMirrorStore::new(pool);
 
-		let result = store.update_push_result(Uuid::new_v4(), Utc::now(), None).await;
+		let result = store
+			.update_push_result(Uuid::new_v4(), Utc::now(), None)
+			.await;
 		assert!(matches!(result, Err(MirrorError::NotFound)));
 	}
 
@@ -702,7 +707,16 @@ fn row_to_external_mirror(
 		String,
 	),
 ) -> Result<ExternalMirror> {
-	let (id, platform, external_owner, external_repo, repo_id, last_synced_at, last_accessed_at, created_at) = row;
+	let (
+		id,
+		platform,
+		external_owner,
+		external_repo,
+		repo_id,
+		last_synced_at,
+		last_accessed_at,
+		created_at,
+	) = row;
 
 	Ok(ExternalMirror {
 		id: Uuid::parse_str(&id)
@@ -825,7 +839,10 @@ mod external_mirror_tests {
 		tokio::time::sleep(std::time::Duration::from_millis(10)).await;
 
 		let new_time = Utc::now();
-		store.update_last_accessed(created.id, new_time).await.unwrap();
+		store
+			.update_last_accessed(created.id, new_time)
+			.await
+			.unwrap();
 
 		let fetched = store.get_by_id(created.id).await.unwrap().unwrap();
 		assert!(fetched.last_accessed_at.unwrap() > original_accessed.unwrap());
@@ -889,7 +906,10 @@ mod external_mirror_tests {
 		assert!(created.last_synced_at.is_none());
 
 		let sync_time = Utc::now();
-		store.update_last_synced(created.id, sync_time).await.unwrap();
+		store
+			.update_last_synced(created.id, sync_time)
+			.await
+			.unwrap();
 
 		let fetched = store.get_by_id(created.id).await.unwrap().unwrap();
 		assert!(fetched.last_synced_at.is_some());

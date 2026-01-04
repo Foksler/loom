@@ -467,7 +467,8 @@ impl GoogleOAuthClient {
 	pub fn authorization_url(&self, state: &str, nonce: &str) -> String {
 		let mut url = Url::parse(GOOGLE_AUTHORIZE_URL).expect("invalid authorize URL");
 
-		url.query_pairs_mut()
+		url
+			.query_pairs_mut()
 			.append_pair("client_id", &self.config.client_id)
 			.append_pair("redirect_uri", &self.config.redirect_uri)
 			.append_pair("response_type", "code")
@@ -914,7 +915,11 @@ mod tests {
 		let scopes = GoogleOAuthConfig::parse_scopes("openid email profile");
 		assert_eq!(
 			scopes,
-			vec!["openid".to_string(), "email".to_string(), "profile".to_string()]
+			vec![
+				"openid".to_string(),
+				"email".to_string(),
+				"profile".to_string()
+			]
 		);
 	}
 
@@ -923,7 +928,11 @@ mod tests {
 		let scopes = GoogleOAuthConfig::parse_scopes("openid,email,profile");
 		assert_eq!(
 			scopes,
-			vec!["openid".to_string(), "email".to_string(), "profile".to_string()]
+			vec![
+				"openid".to_string(),
+				"email".to_string(),
+				"profile".to_string()
+			]
 		);
 	}
 
@@ -932,7 +941,11 @@ mod tests {
 		let scopes = GoogleOAuthConfig::parse_scopes("openid, email profile");
 		assert_eq!(
 			scopes,
-			vec!["openid".to_string(), "email".to_string(), "profile".to_string()]
+			vec![
+				"openid".to_string(),
+				"email".to_string(),
+				"profile".to_string()
+			]
 		);
 	}
 

@@ -109,7 +109,10 @@ mod tests {
 	#[test]
 	fn peer_info_serialization() {
 		let keypair = WgKeyPair::generate();
-		let peer = PeerInfo::new(*keypair.public_key(), "fd7a:115c:a1e0:1::1".parse().unwrap());
+		let peer = PeerInfo::new(
+			*keypair.public_key(),
+			"fd7a:115c:a1e0:1::1".parse().unwrap(),
+		);
 
 		let json = serde_json::to_string(&peer).unwrap();
 		let deserialized: PeerInfo = serde_json::from_str(&json).unwrap();
@@ -122,7 +125,10 @@ mod tests {
 	#[test]
 	fn update_endpoint() {
 		let keypair = WgKeyPair::generate();
-		let mut peer = PeerInfo::new(*keypair.public_key(), "fd7a:115c:a1e0:1::1".parse().unwrap());
+		let mut peer = PeerInfo::new(
+			*keypair.public_key(),
+			"fd7a:115c:a1e0:1::1".parse().unwrap(),
+		);
 
 		assert!(peer.endpoint.is_none());
 		assert!(peer.last_seen.is_none());
@@ -136,7 +142,10 @@ mod tests {
 	#[test]
 	fn update_derp_region() {
 		let keypair = WgKeyPair::generate();
-		let mut peer = PeerInfo::new(*keypair.public_key(), "fd7a:115c:a1e0:1::1".parse().unwrap());
+		let mut peer = PeerInfo::new(
+			*keypair.public_key(),
+			"fd7a:115c:a1e0:1::1".parse().unwrap(),
+		);
 
 		assert!(peer.derp_region.is_none());
 

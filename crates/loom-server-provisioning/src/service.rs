@@ -6,7 +6,6 @@ use std::sync::Arc;
 use chrono::Utc;
 use loom_server_auth::{OrgRole, User, UserId};
 use loom_server_db::{OrgRepository, UserRepository};
-use sqlx::SqlitePool;
 
 use crate::error::ProvisioningError;
 use crate::request::{ProvisioningRequest, ProvisioningSource};
@@ -21,7 +20,6 @@ pub type Result<T> = std::result::Result<T, ProvisioningError>;
 /// provisioned, they automatically get a personal organization.
 #[derive(Clone)]
 pub struct UserProvisioningService {
-	pool: SqlitePool,
 	user_repo: Arc<UserRepository>,
 	org_repo: Arc<OrgRepository>,
 	signups_disabled: bool,
@@ -30,13 +28,11 @@ pub struct UserProvisioningService {
 impl UserProvisioningService {
 	/// Create a new provisioning service.
 	pub fn new(
-		pool: SqlitePool,
 		user_repo: Arc<UserRepository>,
 		org_repo: Arc<OrgRepository>,
 		signups_disabled: bool,
 	) -> Self {
 		Self {
-			pool,
 			user_repo,
 			org_repo,
 			signups_disabled,
@@ -74,7 +70,8 @@ impl UserProvisioningService {
 
 		// Handle enterprise org membership for SCIM
 		if let Some(enterprise_org_id) = &request.enterprise_org_id {
-			self.ensure_enterprise_membership(&user.id, enterprise_org_id, &request)
+			self
+				.ensure_enterprise_membership(&user.id, enterprise_org_id, &request)
 				.await?;
 		}
 
@@ -93,7 +90,10 @@ impl UserProvisioningService {
 				.preferred_username
 				.as_deref()
 				.unwrap_or(&request.display_name);
-			let username = self.user_repo.generate_unique_username(username_base).await?;
+			let username = self
+				.user_repo
+				.generate_unique_username(username_base)
+				.await?;
 			self.user_repo.update_username(&user.id, &username).await?;
 			user.username = Some(username);
 			tracing::debug!(user_id = %user.id, "set username for existing user");
@@ -101,7 +101,8 @@ impl UserProvisioningService {
 
 		// Update SCIM fields if this is SCIM provisioning
 		if request.source == ProvisioningSource::Scim {
-			self.update_scim_fields(&user.id, request.scim_external_id.as_deref())
+			self
+				.update_scim_fields(&user.id, request.scim_external_id.as_deref())
 				.await?;
 		}
 
@@ -120,7 +121,10 @@ impl UserProvisioningService {
 			.preferred_username
 			.as_deref()
 			.unwrap_or(&request.display_name);
-		let username = self.user_repo.generate_unique_username(username_base).await?;
+		let username = self
+			.user_repo
+			.generate_unique_username(username_base)
+			.await?;
 
 		let user = User {
 			id: UserId::generate(),
@@ -142,7 +146,8 @@ impl UserProvisioningService {
 
 		// Set SCIM fields if this is SCIM provisioning
 		if request.source == ProvisioningSource::Scim {
-			self.update_scim_fields(&user.id, request.scim_external_id.as_deref())
+			self
+				.update_scim_fields(&user.id, request.scim_external_id.as_deref())
 				.await?;
 		}
 
@@ -161,16 +166,9 @@ impl UserProvisioningService {
 		user_id: &UserId,
 		scim_external_id: Option<&str>,
 	) -> Result<()> {
-		sqlx::query(
-			"UPDATE users SET scim_external_id = ?, provisioned_by_scim = 1, updated_at = ? WHERE id = ?",
-		)
-		.bind(scim_external_id)
-		.bind(Utc::now().to_rfc3339())
-		.bind(user_id.to_string())
-		.execute(&self.pool)
-		.await
-		.map_err(loom_server_db::DbError::from)?;
-
+		self.user_repo
+			.update_scim_fields(user_id, scim_external_id, true)
+			.await?;
 		tracing::debug!(user_id = %user_id, "updated SCIM fields");
 		Ok(())
 	}
@@ -190,7 +188,8 @@ impl UserProvisioningService {
 
 		// Create membership with provenance tracking
 		let provisioned_by = request.source.to_string();
-		self.org_repo
+		self
+			.org_repo
 			.add_member_with_provenance(org_id, user_id, OrgRole::Member, Some(&provisioned_by))
 			.await?;
 

@@ -56,7 +56,10 @@ impl TryFrom<SessionRow> for Session {
 
 	fn try_from(row: SessionRow) -> Result<Self> {
 		Ok(Session {
-			id: row.id.parse().map_err(|_| WgError::Internal("invalid session id".to_string()))?,
+			id: row
+				.id
+				.parse()
+				.map_err(|_| WgError::Internal("invalid session id".to_string()))?,
 			device_id: row
 				.device_id
 				.parse()
@@ -70,7 +73,11 @@ impl TryFrom<SessionRow> for Session {
 				.parse()
 				.map_err(|_| WgError::IpAllocation("invalid client IP".to_string()))?,
 			created_at: parse_datetime(&row.created_at)?,
-			last_handshake_at: row.last_handshake_at.as_ref().map(|s| parse_datetime(s)).transpose()?,
+			last_handshake_at: row
+				.last_handshake_at
+				.as_ref()
+				.map(|s| parse_datetime(s))
+				.transpose()?,
 		})
 	}
 }
@@ -169,7 +176,11 @@ impl SessionService {
 		})
 	}
 
-	async fn get_by_device_weaver(&self, device_id: Uuid, weaver_id: Uuid) -> Result<Option<Session>> {
+	async fn get_by_device_weaver(
+		&self,
+		device_id: Uuid,
+		weaver_id: Uuid,
+	) -> Result<Option<Session>> {
 		let row: Option<(String, String, String, String, String, Option<String>)> = sqlx::query_as(
 			"SELECT id, device_id, weaver_id, client_ip, created_at, last_handshake_at
              FROM wg_sessions WHERE device_id = ? AND weaver_id = ?",
@@ -207,18 +218,21 @@ impl SessionService {
 		.fetch_all(&self.db)
 		.await?;
 
-		rows.into_iter()
-			.map(|(id, device_id, weaver_id, client_ip, created_at, last_handshake_at)| {
-				SessionRow {
-					id,
-					device_id,
-					weaver_id,
-					client_ip,
-					created_at,
-					last_handshake_at,
-				}
-				.try_into()
-			})
+		rows
+			.into_iter()
+			.map(
+				|(id, device_id, weaver_id, client_ip, created_at, last_handshake_at)| {
+					SessionRow {
+						id,
+						device_id,
+						weaver_id,
+						client_ip,
+						created_at,
+						last_handshake_at,
+					}
+					.try_into()
+				},
+			)
 			.collect()
 	}
 
@@ -233,24 +247,30 @@ impl SessionService {
 		.fetch_all(&self.db)
 		.await?;
 
-		rows.into_iter()
-			.map(|(id, device_id, weaver_id, client_ip, created_at, last_handshake_at)| {
-				SessionRow {
-					id,
-					device_id,
-					weaver_id,
-					client_ip,
-					created_at,
-					last_handshake_at,
-				}
-				.try_into()
-			})
+		rows
+			.into_iter()
+			.map(
+				|(id, device_id, weaver_id, client_ip, created_at, last_handshake_at)| {
+					SessionRow {
+						id,
+						device_id,
+						weaver_id,
+						client_ip,
+						created_at,
+						last_handshake_at,
+					}
+					.try_into()
+				},
+			)
 			.collect()
 	}
 
 	#[instrument(skip(self), fields(%session_id))]
 	pub async fn terminate(&self, session_id: Uuid) -> Result<()> {
-		let session = self.get(session_id).await?.ok_or(WgError::SessionNotFound)?;
+		let session = self
+			.get(session_id)
+			.await?
+			.ok_or(WgError::SessionNotFound)?;
 
 		let device = self.device_service.get(session.device_id).await?;
 
@@ -270,7 +290,10 @@ impl SessionService {
 				public_key: BASE64_STANDARD.encode(device.public_key),
 				session_id: session_id.to_string(),
 			};
-			self.peer_notifier.notify_peer_removed(session.weaver_id, event).await;
+			self
+				.peer_notifier
+				.notify_peer_removed(session.weaver_id, event)
+				.await;
 		}
 
 		Ok(())
