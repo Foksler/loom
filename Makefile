@@ -243,3 +243,7 @@ web-storybook-build:
 	@echo "Building Storybook..."
 	cd $(WEB_DIR) && pnpm storybook:build
 
+nixos-switch:
+	sudo nixos-rebuild switch --flake .#virtualMachine
+
+
