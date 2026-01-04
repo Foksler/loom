@@ -13,12 +13,16 @@
 { git }:
 
 let
-  patches = [
+  customPatches = [
     ./001-disable-force-push.patch
   ];
+  patchNames = map baseNameOf customPatches;
+  existingPatchNames = map baseNameOf (git.patches or []);
+  # Only add patches that aren't already applied (prevents double-patching in git-with-svn)
+  newPatches = builtins.filter (p: !(builtins.elem (baseNameOf p) existingPatchNames)) customPatches;
 in
 git.overrideAttrs (oldAttrs: {
-  patches = (oldAttrs.patches or []) ++ patches;
+  patches = (oldAttrs.patches or []) ++ newPatches;
   doCheck = false;
   doInstallCheck = false;
 })
