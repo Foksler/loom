@@ -25,7 +25,10 @@ use crate::{
 	routes::admin::AdminErrorResponse,
 };
 use loom_server_auth::types::{OrgId, OrgRole};
-use loom_server_scm::{MaintenanceJob, MaintenanceJobStore, MaintenanceTask, OwnerType, RepoStore, Repository, Visibility};
+use loom_server_scm::{
+	MaintenanceJob, MaintenanceJobStore, MaintenanceTask, OwnerType, RepoStore, Repository,
+	Visibility,
+};
 
 async fn check_repo_admin(
 	repo: &Repository,
@@ -76,7 +79,10 @@ async fn check_repo_access(
 		OwnerType::Org => {
 			let org_id = OrgId::new(repo.owner_id);
 			matches!(
-				state.org_repo.get_membership(&org_id, &current_user.user.id).await,
+				state
+					.org_repo
+					.get_membership(&org_id, &current_user.user.id)
+					.await,
 				Ok(Some(_))
 			)
 		}
@@ -406,7 +412,9 @@ pub async fn list_repo_maintenance_jobs(
 
 			(
 				StatusCode::OK,
-				Json(ListMaintenanceJobsResponse { jobs: job_responses }),
+				Json(ListMaintenanceJobsResponse {
+					jobs: job_responses,
+				}),
 			)
 				.into_response()
 		}
@@ -492,31 +500,63 @@ mod tests {
 	#[test]
 	fn test_public_repo_allows_access() {
 		let repo = make_public_repo();
-		assert_eq!(repo.visibility, Visibility::Public, "Public repo should be accessible");
+		assert_eq!(
+			repo.visibility,
+			Visibility::Public,
+			"Public repo should be accessible"
+		);
 	}
 
 	#[test]
 	fn test_private_repo_requires_membership() {
 		let org_id = Uuid::new_v4();
 		let repo = make_org_repo(org_id);
-		assert_eq!(repo.visibility, Visibility::Private, "Private repo requires membership check");
+		assert_eq!(
+			repo.visibility,
+			Visibility::Private,
+			"Private repo requires membership check"
+		);
 		assert_eq!(repo.owner_type, OwnerType::Org, "Org repo ownership check");
 	}
 
 	#[test]
 	fn test_maintenance_task_conversion() {
 		assert!(matches!(MaintenanceTaskApi::Gc.into(), MaintenanceTask::Gc));
-		assert!(matches!(MaintenanceTaskApi::Prune.into(), MaintenanceTask::Prune));
-		assert!(matches!(MaintenanceTaskApi::Repack.into(), MaintenanceTask::Repack));
-		assert!(matches!(MaintenanceTaskApi::Fsck.into(), MaintenanceTask::Fsck));
-		assert!(matches!(MaintenanceTaskApi::All.into(), MaintenanceTask::All));
+		assert!(matches!(
+			MaintenanceTaskApi::Prune.into(),
+			MaintenanceTask::Prune
+		));
+		assert!(matches!(
+			MaintenanceTaskApi::Repack.into(),
+			MaintenanceTask::Repack
+		));
+		assert!(matches!(
+			MaintenanceTaskApi::Fsck.into(),
+			MaintenanceTask::Fsck
+		));
+		assert!(matches!(
+			MaintenanceTaskApi::All.into(),
+			MaintenanceTask::All
+		));
 	}
 
 	#[test]
 	fn test_maintenance_status_conversion() {
-		assert!(matches!(MaintenanceJobStatus::Pending.into(), MaintenanceJobStatusApi::Pending));
-		assert!(matches!(MaintenanceJobStatus::Running.into(), MaintenanceJobStatusApi::Running));
-		assert!(matches!(MaintenanceJobStatus::Success.into(), MaintenanceJobStatusApi::Success));
-		assert!(matches!(MaintenanceJobStatus::Failed.into(), MaintenanceJobStatusApi::Failed));
+		assert!(matches!(
+			MaintenanceJobStatus::Pending.into(),
+			MaintenanceJobStatusApi::Pending
+		));
+		assert!(matches!(
+			MaintenanceJobStatus::Running.into(),
+			MaintenanceJobStatusApi::Running
+		));
+		assert!(matches!(
+			MaintenanceJobStatus::Success.into(),
+			MaintenanceJobStatusApi::Success
+		));
+		assert!(matches!(
+			MaintenanceJobStatus::Failed.into(),
+			MaintenanceJobStatusApi::Failed
+		));
 	}
 }

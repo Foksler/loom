@@ -21,17 +21,17 @@ use axum::{
 	response::{IntoResponse, Redirect},
 	Json,
 };
-use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
-use loom_server_auth::{generate_access_token, generate_session_token, Session, SessionType};
-use loom_server_auth_devicecode::{DeviceCode, DEVICE_CODE_EXPIRY_MINUTES};
-use loom_server_auth_magiclink::{verify_magic_link_token, MagicLink};
 pub use loom_server_api::auth::{
 	AuthErrorResponse, AuthProvidersResponse, AuthSuccessResponse, CurrentUserResponse,
 	DeviceCodeCompleteRequest, DeviceCodeCompleteResponse, DeviceCodePollRequest,
 	DeviceCodePollResponse, DeviceCodeStartResponse, MagicLinkRequest, WsTokenResponse,
 };
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
+use loom_server_auth::{generate_access_token, SessionType};
+use loom_server_auth_devicecode::{DeviceCode, DEVICE_CODE_EXPIRY_MINUTES};
+use loom_server_auth_magiclink::{verify_magic_link_token, MagicLink};
+use loom_server_session::{AuthMethod, ClientInfo as SessionClientInfo, SessionRequest};
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -102,7 +102,12 @@ pub async fn get_current_user(RequireAuth(current_user): RequireAuth) -> impl In
 		email: current_user.user.primary_email.clone(),
 		avatar_url: current_user.user.avatar_url.clone(),
 		locale: current_user.user.locale.clone(),
-		global_roles: current_user.user.global_roles().iter().map(|r| r.to_string()).collect(),
+		global_roles: current_user
+			.user
+			.global_roles()
+			.iter()
+			.map(|r| r.to_string())
+			.collect(),
 		created_at: current_user.user.created_at,
 	})
 }
@@ -204,9 +209,7 @@ pub async fn logout(
 	// Build response with cleared session cookie
 	let mut headers = HeaderMap::new();
 	let cookie_name = &state.auth_config.session_cookie_name;
-	let clear_cookie = format!(
-		"{cookie_name}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax"
-	);
+	let clear_cookie = format!("{cookie_name}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax");
 	if let Ok(value) = HeaderValue::from_str(&clear_cookie) {
 		headers.insert(SET_COOKIE, value);
 	}
@@ -329,7 +332,11 @@ fn render_magic_link_email(verification_url: &str, locale: &str) -> (String, Str
 
 	let subject = t(locale, "server.email.magic_link.subject");
 	let body = t(locale, "server.email.magic_link.body");
-	let expires = t_fmt(locale, "server.email.magic_link.expires", &[("minutes", "10")]);
+	let expires = t_fmt(
+		locale,
+		"server.email.magic_link.expires",
+		&[("minutes", "10")],
+	);
 	let ignore = t(locale, "server.email.magic_link.ignore");
 	let copy_link = t(locale, "server.email.magic_link.copy_link");
 
@@ -354,9 +361,7 @@ fn render_magic_link_email(verification_url: &str, locale: &str) -> (String, Str
 </html>"#,
 	);
 
-	let text = format!(
-		"{subject}\n\n{body} {expires}\n\n{verification_url}\n\n{ignore}",
-	);
+	let text = format!("{subject}\n\n{body} {expires}\n\n{verification_url}\n\n{ignore}",);
 
 	(html, text)
 }
@@ -403,10 +408,9 @@ pub async fn device_start(State(state): State<AppState>) -> impl IntoResponse {
 
 	let verification_url = format!("{}/device", state.base_url);
 
-	state.audit_service.log(
-		AuditLogBuilder::new(AuditEventType::DeviceCodeStarted)
-			.build(),
-	);
+	state
+		.audit_service
+		.log(AuditLogBuilder::new(AuditEventType::DeviceCodeStarted).build());
 
 	Json(DeviceCodeStartResponse {
 		device_code: device_code.device_code,
@@ -656,17 +660,29 @@ pub async fn login_github(
 			StatusCode::NOT_IMPLEMENTED,
 			Json(AuthErrorResponse {
 				error: "not_configured".to_string(),
-				message: t_fmt(locale, "server.api.auth.oauth_not_configured", &[("provider", "GitHub")]),
+				message: t_fmt(
+					locale,
+					"server.api.auth.oauth_not_configured",
+					&[("provider", "GitHub")],
+				),
 			}),
 		)
 			.into_response();
 	};
 
 	let oauth_state = generate_state();
-	let redirect_url_param = query.redirect.as_deref().map(|r| sanitize_redirect(Some(r)));
+	let redirect_url_param = query
+		.redirect
+		.as_deref()
+		.map(|r| sanitize_redirect(Some(r)));
 	state
 		.oauth_state_store
-		.store(oauth_state.clone(), "github".to_string(), None, redirect_url_param)
+		.store(
+			oauth_state.clone(),
+			"github".to_string(),
+			None,
+			redirect_url_param,
+		)
 		.await;
 
 	let redirect_url = github_client.authorization_url(&oauth_state);
@@ -705,7 +721,11 @@ pub async fn login_google(
 			StatusCode::NOT_IMPLEMENTED,
 			Json(AuthErrorResponse {
 				error: "not_configured".to_string(),
-				message: t_fmt(locale, "server.api.auth.oauth_not_configured", &[("provider", "Google")]),
+				message: t_fmt(
+					locale,
+					"server.api.auth.oauth_not_configured",
+					&[("provider", "Google")],
+				),
 			}),
 		)
 			.into_response();
@@ -713,10 +733,18 @@ pub async fn login_google(
 
 	let oauth_state = generate_state();
 	let nonce = generate_nonce();
-	let redirect_url_param = query.redirect.as_deref().map(|r| sanitize_redirect(Some(r)));
+	let redirect_url_param = query
+		.redirect
+		.as_deref()
+		.map(|r| sanitize_redirect(Some(r)));
 	state
 		.oauth_state_store
-		.store(oauth_state.clone(), "google".to_string(), Some(nonce.clone()), redirect_url_param)
+		.store(
+			oauth_state.clone(),
+			"google".to_string(),
+			Some(nonce.clone()),
+			redirect_url_param,
+		)
 		.await;
 
 	let redirect_url = google_client.authorization_url(&oauth_state, &nonce);
@@ -755,7 +783,11 @@ pub async fn login_okta(
 			StatusCode::NOT_IMPLEMENTED,
 			Json(AuthErrorResponse {
 				error: "not_configured".to_string(),
-				message: t_fmt(locale, "server.api.auth.oauth_not_configured", &[("provider", "Okta")]),
+				message: t_fmt(
+					locale,
+					"server.api.auth.oauth_not_configured",
+					&[("provider", "Okta")],
+				),
 			}),
 		)
 			.into_response();
@@ -763,10 +795,18 @@ pub async fn login_okta(
 
 	let oauth_state = generate_state();
 	let nonce = generate_nonce();
-	let redirect_url_param = query.redirect.as_deref().map(|r| sanitize_redirect(Some(r)));
+	let redirect_url_param = query
+		.redirect
+		.as_deref()
+		.map(|r| sanitize_redirect(Some(r)));
 	state
 		.oauth_state_store
-		.store(oauth_state.clone(), "okta".to_string(), Some(nonce.clone()), redirect_url_param)
+		.store(
+			oauth_state.clone(),
+			"okta".to_string(),
+			Some(nonce.clone()),
+			redirect_url_param,
+		)
 		.await;
 
 	let redirect_url = okta_client.authorization_url(&oauth_state, &nonce);
@@ -823,7 +863,11 @@ pub async fn callback_github(
 			StatusCode::NOT_IMPLEMENTED,
 			Json(AuthErrorResponse {
 				error: "not_configured".to_string(),
-				message: t_fmt(locale, "server.api.auth.oauth_not_configured", &[("provider", "GitHub")]),
+				message: t_fmt(
+					locale,
+					"server.api.auth.oauth_not_configured",
+					&[("provider", "GitHub")],
+				),
 			}),
 		)
 			.into_response();
@@ -873,7 +917,10 @@ pub async fn callback_github(
 		}
 	};
 
-	let github_user = match github_client.get_user(token_response.access_token.expose()).await {
+	let github_user = match github_client
+		.get_user(token_response.access_token.expose())
+		.await
+	{
 		Ok(user) => user,
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to get GitHub user");
@@ -891,9 +938,16 @@ pub async fn callback_github(
 	let email = if let Some(email) = &github_user.email {
 		email.clone()
 	} else {
-		match github_client.get_emails(token_response.access_token.expose()).await {
+		match github_client
+			.get_emails(token_response.access_token.expose())
+			.await
+		{
 			Ok(emails) => {
-				match emails.into_iter().find(|e| e.primary && e.verified).map(|e| e.email) {
+				match emails
+					.into_iter()
+					.find(|e| e.primary && e.verified)
+					.map(|e| e.email)
+				{
 					Some(email) => email,
 					None => {
 						tracing::warn!(login = %github_user.login, "No verified email found for GitHub user");
@@ -933,7 +987,7 @@ pub async fn callback_github(
 		&email,
 		&display_name,
 		github_user.avatar_url,
-		"github",
+		AuthMethod::GitHub,
 		client_info,
 		state_entry.redirect_url,
 		Some(&preferred_username),
@@ -990,7 +1044,11 @@ pub async fn callback_google(
 			StatusCode::NOT_IMPLEMENTED,
 			Json(AuthErrorResponse {
 				error: "not_configured".to_string(),
-				message: t_fmt(locale, "server.api.auth.oauth_not_configured", &[("provider", "Google")]),
+				message: t_fmt(
+					locale,
+					"server.api.auth.oauth_not_configured",
+					&[("provider", "Google")],
+				),
 			}),
 		)
 			.into_response();
@@ -1040,7 +1098,10 @@ pub async fn callback_google(
 		}
 	};
 
-	let google_user = match google_client.get_user_info(token_response.access_token.expose()).await {
+	let google_user = match google_client
+		.get_user_info(token_response.access_token.expose())
+		.await
+	{
 		Ok(user) => user,
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to get Google user");
@@ -1076,7 +1137,7 @@ pub async fn callback_google(
 		&google_user.email,
 		&display_name,
 		google_user.picture,
-		"google",
+		AuthMethod::Google,
 		client_info,
 		state_entry.redirect_url,
 		None,
@@ -1133,7 +1194,11 @@ pub async fn callback_okta(
 			StatusCode::NOT_IMPLEMENTED,
 			Json(AuthErrorResponse {
 				error: "not_configured".to_string(),
-				message: t_fmt(locale, "server.api.auth.oauth_not_configured", &[("provider", "Okta")]),
+				message: t_fmt(
+					locale,
+					"server.api.auth.oauth_not_configured",
+					&[("provider", "Okta")],
+				),
 			}),
 		)
 			.into_response();
@@ -1183,7 +1248,10 @@ pub async fn callback_okta(
 		}
 	};
 
-	let okta_user = match okta_client.get_user_info(token_response.access_token.expose()).await {
+	let okta_user = match okta_client
+		.get_user_info(token_response.access_token.expose())
+		.await
+	{
 		Ok(user) => user,
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to get Okta user");
@@ -1217,7 +1285,7 @@ pub async fn callback_okta(
 		&okta_user.email,
 		&display_name,
 		None,
-		"okta",
+		AuthMethod::Okta,
 		client_info,
 		state_entry.redirect_url,
 		okta_user.preferred_username.as_deref(),
@@ -1232,29 +1300,12 @@ async fn complete_oauth_login(
 	email: &str,
 	display_name: &str,
 	avatar_url: Option<String>,
-	provider: &str,
+	auth_method: AuthMethod,
 	client_info: ClientInfo,
 	redirect_url: Option<String>,
 	preferred_username: Option<&str>,
 ) -> axum::response::Response {
 	let locale = state.default_locale.as_str();
-
-	// Check if signups are disabled and user doesn't already exist
-	if state.auth_config.signups_disabled {
-		match state.user_repo.get_user_by_email(email).await {
-			Ok(None) => {
-				tracing::warn!(email = %email, provider = %provider, "Signup rejected: signups are disabled");
-				return Redirect::to("/login?error=signups_disabled").into_response();
-			}
-			Ok(Some(_)) => {
-				// User exists, allow login to proceed
-			}
-			Err(e) => {
-				tracing::error!(error = %e, email = %email, "Failed to check if user exists");
-				return Redirect::to("/login?error=internal_error").into_response();
-			}
-		}
-	}
 
 	let request = loom_server_provisioning::ProvisioningRequest::oauth(
 		email,
@@ -1264,6 +1315,9 @@ async fn complete_oauth_login(
 	);
 	let user = match state.user_provisioning.provision_user(request).await {
 		Ok(user) => user,
+		Err(loom_server_provisioning::ProvisioningError::SignupsDisabled) => {
+			return Redirect::to("/login?error=signups_disabled").into_response();
+		}
 		Err(e) => {
 			tracing::error!(error = %e, email = %email, "Failed to provision user");
 			return (
@@ -1277,67 +1331,35 @@ async fn complete_oauth_login(
 		}
 	};
 
-	let mut session = Session::new(user.id, SessionType::Web);
-	if let Some(ip) = client_info.ip_address {
-		session = session.with_ip(ip);
-	}
-	if let Some(ua) = client_info.user_agent {
-		session = session.with_user_agent(ua);
-	}
-	session = session.with_geo(client_info.geo_city, client_info.geo_country);
+	let session_client_info = SessionClientInfo {
+		ip_address: client_info.ip_address,
+		user_agent: client_info.user_agent,
+		geo_city: client_info.geo_city,
+		geo_country: client_info.geo_country,
+	};
 
-	let session_token = generate_session_token();
-	let session_token_hash = hash_token(&session_token);
+	let session_request =
+		SessionRequest::new(user.id, auth_method, session_client_info).with_email(email);
 
-	if let Err(e) = state
-		.session_repo
-		.create_session(&session, &session_token_hash)
-		.await
-	{
-		tracing::error!(error = %e, user_id = %user.id, "Failed to create session");
-		return (
-			StatusCode::INTERNAL_SERVER_ERROR,
-			Json(AuthErrorResponse {
-				error: "internal_error".to_string(),
-				message: t(locale, "server.api.error.internal").to_string(),
-			}),
-		)
-			.into_response();
-	}
+	let session_response = match state.session_service.create_session(session_request).await {
+		Ok(resp) => resp,
+		Err(e) => {
+			tracing::error!(error = %e, user_id = %user.id, "Failed to create session");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(AuthErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
 
-	state.audit_service.log(
-		AuditLogBuilder::new(AuditEventType::Login)
-			.actor(AuditUserId::new(user.id.into_inner()))
-			.details(serde_json::json!({
-				"provider": provider,
-				"email": email,
-			}))
-			.build(),
-	);
-
-	state.audit_service.log(
-		AuditLogBuilder::new(AuditEventType::SessionCreated)
-			.actor(AuditUserId::new(user.id.into_inner()))
-			.resource("session", session.id.to_string())
-			.details(serde_json::json!({
-				"session_type": "web",
-				"auth_method": provider,
-			}))
-			.build(),
-	);
-
-	tracing::info!(user_id = %user.id, email = %email, provider = %provider, "User authenticated via OAuth");
-
-	let cookie_name = &state.auth_config.session_cookie_name;
-	let cookie = format!(
-		"{}={}; Path=/; Max-Age={}; HttpOnly; Secure; SameSite=Lax",
-		cookie_name,
-		session_token,
-		60 * 60 * 24 * 60 // 60 days
-	);
+	tracing::info!(user_id = %user.id, email = %email, auth_method = %auth_method, "User authenticated via OAuth");
 
 	let mut headers = HeaderMap::new();
-	if let Ok(value) = HeaderValue::from_str(&cookie) {
+	if let Ok(value) = HeaderValue::from_str(&session_response.cookie_header) {
 		headers.insert(SET_COOKIE, value);
 	}
 
@@ -1443,27 +1465,13 @@ pub async fn verify_magic_link(
 		}
 	}
 
-	// Check if signups are disabled and user doesn't already exist
-	if state.auth_config.signups_disabled {
-		match state.user_repo.get_user_by_email(&email).await {
-			Ok(None) => {
-				tracing::warn!(email = %email, "Signup rejected via magic link: signups are disabled");
-				return Redirect::to("/login?error=signups_disabled").into_response();
-			}
-			Ok(Some(_)) => {
-				// User exists, allow login to proceed
-			}
-			Err(e) => {
-				tracing::error!(error = %e, email = %email, "Failed to check if user exists");
-				return Redirect::to("/login?error=internal_error").into_response();
-			}
-		}
-	}
-
 	// Provision user
 	let request = loom_server_provisioning::ProvisioningRequest::magic_link(&email);
 	let user = match state.user_provisioning.provision_user(request).await {
 		Ok(user) => user,
+		Err(loom_server_provisioning::ProvisioningError::SignupsDisabled) => {
+			return Redirect::to("/login?error=signups_disabled").into_response();
+		}
 		Err(e) => {
 			tracing::error!(error = %e, email = %email, "Failed to provision user");
 			return (
@@ -1477,79 +1485,39 @@ pub async fn verify_magic_link(
 		}
 	};
 
-	// Create session for user with client metadata
-	let mut session = Session::new(user.id, SessionType::Web);
-	if let Some(ip) = client_info.ip_address {
-		session = session.with_ip(ip);
-	}
-	if let Some(ua) = client_info.user_agent {
-		session = session.with_user_agent(ua);
-	}
-	session = session.with_geo(client_info.geo_city, client_info.geo_country);
+	let session_client_info = SessionClientInfo {
+		ip_address: client_info.ip_address,
+		user_agent: client_info.user_agent,
+		geo_city: client_info.geo_city,
+		geo_country: client_info.geo_country,
+	};
 
-	let session_token = generate_session_token();
-	let session_token_hash = hash_token(&session_token);
+	let session_request =
+		SessionRequest::new(user.id, AuthMethod::MagicLink, session_client_info).with_email(&email);
 
-	if let Err(e) = state
-		.session_repo
-		.create_session(&session, &session_token_hash)
-		.await
-	{
-		tracing::error!(error = %e, user_id = %user.id, "Failed to create session");
-		return (
-			StatusCode::INTERNAL_SERVER_ERROR,
-			Json(AuthErrorResponse {
-				error: "internal_error".to_string(),
-				message: t(locale, "server.api.error.internal").to_string(),
-			}),
-		)
-			.into_response();
-	}
-
-	state.audit_service.log(
-		AuditLogBuilder::new(AuditEventType::MagicLinkUsed)
-			.actor(AuditUserId::new(user.id.into_inner()))
-			.details(serde_json::json!({
-				"email": &email,
-			}))
-			.build(),
-	);
-
-	state.audit_service.log(
-		AuditLogBuilder::new(AuditEventType::SessionCreated)
-			.actor(AuditUserId::new(user.id.into_inner()))
-			.resource("session", session.id.to_string())
-			.details(serde_json::json!({
-				"session_type": "web",
-				"auth_method": "magic_link",
-			}))
-			.build(),
-	);
+	let session_response = match state.session_service.create_session(session_request).await {
+		Ok(resp) => resp,
+		Err(e) => {
+			tracing::error!(error = %e, user_id = %user.id, "Failed to create session");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(AuthErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
 
 	tracing::info!(user_id = %user.id, email = %email, "User authenticated via magic link");
 
-	// Set session cookie and redirect to dashboard
-	let cookie_name = &state.auth_config.session_cookie_name;
-	let cookie = format!(
-		"{}={}; Path=/; Max-Age={}; HttpOnly; Secure; SameSite=Lax",
-		cookie_name,
-		session_token,
-		60 * 60 * 24 * 60 // 60 days in seconds
-	);
-
 	let mut response_headers = HeaderMap::new();
-	if let Ok(value) = HeaderValue::from_str(&cookie) {
+	if let Ok(value) = HeaderValue::from_str(&session_response.cookie_header) {
 		response_headers.insert(SET_COOKIE, value);
 	}
 
 	(response_headers, Redirect::to("/")).into_response()
-}
-
-/// Hash a token using SHA-256 (same as auth_middleware).
-fn hash_token(token: &str) -> String {
-	let mut hasher = Sha256::new();
-	hasher.update(token.as_bytes());
-	hex::encode(hasher.finalize())
 }
 
 #[utoipa::path(
@@ -1565,12 +1533,13 @@ fn hash_token(token: &str) -> String {
 /// Returns HTML for the device code entry page where users enter the code
 /// displayed by CLI/VS Code to complete authentication.
 #[tracing::instrument(skip(headers, state))]
-pub async fn device_page(
-	headers: HeaderMap,
-	State(state): State<AppState>,
-) -> impl IntoResponse {
+pub async fn device_page(headers: HeaderMap, State(state): State<AppState>) -> impl IntoResponse {
 	let locale = resolve_locale_from_headers(&headers, &state.default_locale);
-	let dir = if loom_common_i18n::is_rtl(locale) { "rtl" } else { "ltr" };
+	let dir = if loom_common_i18n::is_rtl(locale) {
+		"rtl"
+	} else {
+		"ltr"
+	};
 
 	let title = loom_common_i18n::t(locale, "server.auth.device.title");
 	let heading = loom_common_i18n::t(locale, "server.auth.device.heading");
@@ -1740,10 +1709,7 @@ pub async fn device_page(
 }
 
 fn resolve_locale_from_headers<'a>(headers: &HeaderMap, default_locale: &'a str) -> &'a str {
-	if let Some(accept_lang) = headers
-		.get("Accept-Language")
-		.and_then(|v| v.to_str().ok())
-	{
+	if let Some(accept_lang) = headers.get("Accept-Language").and_then(|v| v.to_str().ok()) {
 		for part in accept_lang.split(',') {
 			let lang = part.split(';').next().unwrap_or("").trim();
 			let lang_base = lang.split('-').next().unwrap_or(lang);
@@ -1759,5 +1725,3 @@ fn resolve_locale_from_headers<'a>(headers: &HeaderMap, default_locale: &'a str)
 	}
 	default_locale
 }
-
-

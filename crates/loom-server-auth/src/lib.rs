@@ -114,3 +114,21 @@ pub use ws_token::{
     generate_ws_token, hash_ws_token, is_valid_ws_token_format, verify_ws_token, WsToken,
     WS_TOKEN_BYTES, WS_TOKEN_EXPIRY_SECONDS, WS_TOKEN_PREFIX,
 };
+
+/// Hash a token using SHA-256 and return the hex-encoded result.
+///
+/// This function is used to hash tokens before database lookup, ensuring
+/// that raw tokens are never stored in the database. The SHA-256 hash is
+/// one-way, so even if the database is compromised, the raw tokens cannot
+/// be recovered.
+///
+/// # Security
+///
+/// - Input tokens are consumed and not logged
+/// - Output hash is safe to log and store
+pub fn hash_token(token: &str) -> String {
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(token.as_bytes());
+    hex::encode(hasher.finalize())
+}

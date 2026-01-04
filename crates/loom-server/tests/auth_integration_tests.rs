@@ -13,13 +13,13 @@
 //! - Admin route authorization (H9)
 //! - Access denial audit logging (H6)
 
-use loom_server::api::{create_app_state, create_router, AppState};
-use loom_server::ServerConfig;
-use loom_server::db::ThreadRepository;
 use axum::{
 	body::Body,
 	http::{header::SET_COOKIE, Request, StatusCode},
 };
+use loom_server::api::{create_app_state, create_router, AppState};
+use loom_server::db::ThreadRepository;
+use loom_server::ServerConfig;
 use loom_server_auth_github::GitHubEmail;
 use loom_server_auth_google::GoogleUserInfo;
 use loom_server_auth_okta::OktaUserInfo;
@@ -272,7 +272,10 @@ async fn test_session_cookie_has_http_only() {
 		let cookie_str = cookie.to_str().unwrap().to_lowercase();
 		// If session cookie, verify HttpOnly
 		if cookie_str.contains("session") {
-			assert!(cookie_str.contains("httponly"), "Session cookie should be HttpOnly");
+			assert!(
+				cookie_str.contains("httponly"),
+				"Session cookie should be HttpOnly"
+			);
 		}
 	}
 }
@@ -346,7 +349,10 @@ fn test_github_email_verified_check() {
 	};
 
 	assert!(verified_email.verified, "Should recognize verified email");
-	assert!(!unverified_email.verified, "Should recognize unverified email");
+	assert!(
+		!unverified_email.verified,
+		"Should recognize unverified email"
+	);
 }
 
 #[test]
@@ -445,8 +451,8 @@ async fn test_admin_route_requires_authentication() {
 #[tokio::test]
 async fn test_admin_route_forbidden_for_non_admin() {
 	use axum::middleware::{self, Next};
-	use axum::Router;
 	use axum::routing::get;
+	use axum::Router;
 	use loom_server::abac_middleware::RequireRole;
 	use loom_server::routes;
 
@@ -501,8 +507,8 @@ async fn test_admin_route_forbidden_for_non_admin() {
 #[tokio::test]
 async fn test_admin_route_allowed_for_admin() {
 	use axum::middleware::{self, Next};
-	use axum::Router;
 	use axum::routing::get;
+	use axum::Router;
 	use loom_server::abac_middleware::RequireRole;
 	use loom_server::routes;
 

@@ -27,7 +27,19 @@ pub async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
 	let overall_start = Instant::now();
 
 	// Run checks in parallel
-	let (database, bin_dir, google_cse, serper, github_app, kubernetes, smtp, geoip, jobs, secrets, scim) = tokio::join!(
+	let (
+		database,
+		bin_dir,
+		google_cse,
+		serper,
+		github_app,
+		kubernetes,
+		smtp,
+		geoip,
+		jobs,
+		secrets,
+		scim,
+	) = tokio::join!(
 		health::check_database(&state.repo),
 		async { health::check_bin_dir() },
 		health::check_google_cse(),

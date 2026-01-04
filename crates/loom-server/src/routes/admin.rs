@@ -33,8 +33,8 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use loom_server_auth::UserId;
 use loom_server_audit::{AuditEventType, AuditLogBuilder, AuditSeverity, UserId as AuditUserId};
+use loom_server_auth::UserId;
 use serde_json::json;
 use uuid::Uuid;
 
@@ -45,13 +45,19 @@ pub use loom_server_api::admin::{
 	ListUsersResponse, UpdateRolesRequest,
 };
 
-use crate::{api::AppState, auth_middleware::RequireAuth, i18n::{resolve_user_locale, t}};
+use crate::{
+	api::AppState,
+	auth_middleware::RequireAuth,
+	i18n::{resolve_user_locale, t},
+};
 
 fn parse_user_id(id: &str, locale: &str) -> Result<UserId, AdminErrorResponse> {
-	Uuid::parse_str(id).map(UserId::new).map_err(|_| AdminErrorResponse {
-		error: "bad_request".to_string(),
-		message: t(locale, "server.api.user.invalid_id").to_string(),
-	})
+	Uuid::parse_str(id)
+		.map(UserId::new)
+		.map_err(|_| AdminErrorResponse {
+			error: "bad_request".to_string(),
+			message: t(locale, "server.api.user.invalid_id").to_string(),
+		})
 }
 
 /// List all users in the system (paginated).
@@ -394,7 +400,7 @@ pub async fn update_user_roles(
 				"old_roles": old_roles,
 				"new_roles": new_roles,
 			}))
-			.build()
+			.build(),
 	);
 
 	(
@@ -564,7 +570,7 @@ pub async fn delete_user(
 				"target_email": target_user.primary_email,
 				"target_display_name": target_user.display_name,
 			}))
-			.build()
+			.build(),
 	);
 
 	(
@@ -626,20 +632,18 @@ pub async fn get_impersonation_state(
 	{
 		Ok(Some((_session_id, target_user_id))) => {
 			match state.user_repo.get_user_by_id(&target_user_id).await {
-				Ok(Some(target_user)) => {
-					Json(ImpersonationState {
-						is_impersonating: true,
-						original_user: Some(ImpersonationUserInfo {
-							id: current_user.user.id.to_string(),
-							display_name: current_user.user.display_name.clone(),
-						}),
-						impersonated_user: Some(ImpersonationUserInfo {
-							id: target_user.id.to_string(),
-							display_name: target_user.display_name,
-						}),
-					})
-					.into_response()
-				}
+				Ok(Some(target_user)) => Json(ImpersonationState {
+					is_impersonating: true,
+					original_user: Some(ImpersonationUserInfo {
+						id: current_user.user.id.to_string(),
+						display_name: current_user.user.display_name.clone(),
+					}),
+					impersonated_user: Some(ImpersonationUserInfo {
+						id: target_user.id.to_string(),
+						display_name: target_user.display_name,
+					}),
+				})
+				.into_response(),
 				Ok(None) => {
 					tracing::warn!(
 						actor_id = %current_user.user.id,
@@ -666,14 +670,12 @@ pub async fn get_impersonation_state(
 				}
 			}
 		}
-		Ok(None) => {
-			Json(ImpersonationState {
-				is_impersonating: false,
-				original_user: None,
-				impersonated_user: None,
-			})
-			.into_response()
-		}
+		Ok(None) => Json(ImpersonationState {
+			is_impersonating: false,
+			original_user: None,
+			impersonated_user: None,
+		})
+		.into_response(),
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to check impersonation state");
 			(
@@ -872,7 +874,7 @@ pub async fn start_impersonation(
 				"session_id": session_id,
 				"target_user_id": target_user_id.to_string(),
 			}))
-			.build()
+			.build(),
 	);
 
 	(
@@ -956,7 +958,11 @@ pub async fn stop_impersonation(
 		}
 	};
 
-	if let Err(e) = state.session_repo.end_impersonation_session(&session_id).await {
+	if let Err(e) = state
+		.session_repo
+		.end_impersonation_session(&session_id)
+		.await
+	{
 		tracing::error!(
 			error = %e,
 			actor_id = %current_user.user.id,
@@ -988,7 +994,7 @@ pub async fn stop_impersonation(
 			.details(json!({
 				"session_id": session_id,
 			}))
-			.build()
+			.build(),
 	);
 
 	(

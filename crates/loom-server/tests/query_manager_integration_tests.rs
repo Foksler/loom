@@ -9,8 +9,8 @@
 //! These tests validate the manager's ability to coordinate queries and responses
 //! across multiple concurrent sessions without data leakage or race conditions.
 
-use loom_server::ServerQueryManager;
 use loom_common_core::server_query::{ServerQueryKind, ServerQueryResponse, ServerQueryResult};
+use loom_server::ServerQueryManager;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -115,13 +115,27 @@ async fn test_list_pending_queries() {
 	tokio::time::sleep(Duration::from_millis(100)).await;
 
 	let pending = manager.list_pending("session-1").await;
-	assert!(pending.len() >= 2, "Should list pending queries, got: {}", pending.len());
-	assert!(pending.iter().any(|q| q.id == "Q-list-1"), "Should include Q-list-1");
-	assert!(pending.iter().any(|q| q.id == "Q-list-2"), "Should include Q-list-2");
+	assert!(
+		pending.len() >= 2,
+		"Should list pending queries, got: {}",
+		pending.len()
+	);
+	assert!(
+		pending.iter().any(|q| q.id == "Q-list-1"),
+		"Should include Q-list-1"
+	);
+	assert!(
+		pending.iter().any(|q| q.id == "Q-list-2"),
+		"Should include Q-list-2"
+	);
 
 	// Clean up by sending responses
-	manager.receive_response(create_test_response("Q-list-1", "content")).await;
-	manager.receive_response(create_test_response("Q-list-2", "content")).await;
+	manager
+		.receive_response(create_test_response("Q-list-1", "content"))
+		.await;
+	manager
+		.receive_response(create_test_response("Q-list-2", "content"))
+		.await;
 
 	let _ = tokio::time::timeout(Duration::from_secs(2), handle1).await;
 	let _ = tokio::time::timeout(Duration::from_secs(2), handle2).await;
@@ -493,8 +507,12 @@ async fn test_list_pending_during_concurrent_sends() {
 	);
 
 	// Clean up by sending responses
-	manager.receive_response(create_test_response("Q-conc-1", "content")).await;
-	manager.receive_response(create_test_response("Q-conc-2", "content")).await;
+	manager
+		.receive_response(create_test_response("Q-conc-1", "content"))
+		.await;
+	manager
+		.receive_response(create_test_response("Q-conc-2", "content"))
+		.await;
 
 	let _ = tokio::time::timeout(Duration::from_secs(2), handle1).await;
 	let _ = tokio::time::timeout(Duration::from_secs(2), handle2).await;

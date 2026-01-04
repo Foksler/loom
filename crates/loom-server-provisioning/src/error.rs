@@ -14,4 +14,7 @@ pub enum ProvisioningError {
 
 	#[error("invalid request: {0}")]
 	InvalidRequest(String),
+
+	#[error("signups are disabled and user does not exist")]
+	SignupsDisabled,
 }

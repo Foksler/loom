@@ -16,9 +16,9 @@ pub use audit::AuditQueryRepository;
 use crate::error::ServerError;
 
 pub use loom_server_db::{
-	ApiKeyRepository, DbError, GithubInstallation, GithubInstallationInfo,
-	GithubRepo, OrgRepository, SessionRepository, ShareRepository, TeamRepository,
-	ThreadRepository, ThreadSearchHit, UserRepository, create_pool,
+	create_pool, ApiKeyRepository, DbError, GithubInstallation, GithubInstallationInfo, GithubRepo,
+	OrgRepository, SessionRepository, ShareRepository, TeamRepository, ThreadRepository,
+	ThreadSearchHit, UserRepository,
 };
 
 /// Run all database migrations (001-027).

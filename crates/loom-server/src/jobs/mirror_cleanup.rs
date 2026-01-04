@@ -54,12 +54,13 @@ impl<S: ExternalMirrorStore + 'static> Job for MirrorCleanupJob<S> {
 
 		let stale_duration = Duration::from_secs(self.stale_after_days as u64 * 24 * 60 * 60);
 
-		let stale_mirrors = loom_server_scm_mirror::find_stale_mirrors(self.store.as_ref(), stale_duration)
-			.await
-			.map_err(|e| JobError::Failed {
-				message: e.to_string(),
-				retryable: true,
-			})?;
+		let stale_mirrors =
+			loom_server_scm_mirror::find_stale_mirrors(self.store.as_ref(), stale_duration)
+				.await
+				.map_err(|e| JobError::Failed {
+					message: e.to_string(),
+					retryable: true,
+				})?;
 
 		if stale_mirrors.is_empty() {
 			return Ok(JobOutput {

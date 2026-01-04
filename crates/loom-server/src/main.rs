@@ -4,8 +4,8 @@
 //! Loom thread persistence server binary.
 
 use clap::{Parser, Subcommand};
-use loom_server_jobs::{JobRepository, JobScheduler};
 use loom_server::{create_app_state, create_router, ThreadRepository};
+use loom_server_jobs::{JobRepository, JobScheduler};
 use std::sync::Arc;
 use std::time::Duration;
 use tower_http::{
@@ -126,7 +126,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	{
 		use loom_server::jobs::OAuthStateCleanupJob;
 		scheduler.register_periodic(
-			Arc::new(OAuthStateCleanupJob::new(Arc::clone(&state.oauth_state_store))),
+			Arc::new(OAuthStateCleanupJob::new(Arc::clone(
+				&state.oauth_state_store,
+			))),
 			Duration::from_secs(config.auth.oauth_state_cleanup_interval_secs),
 		);
 	}
@@ -135,7 +137,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	{
 		use loom_server::jobs::JobHistoryCleanupJob;
 		scheduler.register_periodic(
-			Arc::new(JobHistoryCleanupJob::new(Arc::clone(&job_repo), config.jobs.history_retention_days)),
+			Arc::new(JobHistoryCleanupJob::new(
+				Arc::clone(&job_repo),
+				config.jobs.history_retention_days,
+			)),
 			Duration::from_secs(24 * 60 * 60), // Daily
 		);
 	}

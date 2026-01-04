@@ -9,10 +9,10 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
+use loom_common_secret::SecretString;
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::types::{OrgId, OrgRole};
 use loom_server_scm::{OwnerType, RepoStore, Webhook, WebhookOwnerType, WebhookStore};
-use loom_common_secret::SecretString;
 use url::Url;
 use uuid::Uuid;
 
@@ -96,7 +96,7 @@ fn is_private_or_reserved_v4(ipv4: &Ipv4Addr) -> bool {
 		|| ipv4.is_private()            // 10/8, 172.16/12, 192.168/16
 		|| ipv4.is_link_local()         // 169.254.0.0/16 (includes cloud metadata 169.254.169.254)
 		|| ipv4.is_broadcast()          // 255.255.255.255
-		|| ipv4.is_unspecified()        // 0.0.0.0
+		|| ipv4.is_unspecified() // 0.0.0.0
 }
 
 fn is_private_or_reserved_v6(ipv6: &Ipv6Addr) -> bool {
@@ -179,16 +179,20 @@ async fn check_org_admin(
 ) -> Result<(), (StatusCode, Json<WebhookErrorResponse>)> {
 	let org_id_typed = OrgId::new(org_id);
 
-	let org = state.org_repo.get_org_by_id(&org_id_typed).await.map_err(|e| {
-		tracing::error!(error = %e, "Failed to get organization");
-		(
-			StatusCode::INTERNAL_SERVER_ERROR,
-			Json(WebhookErrorResponse {
-				error: "internal_error".to_string(),
-				message: t(locale, "server.api.error.internal").to_string(),
-			}),
-		)
-	})?;
+	let org = state
+		.org_repo
+		.get_org_by_id(&org_id_typed)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get organization");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(WebhookErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?;
 
 	if org.is_none() {
 		return Err((
@@ -911,7 +915,9 @@ mod tests {
 		assert!(is_private_or_reserved_v4(&"10.0.0.1".parse().unwrap()));
 		assert!(is_private_or_reserved_v4(&"172.16.0.1".parse().unwrap()));
 		assert!(is_private_or_reserved_v4(&"192.168.1.1".parse().unwrap()));
-		assert!(is_private_or_reserved_v4(&"169.254.169.254".parse().unwrap()));
+		assert!(is_private_or_reserved_v4(
+			&"169.254.169.254".parse().unwrap()
+		));
 		assert!(is_private_or_reserved_v4(&"0.0.0.0".parse().unwrap()));
 
 		assert!(!is_private_or_reserved_v4(&"8.8.8.8".parse().unwrap()));

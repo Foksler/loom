@@ -204,7 +204,13 @@ pub async fn list_teams(
 		team_responses.push(TeamResponse::from_team(team, member_count));
 	}
 
-	(StatusCode::OK, Json(ListTeamsResponse { teams: team_responses })).into_response()
+	(
+		StatusCode::OK,
+		Json(ListTeamsResponse {
+			teams: team_responses,
+		}),
+	)
+		.into_response()
 }
 
 #[utoipa::path(
@@ -303,15 +309,18 @@ pub async fn create_team(
 		}
 	};
 
-	let subject =
-		build_subject_attrs(&current_user, &state.org_repo, &state.team_repo).await;
+	let subject = build_subject_attrs(&current_user, &state.org_repo, &state.team_repo).await;
 	let resource = team_resource(TeamId::generate(), org.id);
 
 	if let Err(e) = authorize!(&subject, Action::ManageTeam, &resource) {
 		return e.into_response();
 	}
 
-	if let Ok(Some(_)) = state.team_repo.get_team_by_slug(&org_id, &payload.slug).await {
+	if let Ok(Some(_)) = state
+		.team_repo
+		.get_team_by_slug(&org_id, &payload.slug)
+		.await
+	{
 		return (
 			StatusCode::CONFLICT,
 			Json(TeamErrorResponse {
@@ -360,7 +369,11 @@ pub async fn create_team(
 			.build(),
 	);
 
-	(StatusCode::CREATED, Json(TeamResponse::from_team(team, Some(1)))).into_response()
+	(
+		StatusCode::CREATED,
+		Json(TeamResponse::from_team(team, Some(1))),
+	)
+		.into_response()
 }
 
 #[utoipa::path(
@@ -453,8 +466,7 @@ pub async fn get_team(
 			.into_response();
 	}
 
-	let subject =
-		build_subject_attrs(&current_user, &state.org_repo, &state.team_repo).await;
+	let subject = build_subject_attrs(&current_user, &state.org_repo, &state.team_repo).await;
 	let resource = team_resource(team.id, team.org_id);
 
 	if let Err(e) = authorize!(&subject, Action::Read, &resource) {
@@ -466,7 +478,11 @@ pub async fn get_team(
 		Err(_) => None,
 	};
 
-	(StatusCode::OK, Json(TeamResponse::from_team(team, member_count))).into_response()
+	(
+		StatusCode::OK,
+		Json(TeamResponse::from_team(team, member_count)),
+	)
+		.into_response()
 }
 
 #[utoipa::path(
@@ -569,8 +585,7 @@ pub async fn update_team(
 			.into_response();
 	}
 
-	let subject =
-		build_subject_attrs(&current_user, &state.org_repo, &state.team_repo).await;
+	let subject = build_subject_attrs(&current_user, &state.org_repo, &state.team_repo).await;
 	let resource = team_resource(team.id, team.org_id);
 
 	if let Err(e) = authorize!(&subject, Action::Write, &resource) {
@@ -642,7 +657,11 @@ pub async fn update_team(
 		Err(_) => None,
 	};
 
-	(StatusCode::OK, Json(TeamResponse::from_team(team, member_count))).into_response()
+	(
+		StatusCode::OK,
+		Json(TeamResponse::from_team(team, member_count)),
+	)
+		.into_response()
 }
 
 #[utoipa::path(
@@ -735,8 +754,7 @@ pub async fn delete_team(
 			.into_response();
 	}
 
-	let subject =
-		build_subject_attrs(&current_user, &state.org_repo, &state.team_repo).await;
+	let subject = build_subject_attrs(&current_user, &state.org_repo, &state.team_repo).await;
 	let resource = team_resource(team.id, team.org_id);
 
 	if let Err(e) = authorize!(&subject, Action::Delete, &resource) {
@@ -869,8 +887,7 @@ pub async fn list_team_members(
 			.into_response();
 	}
 
-	let subject =
-		build_subject_attrs(&current_user, &state.org_repo, &state.team_repo).await;
+	let subject = build_subject_attrs(&current_user, &state.org_repo, &state.team_repo).await;
 	let resource = team_resource(team.id, team.org_id);
 
 	if let Err(e) = authorize!(&subject, Action::Read, &resource) {
@@ -906,7 +923,11 @@ pub async fn list_team_members(
 		members.push(TeamMemberResponse {
 			user_id: user.id.to_string(),
 			display_name: user.display_name,
-			email: if user.email_visible { user.primary_email } else { None },
+			email: if user.email_visible {
+				user.primary_email
+			} else {
+				None
+			},
 			avatar_url: user.avatar_url,
 			role: membership.role.into(),
 			joined_at: membership.created_at,
@@ -1020,15 +1041,18 @@ pub async fn add_team_member(
 			.into_response();
 	}
 
-	let subject =
-		build_subject_attrs(&current_user, &state.org_repo, &state.team_repo).await;
+	let subject = build_subject_attrs(&current_user, &state.org_repo, &state.team_repo).await;
 	let resource = team_resource(team.id, team.org_id);
 
 	if let Err(e) = authorize!(&subject, Action::ManageTeam, &resource) {
 		return e.into_response();
 	}
 
-	match state.org_repo.get_membership(&org_id, &target_user_id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &target_user_id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return (
@@ -1053,7 +1077,11 @@ pub async fn add_team_member(
 		}
 	}
 
-	if let Ok(Some(_)) = state.team_repo.get_membership(&team.id, &target_user_id).await {
+	if let Ok(Some(_)) = state
+		.team_repo
+		.get_membership(&team.id, &target_user_id)
+		.await
+	{
 		return (
 			StatusCode::CONFLICT,
 			Json(TeamErrorResponse {
@@ -1065,7 +1093,11 @@ pub async fn add_team_member(
 	}
 
 	let role: TeamRole = payload.role.into();
-	if let Err(e) = state.team_repo.add_member(&team.id, &target_user_id, role).await {
+	if let Err(e) = state
+		.team_repo
+		.add_member(&team.id, &target_user_id, role)
+		.await
+	{
 		tracing::error!(error = %e, %org_id, %team_id, %target_user_id, "Failed to add team member");
 		return (
 			StatusCode::INTERNAL_SERVER_ERROR,
@@ -1202,8 +1234,7 @@ pub async fn remove_team_member(
 	let is_self_removal = target_user_id == current_user.user.id;
 
 	if !is_self_removal {
-		let subject =
-			build_subject_attrs(&current_user, &state.org_repo, &state.team_repo).await;
+		let subject = build_subject_attrs(&current_user, &state.org_repo, &state.team_repo).await;
 		let resource = team_resource(team.id, team.org_id);
 
 		if let Err(e) = authorize!(&subject, Action::ManageTeam, &resource) {
@@ -1211,7 +1242,11 @@ pub async fn remove_team_member(
 		}
 	}
 
-	let membership = match state.team_repo.get_membership(&team.id, &target_user_id).await {
+	let membership = match state
+		.team_repo
+		.get_membership(&team.id, &target_user_id)
+		.await
+	{
 		Ok(Some(m)) => m,
 		Ok(None) => {
 			return (
@@ -1269,7 +1304,11 @@ pub async fn remove_team_member(
 		}
 	}
 
-	if let Err(e) = state.team_repo.remove_member(&team.id, &target_user_id).await {
+	if let Err(e) = state
+		.team_repo
+		.remove_member(&team.id, &target_user_id)
+		.await
+	{
 		tracing::error!(error = %e, %org_id, %team_id, %target_user_id, "Failed to remove team member");
 		return (
 			StatusCode::INTERNAL_SERVER_ERROR,

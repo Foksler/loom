@@ -119,7 +119,10 @@ fn validate_svid(
 	let token = if let Some(bearer) = auth_value.strip_prefix("Bearer ") {
 		bearer.trim()
 	} else {
-		return Err((StatusCode::UNAUTHORIZED, "invalid Authorization header format"));
+		return Err((
+			StatusCode::UNAUTHORIZED,
+			"invalid Authorization header format",
+		));
 	};
 
 	if token.is_empty() {
@@ -218,7 +221,10 @@ mod tests {
 	#[test]
 	fn test_validate_svid_invalid_format() {
 		let mut headers = HeaderMap::new();
-		headers.insert(header::AUTHORIZATION, HeaderValue::from_static("Basic abc123"));
+		headers.insert(
+			header::AUTHORIZATION,
+			HeaderValue::from_static("Basic abc123"),
+		);
 		let result = validate_svid(&headers, "weaver-123", true);
 		assert!(result.is_err());
 		let (status, _) = result.unwrap_err();

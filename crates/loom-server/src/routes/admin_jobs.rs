@@ -100,7 +100,9 @@ pub async fn list_jobs(
 				id: j.job_id.clone(),
 				name: j.name,
 				description: def.map(|d| d.description.clone()).unwrap_or_default(),
-				job_type: def.map(|d| d.job_type.clone()).unwrap_or_else(|| "periodic".to_string()),
+				job_type: def
+					.map(|d| d.job_type.clone())
+					.unwrap_or_else(|| "periodic".to_string()),
 				interval_secs: def.and_then(|d| d.interval_secs),
 				enabled: def.map(|d| d.enabled).unwrap_or(true),
 				status: j.status.into(),
@@ -381,7 +383,10 @@ pub async fn job_history(
 		}
 	};
 
-	match repository.list_runs(&job_id, query.limit, query.offset).await {
+	match repository
+		.list_runs(&job_id, query.limit, query.offset)
+		.await
+	{
 		Ok(runs) => {
 			let run_infos: Vec<JobRunInfo> = runs
 				.into_iter()

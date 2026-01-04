@@ -16,14 +16,15 @@ use loom_server_config::ScimConfig;
 use loom_server_geoip::GeoIpService;
 use loom_server_github_app::{GithubAppClient, GithubAppConfig};
 use loom_server_jobs::{JobRepository, JobScheduler};
-use loom_server_search_google_cse::CseClient;
-use loom_server_search_serper::SerperClient;
 use loom_server_k8s::{K8sClient, KubeClient};
 use loom_server_llm_service::LlmService;
+use loom_server_search_google_cse::CseClient;
+use loom_server_search_serper::SerperClient;
 use loom_server_secrets::{SecretsService, SoftwareKeyBackend, SqliteSecretStore, SvidIssuer};
-use loom_server_wgtunnel::WgTunnelServices;
+use loom_server_session::SessionService;
 use loom_server_smtp::SmtpClient;
 use loom_server_weaver::{Provisioner, WeaverConfig, WebhookConfig, WebhookDispatcher};
+use loom_server_wgtunnel::WgTunnelServices;
 use std::sync::Arc;
 use tower_http::services::{ServeDir, ServeFile};
 use utoipa::OpenApi;
@@ -32,7 +33,9 @@ use utoipa_swagger_ui::SwaggerUi;
 use axum::Router;
 use loom_server_config::ServerConfig;
 
-use loom_server_audit::{AuditService, AuditFilterConfig, AuditSink, NoopEnricher, SqliteAuditSink};
+use loom_server_audit::{
+	AuditFilterConfig, AuditService, AuditSink, NoopEnricher, SqliteAuditSink,
+};
 use loom_server_config::QueueOverflowPolicy;
 
 use crate::{
@@ -97,6 +100,7 @@ pub struct AppState {
 	pub wg_tunnel_services: Option<WgTunnelServices>,
 	pub scim_config: ScimConfig,
 	pub pool: SqlitePool,
+	pub session_service: Arc<SessionService>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -121,6 +125,7 @@ pub async fn create_app_state(
 		pool.clone(),
 		user_repo.clone(),
 		org_repo.clone(),
+		config.auth.signups_disabled,
 	));
 
 	// Create SQLite audit sink
@@ -140,10 +145,18 @@ pub async fn create_app_state(
 	let scm_repo_store = Arc::new(loom_server_scm::SqliteRepoStore::new(pool.clone()));
 	let scm_protection_store = Arc::new(loom_server_scm::SqliteProtectionStore::new(pool.clone()));
 	let scm_webhook_store = Arc::new(loom_server_scm::SqliteWebhookStore::new(pool.clone()));
-	let scm_maintenance_store = Arc::new(loom_server_scm::SqliteMaintenanceJobStore::new(pool.clone()));
-	let scm_team_access_store = Arc::new(loom_server_scm::SqliteRepoTeamAccessStore::new(pool.clone()));
-	let push_mirror_store = Arc::new(loom_server_scm_mirror::SqlitePushMirrorStore::new(pool.clone()));
-	let external_mirror_store = Arc::new(loom_server_scm_mirror::SqliteExternalMirrorStore::new(pool.clone()));
+	let scm_maintenance_store = Arc::new(loom_server_scm::SqliteMaintenanceJobStore::new(
+		pool.clone(),
+	));
+	let scm_team_access_store = Arc::new(loom_server_scm::SqliteRepoTeamAccessStore::new(
+		pool.clone(),
+	));
+	let push_mirror_store = Arc::new(loom_server_scm_mirror::SqlitePushMirrorStore::new(
+		pool.clone(),
+	));
+	let external_mirror_store = Arc::new(loom_server_scm_mirror::SqliteExternalMirrorStore::new(
+		pool.clone(),
+	));
 	let audit_query_repo = Arc::new(AuditQueryRepository::new(pool.clone()));
 	let auth_config = loom_server_auth::middleware::AuthConfig {
 		dev_mode: config.auth.dev_mode,
@@ -255,6 +268,12 @@ pub async fn create_app_state(
 		None
 	};
 
+	let session_service = Arc::new(SessionService::new(
+		session_repo.clone(),
+		audit_service.clone(),
+		loom_server_auth::middleware::SESSION_COOKIE_NAME,
+	));
+
 	AppState {
 		repo,
 		user_repo,
@@ -301,6 +320,7 @@ pub async fn create_app_state(
 		wg_tunnel_services,
 		scim_config: config.scim.clone(),
 		pool,
+		session_service,
 	}
 }
 
@@ -505,7 +525,7 @@ type SecretsInfrastructure = (
 );
 
 fn initialize_secrets_infrastructure(pool: SqlitePool) -> SecretsInfrastructure {
-	use loom_server_secrets::{SvidConfig, generate_key};
+	use loom_server_secrets::{generate_key, SvidConfig};
 
 	let backend = if let Ok(key_b64) = std::env::var("LOOM_SECRETS_MASTER_KEY") {
 		let svid_key = std::env::var("LOOM_SECRETS_SVID_SIGNING_KEY")
@@ -513,7 +533,12 @@ fn initialize_secrets_infrastructure(pool: SqlitePool) -> SecretsInfrastructure 
 			.map(loom_common_secret::SecretString::new);
 
 		let secret = loom_common_secret::SecretString::new(key_b64);
-		match SoftwareKeyBackend::from_base64(&secret, svid_key.as_ref(), "loom-secrets".to_string(), "loom-secrets".to_string()) {
+		match SoftwareKeyBackend::from_base64(
+			&secret,
+			svid_key.as_ref(),
+			"loom-secrets".to_string(),
+			"loom-secrets".to_string(),
+		) {
 			Ok(backend) => {
 				tracing::info!("Secrets infrastructure initialized from LOOM_SECRETS_MASTER_KEY");
 				Arc::new(backend)
@@ -524,9 +549,16 @@ fn initialize_secrets_infrastructure(pool: SqlitePool) -> SecretsInfrastructure 
 			}
 		}
 	} else {
-		tracing::info!("LOOM_SECRETS_MASTER_KEY not set, generating ephemeral key (for development only)");
+		tracing::info!(
+			"LOOM_SECRETS_MASTER_KEY not set, generating ephemeral key (for development only)"
+		);
 		let kek = generate_key();
-		Arc::new(SoftwareKeyBackend::new(kek, None, "loom-secrets".to_string(), "loom-secrets".to_string()))
+		Arc::new(SoftwareKeyBackend::new(
+			kek,
+			None,
+			"loom-secrets".to_string(),
+			"loom-secrets".to_string(),
+		))
 	};
 
 	let svid_issuer = Arc::new(SvidIssuer::new(backend.clone(), SvidConfig::default()));
@@ -610,8 +642,8 @@ fn initialize_okta_oauth() -> Option<Arc<OktaOAuthClient>> {
 }
 
 fn admin_routes(state: AppState) -> Router<AppState> {
-	use axum::middleware::from_fn_with_state;
 	use crate::{auth_middleware::auth_layer, typed_router::require_auth_layer};
+	use axum::middleware::from_fn_with_state;
 
 	Router::new()
 		.route("/users", get(routes::admin::list_users))
@@ -1177,10 +1209,16 @@ pub fn create_router(state: AppState) -> Router {
 		authed = authed
 			.route("/api/wg/devices", post(routes::wgtunnel::register_device))
 			.route("/api/wg/devices", get(routes::wgtunnel::list_devices))
-			.route("/api/wg/devices/{id}", delete(routes::wgtunnel::revoke_device))
+			.route(
+				"/api/wg/devices/{id}",
+				delete(routes::wgtunnel::revoke_device),
+			)
 			.route("/api/wg/sessions", post(routes::wgtunnel::create_session))
 			.route("/api/wg/sessions", get(routes::wgtunnel::list_sessions))
-			.route("/api/wg/sessions/{id}", delete(routes::wgtunnel::terminate_session))
+			.route(
+				"/api/wg/sessions/{id}",
+				delete(routes::wgtunnel::terminate_session),
+			)
 			.route("/api/wg/derp-map", get(routes::wgtunnel::get_derp_map));
 	}
 
@@ -1223,12 +1261,8 @@ pub fn create_router(state: AppState) -> Router {
 			match uuid::Uuid::parse_str(&org_id_str) {
 				Ok(uuid) => {
 					let org_id = loom_server_auth::OrgId::new(uuid);
-					let scim_router = loom_server_scim::scim_routes(
-						scim_pool,
-						scim_config.token,
-						org_id,
-						scim_provisioning,
-					);
+					let scim_router =
+						loom_server_scim::scim_routes(scim_pool, scim_config.token, org_id, scim_provisioning);
 					router = router.nest("/api/scim", scim_router);
 					tracing::info!("SCIM endpoints enabled at /api/scim");
 				}
@@ -1560,7 +1594,10 @@ mod tests {
 			.await
 			.unwrap();
 		let updated: Thread = serde_json::from_slice(&body).unwrap();
-		assert_eq!(updated.visibility, loom_common_thread::ThreadVisibility::Public);
+		assert_eq!(
+			updated.visibility,
+			loom_common_thread::ThreadVisibility::Public
+		);
 	}
 
 	#[tokio::test]

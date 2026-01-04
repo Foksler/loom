@@ -58,8 +58,7 @@ use axum::{
 use loom_server_auth::{
 	abac::{OrgMembershipAttr, TeamMembershipAttr},
 	middleware::{AuthContext, CurrentUser},
-	Action, GlobalRole, OrgId, ResourceAttrs, ResourceType,
-	SubjectAttrs, TeamId, UserId, Visibility,
+	Action, GlobalRole, OrgId, ResourceAttrs, ResourceType, SubjectAttrs, TeamId, UserId, Visibility,
 };
 use pin_project_lite::pin_project;
 use serde::Serialize;
@@ -164,7 +163,9 @@ where
 				resource_type = ?self.resource_type,
 				"ABAC denied: not authenticated"
 			);
-			return RequireCapabilityFuture::Rejected { resp: Some(unauthorized_response()) };
+			return RequireCapabilityFuture::Rejected {
+				resp: Some(unauthorized_response()),
+			};
 		};
 
 		let subject = build_subject_attrs_sync(&current_user);
@@ -185,7 +186,9 @@ where
 				"ABAC denied: capability check failed"
 			);
 
-			return RequireCapabilityFuture::Rejected { resp: Some(forbidden_response()) };
+			return RequireCapabilityFuture::Rejected {
+				resp: Some(forbidden_response()),
+			};
 		}
 
 		tracing::debug!(
@@ -195,7 +198,9 @@ where
 			"ABAC allowed: capability check passed"
 		);
 
-		RequireCapabilityFuture::Inner { fut: self.inner.call(req) }
+		RequireCapabilityFuture::Inner {
+			fut: self.inner.call(req),
+		}
 	}
 }
 
@@ -370,7 +375,9 @@ where
 				require_auditor = self.require_auditor,
 				"Role check denied: not authenticated"
 			);
-			return RequireRoleFuture::Rejected { resp: Some(unauthorized_response()) };
+			return RequireRoleFuture::Rejected {
+				resp: Some(unauthorized_response()),
+			};
 		};
 
 		let is_admin = current_user.user.is_system_admin;
@@ -394,7 +401,9 @@ where
 				"Role check denied: insufficient privileges"
 			);
 
-			return RequireRoleFuture::Rejected { resp: Some(forbidden_response()) };
+			return RequireRoleFuture::Rejected {
+				resp: Some(forbidden_response()),
+			};
 		}
 
 		tracing::debug!(
@@ -402,7 +411,9 @@ where
 			"Role check passed"
 		);
 
-		RequireRoleFuture::Inner { fut: self.inner.call(req) }
+		RequireRoleFuture::Inner {
+			fut: self.inner.call(req),
+		}
 	}
 }
 
@@ -435,17 +446,25 @@ where
 ///
 /// This is used by route-level middleware where we cannot perform async operations.
 /// It only includes global roles, not organization or team memberships.
-fn build_subject_attrs_sync(current_user: &loom_server_auth::middleware::CurrentUser) -> SubjectAttrs {
+fn build_subject_attrs_sync(
+	current_user: &loom_server_auth::middleware::CurrentUser,
+) -> SubjectAttrs {
 	let mut subject = SubjectAttrs::new(current_user.user.id);
 
 	if current_user.user.is_system_admin {
-		subject.global_roles.push(loom_server_auth::GlobalRole::SystemAdmin);
+		subject
+			.global_roles
+			.push(loom_server_auth::GlobalRole::SystemAdmin);
 	}
 	if current_user.user.is_support {
-		subject.global_roles.push(loom_server_auth::GlobalRole::Support);
+		subject
+			.global_roles
+			.push(loom_server_auth::GlobalRole::Support);
 	}
 	if current_user.user.is_auditor {
-		subject.global_roles.push(loom_server_auth::GlobalRole::Auditor);
+		subject
+			.global_roles
+			.push(loom_server_auth::GlobalRole::Auditor);
 	}
 
 	subject
@@ -817,7 +836,10 @@ mod tests {
 	async fn require_capability_allows_admin() {
 		let app = Router::new()
 			.route("/", get(dummy_handler))
-			.layer(RequireCapability::new(Action::Write, ResourceType::Organization));
+			.layer(RequireCapability::new(
+				Action::Write,
+				ResourceType::Organization,
+			));
 
 		let user = test_user(true, false, false);
 		let current_user = CurrentUser::from_access_token(user);

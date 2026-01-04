@@ -10,8 +10,8 @@
 //! These tests validate the handler's ability to safely integrate query processing
 //! into the LLM pipeline without breaking conversation flow.
 
-use loom_server::{LlmQueryHandler, SimpleRegexDetector, ServerQueryManager};
 use loom_common_core::server_query::{ServerQueryKind, ServerQueryResponse, ServerQueryResult};
+use loom_server::{LlmQueryHandler, ServerQueryManager, SimpleRegexDetector};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -121,7 +121,10 @@ async fn test_query_timeout_handling() {
 	assert!(result.is_err(), "Should error on timeout");
 	let error = result.unwrap_err();
 	assert!(
-		matches!(error, loom_common_core::server_query::ServerQueryError::Timeout),
+		matches!(
+			error,
+			loom_common_core::server_query::ServerQueryError::Timeout
+		),
 		"Should be timeout error, got: {error:?}"
 	);
 }
@@ -284,7 +287,9 @@ async fn test_concurrent_queries_different_sessions() {
 			}
 		});
 
-		let result = handler1.handle_llm_output("session-a", "read file.txt").await;
+		let result = handler1
+			.handle_llm_output("session-a", "read file.txt")
+			.await;
 		let _ = tokio::time::timeout(Duration::from_secs(5), response_task).await;
 		result
 	});
@@ -305,7 +310,9 @@ async fn test_concurrent_queries_different_sessions() {
 			}
 		});
 
-		let result = handler2.handle_llm_output("session-b", "read other.txt").await;
+		let result = handler2
+			.handle_llm_output("session-b", "read other.txt")
+			.await;
 		let _ = tokio::time::timeout(Duration::from_secs(5), response_task).await;
 		result
 	});

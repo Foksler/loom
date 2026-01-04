@@ -114,15 +114,24 @@ mod tests {
 	#[test]
 	fn test_extract_client_ip_xff() {
 		let mut headers = HeaderMap::new();
-		headers.insert("x-forwarded-for", "203.0.113.195, 70.41.3.18".parse().unwrap());
-		assert_eq!(extract_client_ip(&headers), Some("203.0.113.195".to_string()));
+		headers.insert(
+			"x-forwarded-for",
+			"203.0.113.195, 70.41.3.18".parse().unwrap(),
+		);
+		assert_eq!(
+			extract_client_ip(&headers),
+			Some("203.0.113.195".to_string())
+		);
 	}
 
 	#[test]
 	fn test_extract_client_ip_real_ip() {
 		let mut headers = HeaderMap::new();
 		headers.insert("x-real-ip", "198.51.100.178".parse().unwrap());
-		assert_eq!(extract_client_ip(&headers), Some("198.51.100.178".to_string()));
+		assert_eq!(
+			extract_client_ip(&headers),
+			Some("198.51.100.178".to_string())
+		);
 	}
 
 	#[test]

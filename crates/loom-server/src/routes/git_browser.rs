@@ -27,11 +27,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::{
-	api::AppState,
-	auth_middleware::OptionalAuth,
-	error::ServerError,
-};
+use crate::{api::AppState, auth_middleware::OptionalAuth, error::ServerError};
 
 use super::git::{check_read_access, get_repo_path_by_id, resolve_repo};
 
@@ -179,19 +175,16 @@ pub async fn list_branches(
 	})?;
 
 	let mut branches = Vec::new();
-	for reference in git_repo.references().map_err(|e| {
-		ServerError::Internal(format!("Failed to list references: {}", e))
-	})?.local_branches().map_err(|e| {
-		ServerError::Internal(format!("Failed to list branches: {}", e))
-	})? {
-		let reference = reference.map_err(|e| {
-			ServerError::Internal(format!("Failed to read reference: {}", e))
-		})?;
+	for reference in git_repo
+		.references()
+		.map_err(|e| ServerError::Internal(format!("Failed to list references: {}", e)))?
+		.local_branches()
+		.map_err(|e| ServerError::Internal(format!("Failed to list branches: {}", e)))?
+	{
+		let reference =
+			reference.map_err(|e| ServerError::Internal(format!("Failed to read reference: {}", e)))?;
 
-		let name = reference
-			.name()
-			.shorten()
-			.to_string();
+		let name = reference.name().shorten().to_string();
 
 		let sha = reference
 			.into_fully_peeled_id()
@@ -278,9 +271,8 @@ pub async fn get_tree(
 
 	let mut entries = Vec::new();
 	for entry_result in target_tree.iter() {
-		let entry = entry_result.map_err(|e| {
-			ServerError::Internal(format!("Failed to read tree entry: {}", e))
-		})?;
+		let entry = entry_result
+			.map_err(|e| ServerError::Internal(format!("Failed to read tree entry: {}", e)))?;
 
 		let entry_name = entry.filename().to_string();
 		let entry_path = if tree_path.is_empty() {
@@ -297,10 +289,7 @@ pub async fn get_tree(
 		};
 
 		let size = if kind == "file" {
-			entry
-				.object()
-				.ok()
-				.map(|o| o.data.len() as u64)
+			entry.object().ok().map(|o| o.data.len() as u64)
 		} else {
 			None
 		};
@@ -422,9 +411,8 @@ pub async fn list_commits(
 		.map_err(|e| ServerError::Internal(format!("Failed to walk commits: {}", e)))?;
 
 	for commit_info in walk {
-		let commit_info = commit_info.map_err(|e| {
-			ServerError::Internal(format!("Failed to get commit: {}", e))
-		})?;
+		let commit_info =
+			commit_info.map_err(|e| ServerError::Internal(format!("Failed to get commit: {}", e)))?;
 
 		total += 1;
 
@@ -441,14 +429,11 @@ pub async fn list_commits(
 			.object()
 			.map_err(|e| ServerError::Internal(format!("Failed to get commit object: {}", e)))?;
 
-		let author = commit.author().map_err(|e| {
-			ServerError::Internal(format!("Failed to get author: {}", e))
-		})?;
+		let author = commit
+			.author()
+			.map_err(|e| ServerError::Internal(format!("Failed to get author: {}", e)))?;
 
-		let parent_shas: Vec<String> = commit
-			.parent_ids()
-			.map(|id| id.to_string())
-			.collect();
+		let parent_shas: Vec<String> = commit.parent_ids().map(|id| id.to_string()).collect();
 
 		commits.push(CommitInfo {
 			sha: commit.id.to_string(),
@@ -502,7 +487,10 @@ pub async fn get_commit(
 	let parent_shas: Vec<String> = parents.split_whitespace().map(|s| s.to_string()).collect();
 
 	// Get the diff part (after the empty line following headers)
-	let diff_start = output_str.find("\n\n").map(|i| i + 2).unwrap_or(output_str.len());
+	let diff_start = output_str
+		.find("\n\n")
+		.map(|i| i + 2)
+		.unwrap_or(output_str.len());
 	let diff = output_str[diff_start..].to_string();
 
 	Ok(Json(CommitWithDiff {
@@ -533,9 +521,8 @@ pub async fn get_blame(
 
 	// Parse ref and path using a simpler approach (since we use git CLI anyway)
 	let (git_ref, file_path) = {
-		let git_repo = gix::open(&repo_path).map_err(|e| {
-			ServerError::Internal(format!("Failed to open repository: {}", e))
-		})?;
+		let git_repo = gix::open(&repo_path)
+			.map_err(|e| ServerError::Internal(format!("Failed to open repository: {}", e)))?;
 		parse_ref_and_path(&ref_and_path, &git_repo)?
 	}; // git_repo is dropped here before the await
 
@@ -545,13 +532,7 @@ pub async fn get_blame(
 
 	// Use git CLI for blame (gix blame support is limited)
 	let output = tokio::process::Command::new("git")
-		.args([
-			"blame",
-			"--line-porcelain",
-			&git_ref,
-			"--",
-			&file_path,
-		])
+		.args(["blame", "--line-porcelain", &git_ref, "--", &file_path])
 		.current_dir(&repo_path)
 		.output()
 		.await
@@ -582,9 +563,9 @@ pub async fn compare_refs(
 	let repo_path = get_repo_path_by_id(repo.id);
 
 	// Parse "base...head" format
-	let (base_ref, head_ref) = refs
-		.split_once("...")
-		.ok_or_else(|| ServerError::BadRequest("Invalid compare format. Use: base...head".to_string()))?;
+	let (base_ref, head_ref) = refs.split_once("...").ok_or_else(|| {
+		ServerError::BadRequest("Invalid compare format. Use: base...head".to_string())
+	})?;
 
 	// Get diff using git CLI
 	let diff_output = tokio::process::Command::new("git")
@@ -632,7 +613,12 @@ pub async fn compare_refs(
 
 	// Count ahead/behind
 	let ahead_behind_output = tokio::process::Command::new("git")
-		.args(["rev-list", "--left-right", "--count", &format!("{}...{}", base_ref, head_ref)])
+		.args([
+			"rev-list",
+			"--left-right",
+			"--count",
+			&format!("{}...{}", base_ref, head_ref),
+		])
 		.current_dir(&repo_path)
 		.output()
 		.await
@@ -665,7 +651,10 @@ fn is_repo_empty(repo: &gix::Repository) -> bool {
 	}
 }
 
-fn parse_ref_and_path(combined: &str, repo: &gix::Repository) -> Result<(String, String), ServerError> {
+fn parse_ref_and_path(
+	combined: &str,
+	repo: &gix::Repository,
+) -> Result<(String, String), ServerError> {
 	// Try to find a valid ref by progressively taking more path segments
 	let parts: Vec<&str> = combined.splitn(2, '/').collect();
 
@@ -683,13 +672,16 @@ fn parse_ref_and_path(combined: &str, repo: &gix::Repository) -> Result<(String,
 	}
 
 	// Default to treating first segment as ref
-	Ok((first_segment.to_string(), parts.get(1).copied().unwrap_or("").to_string()))
+	Ok((
+		first_segment.to_string(),
+		parts.get(1).copied().unwrap_or("").to_string(),
+	))
 }
 
 fn format_git_time(time: gix::date::Time) -> String {
 	let secs = time.seconds;
-	let dt = DateTime::from_timestamp(secs, 0)
-		.unwrap_or_else(|| DateTime::from_timestamp(0, 0).unwrap());
+	let dt =
+		DateTime::from_timestamp(secs, 0).unwrap_or_else(|| DateTime::from_timestamp(0, 0).unwrap());
 	dt.to_rfc3339()
 }
 
@@ -740,10 +732,25 @@ pub fn router() -> crate::OptionalAuthRouter {
 	crate::OptionalAuthRouter::new()
 		.route("/api/repos/{owner}/{name}", get(get_repo_by_owner_name))
 		.route("/api/repos/{owner}/{name}/branches", get(list_branches))
-		.route("/api/repos/{owner}/{name}/tree/{*ref_and_path}", get(get_tree))
-		.route("/api/repos/{owner}/{name}/blob/{*ref_and_path}", get(get_blob))
-		.route("/api/repos/{owner}/{name}/commits/{git_ref}", get(list_commits))
+		.route(
+			"/api/repos/{owner}/{name}/tree/{*ref_and_path}",
+			get(get_tree),
+		)
+		.route(
+			"/api/repos/{owner}/{name}/blob/{*ref_and_path}",
+			get(get_blob),
+		)
+		.route(
+			"/api/repos/{owner}/{name}/commits/{git_ref}",
+			get(list_commits),
+		)
 		.route("/api/repos/{owner}/{name}/commit/{sha}", get(get_commit))
-		.route("/api/repos/{owner}/{name}/blame/{*ref_and_path}", get(get_blame))
-		.route("/api/repos/{owner}/{name}/compare/{*refs}", get(compare_refs))
+		.route(
+			"/api/repos/{owner}/{name}/blame/{*ref_and_path}",
+			get(get_blame),
+		)
+		.route(
+			"/api/repos/{owner}/{name}/compare/{*refs}",
+			get(compare_refs),
+		)
 }

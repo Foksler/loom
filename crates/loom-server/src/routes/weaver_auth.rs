@@ -183,7 +183,10 @@ pub async fn exchange_token(
 				StatusCode::NOT_FOUND,
 				Json(ErrorResponse {
 					error: "pod_not_found".to_string(),
-					message: format!("Pod '{}' not found in namespace '{}'", payload.pod_name, payload.pod_namespace),
+					message: format!(
+						"Pod '{}' not found in namespace '{}'",
+						payload.pod_name, payload.pod_namespace
+					),
 				}),
 			)
 				.into_response();
@@ -201,14 +204,12 @@ pub async fn exchange_token(
 		}
 	};
 
-	let labels = pod
-		.metadata
-		.labels
-		.as_ref()
-		.cloned()
-		.unwrap_or_default();
+	let labels = pod.metadata.labels.as_ref().cloned().unwrap_or_default();
 
-	let is_managed = labels.get(MANAGED_LABEL).map(|v| v == "true").unwrap_or(false);
+	let is_managed = labels
+		.get(MANAGED_LABEL)
+		.map(|v| v == "true")
+		.unwrap_or(false);
 	if !is_managed {
 		warn!(
 			pod_name = %payload.pod_name,

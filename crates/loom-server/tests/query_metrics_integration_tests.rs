@@ -6,11 +6,11 @@
 //! Purpose: Verify that metrics are properly recorded throughout the query lifecycle,
 //! including sent, success, failure, and timeout scenarios.
 
-use loom_server::QueryMetrics;
-use loom_server::ServerQueryManager;
 use loom_common_core::server_query::{
 	ServerQuery, ServerQueryKind, ServerQueryResponse, ServerQueryResult,
 };
+use loom_server::QueryMetrics;
+use loom_server::ServerQueryManager;
 use std::sync::Arc;
 use std::time::Duration;
 

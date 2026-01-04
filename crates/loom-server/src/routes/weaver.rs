@@ -97,12 +97,9 @@ pub async fn create_weaver(
 ) -> Result<impl IntoResponse, ServerError> {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let provisioner = state
-		.provisioner
-		.as_ref()
-		.ok_or_else(|| {
-			ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
-		})?;
+	let provisioner = state.provisioner.as_ref().ok_or_else(|| {
+		ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
+	})?;
 
 	let org_uuid = Uuid::parse_str(&request.org_id).map_err(|_| {
 		ServerError::BadRequest(t_fmt(
@@ -114,7 +111,11 @@ pub async fn create_weaver(
 	let org_id = OrgId::new(org_uuid);
 
 	if !current_user.user.is_system_admin() {
-		match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+		match state
+			.org_repo
+			.get_membership(&org_id, &current_user.user.id)
+			.await
+		{
 			Ok(Some(_)) => {}
 			Ok(None) => {
 				return Err(ServerError::Forbidden(t(
@@ -196,12 +197,9 @@ pub async fn list_weavers(
 ) -> Result<impl IntoResponse, ServerError> {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let provisioner = state
-		.provisioner
-		.as_ref()
-		.ok_or_else(|| {
-			ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
-		})?;
+	let provisioner = state.provisioner.as_ref().ok_or_else(|| {
+		ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
+	})?;
 
 	let tag_filter = parse_tag_filter(params.tag);
 
@@ -254,12 +252,9 @@ pub async fn get_weaver(
 ) -> Result<impl IntoResponse, ServerError> {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let provisioner = state
-		.provisioner
-		.as_ref()
-		.ok_or_else(|| {
-			ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
-		})?;
+	let provisioner = state.provisioner.as_ref().ok_or_else(|| {
+		ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
+	})?;
 
 	let weaver_id: WeaverId = id.parse().map_err(|_| {
 		ServerError::BadRequest(t_fmt(
@@ -306,12 +301,9 @@ pub async fn delete_weaver(
 ) -> Result<impl IntoResponse, ServerError> {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let provisioner = state
-		.provisioner
-		.as_ref()
-		.ok_or_else(|| {
-			ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
-		})?;
+	let provisioner = state.provisioner.as_ref().ok_or_else(|| {
+		ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
+	})?;
 
 	let weaver_id: WeaverId = id.parse().map_err(|_| {
 		ServerError::BadRequest(t_fmt(
@@ -377,12 +369,9 @@ pub async fn stream_logs(
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, ServerError> {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let provisioner = state
-		.provisioner
-		.as_ref()
-		.ok_or_else(|| {
-			ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
-		})?;
+	let provisioner = state.provisioner.as_ref().ok_or_else(|| {
+		ServerError::Internal(t(locale, "server.api.weaver.provisioner_not_configured"))
+	})?;
 
 	let weaver_id: WeaverId = id
 		.parse()
@@ -417,11 +406,13 @@ pub async fn stream_logs(
 		Ok::<_, Infallible>(event)
 	});
 
-	Ok(Sse::new(sse_stream).keep_alive(
-		axum::response::sse::KeepAlive::new()
-			.interval(std::time::Duration::from_secs(15))
-			.text("keep-alive"),
-	))
+	Ok(
+		Sse::new(sse_stream).keep_alive(
+			axum::response::sse::KeepAlive::new()
+				.interval(std::time::Duration::from_secs(15))
+				.text("keep-alive"),
+		),
+	)
 }
 
 /// POST /api/weavers/cleanup - Trigger cleanup of expired weavers.
@@ -531,11 +522,7 @@ pub async fn attach_weaver(
 	})?;
 
 	let weaver = provisioner.get_weaver(&weaver_id).await.map_err(|_| {
-		ServerError::NotFound(t_fmt(
-			locale,
-			"server.api.weaver.not_found",
-			&[("id", &id)],
-		))
+		ServerError::NotFound(t_fmt(locale, "server.api.weaver.not_found", &[("id", &id)]))
 	})?;
 
 	let access = get_weaver_access(&current_user, &weaver);
@@ -692,20 +679,21 @@ pub fn weaver_routes(state: AppState) -> Router {
 /// Parse tag filter from query parameters.
 /// Tags are provided as "key:value" strings.
 fn parse_tag_filter(tags: Option<Vec<String>>) -> Option<HashMap<String, String>> {
-	tags.map(|tag_list| {
-		tag_list
-			.into_iter()
-			.filter_map(|t| {
-				let parts: Vec<&str> = t.splitn(2, ':').collect();
-				if parts.len() == 2 {
-					Some((parts[0].to_string(), parts[1].to_string()))
-				} else {
-					None
-				}
-			})
-			.collect()
-	})
-	.filter(|m: &HashMap<String, String>| !m.is_empty())
+	tags
+		.map(|tag_list| {
+			tag_list
+				.into_iter()
+				.filter_map(|t| {
+					let parts: Vec<&str> = t.splitn(2, ':').collect();
+					if parts.len() == 2 {
+						Some((parts[0].to_string(), parts[1].to_string()))
+					} else {
+						None
+					}
+				})
+				.collect()
+		})
+		.filter(|m: &HashMap<String, String>| !m.is_empty())
 }
 
 #[cfg(test)]

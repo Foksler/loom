@@ -24,7 +24,11 @@ use uuid::Uuid;
 pub use loom_server_api::protection::*;
 pub use loom_server_api::repos::RepoErrorResponse;
 
-use crate::{api::AppState, auth_middleware::RequireAuth, i18n::{resolve_user_locale, t}};
+use crate::{
+	api::AppState,
+	auth_middleware::RequireAuth,
+	i18n::{resolve_user_locale, t},
+};
 
 async fn check_repo_admin(
 	repo_id: Uuid,
@@ -233,7 +237,11 @@ pub async fn create_protection_rule(
 				created_by = %current_user.user.id,
 				"Branch protection rule created"
 			);
-			(StatusCode::CREATED, Json(ProtectionRuleResponse::from(created))).into_response()
+			(
+				StatusCode::CREATED,
+				Json(ProtectionRuleResponse::from(created)),
+			)
+				.into_response()
 		}
 		Err(loom_server_scm::ScmError::AlreadyExists) => (
 			StatusCode::CONFLICT,

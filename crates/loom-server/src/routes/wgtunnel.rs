@@ -44,15 +44,21 @@ fn wg_error_to_response(e: WgError) -> ServerError {
 		WgError::DeviceNotFound => ServerError::NotFound("Device not found".to_string()),
 		WgError::WeaverNotFound => ServerError::NotFound("Weaver not found".to_string()),
 		WgError::SessionNotFound => ServerError::NotFound("Session not found".to_string()),
-		WgError::DeviceAlreadyExists => ServerError::BadRequest("Device already registered".to_string()),
+		WgError::DeviceAlreadyExists => {
+			ServerError::BadRequest("Device already registered".to_string())
+		}
 		WgError::DeviceRevoked => ServerError::BadRequest("Device has been revoked".to_string()),
-		WgError::WeaverAlreadyRegistered => ServerError::BadRequest("Weaver already registered".to_string()),
+		WgError::WeaverAlreadyRegistered => {
+			ServerError::BadRequest("Weaver already registered".to_string())
+		}
 		WgError::SessionAlreadyExists => ServerError::BadRequest("Session already exists".to_string()),
 		WgError::InvalidPublicKey(msg) => ServerError::BadRequest(format!("Invalid public key: {msg}")),
 		WgError::IpAllocation(msg) => ServerError::Internal(format!("IP allocation failed: {msg}")),
 		WgError::Unauthorized(msg) => ServerError::Unauthorized(msg),
 		WgError::Database(e) => ServerError::Db(e),
-		WgError::Config(msg) | WgError::DerpMap(msg) | WgError::Internal(msg) => ServerError::Internal(msg),
+		WgError::Config(msg) | WgError::DerpMap(msg) | WgError::Internal(msg) => {
+			ServerError::Internal(msg)
+		}
 	}
 }
 
@@ -122,9 +128,10 @@ pub async fn register_device(
 	RequireAuth(current_user): RequireAuth,
 	Json(request): Json<RegisterDeviceRequest>,
 ) -> Result<impl IntoResponse, ServerError> {
-	let services = state.wg_tunnel_services.as_ref().ok_or_else(|| {
-		ServerError::ServiceUnavailable("WireGuard tunnel not enabled".to_string())
-	})?;
+	let services = state
+		.wg_tunnel_services
+		.as_ref()
+		.ok_or_else(|| ServerError::ServiceUnavailable("WireGuard tunnel not enabled".to_string()))?;
 
 	let public_key = parse_public_key(&request.public_key)?;
 	let user_id: Uuid = current_user.user.id.into_inner();
@@ -166,9 +173,10 @@ pub async fn list_devices(
 	State(state): State<AppState>,
 	RequireAuth(current_user): RequireAuth,
 ) -> Result<impl IntoResponse, ServerError> {
-	let services = state.wg_tunnel_services.as_ref().ok_or_else(|| {
-		ServerError::ServiceUnavailable("WireGuard tunnel not enabled".to_string())
-	})?;
+	let services = state
+		.wg_tunnel_services
+		.as_ref()
+		.ok_or_else(|| ServerError::ServiceUnavailable("WireGuard tunnel not enabled".to_string()))?;
 
 	let user_id: Uuid = current_user.user.id.into_inner();
 
@@ -214,9 +222,10 @@ pub async fn revoke_device(
 	RequireAuth(current_user): RequireAuth,
 	Path(id): Path<String>,
 ) -> Result<impl IntoResponse, ServerError> {
-	let services = state.wg_tunnel_services.as_ref().ok_or_else(|| {
-		ServerError::ServiceUnavailable("WireGuard tunnel not enabled".to_string())
-	})?;
+	let services = state
+		.wg_tunnel_services
+		.as_ref()
+		.ok_or_else(|| ServerError::ServiceUnavailable("WireGuard tunnel not enabled".to_string()))?;
 
 	let device_id: Uuid = id
 		.parse()
@@ -255,19 +264,19 @@ pub async fn create_session(
 	RequireAuth(current_user): RequireAuth,
 	Json(request): Json<loom_server_wgtunnel::CreateSessionApiRequest>,
 ) -> Result<impl IntoResponse, ServerError> {
-	let services = state.wg_tunnel_services.as_ref().ok_or_else(|| {
-		ServerError::ServiceUnavailable("WireGuard tunnel not enabled".to_string())
-	})?;
+	let services = state
+		.wg_tunnel_services
+		.as_ref()
+		.ok_or_else(|| ServerError::ServiceUnavailable("WireGuard tunnel not enabled".to_string()))?;
 
 	let weaver_id: loom_server_weaver::WeaverId = request
 		.weaver_id
 		.parse()
 		.map_err(|_| ServerError::BadRequest(format!("Invalid weaver ID: {}", request.weaver_id)))?;
 
-	let provisioner = state
-		.provisioner
-		.as_ref()
-		.ok_or_else(|| ServerError::ServiceUnavailable("Weaver provisioner not configured".to_string()))?;
+	let provisioner = state.provisioner.as_ref().ok_or_else(|| {
+		ServerError::ServiceUnavailable("Weaver provisioner not configured".to_string())
+	})?;
 	let weaver = provisioner.get_weaver(&weaver_id).await?;
 	if weaver.owner_user_id != current_user.user.id.to_string() {
 		return Err(ServerError::Forbidden(
@@ -281,7 +290,11 @@ pub async fn create_session(
 		.map_err(|_| ServerError::BadRequest(format!("Invalid weaver ID: {}", request.weaver_id)))?;
 
 	let user_id: Uuid = current_user.user.id.into_inner();
-	let devices = services.device_service.list(user_id).await.map_err(wg_error_to_response)?;
+	let devices = services
+		.device_service
+		.list(user_id)
+		.await
+		.map_err(wg_error_to_response)?;
 
 	let device = devices.first().ok_or_else(|| {
 		ServerError::BadRequest("No registered device. Register a device first.".to_string())
@@ -324,12 +337,17 @@ pub async fn list_sessions(
 	State(state): State<AppState>,
 	RequireAuth(current_user): RequireAuth,
 ) -> Result<impl IntoResponse, ServerError> {
-	let services = state.wg_tunnel_services.as_ref().ok_or_else(|| {
-		ServerError::ServiceUnavailable("WireGuard tunnel not enabled".to_string())
-	})?;
+	let services = state
+		.wg_tunnel_services
+		.as_ref()
+		.ok_or_else(|| ServerError::ServiceUnavailable("WireGuard tunnel not enabled".to_string()))?;
 
 	let user_id: Uuid = current_user.user.id.into_inner();
-	let devices = services.device_service.list(user_id).await.map_err(wg_error_to_response)?;
+	let devices = services
+		.device_service
+		.list(user_id)
+		.await
+		.map_err(wg_error_to_response)?;
 
 	let mut all_sessions = Vec::new();
 	for device in devices {
@@ -376,9 +394,10 @@ pub async fn terminate_session(
 	RequireAuth(current_user): RequireAuth,
 	Path(id): Path<String>,
 ) -> Result<impl IntoResponse, ServerError> {
-	let services = state.wg_tunnel_services.as_ref().ok_or_else(|| {
-		ServerError::ServiceUnavailable("WireGuard tunnel not enabled".to_string())
-	})?;
+	let services = state
+		.wg_tunnel_services
+		.as_ref()
+		.ok_or_else(|| ServerError::ServiceUnavailable("WireGuard tunnel not enabled".to_string()))?;
 
 	let session_id: Uuid = id
 		.parse()
@@ -400,7 +419,9 @@ pub async fn terminate_session(
 		.ok_or_else(|| ServerError::NotFound("Device not found".to_string()))?;
 
 	if device.user_id != user_id && !current_user.user.is_system_admin() {
-		return Err(ServerError::Forbidden("Not authorized to terminate this session".to_string()));
+		return Err(ServerError::Forbidden(
+			"Not authorized to terminate this session".to_string(),
+		));
 	}
 
 	services
@@ -431,9 +452,10 @@ pub async fn get_derp_map(
 	State(state): State<AppState>,
 	RequireAuth(_current_user): RequireAuth,
 ) -> Result<impl IntoResponse, ServerError> {
-	let services = state.wg_tunnel_services.as_ref().ok_or_else(|| {
-		ServerError::ServiceUnavailable("WireGuard tunnel not enabled".to_string())
-	})?;
+	let services = state
+		.wg_tunnel_services
+		.as_ref()
+		.ok_or_else(|| ServerError::ServiceUnavailable("WireGuard tunnel not enabled".to_string()))?;
 
 	let derp_map = services
 		.derp_service
@@ -563,11 +585,28 @@ pub async fn register_weaver(
 		Ok(w) => w,
 		Err(e) => {
 			let (status, error, message) = match &e {
-				WgError::WeaverAlreadyRegistered => (StatusCode::CONFLICT, "already_registered", e.to_string()),
-				WgError::IpAllocation(msg) => (StatusCode::INTERNAL_SERVER_ERROR, "ip_allocation_failed", msg.clone()),
-				_ => (StatusCode::INTERNAL_SERVER_ERROR, "internal_error", e.to_string()),
+				WgError::WeaverAlreadyRegistered => {
+					(StatusCode::CONFLICT, "already_registered", e.to_string())
+				}
+				WgError::IpAllocation(msg) => (
+					StatusCode::INTERNAL_SERVER_ERROR,
+					"ip_allocation_failed",
+					msg.clone(),
+				),
+				_ => (
+					StatusCode::INTERNAL_SERVER_ERROR,
+					"internal_error",
+					e.to_string(),
+				),
 			};
-			return (status, Json(ErrorResponse { error: error.to_string(), message })).into_response();
+			return (
+				status,
+				Json(ErrorResponse {
+					error: error.to_string(),
+					message,
+				}),
+			)
+				.into_response();
 		}
 	};
 

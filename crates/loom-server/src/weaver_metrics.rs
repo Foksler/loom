@@ -60,9 +60,8 @@ impl WeaverMetrics {
 		)
 		.expect("Failed to create weavers_cleanup_deleted_total counter");
 
-		let weavers_active =
-			Gauge::new("loom_weavers_active", "Current number of running weavers")
-				.expect("Failed to create weavers_active gauge");
+		let weavers_active = Gauge::new("loom_weavers_active", "Current number of running weavers")
+			.expect("Failed to create weavers_active gauge");
 
 		let registry = prometheus::default_registry();
 

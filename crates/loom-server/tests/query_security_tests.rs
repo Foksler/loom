@@ -8,9 +8,7 @@
 //! These tests ensure queries cannot be exploited to access unauthorized resources
 //! or cause denial of service.
 
-use loom_server::{
-	PathSanitizer, QueryValidator, RateLimiter, ResultValidator, SecurityError,
-};
+use loom_server::{PathSanitizer, QueryValidator, RateLimiter, ResultValidator, SecurityError};
 use serde_json::json;
 
 // ============================================================================

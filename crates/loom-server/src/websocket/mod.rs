@@ -66,14 +66,34 @@ pub mod config {
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum WebSocketMessage {
 	Auth(auth::AuthMessage),
-	AuthOk { user_id: String },
-	AuthError { message: String },
-	ServerQuery { id: String, kind: serde_json::Value },
-	QueryResponse { query_id: String, result: serde_json::Value },
-	LlmEvent { event_type: String, data: serde_json::Value },
-	Ping { timestamp: i64 },
-	Pong { timestamp: i64 },
-	Control { command: String, payload: Option<serde_json::Value> },
+	AuthOk {
+		user_id: String,
+	},
+	AuthError {
+		message: String,
+	},
+	ServerQuery {
+		id: String,
+		kind: serde_json::Value,
+	},
+	QueryResponse {
+		query_id: String,
+		result: serde_json::Value,
+	},
+	LlmEvent {
+		event_type: String,
+		data: serde_json::Value,
+	},
+	Ping {
+		timestamp: i64,
+	},
+	Pong {
+		timestamp: i64,
+	},
+	Control {
+		command: String,
+		payload: Option<serde_json::Value>,
+	},
 }
 
 #[cfg(test)]
@@ -85,7 +105,9 @@ mod tests {
 
 		#[test]
 		fn ping_serialization() {
-			let msg = WebSocketMessage::Ping { timestamp: 1234567890 };
+			let msg = WebSocketMessage::Ping {
+				timestamp: 1234567890,
+			};
 			let json = serde_json::to_string(&msg).unwrap();
 			assert!(json.contains("\"type\":\"ping\""));
 			assert!(json.contains("\"timestamp\":1234567890"));
@@ -129,7 +151,11 @@ mod tests {
 			assert!(json.contains("\"query_id\":\"Q-abc123\""));
 
 			let parsed: WebSocketMessage = serde_json::from_str(&json).unwrap();
-			if let WebSocketMessage::QueryResponse { query_id, result: _ } = parsed {
+			if let WebSocketMessage::QueryResponse {
+				query_id,
+				result: _,
+			} = parsed
+			{
 				assert_eq!(query_id, "Q-abc123");
 			} else {
 				panic!("Expected QueryResponse message");

@@ -9,12 +9,12 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use loom_server_audit::{AuditEventType, AuditLogBuilder};
+use loom_common_thread::{Thread, ThreadId};
 pub use loom_server_api::threads::{
 	ListParams, ListResponse, SearchParams, SearchResponse, SearchResponseHit,
 	UpdateVisibilityRequest,
 };
-use loom_common_thread::{Thread, ThreadId};
+use loom_server_audit::{AuditEventType, AuditLogBuilder};
 
 use crate::{api::AppState, error::ServerError};
 

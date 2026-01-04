@@ -27,7 +27,6 @@ use axum::{
 };
 use base64::Engine;
 use loom_server_auth::middleware::{identify_bearer_token, BearerTokenType, CurrentUser};
-use sha2::{Digest, Sha256};
 use loom_server_auth::types::{OrgId, OrgRole};
 use loom_server_scm::{
 	check_push_allowed, OwnerType, ProtectionStore, PushCheck, RepoRole, RepoStore,
@@ -35,6 +34,7 @@ use loom_server_scm::{
 };
 use loom_server_scm_mirror::{CreateExternalMirror, ExternalMirrorStore, Platform};
 use serde::Deserialize;
+use sha2::{Digest, Sha256};
 use std::{path::PathBuf, process::Stdio};
 use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
@@ -95,11 +95,7 @@ async fn extract_basic_auth_user(headers: &HeaderMap, state: &AppState) -> Optio
 				.await
 				.ok()??;
 
-			let user = state
-				.user_repo
-				.get_user_by_id(&user_id)
-				.await
-				.ok()??;
+			let user = state.user_repo.get_user_by_id(&user_id).await.ok()??;
 			Some(CurrentUser::from_access_token(user))
 		}
 		BearerTokenType::ApiKey => {
@@ -188,19 +184,13 @@ fn get_repos_base_dir() -> PathBuf {
 fn get_repo_path(repo: &Repository) -> PathBuf {
 	let id_str = repo.id.to_string();
 	let shard = &id_str[..2];
-	get_repos_base_dir()
-		.join(shard)
-		.join(&id_str)
-		.join("git")
+	get_repos_base_dir().join(shard).join(&id_str).join("git")
 }
 
 pub fn get_repo_path_by_id(repo_id: uuid::Uuid) -> PathBuf {
 	let id_str = repo_id.to_string();
 	let shard = &id_str[..2];
-	get_repos_base_dir()
-		.join(shard)
-		.join(&id_str)
-		.join("git")
+	get_repos_base_dir().join(shard).join(&id_str).join("git")
 }
 
 #[derive(Debug, Clone)]
@@ -284,7 +274,11 @@ pub async fn resolve_repo(
 	// Try looking up by username
 	if let Ok(Some(user)) = state.user_repo.get_user_by_username(owner).await {
 		if let Some(scm_repo) = scm_store
-			.get_by_owner_and_name(loom_server_scm::OwnerType::User, user.id.into_inner(), repo_name)
+			.get_by_owner_and_name(
+				loom_server_scm::OwnerType::User,
+				user.id.into_inner(),
+				repo_name,
+			)
 			.await
 			.map_err(|e| ServerError::Internal(e.to_string()))?
 		{
@@ -292,7 +286,9 @@ pub async fn resolve_repo(
 		}
 	}
 
-	Err(ServerError::NotFound(t(locale, "server.api.scm.repo_not_found").to_string()))
+	Err(ServerError::NotFound(
+		t(locale, "server.api.scm.repo_not_found").to_string(),
+	))
 }
 
 fn higher_role(a: Option<RepoRole>, b: Option<RepoRole>) -> Option<RepoRole> {
@@ -468,20 +464,12 @@ fn extract_branch_name(ref_name: &str) -> Option<&str> {
 	ref_name.strip_prefix("refs/heads/")
 }
 
-async fn check_user_is_repo_admin(
-	repo: &Repository,
-	user: &CurrentUser,
-	state: &AppState,
-) -> bool {
+async fn check_user_is_repo_admin(repo: &Repository, user: &CurrentUser, state: &AppState) -> bool {
 	let role = get_user_repo_role(user, repo, state).await;
 	role.map(|r| r == RepoRole::Admin).unwrap_or(false)
 }
 
-async fn is_force_push(
-	repo_path: &std::path::Path,
-	old_sha: &str,
-	new_sha: &str,
-) -> bool {
+async fn is_force_push(repo_path: &std::path::Path, old_sha: &str, new_sha: &str) -> bool {
 	if old_sha == ZERO_SHA || new_sha == ZERO_SHA {
 		return false;
 	}
@@ -581,13 +569,15 @@ async fn create_on_demand_mirror(
 	state: &AppState,
 	locale: &str,
 ) -> Result<Repository, ServerError> {
-	let external_mirror_store = state.external_mirror_store.as_ref().ok_or_else(|| {
-		ServerError::Internal(t(locale, "server.api.scm.not_configured").to_string())
-	})?;
+	let external_mirror_store = state
+		.external_mirror_store
+		.as_ref()
+		.ok_or_else(|| ServerError::Internal(t(locale, "server.api.scm.not_configured").to_string()))?;
 
-	let scm_store = state.scm_repo_store.as_ref().ok_or_else(|| {
-		ServerError::Internal(t(locale, "server.api.scm.not_configured").to_string())
-	})?;
+	let scm_store = state
+		.scm_repo_store
+		.as_ref()
+		.ok_or_else(|| ServerError::Internal(t(locale, "server.api.scm.not_configured").to_string()))?;
 
 	if let Ok(Some(existing)) = external_mirror_store
 		.get_by_external(
@@ -706,7 +696,9 @@ async fn create_on_demand_mirror(
 
 	if let Some(store) = &state.external_mirror_store {
 		if let Ok(Some(mirror)) = store.get_by_repo_id(repo.id).await {
-			let _ = store.update_last_synced(mirror.id, chrono::Utc::now()).await;
+			let _ = store
+				.update_last_synced(mirror.id, chrono::Utc::now())
+				.await;
 		}
 	}
 
@@ -739,9 +731,8 @@ pub async fn info_refs(
 		.and_then(|u| u.user.locale.as_deref())
 		.unwrap_or(&state.default_locale);
 
-	let service = GitService::from_str(&params.service).ok_or_else(|| {
-		ServerError::BadRequest(format!("Invalid service: {}", params.service))
-	})?;
+	let service = GitService::from_str(&params.service)
+		.ok_or_else(|| ServerError::BadRequest(format!("Invalid service: {}", params.service)))?;
 
 	let scm_repo = match resolve_repo(&owner, &repo, &state, locale).await {
 		Ok(repo) => repo,
@@ -771,7 +762,9 @@ pub async fn info_refs(
 	let repo_path = get_repo_path(&scm_repo);
 
 	if !repo_path.exists() {
-		return Err(ServerError::NotFound(t(locale, "server.api.scm.repo_not_found").to_string()));
+		return Err(ServerError::NotFound(
+			t(locale, "server.api.scm.repo_not_found").to_string(),
+		));
 	}
 
 	match service {
@@ -802,15 +795,17 @@ pub async fn info_refs(
 	response_body.extend(pkt_flush());
 	response_body.extend(git_output);
 
-	Ok((
-		StatusCode::OK,
-		[
-			(header::CONTENT_TYPE, service.content_type()),
-			(header::CACHE_CONTROL, "no-cache"),
-		],
-		response_body,
+	Ok(
+		(
+			StatusCode::OK,
+			[
+				(header::CONTENT_TYPE, service.content_type()),
+				(header::CACHE_CONTROL, "no-cache"),
+			],
+			response_body,
+		)
+			.into_response(),
 	)
-		.into_response())
 }
 
 #[instrument(skip(state, body, headers), fields(owner = %owner, repo = %repo))]
@@ -857,7 +852,9 @@ pub async fn upload_pack(
 	let repo_path = get_repo_path(&scm_repo);
 
 	if !repo_path.exists() {
-		return Err(ServerError::NotFound(t(locale, "server.api.scm.repo_not_found").to_string()));
+		return Err(ServerError::NotFound(
+			t(locale, "server.api.scm.repo_not_found").to_string(),
+		));
 	}
 
 	if let Err(e) = check_read_access(&scm_repo, effective_user.as_ref(), &state, locale).await {
@@ -871,18 +868,20 @@ pub async fn upload_pack(
 
 	let output = run_git_command(&repo_path, GitService::UploadPack, &body, false).await?;
 
-	Ok((
-		StatusCode::OK,
-		[
-			(
-				header::CONTENT_TYPE,
-				GitService::UploadPack.result_content_type(),
-			),
-			(header::CACHE_CONTROL, "no-cache"),
-		],
-		output,
+	Ok(
+		(
+			StatusCode::OK,
+			[
+				(
+					header::CONTENT_TYPE,
+					GitService::UploadPack.result_content_type(),
+				),
+				(header::CACHE_CONTROL, "no-cache"),
+			],
+			output,
+		)
+			.into_response(),
 	)
-		.into_response())
 }
 
 #[instrument(skip(state, body, headers), fields(owner = %owner, repo = %repo))]
@@ -918,7 +917,9 @@ pub async fn receive_pack(
 	let repo_path = get_repo_path(&scm_repo);
 
 	if !repo_path.exists() {
-		return Err(ServerError::NotFound(t(locale, "server.api.scm.repo_not_found").to_string()));
+		return Err(ServerError::NotFound(
+			t(locale, "server.api.scm.repo_not_found").to_string(),
+		));
 	}
 
 	if let Err(e) = check_write_access(&scm_repo, effective_user.as_ref(), &state, locale).await {
@@ -930,14 +931,24 @@ pub async fn receive_pack(
 
 	let user = match effective_user.as_ref() {
 		Some(u) => u,
-		None => return Ok(git_unauthorized_response(&t(locale, "server.api.scm.git.auth_required"))),
+		None => {
+			return Ok(git_unauthorized_response(&t(
+				locale,
+				"server.api.scm.git.auth_required",
+			)))
+		}
 	};
 
 	if let Some(protection_store) = state.scm_protection_store.as_ref() {
 		let rules = protection_store
 			.list_by_repo(scm_repo.id)
 			.await
-			.map_err(|e| ServerError::Internal(format!("{}: {e}", t(locale, "server.api.scm.protection.failed_to_load"))))?;
+			.map_err(|e| {
+				ServerError::Internal(format!(
+					"{}: {e}",
+					t(locale, "server.api.scm.protection.failed_to_load")
+				))
+			})?;
 
 		if !rules.is_empty() {
 			let user_is_admin = check_user_is_repo_admin(&scm_repo, user, &state).await;
@@ -972,18 +983,20 @@ pub async fn receive_pack(
 
 	let output = run_git_command(&repo_path, GitService::ReceivePack, &body, false).await?;
 
-	Ok((
-		StatusCode::OK,
-		[
-			(
-				header::CONTENT_TYPE,
-				GitService::ReceivePack.result_content_type(),
-			),
-			(header::CACHE_CONTROL, "no-cache"),
-		],
-		output,
+	Ok(
+		(
+			StatusCode::OK,
+			[
+				(
+					header::CONTENT_TYPE,
+					GitService::ReceivePack.result_content_type(),
+				),
+				(header::CACHE_CONTROL, "no-cache"),
+			],
+			output,
+		)
+			.into_response(),
 	)
-		.into_response())
 }
 
 fn parse_mirror_git_path(path: &str) -> Option<(String, String)> {
@@ -1014,14 +1027,12 @@ async fn git_wildcard_handler(
 	headers: HeaderMap,
 	body: Bytes,
 ) -> Result<Response, ServerError> {
-	let (owner, repo) = parse_mirror_git_path(&path).ok_or_else(|| {
-		ServerError::BadRequest("Invalid git path".to_string())
-	})?;
+	let (owner, repo) = parse_mirror_git_path(&path)
+		.ok_or_else(|| ServerError::BadRequest("Invalid git path".to_string()))?;
 
 	if path.ends_with("/info/refs") {
-		let query = query.ok_or_else(|| {
-			ServerError::BadRequest("Missing service parameter".to_string())
-		})?;
+		let query =
+			query.ok_or_else(|| ServerError::BadRequest("Missing service parameter".to_string()))?;
 		info_refs(Path((owner, repo)), query, auth, state, headers).await
 	} else if path.ends_with("/git-upload-pack") {
 		upload_pack(Path((owner, repo)), auth, state, headers, body).await
@@ -1040,7 +1051,15 @@ pub fn router() -> crate::OptionalAuthRouter {
 		.route(
 			"/git/mirrors/{*path}",
 			get(|path, query, auth, state, headers, body| {
-				git_wildcard_handler(path, axum::http::Method::GET, Some(query), auth, state, headers, body)
+				git_wildcard_handler(
+					path,
+					axum::http::Method::GET,
+					Some(query),
+					auth,
+					state,
+					headers,
+					body,
+				)
 			})
 			.post(|path, auth, state, headers, body: Bytes| async move {
 				git_wildcard_handler(
@@ -1142,7 +1161,10 @@ mod tests {
 	#[test]
 	fn test_extract_branch_name() {
 		assert_eq!(extract_branch_name("refs/heads/main"), Some("main"));
-		assert_eq!(extract_branch_name("refs/heads/feature/test"), Some("feature/test"));
+		assert_eq!(
+			extract_branch_name("refs/heads/feature/test"),
+			Some("feature/test")
+		);
 		assert_eq!(extract_branch_name("refs/tags/v1.0"), None);
 		assert_eq!(extract_branch_name("main"), None);
 	}
@@ -1247,7 +1269,9 @@ mod tests {
 		let id = uuid::Uuid::parse_str("12345678-1234-1234-1234-123456789012").unwrap();
 		let path = get_repo_path_by_id(id);
 		assert!(path.to_string_lossy().contains("12"));
-		assert!(path.to_string_lossy().contains("12345678-1234-1234-1234-123456789012"));
+		assert!(path
+			.to_string_lossy()
+			.contains("12345678-1234-1234-1234-123456789012"));
 		assert!(path.to_string_lossy().ends_with("git"));
 	}
 

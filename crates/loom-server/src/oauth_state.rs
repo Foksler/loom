@@ -224,7 +224,11 @@ impl OAuthStateStore {
 		states.retain(|_, entry| entry.created_at.elapsed() < expiry);
 		let removed = before - states.len();
 		if removed > 0 {
-			tracing::debug!(removed = removed, remaining = states.len(), "Cleaned up expired OAuth states");
+			tracing::debug!(
+				removed = removed,
+				remaining = states.len(),
+				"Cleaned up expired OAuth states"
+			);
 		}
 		removed
 	}
@@ -317,7 +321,12 @@ mod tests {
 		let nonce = generate_nonce();
 
 		store
-			.store(state.clone(), "google".to_string(), Some(nonce.clone()), None)
+			.store(
+				state.clone(),
+				"google".to_string(),
+				Some(nonce.clone()),
+				None,
+			)
 			.await;
 
 		let entry = store.validate_and_consume(&state, "google").await;
@@ -331,7 +340,12 @@ mod tests {
 		let state = generate_state();
 
 		store
-			.store(state.clone(), "github".to_string(), None, Some("/dashboard".to_string()))
+			.store(
+				state.clone(),
+				"github".to_string(),
+				None,
+				Some("/dashboard".to_string()),
+			)
 			.await;
 
 		let entry = store.validate_and_consume(&state, "github").await;
@@ -343,8 +357,12 @@ mod tests {
 	async fn test_cleanup_expired() {
 		let store = OAuthStateStore::new();
 
-		store.store("state1".to_string(), "github".to_string(), None, None).await;
-		store.store("state2".to_string(), "google".to_string(), None, None).await;
+		store
+			.store("state1".to_string(), "github".to_string(), None, None)
+			.await;
+		store
+			.store("state2".to_string(), "google".to_string(), None, None)
+			.await;
 
 		assert_eq!(store.len().await, 2);
 
@@ -360,7 +378,9 @@ mod tests {
 		assert!(store.is_empty().await);
 		assert_eq!(store.len().await, 0);
 
-		store.store("state1".to_string(), "github".to_string(), None, None).await;
+		store
+			.store("state1".to_string(), "github".to_string(), None, None)
+			.await;
 
 		assert!(!store.is_empty().await);
 		assert_eq!(store.len().await, 1);
@@ -378,7 +398,9 @@ mod tests {
 		let store = OAuthStateStore::new();
 		let state = generate_state();
 
-		store.store(state.clone(), "github".to_string(), None, None).await;
+		store
+			.store(state.clone(), "github".to_string(), None, None)
+			.await;
 
 		let entry1 = store.validate_and_consume(&state, "github").await;
 		assert!(entry1.is_some());

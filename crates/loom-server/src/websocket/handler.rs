@@ -18,17 +18,13 @@ use axum::{
 };
 use chrono::Utc;
 use futures::{SinkExt, StreamExt};
-use loom_server_auth::middleware::{identify_bearer_token, BearerTokenType, CurrentUser};
-use sha2::{Digest, Sha256};
+use loom_server_auth::{
+	hash_token,
+	middleware::{identify_bearer_token, BearerTokenType, CurrentUser},
+};
 use std::sync::Arc;
 use tokio::sync::{mpsc, RwLock};
 use tracing::{debug, error, info, warn};
-
-fn hash_token(token: &str) -> String {
-	let mut hasher = Sha256::new();
-	hasher.update(token.as_bytes());
-	hex::encode(hasher.finalize())
-}
 
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct WsQueryParams {
@@ -556,7 +552,10 @@ async fn validate_ws_token(
 ) -> Option<CurrentUser> {
 	let token_hash = hash_token(token);
 
-	let user_id = match session_repo.validate_and_consume_ws_token(&token_hash).await {
+	let user_id = match session_repo
+		.validate_and_consume_ws_token(&token_hash)
+		.await
+	{
 		Ok(Some(uid)) => uid,
 		Ok(None) => {
 			debug!("WS token not found, expired, or already used");

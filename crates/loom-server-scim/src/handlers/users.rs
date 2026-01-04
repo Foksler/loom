@@ -249,6 +249,8 @@ pub async fn delete_user(
 	State(state): State<ScimState>,
 	Path(id): Path<String>,
 ) -> Result<StatusCode, ScimApiError> {
+	let user_id = parse_user_id(&id)?;
+
 	let now = Utc::now().to_rfc3339();
 	sqlx::query("UPDATE users SET deleted_at = ?, updated_at = datetime('now') WHERE id = ?")
 		.bind(&now)
@@ -256,12 +258,11 @@ pub async fn delete_user(
 		.execute(&state.pool)
 		.await?;
 
-	let org_id_str = state.org_id.to_string();
-	sqlx::query("DELETE FROM org_memberships WHERE user_id = ? AND org_id = ?")
-		.bind(&id)
-		.bind(&org_id_str)
-		.execute(&state.pool)
-		.await?;
+	state
+		.provisioning
+		.deprovision_from_org(&user_id, &state.org_id)
+		.await
+		.map_err(|e| ScimApiError::Internal(e.to_string()))?;
 
 	info!(user_id = %id, "SCIM: deprovisioned user");
 	Ok(StatusCode::NO_CONTENT)

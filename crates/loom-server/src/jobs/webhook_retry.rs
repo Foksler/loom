@@ -145,9 +145,8 @@ impl<S: WebhookStore + 'static> Job for WebhookRetryJob<S> {
 					} else {
 						let backoff_secs =
 							RETRY_BACKOFF_BASE_SECS * (2_i64.pow(delivery_record.attempts as u32 - 1));
-						delivery_record.next_retry_at = Some(
-							Utc::now() + chrono::Duration::seconds(backoff_secs),
-						);
+						delivery_record.next_retry_at =
+							Some(Utc::now() + chrono::Duration::seconds(backoff_secs));
 						retrying += 1;
 						tracing::info!(
 							delivery_id = %delivery_record.id,
@@ -175,9 +174,8 @@ impl<S: WebhookStore + 'static> Job for WebhookRetryJob<S> {
 					} else {
 						let backoff_secs =
 							RETRY_BACKOFF_BASE_SECS * (2_i64.pow(delivery_record.attempts as u32 - 1));
-						delivery_record.next_retry_at = Some(
-							Utc::now() + chrono::Duration::seconds(backoff_secs),
-						);
+						delivery_record.next_retry_at =
+							Some(Utc::now() + chrono::Duration::seconds(backoff_secs));
 						retrying += 1;
 						tracing::info!(
 							delivery_id = %delivery_record.id,

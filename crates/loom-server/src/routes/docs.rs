@@ -77,7 +77,10 @@ pub async fn search_handler(
 			return (
 				StatusCode::BAD_REQUEST,
 				Json(SearchError {
-					error: format!("Invalid diataxis value '{}'. Must be one of: {:?}", d, valid),
+					error: format!(
+						"Invalid diataxis value '{}'. Must be one of: {:?}",
+						d, valid
+					),
 				}),
 			)
 				.into_response();
@@ -92,7 +95,12 @@ pub async fn search_handler(
 	};
 
 	match search_docs(pool, &params).await {
-		Ok(hits) => Json(SearchResponse { hits, limit, offset }).into_response(),
+		Ok(hits) => Json(SearchResponse {
+			hits,
+			limit,
+			offset,
+		})
+		.into_response(),
 		Err(e) => {
 			tracing::error!("Docs search error: {}", e);
 			(

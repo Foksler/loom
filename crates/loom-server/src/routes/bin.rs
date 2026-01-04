@@ -3,11 +3,7 @@
 
 //! Binary directory listing HTTP handler.
 
-use axum::{
-	extract::Request,
-	http::StatusCode,
-	response::IntoResponse,
-};
+use axum::{extract::Request, http::StatusCode, response::IntoResponse};
 
 /// Handler to list files in the /bin directory
 /// Only shows the index for requests to `/bin/` (trailing slash).

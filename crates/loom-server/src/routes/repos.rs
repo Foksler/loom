@@ -19,13 +19,20 @@ use axum::{
 };
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::types::{OrgId, OrgRole, UserId};
-use loom_server_scm::{validate_repo_name, GitRepository, OwnerType, RepoRole, RepoStore, RepoTeamAccessStore, Repository, Visibility};
+use loom_server_scm::{
+	validate_repo_name, GitRepository, OwnerType, RepoRole, RepoStore, RepoTeamAccessStore,
+	Repository, Visibility,
+};
 use std::path::PathBuf;
 use uuid::Uuid;
 
 pub use loom_server_api::repos::*;
 
-use crate::{api::AppState, auth_middleware::RequireAuth, i18n::{resolve_user_locale, t}};
+use crate::{
+	api::AppState,
+	auth_middleware::RequireAuth,
+	i18n::{resolve_user_locale, t},
+};
 
 fn get_repos_base_dir() -> PathBuf {
 	std::env::var("LOOM_SERVER_DATA_DIR")
@@ -41,7 +48,12 @@ fn get_repo_disk_path(repo_id: Uuid) -> PathBuf {
 }
 
 fn build_clone_url(base_url: &str, owner_name: &str, repo_name: &str) -> String {
-	format!("{}/git/{}/{}.git", base_url.trim_end_matches('/'), owner_name, repo_name)
+	format!(
+		"{}/git/{}/{}.git",
+		base_url.trim_end_matches('/'),
+		owner_name,
+		repo_name
+	)
 }
 
 fn repo_to_response(repo: Repository, clone_url: String) -> RepoResponse {
@@ -119,7 +131,10 @@ pub async fn create_repo(
 				)
 					.into_response();
 			}
-			owner_name = current_user.user.username.clone()
+			owner_name = current_user
+				.user
+				.username
+				.clone()
 				.unwrap_or_else(|| current_user.user.display_name.clone());
 		}
 		OwnerType::Org => {
@@ -353,7 +368,10 @@ pub async fn get_repo(
 			OwnerType::Org => {
 				let org_id = OrgId::new(repo.owner_id);
 				matches!(
-					state.org_repo.get_membership(&org_id, &current_user.user.id).await,
+					state
+						.org_repo
+						.get_membership(&org_id, &current_user.user.id)
+						.await,
 					Ok(Some(_))
 				)
 			}
@@ -373,13 +391,21 @@ pub async fn get_repo(
 
 	let owner_name = match repo.owner_type {
 		OwnerType::User => {
-			match state.user_repo.get_user_by_id(&UserId::new(repo.owner_id)).await {
+			match state
+				.user_repo
+				.get_user_by_id(&UserId::new(repo.owner_id))
+				.await
+			{
 				Ok(Some(u)) => u.username.unwrap_or(u.display_name),
 				_ => "unknown".to_string(),
 			}
 		}
 		OwnerType::Org => {
-			match state.org_repo.get_org_by_id(&OrgId::new(repo.owner_id)).await {
+			match state
+				.org_repo
+				.get_org_by_id(&OrgId::new(repo.owner_id))
+				.await
+			{
 				Ok(Some(o)) => o.slug,
 				_ => "unknown".to_string(),
 			}
@@ -460,7 +486,11 @@ pub async fn update_repo(
 		OwnerType::User => repo.owner_id == current_user.user.id.into_inner(),
 		OwnerType::Org => {
 			let org_id = OrgId::new(repo.owner_id);
-			match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+			match state
+				.org_repo
+				.get_membership(&org_id, &current_user.user.id)
+				.await
+			{
 				Ok(Some(m)) => m.role == OrgRole::Owner || m.role == OrgRole::Admin,
 				_ => false,
 			}
@@ -532,13 +562,21 @@ pub async fn update_repo(
 
 	let owner_name = match updated_repo.owner_type {
 		OwnerType::User => {
-			match state.user_repo.get_user_by_id(&UserId::new(updated_repo.owner_id)).await {
+			match state
+				.user_repo
+				.get_user_by_id(&UserId::new(updated_repo.owner_id))
+				.await
+			{
 				Ok(Some(u)) => u.username.unwrap_or(u.display_name),
 				_ => "unknown".to_string(),
 			}
 		}
 		OwnerType::Org => {
-			match state.org_repo.get_org_by_id(&OrgId::new(updated_repo.owner_id)).await {
+			match state
+				.org_repo
+				.get_org_by_id(&OrgId::new(updated_repo.owner_id))
+				.await
+			{
 				Ok(Some(o)) => o.slug,
 				_ => "unknown".to_string(),
 			}
@@ -566,7 +604,11 @@ pub async fn update_repo(
 	let clone_url = build_clone_url(&state.base_url, &owner_name, &updated_repo.name);
 	let _ = locale;
 
-	(StatusCode::OK, Json(repo_to_response(updated_repo, clone_url))).into_response()
+	(
+		StatusCode::OK,
+		Json(repo_to_response(updated_repo, clone_url)),
+	)
+		.into_response()
 }
 
 #[utoipa::path(
@@ -634,7 +676,11 @@ pub async fn delete_repo(
 		OwnerType::User => repo.owner_id == current_user.user.id.into_inner(),
 		OwnerType::Org => {
 			let org_id = OrgId::new(repo.owner_id);
-			match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+			match state
+				.org_repo
+				.get_membership(&org_id, &current_user.user.id)
+				.await
+			{
 				Ok(Some(m)) => m.role == OrgRole::Owner || m.role == OrgRole::Admin,
 				_ => false,
 			}
@@ -761,7 +807,10 @@ pub async fn list_user_repos(
 	};
 
 	let is_owner = id == current_user.user.id.into_inner();
-	let owner_name = target_user.username.as_ref().unwrap_or(&target_user.display_name);
+	let owner_name = target_user
+		.username
+		.as_ref()
+		.unwrap_or(&target_user.display_name);
 	let visible_repos: Vec<_> = repos
 		.into_iter()
 		.filter(|r| r.visibility == Visibility::Public || is_owner)
@@ -771,7 +820,13 @@ pub async fn list_user_repos(
 		})
 		.collect();
 
-	(StatusCode::OK, Json(ListReposResponse { repos: visible_repos })).into_response()
+	(
+		StatusCode::OK,
+		Json(ListReposResponse {
+			repos: visible_repos,
+		}),
+	)
+		.into_response()
 }
 
 #[utoipa::path(
@@ -836,7 +891,10 @@ pub async fn list_org_repos(
 	};
 
 	let is_member = matches!(
-		state.org_repo.get_membership(&org_id, &current_user.user.id).await,
+		state
+			.org_repo
+			.get_membership(&org_id, &current_user.user.id)
+			.await,
 		Ok(Some(_))
 	);
 
@@ -864,7 +922,13 @@ pub async fn list_org_repos(
 		})
 		.collect();
 
-	(StatusCode::OK, Json(ListReposResponse { repos: visible_repos })).into_response()
+	(
+		StatusCode::OK,
+		Json(ListReposResponse {
+			repos: visible_repos,
+		}),
+	)
+		.into_response()
 }
 
 async fn check_repo_admin_access(
@@ -877,7 +941,11 @@ async fn check_repo_admin_access(
 		OwnerType::User => repo.owner_id == current_user.user.id.into_inner(),
 		OwnerType::Org => {
 			let org_id = OrgId::new(repo.owner_id);
-			match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+			match state
+				.org_repo
+				.get_membership(&org_id, &current_user.user.id)
+				.await
+			{
 				Ok(Some(m)) => m.role == OrgRole::Owner || m.role == OrgRole::Admin,
 				_ => false,
 			}
@@ -886,7 +954,10 @@ async fn check_repo_admin_access(
 
 	if !is_admin {
 		if let Some(store) = &state.scm_team_access_store {
-			if let Ok(Some(role)) = store.get_user_role_via_teams(current_user.user.id.into_inner(), repo.id).await {
+			if let Ok(Some(role)) = store
+				.get_user_role_via_teams(current_user.user.id.into_inner(), repo.id)
+				.await
+			{
 				if role == RepoRole::Admin {
 					return Ok(());
 				}
@@ -1090,7 +1161,10 @@ pub async fn grant_repo_team_access(
 	}
 
 	let role: RepoRole = payload.role.into();
-	match team_access_store.grant_team_access(id, payload.team_id, role).await {
+	match team_access_store
+		.grant_team_access(id, payload.team_id, role)
+		.await
+	{
 		Ok(()) => {
 			tracing::info!(
 				repo_id = %id,

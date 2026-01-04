@@ -16,17 +16,17 @@ use axum::{
 	Json,
 };
 use chrono::Utc;
+pub use loom_server_api::orgs::{
+	AddOrgMemberRequest, CreateOrgRequest, JoinRequestResponse, ListJoinRequestsResponse,
+	ListOrgMembersResponse, ListOrgsResponse, OrgErrorResponse, OrgMemberResponse, OrgResponse,
+	OrgSuccessResponse, OrgVisibilityApi, UpdateOrgMemberRoleRequest, UpdateOrgRequest,
+};
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::{
 	is_username_reserved,
 	org::{OrgVisibility, Organization},
 	types::{OrgId, OrgRole, UserId},
 	Action, Visibility,
-};
-pub use loom_server_api::orgs::{
-	AddOrgMemberRequest, CreateOrgRequest, JoinRequestResponse, ListJoinRequestsResponse,
-	ListOrgMembersResponse, ListOrgsResponse, OrgErrorResponse, OrgMemberResponse, OrgResponse,
-	OrgSuccessResponse, OrgVisibilityApi, UpdateOrgMemberRoleRequest, UpdateOrgRequest,
 };
 use regex::Regex;
 use uuid::Uuid;
@@ -149,7 +149,13 @@ pub async fn list_orgs(
 		org_responses.push(OrgResponse::from_org(org, member_count));
 	}
 
-	(StatusCode::OK, Json(ListOrgsResponse { orgs: org_responses })).into_response()
+	(
+		StatusCode::OK,
+		Json(ListOrgsResponse {
+			orgs: org_responses,
+		}),
+	)
+		.into_response()
 }
 
 #[utoipa::path(
@@ -292,7 +298,11 @@ pub async fn create_org(
 			.build(),
 	);
 
-	(StatusCode::CREATED, Json(OrgResponse::from_org(org, Some(1)))).into_response()
+	(
+		StatusCode::CREATED,
+		Json(OrgResponse::from_org(org, Some(1))),
+	)
+		.into_response()
 }
 
 #[utoipa::path(
@@ -380,7 +390,11 @@ pub async fn get_org(
 		Err(_) => None,
 	};
 
-	(StatusCode::OK, Json(OrgResponse::from_org(org, member_count))).into_response()
+	(
+		StatusCode::OK,
+		Json(OrgResponse::from_org(org, member_count)),
+	)
+		.into_response()
 }
 
 #[utoipa::path(
@@ -558,7 +572,11 @@ pub async fn update_org(
 		Err(_) => None,
 	};
 
-	(StatusCode::OK, Json(OrgResponse::from_org(org, member_count))).into_response()
+	(
+		StatusCode::OK,
+		Json(OrgResponse::from_org(org, member_count)),
+	)
+		.into_response()
 }
 
 #[utoipa::path(
@@ -784,14 +802,24 @@ pub async fn list_org_members(
 		.map(|(membership, user)| OrgMemberResponse {
 			user_id: user.id.to_string(),
 			display_name: user.display_name,
-			email: if user.email_visible { user.primary_email } else { None },
+			email: if user.email_visible {
+				user.primary_email
+			} else {
+				None
+			},
 			avatar_url: user.avatar_url,
 			role: membership.role.to_string(),
 			joined_at: membership.created_at,
 		})
 		.collect();
 
-	(StatusCode::OK, Json(ListOrgMembersResponse { members: member_responses })).into_response()
+	(
+		StatusCode::OK,
+		Json(ListOrgMembersResponse {
+			members: member_responses,
+		}),
+	)
+		.into_response()
 }
 
 #[utoipa::path(
@@ -915,7 +943,11 @@ pub async fn add_org_member(
 	};
 
 	let target_user_id = target_user.id;
-	if let Ok(Some(_)) = state.org_repo.get_membership(&org_id, &target_user.id).await {
+	if let Ok(Some(_)) = state
+		.org_repo
+		.get_membership(&org_id, &target_user.id)
+		.await
+	{
 		return (
 			StatusCode::CONFLICT,
 			Json(OrgErrorResponse {
@@ -926,7 +958,11 @@ pub async fn add_org_member(
 			.into_response();
 	}
 
-	if let Err(e) = state.org_repo.add_member(&org_id, &target_user.id, role).await {
+	if let Err(e) = state
+		.org_repo
+		.add_member(&org_id, &target_user.id, role)
+		.await
+	{
 		tracing::error!(error = %e, %org_id, %target_user_id, "Failed to add member");
 		return (
 			StatusCode::INTERNAL_SERVER_ERROR,
@@ -1051,7 +1087,11 @@ pub async fn remove_org_member(
 		}
 	}
 
-	let membership = match state.org_repo.get_membership(&org_id, &target_user_id).await {
+	let membership = match state
+		.org_repo
+		.get_membership(&org_id, &target_user_id)
+		.await
+	{
 		Ok(Some(m)) => m,
 		Ok(None) => {
 			return (
@@ -1227,7 +1267,11 @@ pub async fn create_join_request(
 			.into_response();
 	}
 
-	match state.org_repo.has_pending_join_request(&org_id, user_id).await {
+	match state
+		.org_repo
+		.has_pending_join_request(&org_id, user_id)
+		.await
+	{
 		Ok(true) => {
 			return (
 				StatusCode::CONFLICT,
@@ -1348,7 +1392,11 @@ pub async fn list_join_requests(
 		return e.into_response();
 	}
 
-	let requests = match state.org_repo.list_pending_join_requests_with_users(&org_id).await {
+	let requests = match state
+		.org_repo
+		.list_pending_join_requests_with_users(&org_id)
+		.await
+	{
 		Ok(requests) => requests,
 		Err(e) => {
 			tracing::error!(error = %e, %org_id, "Failed to list join requests");
@@ -1369,12 +1417,22 @@ pub async fn list_join_requests(
 			id: request.user_id.to_string(),
 			user_id: user.id.to_string(),
 			display_name: user.display_name,
-			email: if user.email_visible { user.primary_email } else { None },
+			email: if user.email_visible {
+				user.primary_email
+			} else {
+				None
+			},
 			created_at: request.created_at,
 		})
 		.collect();
 
-	(StatusCode::OK, Json(ListJoinRequestsResponse { requests: request_responses })).into_response()
+	(
+		StatusCode::OK,
+		Json(ListJoinRequestsResponse {
+			requests: request_responses,
+		}),
+	)
+		.into_response()
 }
 
 #[utoipa::path(
@@ -1681,7 +1739,11 @@ pub async fn restore_org(
 		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
 	};
 
-	let org = match state.org_repo.get_org_by_id_including_deleted(&org_id).await {
+	let org = match state
+		.org_repo
+		.get_org_by_id_including_deleted(&org_id)
+		.await
+	{
 		Ok(Some(org)) => org,
 		Ok(None) => {
 			return (
@@ -1721,8 +1783,7 @@ pub async fn restore_org(
 	};
 
 	let grace_period_days = 90;
-	let grace_period_expired =
-		Utc::now() > deleted_at + chrono::Duration::days(grace_period_days);
+	let grace_period_expired = Utc::now() > deleted_at + chrono::Duration::days(grace_period_days);
 	if grace_period_expired {
 		return (
 			StatusCode::GONE,
@@ -1734,7 +1795,11 @@ pub async fn restore_org(
 			.into_response();
 	}
 
-	let membership = match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	let membership = match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(m)) => m,
 		Ok(None) => {
 			return (
@@ -1872,31 +1937,34 @@ pub async fn update_org_member_role(
 		}
 	};
 
-	let caller_membership =
-		match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
-			Ok(Some(m)) => m,
-			Ok(None) => {
-				return (
-					StatusCode::FORBIDDEN,
-					Json(OrgErrorResponse {
-						error: "forbidden".to_string(),
-						message: t(locale, "server.api.org.not_a_member").to_string(),
-					}),
-				)
-					.into_response();
-			}
-			Err(e) => {
-				tracing::error!(error = %e, %org_id, "Failed to get caller membership");
-				return (
-					StatusCode::INTERNAL_SERVER_ERROR,
-					Json(OrgErrorResponse {
-						error: "internal_error".to_string(),
-						message: t(locale, "server.api.error.internal").to_string(),
-					}),
-				)
-					.into_response();
-			}
-		};
+	let caller_membership = match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
+		Ok(Some(m)) => m,
+		Ok(None) => {
+			return (
+				StatusCode::FORBIDDEN,
+				Json(OrgErrorResponse {
+					error: "forbidden".to_string(),
+					message: t(locale, "server.api.org.not_a_member").to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to get caller membership");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(OrgErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
 
 	if caller_membership.role != OrgRole::Owner {
 		return (
@@ -1909,7 +1977,11 @@ pub async fn update_org_member_role(
 			.into_response();
 	}
 
-	let target_membership = match state.org_repo.get_membership(&org_id, &target_user_id).await {
+	let target_membership = match state
+		.org_repo
+		.get_membership(&org_id, &target_user_id)
+		.await
+	{
 		Ok(Some(m)) => m,
 		Ok(None) => {
 			return (

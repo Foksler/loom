@@ -54,7 +54,10 @@ impl AuditQueryRepository {
 
 		let where_clause = conditions.join(" AND ");
 
-		let count_sql = format!("SELECT COUNT(*) as cnt FROM audit_logs WHERE {}", where_clause);
+		let count_sql = format!(
+			"SELECT COUNT(*) as cnt FROM audit_logs WHERE {}",
+			where_clause
+		);
 		let mut count_query = sqlx::query(&count_sql);
 		if let Some(v) = event_type {
 			count_query = count_query.bind(v);

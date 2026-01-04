@@ -68,7 +68,8 @@ impl AuthedRouter {
 	}
 
 	pub fn build(self, state: AppState) -> Router<AppState> {
-		self.0
+		self
+			.0
 			.layer(from_fn_with_state(state.clone(), require_auth_layer))
 			.layer(from_fn_with_state(state, auth_layer))
 	}

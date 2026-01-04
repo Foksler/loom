@@ -131,7 +131,10 @@ async fn different_users_get_different_tokens() {
 	let token1 = json1["token"].as_str().unwrap();
 	let token2 = json2["token"].as_str().unwrap();
 
-	assert_ne!(token1, token2, "Different users should get different tokens");
+	assert_ne!(
+		token1, token2,
+		"Different users should get different tokens"
+	);
 }
 
 #[tokio::test]

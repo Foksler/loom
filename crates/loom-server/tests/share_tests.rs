@@ -8,16 +8,16 @@
 //! - Users cannot revoke share links for threads they don't own
 //! - Thread owners can manage their own share links
 
-use loom_server::api::{create_app_state, create_router};
-use loom_server::ServerConfig;
-use loom_server::db::ThreadRepository;
 use axum::{
 	body::Body,
 	http::{Request, StatusCode},
 };
 use chrono::Utc;
-use loom_server_auth::{generate_session_token, Session, SessionType, User, UserId};
 use loom_common_thread::Thread;
+use loom_server::api::{create_app_state, create_router};
+use loom_server::db::ThreadRepository;
+use loom_server::ServerConfig;
+use loom_server_auth::{generate_session_token, Session, SessionType, User, UserId};
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use tempfile::tempdir;
@@ -80,19 +80,20 @@ async fn create_test_user_with_session(
 	let token = generate_session_token();
 	let token_hash = hash_token(&token);
 
-	session_repo.create_session(&session, &token_hash).await.unwrap();
+	session_repo
+		.create_session(&session, &token_hash)
+		.await
+		.unwrap();
 
 	(user, token)
 }
 
 /// Creates a test thread owned by the specified user.
-async fn create_test_thread_with_owner(
-	repo: &ThreadRepository,
-	owner_user_id: &UserId,
-) -> Thread {
+async fn create_test_thread_with_owner(repo: &ThreadRepository, owner_user_id: &UserId) -> Thread {
 	let thread = Thread::new();
 	repo.upsert(&thread, None).await.unwrap();
-	repo.set_owner_user_id(thread.id.as_str(), &owner_user_id.to_string())
+	repo
+		.set_owner_user_id(thread.id.as_str(), &owner_user_id.to_string())
 		.await
 		.unwrap();
 	thread
@@ -107,10 +108,12 @@ async fn test_cannot_create_share_link_for_others_thread() {
 	let (app, repo, user_repo, session_repo, _dir) = setup_test_app().await;
 
 	// Create User A (thread owner)
-	let (user_a, _token_a) = create_test_user_with_session(&user_repo, &session_repo, "user-a@example.com").await;
+	let (user_a, _token_a) =
+		create_test_user_with_session(&user_repo, &session_repo, "user-a@example.com").await;
 
 	// Create User B (attacker)
-	let (_user_b, token_b) = create_test_user_with_session(&user_repo, &session_repo, "user-b@example.com").await;
+	let (_user_b, token_b) =
+		create_test_user_with_session(&user_repo, &session_repo, "user-b@example.com").await;
 
 	// Create a thread owned by User A
 	let thread = create_test_thread_with_owner(&repo, &user_a.id).await;
@@ -148,10 +151,12 @@ async fn test_cannot_revoke_share_link_for_others_thread() {
 	let (app, repo, user_repo, session_repo, _dir) = setup_test_app().await;
 
 	// Create User A (thread owner)
-	let (user_a, token_a) = create_test_user_with_session(&user_repo, &session_repo, "user-a@example.com").await;
+	let (user_a, token_a) =
+		create_test_user_with_session(&user_repo, &session_repo, "user-a@example.com").await;
 
 	// Create User B (attacker)
-	let (_user_b, token_b) = create_test_user_with_session(&user_repo, &session_repo, "user-b@example.com").await;
+	let (_user_b, token_b) =
+		create_test_user_with_session(&user_repo, &session_repo, "user-b@example.com").await;
 
 	// Create a thread owned by User A
 	let thread = create_test_thread_with_owner(&repo, &user_a.id).await;
@@ -209,7 +214,8 @@ async fn test_owner_can_manage_share_links() {
 	let (app, repo, user_repo, session_repo, _dir) = setup_test_app().await;
 
 	// Create User A (thread owner)
-	let (user_a, token_a) = create_test_user_with_session(&user_repo, &session_repo, "user-a@example.com").await;
+	let (user_a, token_a) =
+		create_test_user_with_session(&user_repo, &session_repo, "user-a@example.com").await;
 
 	// Create a thread owned by User A
 	let thread = create_test_thread_with_owner(&repo, &user_a.id).await;
@@ -267,7 +273,8 @@ async fn test_unauthenticated_user_cannot_create_share_link() {
 	let (app, repo, user_repo, session_repo, _dir) = setup_test_app().await;
 
 	// Create a user and thread
-	let (user_a, _token_a) = create_test_user_with_session(&user_repo, &session_repo, "user-a@example.com").await;
+	let (user_a, _token_a) =
+		create_test_user_with_session(&user_repo, &session_repo, "user-a@example.com").await;
 	let thread = create_test_thread_with_owner(&repo, &user_a.id).await;
 
 	// Try to create share link without authentication
@@ -296,7 +303,8 @@ async fn test_invalid_token_cannot_create_share_link() {
 	let (app, repo, user_repo, session_repo, _dir) = setup_test_app().await;
 
 	// Create a user and thread
-	let (user_a, _token_a) = create_test_user_with_session(&user_repo, &session_repo, "user-a@example.com").await;
+	let (user_a, _token_a) =
+		create_test_user_with_session(&user_repo, &session_repo, "user-a@example.com").await;
 	let thread = create_test_thread_with_owner(&repo, &user_a.id).await;
 
 	// Try to create share link with invalid token

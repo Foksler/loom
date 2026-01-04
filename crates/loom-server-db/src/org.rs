@@ -355,18 +355,43 @@ impl OrgRepository {
 		user_id: &UserId,
 		role: OrgRole,
 	) -> Result<(), DbError> {
+		self.add_member_with_provenance(org_id, user_id, role, None).await
+	}
+
+	/// Add a member to an organization with provenance tracking.
+	///
+	/// # Arguments
+	/// * `org_id` - The organization's UUID
+	/// * `user_id` - The user's UUID
+	/// * `role` - The member's role (owner, admin, member)
+	/// * `provisioned_by` - Optional provenance source (e.g., "scim", "oauth")
+	///
+	/// # Database Constraints
+	/// - (`org_id`, `user_id`) must be unique
+	/// - `org_id` must reference an existing organization
+	/// - `user_id` must reference an existing user
+	#[tracing::instrument(skip(self), fields(org_id = %org_id, user_id = %user_id, role = %role, provisioned_by = ?provisioned_by))]
+	pub async fn add_member_with_provenance(
+		&self,
+		org_id: &OrgId,
+		user_id: &UserId,
+		role: OrgRole,
+		provisioned_by: Option<&str>,
+	) -> Result<(), DbError> {
 		let id = Uuid::new_v4().to_string();
 		let now = Utc::now().to_rfc3339();
 		sqlx::query(
 			r#"
-			INSERT INTO org_memberships (id, org_id, user_id, role, created_at)
-			VALUES (?, ?, ?, ?, ?)
+			INSERT INTO org_memberships (id, org_id, user_id, role, provisioned_by, created_at, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
 			"#,
 		)
 		.bind(&id)
 		.bind(org_id.to_string())
 		.bind(user_id.to_string())
 		.bind(role.to_string())
+		.bind(provisioned_by)
+		.bind(&now)
 		.bind(&now)
 		.execute(&self.pool)
 		.await?;

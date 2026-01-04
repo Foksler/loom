@@ -172,10 +172,14 @@ pub async fn get_secret(
 		Err(resp) => return resp.into_response(),
 	};
 
-	let secret_value = match secrets_service.get_secret_for_weaver(&claims, secret_scope, &name).await {
+	let secret_value = match secrets_service
+		.get_secret_for_weaver(&claims, secret_scope, &name)
+		.await
+	{
 		Ok(v) => v,
 		Err(e) => {
-			let status = StatusCode::from_u16(e.status_code()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+			let status =
+				StatusCode::from_u16(e.status_code()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
 			let error_code = match &e {
 				loom_server_secrets::SecretsError::SecretNotFound(_) => "secret_not_found",
 				loom_server_secrets::SecretsError::AccessDenied(_) => "access_denied",

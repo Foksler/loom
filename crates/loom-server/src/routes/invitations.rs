@@ -41,9 +41,8 @@ use axum::{
 use chrono::Utc;
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::{
-	org::OrgVisibility, render_email, Action, EmailTemplate, OrgId, OrgRole, Visibility,
+	hash_token, org::OrgVisibility, render_email, Action, EmailTemplate, OrgId, OrgRole, Visibility,
 };
-use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
 pub use loom_server_api::invitations::*;
@@ -55,12 +54,6 @@ use crate::{
 	authorize,
 	i18n::{resolve_user_locale, t},
 };
-
-fn hash_token(token: &str) -> String {
-	let mut hasher = Sha256::new();
-	hasher.update(token.as_bytes());
-	hex::encode(hasher.finalize())
-}
 
 fn generate_invitation_token() -> String {
 	format!("{}{}", Uuid::new_v4().simple(), Uuid::new_v4().simple())
@@ -241,7 +234,13 @@ pub async fn list_invitations(
 		"Listed invitations"
 	);
 
-	(StatusCode::OK, Json(ListInvitationsResponse { invitations: responses })).into_response()
+	(
+		StatusCode::OK,
+		Json(ListInvitationsResponse {
+			invitations: responses,
+		}),
+	)
+		.into_response()
 }
 
 /// Create an invitation to join an organization.
@@ -366,7 +365,13 @@ pub async fn create_invitation(
 
 	let invitation_id = match state
 		.org_repo
-		.create_invitation(&org_id, &payload.email, role, &current_user.user.id, &token_hash)
+		.create_invitation(
+			&org_id,
+			&payload.email,
+			role,
+			&current_user.user.id,
+			&token_hash,
+		)
 		.await
 	{
 		Ok(id) => id,
@@ -394,18 +399,20 @@ pub async fn create_invitation(
 			inviter_name: current_user.user.display_name.clone(),
 			token: token.clone(),
 		};
-		let email_locale = loom_common_i18n::resolve_locale(
-			current_user.user.locale.as_deref(),
-			&state.default_locale,
-		);
+		let email_locale =
+			loom_common_i18n::resolve_locale(current_user.user.locale.as_deref(), &state.default_locale);
 		let (subject, body) = render_email(&template, email_locale);
 
-		if let Err(e) = smtp_client.send_email(&payload.email, &subject, &body, &body).await {
+		if let Err(e) = smtp_client
+			.send_email(&payload.email, &subject, &body, &body)
+			.await
+		{
 			tracing::warn!(error = %e, "Failed to send invitation email");
 		}
 	}
 
-	let expires_at = Utc::now() + chrono::Duration::days(loom_server_auth::OrgInvitation::EXPIRY_DAYS);
+	let expires_at =
+		Utc::now() + chrono::Duration::days(loom_server_auth::OrgInvitation::EXPIRY_DAYS);
 
 	state.audit_service.log(
 		AuditLogBuilder::new(AuditEventType::MemberAdded)
@@ -669,7 +676,11 @@ pub async fn accept_invitation(
 
 	let token_hash = hash_token(&payload.token);
 
-	let invitation = match state.org_repo.get_invitation_by_token_hash(&token_hash).await {
+	let invitation = match state
+		.org_repo
+		.get_invitation_by_token_hash(&token_hash)
+		.await
+	{
 		Ok(Some(inv)) => inv,
 		Ok(None) => {
 			return (
@@ -775,7 +786,11 @@ pub async fn accept_invitation(
 			.into_response();
 	}
 
-	if let Err(e) = state.org_repo.accept_invitation(&invitation.id.to_string()).await {
+	if let Err(e) = state
+		.org_repo
+		.accept_invitation(&invitation.id.to_string())
+		.await
+	{
 		tracing::error!(
 			error = %e,
 			actor_id = %current_user.user.id,
@@ -860,7 +875,11 @@ pub async fn get_invitation(
 
 	let token_hash = hash_token(&token);
 
-	let invitation = match state.org_repo.get_invitation_by_token_hash(&token_hash).await {
+	let invitation = match state
+		.org_repo
+		.get_invitation_by_token_hash(&token_hash)
+		.await
+	{
 		Ok(Some(inv)) => inv,
 		Ok(None) => {
 			return (
@@ -1074,7 +1093,13 @@ pub async fn list_join_requests(
 		"Listed join requests"
 	);
 
-	(StatusCode::OK, Json(ListJoinRequestsResponse { requests: responses })).into_response()
+	(
+		StatusCode::OK,
+		Json(ListJoinRequestsResponse {
+			requests: responses,
+		}),
+	)
+		.into_response()
 }
 
 /// Create a join request for an organization.
@@ -1180,7 +1205,11 @@ pub async fn create_join_request(
 			.into_response();
 	}
 
-	if let Ok(Some(_)) = state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	if let Ok(Some(_)) = state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		return (
 			StatusCode::CONFLICT,
 			Json(InvitationErrorResponse {

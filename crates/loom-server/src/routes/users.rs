@@ -368,7 +368,11 @@ pub async fn request_account_deletion(
 			.into_response();
 	}
 
-	if let Err(e) = state.user_repo.soft_delete_user(&current_user.user.id).await {
+	if let Err(e) = state
+		.user_repo
+		.soft_delete_user(&current_user.user.id)
+		.await
+	{
 		tracing::error!(error = %e, %user_id, "Failed to schedule account deletion");
 		return (
 			StatusCode::INTERNAL_SERVER_ERROR,
@@ -402,17 +406,23 @@ pub async fn request_account_deletion(
 
 			let subject = t(locale, "server.email.deletion_scheduled.subject");
 			let body = t(locale, "server.email.deletion_scheduled.body");
-			let grace = t_fmt(locale, "server.email.deletion_scheduled.grace", &[("days", &days)]);
+			let grace = t_fmt(
+				locale,
+				"server.email.deletion_scheduled.grace",
+				&[("days", &days)],
+			);
 			let permanent = t(locale, "server.email.deletion_scheduled.permanent");
 
 			let body_text = format!("{body}\n\n{grace}\n\n{permanent}");
 
 			let dir = if is_rtl(locale) { "rtl" } else { "ltr" };
-			let body_html = format!(
-				"<div dir=\"{dir}\"><p>{body}</p><p>{grace}</p><p>{permanent}</p></div>"
-			);
+			let body_html =
+				format!("<div dir=\"{dir}\"><p>{body}</p><p>{grace}</p><p>{permanent}</p></div>");
 
-			if let Err(e) = smtp.send_email(email, &subject, &body_html, &body_text).await {
+			if let Err(e) = smtp
+				.send_email(email, &subject, &body_html, &body_text)
+				.await
+			{
 				tracing::warn!(error = %e, %user_id, "Failed to send deletion confirmation email");
 			}
 		}
@@ -491,8 +501,7 @@ pub async fn restore_account(
 		}
 	};
 
-	let hard_delete_at =
-		deleted_at + chrono::Duration::days(ACCOUNT_DELETION_GRACE_DAYS);
+	let hard_delete_at = deleted_at + chrono::Duration::days(ACCOUNT_DELETION_GRACE_DAYS);
 	if Utc::now() >= hard_delete_at {
 		return (
 			StatusCode::GONE,

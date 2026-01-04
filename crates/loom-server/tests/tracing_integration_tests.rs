@@ -344,8 +344,7 @@ async fn test_concurrent_trace_storage() {
 	for i in 0..10 {
 		let store_clone = store.clone();
 		let handle = tokio::spawn(async move {
-			let mut tracer =
-				QueryTracer::new(format!("Q-concurrent-{i}"), Some(format!("session-{i}")));
+			let mut tracer = QueryTracer::new(format!("Q-concurrent-{i}"), Some(format!("session-{i}")));
 			tracer.record_sent(5);
 			tokio::time::sleep(Duration::from_millis(5)).await;
 			tracer.record_response_received("ok");

@@ -188,3 +188,8 @@ if is_rtl(locale) {
 
 ### RTL Languages
 Arabic (`ar`) and other RTL locales require `dir="rtl"` on HTML elements. Use `loom_i18n::is_rtl()` to check.
+
+
+## 
+
+- When multiple code paths do similar things with slight variations, create a shared service with a request struct that cpatures the variations, rather than having each caller implemnt its own logic.

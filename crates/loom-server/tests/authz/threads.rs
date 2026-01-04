@@ -181,7 +181,11 @@ async fn unauthenticated_cannot_upsert_thread() {
 	thread.version += 1;
 
 	let response = app
-		.put(&format!("/api/threads/{}", thread.id.as_str()), None, &thread)
+		.put(
+			&format!("/api/threads/{}", thread.id.as_str()),
+			None,
+			&thread,
+		)
 		.await;
 	assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 }
@@ -218,9 +222,13 @@ async fn owner_can_delete_thread() {
 
 	let thread = Thread::new();
 	app.state.repo.upsert(&thread, None).await.unwrap();
-	app.state
+	app
+		.state
 		.repo
-		.set_owner_user_id(thread.id.as_str(), &app.fixtures.org_a.owner.user.id.to_string())
+		.set_owner_user_id(
+			thread.id.as_str(),
+			&app.fixtures.org_a.owner.user.id.to_string(),
+		)
 		.await
 		.unwrap();
 
@@ -337,7 +345,10 @@ async fn authenticated_can_search_threads() {
 	let app = TestApp::new().await;
 
 	let response = app
-		.get("/api/threads/search?q=test", Some(&app.fixtures.org_a.owner))
+		.get(
+			"/api/threads/search?q=test",
+			Some(&app.fixtures.org_a.owner),
+		)
 		.await;
 	assert_eq!(response.status(), StatusCode::OK);
 
@@ -368,7 +379,10 @@ async fn search_scoped_to_user() {
 	let app = TestApp::new().await;
 
 	let response = app
-		.get("/api/threads/search?q=test", Some(&app.fixtures.org_a.owner))
+		.get(
+			"/api/threads/search?q=test",
+			Some(&app.fixtures.org_a.owner),
+		)
 		.await;
 	assert_eq!(response.status(), StatusCode::OK);
 

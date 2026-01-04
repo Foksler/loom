@@ -85,12 +85,10 @@ pub async fn list_logs(
 
 	let min_level = params.level.as_deref().and_then(parse_level);
 
-	let entries = state.log_buffer.get_entries(
-		limit,
-		min_level,
-		params.target.as_deref(),
-		params.after_id,
-	);
+	let entries =
+		state
+			.log_buffer
+			.get_entries(limit, min_level, params.target.as_deref(), params.after_id);
 
 	Json(ListLogsResponse {
 		entries,

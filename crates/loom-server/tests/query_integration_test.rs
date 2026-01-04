@@ -7,10 +7,10 @@
 //! client response and result injection. Tests cover happy paths, error scenarios, and
 //! concurrent operations to ensure robustness of the query-response protocol.
 
-use loom_server::ServerQueryManager;
 use loom_common_core::server_query::{
 	ServerQuery, ServerQueryError, ServerQueryKind, ServerQueryResponse, ServerQueryResult,
 };
+use loom_server::ServerQueryManager;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -268,11 +268,9 @@ async fn test_concurrent_queries_different_sessions() {
 	let manager_a = manager.clone();
 	let manager_b = manager.clone();
 
-	let handle_a =
-		tokio::spawn(async move { manager_a.send_query("session-a", query_a).await });
+	let handle_a = tokio::spawn(async move { manager_a.send_query("session-a", query_a).await });
 
-	let handle_b =
-		tokio::spawn(async move { manager_b.send_query("session-b", query_b).await });
+	let handle_b = tokio::spawn(async move { manager_b.send_query("session-b", query_b).await });
 
 	// Give time to register
 	tokio::time::sleep(Duration::from_millis(100)).await;

@@ -14,10 +14,9 @@ use axum::{
 	Json,
 };
 use chrono::{DateTime, Duration, Utc};
+use loom_common_thread::ThreadId;
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::{GlobalRole, ShareLink, SupportAccess};
-use loom_common_thread::ThreadId;
-
 
 pub use loom_server_api::share::*;
 
@@ -170,8 +169,7 @@ pub async fn create_share_link(
 		tracing::warn!(error = %e, thread_id = %id, "Failed to revoke existing share links");
 	}
 
-	let (share_link, plaintext_token) =
-		ShareLink::new(id.clone(), current_user.user.id, expires_at);
+	let (share_link, plaintext_token) = ShareLink::new(id.clone(), current_user.user.id, expires_at);
 
 	if let Err(e) = state.share_repo.create_share_link(&share_link).await {
 		tracing::error!(error = %e, thread_id = %id, "Failed to create share link");
@@ -185,7 +183,10 @@ pub async fn create_share_link(
 			.into_response();
 	}
 
-	let url = format!("{}/api/threads/{}/share/{}", state.base_url, id, plaintext_token);
+	let url = format!(
+		"{}/api/threads/{}/share/{}",
+		state.base_url, id, plaintext_token
+	);
 
 	state.audit_service.log(
 		AuditLogBuilder::new(AuditEventType::ThreadShared)
@@ -434,14 +435,16 @@ pub async fn get_shared_thread(
 	let thread_id = match ThreadId::parse(&id) {
 		Ok(tid) => tid,
 		Err(_) => {
-			return Ok((
-				StatusCode::BAD_REQUEST,
-				Json(ShareLinkErrorResponse {
-					code: "invalid_thread_id".to_string(),
-					message: t(locale, "server.api.share.invalid_thread_id").to_string(),
-				}),
-			)
-				.into_response());
+			return Ok(
+				(
+					StatusCode::BAD_REQUEST,
+					Json(ShareLinkErrorResponse {
+						code: "invalid_thread_id".to_string(),
+						message: t(locale, "server.api.share.invalid_thread_id").to_string(),
+					}),
+				)
+					.into_response(),
+			);
 		}
 	};
 
@@ -450,14 +453,16 @@ pub async fn get_shared_thread(
 	let share_link = match state.share_repo.get_share_link_by_hash(&token_hash).await {
 		Ok(Some(link)) => link,
 		Ok(None) => {
-			return Ok((
-				StatusCode::NOT_FOUND,
-				Json(ShareLinkErrorResponse {
-					code: "invalid_token".to_string(),
-					message: t(locale, "server.api.share.invalid_or_expired").to_string(),
-				}),
-			)
-				.into_response());
+			return Ok(
+				(
+					StatusCode::NOT_FOUND,
+					Json(ShareLinkErrorResponse {
+						code: "invalid_token".to_string(),
+						message: t(locale, "server.api.share.invalid_or_expired").to_string(),
+					}),
+				)
+					.into_response(),
+			);
 		}
 		Err(e) => {
 			tracing::error!(error = %e, "failed to look up share link");
@@ -468,62 +473,72 @@ pub async fn get_shared_thread(
 	};
 
 	if share_link.thread_id != id {
-		return Ok((
-			StatusCode::NOT_FOUND,
-			Json(ShareLinkErrorResponse {
-				code: "invalid_token".to_string(),
-				message: t(locale, "server.api.share.invalid_or_expired").to_string(),
-			}),
-		)
-			.into_response());
+		return Ok(
+			(
+				StatusCode::NOT_FOUND,
+				Json(ShareLinkErrorResponse {
+					code: "invalid_token".to_string(),
+					message: t(locale, "server.api.share.invalid_or_expired").to_string(),
+				}),
+			)
+				.into_response(),
+		);
 	}
 
 	if share_link.revoked_at.is_some() {
-		return Ok((
-			StatusCode::GONE,
-			Json(ShareLinkErrorResponse {
-				code: "revoked".to_string(),
-				message: t(locale, "server.api.share.link_revoked").to_string(),
-			}),
-		)
-			.into_response());
+		return Ok(
+			(
+				StatusCode::GONE,
+				Json(ShareLinkErrorResponse {
+					code: "revoked".to_string(),
+					message: t(locale, "server.api.share.link_revoked").to_string(),
+				}),
+			)
+				.into_response(),
+		);
 	}
 
 	if let Some(expires_at) = share_link.expires_at {
 		if Utc::now() >= expires_at {
-			return Ok((
-				StatusCode::GONE,
-				Json(ShareLinkErrorResponse {
-					code: "expired".to_string(),
-					message: t(locale, "server.api.share.link_expired").to_string(),
-				}),
-			)
-				.into_response());
+			return Ok(
+				(
+					StatusCode::GONE,
+					Json(ShareLinkErrorResponse {
+						code: "expired".to_string(),
+						message: t(locale, "server.api.share.link_expired").to_string(),
+					}),
+				)
+					.into_response(),
+			);
 		}
 	}
 
 	if !share_link.verify(&token) {
-		return Ok((
-			StatusCode::NOT_FOUND,
-			Json(ShareLinkErrorResponse {
-				code: "invalid_token".to_string(),
-				message: t(locale, "server.api.share.invalid_or_expired").to_string(),
-			}),
-		)
-			.into_response());
+		return Ok(
+			(
+				StatusCode::NOT_FOUND,
+				Json(ShareLinkErrorResponse {
+					code: "invalid_token".to_string(),
+					message: t(locale, "server.api.share.invalid_or_expired").to_string(),
+				}),
+			)
+				.into_response(),
+		);
 	}
 
 	let thread = match state.repo.get(&thread_id).await {
 		Ok(Some(thread)) => thread,
 		Ok(None) => {
-			return Ok((
-				StatusCode::NOT_FOUND,
-				Json(ShareLinkErrorResponse {
-					code: "not_found".to_string(),
-					message: t(locale, "server.api.share.thread_not_found").to_string(),
-				}),
-			)
-				.into_response());
+			return Ok(
+				(
+					StatusCode::NOT_FOUND,
+					Json(ShareLinkErrorResponse {
+						code: "not_found".to_string(),
+						message: t(locale, "server.api.share.thread_not_found").to_string(),
+					}),
+				)
+					.into_response(),
+			);
 		}
 		Err(e) => {
 			tracing::error!(error = %e, "failed to get shared thread");
@@ -533,22 +548,23 @@ pub async fn get_shared_thread(
 		}
 	};
 
-	let content = serde_json::to_value(&thread.conversation)
-		.unwrap_or(serde_json::Value::Null);
+	let content = serde_json::to_value(&thread.conversation).unwrap_or(serde_json::Value::Null);
 
 	tracing::info!(share_link_id = %share_link.id, "shared thread accessed");
 
-	Ok((
-		StatusCode::OK,
-		Json(SharedThreadResponse {
-			id: thread.id.to_string(),
-			title: thread.metadata.title,
-			created_at: thread.created_at,
-			updated_at: thread.updated_at,
-			content,
-		}),
+	Ok(
+		(
+			StatusCode::OK,
+			Json(SharedThreadResponse {
+				id: thread.id.to_string(),
+				title: thread.metadata.title,
+				created_at: thread.created_at,
+				updated_at: thread.updated_at,
+				content,
+			}),
+		)
+			.into_response(),
 	)
-		.into_response())
 }
 
 // ============================================================================
@@ -671,7 +687,11 @@ pub async fn request_support_access(
 
 	let support_access = SupportAccess::new(&id, current_user.user.id);
 
-	if let Err(e) = state.share_repo.create_support_access(&support_access).await {
+	if let Err(e) = state
+		.share_repo
+		.create_support_access(&support_access)
+		.await
+	{
 		tracing::error!(error = %e, thread_id = %id, "Failed to create support access request");
 		return (
 			StatusCode::INTERNAL_SERVER_ERROR,
@@ -1043,7 +1063,11 @@ pub async fn revoke_support_access(
 		}
 	};
 
-	if let Err(e) = state.share_repo.revoke_support_access(&active_access.id).await {
+	if let Err(e) = state
+		.share_repo
+		.revoke_support_access(&active_access.id)
+		.await
+	{
 		tracing::error!(error = %e, thread_id = %id, "Failed to revoke support access");
 		return (
 			StatusCode::INTERNAL_SERVER_ERROR,

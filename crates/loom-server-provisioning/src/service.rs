@@ -24,6 +24,7 @@ pub struct UserProvisioningService {
 	pool: SqlitePool,
 	user_repo: Arc<UserRepository>,
 	org_repo: Arc<OrgRepository>,
+	signups_disabled: bool,
 }
 
 impl UserProvisioningService {
@@ -32,11 +33,13 @@ impl UserProvisioningService {
 		pool: SqlitePool,
 		user_repo: Arc<UserRepository>,
 		org_repo: Arc<OrgRepository>,
+		signups_disabled: bool,
 	) -> Self {
 		Self {
 			pool,
 			user_repo,
 			org_repo,
+			signups_disabled,
 		}
 	}
 
@@ -46,9 +49,16 @@ impl UserProvisioningService {
 	/// - If user exists, updates their profile and returns them
 	/// - If user is new, creates them with a personal organization
 	/// - For SCIM, also handles enterprise org membership
+	///
+	/// Returns `SignupsDisabled` error if signups are disabled and user doesn't exist.
 	#[tracing::instrument(skip(self), fields(email = %request.email, source = %request.source))]
 	pub async fn provision_user(&self, request: ProvisioningRequest) -> Result<User> {
 		let existing_user = self.user_repo.get_user_by_email(&request.email).await?;
+
+		if self.signups_disabled && existing_user.is_none() {
+			tracing::warn!(email = %request.email, source = %request.source, "Signup rejected: signups are disabled");
+			return Err(ProvisioningError::SignupsDisabled);
+		}
 
 		let user = if let Some(mut user) = existing_user {
 			self.update_existing_user(&mut user, &request).await?;
@@ -178,27 +188,11 @@ impl UserProvisioningService {
 			return Ok(());
 		}
 
-		// Create membership with SCIM provenance
-		let membership_id = uuid::Uuid::new_v4().to_string();
-		let now = Utc::now().to_rfc3339();
+		// Create membership with provenance tracking
 		let provisioned_by = request.source.to_string();
-
-		sqlx::query(
-			r#"
-			INSERT INTO org_memberships (id, org_id, user_id, role, provisioned_by, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?)
-			"#,
-		)
-		.bind(&membership_id)
-		.bind(org_id.to_string())
-		.bind(user_id.to_string())
-		.bind(OrgRole::Member.to_string())
-		.bind(&provisioned_by)
-		.bind(&now)
-		.bind(&now)
-		.execute(&self.pool)
-		.await
-		.map_err(loom_server_db::DbError::from)?;
+		self.org_repo
+			.add_member_with_provenance(org_id, user_id, OrgRole::Member, Some(&provisioned_by))
+			.await?;
 
 		tracing::info!(
 			user_id = %user_id,
@@ -217,5 +211,21 @@ impl UserProvisioningService {
 	pub async fn ensure_personal_org(&self, user_id: &UserId) -> Result<()> {
 		self.org_repo.ensure_personal_org(user_id).await?;
 		Ok(())
+	}
+
+	/// Remove a user from an organization (deprovision).
+	///
+	/// Used by SCIM to remove a user's membership when they are deprovisioned.
+	#[tracing::instrument(skip(self), fields(user_id = %user_id, org_id = %org_id))]
+	pub async fn deprovision_from_org(
+		&self,
+		user_id: &UserId,
+		org_id: &loom_server_auth::OrgId,
+	) -> Result<bool> {
+		let removed = self.org_repo.remove_member(org_id, user_id).await?;
+		if removed {
+			tracing::info!(user_id = %user_id, org_id = %org_id, "deprovisioned user from org");
+		}
+		Ok(removed)
 	}
 }

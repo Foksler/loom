@@ -35,9 +35,7 @@ use axum::{
 };
 use chrono::Utc;
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
-use loom_server_auth::{Action, ApiKeyScope, OrgId, Visibility};
-
-use sha2::{Digest, Sha256};
+use loom_server_auth::{hash_token, Action, ApiKeyScope, OrgId, Visibility};
 
 pub use loom_server_api::api_keys::*;
 
@@ -48,12 +46,6 @@ use crate::{
 	authorize,
 	i18n::{resolve_user_locale, t},
 };
-
-fn hash_token(token: &str) -> String {
-	let mut hasher = Sha256::new();
-	hasher.update(token.as_bytes());
-	hex::encode(hasher.finalize())
-}
 
 /// List all API keys for an organization.
 ///
@@ -121,7 +113,13 @@ pub async fn list_api_keys(
 		}
 	};
 
-	if state.org_repo.get_org_by_id(&org_id).await.unwrap_or(None).is_none() {
+	if state
+		.org_repo
+		.get_org_by_id(&org_id)
+		.await
+		.unwrap_or(None)
+		.is_none()
+	{
 		return (
 			StatusCode::NOT_FOUND,
 			Json(ApiKeyErrorResponse {
@@ -263,7 +261,13 @@ pub async fn create_api_key(
 		}
 	};
 
-	if state.org_repo.get_org_by_id(&org_id).await.unwrap_or(None).is_none() {
+	if state
+		.org_repo
+		.get_org_by_id(&org_id)
+		.await
+		.unwrap_or(None)
+		.is_none()
+	{
 		return (
 			StatusCode::NOT_FOUND,
 			Json(ApiKeyErrorResponse {
@@ -314,7 +318,13 @@ pub async fn create_api_key(
 
 	match state
 		.api_key_repo
-		.create_api_key(&org_id, &payload.name, &token_hash, &scopes, &current_user.user.id)
+		.create_api_key(
+			&org_id,
+			&payload.name,
+			&token_hash,
+			&scopes,
+			&current_user.user.id,
+		)
 		.await
 	{
 		Ok(id) => {
@@ -447,7 +457,13 @@ pub async fn revoke_api_key(
 		}
 	};
 
-	if state.org_repo.get_org_by_id(&org_id).await.unwrap_or(None).is_none() {
+	if state
+		.org_repo
+		.get_org_by_id(&org_id)
+		.await
+		.unwrap_or(None)
+		.is_none()
+	{
 		return (
 			StatusCode::NOT_FOUND,
 			Json(ApiKeyErrorResponse {
@@ -523,7 +539,11 @@ pub async fn revoke_api_key(
 			.into_response();
 	}
 
-	match state.api_key_repo.revoke_api_key(&id, &current_user.user.id).await {
+	match state
+		.api_key_repo
+		.revoke_api_key(&id, &current_user.user.id)
+		.await
+	{
 		Ok(true) => {
 			state.audit_service.log(
 				AuditLogBuilder::new(AuditEventType::ApiKeyRevoked)
@@ -646,7 +666,13 @@ pub async fn get_api_key_usage(
 		}
 	};
 
-	if state.org_repo.get_org_by_id(&org_id).await.unwrap_or(None).is_none() {
+	if state
+		.org_repo
+		.get_org_by_id(&org_id)
+		.await
+		.unwrap_or(None)
+		.is_none()
+	{
 		return (
 			StatusCode::NOT_FOUND,
 			Json(ApiKeyErrorResponse {
@@ -732,7 +758,11 @@ pub async fn get_api_key_usage(
 				"Retrieved API key usage logs"
 			);
 
-			(StatusCode::OK, Json(ApiKeyUsageListResponse { usage, total })).into_response()
+			(
+				StatusCode::OK,
+				Json(ApiKeyUsageListResponse { usage, total }),
+			)
+				.into_response()
 		}
 		Err(e) => {
 			tracing::error!(

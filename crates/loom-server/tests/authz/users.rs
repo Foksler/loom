@@ -169,7 +169,9 @@ async fn user_can_request_deletion() {
 	let app = TestApp::new().await;
 	let member = &app.fixtures.org_a.member;
 
-	let response = app.post("/api/users/me/delete", Some(member), json!({})).await;
+	let response = app
+		.post("/api/users/me/delete", Some(member), json!({}))
+		.await;
 
 	assert_eq!(
 		response.status(),
@@ -183,7 +185,9 @@ async fn user_can_restore_account() {
 	let app = TestApp::new().await;
 	let owner = &app.fixtures.org_a.owner;
 
-	let restore_response = app.post("/api/users/me/restore", Some(owner), json!({})).await;
+	let restore_response = app
+		.post("/api/users/me/restore", Some(owner), json!({}))
+		.await;
 
 	assert_eq!(
 		restore_response.status(),
@@ -197,10 +201,14 @@ async fn restore_requires_reauth_after_deletion() {
 	let app = TestApp::new().await;
 	let member = &app.fixtures.org_a.member;
 
-	let delete_response = app.post("/api/users/me/delete", Some(member), json!({})).await;
+	let delete_response = app
+		.post("/api/users/me/delete", Some(member), json!({}))
+		.await;
 	assert_eq!(delete_response.status(), StatusCode::OK);
 
-	let restore_response = app.post("/api/users/me/restore", Some(member), json!({})).await;
+	let restore_response = app
+		.post("/api/users/me/restore", Some(member), json!({}))
+		.await;
 
 	assert_eq!(
 		restore_response.status(),
@@ -285,7 +293,10 @@ async fn user_can_revoke_own_session() {
 	let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
 	let sessions = json["sessions"].as_array().unwrap();
 
-	assert!(!sessions.is_empty(), "User should have at least one session");
+	assert!(
+		!sessions.is_empty(),
+		"User should have at least one session"
+	);
 	let session_id = sessions[0]["id"].as_str().unwrap();
 
 	let revoke_response = app

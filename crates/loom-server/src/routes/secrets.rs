@@ -18,16 +18,20 @@ use axum::{
 use loom_common_secret::SecretString;
 use loom_server_auth::types::{OrgId, OrgRole};
 use loom_server_scm::RepoStore;
+use loom_server_secrets::store::SecretFilter;
 use loom_server_secrets::{
 	CreateSecretInput, SecretScope, SecretsService, SoftwareKeyBackend, SqliteSecretStore,
 };
-use loom_server_secrets::store::SecretFilter;
 use std::sync::Arc;
 use uuid::Uuid;
 
 pub use loom_server_api::secrets::*;
 
-use crate::{api::AppState, auth_middleware::RequireAuth, i18n::{resolve_user_locale, t}};
+use crate::{
+	api::AppState,
+	auth_middleware::RequireAuth,
+	i18n::{resolve_user_locale, t},
+};
 
 fn parse_org_id(id_str: &str, locale: &str) -> Result<OrgId, SecretErrorResponse> {
 	Uuid::parse_str(id_str)
@@ -48,8 +52,10 @@ fn parse_repo_id(id_str: &str, locale: &str) -> Result<Uuid, SecretErrorResponse
 async fn get_secrets_service(
 	state: &AppState,
 	locale: &str,
-) -> Result<Arc<SecretsService<SoftwareKeyBackend, SqliteSecretStore>>, (StatusCode, Json<SecretErrorResponse>)>
-{
+) -> Result<
+	Arc<SecretsService<SoftwareKeyBackend, SqliteSecretStore>>,
+	(StatusCode, Json<SecretErrorResponse>),
+> {
 	match state.secrets_service.as_ref() {
 		Some(svc) => Ok(svc.clone()),
 		None => Err((
@@ -255,7 +261,11 @@ pub async fn list_org_secrets(
 					updated_at: chrono::DateTime::default(),
 				})
 				.collect();
-			(StatusCode::OK, Json(ListSecretsResponse { secrets: responses })).into_response()
+			(
+				StatusCode::OK,
+				Json(ListSecretsResponse { secrets: responses }),
+			)
+				.into_response()
 		}
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to list org secrets");
@@ -502,7 +512,11 @@ pub async fn update_org_secret(
 	};
 
 	match service
-		.rotate_secret(meta.id, SecretString::new(payload.value), current_user.user.id)
+		.rotate_secret(
+			meta.id,
+			SecretString::new(payload.value),
+			current_user.user.id,
+		)
 		.await
 	{
 		Ok(new_version) => {
@@ -675,7 +689,11 @@ pub async fn list_repo_secrets(
 					updated_at: chrono::DateTime::default(),
 				})
 				.collect();
-			(StatusCode::OK, Json(ListSecretsResponse { secrets: responses })).into_response()
+			(
+				StatusCode::OK,
+				Json(ListSecretsResponse { secrets: responses }),
+			)
+				.into_response()
 		}
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to list repo secrets");
@@ -938,7 +956,11 @@ pub async fn update_repo_secret(
 	};
 
 	match service
-		.rotate_secret(meta.id, SecretString::new(payload.value), current_user.user.id)
+		.rotate_secret(
+			meta.id,
+			SecretString::new(payload.value),
+			current_user.user.id,
+		)
 		.await
 	{
 		Ok(new_version) => {

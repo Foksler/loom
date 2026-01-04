@@ -10,8 +10,8 @@
 //! These tests ensure the query detection system can reliably extract intent from
 //! natural language LLM output without false positives or missed patterns.
 
-use loom_server::SimpleRegexDetector;
 use loom_common_core::server_query::ServerQueryKind;
+use loom_server::SimpleRegexDetector;
 
 // ============================================================================
 // ReadFile Pattern Detection Tests

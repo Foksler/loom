@@ -26,12 +26,14 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use loom_server_llm_anthropic::{exchange_code, OAuthCredentials, Pkce, CLIENT_ID, REDIRECT_URI, SCOPES};
 use loom_common_secret::SecretString;
+use loom_server_llm_anthropic::{
+	exchange_code, OAuthCredentials, Pkce, CLIENT_ID, REDIRECT_URI, SCOPES,
+};
 use url::Url;
 
 pub use loom_server_api::admin::{
-	AccountDetailsResponse, AccountsSummary, AccountStatus, AddAccountResponse, AdminErrorResponse,
+	AccountDetailsResponse, AccountStatus, AccountsSummary, AddAccountResponse, AdminErrorResponse,
 	AnthropicAccountsResponse, InitiateOAuthRequest, InitiateOAuthResponse, RemoveAccountResponse,
 	SubmitOAuthCodeRequest,
 };
@@ -116,7 +118,10 @@ pub async fn list_accounts(
 	}
 
 	let accounts = match llm_service.anthropic_account_details().await {
-		Some(details) => details.into_iter().map(AccountDetailsResponse::from).collect::<Vec<_>>(),
+		Some(details) => details
+			.into_iter()
+			.map(AccountDetailsResponse::from)
+			.collect::<Vec<_>>(),
 		None => vec![],
 	};
 
@@ -146,7 +151,11 @@ pub async fn list_accounts(
 		"Listed Anthropic accounts"
 	);
 
-	(StatusCode::OK, Json(AnthropicAccountsResponse { accounts, summary })).into_response()
+	(
+		StatusCode::OK,
+		Json(AnthropicAccountsResponse { accounts, summary }),
+	)
+		.into_response()
 }
 
 /// Initiate OAuth flow to add a new Anthropic account.
@@ -230,7 +239,8 @@ pub async fn initiate_oauth(
 	let pkce = Pkce::generate();
 	let oauth_state = generate_state();
 
-	let mut auth_url = Url::parse("https://claude.ai/oauth/authorize").expect("Invalid authorize URL");
+	let mut auth_url =
+		Url::parse("https://claude.ai/oauth/authorize").expect("Invalid authorize URL");
 	{
 		let mut params = auth_url.query_pairs_mut();
 		params.append_pair("client_id", CLIENT_ID);
@@ -242,12 +252,15 @@ pub async fn initiate_oauth(
 		params.append_pair("state", &oauth_state);
 	}
 
-	state.oauth_state_store.store(
-		oauth_state.clone(),
-		ANTHROPIC_ADMIN_PROVIDER.to_string(),
-		Some(pkce.verifier),
-		body.redirect_after,
-	).await;
+	state
+		.oauth_state_store
+		.store(
+			oauth_state.clone(),
+			ANTHROPIC_ADMIN_PROVIDER.to_string(),
+			Some(pkce.verifier),
+			body.redirect_after,
+		)
+		.await;
 
 	tracing::info!(
 		actor_id = %current_user.user.id,
@@ -255,10 +268,14 @@ pub async fn initiate_oauth(
 		"Initiated Anthropic OAuth flow"
 	);
 
-	(StatusCode::OK, Json(InitiateOAuthResponse {
-		redirect_url: auth_url.to_string(),
-		state: oauth_state,
-	})).into_response()
+	(
+		StatusCode::OK,
+		Json(InitiateOAuthResponse {
+			redirect_url: auth_url.to_string(),
+			state: oauth_state,
+		}),
+	)
+		.into_response()
 }
 
 /// Complete OAuth flow by submitting the authorization code.
@@ -344,7 +361,11 @@ pub async fn complete_oauth(
 			.into_response();
 	}
 
-	let entry = match state.oauth_state_store.validate_and_consume(&body.state, ANTHROPIC_ADMIN_PROVIDER).await {
+	let entry = match state
+		.oauth_state_store
+		.validate_and_consume(&body.state, ANTHROPIC_ADMIN_PROVIDER)
+		.await
+	{
 		Some(e) => e,
 		None => {
 			tracing::warn!(state = %body.state, "Invalid or expired OAuth state");
@@ -393,7 +414,11 @@ pub async fn complete_oauth(
 	};
 
 	let (access, refresh, expires) = match exchange_result {
-		loom_server_llm_anthropic::ExchangeResult::Success { access, refresh, expires } => (access, refresh, expires),
+		loom_server_llm_anthropic::ExchangeResult::Success {
+			access,
+			refresh,
+			expires,
+		} => (access, refresh, expires),
 		loom_server_llm_anthropic::ExchangeResult::Failed { error } => {
 			tracing::error!(error = %error, "OAuth token exchange failed");
 			return (
@@ -414,7 +439,10 @@ pub async fn complete_oauth(
 		expires,
 	);
 
-	if let Err(e) = llm_service.add_anthropic_account(account_id.clone(), credentials).await {
+	if let Err(e) = llm_service
+		.add_anthropic_account(account_id.clone(), credentials)
+		.await
+	{
 		tracing::error!(error = %e, account_id = %account_id, "Failed to add account to pool");
 		return (
 			StatusCode::INTERNAL_SERVER_ERROR,
@@ -548,22 +576,32 @@ pub async fn remove_account(
 mod tests {
 	#[test]
 	fn test_strip_fragment_from_code() {
-		let code_with_fragment = "1sCIWJJZXLfYfURhCUQ1rOq7yPCyFESxFp7BjKLlxFzhl3aJ#3b191854-6359-45d3-93ff-65a0b0c158b4";
-		let code = code_with_fragment.split('#').next().unwrap_or(code_with_fragment);
+		let code_with_fragment =
+			"1sCIWJJZXLfYfURhCUQ1rOq7yPCyFESxFp7BjKLlxFzhl3aJ#3b191854-6359-45d3-93ff-65a0b0c158b4";
+		let code = code_with_fragment
+			.split('#')
+			.next()
+			.unwrap_or(code_with_fragment);
 		assert_eq!(code, "1sCIWJJZXLfYfURhCUQ1rOq7yPCyFESxFp7BjKLlxFzhl3aJ");
 	}
 
 	#[test]
 	fn test_strip_fragment_no_fragment() {
 		let code_without_fragment = "1sCIWJJZXLfYfURhCUQ1rOq7yPCyFESxFp7BjKLlxFzhl3aJ";
-		let code = code_without_fragment.split('#').next().unwrap_or(code_without_fragment);
+		let code = code_without_fragment
+			.split('#')
+			.next()
+			.unwrap_or(code_without_fragment);
 		assert_eq!(code, "1sCIWJJZXLfYfURhCUQ1rOq7yPCyFESxFp7BjKLlxFzhl3aJ");
 	}
 
 	#[test]
 	fn test_strip_fragment_empty_fragment() {
 		let code_empty_fragment = "someCode#";
-		let code = code_empty_fragment.split('#').next().unwrap_or(code_empty_fragment);
+		let code = code_empty_fragment
+			.split('#')
+			.next()
+			.unwrap_or(code_empty_fragment);
 		assert_eq!(code, "someCode");
 	}
 

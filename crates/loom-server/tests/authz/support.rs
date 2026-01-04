@@ -9,6 +9,10 @@ use axum::{
 	Router,
 };
 use chrono::Utc;
+use loom_common_thread::{
+	AgentStateKind, AgentStateSnapshot, ConversationSnapshot, Thread, ThreadId, ThreadMetadata,
+	ThreadVisibility,
+};
 use loom_server_auth::{
 	org::{OrgVisibility, Organization},
 	session::{generate_session_token, Session},
@@ -16,11 +20,9 @@ use loom_server_auth::{
 	types::{OrgId, OrgRole, SessionType, TeamRole, UserId},
 	User,
 };
-use loom_common_thread::{
-	AgentStateKind, AgentStateSnapshot, ConversationSnapshot, Thread, ThreadId, ThreadMetadata,
-	ThreadVisibility,
+use loom_server_k8s::{
+	AttachedProcess, K8sClient, K8sError, LogOptions, LogStream, Namespace, Pod,
 };
-use loom_server_k8s::{AttachedProcess, K8sClient, K8sError, LogOptions, LogStream, Namespace, Pod};
 use loom_server_weaver::{Provisioner, WeaverConfig};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -79,9 +81,12 @@ impl K8sClient for MockK8sClient {
 
 	async fn get_pod(&self, name: &str, _namespace: &str) -> Result<Pod, K8sError> {
 		let pods = self.pods.lock().unwrap();
-		pods.get(name).cloned().ok_or_else(|| K8sError::PodNotFound {
-			name: name.to_string(),
-		})
+		pods
+			.get(name)
+			.cloned()
+			.ok_or_else(|| K8sError::PodNotFound {
+				name: name.to_string(),
+			})
 	}
 
 	async fn get_namespace(&self, _name: &str) -> Result<Namespace, K8sError> {
@@ -230,7 +235,8 @@ impl TestApp {
 	}
 
 	pub async fn get(&self, path: &str, user: Option<&TestUser>) -> Response<Body> {
-		self.request(Method::GET, path, user, Option::<()>::None)
+		self
+			.request(Method::GET, path, user, Option::<()>::None)
 			.await
 	}
 
@@ -262,7 +268,8 @@ impl TestApp {
 	}
 
 	pub async fn delete(&self, path: &str, user: Option<&TestUser>) -> Response<Body> {
-		self.request(Method::DELETE, path, user, Option::<()>::None)
+		self
+			.request(Method::DELETE, path, user, Option::<()>::None)
 			.await
 	}
 
@@ -307,14 +314,14 @@ pub async fn run_authz_cases(app: &TestApp, cases: &[AuthzCase]) {
 	for case in cases {
 		let response = match (&case.method, &case.body) {
 			(m, Some(body)) if *m == Method::POST => {
-				app.post(&case.path, case.user.as_ref(), body.clone())
-					.await
+				app.post(&case.path, case.user.as_ref(), body.clone()).await
 			}
 			(m, Some(body)) if *m == Method::PUT => {
 				app.put(&case.path, case.user.as_ref(), body.clone()).await
 			}
 			(m, Some(body)) if *m == Method::PATCH => {
-				app.patch(&case.path, case.user.as_ref(), body.clone())
+				app
+					.patch(&case.path, case.user.as_ref(), body.clone())
 					.await
 			}
 			(m, _) if *m == Method::DELETE => app.delete(&case.path, case.user.as_ref()).await,
@@ -339,7 +346,11 @@ async fn create_fixtures(state: &AppState, repo: &Arc<ThreadRepository>) -> Fixt
 	let org_a = create_org_fixture(state, repo, "org-a", "Organization A").await;
 	let org_b = create_org_fixture(state, repo, "org-b", "Organization B").await;
 
-	Fixtures { org_a, org_b, admin }
+	Fixtures {
+		org_a,
+		org_b,
+		admin,
+	}
 }
 
 async fn create_org_fixture(
@@ -365,8 +376,7 @@ async fn create_org_fixture(
 	let owner =
 		create_test_user_internal(state, &format!("owner@{slug}.test"), "Owner User", false).await;
 	let member =
-		create_test_user_internal(state, &format!("member@{slug}.test"), "Member User", false)
-			.await;
+		create_test_user_internal(state, &format!("member@{slug}.test"), "Member User", false).await;
 
 	state
 		.org_repo
@@ -397,7 +407,8 @@ async fn create_org_fixture(
 
 	let thread = create_test_thread();
 	repo.upsert(&thread, None).await.unwrap();
-	repo.set_owner_user_id(thread.id.as_str(), &owner.user.id.to_string())
+	repo
+		.set_owner_user_id(thread.id.as_str(), &owner.user.id.to_string())
 		.await
 		.unwrap();
 

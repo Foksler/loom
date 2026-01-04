@@ -51,10 +51,7 @@ async fn test_git_receive_pack_requires_auth() {
 
 	let request = Request::builder()
 		.method("POST")
-		.uri(&format!(
-			"/git/{}/test-repo.git/git-receive-pack",
-			org.slug
-		))
+		.uri(&format!("/git/{}/test-repo.git/git-receive-pack", org.slug))
 		.header("content-type", "application/x-git-receive-pack-request")
 		.body(Body::from("0000"))
 		.unwrap();

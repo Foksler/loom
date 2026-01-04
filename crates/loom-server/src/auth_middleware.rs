@@ -46,11 +46,13 @@ use axum::{
 	Json,
 };
 use chrono::Utc;
-use loom_server_auth::middleware::{
-	extract_bearer_token, extract_session_cookie_with_name, identify_bearer_token, AuthContext,
-	BearerTokenType, CurrentUser,
+use loom_server_auth::{
+	hash_token,
+	middleware::{
+		extract_bearer_token, extract_session_cookie_with_name, identify_bearer_token, AuthContext,
+		BearerTokenType, CurrentUser,
+	},
 };
-use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use tracing::instrument;
 
@@ -59,23 +61,6 @@ use crate::{
 	db::{ApiKeyRepository, SessionRepository, UserRepository},
 	error::ErrorResponse,
 };
-
-/// Hash a token using SHA-256 and return the hex-encoded result.
-///
-/// This function is used to hash tokens before database lookup, ensuring
-/// that raw tokens are never stored in the database. The SHA-256 hash is
-/// one-way, so even if the database is compromised, the raw tokens cannot
-/// be recovered.
-///
-/// # Security
-///
-/// - Input tokens are consumed and not logged
-/// - Output hash is safe to log and store
-fn hash_token(token: &str) -> String {
-	let mut hasher = Sha256::new();
-	hasher.update(token.as_bytes());
-	hex::encode(hasher.finalize())
-}
 
 /// Authentication middleware that extracts auth context from requests.
 ///
@@ -117,16 +102,11 @@ pub async fn auth_layer(
 	let span = tracing::Span::current();
 
 	// Try session cookie first
-	if let Some(session_token) = extract_session_cookie_with_name(
-		headers,
-		&state.auth_config.session_cookie_name,
-	) {
-		if let Some(auth_ctx) = authenticate_session(
-			&session_token,
-			&state.session_repo,
-			&state.user_repo,
-		)
-		.await
+	if let Some(session_token) =
+		extract_session_cookie_with_name(headers, &state.auth_config.session_cookie_name)
+	{
+		if let Some(auth_ctx) =
+			authenticate_session(&session_token, &state.session_repo, &state.user_repo).await
 		{
 			if let Some(ref user) = auth_ctx.current_user {
 				span.record("auth_method", "session");
@@ -141,12 +121,8 @@ pub async fn auth_layer(
 	if let Some(bearer_token) = extract_bearer_token(headers) {
 		match identify_bearer_token(&bearer_token) {
 			BearerTokenType::ApiKey => {
-				if let Some(auth_ctx) = authenticate_api_key(
-					&bearer_token,
-					&state.api_key_repo,
-					&state.user_repo,
-				)
-				.await
+				if let Some(auth_ctx) =
+					authenticate_api_key(&bearer_token, &state.api_key_repo, &state.user_repo).await
 				{
 					if let Some(ref user) = auth_ctx.current_user {
 						span.record("auth_method", "api_key");
@@ -157,12 +133,8 @@ pub async fn auth_layer(
 				}
 			}
 			BearerTokenType::AccessToken => {
-				if let Some(auth_ctx) = authenticate_access_token(
-					&bearer_token,
-					&state.session_repo,
-					&state.user_repo,
-				)
-				.await
+				if let Some(auth_ctx) =
+					authenticate_access_token(&bearer_token, &state.session_repo, &state.user_repo).await
 				{
 					if let Some(ref user) = auth_ctx.current_user {
 						span.record("auth_method", "access_token");
@@ -186,9 +158,7 @@ pub async fn auth_layer(
 		if let Some(ref dev_user) = state.dev_user {
 			span.record("auth_method", "dev_mode");
 			span.record("user_id", tracing::field::display(&dev_user.id));
-			tracing::warn!(
-				"⚠️  DEV MODE AUTHENTICATION ENABLED - DO NOT USE IN PRODUCTION ⚠️"
-			);
+			tracing::warn!("⚠️  DEV MODE AUTHENTICATION ENABLED - DO NOT USE IN PRODUCTION ⚠️");
 			tracing::debug!("Dev mode: authenticating as dev user");
 			let current_user = CurrentUser::from_access_token(dev_user.clone());
 			request
@@ -200,7 +170,9 @@ pub async fn auth_layer(
 
 	// No valid authentication found - store unauthenticated context
 	span.record("auth_method", "none");
-	request.extensions_mut().insert(AuthContext::unauthenticated());
+	request
+		.extensions_mut()
+		.insert(AuthContext::unauthenticated());
 	next.run(request).await
 }
 
@@ -658,10 +630,7 @@ mod tests {
 			let current_user = CurrentUser::from_access_token(user);
 			let auth_ctx = AuthContext::authenticated(current_user);
 
-			let mut request = Request::builder()
-				.uri("/test")
-				.body(Body::empty())
-				.unwrap();
+			let mut request = Request::builder().uri("/test").body(Body::empty()).unwrap();
 			request.extensions_mut().insert(auth_ctx);
 
 			let response = app.oneshot(request).await.unwrap();
@@ -676,10 +645,7 @@ mod tests {
 
 			let auth_ctx = AuthContext::unauthenticated();
 
-			let mut request = Request::builder()
-				.uri("/test")
-				.body(Body::empty())
-				.unwrap();
+			let mut request = Request::builder().uri("/test").body(Body::empty()).unwrap();
 			request.extensions_mut().insert(auth_ctx);
 
 			let response = app.oneshot(request).await.unwrap();
@@ -692,10 +658,7 @@ mod tests {
 				.route("/test", get(dummy_handler))
 				.layer(middleware::from_fn(require_auth_layer));
 
-			let request = Request::builder()
-				.uri("/test")
-				.body(Body::empty())
-				.unwrap();
+			let request = Request::builder().uri("/test").body(Body::empty()).unwrap();
 
 			let response = app.oneshot(request).await.unwrap();
 			assert_eq!(response.status(), StatusCode::UNAUTHORIZED);

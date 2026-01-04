@@ -4846,6 +4846,7 @@ dependencies = [
  "loom-server-search-google-cse",
  "loom-server-search-serper",
  "loom-server-secrets",
+ "loom-server-session",
  "loom-server-smtp",
  "loom-server-weaver",
  "loom-server-wgtunnel",
@@ -5425,6 +5426,21 @@ dependencies = [
  "uuid",
  "uuid7",
  "zeroize",
+]
+
+[[package]]
+name = "loom-server-session"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "loom-server-audit",
+ "loom-server-auth",
+ "loom-server-db",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio-test",
+ "tracing",
 ]
 
 [[package]]

@@ -11,12 +11,12 @@ use tokio::time::{timeout, Instant};
 use utoipa::ToSchema;
 
 use loom_server_config::ScimConfig;
-use loom_server_weaver::Provisioner;
 use loom_server_github_app::{GithubAppClient, GithubAppError};
 use loom_server_jobs::JobScheduler;
 use loom_server_llm_service::LlmService;
 use loom_server_secrets::KeyBackend;
 use loom_server_smtp::SmtpClient;
+use loom_server_weaver::Provisioner;
 
 use crate::db::{OrgRepository, ThreadRepository};
 
@@ -454,8 +454,9 @@ const CSE_CHECK_TIMEOUT: Duration = Duration::from_secs(5);
 const CSE_CACHE_TTL: Duration = Duration::from_secs(3600); // 1 hour
 
 /// Cached CSE health result to avoid burning through API quota on health checks.
-static CSE_HEALTH_CACHE: std::sync::OnceLock<tokio::sync::RwLock<Option<(Instant, GoogleCseHealth)>>> =
-	std::sync::OnceLock::new();
+static CSE_HEALTH_CACHE: std::sync::OnceLock<
+	tokio::sync::RwLock<Option<(Instant, GoogleCseHealth)>>,
+> = std::sync::OnceLock::new();
 
 fn get_cse_cache() -> &'static tokio::sync::RwLock<Option<(Instant, GoogleCseHealth)>> {
 	CSE_HEALTH_CACHE.get_or_init(|| tokio::sync::RwLock::new(None))
@@ -504,7 +505,10 @@ pub async fn check_google_cse() -> GoogleCseHealth {
 							HealthStatus::Unhealthy,
 							Some("Invalid API key or CSE ID".to_string()),
 						)
-					} else if err_str.contains("Rate limit") || err_str.contains("429") || err_str.contains("Quota") {
+					} else if err_str.contains("Rate limit")
+						|| err_str.contains("429")
+						|| err_str.contains("Quota")
+					{
 						(
 							true,
 							HealthStatus::Degraded,
@@ -543,12 +547,15 @@ pub async fn check_google_cse() -> GoogleCseHealth {
 	// Update cache
 	{
 		let mut cache = get_cse_cache().write().await;
-		*cache = Some((Instant::now(), GoogleCseHealth {
-			status: health.status,
-			latency_ms: health.latency_ms,
-			configured: health.configured,
-			error: health.error.clone(),
-		}));
+		*cache = Some((
+			Instant::now(),
+			GoogleCseHealth {
+				status: health.status,
+				latency_ms: health.latency_ms,
+				configured: health.configured,
+				error: health.error.clone(),
+			},
+		));
 	}
 
 	health
@@ -558,8 +565,9 @@ const SERPER_CHECK_TIMEOUT: Duration = Duration::from_secs(5);
 const SERPER_CACHE_TTL: Duration = Duration::from_secs(3600); // 1 hour
 
 /// Cached Serper health result to avoid burning through API quota on health checks.
-static SERPER_HEALTH_CACHE: std::sync::OnceLock<tokio::sync::RwLock<Option<(Instant, SerperHealth)>>> =
-	std::sync::OnceLock::new();
+static SERPER_HEALTH_CACHE: std::sync::OnceLock<
+	tokio::sync::RwLock<Option<(Instant, SerperHealth)>>,
+> = std::sync::OnceLock::new();
 
 fn get_serper_cache() -> &'static tokio::sync::RwLock<Option<(Instant, SerperHealth)>> {
 	SERPER_HEALTH_CACHE.get_or_init(|| tokio::sync::RwLock::new(None))
@@ -607,7 +615,10 @@ pub async fn check_serper() -> SerperHealth {
 							HealthStatus::Unhealthy,
 							Some("Invalid API key".to_string()),
 						)
-					} else if err_str.contains("Rate limit") || err_str.contains("429") || err_str.contains("Quota") {
+					} else if err_str.contains("Rate limit")
+						|| err_str.contains("429")
+						|| err_str.contains("Quota")
+					{
 						(
 							true,
 							HealthStatus::Degraded,
@@ -646,12 +657,15 @@ pub async fn check_serper() -> SerperHealth {
 	// Update cache
 	{
 		let mut cache = get_serper_cache().write().await;
-		*cache = Some((Instant::now(), SerperHealth {
-			status: health.status,
-			latency_ms: health.latency_ms,
-			configured: health.configured,
-			error: health.error.clone(),
-		}));
+		*cache = Some((
+			Instant::now(),
+			SerperHealth {
+				status: health.status,
+				latency_ms: health.latency_ms,
+				configured: health.configured,
+				error: health.error.clone(),
+			},
+		));
 	}
 
 	health
@@ -952,8 +966,17 @@ pub fn check_auth_providers(
 /// - Master key is present and can encrypt/decrypt
 /// - SVID signing key is present and can sign
 pub async fn check_secrets(
-	secrets_service: Option<&Arc<loom_server_secrets::SecretsService<loom_server_secrets::SoftwareKeyBackend, loom_server_secrets::SqliteSecretStore>>>,
-	svid_issuer: Option<&Arc<loom_server_secrets::SvidIssuer<loom_server_secrets::SoftwareKeyBackend>>>,
+	secrets_service: Option<
+		&Arc<
+			loom_server_secrets::SecretsService<
+				loom_server_secrets::SoftwareKeyBackend,
+				loom_server_secrets::SqliteSecretStore,
+			>,
+		>,
+	>,
+	svid_issuer: Option<
+		&Arc<loom_server_secrets::SvidIssuer<loom_server_secrets::SoftwareKeyBackend>>,
+	>,
 ) -> Option<SecretsHealth> {
 	let start = Instant::now();
 
@@ -1039,7 +1062,10 @@ pub async fn check_scim(scim_config: &ScimConfig, org_repo: &OrgRepository) -> S
 				let org_id = loom_server_auth::OrgId::new(uuid);
 				match org_repo.get_org_by_id(&org_id).await {
 					Ok(Some(_)) => (true, None),
-					Ok(None) => (false, Some(format!("Organization {} not found", org_id_str))),
+					Ok(None) => (
+						false,
+						Some(format!("Organization {} not found", org_id_str)),
+					),
 					Err(e) => (false, Some(format!("Failed to check organization: {}", e))),
 				}
 			}
