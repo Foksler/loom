@@ -212,7 +212,7 @@
           
         in
         {
-          inherit (pkgs) smtprelay loom-web;
+          inherit (pkgs) git gitFull smtprelay loom-web;
           inherit (pkgs) loom-cli-windows loom-cli-macos loom-cli-linux-aarch64 loom-cli-windows-aarch64;
           inherit (pkgsWithTools) license;
           

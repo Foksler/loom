@@ -23,6 +23,8 @@ let
   else null;
 in
 {
+  git = import ../../third_party/git { inherit (prev) git; };
+  gitFull = import ../../third_party/git { git = prev.gitFull; };
   smtprelay = final.callPackage ./smtprelay.nix { };
   loom-server = final.callPackage ./loom-server.nix { };
   loom-cli = final.callPackage ./loom-cli.nix { };
