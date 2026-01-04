@@ -26,7 +26,7 @@
     pkgs.neovim # Modern, backwards-compatible vim fork
     pkgs.nixpkgs-fmt # Nix code formatter
     pkgs.opentelemetry-collector # Telemetry data collector and processor
-    pkgs.pre-commit # Framework for managing git pre-commit hooks
+    pkgs.prek # Faster pre-commit alternative (Rust, no Python/dotnet dependency)
     pkgs.starship # Cross-shell customizable prompt
     pkgs.sqlite # SQL database engine
     pkgs.stow # Symlink farm manager
