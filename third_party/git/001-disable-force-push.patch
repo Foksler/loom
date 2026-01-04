@@ -2,7 +2,7 @@ diff --git a/builtin/push.c b/builtin/push.c
 index 5b6cebb..951930f 100644
 --- a/builtin/push.c
 +++ b/builtin/push.c
-@@ -552,6 +552,7 @@ int cmd_push(int argc,
+@@ -551,6 +551,7 @@ int cmd_push(int argc,
  	int tags = 0;
  	int push_cert = -1;
  	int rc;
@@ -19,7 +19,7 @@ index 5b6cebb..951930f 100644
  		OPT_CALLBACK_F(0, "force-with-lease", &cas, N_("<refname>:<expect>"),
  			       N_("require old value of ref to be at this value"),
  			       PARSE_OPT_OPTARG | PARSE_OPT_LITERAL_ARGHELP, parseopt_push_cas_option),
-@@ -605,6 +606,9 @@ int cmd_push(int argc,
+@@ -603,6 +604,9 @@ int cmd_push(int argc,
  		: &push_options_config);
  	set_push_cert_flags(&flags, push_cert);
  
