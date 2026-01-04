@@ -350,14 +350,6 @@
     preserveGenerations = "1d";
   };
 
-  # KDE Plasma Desktop Environment
-  services.displayManager.sddm.enable = true;
-  services.desktopManager.plasma6.enable = true;
-  services.xserver.enable = true;
-
-  # Firefox browser
-  programs.firefox.enable = true;
-
   # Podman container runtime (images built and pushed by GitHub Actions)
   services.loom-podman = {
     enable = true;

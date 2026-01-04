@@ -220,6 +220,9 @@
           skopeo = pkgsWithCargo2nix.skopeo;
           cosign = pkgsWithCargo2nix.cosign;
           
+          # prek - faster pre-commit alternative (Rust-based, no Python dependency)
+          prek = pkgsWithCargo2nix.prek;
+          
           # cargo2nix tool for regenerating Cargo.nix
           cargo2nix = cargo2nix.packages.${system}.cargo2nix;
           
