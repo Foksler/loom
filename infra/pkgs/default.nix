@@ -25,7 +25,7 @@ in
 {
   git = import ../../third_party/git { inherit (prev) git; };
   gitFull = import ../../third_party/git { git = prev.gitFull; };
-  smtprelay = final.callPackage ./smtprelay.nix { };
+  smtprelay = final.callPackage ../../third_party/smtprelay { };
   loom-server = final.callPackage ./loom-server.nix { };
   loom-cli = final.callPackage ./loom-cli.nix { };
   loom-cli-linux = final.callPackage ./loom-cli-linux.nix { };

@@ -8,6 +8,7 @@
 
 buildGoModule rec {
   pname = "smtprelay";
+  # Note: v2.3.0 requires Go 1.25.3+ which isn't available in nixpkgs yet
   version = "2.2.3";
 
   src = fetchFromGitHub {
