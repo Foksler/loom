@@ -227,22 +227,22 @@ pub struct AuthProvidersHealth {
 /// All health check components.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct HealthComponents {
-	pub database: DatabaseHealth,
+	pub auth_providers: AuthProvidersHealth,
 	pub bin_dir: BinDirHealth,
-	pub llm_providers: LlmProvidersHealth,
-	pub google_cse: GoogleCseHealth,
-	pub serper: SerperHealth,
-	pub github_app: GithubAppHealth,
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub kubernetes: Option<KubernetesHealth>,
-	pub smtp: SmtpHealth,
+	pub database: DatabaseHealth,
 	pub geoip: GeoIpHealth,
+	pub github_app: GithubAppHealth,
+	pub google_cse: GoogleCseHealth,
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub jobs: Option<JobsHealth>,
-	pub auth_providers: AuthProvidersHealth,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub kubernetes: Option<KubernetesHealth>,
+	pub llm_providers: LlmProvidersHealth,
+	pub scim: ScimHealth,
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub secrets: Option<SecretsHealth>,
-	pub scim: ScimHealth,
+	pub serper: SerperHealth,
+	pub smtp: SmtpHealth,
 }
 
 /// Complete health check response.

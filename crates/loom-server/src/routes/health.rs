@@ -52,19 +52,19 @@ pub async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
 	);
 
 	let components = HealthComponents {
-		database,
-		bin_dir,
-		llm_providers,
-		google_cse,
-		serper,
-		github_app,
-		kubernetes,
-		smtp,
-		geoip,
-		jobs,
 		auth_providers,
-		secrets,
+		bin_dir,
+		database,
+		geoip,
+		github_app,
+		google_cse,
+		jobs,
+		kubernetes,
+		llm_providers,
 		scim,
+		secrets,
+		serper,
+		smtp,
 	};
 
 	let status = health::aggregate_status(&components);
