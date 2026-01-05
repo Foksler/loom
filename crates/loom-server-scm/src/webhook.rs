@@ -4,8 +4,8 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use loom_common_secret::SecretString;
+use loom_server_db::{ScmRepository, WebhookDeliveryRecord, WebhookRecord};
 use serde::{Deserialize, Serialize};
-use sqlx::{Row, SqlitePool};
 use uuid::Uuid;
 
 use crate::error::{Result, ScmError};
@@ -211,258 +211,150 @@ pub trait WebhookStore: Send + Sync {
 }
 
 pub struct SqliteWebhookStore {
-	pool: SqlitePool,
+	db: ScmRepository,
 }
 
 impl SqliteWebhookStore {
-	pub fn new(pool: SqlitePool) -> Self {
-		Self { pool }
+	pub fn new(db: ScmRepository) -> Self {
+		Self { db }
 	}
 
-	fn row_to_webhook(&self, row: &sqlx::sqlite::SqliteRow) -> Result<Webhook> {
-		let id_str: String = row.get("id");
-		let owner_type_str: String = row.get("owner_type");
-		let owner_id_str: String = row.get("owner_id");
-		let payload_format_str: String = row.get("payload_format");
-		let events_str: String = row.get("events");
-		let created_at_str: String = row.get("created_at");
-
+	fn record_to_webhook(record: WebhookRecord) -> Result<Webhook> {
 		Ok(Webhook {
-			id: Uuid::parse_str(&id_str)
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			owner_type: owner_type_str.parse::<WebhookOwnerType>().map_err(|_| {
+			id: record.id,
+			owner_type: record.owner_type.parse::<WebhookOwnerType>().map_err(|_| {
 				ScmError::Database(sqlx::Error::Decode(
-					format!("invalid owner_type: {}", owner_type_str).into(),
+					format!("invalid owner_type: {}", record.owner_type).into(),
 				))
 			})?,
-			owner_id: Uuid::parse_str(&owner_id_str)
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			url: row.get("url"),
-			secret: SecretString::new(row.get("secret")),
-			payload_format: payload_format_str.parse::<PayloadFormat>().map_err(|_| {
+			owner_id: record.owner_id,
+			url: record.url,
+			secret: record.secret,
+			payload_format: record.payload_format.parse::<PayloadFormat>().map_err(|_| {
 				ScmError::Database(sqlx::Error::Decode(
-					format!("invalid payload_format: {}", payload_format_str).into(),
+					format!("invalid payload_format: {}", record.payload_format).into(),
 				))
 			})?,
-			events: serde_json::from_str(&events_str)
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			enabled: row.get::<i32, _>("enabled") != 0,
-			created_at: DateTime::parse_from_rfc3339(&created_at_str)
-				.map(|d| d.with_timezone(&Utc))
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
+			events: record.events,
+			enabled: record.enabled,
+			created_at: record.created_at,
 		})
 	}
 
-	fn row_to_delivery(&self, row: &sqlx::sqlite::SqliteRow) -> Result<WebhookDelivery> {
-		let id_str: String = row.get("id");
-		let webhook_id_str: String = row.get("webhook_id");
-		let payload_str: String = row.get("payload");
-		let delivered_at_str: Option<String> = row.get("delivered_at");
-		let next_retry_at_str: Option<String> = row.get("next_retry_at");
-		let status_str: String = row.get("status");
+	fn webhook_to_record(webhook: &Webhook) -> WebhookRecord {
+		WebhookRecord {
+			id: webhook.id,
+			owner_type: webhook.owner_type.as_str().to_string(),
+			owner_id: webhook.owner_id,
+			url: webhook.url.clone(),
+			secret: SecretString::new(webhook.secret.expose().clone()),
+			payload_format: webhook.payload_format.as_str().to_string(),
+			events: webhook.events.clone(),
+			enabled: webhook.enabled,
+			created_at: webhook.created_at,
+		}
+	}
 
+	fn record_to_delivery(record: WebhookDeliveryRecord) -> Result<WebhookDelivery> {
 		Ok(WebhookDelivery {
-			id: Uuid::parse_str(&id_str)
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			webhook_id: Uuid::parse_str(&webhook_id_str)
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			event: row.get("event"),
-			payload: serde_json::from_str(&payload_str)
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			response_code: row.get("response_code"),
-			response_body: row.get("response_body"),
-			delivered_at: delivered_at_str
-				.map(|s| DateTime::parse_from_rfc3339(&s).map(|d| d.with_timezone(&Utc)))
-				.transpose()
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			attempts: row.get("attempts"),
-			next_retry_at: next_retry_at_str
-				.map(|s| DateTime::parse_from_rfc3339(&s).map(|d| d.with_timezone(&Utc)))
-				.transpose()
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			status: status_str.parse::<DeliveryStatus>().map_err(|_| {
+			id: record.id,
+			webhook_id: record.webhook_id,
+			event: record.event,
+			payload: record.payload,
+			response_code: record.response_code,
+			response_body: record.response_body,
+			delivered_at: record.delivered_at,
+			attempts: record.attempts,
+			next_retry_at: record.next_retry_at,
+			status: record.status.parse::<DeliveryStatus>().map_err(|_| {
 				ScmError::Database(sqlx::Error::Decode(
-					format!("invalid status: {}", status_str).into(),
+					format!("invalid status: {}", record.status).into(),
 				))
 			})?,
 		})
+	}
+
+	fn delivery_to_record(delivery: &WebhookDelivery) -> WebhookDeliveryRecord {
+		WebhookDeliveryRecord {
+			id: delivery.id,
+			webhook_id: delivery.webhook_id,
+			event: delivery.event.clone(),
+			payload: delivery.payload.clone(),
+			response_code: delivery.response_code,
+			response_body: delivery.response_body.clone(),
+			delivered_at: delivery.delivered_at,
+			attempts: delivery.attempts,
+			next_retry_at: delivery.next_retry_at,
+			status: delivery.status.as_str().to_string(),
+		}
+	}
+}
+
+fn db_err(e: loom_server_db::DbError) -> ScmError {
+	match e {
+		loom_server_db::DbError::Sqlx(e) => ScmError::Database(e),
+		_ => ScmError::Database(sqlx::Error::Protocol(e.to_string())),
 	}
 }
 
 #[async_trait]
 impl WebhookStore for SqliteWebhookStore {
 	async fn create(&self, webhook: &Webhook) -> Result<Webhook> {
-		let events_json =
-			serde_json::to_string(&webhook.events).map_err(|e| ScmError::GitError(e.to_string()))?;
-
-		sqlx::query(
-			r#"
-			INSERT INTO webhooks (id, owner_type, owner_id, url, secret, payload_format, events, enabled, created_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-			"#,
-		)
-		.bind(webhook.id.to_string())
-		.bind(webhook.owner_type.as_str())
-		.bind(webhook.owner_id.to_string())
-		.bind(&webhook.url)
-		.bind(webhook.secret.expose())
-		.bind(webhook.payload_format.as_str())
-		.bind(&events_json)
-		.bind(webhook.enabled as i32)
-		.bind(webhook.created_at.to_rfc3339())
-		.execute(&self.pool)
-		.await?;
-
+		let record = Self::webhook_to_record(webhook);
+		self.db.create_webhook(&record).await.map_err(db_err)?;
 		Ok(webhook.clone())
 	}
 
 	async fn get_by_id(&self, id: Uuid) -> Result<Option<Webhook>> {
-		let row = sqlx::query(
-			r#"
-			SELECT id, owner_type, owner_id, url, secret, payload_format, events, enabled, created_at
-			FROM webhooks
-			WHERE id = ?
-			"#,
-		)
-		.bind(id.to_string())
-		.fetch_optional(&self.pool)
-		.await?;
-
-		row.map(|r| self.row_to_webhook(&r)).transpose()
+		let record = self.db.get_webhook_by_id(id).await.map_err(db_err)?;
+		record.map(Self::record_to_webhook).transpose()
 	}
 
 	async fn list_by_repo(&self, repo_id: Uuid) -> Result<Vec<Webhook>> {
-		let rows = sqlx::query(
-			r#"
-			SELECT id, owner_type, owner_id, url, secret, payload_format, events, enabled, created_at
-			FROM webhooks
-			WHERE owner_type = 'repo' AND owner_id = ?
-			ORDER BY created_at DESC
-			"#,
-		)
-		.bind(repo_id.to_string())
-		.fetch_all(&self.pool)
-		.await?;
-
-		rows.iter().map(|r| self.row_to_webhook(r)).collect()
+		let records = self.db.list_webhooks_by_repo(repo_id).await.map_err(db_err)?;
+		records.into_iter().map(Self::record_to_webhook).collect()
 	}
 
 	async fn list_by_org(&self, org_id: Uuid) -> Result<Vec<Webhook>> {
-		let rows = sqlx::query(
-			r#"
-			SELECT id, owner_type, owner_id, url, secret, payload_format, events, enabled, created_at
-			FROM webhooks
-			WHERE owner_type = 'org' AND owner_id = ?
-			ORDER BY created_at DESC
-			"#,
-		)
-		.bind(org_id.to_string())
-		.fetch_all(&self.pool)
-		.await?;
-
-		rows.iter().map(|r| self.row_to_webhook(r)).collect()
+		let records = self.db.list_webhooks_by_org(org_id).await.map_err(db_err)?;
+		records.into_iter().map(Self::record_to_webhook).collect()
 	}
 
 	async fn delete(&self, id: Uuid) -> Result<()> {
-		let result = sqlx::query(
-			r#"
-			DELETE FROM webhooks WHERE id = ?
-			"#,
-		)
-		.bind(id.to_string())
-		.execute(&self.pool)
-		.await?;
-
-		if result.rows_affected() == 0 {
-			return Err(ScmError::NotFound);
-		}
-
-		Ok(())
+		self.db.delete_webhook(id).await.map_err(|e| match e {
+			loom_server_db::DbError::NotFound(_) => ScmError::NotFound,
+			loom_server_db::DbError::Sqlx(e) => ScmError::Database(e),
+			_ => ScmError::Database(sqlx::Error::Protocol(e.to_string())),
+		})
 	}
 
 	async fn create_delivery(&self, delivery: &WebhookDelivery) -> Result<WebhookDelivery> {
-		let payload_json =
-			serde_json::to_string(&delivery.payload).map_err(|e| ScmError::GitError(e.to_string()))?;
-
-		sqlx::query(
-			r#"
-			INSERT INTO webhook_deliveries (id, webhook_id, event, payload, response_code, response_body, delivered_at, attempts, next_retry_at, status)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-			"#,
-		)
-		.bind(delivery.id.to_string())
-		.bind(delivery.webhook_id.to_string())
-		.bind(&delivery.event)
-		.bind(&payload_json)
-		.bind(delivery.response_code)
-		.bind(&delivery.response_body)
-		.bind(delivery.delivered_at.map(|d| d.to_rfc3339()))
-		.bind(delivery.attempts)
-		.bind(delivery.next_retry_at.map(|d| d.to_rfc3339()))
-		.bind(delivery.status.as_str())
-		.execute(&self.pool)
-		.await?;
-
+		let record = Self::delivery_to_record(delivery);
+		self.db.create_webhook_delivery(&record).await.map_err(db_err)?;
 		Ok(delivery.clone())
 	}
 
 	async fn update_delivery(&self, delivery: &WebhookDelivery) -> Result<()> {
-		let result = sqlx::query(
-			r#"
-			UPDATE webhook_deliveries
-			SET response_code = ?, response_body = ?, delivered_at = ?, attempts = ?, next_retry_at = ?, status = ?
-			WHERE id = ?
-			"#,
-		)
-		.bind(delivery.response_code)
-		.bind(&delivery.response_body)
-		.bind(delivery.delivered_at.map(|d| d.to_rfc3339()))
-		.bind(delivery.attempts)
-		.bind(delivery.next_retry_at.map(|d| d.to_rfc3339()))
-		.bind(delivery.status.as_str())
-		.bind(delivery.id.to_string())
-		.execute(&self.pool)
-		.await?;
-
-		if result.rows_affected() == 0 {
-			return Err(ScmError::NotFound);
-		}
-
-		Ok(())
+		let record = Self::delivery_to_record(delivery);
+		self.db.update_webhook_delivery(&record).await.map_err(|e| match e {
+			loom_server_db::DbError::NotFound(_) => ScmError::NotFound,
+			loom_server_db::DbError::Sqlx(e) => ScmError::Database(e),
+			_ => ScmError::Database(sqlx::Error::Protocol(e.to_string())),
+		})
 	}
 
 	async fn get_pending_deliveries(&self) -> Result<Vec<WebhookDelivery>> {
-		let now = Utc::now().to_rfc3339();
-		let rows = sqlx::query(
-			r#"
-			SELECT id, webhook_id, event, payload, response_code, response_body, delivered_at, attempts, next_retry_at, status
-			FROM webhook_deliveries
-			WHERE status = 'pending' AND (next_retry_at IS NULL OR next_retry_at <= ?)
-			ORDER BY next_retry_at ASC, id ASC
-			LIMIT 100
-			"#,
-		)
-		.bind(&now)
-		.fetch_all(&self.pool)
-		.await?;
-
-		rows.iter().map(|r| self.row_to_delivery(r)).collect()
+		let records = self.db.get_pending_webhook_deliveries().await.map_err(db_err)?;
+		records.into_iter().map(Self::record_to_delivery).collect()
 	}
 
 	async fn get_webhook_for_delivery(&self, delivery_id: Uuid) -> Result<Option<Webhook>> {
-		let row = sqlx::query(
-			r#"
-			SELECT w.id, w.owner_type, w.owner_id, w.url, w.secret, w.payload_format, w.events, w.enabled, w.created_at
-			FROM webhooks w
-			INNER JOIN webhook_deliveries d ON d.webhook_id = w.id
-			WHERE d.id = ?
-			"#,
-		)
-		.bind(delivery_id.to_string())
-		.fetch_optional(&self.pool)
-		.await?;
-
-		row.map(|r| self.row_to_webhook(&r)).transpose()
+		let record = self
+			.db
+			.get_webhook_for_delivery(delivery_id)
+			.await
+			.map_err(db_err)?;
+		record.map(Self::record_to_webhook).transpose()
 	}
 }
 
@@ -686,17 +578,9 @@ pub mod payload {
 
 pub mod delivery {
 	use super::*;
-	use hmac::{Hmac, Mac};
-	use sha2::Sha256;
-
-	type HmacSha256 = Hmac<Sha256>;
 
 	pub fn sign_payload(secret: &str, body: &[u8]) -> String {
-		let mut mac =
-			HmacSha256::new_from_slice(secret.as_bytes()).expect("HMAC can take key of any size");
-		mac.update(body);
-		let result = mac.finalize();
-		let signature = hex::encode(result.into_bytes());
+		let signature = loom_common_webhook::compute_hmac_sha256(secret.as_bytes(), body);
 		format!("sha256={}", signature)
 	}
 

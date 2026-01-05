@@ -21,10 +21,9 @@ tokio.workspace = true
 tracing.workspace = true
 uuid7.workspace = true
 
-hex.workspace = true
-hmac.workspace = true
 reqwest.workspace = true
-sha2.workspace = true
+
+loom-common-webhook.workspace = true
 
 loom-server-k8s.workspace = true
 loom-common-secret.workspace = true

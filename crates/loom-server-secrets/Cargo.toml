@@ -54,6 +54,7 @@ hex = "0.4"
 
 # Internal crates
 loom-server-auth = { path = "../loom-server-auth" }
+loom-server-db = { path = "../loom-server-db" }
 loom-server-k8s = { path = "../loom-server-k8s" }
 
 [dev-dependencies]

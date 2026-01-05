@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Proprietary
 
 use crate::error::{Result, WgError};
-use sqlx::SqlitePool;
+use loom_server_db::WgTunnelRepository;
 use std::net::Ipv6Addr;
 use std::sync::atomic::{AtomicU64, Ordering};
 use tracing::instrument;
@@ -13,15 +13,15 @@ const CLIENT_SUBNET_BASE: u128 = 0xfd7a_115c_a1e0_0002_0000_0000_0000_0000;
 const SUBNET_HOST_MASK: u128 = 0x0000_0000_0000_0000_FFFF_FFFF_FFFF_FFFF;
 
 pub struct IpAllocator {
-	db: SqlitePool,
+	repo: WgTunnelRepository,
 	weaver_counter: AtomicU64,
 	client_counter: AtomicU64,
 }
 
 impl IpAllocator {
-	pub async fn new(db: SqlitePool) -> Result<Self> {
+	pub async fn new(repo: WgTunnelRepository) -> Result<Self> {
 		let allocator = Self {
-			db,
+			repo,
 			weaver_counter: AtomicU64::new(1),
 			client_counter: AtomicU64::new(1),
 		};
@@ -40,12 +40,7 @@ impl IpAllocator {
 	}
 
 	async fn get_max_host_number(&self, allocation_type: &str) -> Result<u64> {
-		let ips: Vec<(String,)> = sqlx::query_as(
-			"SELECT ip FROM wg_ip_allocations WHERE allocation_type = ? AND released_at IS NULL",
-		)
-		.bind(allocation_type)
-		.fetch_all(&self.db)
-		.await?;
+		let ips = self.repo.get_allocated_ips_by_type(allocation_type).await?;
 
 		let mut max_host: u64 = 0;
 		for (ip_str,) in ips {
@@ -63,12 +58,7 @@ impl IpAllocator {
 
 	#[instrument(skip(self), fields(%weaver_id))]
 	pub async fn allocate_weaver_ip(&self, weaver_id: Uuid) -> Result<Ipv6Addr> {
-		let existing: Option<(String,)> = sqlx::query_as(
-			"SELECT ip FROM wg_ip_allocations WHERE entity_id = ? AND released_at IS NULL",
-		)
-		.bind(weaver_id.to_string())
-		.fetch_optional(&self.db)
-		.await?;
+		let existing = self.repo.get_allocation_for_entity(weaver_id).await?;
 
 		if let Some((ip_str,)) = existing {
 			return ip_str
@@ -86,26 +76,17 @@ impl IpAllocator {
 		let addr = Ipv6Addr::from(WEAVER_SUBNET_BASE | (host as u128));
 		let ip_str = addr.to_string();
 
-		sqlx::query(
-			"INSERT INTO wg_ip_allocations (ip, allocation_type, entity_id, allocated_at)
-             VALUES (?, 'weaver', ?, datetime('now'))",
-		)
-		.bind(&ip_str)
-		.bind(weaver_id.to_string())
-		.execute(&self.db)
-		.await?;
+		self
+			.repo
+			.insert_ip_allocation(&ip_str, "weaver", weaver_id)
+			.await?;
 
 		Ok(addr)
 	}
 
 	#[instrument(skip(self), fields(%session_id))]
 	pub async fn allocate_client_ip(&self, session_id: Uuid) -> Result<Ipv6Addr> {
-		let existing: Option<(String,)> = sqlx::query_as(
-			"SELECT ip FROM wg_ip_allocations WHERE entity_id = ? AND released_at IS NULL",
-		)
-		.bind(session_id.to_string())
-		.fetch_optional(&self.db)
-		.await?;
+		let existing = self.repo.get_allocation_for_entity(session_id).await?;
 
 		if let Some((ip_str,)) = existing {
 			return ip_str
@@ -123,24 +104,17 @@ impl IpAllocator {
 		let addr = Ipv6Addr::from(CLIENT_SUBNET_BASE | (host as u128));
 		let ip_str = addr.to_string();
 
-		sqlx::query(
-			"INSERT INTO wg_ip_allocations (ip, allocation_type, entity_id, allocated_at)
-             VALUES (?, 'client', ?, datetime('now'))",
-		)
-		.bind(&ip_str)
-		.bind(session_id.to_string())
-		.execute(&self.db)
-		.await?;
+		self
+			.repo
+			.insert_ip_allocation(&ip_str, "client", session_id)
+			.await?;
 
 		Ok(addr)
 	}
 
 	#[instrument(skip(self), fields(%ip))]
 	pub async fn release_ip(&self, ip: Ipv6Addr) -> Result<()> {
-		sqlx::query("UPDATE wg_ip_allocations SET released_at = datetime('now') WHERE ip = ?")
-			.bind(ip.to_string())
-			.execute(&self.db)
-			.await?;
+		self.repo.release_ip(ip).await?;
 
 		Ok(())
 	}

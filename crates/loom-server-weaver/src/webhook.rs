@@ -6,13 +6,9 @@
 use crate::config::{WebhookConfig, WebhookEvent};
 use crate::types::Weaver;
 use chrono::{DateTime, Utc};
-use hmac::{Hmac, Mac};
 use serde::Serialize;
-use sha2::Sha256;
 use std::collections::HashMap;
 use tracing::{debug, error, warn};
-
-type HmacSha256 = Hmac<Sha256>;
 
 /// Payload sent to webhook endpoints.
 #[derive(Debug, Clone, Serialize)]
@@ -112,13 +108,8 @@ impl WebhookPayload {
 	}
 }
 
-/// Compute HMAC-SHA256 signature for webhook payload.
 fn compute_signature(secret: &str, body: &str) -> String {
-	let mut mac =
-		HmacSha256::new_from_slice(secret.as_bytes()).expect("HMAC can take key of any size");
-	mac.update(body.as_bytes());
-	let result = mac.finalize();
-	hex::encode(result.into_bytes())
+	loom_common_webhook::compute_hmac_sha256(secret.as_bytes(), body.as_bytes())
 }
 
 /// Dispatches webhook notifications for weaver lifecycle events.

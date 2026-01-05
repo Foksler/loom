@@ -149,6 +149,8 @@ pub fn create_mock_provisioner() -> Arc<Provisioner> {
 		server_url: String::new(),
 		secrets_server_url: None,
 		secrets_allow_insecure: false,
+		wg_enabled: false,
+		wg_server_url: None,
 	};
 	Arc::new(Provisioner::new(client, config))
 }

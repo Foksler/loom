@@ -11,7 +11,7 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use sqlx::{FromRow, Row, SqlitePool};
+use sqlx::SqlitePool;
 use tracing::{debug, instrument};
 use uuid::Uuid;
 
@@ -19,6 +19,10 @@ use crate::error::{SecretsError, SecretsResult};
 use crate::key_backend::EncryptedDekData;
 use crate::types::{SecretId, SecretScope, SecretVersionId, WeaverId};
 use loom_server_auth::types::{OrgId, UserId};
+use loom_server_db::{
+	CreateSecretParams, CreateVersionParams, SecretFilterParams, SecretRow, SecretVersionRow,
+	SecretsRepository, StoreDekParams,
+};
 
 /// A stored secret with encrypted value.
 #[derive(Debug, Clone)]
@@ -51,20 +55,10 @@ pub struct StoredSecretVersion {
 	pub disabled_at: Option<DateTime<Utc>>,
 }
 
-/// A stored encrypted DEK.
-#[derive(Debug, Clone, FromRow)]
-pub struct StoredDek {
-	pub id: String,
-	pub encrypted_key: Vec<u8>,
-	pub nonce: Vec<u8>,
-	pub kek_version: i32,
-	pub created_at: String,
-}
-
-impl TryFrom<StoredDek> for EncryptedDekData {
+impl TryFrom<loom_server_db::EncryptedDekRow> for EncryptedDekData {
 	type Error = SecretsError;
 
-	fn try_from(stored: StoredDek) -> Result<Self, Self::Error> {
+	fn try_from(stored: loom_server_db::EncryptedDekRow) -> Result<Self, Self::Error> {
 		if stored.nonce.len() != 12 {
 			return Err(SecretsError::InvalidNonce(format!(
 				"expected 12 bytes, got {}",
@@ -174,13 +168,15 @@ pub trait SecretStore: Send + Sync {
 
 /// SQLite implementation of SecretStore.
 pub struct SqliteSecretStore {
-	pool: SqlitePool,
+	repo: SecretsRepository,
 }
 
 impl SqliteSecretStore {
 	/// Create a new SQLite secret store.
 	pub fn new(pool: SqlitePool) -> Self {
-		Self { pool }
+		Self {
+			repo: SecretsRepository::new(pool),
+		}
 	}
 }
 
@@ -196,54 +192,43 @@ impl SecretStore for SqliteSecretStore {
 		let scope_str = request.scope.as_str();
 		let repo_id_str = request.repo_id.map(|id| id.to_string());
 
-		let mut tx = self.pool.begin().await.map_err(SecretsError::Database)?;
+		let secret_params = CreateSecretParams {
+			id: secret_id.to_string(),
+			org_id: request.org_id.to_string(),
+			scope: scope_str.to_string(),
+			repo_id: repo_id_str.clone(),
+			weaver_id: request.weaver_id.clone(),
+			name: request.name.clone(),
+			description: request.description.clone(),
+			created_by: request.created_by.to_string(),
+			created_at: now_str.clone(),
+			updated_at: now_str.clone(),
+		};
 
-		// Insert secret
-		sqlx::query(
-			r#"
-            INSERT INTO secrets (id, org_id, scope, repo_id, weaver_id, name, description, current_version, created_by, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)
-            "#,
-		)
-		.bind(secret_id.to_string())
-		.bind(request.org_id.to_string())
-		.bind(scope_str)
-		.bind(&repo_id_str)
-		.bind(&request.weaver_id)
-		.bind(&request.name)
-		.bind(&request.description)
-		.bind(request.created_by.to_string())
-		.bind(&now_str)
-		.bind(&now_str)
-		.execute(&mut *tx)
-		.await
-		.map_err(|e| {
-			if is_unique_constraint_error(&e) {
+		self.repo.insert_secret(&secret_params).await.map_err(|e| match e {
+			loom_server_db::DbError::Conflict(_) => {
 				SecretsError::SecretAlreadyExists(request.name.clone())
-			} else {
-				SecretsError::Database(e)
 			}
+			loom_server_db::DbError::Sqlx(e) => SecretsError::Database(e),
+			other => SecretsError::Database(sqlx::Error::Protocol(other.to_string())),
 		})?;
 
-		// Insert initial version
-		sqlx::query(
-			r#"
-            INSERT INTO secret_versions (id, secret_id, version, ciphertext, nonce, dek_id, created_by, created_at)
-            VALUES (?, ?, 1, ?, ?, ?, ?, ?)
-            "#,
-		)
-		.bind(version_id.to_string())
-		.bind(secret_id.to_string())
-		.bind(&request.ciphertext)
-		.bind(&request.nonce)
-		.bind(&request.dek_id)
-		.bind(request.created_by.to_string())
-		.bind(&now_str)
-		.execute(&mut *tx)
-		.await
-		.map_err(SecretsError::Database)?;
+		let version_params = CreateVersionParams {
+			id: version_id.to_string(),
+			secret_id: secret_id.to_string(),
+			version: 1,
+			ciphertext: request.ciphertext,
+			nonce: request.nonce,
+			dek_id: request.dek_id,
+			created_by: request.created_by.to_string(),
+			created_at: now_str,
+			expires_at: None,
+		};
 
-		tx.commit().await.map_err(SecretsError::Database)?;
+		self.repo
+			.insert_version(&version_params)
+			.await
+			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
 
 		debug!(secret_id = %secret_id, name = %request.name, "Created secret");
 
@@ -263,17 +248,11 @@ impl SecretStore for SqliteSecretStore {
 	}
 
 	async fn get_secret(&self, id: SecretId) -> SecretsResult<Option<StoredSecret>> {
-		let row = sqlx::query(
-			r#"
-            SELECT id, org_id, scope, repo_id, weaver_id, name, description, current_version, created_by, created_at, updated_at
-            FROM secrets
-            WHERE id = ? AND deleted_at IS NULL
-            "#,
-		)
-		.bind(id.to_string())
-		.fetch_optional(&self.pool)
-		.await
-		.map_err(SecretsError::Database)?;
+		let row = self
+			.repo
+			.get_secret(&id.to_string())
+			.await
+			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
 
 		match row {
 			Some(row) => Ok(Some(parse_secret_row(&row)?)),
@@ -292,25 +271,17 @@ impl SecretStore for SqliteSecretStore {
 		let scope_str = scope.as_str();
 		let repo_id_str = repo_id.map(|id| id.to_string());
 
-		let row = sqlx::query(
-			r#"
-            SELECT id, org_id, scope, repo_id, weaver_id, name, description, current_version, created_by, created_at, updated_at
-            FROM secrets
-            WHERE org_id = ? AND scope = ? AND (repo_id = ? OR (repo_id IS NULL AND ? IS NULL))
-              AND (weaver_id = ? OR (weaver_id IS NULL AND ? IS NULL))
-              AND name = ? AND deleted_at IS NULL
-            "#,
-		)
-		.bind(org_id.to_string())
-		.bind(scope_str)
-		.bind(&repo_id_str)
-		.bind(&repo_id_str)
-		.bind(weaver_id)
-		.bind(weaver_id)
-		.bind(name)
-		.fetch_optional(&self.pool)
-		.await
-		.map_err(SecretsError::Database)?;
+		let row = self
+			.repo
+			.get_secret_by_name(
+				&org_id.to_string(),
+				scope_str,
+				repo_id_str.as_deref(),
+				weaver_id,
+				name,
+			)
+			.await
+			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
 
 		match row {
 			Some(row) => Ok(Some(parse_secret_row(&row)?)),
@@ -319,55 +290,19 @@ impl SecretStore for SqliteSecretStore {
 	}
 
 	async fn list_secrets(&self, filter: &SecretFilter) -> SecretsResult<Vec<StoredSecret>> {
-		// Build dynamic query based on filter
-		let mut query = String::from(
-			r#"
-            SELECT id, org_id, scope, repo_id, weaver_id, name, description, current_version, created_by, created_at, updated_at
-            FROM secrets
-            WHERE deleted_at IS NULL
-            "#,
-		);
+		let filter_params = SecretFilterParams {
+			org_id: filter.org_id.map(|id| id.to_string()),
+			scope: filter.scope.as_ref().map(|s| s.as_str().to_string()),
+			repo_id: filter.repo_id.map(|id| id.to_string()),
+			weaver_id: filter.weaver_id.clone(),
+			name: filter.name.clone(),
+		};
 
-		if filter.org_id.is_some() {
-			query.push_str(" AND org_id = ?");
-		}
-		if filter.scope.is_some() {
-			query.push_str(" AND scope = ?");
-		}
-		if filter.repo_id.is_some() {
-			query.push_str(" AND repo_id = ?");
-		}
-		if filter.weaver_id.is_some() {
-			query.push_str(" AND weaver_id = ?");
-		}
-		if filter.name.is_some() {
-			query.push_str(" AND name = ?");
-		}
-
-		query.push_str(" ORDER BY name ASC");
-
-		let mut q = sqlx::query(&query);
-
-		if let Some(ref org_id) = filter.org_id {
-			q = q.bind(org_id.to_string());
-		}
-		if let Some(ref scope) = filter.scope {
-			q = q.bind(scope.as_str());
-		}
-		if let Some(ref repo_id) = filter.repo_id {
-			q = q.bind(repo_id.to_string());
-		}
-		if let Some(ref weaver_id) = filter.weaver_id {
-			q = q.bind(weaver_id);
-		}
-		if let Some(ref name) = filter.name {
-			q = q.bind(name);
-		}
-
-		let rows = q
-			.fetch_all(&self.pool)
+		let rows = self
+			.repo
+			.list_secrets(&filter_params)
 			.await
-			.map_err(SecretsError::Database)?;
+			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
 
 		rows.iter().map(parse_secret_row).collect()
 	}
@@ -381,54 +316,53 @@ impl SecretStore for SqliteSecretStore {
 		let now_str = now.to_rfc3339();
 		let expires_at_str = request.expires_at.map(|dt| dt.to_rfc3339());
 
-		let mut tx = self.pool.begin().await.map_err(SecretsError::Database)?;
+		let mut tx = self
+			.repo
+			.begin()
+			.await
+			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
 
-		// Get next version number within transaction
-		let next_version: i32 = sqlx::query_scalar(
-			"SELECT COALESCE(MAX(version), 0) + 1 FROM secret_versions WHERE secret_id = ?",
-		)
-		.bind(request.secret_id.to_string())
-		.fetch_one(&mut *tx)
-		.await
-		.map_err(SecretsError::Database)?;
+		let next_version = self
+			.repo
+			.get_next_version_number(&mut tx, &request.secret_id.to_string())
+			.await
+			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
 
-		// Insert version within transaction
-		sqlx::query(
-			r#"
-            INSERT INTO secret_versions (id, secret_id, version, ciphertext, nonce, dek_id, created_by, created_at, expires_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            "#,
-		)
-		.bind(version_id.to_string())
-		.bind(request.secret_id.to_string())
-		.bind(next_version)
-		.bind(&request.ciphertext)
-		.bind(&request.nonce)
-		.bind(&request.dek_id)
-		.bind(request.created_by.to_string())
-		.bind(&now_str)
-		.bind(&expires_at_str)
-		.execute(&mut *tx)
-		.await
-		.map_err(SecretsError::Database)?;
+		let version_params = CreateVersionParams {
+			id: version_id.to_string(),
+			secret_id: request.secret_id.to_string(),
+			version: next_version,
+			ciphertext: request.ciphertext.clone(),
+			nonce: request.nonce.clone(),
+			dek_id: request.dek_id.clone(),
+			created_by: request.created_by.to_string(),
+			created_at: now_str.clone(),
+			expires_at: expires_at_str,
+		};
 
-		// Update secret's current_version within transaction
-		// Only update if secret is not soft-deleted (defense in depth)
-		let update_result = sqlx::query(
-			"UPDATE secrets SET current_version = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL",
-		)
-		.bind(next_version)
-		.bind(&now_str)
-		.bind(request.secret_id.to_string())
-		.execute(&mut *tx)
-		.await
-		.map_err(SecretsError::Database)?;
+		self.repo
+			.insert_version_in_tx(&mut tx, &version_params)
+			.await
+			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
 
-		if update_result.rows_affected() == 0 {
+		let rows_affected = self
+			.repo
+			.update_current_version_in_tx(
+				&mut tx,
+				&request.secret_id.to_string(),
+				next_version,
+				&now_str,
+			)
+			.await
+			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
+
+		if rows_affected == 0 {
 			return Err(SecretsError::SecretNotFoundById(request.secret_id));
 		}
 
-		tx.commit().await.map_err(SecretsError::Database)?;
+		tx.commit()
+			.await
+			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
 
 		debug!(secret_id = %request.secret_id, version = next_version, "Created secret version");
 
@@ -450,18 +384,11 @@ impl SecretStore for SqliteSecretStore {
 		&self,
 		secret_id: SecretId,
 	) -> SecretsResult<Option<StoredSecretVersion>> {
-		let row = sqlx::query(
-			r#"
-            SELECT v.id, v.secret_id, v.version, v.ciphertext, v.nonce, v.dek_id, v.created_by, v.created_at, v.expires_at, v.disabled_at
-            FROM secret_versions v
-            JOIN secrets s ON s.id = v.secret_id AND s.current_version = v.version
-            WHERE v.secret_id = ? AND v.disabled_at IS NULL AND s.deleted_at IS NULL
-            "#,
-		)
-		.bind(secret_id.to_string())
-		.fetch_optional(&self.pool)
-		.await
-		.map_err(SecretsError::Database)?;
+		let row = self
+			.repo
+			.get_current_version(&secret_id.to_string())
+			.await
+			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
 
 		match row {
 			Some(row) => Ok(Some(parse_version_row(&row)?)),
@@ -474,19 +401,11 @@ impl SecretStore for SqliteSecretStore {
 		secret_id: SecretId,
 		version: i32,
 	) -> SecretsResult<Option<StoredSecretVersion>> {
-		let row = sqlx::query(
-			r#"
-            SELECT v.id, v.secret_id, v.version, v.ciphertext, v.nonce, v.dek_id, v.created_by, v.created_at, v.expires_at, v.disabled_at
-            FROM secret_versions v
-            JOIN secrets s ON s.id = v.secret_id
-            WHERE v.secret_id = ? AND v.version = ? AND s.deleted_at IS NULL
-            "#,
-		)
-		.bind(secret_id.to_string())
-		.bind(version)
-		.fetch_optional(&self.pool)
-		.await
-		.map_err(SecretsError::Database)?;
+		let row = self
+			.repo
+			.get_version(&secret_id.to_string(), version)
+			.await
+			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
 
 		match row {
 			Some(row) => Ok(Some(parse_version_row(&row)?)),
@@ -495,57 +414,47 @@ impl SecretStore for SqliteSecretStore {
 	}
 
 	async fn disable_version(&self, version_id: SecretVersionId) -> SecretsResult<()> {
-		let now_str = Utc::now().to_rfc3339();
-		sqlx::query("UPDATE secret_versions SET disabled_at = ? WHERE id = ?")
-			.bind(&now_str)
-			.bind(version_id.to_string())
-			.execute(&self.pool)
+		self.repo
+			.disable_version(&version_id.to_string())
 			.await
-			.map_err(SecretsError::Database)?;
+			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
 
 		Ok(())
 	}
 
 	async fn delete_secret(&self, id: SecretId) -> SecretsResult<()> {
-		let now_str = Utc::now().to_rfc3339();
-		sqlx::query("UPDATE secrets SET deleted_at = ? WHERE id = ?")
-			.bind(&now_str)
-			.bind(id.to_string())
-			.execute(&self.pool)
+		self.repo
+			.delete_secret(&id.to_string())
 			.await
-			.map_err(SecretsError::Database)?;
+			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
 
 		Ok(())
 	}
 
 	async fn store_dek(&self, dek: &EncryptedDekData) -> SecretsResult<()> {
 		let now_str = Utc::now().to_rfc3339();
-		sqlx::query(
-			r#"
-            INSERT INTO encrypted_deks (id, encrypted_key, nonce, kek_version, created_at)
-            VALUES (?, ?, ?, ?, ?)
-            "#,
-		)
-		.bind(&dek.id)
-		.bind(&dek.encrypted_key)
-		.bind(dek.nonce.to_vec())
-		.bind(dek.kek_version as i32)
-		.bind(&now_str)
-		.execute(&self.pool)
-		.await
-		.map_err(SecretsError::Database)?;
+		let params = StoreDekParams {
+			id: dek.id.clone(),
+			encrypted_key: dek.encrypted_key.clone(),
+			nonce: dek.nonce.to_vec(),
+			kek_version: dek.kek_version as i32,
+			created_at: now_str,
+		};
+
+		self.repo
+			.store_dek(&params)
+			.await
+			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
 
 		Ok(())
 	}
 
 	async fn get_dek(&self, id: &str) -> SecretsResult<Option<EncryptedDekData>> {
-		let row = sqlx::query_as::<_, StoredDek>(
-			"SELECT id, encrypted_key, nonce, kek_version, created_at FROM encrypted_deks WHERE id = ?",
-		)
-		.bind(id)
-		.fetch_optional(&self.pool)
-		.await
-		.map_err(SecretsError::Database)?;
+		let row = self
+			.repo
+			.get_dek(id)
+			.await
+			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
 
 		match row {
 			Some(stored) => Ok(Some(stored.try_into()?)),
@@ -554,37 +463,27 @@ impl SecretStore for SqliteSecretStore {
 	}
 }
 
-fn parse_secret_row(row: &sqlx::sqlite::SqliteRow) -> SecretsResult<StoredSecret> {
-	let id: String = row.get("id");
-	let org_id: String = row.get("org_id");
-	let scope: String = row.get("scope");
-	let repo_id: Option<String> = row.get("repo_id");
-	let weaver_id: Option<String> = row.get("weaver_id");
-	let name: String = row.get("name");
-	let description: Option<String> = row.get("description");
-	let current_version: i32 = row.get("current_version");
-	let created_by: String = row.get("created_by");
-	let created_at: String = row.get("created_at");
-	let updated_at: String = row.get("updated_at");
-
+fn parse_secret_row(row: &SecretRow) -> SecretsResult<StoredSecret> {
 	let parsed_org_id = OrgId::new(
-		Uuid::parse_str(&org_id)
-			.map_err(|_| SecretsError::CorruptedData(format!("invalid org id: {}", org_id)))?,
+		Uuid::parse_str(&row.org_id)
+			.map_err(|_| SecretsError::CorruptedData(format!("invalid org id: {}", row.org_id)))?,
 	);
 
-	let parsed_repo_id = repo_id
+	let parsed_repo_id = row
+		.repo_id
 		.as_ref()
 		.map(|s| {
 			Uuid::parse_str(s).map_err(|_| SecretsError::CorruptedData(format!("invalid repo id: {}", s)))
 		})
 		.transpose()?;
 
-	let parsed_scope = match scope.as_str() {
+	let parsed_scope = match row.scope.as_str() {
 		"org" => SecretScope::Org {
 			org_id: parsed_org_id,
 		},
 		"repo" => {
-			let repo_id_str = repo_id
+			let repo_id_str = row
+				.repo_id
 				.as_ref()
 				.ok_or_else(|| SecretsError::CorruptedData("repo scope requires repo_id".into()))?;
 			SecretScope::Repo {
@@ -593,7 +492,8 @@ fn parse_secret_row(row: &sqlx::sqlite::SqliteRow) -> SecretsResult<StoredSecret
 			}
 		}
 		"weaver" => {
-			let weaver_id_str = weaver_id
+			let weaver_id_str = row
+				.weaver_id
 				.as_ref()
 				.ok_or_else(|| SecretsError::CorruptedData("weaver scope requires weaver_id".into()))?;
 			let wid = weaver_id_str.parse::<uuid7::Uuid>().map_err(|_| {
@@ -613,87 +513,83 @@ fn parse_secret_row(row: &sqlx::sqlite::SqliteRow) -> SecretsResult<StoredSecret
 
 	Ok(StoredSecret {
 		id: SecretId::new(
-			Uuid::parse_str(&id)
-				.map_err(|_| SecretsError::CorruptedData(format!("invalid secret id: {}", id)))?,
+			Uuid::parse_str(&row.id)
+				.map_err(|_| SecretsError::CorruptedData(format!("invalid secret id: {}", row.id)))?,
 		),
 		org_id: parsed_org_id,
 		scope: parsed_scope,
 		repo_id: parsed_repo_id,
-		weaver_id,
-		name,
-		description,
-		current_version,
-		created_by: UserId::new(Uuid::parse_str(&created_by).map_err(|_| {
-			SecretsError::CorruptedData(format!("invalid created_by id: {}", created_by))
+		weaver_id: row.weaver_id.clone(),
+		name: row.name.clone(),
+		description: row.description.clone(),
+		current_version: row.current_version,
+		created_by: UserId::new(Uuid::parse_str(&row.created_by).map_err(|_| {
+			SecretsError::CorruptedData(format!("invalid created_by id: {}", row.created_by))
 		})?),
-		created_at: DateTime::parse_from_rfc3339(&created_at)
+		created_at: DateTime::parse_from_rfc3339(&row.created_at)
 			.map(|dt| dt.with_timezone(&Utc))
 			.map_err(|_| {
-				SecretsError::CorruptedData(format!("invalid created_at timestamp: {}", created_at))
+				SecretsError::CorruptedData(format!(
+					"invalid created_at timestamp: {}",
+					row.created_at
+				))
 			})?,
-		updated_at: DateTime::parse_from_rfc3339(&updated_at)
+		updated_at: DateTime::parse_from_rfc3339(&row.updated_at)
 			.map(|dt| dt.with_timezone(&Utc))
 			.map_err(|_| {
-				SecretsError::CorruptedData(format!("invalid updated_at timestamp: {}", updated_at))
+				SecretsError::CorruptedData(format!(
+					"invalid updated_at timestamp: {}",
+					row.updated_at
+				))
 			})?,
 	})
 }
 
-fn parse_version_row(row: &sqlx::sqlite::SqliteRow) -> SecretsResult<StoredSecretVersion> {
-	let id: String = row.get("id");
-	let secret_id: String = row.get("secret_id");
-	let version: i32 = row.get("version");
-	let ciphertext: Vec<u8> = row.get("ciphertext");
-	let nonce: Vec<u8> = row.get("nonce");
-	let dek_id: String = row.get("dek_id");
-	let created_by: String = row.get("created_by");
-	let created_at: String = row.get("created_at");
-	let expires_at: Option<String> = row.get("expires_at");
-	let disabled_at: Option<String> = row.get("disabled_at");
-
+fn parse_version_row(row: &SecretVersionRow) -> SecretsResult<StoredSecretVersion> {
 	Ok(StoredSecretVersion {
 		id: SecretVersionId::new(
-			Uuid::parse_str(&id)
-				.map_err(|_| SecretsError::CorruptedData(format!("invalid version id: {}", id)))?,
+			Uuid::parse_str(&row.id)
+				.map_err(|_| SecretsError::CorruptedData(format!("invalid version id: {}", row.id)))?,
 		),
 		secret_id: SecretId::new(
-			Uuid::parse_str(&secret_id)
-				.map_err(|_| SecretsError::CorruptedData(format!("invalid secret id: {}", secret_id)))?,
+			Uuid::parse_str(&row.secret_id).map_err(|_| {
+				SecretsError::CorruptedData(format!("invalid secret id: {}", row.secret_id))
+			})?,
 		),
-		version,
-		ciphertext,
-		nonce,
-		dek_id,
-		created_by: UserId::new(Uuid::parse_str(&created_by).map_err(|_| {
-			SecretsError::CorruptedData(format!("invalid created_by id: {}", created_by))
+		version: row.version,
+		ciphertext: row.ciphertext.clone(),
+		nonce: row.nonce.clone(),
+		dek_id: row.dek_id.clone(),
+		created_by: UserId::new(Uuid::parse_str(&row.created_by).map_err(|_| {
+			SecretsError::CorruptedData(format!("invalid created_by id: {}", row.created_by))
 		})?),
-		created_at: DateTime::parse_from_rfc3339(&created_at)
+		created_at: DateTime::parse_from_rfc3339(&row.created_at)
 			.map(|dt| dt.with_timezone(&Utc))
 			.map_err(|_| {
-				SecretsError::CorruptedData(format!("invalid created_at timestamp: {}", created_at))
+				SecretsError::CorruptedData(format!(
+					"invalid created_at timestamp: {}",
+					row.created_at
+				))
 			})?,
-		expires_at: expires_at
+		expires_at: row
+			.expires_at
+			.as_ref()
 			.map(|s| {
-				DateTime::parse_from_rfc3339(&s)
+				DateTime::parse_from_rfc3339(s)
 					.map(|dt| dt.with_timezone(&Utc))
 					.map_err(|_| SecretsError::CorruptedData(format!("invalid expires_at timestamp: {}", s)))
 			})
 			.transpose()?,
-		disabled_at: disabled_at
+		disabled_at: row
+			.disabled_at
+			.as_ref()
 			.map(|s| {
-				DateTime::parse_from_rfc3339(&s)
+				DateTime::parse_from_rfc3339(s)
 					.map(|dt| dt.with_timezone(&Utc))
 					.map_err(|_| SecretsError::CorruptedData(format!("invalid disabled_at timestamp: {}", s)))
 			})
 			.transpose()?,
 	})
-}
-
-fn is_unique_constraint_error(e: &sqlx::Error) -> bool {
-	if let sqlx::Error::Database(ref db_err) = e {
-		return db_err.message().contains("UNIQUE constraint failed");
-	}
-	false
 }
 
 #[cfg(test)]

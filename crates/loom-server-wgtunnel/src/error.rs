@@ -61,3 +61,17 @@ impl From<loom_wgtunnel_common::ip::IpError> for WgError {
 		WgError::IpAllocation(e.to_string())
 	}
 }
+
+impl From<loom_server_db::DbError> for WgError {
+	fn from(e: loom_server_db::DbError) -> Self {
+		match e {
+			loom_server_db::DbError::Sqlx(sqlx_err) => WgError::Database(sqlx_err),
+			loom_server_db::DbError::NotFound(msg) => WgError::Internal(format!("not found: {msg}")),
+			loom_server_db::DbError::Conflict(msg) => WgError::Internal(format!("conflict: {msg}")),
+			loom_server_db::DbError::Internal(msg) => WgError::Internal(msg),
+			loom_server_db::DbError::Serialization(err) => {
+				WgError::Internal(format!("serialization: {err}"))
+			}
+		}
+	}
+}

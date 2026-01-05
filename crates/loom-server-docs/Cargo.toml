@@ -10,6 +10,8 @@ license.workspace = true
 description = "Documentation search service for Loom"
 
 [dependencies]
+anyhow = { workspace = true }
+loom-server-db = { path = "../loom-server-db" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }

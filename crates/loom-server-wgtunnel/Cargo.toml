@@ -14,6 +14,7 @@ description = "Server-side coordination APIs for the WireGuard tunnel system"
 loom-wgtunnel-common = { path = "../loom-wgtunnel-common" }
 loom-common-secret = { path = "../loom-common-secret" }
 loom-common-config = { path = "../loom-common-config" }
+loom-server-db = { path = "../loom-server-db" }
 
 # Database
 sqlx = { workspace = true }

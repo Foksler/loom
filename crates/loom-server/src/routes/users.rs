@@ -394,33 +394,13 @@ pub async fn request_account_deletion(
 
 	let deletion_scheduled_at = Utc::now();
 
-	if let Some(smtp) = &state.smtp_client {
+	if let Some(email_service) = &state.email_service {
 		if let Some(email) = &current_user.user.primary_email {
-			use loom_common_i18n::{is_rtl, t, t_fmt};
-
-			let locale = loom_common_i18n::resolve_locale(
-				current_user.user.locale.as_deref(),
-				&state.default_locale,
-			);
-			let days = ACCOUNT_DELETION_GRACE_DAYS.to_string();
-
-			let subject = t(locale, "server.email.deletion_scheduled.subject");
-			let body = t(locale, "server.email.deletion_scheduled.body");
-			let grace = t_fmt(
-				locale,
-				"server.email.deletion_scheduled.grace",
-				&[("days", &days)],
-			);
-			let permanent = t(locale, "server.email.deletion_scheduled.permanent");
-
-			let body_text = format!("{body}\n\n{grace}\n\n{permanent}");
-
-			let dir = if is_rtl(locale) { "rtl" } else { "ltr" };
-			let body_html =
-				format!("<div dir=\"{dir}\"><p>{body}</p><p>{grace}</p><p>{permanent}</p></div>");
-
-			if let Err(e) = smtp
-				.send_email(email, &subject, &body_html, &body_text)
+			let request = loom_server_email::EmailRequest::DeletionScheduled {
+				grace_days: ACCOUNT_DELETION_GRACE_DAYS,
+			};
+			if let Err(e) = email_service
+				.send(email, request, current_user.user.locale.as_deref())
 				.await
 			{
 				tracing::warn!(error = %e, %user_id, "Failed to send deletion confirmation email");

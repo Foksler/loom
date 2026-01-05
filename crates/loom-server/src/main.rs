@@ -88,7 +88,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	// Load docs search index
 	let docs_index_path =
 		std::env::var("LOOM_SERVER_DOCS_INDEX").unwrap_or_else(|_| "docs-index.json".to_string());
-	if let Err(e) = loom_server_docs::load_docs_index(&pool, &docs_index_path).await {
+	let docs_repo = loom_server_docs::DocsRepository::new(pool.clone());
+	if let Err(e) = loom_server_docs::load_docs_index(&docs_repo, &docs_index_path).await {
 		tracing::warn!(path = %docs_index_path, error = %e, "Failed to load docs index");
 	}
 

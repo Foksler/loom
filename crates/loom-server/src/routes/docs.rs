@@ -9,7 +9,7 @@ use axum::{
 	response::IntoResponse,
 	Json,
 };
-use loom_server_docs::{search_docs, DocSearchHit, DocSearchParams};
+use loom_server_docs::{search_docs, DocSearchHit, DocSearchParams, DocsRepository};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -94,7 +94,8 @@ pub async fn search_handler(
 		offset,
 	};
 
-	match search_docs(pool, &params).await {
+	let docs_repo = DocsRepository::new(pool.clone());
+	match search_docs(&docs_repo, &params).await {
 		Ok(hits) => Json(SearchResponse {
 			hits,
 			limit,

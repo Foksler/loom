@@ -4774,6 +4774,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-common-webhook"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "hmac",
+ "proptest",
+ "sha2",
+]
+
+[[package]]
 name = "loom-redact"
 version = "0.1.0"
 dependencies = [
@@ -4832,6 +4842,7 @@ dependencies = [
  "loom-server-config",
  "loom-server-db",
  "loom-server-docs",
+ "loom-server-email",
  "loom-server-geoip",
  "loom-server-github-app",
  "loom-server-jobs",
@@ -5076,6 +5087,7 @@ dependencies = [
  "tokio",
  "tokio-test",
  "tracing",
+ "utoipa",
  "uuid",
 ]
 
@@ -5083,6 +5095,8 @@ dependencies = [
 name = "loom-server-docs"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "loom-server-db",
  "serde",
  "serde_json",
  "sqlx",
@@ -5090,6 +5104,18 @@ dependencies = [
  "tokio",
  "tracing",
  "utoipa",
+]
+
+[[package]]
+name = "loom-server-email"
+version = "0.1.0"
+dependencies = [
+ "loom-common-i18n",
+ "loom-server-auth",
+ "loom-server-smtp",
+ "thiserror 1.0.69",
+ "tokio-test",
+ "tracing",
 ]
 
 [[package]]
@@ -5110,18 +5136,16 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "chrono",
- "hex",
- "hmac",
  "jsonwebtoken",
  "loom-common-config",
  "loom-common-http",
+ "loom-common-webhook",
  "proptest",
  "rand 0.8.5",
  "reqwest",
  "rsa",
  "serde",
  "serde_json",
- "sha2",
  "thiserror 1.0.69",
  "tokio",
  "tokio-test",
@@ -5328,14 +5352,13 @@ dependencies = [
  "async-trait",
  "chrono",
  "gix 0.68.0",
- "hex",
- "hmac",
  "loom-common-secret",
+ "loom-common-webhook",
+ "loom-server-db",
  "proptest",
  "reqwest",
  "serde",
  "serde_json",
- "sha2",
  "sqlx",
  "tempfile",
  "thiserror 1.0.69",
@@ -5412,6 +5435,7 @@ dependencies = [
  "hex",
  "loom-common-secret",
  "loom-server-auth",
+ "loom-server-db",
  "loom-server-k8s",
  "proptest",
  "rand 0.8.5",
@@ -5463,16 +5487,14 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "chrono",
- "hex",
- "hmac",
  "k8s-openapi",
  "loom-common-secret",
+ "loom-common-webhook",
  "loom-server-k8s",
  "proptest",
  "reqwest",
  "serde",
  "serde_json",
- "sha2",
  "thiserror 1.0.69",
  "tokio",
  "tracing",
@@ -5491,6 +5513,7 @@ dependencies = [
  "ipnet",
  "loom-common-config",
  "loom-common-secret",
+ "loom-server-db",
  "loom-wgtunnel-common",
  "serde",
  "serde_json",

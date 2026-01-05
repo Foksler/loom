@@ -2,8 +2,7 @@
 // reserved. SPDX-License-Identifier: Proprietary
 
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
-use sqlx::{Row, SqlitePool};
+use loom_server_db::{RepoRecord, RepoTeamAccessRecord, ScmRepository};
 use uuid::Uuid;
 
 use crate::error::{Result, ScmError};
@@ -59,96 +58,66 @@ pub trait RepoStore: Send + Sync {
 }
 
 pub struct SqliteRepoStore {
-	pool: SqlitePool,
+	db: ScmRepository,
 }
 
 impl SqliteRepoStore {
-	pub fn new(pool: SqlitePool) -> Self {
-		Self { pool }
+	pub fn new(db: ScmRepository) -> Self {
+		Self { db }
 	}
 
-	fn row_to_repo(&self, row: &sqlx::sqlite::SqliteRow) -> Result<Repository> {
-		let id_str: String = row.get("id");
-		let owner_type_str: String = row.get("owner_type");
-		let owner_id_str: String = row.get("owner_id");
-		let visibility_str: String = row.get("visibility");
-		let deleted_at_str: Option<String> = row.get("deleted_at");
-		let created_at_str: String = row.get("created_at");
-		let updated_at_str: String = row.get("updated_at");
-
+	fn record_to_repo(record: RepoRecord) -> Result<Repository> {
 		Ok(Repository {
-			id: Uuid::parse_str(&id_str)
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			owner_type: owner_type_str.parse::<OwnerType>().map_err(|_| {
+			id: record.id,
+			owner_type: record.owner_type.parse::<OwnerType>().map_err(|_| {
 				ScmError::Database(sqlx::Error::Decode(
-					format!("invalid owner_type: {}", owner_type_str).into(),
+					format!("invalid owner_type: {}", record.owner_type).into(),
 				))
 			})?,
-			owner_id: Uuid::parse_str(&owner_id_str)
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			name: row.get("name"),
-			visibility: visibility_str.parse::<Visibility>().map_err(|_| {
+			owner_id: record.owner_id,
+			name: record.name,
+			visibility: record.visibility.parse::<Visibility>().map_err(|_| {
 				ScmError::Database(sqlx::Error::Decode(
-					format!("invalid visibility: {}", visibility_str).into(),
+					format!("invalid visibility: {}", record.visibility).into(),
 				))
 			})?,
-			default_branch: row.get("default_branch"),
-			deleted_at: deleted_at_str
-				.map(|s| DateTime::parse_from_rfc3339(&s).map(|d| d.with_timezone(&Utc)))
-				.transpose()
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			created_at: DateTime::parse_from_rfc3339(&created_at_str)
-				.map(|d| d.with_timezone(&Utc))
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			updated_at: DateTime::parse_from_rfc3339(&updated_at_str)
-				.map(|d| d.with_timezone(&Utc))
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
+			default_branch: record.default_branch,
+			deleted_at: record.deleted_at,
+			created_at: record.created_at,
+			updated_at: record.updated_at,
 		})
+	}
+
+	fn repo_to_record(repo: &Repository) -> RepoRecord {
+		RepoRecord {
+			id: repo.id,
+			owner_type: repo.owner_type.as_str().to_string(),
+			owner_id: repo.owner_id,
+			name: repo.name.clone(),
+			visibility: repo.visibility.as_str().to_string(),
+			default_branch: repo.default_branch.clone(),
+			deleted_at: repo.deleted_at,
+			created_at: repo.created_at,
+			updated_at: repo.updated_at,
+		}
 	}
 }
 
 #[async_trait]
 impl RepoStore for SqliteRepoStore {
 	async fn create(&self, repo: &Repository) -> Result<Repository> {
-		sqlx::query(
-			r#"
-			INSERT INTO repos (id, owner_type, owner_id, name, visibility, default_branch, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-			"#,
-		)
-		.bind(repo.id.to_string())
-		.bind(repo.owner_type.as_str())
-		.bind(repo.owner_id.to_string())
-		.bind(&repo.name)
-		.bind(repo.visibility.as_str())
-		.bind(&repo.default_branch)
-		.bind(repo.created_at.to_rfc3339())
-		.bind(repo.updated_at.to_rfc3339())
-		.execute(&self.pool)
-		.await
-		.map_err(|e| match e {
-			sqlx::Error::Database(ref db_err) if db_err.is_unique_violation() => {
-				ScmError::AlreadyExists
-			}
-			_ => ScmError::Database(e),
+		let record = Self::repo_to_record(repo);
+		self.db.create_repo(&record).await.map_err(|e| match e {
+			loom_server_db::DbError::Conflict(_) => ScmError::AlreadyExists,
+			loom_server_db::DbError::Sqlx(e) => ScmError::Database(e),
+			_ => ScmError::Database(sqlx::Error::Protocol(e.to_string())),
 		})?;
-
 		Ok(repo.clone())
 	}
 
 	async fn get_by_id(&self, id: Uuid) -> Result<Option<Repository>> {
-		let row = sqlx::query(
-			r#"
-			SELECT id, owner_type, owner_id, name, visibility, default_branch, deleted_at, created_at, updated_at
-			FROM repos
-			WHERE id = ? AND deleted_at IS NULL
-			"#,
-		)
-		.bind(id.to_string())
-		.fetch_optional(&self.pool)
-		.await?;
-
-		row.map(|r| self.row_to_repo(&r)).transpose()
+		let record = self.db.get_repo_by_id(id).await.map_err(db_err)?;
+		record.map(Self::record_to_repo).transpose()
 	}
 
 	async fn get_by_owner_and_name(
@@ -157,102 +126,47 @@ impl RepoStore for SqliteRepoStore {
 		owner_id: Uuid,
 		name: &str,
 	) -> Result<Option<Repository>> {
-		let row = sqlx::query(
-			r#"
-			SELECT id, owner_type, owner_id, name, visibility, default_branch, deleted_at, created_at, updated_at
-			FROM repos
-			WHERE owner_type = ? AND owner_id = ? AND name = ? AND deleted_at IS NULL
-			"#,
-		)
-		.bind(owner_type.as_str())
-		.bind(owner_id.to_string())
-		.bind(name)
-		.fetch_optional(&self.pool)
-		.await?;
-
-		row.map(|r| self.row_to_repo(&r)).transpose()
+		let record = self
+			.db
+			.get_repo_by_owner_and_name(owner_type.as_str(), owner_id, name)
+			.await
+			.map_err(db_err)?;
+		record.map(Self::record_to_repo).transpose()
 	}
 
 	async fn list_by_owner(&self, owner_type: OwnerType, owner_id: Uuid) -> Result<Vec<Repository>> {
-		let rows = sqlx::query(
-			r#"
-			SELECT id, owner_type, owner_id, name, visibility, default_branch, deleted_at, created_at, updated_at
-			FROM repos
-			WHERE owner_type = ? AND owner_id = ? AND deleted_at IS NULL
-			ORDER BY name ASC
-			"#,
-		)
-		.bind(owner_type.as_str())
-		.bind(owner_id.to_string())
-		.fetch_all(&self.pool)
-		.await?;
-
-		rows.iter().map(|r| self.row_to_repo(r)).collect()
+		let records = self
+			.db
+			.list_repos_by_owner(owner_type.as_str(), owner_id)
+			.await
+			.map_err(db_err)?;
+		records.into_iter().map(Self::record_to_repo).collect()
 	}
 
 	async fn update(&self, repo: &Repository) -> Result<Repository> {
-		let updated_at = Utc::now().to_rfc3339();
-
-		let result = sqlx::query(
-			r#"
-			UPDATE repos
-			SET name = ?, visibility = ?, default_branch = ?, updated_at = ?
-			WHERE id = ? AND deleted_at IS NULL
-			"#,
-		)
-		.bind(&repo.name)
-		.bind(repo.visibility.as_str())
-		.bind(&repo.default_branch)
-		.bind(&updated_at)
-		.bind(repo.id.to_string())
-		.execute(&self.pool)
-		.await?;
-
-		if result.rows_affected() == 0 {
-			return Err(ScmError::NotFound);
-		}
-
+		let record = Self::repo_to_record(repo);
+		self.db.update_repo(&record).await.map_err(|e| match e {
+			loom_server_db::DbError::NotFound(_) => ScmError::NotFound,
+			loom_server_db::DbError::Sqlx(e) => ScmError::Database(e),
+			_ => ScmError::Database(sqlx::Error::Protocol(e.to_string())),
+		})?;
 		self.get_by_id(repo.id).await?.ok_or(ScmError::NotFound)
 	}
 
 	async fn soft_delete(&self, id: Uuid) -> Result<()> {
-		let deleted_at = Utc::now().to_rfc3339();
-
-		let result = sqlx::query(
-			r#"
-			UPDATE repos
-			SET deleted_at = ?, updated_at = ?
-			WHERE id = ? AND deleted_at IS NULL
-			"#,
-		)
-		.bind(&deleted_at)
-		.bind(&deleted_at)
-		.bind(id.to_string())
-		.execute(&self.pool)
-		.await?;
-
-		if result.rows_affected() == 0 {
-			return Err(ScmError::NotFound);
-		}
-
-		Ok(())
+		self.db.soft_delete_repo(id).await.map_err(|e| match e {
+			loom_server_db::DbError::NotFound(_) => ScmError::NotFound,
+			loom_server_db::DbError::Sqlx(e) => ScmError::Database(e),
+			_ => ScmError::Database(sqlx::Error::Protocol(e.to_string())),
+		})
 	}
 
 	async fn hard_delete(&self, id: Uuid) -> Result<()> {
-		let result = sqlx::query(
-			r#"
-			DELETE FROM repos WHERE id = ?
-			"#,
-		)
-		.bind(id.to_string())
-		.execute(&self.pool)
-		.await?;
-
-		if result.rows_affected() == 0 {
-			return Err(ScmError::NotFound);
-		}
-
-		Ok(())
+		self.db.hard_delete_repo(id).await.map_err(|e| match e {
+			loom_server_db::DbError::NotFound(_) => ScmError::NotFound,
+			loom_server_db::DbError::Sqlx(e) => ScmError::Database(e),
+			_ => ScmError::Database(sqlx::Error::Protocol(e.to_string())),
+		})
 	}
 }
 
@@ -266,27 +180,21 @@ pub trait RepoTeamAccessStore: Send + Sync {
 }
 
 pub struct SqliteRepoTeamAccessStore {
-	pool: SqlitePool,
+	db: ScmRepository,
 }
 
 impl SqliteRepoTeamAccessStore {
-	pub fn new(pool: SqlitePool) -> Self {
-		Self { pool }
+	pub fn new(db: ScmRepository) -> Self {
+		Self { db }
 	}
 
-	fn row_to_team_access(&self, row: &sqlx::sqlite::SqliteRow) -> Result<RepoTeamAccess> {
-		let repo_id_str: String = row.get("repo_id");
-		let team_id_str: String = row.get("team_id");
-		let role_str: String = row.get("role");
-
+	fn record_to_team_access(record: RepoTeamAccessRecord) -> Result<RepoTeamAccess> {
 		Ok(RepoTeamAccess {
-			repo_id: Uuid::parse_str(&repo_id_str)
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			team_id: Uuid::parse_str(&team_id_str)
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			role: role_str.parse::<RepoRole>().map_err(|_| {
+			repo_id: record.repo_id,
+			team_id: record.team_id,
+			role: record.role.parse::<RepoRole>().map_err(|_| {
 				ScmError::Database(sqlx::Error::Decode(
-					format!("invalid role: {}", role_str).into(),
+					format!("invalid role: {}", record.role).into(),
 				))
 			})?,
 		})
@@ -296,54 +204,29 @@ impl SqliteRepoTeamAccessStore {
 #[async_trait]
 impl RepoTeamAccessStore for SqliteRepoTeamAccessStore {
 	async fn grant_team_access(&self, repo_id: Uuid, team_id: Uuid, role: RepoRole) -> Result<()> {
-		sqlx::query(
-			r#"
-			INSERT INTO repo_team_access (repo_id, team_id, role)
-			VALUES (?, ?, ?)
-			ON CONFLICT (repo_id, team_id) DO UPDATE SET role = excluded.role
-			"#,
-		)
-		.bind(repo_id.to_string())
-		.bind(team_id.to_string())
-		.bind(role.as_str())
-		.execute(&self.pool)
-		.await?;
-
-		Ok(())
+		self.db
+			.grant_team_access(repo_id, team_id, role.as_str())
+			.await
+			.map_err(db_err)
 	}
 
 	async fn revoke_team_access(&self, repo_id: Uuid, team_id: Uuid) -> Result<()> {
-		let result = sqlx::query(
-			r#"
-			DELETE FROM repo_team_access
-			WHERE repo_id = ? AND team_id = ?
-			"#,
-		)
-		.bind(repo_id.to_string())
-		.bind(team_id.to_string())
-		.execute(&self.pool)
-		.await?;
-
-		if result.rows_affected() == 0 {
-			return Err(ScmError::NotFound);
-		}
-
-		Ok(())
+		self.db
+			.revoke_team_access(repo_id, team_id)
+			.await
+			.map_err(|e| match e {
+				loom_server_db::DbError::NotFound(_) => ScmError::NotFound,
+				loom_server_db::DbError::Sqlx(e) => ScmError::Database(e),
+				_ => ScmError::Database(sqlx::Error::Protocol(e.to_string())),
+			})
 	}
 
 	async fn list_repo_team_access(&self, repo_id: Uuid) -> Result<Vec<RepoTeamAccess>> {
-		let rows = sqlx::query(
-			r#"
-			SELECT repo_id, team_id, role
-			FROM repo_team_access
-			WHERE repo_id = ?
-			"#,
-		)
-		.bind(repo_id.to_string())
-		.fetch_all(&self.pool)
-		.await?;
-
-		rows.iter().map(|r| self.row_to_team_access(r)).collect()
+		let records = self.db.list_repo_team_access(repo_id).await.map_err(db_err)?;
+		records
+			.into_iter()
+			.map(Self::record_to_team_access)
+			.collect()
 	}
 
 	async fn get_user_role_via_teams(
@@ -351,22 +234,14 @@ impl RepoTeamAccessStore for SqliteRepoTeamAccessStore {
 		user_id: Uuid,
 		repo_id: Uuid,
 	) -> Result<Option<RepoRole>> {
-		let rows = sqlx::query(
-			r#"
-			SELECT rta.role
-			FROM repo_team_access rta
-			INNER JOIN team_memberships tm ON rta.team_id = tm.team_id
-			WHERE tm.user_id = ? AND rta.repo_id = ?
-			"#,
-		)
-		.bind(user_id.to_string())
-		.bind(repo_id.to_string())
-		.fetch_all(&self.pool)
-		.await?;
+		let roles = self
+			.db
+			.get_user_roles_via_teams(user_id, repo_id)
+			.await
+			.map_err(db_err)?;
 
 		let mut highest_role: Option<RepoRole> = None;
-		for row in &rows {
-			let role_str: String = row.get("role");
+		for role_str in roles {
 			let role = role_str.parse::<RepoRole>().map_err(|_| {
 				ScmError::Database(sqlx::Error::Decode(
 					format!("invalid role: {}", role_str).into(),
@@ -386,6 +261,13 @@ impl RepoTeamAccessStore for SqliteRepoTeamAccessStore {
 		}
 
 		Ok(highest_role)
+	}
+}
+
+fn db_err(e: loom_server_db::DbError) -> ScmError {
+	match e {
+		loom_server_db::DbError::Sqlx(e) => ScmError::Database(e),
+		_ => ScmError::Database(sqlx::Error::Protocol(e.to_string())),
 	}
 }
 

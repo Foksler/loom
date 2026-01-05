@@ -20,6 +20,17 @@ pub struct ClientInfo {
 	pub geo_country: Option<String>,
 }
 
+impl From<ClientInfo> for loom_server_session::ClientInfo {
+	fn from(info: ClientInfo) -> Self {
+		Self {
+			ip_address: info.ip_address,
+			user_agent: info.user_agent,
+			geo_city: info.geo_city,
+			geo_country: info.geo_country,
+		}
+	}
+}
+
 impl ClientInfo {
 	/// Extract client info from request headers with optional GeoIP lookup.
 	#[tracing::instrument(level = "debug", skip(headers, geoip))]

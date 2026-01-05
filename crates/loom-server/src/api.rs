@@ -13,6 +13,8 @@ use loom_server_auth_github::{GitHubOAuthClient, GitHubOAuthConfig};
 use loom_server_auth_google::{GoogleOAuthClient, GoogleOAuthConfig};
 use loom_server_auth_okta::{OktaOAuthClient, OktaOAuthConfig};
 use loom_server_config::ScimConfig;
+use loom_server_db::ScmRepository;
+use loom_server_email::EmailService;
 use loom_server_geoip::GeoIpService;
 use loom_server_github_app::{GithubAppClient, GithubAppConfig};
 use loom_server_jobs::{JobRepository, JobScheduler};
@@ -77,6 +79,7 @@ pub struct AppState {
 	pub provisioner: Option<Arc<Provisioner>>,
 	pub webhook_dispatcher: Option<Arc<WebhookDispatcher>>,
 	pub smtp_client: Option<Arc<SmtpClient>>,
+	pub email_service: Option<Arc<EmailService>>,
 	pub github_oauth: Option<Arc<GitHubOAuthClient>>,
 	pub google_oauth: Option<Arc<GoogleOAuthClient>>,
 	pub okta_oauth: Option<Arc<OktaOAuthClient>>,
@@ -141,15 +144,15 @@ pub async fn create_app_state(
 		vec![sqlite_audit_sink],
 	));
 	let share_repo = Arc::new(ShareRepository::new(pool.clone()));
-	let scm_repo_store = Arc::new(loom_server_scm::SqliteRepoStore::new(pool.clone()));
-	let scm_protection_store = Arc::new(loom_server_scm::SqliteProtectionStore::new(pool.clone()));
-	let scm_webhook_store = Arc::new(loom_server_scm::SqliteWebhookStore::new(pool.clone()));
-	let scm_maintenance_store = Arc::new(loom_server_scm::SqliteMaintenanceJobStore::new(
-		pool.clone(),
-	));
-	let scm_team_access_store = Arc::new(loom_server_scm::SqliteRepoTeamAccessStore::new(
-		pool.clone(),
-	));
+	let scm_repo = ScmRepository::new(pool.clone());
+	let scm_repo_store = Arc::new(loom_server_scm::SqliteRepoStore::new(scm_repo.clone()));
+	let scm_protection_store =
+		Arc::new(loom_server_scm::SqliteProtectionStore::new(pool.clone()));
+	let scm_webhook_store = Arc::new(loom_server_scm::SqliteWebhookStore::new(scm_repo.clone()));
+	let scm_maintenance_store =
+		Arc::new(loom_server_scm::SqliteMaintenanceJobStore::new(scm_repo.clone()));
+	let scm_team_access_store =
+		Arc::new(loom_server_scm::SqliteRepoTeamAccessStore::new(scm_repo.clone()));
 	let push_mirror_store = Arc::new(loom_server_scm_mirror::SqlitePushMirrorStore::new(
 		pool.clone(),
 	));
@@ -234,8 +237,14 @@ pub async fn create_app_state(
 	// Initialize WireGuard tunnel services if enabled
 	let wg_tunnel_services = initialize_wgtunnel_services(pool.clone()).await;
 
-	// Initialize SMTP client if configured
+	// Initialize SMTP client and email service if configured
 	let smtp_client = initialize_smtp_client(config);
+	let email_service = smtp_client.as_ref().map(|client| {
+		Arc::new(EmailService::new(
+			client.clone(),
+			config.logging.locale.clone(),
+		))
+	});
 
 	// Initialize OAuth clients
 	let github_oauth = initialize_github_oauth();
@@ -296,6 +305,7 @@ pub async fn create_app_state(
 		provisioner,
 		webhook_dispatcher,
 		smtp_client,
+		email_service,
 		github_oauth,
 		google_oauth,
 		okta_oauth,

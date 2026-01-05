@@ -166,7 +166,8 @@ impl UserProvisioningService {
 		user_id: &UserId,
 		scim_external_id: Option<&str>,
 	) -> Result<()> {
-		self.user_repo
+		self
+			.user_repo
 			.update_scim_fields(user_id, scim_external_id, true)
 			.await?;
 		tracing::debug!(user_id = %user_id, "updated SCIM fields");

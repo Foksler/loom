@@ -28,9 +28,7 @@ tracing = { workspace = true }
 jsonwebtoken = "9"
 
 # HMAC for webhook verification
-hex = "0.4"
-hmac = "0.12"
-sha2 = "0.10"
+loom-common-webhook = { path = "../loom-common-webhook" }
 
 # Time handling
 chrono = { version = "0.4", features = ["serde"] }

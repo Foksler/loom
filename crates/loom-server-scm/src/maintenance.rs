@@ -6,9 +6,9 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use loom_server_db::{MaintenanceJobRecord, ScmRepository};
 use serde::{Deserialize, Serialize};
-use sqlx::{Row, SqlitePool};
-use tracing::{info, instrument, warn};
+use tracing::{info, instrument};
 use uuid::Uuid;
 
 use crate::error::{Result, ScmError};
@@ -182,9 +182,6 @@ pub fn run_maintenance(repo_path: &Path, task: MaintenanceTask) -> Result<Mainte
 	}
 }
 
-// NOTE: repack uses git subprocess because gitoxide doesn't yet support
-// pack maintenance operations. See: https://github.com/GitoxideLabs/gitoxide/blob/main/crate-status.md
-// Track progress at: https://github.com/GitoxideLabs/gitoxide/issues/307
 fn run_repack(repo_path: &Path) -> Result<()> {
 	let output = std::process::Command::new("git")
 		.args(["repack", "-a", "-d"])
@@ -266,125 +263,81 @@ pub trait MaintenanceJobStore: Send + Sync {
 }
 
 pub struct SqliteMaintenanceJobStore {
-	pool: SqlitePool,
+	db: ScmRepository,
 }
 
 impl SqliteMaintenanceJobStore {
-	pub fn new(pool: SqlitePool) -> Self {
-		Self { pool }
+	pub fn new(db: ScmRepository) -> Self {
+		Self { db }
 	}
 
-	fn row_to_job(&self, row: &sqlx::sqlite::SqliteRow) -> Result<MaintenanceJob> {
-		let id_str: String = row.get("id");
-		let repo_id_str: Option<String> = row.get("repo_id");
-		let task_str: String = row.get("task");
-		let status_str: String = row.get("status");
-		let started_at_str: Option<String> = row.get("started_at");
-		let finished_at_str: Option<String> = row.get("finished_at");
-		let created_at_str: String = row.get("created_at");
-
+	fn record_to_job(record: MaintenanceJobRecord) -> Result<MaintenanceJob> {
 		Ok(MaintenanceJob {
-			id: Uuid::parse_str(&id_str)
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			repo_id: repo_id_str
-				.map(|s| Uuid::parse_str(&s))
-				.transpose()
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			task: task_str.parse::<MaintenanceTask>().map_err(|_| {
+			id: record.id,
+			repo_id: record.repo_id,
+			task: record.task.parse::<MaintenanceTask>().map_err(|_| {
 				ScmError::Database(sqlx::Error::Decode(
-					format!("invalid task: {}", task_str).into(),
+					format!("invalid task: {}", record.task).into(),
 				))
 			})?,
-			status: status_str.parse::<MaintenanceJobStatus>().map_err(|_| {
+			status: record.status.parse::<MaintenanceJobStatus>().map_err(|_| {
 				ScmError::Database(sqlx::Error::Decode(
-					format!("invalid status: {}", status_str).into(),
+					format!("invalid status: {}", record.status).into(),
 				))
 			})?,
-			started_at: started_at_str
-				.map(|s| DateTime::parse_from_rfc3339(&s).map(|d| d.with_timezone(&Utc)))
-				.transpose()
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			finished_at: finished_at_str
-				.map(|s| DateTime::parse_from_rfc3339(&s).map(|d| d.with_timezone(&Utc)))
-				.transpose()
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			error: row.get("error"),
-			created_at: DateTime::parse_from_rfc3339(&created_at_str)
-				.map(|d| d.with_timezone(&Utc))
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
+			started_at: record.started_at,
+			finished_at: record.finished_at,
+			error: record.error,
+			created_at: record.created_at,
 		})
+	}
+
+	fn job_to_record(job: &MaintenanceJob) -> MaintenanceJobRecord {
+		MaintenanceJobRecord {
+			id: job.id,
+			repo_id: job.repo_id,
+			task: job.task.as_str().to_string(),
+			status: job.status.as_str().to_string(),
+			started_at: job.started_at,
+			finished_at: job.finished_at,
+			error: job.error.clone(),
+			created_at: job.created_at,
+		}
+	}
+}
+
+fn db_err(e: loom_server_db::DbError) -> ScmError {
+	match e {
+		loom_server_db::DbError::Sqlx(e) => ScmError::Database(e),
+		_ => ScmError::Database(sqlx::Error::Protocol(e.to_string())),
 	}
 }
 
 #[async_trait]
 impl MaintenanceJobStore for SqliteMaintenanceJobStore {
 	async fn create(&self, job: &MaintenanceJob) -> Result<MaintenanceJob> {
-		sqlx::query(
-			r#"
-			INSERT INTO repo_maintenance_jobs (id, repo_id, task, status, started_at, finished_at, error, created_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-			"#,
-		)
-		.bind(job.id.to_string())
-		.bind(job.repo_id.map(|id| id.to_string()))
-		.bind(job.task.as_str())
-		.bind(job.status.as_str())
-		.bind(job.started_at.map(|t| t.to_rfc3339()))
-		.bind(job.finished_at.map(|t| t.to_rfc3339()))
-		.bind(&job.error)
-		.bind(job.created_at.to_rfc3339())
-		.execute(&self.pool)
-		.await?;
-
+		let record = Self::job_to_record(job);
+		self.db.create_maintenance_job(&record).await.map_err(db_err)?;
 		Ok(job.clone())
 	}
 
 	async fn get_by_id(&self, id: Uuid) -> Result<Option<MaintenanceJob>> {
-		let row = sqlx::query(
-			r#"
-			SELECT id, repo_id, task, status, started_at, finished_at, error, created_at
-			FROM repo_maintenance_jobs
-			WHERE id = ?
-			"#,
-		)
-		.bind(id.to_string())
-		.fetch_optional(&self.pool)
-		.await?;
-
-		row.map(|r| self.row_to_job(&r)).transpose()
+		let record = self.db.get_maintenance_job_by_id(id).await.map_err(db_err)?;
+		record.map(Self::record_to_job).transpose()
 	}
 
 	async fn list_by_repo(&self, repo_id: Uuid, limit: u32) -> Result<Vec<MaintenanceJob>> {
-		let rows = sqlx::query(
-			r#"
-			SELECT id, repo_id, task, status, started_at, finished_at, error, created_at
-			FROM repo_maintenance_jobs
-			WHERE repo_id = ?
-			ORDER BY created_at DESC
-			LIMIT ?
-			"#,
-		)
-		.bind(repo_id.to_string())
-		.bind(limit as i64)
-		.fetch_all(&self.pool)
-		.await?;
-
-		rows.iter().map(|r| self.row_to_job(r)).collect()
+		let records = self
+			.db
+			.list_maintenance_jobs_by_repo(repo_id, limit)
+			.await
+			.map_err(db_err)?;
+		records.into_iter().map(Self::record_to_job).collect()
 	}
 
 	async fn list_pending(&self) -> Result<Vec<MaintenanceJob>> {
-		let rows = sqlx::query(
-			r#"
-			SELECT id, repo_id, task, status, started_at, finished_at, error, created_at
-			FROM repo_maintenance_jobs
-			WHERE status = 'pending'
-			ORDER BY created_at ASC
-			"#,
-		)
-		.fetch_all(&self.pool)
-		.await?;
-
-		rows.iter().map(|r| self.row_to_job(r)).collect()
+		let records = self.db.list_pending_maintenance_jobs().await.map_err(db_err)?;
+		records.into_iter().map(Self::record_to_job).collect()
 	}
 
 	async fn update_status(
@@ -393,46 +346,25 @@ impl MaintenanceJobStore for SqliteMaintenanceJobStore {
 		status: MaintenanceJobStatus,
 		error: Option<String>,
 	) -> Result<()> {
-		let result = sqlx::query(
-			r#"
-			UPDATE repo_maintenance_jobs
-			SET status = ?, error = ?
-			WHERE id = ?
-			"#,
-		)
-		.bind(status.as_str())
-		.bind(&error)
-		.bind(id.to_string())
-		.execute(&self.pool)
-		.await?;
-
-		if result.rows_affected() == 0 {
-			return Err(ScmError::NotFound);
-		}
-
-		Ok(())
+		self.db
+			.update_maintenance_job_status(id, status.as_str(), error.as_deref())
+			.await
+			.map_err(|e| match e {
+				loom_server_db::DbError::NotFound(_) => ScmError::NotFound,
+				loom_server_db::DbError::Sqlx(e) => ScmError::Database(e),
+				_ => ScmError::Database(sqlx::Error::Protocol(e.to_string())),
+			})
 	}
 
 	async fn mark_started(&self, id: Uuid) -> Result<()> {
-		let now = Utc::now().to_rfc3339();
-
-		let result = sqlx::query(
-			r#"
-			UPDATE repo_maintenance_jobs
-			SET status = 'running', started_at = ?
-			WHERE id = ?
-			"#,
-		)
-		.bind(&now)
-		.bind(id.to_string())
-		.execute(&self.pool)
-		.await?;
-
-		if result.rows_affected() == 0 {
-			return Err(ScmError::NotFound);
-		}
-
-		Ok(())
+		self.db
+			.mark_maintenance_job_started(id)
+			.await
+			.map_err(|e| match e {
+				loom_server_db::DbError::NotFound(_) => ScmError::NotFound,
+				loom_server_db::DbError::Sqlx(e) => ScmError::Database(e),
+				_ => ScmError::Database(sqlx::Error::Protocol(e.to_string())),
+			})
 	}
 
 	async fn mark_finished(
@@ -441,32 +373,16 @@ impl MaintenanceJobStore for SqliteMaintenanceJobStore {
 		status: MaintenanceJobStatus,
 		error: Option<String>,
 	) -> Result<()> {
-		let now = Utc::now().to_rfc3339();
-
-		let result = sqlx::query(
-			r#"
-			UPDATE repo_maintenance_jobs
-			SET status = ?, finished_at = ?, error = ?
-			WHERE id = ?
-			"#,
-		)
-		.bind(status.as_str())
-		.bind(&now)
-		.bind(&error)
-		.bind(id.to_string())
-		.execute(&self.pool)
-		.await?;
-
-		if result.rows_affected() == 0 {
-			return Err(ScmError::NotFound);
-		}
-
-		Ok(())
+		self.db
+			.mark_maintenance_job_finished(id, status.as_str(), error.as_deref())
+			.await
+			.map_err(|e| match e {
+				loom_server_db::DbError::NotFound(_) => ScmError::NotFound,
+				loom_server_db::DbError::Sqlx(e) => ScmError::Database(e),
+				_ => ScmError::Database(sqlx::Error::Protocol(e.to_string())),
+			})
 	}
 }
-
-// Note: Maintenance migrations are now managed by loom-server in:
-// - migrations/018_scm_maintenance.sql (repo_maintenance_jobs)
 
 #[cfg(test)]
 mod tests {

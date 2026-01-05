@@ -5,8 +5,8 @@ use crate::error::{Result, WgError};
 use crate::ip_allocator::IpAllocator;
 use base64::prelude::*;
 use chrono::{DateTime, Utc};
+use loom_server_db::WgTunnelRepository;
 use serde::{Deserialize, Serialize};
-use sqlx::SqlitePool;
 use std::net::Ipv6Addr;
 use std::sync::Arc;
 use tracing::instrument;
@@ -39,16 +39,6 @@ struct WeaverRow {
 	registered_at: String,
 	last_seen_at: Option<String>,
 }
-
-type WeaverRowTuple = (
-	String,
-	Vec<u8>,
-	String,
-	Option<i64>,
-	Option<String>,
-	String,
-	Option<String>,
-);
 
 impl TryFrom<WeaverRow> for WeaverWg {
 	type Error = WgError;
@@ -95,13 +85,13 @@ fn parse_datetime(s: &str) -> Result<DateTime<Utc>> {
 
 #[derive(Clone)]
 pub struct WeaverWgService {
-	db: SqlitePool,
+	repo: WgTunnelRepository,
 	ip_allocator: Arc<IpAllocator>,
 }
 
 impl WeaverWgService {
-	pub fn new(db: SqlitePool, ip_allocator: Arc<IpAllocator>) -> Self {
-		Self { db, ip_allocator }
+	pub fn new(repo: WgTunnelRepository, ip_allocator: Arc<IpAllocator>) -> Self {
+		Self { repo, ip_allocator }
 	}
 
 	#[instrument(skip(self, public_key), fields(%weaver_id, derp_region = ?derp_region))]
@@ -119,16 +109,10 @@ impl WeaverWgService {
 		let assigned_ip = self.ip_allocator.allocate_weaver_ip(weaver_id).await?;
 		let now = Utc::now();
 
-		sqlx::query(
-			"INSERT INTO wg_weavers (weaver_id, public_key, assigned_ip, derp_home_region, registered_at)
-             VALUES (?, ?, ?, ?, datetime('now'))",
-		)
-		.bind(weaver_id.to_string())
-		.bind(public_key.as_slice())
-		.bind(assigned_ip.to_string())
-		.bind(derp_region.map(|r| r as i64))
-		.execute(&self.db)
-		.await?;
+		self
+			.repo
+			.insert_weaver(weaver_id, public_key.as_slice(), assigned_ip, derp_region)
+			.await?;
 
 		Ok(WeaverWg {
 			weaver_id,
@@ -143,14 +127,7 @@ impl WeaverWgService {
 
 	#[instrument(skip(self), fields(%weaver_id))]
 	pub async fn get(&self, weaver_id: Uuid) -> Result<Option<WeaverWg>> {
-		let row: Option<WeaverRowTuple> =
-			sqlx::query_as(
-				"SELECT weaver_id, public_key, assigned_ip, derp_home_region, endpoint, registered_at, last_seen_at
-                 FROM wg_weavers WHERE weaver_id = ?",
-			)
-			.bind(weaver_id.to_string())
-			.fetch_optional(&self.db)
-			.await?;
+		let row = self.repo.get_weaver(weaver_id).await?;
 
 		match row {
 			Some((
@@ -186,12 +163,9 @@ impl WeaverWgService {
 			self.ip_allocator.release_ip(w.assigned_ip).await?;
 		}
 
-		let result = sqlx::query("DELETE FROM wg_weavers WHERE weaver_id = ?")
-			.bind(weaver_id.to_string())
-			.execute(&self.db)
-			.await?;
+		let rows_affected = self.repo.delete_weaver(weaver_id).await?;
 
-		if result.rows_affected() == 0 {
+		if rows_affected == 0 {
 			return Err(WgError::WeaverNotFound);
 		}
 
@@ -200,13 +174,12 @@ impl WeaverWgService {
 
 	#[instrument(skip(self), fields(%weaver_id, %endpoint))]
 	pub async fn update_endpoint(&self, weaver_id: Uuid, endpoint: &str) -> Result<()> {
-		let result = sqlx::query("UPDATE wg_weavers SET endpoint = ? WHERE weaver_id = ?")
-			.bind(endpoint)
-			.bind(weaver_id.to_string())
-			.execute(&self.db)
+		let rows_affected = self
+			.repo
+			.update_weaver_endpoint(weaver_id, endpoint)
 			.await?;
 
-		if result.rows_affected() == 0 {
+		if rows_affected == 0 {
 			return Err(WgError::WeaverNotFound);
 		}
 
@@ -215,10 +188,7 @@ impl WeaverWgService {
 
 	#[instrument(skip(self), fields(%weaver_id))]
 	pub async fn update_last_seen(&self, weaver_id: Uuid) -> Result<()> {
-		sqlx::query("UPDATE wg_weavers SET last_seen_at = datetime('now') WHERE weaver_id = ?")
-			.bind(weaver_id.to_string())
-			.execute(&self.db)
-			.await?;
+		self.repo.update_weaver_last_seen(weaver_id).await?;
 
 		Ok(())
 	}

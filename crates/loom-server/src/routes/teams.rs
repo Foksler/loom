@@ -20,7 +20,6 @@ use loom_server_auth::{
 	types::{OrgId, TeamId, TeamRole, UserId},
 	Action,
 };
-use regex::Regex;
 use uuid::Uuid;
 
 pub use loom_server_api::teams::*;
@@ -31,20 +30,18 @@ use crate::{
 	auth_middleware::RequireAuth,
 	authorize,
 	i18n::{resolve_user_locale, t},
+	validation::validate_slug,
 };
 
-fn validate_slug(slug: &str, locale: &str) -> Result<(), TeamErrorResponse> {
-	let re = Regex::new(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$").unwrap();
-	if slug.len() < 2 || slug.len() > 50 {
+fn validate_team_slug(slug: &str, locale: &str) -> Result<(), TeamErrorResponse> {
+	if !validate_slug(slug, 2, 50) {
 		return Err(TeamErrorResponse {
 			error: "invalid_slug".to_string(),
-			message: t(locale, "server.api.team.invalid_slug_length").to_string(),
-		});
-	}
-	if !re.is_match(slug) {
-		return Err(TeamErrorResponse {
-			error: "invalid_slug".to_string(),
-			message: t(locale, "server.api.team.invalid_slug_format").to_string(),
+			message: if slug.len() < 2 || slug.len() > 50 {
+				t(locale, "server.api.team.invalid_slug_length").to_string()
+			} else {
+				t(locale, "server.api.team.invalid_slug_format").to_string()
+			},
 		});
 	}
 	Ok(())
@@ -269,7 +266,7 @@ pub async fn create_team(
 		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
 	};
 
-	if let Err(e) = validate_slug(&payload.slug, locale) {
+	if let Err(e) = validate_team_slug(&payload.slug, locale) {
 		return (StatusCode::BAD_REQUEST, Json(e)).into_response();
 	}
 
@@ -607,7 +604,7 @@ pub async fn update_team(
 	}
 
 	if let Some(ref slug) = payload.slug {
-		if let Err(e) = validate_slug(slug, locale) {
+		if let Err(e) = validate_team_slug(slug, locale) {
 			return (StatusCode::BAD_REQUEST, Json(e)).into_response();
 		}
 

@@ -40,9 +40,8 @@ use axum::{
 };
 use chrono::Utc;
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
-use loom_server_auth::{
-	hash_token, org::OrgVisibility, render_email, Action, EmailTemplate, OrgId, OrgRole, Visibility,
-};
+use loom_server_auth::{hash_token, org::OrgVisibility, Action, OrgId, OrgRole, Visibility};
+use loom_server_email::EmailRequest;
 use uuid::Uuid;
 
 pub use loom_server_api::invitations::*;
@@ -393,18 +392,14 @@ pub async fn create_invitation(
 		}
 	};
 
-	if let Some(smtp_client) = &state.smtp_client {
-		let template = EmailTemplate::OrgInvitation {
+	if let Some(email_service) = &state.email_service {
+		let request = EmailRequest::OrgInvitation {
 			org_name: org.name.clone(),
 			inviter_name: current_user.user.display_name.clone(),
 			token: token.clone(),
 		};
-		let email_locale =
-			loom_common_i18n::resolve_locale(current_user.user.locale.as_deref(), &state.default_locale);
-		let (subject, body) = render_email(&template, email_locale);
-
-		if let Err(e) = smtp_client
-			.send_email(&payload.email, &subject, &body, &body)
+		if let Err(e) = email_service
+			.send(&payload.email, request, current_user.user.locale.as_deref())
 			.await
 		{
 			tracing::warn!(error = %e, "Failed to send invitation email");

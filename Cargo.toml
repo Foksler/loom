@@ -35,6 +35,7 @@ members = [
 	"crates/loom-server-k8s",
 	"crates/loom-server-weaver",
 	"crates/loom-server-smtp",
+	"crates/loom-server-email",
 	"crates/loom-common-i18n",
 	"crates/loom-server-geoip",
 	"crates/loom-server-jobs",
@@ -52,6 +53,7 @@ members = [
 	"crates/loom-common-spool",
 	"crates/loom-cli-spool",
 	"crates/loom-redact",
+	"crates/loom-common-webhook",
 	]
 
 [workspace.package]
@@ -147,6 +149,7 @@ loom-common-version = { path = "crates/loom-common-version" }
 loom-server-k8s = { path = "crates/loom-server-k8s" }
 loom-server-geoip = { path = "crates/loom-server-geoip" }
 loom-server-jobs = { path = "crates/loom-server-jobs" }
+loom-common-webhook = { path = "crates/loom-common-webhook" }
 
 # Build profile optimizations for faster development builds
 [profile.dev]

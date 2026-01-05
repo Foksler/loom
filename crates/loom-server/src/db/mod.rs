@@ -318,6 +318,26 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ServerError> {
 		}
 	}
 
+	let m28 = include_str!("../../migrations/028_wgtunnel.sql");
+	for stmt in m28.split(';').filter(|s| !s.trim().is_empty()) {
+		if let Err(e) = sqlx::query(stmt).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists") && !msg.contains("duplicate column") {
+				return Err(e.into());
+			}
+		}
+	}
+
+	let m29 = include_str!("../../migrations/029_scim_support.sql");
+	for stmt in m29.split(';').filter(|s| !s.trim().is_empty()) {
+		if let Err(e) = sqlx::query(stmt).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists") && !msg.contains("duplicate column") {
+				return Err(e.into());
+			}
+		}
+	}
+
 	tracing::debug!("database migrations complete");
 	Ok(())
 }

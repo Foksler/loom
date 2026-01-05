@@ -3,13 +3,9 @@
 
 //! Webhook signature verification for GitHub App webhooks.
 
-use hmac::{Hmac, Mac};
-use sha2::Sha256;
 use tracing::{debug, warn};
 
 use crate::error::GithubAppError;
-
-type HmacSha256 = Hmac<Sha256>;
 
 /// Verify a GitHub webhook signature.
 ///
@@ -53,25 +49,14 @@ pub fn verify_webhook_signature(
 	}
 
 	let expected_hex = &signature_header[PREFIX.len()..];
-	let expected_bytes = hex::decode(expected_hex).map_err(|e| {
-		warn!(error = %e, "Invalid webhook signature: hex decode failed");
-		GithubAppError::InvalidWebhookSignature
-	})?;
 
-	let mut mac = HmacSha256::new_from_slice(secret.as_bytes()).map_err(|e| {
-		warn!(error = %e, "Invalid webhook secret: HMAC key error");
-		GithubAppError::InvalidWebhookSignature
-	})?;
-
-	mac.update(body);
-
-	mac.verify_slice(&expected_bytes).map_err(|_| {
+	if loom_common_webhook::verify_hmac_sha256(secret.as_bytes(), body, expected_hex) {
+		debug!("Webhook signature verified successfully");
+		Ok(())
+	} else {
 		warn!("Webhook signature verification failed");
-		GithubAppError::InvalidWebhookSignature
-	})?;
-
-	debug!("Webhook signature verified successfully");
-	Ok(())
+		Err(GithubAppError::InvalidWebhookSignature)
+	}
 }
 
 /// Compute the HMAC-SHA256 signature for a webhook payload.
@@ -87,11 +72,8 @@ pub fn verify_webhook_signature(
 ///
 /// The signature in the format `sha256=<hex>`
 pub fn compute_webhook_signature(secret: &str, body: &[u8]) -> String {
-	let mut mac =
-		HmacSha256::new_from_slice(secret.as_bytes()).expect("HMAC can accept any key length");
-	mac.update(body);
-	let result = mac.finalize();
-	format!("sha256={}", hex::encode(result.into_bytes()))
+	let signature = loom_common_webhook::compute_hmac_sha256(secret.as_bytes(), body);
+	format!("sha256={}", signature)
 }
 
 #[cfg(test)]

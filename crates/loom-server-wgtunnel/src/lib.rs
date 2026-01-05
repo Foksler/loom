@@ -25,6 +25,7 @@ pub use types::{
 };
 pub use weavers::{WeaverWg, WeaverWgService};
 
+use loom_server_db::WgTunnelRepository;
 use sqlx::SqlitePool;
 use std::sync::Arc;
 
@@ -41,12 +42,13 @@ pub struct WgTunnelServices {
 impl WgTunnelServices {
 	pub async fn new(db: SqlitePool, config: WgTunnelConfig) -> Result<Self> {
 		let config = Arc::new(config);
-		let ip_allocator = Arc::new(IpAllocator::new(db.clone()).await?);
+		let repo = WgTunnelRepository::new(db);
+		let ip_allocator = Arc::new(IpAllocator::new(repo.clone()).await?);
 		let peer_notifier = Arc::new(PeerNotifier::new());
-		let device_service = DeviceService::new(db.clone());
-		let weaver_service = WeaverWgService::new(db.clone(), ip_allocator.clone());
+		let device_service = DeviceService::new(repo.clone());
+		let weaver_service = WeaverWgService::new(repo.clone(), ip_allocator.clone());
 		let session_service = SessionService::new(
-			db.clone(),
+			repo,
 			ip_allocator,
 			peer_notifier.clone(),
 			device_service.clone(),

@@ -4,8 +4,8 @@
 use crate::error::{Result, WgError};
 use base64::prelude::*;
 use chrono::{DateTime, Utc};
+use loom_server_db::WgTunnelRepository;
 use serde::{Deserialize, Serialize};
-use sqlx::SqlitePool;
 use tracing::instrument;
 use uuid::Uuid;
 
@@ -36,16 +36,6 @@ struct DeviceRow {
 	last_seen_at: Option<String>,
 	revoked_at: Option<String>,
 }
-
-type DeviceRowTuple = (
-	String,
-	String,
-	Vec<u8>,
-	Option<String>,
-	String,
-	Option<String>,
-	Option<String>,
-);
 
 impl TryFrom<DeviceRow> for Device {
 	type Error = WgError;
@@ -94,12 +84,12 @@ fn parse_datetime(s: &str) -> Result<DateTime<Utc>> {
 
 #[derive(Clone)]
 pub struct DeviceService {
-	db: SqlitePool,
+	repo: WgTunnelRepository,
 }
 
 impl DeviceService {
-	pub fn new(db: SqlitePool) -> Self {
-		Self { db }
+	pub fn new(repo: WgTunnelRepository) -> Self {
+		Self { repo }
 	}
 
 	#[instrument(skip(self, public_key), fields(%user_id, name = ?name))]
@@ -117,16 +107,10 @@ impl DeviceService {
 		let id = Uuid::new_v4();
 		let now = Utc::now();
 
-		sqlx::query(
-			"INSERT INTO wg_devices (id, user_id, public_key, name, created_at)
-             VALUES (?, ?, ?, ?, datetime('now'))",
-		)
-		.bind(id.to_string())
-		.bind(user_id.to_string())
-		.bind(public_key.as_slice())
-		.bind(&name)
-		.execute(&self.db)
-		.await?;
+		self
+			.repo
+			.insert_device(id, user_id, public_key.as_slice(), name.as_deref())
+			.await?;
 
 		Ok(Device {
 			id,
@@ -141,14 +125,7 @@ impl DeviceService {
 
 	#[instrument(skip(self), fields(%user_id))]
 	pub async fn list(&self, user_id: Uuid) -> Result<Vec<Device>> {
-		let rows: Vec<DeviceRowTuple> = sqlx::query_as(
-			"SELECT id, user_id, public_key, name, created_at, last_seen_at, revoked_at
-                 FROM wg_devices WHERE user_id = ? AND revoked_at IS NULL
-                 ORDER BY created_at DESC",
-		)
-		.bind(user_id.to_string())
-		.fetch_all(&self.db)
-		.await?;
+		let rows = self.repo.list_devices_for_user(user_id).await?;
 
 		rows
 			.into_iter()
@@ -171,13 +148,7 @@ impl DeviceService {
 
 	#[instrument(skip(self), fields(%id))]
 	pub async fn get(&self, id: Uuid) -> Result<Option<Device>> {
-		let row: Option<DeviceRowTuple> = sqlx::query_as(
-			"SELECT id, user_id, public_key, name, created_at, last_seen_at, revoked_at
-                 FROM wg_devices WHERE id = ?",
-		)
-		.bind(id.to_string())
-		.fetch_optional(&self.db)
-		.await?;
+		let row = self.repo.get_device(id).await?;
 
 		match row {
 			Some((id, user_id, public_key, name, created_at, last_seen_at, revoked_at)) => {
@@ -199,13 +170,10 @@ impl DeviceService {
 
 	#[instrument(skip(self, public_key))]
 	pub async fn get_by_public_key(&self, public_key: &[u8; 32]) -> Result<Option<Device>> {
-		let row: Option<DeviceRowTuple> = sqlx::query_as(
-			"SELECT id, user_id, public_key, name, created_at, last_seen_at, revoked_at
-                 FROM wg_devices WHERE public_key = ?",
-		)
-		.bind(public_key.as_slice())
-		.fetch_optional(&self.db)
-		.await?;
+		let row = self
+			.repo
+			.get_device_by_public_key(public_key.as_slice())
+			.await?;
 
 		match row {
 			Some((id, user_id, public_key, name, created_at, last_seen_at, revoked_at)) => {
@@ -227,16 +195,9 @@ impl DeviceService {
 
 	#[instrument(skip(self), fields(%id, %user_id))]
 	pub async fn revoke(&self, id: Uuid, user_id: Uuid) -> Result<()> {
-		let result = sqlx::query(
-			"UPDATE wg_devices SET revoked_at = datetime('now')
-             WHERE id = ? AND user_id = ? AND revoked_at IS NULL",
-		)
-		.bind(id.to_string())
-		.bind(user_id.to_string())
-		.execute(&self.db)
-		.await?;
+		let rows_affected = self.repo.revoke_device(id, user_id).await?;
 
-		if result.rows_affected() == 0 {
+		if rows_affected == 0 {
 			return Err(WgError::DeviceNotFound);
 		}
 
@@ -245,10 +206,7 @@ impl DeviceService {
 
 	#[instrument(skip(self), fields(%id))]
 	pub async fn update_last_seen(&self, id: Uuid) -> Result<()> {
-		sqlx::query("UPDATE wg_devices SET last_seen_at = datetime('now') WHERE id = ?")
-			.bind(id.to_string())
-			.execute(&self.db)
-			.await?;
+		self.repo.update_device_last_seen(id).await?;
 
 		Ok(())
 	}

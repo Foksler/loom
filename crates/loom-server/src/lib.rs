@@ -20,12 +20,14 @@ pub mod llm_proxy;
 pub mod llm_query_handler;
 pub mod llm_query_processor;
 pub mod oauth_state;
+pub mod pagination;
 pub mod query_metrics;
 pub mod query_security;
 pub mod query_tracing;
 pub mod routes;
 pub mod server_query;
 pub mod typed_router;
+pub mod validation;
 pub mod weaver_metrics;
 pub mod websocket;
 

@@ -9,9 +9,9 @@ use crate::peer_stream::{PeerEvent, PeerNotifier};
 use crate::weavers::WeaverWgService;
 use base64::prelude::*;
 use chrono::{DateTime, Utc};
+use loom_server_db::WgTunnelRepository;
 use loom_wgtunnel_common::DerpMap;
 use serde::{Deserialize, Serialize};
-use sqlx::SqlitePool;
 use std::net::Ipv6Addr;
 use std::sync::Arc;
 use tracing::instrument;
@@ -94,7 +94,7 @@ fn parse_datetime(s: &str) -> Result<DateTime<Utc>> {
 
 #[derive(Clone)]
 pub struct SessionService {
-	db: SqlitePool,
+	repo: WgTunnelRepository,
 	ip_allocator: Arc<IpAllocator>,
 	peer_notifier: Arc<PeerNotifier>,
 	device_service: DeviceService,
@@ -104,7 +104,7 @@ pub struct SessionService {
 
 impl SessionService {
 	pub fn new(
-		db: SqlitePool,
+		repo: WgTunnelRepository,
 		ip_allocator: Arc<IpAllocator>,
 		peer_notifier: Arc<PeerNotifier>,
 		device_service: DeviceService,
@@ -112,7 +112,7 @@ impl SessionService {
 		config: Arc<WgTunnelConfig>,
 	) -> Self {
 		Self {
-			db,
+			repo,
 			ip_allocator,
 			peer_notifier,
 			device_service,
@@ -147,16 +147,10 @@ impl SessionService {
 		let session_id = Uuid::new_v4();
 		let client_ip = self.ip_allocator.allocate_client_ip(session_id).await?;
 
-		sqlx::query(
-			"INSERT INTO wg_sessions (id, device_id, weaver_id, client_ip, created_at)
-             VALUES (?, ?, ?, ?, datetime('now'))",
-		)
-		.bind(session_id.to_string())
-		.bind(device_id.to_string())
-		.bind(weaver_id.to_string())
-		.bind(client_ip.to_string())
-		.execute(&self.db)
-		.await?;
+		self
+			.repo
+			.insert_session(session_id, device_id, weaver_id, client_ip)
+			.await?;
 
 		let event = PeerEvent::PeerAdded {
 			public_key: BASE64_STANDARD.encode(device.public_key),
@@ -181,14 +175,10 @@ impl SessionService {
 		device_id: Uuid,
 		weaver_id: Uuid,
 	) -> Result<Option<Session>> {
-		let row: Option<(String, String, String, String, String, Option<String>)> = sqlx::query_as(
-			"SELECT id, device_id, weaver_id, client_ip, created_at, last_handshake_at
-             FROM wg_sessions WHERE device_id = ? AND weaver_id = ?",
-		)
-		.bind(device_id.to_string())
-		.bind(weaver_id.to_string())
-		.fetch_optional(&self.db)
-		.await?;
+		let row = self
+			.repo
+			.get_session_by_device_weaver(device_id, weaver_id)
+			.await?;
 
 		match row {
 			Some((id, device_id, weaver_id, client_ip, created_at, last_handshake_at)) => {
@@ -209,14 +199,7 @@ impl SessionService {
 
 	#[instrument(skip(self), fields(%device_id))]
 	pub async fn list_for_device(&self, device_id: Uuid) -> Result<Vec<Session>> {
-		let rows: Vec<(String, String, String, String, String, Option<String>)> = sqlx::query_as(
-			"SELECT id, device_id, weaver_id, client_ip, created_at, last_handshake_at
-             FROM wg_sessions WHERE device_id = ?
-             ORDER BY created_at DESC",
-		)
-		.bind(device_id.to_string())
-		.fetch_all(&self.db)
-		.await?;
+		let rows = self.repo.list_sessions_for_device(device_id).await?;
 
 		rows
 			.into_iter()
@@ -238,14 +221,7 @@ impl SessionService {
 
 	#[instrument(skip(self), fields(%weaver_id))]
 	pub async fn list_for_weaver(&self, weaver_id: Uuid) -> Result<Vec<Session>> {
-		let rows: Vec<(String, String, String, String, String, Option<String>)> = sqlx::query_as(
-			"SELECT id, device_id, weaver_id, client_ip, created_at, last_handshake_at
-             FROM wg_sessions WHERE weaver_id = ?
-             ORDER BY created_at DESC",
-		)
-		.bind(weaver_id.to_string())
-		.fetch_all(&self.db)
-		.await?;
+		let rows = self.repo.list_sessions_for_weaver(weaver_id).await?;
 
 		rows
 			.into_iter()
@@ -276,12 +252,9 @@ impl SessionService {
 
 		self.ip_allocator.release_ip(session.client_ip).await?;
 
-		let result = sqlx::query("DELETE FROM wg_sessions WHERE id = ?")
-			.bind(session_id.to_string())
-			.execute(&self.db)
-			.await?;
+		let rows_affected = self.repo.delete_session(session_id).await?;
 
-		if result.rows_affected() == 0 {
+		if rows_affected == 0 {
 			return Err(WgError::SessionNotFound);
 		}
 
@@ -301,13 +274,7 @@ impl SessionService {
 
 	#[instrument(skip(self), fields(%session_id))]
 	pub async fn get(&self, session_id: Uuid) -> Result<Option<Session>> {
-		let row: Option<(String, String, String, String, String, Option<String>)> = sqlx::query_as(
-			"SELECT id, device_id, weaver_id, client_ip, created_at, last_handshake_at
-             FROM wg_sessions WHERE id = ?",
-		)
-		.bind(session_id.to_string())
-		.fetch_optional(&self.db)
-		.await?;
+		let row = self.repo.get_session(session_id).await?;
 
 		match row {
 			Some((id, device_id, weaver_id, client_ip, created_at, last_handshake_at)) => {
@@ -328,10 +295,7 @@ impl SessionService {
 
 	#[instrument(skip(self), fields(%session_id))]
 	pub async fn update_handshake(&self, session_id: Uuid) -> Result<()> {
-		sqlx::query("UPDATE wg_sessions SET last_handshake_at = datetime('now') WHERE id = ?")
-			.bind(session_id.to_string())
-			.execute(&self.db)
-			.await?;
+		self.repo.update_session_handshake(session_id).await?;
 
 		Ok(())
 	}

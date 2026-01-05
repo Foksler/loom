@@ -30,7 +30,7 @@ use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::{generate_access_token, SessionType};
 use loom_server_auth_devicecode::{DeviceCode, DEVICE_CODE_EXPIRY_MINUTES};
 use loom_server_auth_magiclink::{verify_magic_link_token, MagicLink};
-use loom_server_session::{AuthMethod, ClientInfo as SessionClientInfo, SessionRequest};
+use loom_server_session::{AuthMethod, SessionRequest};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -290,10 +290,12 @@ pub async fn request_magic_link(
 		return success_response.into_response();
 	}
 
-	// Send email if SMTP is configured
-	let Some(smtp_client) = &state.smtp_client else {
+	// Send email if email service is configured
+	let Some(email_service) = &state.email_service else {
 		// SECURITY: Never log the plaintext token - it allows account takeover
-		tracing::warn!("SMTP not configured, magic link not sent - user will not receive email");
+		tracing::warn!(
+			"Email service not configured, magic link not sent - user will not receive email"
+		);
 		return success_response.into_response();
 	};
 
@@ -302,14 +304,9 @@ pub async fn request_magic_link(
 		state.base_url, plaintext_token
 	);
 
-	let locale = state.default_locale.as_str();
-	let (html_body, text_body) = render_magic_link_email(&verification_url, locale);
-	let subject = loom_common_i18n::t(locale, "server.email.magic_link.subject");
+	let request = loom_server_email::EmailRequest::MagicLink { verification_url };
 
-	if let Err(e) = smtp_client
-		.send_email(&email, &subject, &html_body, &text_body)
-		.await
-	{
+	if let Err(e) = email_service.send(&email, request, None).await {
 		tracing::error!(error = %e, email = %email, "Failed to send magic link email");
 	} else {
 		state.audit_service.log(
@@ -324,46 +321,6 @@ pub async fn request_magic_link(
 	}
 
 	success_response.into_response()
-}
-
-/// Render the magic link email content.
-fn render_magic_link_email(verification_url: &str, locale: &str) -> (String, String) {
-	use loom_common_i18n::{is_rtl, t, t_fmt};
-
-	let subject = t(locale, "server.email.magic_link.subject");
-	let body = t(locale, "server.email.magic_link.body");
-	let expires = t_fmt(
-		locale,
-		"server.email.magic_link.expires",
-		&[("minutes", "10")],
-	);
-	let ignore = t(locale, "server.email.magic_link.ignore");
-	let copy_link = t(locale, "server.email.magic_link.copy_link");
-
-	let dir = if is_rtl(locale) { "rtl" } else { "ltr" };
-	let align = if is_rtl(locale) { "right" } else { "left" };
-
-	let html = format!(
-		r#"<!DOCTYPE html>
-<html lang="{locale}" dir="{dir}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{subject}</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; direction: {dir}; text-align: {align};">
-    <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 20px;">{subject}</h1>
-    <p style="margin-bottom: 20px;">{body} {expires}</p>
-    <a href="{verification_url}" style="display: inline-block; background-color: #0066cc; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">{subject}</a>
-    <p style="margin-top: 20px; color: #666; font-size: 14px;">{ignore}</p>
-    <p style="margin-top: 20px; color: #666; font-size: 12px;">{copy_link} <span dir="ltr">{verification_url}</span></p>
-</body>
-</html>"#,
-	);
-
-	let text = format!("{subject}\n\n{body} {expires}\n\n{verification_url}\n\n{ignore}",);
-
-	(html, text)
 }
 
 #[utoipa::path(
@@ -1331,15 +1288,8 @@ async fn complete_oauth_login(
 		}
 	};
 
-	let session_client_info = SessionClientInfo {
-		ip_address: client_info.ip_address,
-		user_agent: client_info.user_agent,
-		geo_city: client_info.geo_city,
-		geo_country: client_info.geo_country,
-	};
-
 	let session_request =
-		SessionRequest::new(user.id, auth_method, session_client_info).with_email(email);
+		SessionRequest::new(user.id, auth_method, client_info.into()).with_email(email);
 
 	let session_response = match state.session_service.create_session(session_request).await {
 		Ok(resp) => resp,
@@ -1485,15 +1435,8 @@ pub async fn verify_magic_link(
 		}
 	};
 
-	let session_client_info = SessionClientInfo {
-		ip_address: client_info.ip_address,
-		user_agent: client_info.user_agent,
-		geo_city: client_info.geo_city,
-		geo_country: client_info.geo_country,
-	};
-
 	let session_request =
-		SessionRequest::new(user.id, AuthMethod::MagicLink, session_client_info).with_email(&email);
+		SessionRequest::new(user.id, AuthMethod::MagicLink, client_info.into()).with_email(&email);
 
 	let session_response = match state.session_service.create_session(session_request).await {
 		Ok(resp) => resp,

@@ -374,6 +374,8 @@ mod tests {
 				image_pull_secrets: Some(vec!["ghcr-secret".to_string()]),
 				secrets_server_url: None,
 				secrets_allow_insecure: None,
+				wg_enabled: None,
+				wg_server_url: None,
 			};
 			let config = layer.resolve().unwrap();
 

@@ -381,8 +381,8 @@ impl OrgRepository {
 		let now = Utc::now().to_rfc3339();
 		sqlx::query(
 			r#"
-			INSERT INTO org_memberships (id, org_id, user_id, role, provisioned_by, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?)
+			INSERT INTO org_memberships (id, org_id, user_id, role, provisioned_by, created_at)
+			VALUES (?, ?, ?, ?, ?, ?)
 			"#,
 		)
 		.bind(&id)
@@ -390,7 +390,6 @@ impl OrgRepository {
 		.bind(user_id.to_string())
 		.bind(role.to_string())
 		.bind(provisioned_by)
-		.bind(&now)
 		.bind(&now)
 		.execute(&self.pool)
 		.await?;

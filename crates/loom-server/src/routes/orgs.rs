@@ -28,7 +28,6 @@ use loom_server_auth::{
 	types::{OrgId, OrgRole, UserId},
 	Action, Visibility,
 };
-use regex::Regex;
 use uuid::Uuid;
 
 use crate::{
@@ -37,6 +36,7 @@ use crate::{
 	auth_middleware::RequireAuth,
 	authorize,
 	i18n::{resolve_user_locale, t},
+	validation::validate_slug,
 };
 
 fn org_visibility_to_abac(v: OrgVisibility) -> Visibility {
@@ -47,18 +47,15 @@ fn org_visibility_to_abac(v: OrgVisibility) -> Visibility {
 	}
 }
 
-fn validate_slug(slug: &str, locale: &str) -> Result<(), OrgErrorResponse> {
-	let re = Regex::new(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$").unwrap();
-	if slug.len() < 3 || slug.len() > 50 {
+fn validate_org_slug(slug: &str, locale: &str) -> Result<(), OrgErrorResponse> {
+	if !validate_slug(slug, 3, 50) {
 		return Err(OrgErrorResponse {
 			error: "invalid_slug".to_string(),
-			message: t(locale, "server.api.org.invalid_slug_length").to_string(),
-		});
-	}
-	if !re.is_match(slug) {
-		return Err(OrgErrorResponse {
-			error: "invalid_slug".to_string(),
-			message: t(locale, "server.api.org.invalid_slug_format").to_string(),
+			message: if slug.len() < 3 || slug.len() > 50 {
+				t(locale, "server.api.org.invalid_slug_length").to_string()
+			} else {
+				t(locale, "server.api.org.invalid_slug_format").to_string()
+			},
 		});
 	}
 	Ok(())
@@ -199,7 +196,7 @@ pub async fn create_org(
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 	let user_id = current_user.user.id;
 
-	if let Err(e) = validate_slug(&payload.slug, locale) {
+	if let Err(e) = validate_org_slug(&payload.slug, locale) {
 		return (StatusCode::BAD_REQUEST, Json(e)).into_response();
 	}
 
@@ -488,7 +485,7 @@ pub async fn update_org(
 
 	if let Some(ref new_slug) = payload.slug {
 		if new_slug != &org.slug {
-			if let Err(e) = validate_slug(new_slug, locale) {
+			if let Err(e) = validate_org_slug(new_slug, locale) {
 				return (StatusCode::BAD_REQUEST, Json(e)).into_response();
 			}
 
