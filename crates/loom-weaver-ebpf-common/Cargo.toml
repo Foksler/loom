@@ -3,11 +3,11 @@
 
 [package]
 name = "loom-weaver-ebpf-common"
-version.workspace = true
-authors.workspace = true
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
+version = "0.1.0"
+authors = ["Geoffrey Huntley"]
+edition = "2021"
+license = "LicenseRef-Proprietary"
+repository = "https://github.com/ghuntley/loom"
 description = "Shared types for weaver eBPF audit sidecar (no_std compatible)"
 
 [features]
