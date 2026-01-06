@@ -1690,6 +1690,10 @@ msgstr "Άνοιγμα στο Weaver"
 msgid "client.repos.weaver.create_failed"
 msgstr "Αποτυχία δημιουργίας weaver"
 
+#: client.repos.weaver.no_org
+msgid "client.repos.weaver.no_org"
+msgstr "Δεν επιλέχθηκε οργανισμός"
+
 #: client.repos.branch.find
 msgid "client.repos.branch.find"
 msgstr "Εύρεση κλάδου..."
@@ -1701,6 +1705,22 @@ msgstr "Δεν βρέθηκαν κλάδοι"
 #: client.repos.branch.default
 msgid "client.repos.branch.default"
 msgstr "προεπιλογή"
+
+#: client.repos.branches.title
+msgid "client.repos.branches.title"
+msgstr "Κλάδοι"
+
+#: client.repos.branches.default
+msgid "client.repos.branches.default"
+msgstr "Προεπιλογή"
+
+#: client.repos.branches.empty
+msgid "client.repos.branches.empty"
+msgstr "Δεν βρέθηκαν κλάδοι"
+
+#: client.repos.branches.compare
+msgid "client.repos.branches.compare"
+msgstr "Σύγκριση"
 
 #: client.repos.commits.minutes_ago
 msgid "client.repos.commits.minutes_ago"
@@ -1793,3 +1813,75 @@ msgstr "Commits"
 #: client.repos.compare.identical
 msgid "client.repos.compare.identical"
 msgstr "Αυτοί οι κλάδοι είναι ίδιοι"
+
+#: client.repos.settings.general
+msgid "client.repos.settings.general"
+msgstr "Γενικά"
+
+#: client.repos.settings.name
+msgid "client.repos.settings.name"
+msgstr "Όνομα αποθετηρίου"
+
+#: client.repos.settings.visibility
+msgid "client.repos.settings.visibility"
+msgstr "Ορατότητα"
+
+#: client.repos.settings.private
+msgid "client.repos.settings.private"
+msgstr "Ιδιωτικό"
+
+#: client.repos.settings.public
+msgid "client.repos.settings.public"
+msgstr "Δημόσιο"
+
+#: client.repos.settings.visibility_private_desc
+msgid "client.repos.settings.visibility_private_desc"
+msgstr "Μόνο εσείς και οι συνεργάτες μπορείτε να έχετε πρόσβαση σε αυτό το αποθετήριο"
+
+#: client.repos.settings.visibility_public_desc
+msgid "client.repos.settings.visibility_public_desc"
+msgstr "Οποιοσδήποτε μπορεί να κλωνοποιήσει αυτό το αποθετήριο"
+
+#: client.repos.settings.default_branch
+msgid "client.repos.settings.default_branch"
+msgstr "Προεπιλεγμένος κλάδος"
+
+#: client.repos.settings.clone_url
+msgid "client.repos.settings.clone_url"
+msgstr "URL κλωνοποίησης"
+
+#: client.repos.settings.copy
+msgid "client.repos.settings.copy"
+msgstr "Αντιγραφή"
+
+#: client.repos.settings.save
+msgid "client.repos.settings.save"
+msgstr "Αποθήκευση αλλαγών"
+
+#: client.repos.settings.cancel
+msgid "client.repos.settings.cancel"
+msgstr "Ακύρωση"
+
+#: client.repos.settings.danger_zone
+msgid "client.repos.settings.danger_zone"
+msgstr "Επικίνδυνη ζώνη"
+
+#: client.repos.settings.delete_title
+msgid "client.repos.settings.delete_title"
+msgstr "Διαγραφή αποθετηρίου"
+
+#: client.repos.settings.delete_warning
+msgid "client.repos.settings.delete_warning"
+msgstr "Αυτή η ενέργεια δεν μπορεί να αναιρεθεί. Θα διαγράψει οριστικά το αποθετήριο και όλα τα περιεχόμενά του."
+
+#: client.repos.settings.delete_button
+msgid "client.repos.settings.delete_button"
+msgstr "Διαγραφή αυτού του αποθετηρίου"
+
+#: client.repos.settings.delete_confirm
+msgid "client.repos.settings.delete_confirm"
+msgstr "Πληκτρολογήστε το όνομα του αποθετηρίου για επιβεβαίωση:"
+
+#: client.repos.settings.delete_confirm_button
+msgid "client.repos.settings.delete_confirm_button"
+msgstr "Καταλαβαίνω, διαγράψτε αυτό το αποθετήριο"

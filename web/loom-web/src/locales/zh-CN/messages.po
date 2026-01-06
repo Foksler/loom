@@ -1690,6 +1690,10 @@ msgstr "在 Weaver 中打开"
 msgid "client.repos.weaver.create_failed"
 msgstr "创建 Weaver 失败"
 
+#: client.repos.weaver.no_org
+msgid "client.repos.weaver.no_org"
+msgstr "未选择组织"
+
 #: client.repos.branch.find
 msgid "client.repos.branch.find"
 msgstr "搜索分支..."
@@ -1701,6 +1705,22 @@ msgstr "未找到分支"
 #: client.repos.branch.default
 msgid "client.repos.branch.default"
 msgstr "默认"
+
+#: client.repos.branches.title
+msgid "client.repos.branches.title"
+msgstr "分支"
+
+#: client.repos.branches.default
+msgid "client.repos.branches.default"
+msgstr "默认"
+
+#: client.repos.branches.empty
+msgid "client.repos.branches.empty"
+msgstr "未找到分支"
+
+#: client.repos.branches.compare
+msgid "client.repos.branches.compare"
+msgstr "比较"
 
 #: client.repos.commits.minutes_ago
 msgid "client.repos.commits.minutes_ago"
@@ -1793,3 +1813,75 @@ msgstr "提交"
 #: client.repos.compare.identical
 msgid "client.repos.compare.identical"
 msgstr "这些分支是相同的"
+
+#: client.repos.settings.general
+msgid "client.repos.settings.general"
+msgstr "常规"
+
+#: client.repos.settings.name
+msgid "client.repos.settings.name"
+msgstr "仓库名称"
+
+#: client.repos.settings.visibility
+msgid "client.repos.settings.visibility"
+msgstr "可见性"
+
+#: client.repos.settings.private
+msgid "client.repos.settings.private"
+msgstr "私有"
+
+#: client.repos.settings.public
+msgid "client.repos.settings.public"
+msgstr "公开"
+
+#: client.repos.settings.visibility_private_desc
+msgid "client.repos.settings.visibility_private_desc"
+msgstr "只有您和协作者可以访问此仓库"
+
+#: client.repos.settings.visibility_public_desc
+msgid "client.repos.settings.visibility_public_desc"
+msgstr "任何人都可以克隆此仓库"
+
+#: client.repos.settings.default_branch
+msgid "client.repos.settings.default_branch"
+msgstr "默认分支"
+
+#: client.repos.settings.clone_url
+msgid "client.repos.settings.clone_url"
+msgstr "克隆 URL"
+
+#: client.repos.settings.copy
+msgid "client.repos.settings.copy"
+msgstr "复制"
+
+#: client.repos.settings.save
+msgid "client.repos.settings.save"
+msgstr "保存更改"
+
+#: client.repos.settings.cancel
+msgid "client.repos.settings.cancel"
+msgstr "取消"
+
+#: client.repos.settings.danger_zone
+msgid "client.repos.settings.danger_zone"
+msgstr "危险区域"
+
+#: client.repos.settings.delete_title
+msgid "client.repos.settings.delete_title"
+msgstr "删除仓库"
+
+#: client.repos.settings.delete_warning
+msgid "client.repos.settings.delete_warning"
+msgstr "此操作无法撤销。这将永久删除仓库及其所有内容。"
+
+#: client.repos.settings.delete_button
+msgid "client.repos.settings.delete_button"
+msgstr "删除此仓库"
+
+#: client.repos.settings.delete_confirm
+msgid "client.repos.settings.delete_confirm"
+msgstr "输入仓库名称以确认："
+
+#: client.repos.settings.delete_confirm_button
+msgid "client.repos.settings.delete_confirm_button"
+msgstr "我了解，删除此仓库"

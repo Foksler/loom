@@ -1690,6 +1690,10 @@ msgstr "Weaver में खोलें"
 msgid "client.repos.weaver.create_failed"
 msgstr "Weaver बनाने में विफल"
 
+#: client.repos.weaver.no_org
+msgid "client.repos.weaver.no_org"
+msgstr "कोई संगठन चयनित नहीं है"
+
 #: client.repos.branch.find
 msgid "client.repos.branch.find"
 msgstr "ब्रांच खोजें..."
@@ -1701,6 +1705,22 @@ msgstr "कोई ब्रांच नहीं मिली"
 #: client.repos.branch.default
 msgid "client.repos.branch.default"
 msgstr "डिफ़ॉल्ट"
+
+#: client.repos.branches.title
+msgid "client.repos.branches.title"
+msgstr "शाखाएं"
+
+#: client.repos.branches.default
+msgid "client.repos.branches.default"
+msgstr "डिफ़ॉल्ट"
+
+#: client.repos.branches.empty
+msgid "client.repos.branches.empty"
+msgstr "कोई शाखाएं नहीं मिलीं"
+
+#: client.repos.branches.compare
+msgid "client.repos.branches.compare"
+msgstr "तुलना करें"
 
 #: client.repos.commits.minutes_ago
 msgid "client.repos.commits.minutes_ago"
@@ -1793,3 +1813,75 @@ msgstr "कमिट्स"
 #: client.repos.compare.identical
 msgid "client.repos.compare.identical"
 msgstr "ये ब्रांचेस समान हैं"
+
+#: client.repos.settings.general
+msgid "client.repos.settings.general"
+msgstr "सामान्य"
+
+#: client.repos.settings.name
+msgid "client.repos.settings.name"
+msgstr "रिपॉजिटरी का नाम"
+
+#: client.repos.settings.visibility
+msgid "client.repos.settings.visibility"
+msgstr "दृश्यता"
+
+#: client.repos.settings.private
+msgid "client.repos.settings.private"
+msgstr "निजी"
+
+#: client.repos.settings.public
+msgid "client.repos.settings.public"
+msgstr "सार्वजनिक"
+
+#: client.repos.settings.visibility_private_desc
+msgid "client.repos.settings.visibility_private_desc"
+msgstr "केवल आप और सहयोगी इस रिपॉजिटरी तक पहुंच सकते हैं"
+
+#: client.repos.settings.visibility_public_desc
+msgid "client.repos.settings.visibility_public_desc"
+msgstr "कोई भी इस रिपॉजिटरी को क्लोन कर सकता है"
+
+#: client.repos.settings.default_branch
+msgid "client.repos.settings.default_branch"
+msgstr "डिफ़ॉल्ट ब्रांच"
+
+#: client.repos.settings.clone_url
+msgid "client.repos.settings.clone_url"
+msgstr "क्लोन URL"
+
+#: client.repos.settings.copy
+msgid "client.repos.settings.copy"
+msgstr "कॉपी करें"
+
+#: client.repos.settings.save
+msgid "client.repos.settings.save"
+msgstr "परिवर्तन सहेजें"
+
+#: client.repos.settings.cancel
+msgid "client.repos.settings.cancel"
+msgstr "रद्द करें"
+
+#: client.repos.settings.danger_zone
+msgid "client.repos.settings.danger_zone"
+msgstr "खतरा क्षेत्र"
+
+#: client.repos.settings.delete_title
+msgid "client.repos.settings.delete_title"
+msgstr "रिपॉजिटरी हटाएं"
+
+#: client.repos.settings.delete_warning
+msgid "client.repos.settings.delete_warning"
+msgstr "इस क्रिया को वापस नहीं लिया जा सकता। यह रिपॉजिटरी और उसकी सभी सामग्री को स्थायी रूप से हटा देगा।"
+
+#: client.repos.settings.delete_button
+msgid "client.repos.settings.delete_button"
+msgstr "इस रिपॉजिटरी को हटाएं"
+
+#: client.repos.settings.delete_confirm
+msgid "client.repos.settings.delete_confirm"
+msgstr "पुष्टि के लिए रिपॉजिटरी का नाम टाइप करें:"
+
+#: client.repos.settings.delete_confirm_button
+msgid "client.repos.settings.delete_confirm_button"
+msgstr "मैं समझता हूं, इस रिपॉजिटरी को हटाएं"

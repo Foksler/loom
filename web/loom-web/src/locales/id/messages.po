@@ -1690,6 +1690,10 @@ msgstr "Buka di Weaver"
 msgid "client.repos.weaver.create_failed"
 msgstr "Gagal membuat weaver"
 
+#: client.repos.weaver.no_org
+msgid "client.repos.weaver.no_org"
+msgstr "Tidak ada organisasi yang dipilih"
+
 #: client.repos.branch.find
 msgid "client.repos.branch.find"
 msgstr "Cari cabang..."
@@ -1701,6 +1705,22 @@ msgstr "Tidak ada cabang ditemukan"
 #: client.repos.branch.default
 msgid "client.repos.branch.default"
 msgstr "default"
+
+#: client.repos.branches.title
+msgid "client.repos.branches.title"
+msgstr "Cabang"
+
+#: client.repos.branches.default
+msgid "client.repos.branches.default"
+msgstr "Default"
+
+#: client.repos.branches.empty
+msgid "client.repos.branches.empty"
+msgstr "Tidak ada cabang ditemukan"
+
+#: client.repos.branches.compare
+msgid "client.repos.branches.compare"
+msgstr "Bandingkan"
 
 #: client.repos.commits.minutes_ago
 msgid "client.repos.commits.minutes_ago"
@@ -1793,3 +1813,75 @@ msgstr "Komit"
 #: client.repos.compare.identical
 msgid "client.repos.compare.identical"
 msgstr "Cabang-cabang ini identik"
+
+#: client.repos.settings.general
+msgid "client.repos.settings.general"
+msgstr "Umum"
+
+#: client.repos.settings.name
+msgid "client.repos.settings.name"
+msgstr "Nama repositori"
+
+#: client.repos.settings.visibility
+msgid "client.repos.settings.visibility"
+msgstr "Visibilitas"
+
+#: client.repos.settings.private
+msgid "client.repos.settings.private"
+msgstr "Privat"
+
+#: client.repos.settings.public
+msgid "client.repos.settings.public"
+msgstr "Publik"
+
+#: client.repos.settings.visibility_private_desc
+msgid "client.repos.settings.visibility_private_desc"
+msgstr "Hanya Anda dan kolaborator yang dapat mengakses repositori ini"
+
+#: client.repos.settings.visibility_public_desc
+msgid "client.repos.settings.visibility_public_desc"
+msgstr "Siapa pun dapat mengklon repositori ini"
+
+#: client.repos.settings.default_branch
+msgid "client.repos.settings.default_branch"
+msgstr "Cabang default"
+
+#: client.repos.settings.clone_url
+msgid "client.repos.settings.clone_url"
+msgstr "URL klon"
+
+#: client.repos.settings.copy
+msgid "client.repos.settings.copy"
+msgstr "Salin"
+
+#: client.repos.settings.save
+msgid "client.repos.settings.save"
+msgstr "Simpan perubahan"
+
+#: client.repos.settings.cancel
+msgid "client.repos.settings.cancel"
+msgstr "Batal"
+
+#: client.repos.settings.danger_zone
+msgid "client.repos.settings.danger_zone"
+msgstr "Zona bahaya"
+
+#: client.repos.settings.delete_title
+msgid "client.repos.settings.delete_title"
+msgstr "Hapus repositori"
+
+#: client.repos.settings.delete_warning
+msgid "client.repos.settings.delete_warning"
+msgstr "Tindakan ini tidak dapat dibatalkan. Ini akan menghapus repositori dan semua isinya secara permanen."
+
+#: client.repos.settings.delete_button
+msgid "client.repos.settings.delete_button"
+msgstr "Hapus repositori ini"
+
+#: client.repos.settings.delete_confirm
+msgid "client.repos.settings.delete_confirm"
+msgstr "Ketik nama repositori untuk mengonfirmasi:"
+
+#: client.repos.settings.delete_confirm_button
+msgid "client.repos.settings.delete_confirm_button"
+msgstr "Saya mengerti, hapus repositori ini"

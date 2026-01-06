@@ -1486,6 +1486,10 @@ msgstr "Ouvrir dans Weaver"
 msgid "client.repos.weaver.create_failed"
 msgstr "Échec de la création du weaver"
 
+#: client.repos.weaver.no_org
+msgid "client.repos.weaver.no_org"
+msgstr "Aucune organisation sélectionnée"
+
 #: client.repos.branch.find
 msgid "client.repos.branch.find"
 msgstr "Rechercher une branche..."
@@ -1497,6 +1501,22 @@ msgstr "Aucune branche trouvée"
 #: client.repos.branch.default
 msgid "client.repos.branch.default"
 msgstr "par défaut"
+
+#: client.repos.branches.title
+msgid "client.repos.branches.title"
+msgstr "Branches"
+
+#: client.repos.branches.default
+msgid "client.repos.branches.default"
+msgstr "Par défaut"
+
+#: client.repos.branches.empty
+msgid "client.repos.branches.empty"
+msgstr "Aucune branche trouvée"
+
+#: client.repos.branches.compare
+msgid "client.repos.branches.compare"
+msgstr "Comparer"
 
 #: client.repos.commits.minutes_ago
 msgid "client.repos.commits.minutes_ago"
@@ -1589,6 +1609,78 @@ msgstr "Commits"
 #: client.repos.compare.identical
 msgid "client.repos.compare.identical"
 msgstr "Ces branches sont identiques"
+
+#: client.repos.settings.general
+msgid "client.repos.settings.general"
+msgstr "Général"
+
+#: client.repos.settings.name
+msgid "client.repos.settings.name"
+msgstr "Nom du dépôt"
+
+#: client.repos.settings.visibility
+msgid "client.repos.settings.visibility"
+msgstr "Visibilité"
+
+#: client.repos.settings.private
+msgid "client.repos.settings.private"
+msgstr "Privé"
+
+#: client.repos.settings.public
+msgid "client.repos.settings.public"
+msgstr "Public"
+
+#: client.repos.settings.visibility_private_desc
+msgid "client.repos.settings.visibility_private_desc"
+msgstr "Seuls vous et les collaborateurs pouvez accéder à ce dépôt"
+
+#: client.repos.settings.visibility_public_desc
+msgid "client.repos.settings.visibility_public_desc"
+msgstr "Tout le monde peut cloner ce dépôt"
+
+#: client.repos.settings.default_branch
+msgid "client.repos.settings.default_branch"
+msgstr "Branche par défaut"
+
+#: client.repos.settings.clone_url
+msgid "client.repos.settings.clone_url"
+msgstr "URL de clonage"
+
+#: client.repos.settings.copy
+msgid "client.repos.settings.copy"
+msgstr "Copier"
+
+#: client.repos.settings.save
+msgid "client.repos.settings.save"
+msgstr "Enregistrer les modifications"
+
+#: client.repos.settings.cancel
+msgid "client.repos.settings.cancel"
+msgstr "Annuler"
+
+#: client.repos.settings.danger_zone
+msgid "client.repos.settings.danger_zone"
+msgstr "Zone de danger"
+
+#: client.repos.settings.delete_title
+msgid "client.repos.settings.delete_title"
+msgstr "Supprimer le dépôt"
+
+#: client.repos.settings.delete_warning
+msgid "client.repos.settings.delete_warning"
+msgstr "Cette action est irréversible. Cela supprimera définitivement le dépôt et tout son contenu."
+
+#: client.repos.settings.delete_button
+msgid "client.repos.settings.delete_button"
+msgstr "Supprimer ce dépôt"
+
+#: client.repos.settings.delete_confirm
+msgid "client.repos.settings.delete_confirm"
+msgstr "Tapez le nom du dépôt pour confirmer :"
+
+#: client.repos.settings.delete_confirm_button
+msgid "client.repos.settings.delete_confirm_button"
+msgstr "Je comprends, supprimer ce dépôt"
 
 #: admin.anthropic.title
 msgid "admin.anthropic.title"

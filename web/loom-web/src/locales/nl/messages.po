@@ -1690,6 +1690,10 @@ msgstr "Openen in Weaver"
 msgid "client.repos.weaver.create_failed"
 msgstr "Weaver aanmaken mislukt"
 
+#: client.repos.weaver.no_org
+msgid "client.repos.weaver.no_org"
+msgstr "Geen organisatie geselecteerd"
+
 #: client.repos.branch.find
 msgid "client.repos.branch.find"
 msgstr "Zoek een branch..."
@@ -1701,6 +1705,22 @@ msgstr "Geen branches gevonden"
 #: client.repos.branch.default
 msgid "client.repos.branch.default"
 msgstr "standaard"
+
+#: client.repos.branches.title
+msgid "client.repos.branches.title"
+msgstr "Branches"
+
+#: client.repos.branches.default
+msgid "client.repos.branches.default"
+msgstr "Standaard"
+
+#: client.repos.branches.empty
+msgid "client.repos.branches.empty"
+msgstr "Geen branches gevonden"
+
+#: client.repos.branches.compare
+msgid "client.repos.branches.compare"
+msgstr "Vergelijken"
 
 #: client.repos.commits.minutes_ago
 msgid "client.repos.commits.minutes_ago"
@@ -1793,3 +1813,75 @@ msgstr "Commits"
 #: client.repos.compare.identical
 msgid "client.repos.compare.identical"
 msgstr "Deze branches zijn identiek"
+
+#: client.repos.settings.general
+msgid "client.repos.settings.general"
+msgstr "Algemeen"
+
+#: client.repos.settings.name
+msgid "client.repos.settings.name"
+msgstr "Repository naam"
+
+#: client.repos.settings.visibility
+msgid "client.repos.settings.visibility"
+msgstr "Zichtbaarheid"
+
+#: client.repos.settings.private
+msgid "client.repos.settings.private"
+msgstr "Privé"
+
+#: client.repos.settings.public
+msgid "client.repos.settings.public"
+msgstr "Openbaar"
+
+#: client.repos.settings.visibility_private_desc
+msgid "client.repos.settings.visibility_private_desc"
+msgstr "Alleen jij en medewerkers hebben toegang tot deze repository"
+
+#: client.repos.settings.visibility_public_desc
+msgid "client.repos.settings.visibility_public_desc"
+msgstr "Iedereen kan deze repository klonen"
+
+#: client.repos.settings.default_branch
+msgid "client.repos.settings.default_branch"
+msgstr "Standaard branch"
+
+#: client.repos.settings.clone_url
+msgid "client.repos.settings.clone_url"
+msgstr "Clone URL"
+
+#: client.repos.settings.copy
+msgid "client.repos.settings.copy"
+msgstr "Kopiëren"
+
+#: client.repos.settings.save
+msgid "client.repos.settings.save"
+msgstr "Wijzigingen opslaan"
+
+#: client.repos.settings.cancel
+msgid "client.repos.settings.cancel"
+msgstr "Annuleren"
+
+#: client.repos.settings.danger_zone
+msgid "client.repos.settings.danger_zone"
+msgstr "Gevarenzone"
+
+#: client.repos.settings.delete_title
+msgid "client.repos.settings.delete_title"
+msgstr "Repository verwijderen"
+
+#: client.repos.settings.delete_warning
+msgid "client.repos.settings.delete_warning"
+msgstr "Deze actie kan niet ongedaan worden gemaakt. Dit verwijdert de repository en al zijn inhoud permanent."
+
+#: client.repos.settings.delete_button
+msgid "client.repos.settings.delete_button"
+msgstr "Deze repository verwijderen"
+
+#: client.repos.settings.delete_confirm
+msgid "client.repos.settings.delete_confirm"
+msgstr "Typ de naam van de repository om te bevestigen:"
+
+#: client.repos.settings.delete_confirm_button
+msgid "client.repos.settings.delete_confirm_button"
+msgstr "Ik begrijp het, verwijder deze repository"

@@ -1690,6 +1690,10 @@ msgstr "Ava Weaveris"
 msgid "client.repos.weaver.create_failed"
 msgstr "Weaveri loomine ebaõnnestus"
 
+#: client.repos.weaver.no_org
+msgid "client.repos.weaver.no_org"
+msgstr "Organisatsioon pole valitud"
+
 #: client.repos.branch.find
 msgid "client.repos.branch.find"
 msgstr "Otsi haru..."
@@ -1701,6 +1705,22 @@ msgstr "Harusid ei leitud"
 #: client.repos.branch.default
 msgid "client.repos.branch.default"
 msgstr "vaikimisi"
+
+#: client.repos.branches.title
+msgid "client.repos.branches.title"
+msgstr "Harud"
+
+#: client.repos.branches.default
+msgid "client.repos.branches.default"
+msgstr "Vaikimisi"
+
+#: client.repos.branches.empty
+msgid "client.repos.branches.empty"
+msgstr "Harusid ei leitud"
+
+#: client.repos.branches.compare
+msgid "client.repos.branches.compare"
+msgstr "Võrdle"
 
 #: client.repos.commits.minutes_ago
 msgid "client.repos.commits.minutes_ago"
@@ -1793,3 +1813,75 @@ msgstr "Commitid"
 #: client.repos.compare.identical
 msgid "client.repos.compare.identical"
 msgstr "Need harud on identsed"
+
+#: client.repos.settings.general
+msgid "client.repos.settings.general"
+msgstr "Üldine"
+
+#: client.repos.settings.name
+msgid "client.repos.settings.name"
+msgstr "Hoidla nimi"
+
+#: client.repos.settings.visibility
+msgid "client.repos.settings.visibility"
+msgstr "Nähtavus"
+
+#: client.repos.settings.private
+msgid "client.repos.settings.private"
+msgstr "Privaatne"
+
+#: client.repos.settings.public
+msgid "client.repos.settings.public"
+msgstr "Avalik"
+
+#: client.repos.settings.visibility_private_desc
+msgid "client.repos.settings.visibility_private_desc"
+msgstr "Ainult sina ja kaastöötajad saavad sellele hoidlale ligi"
+
+#: client.repos.settings.visibility_public_desc
+msgid "client.repos.settings.visibility_public_desc"
+msgstr "Igaüks saab seda hoidlat kloonida"
+
+#: client.repos.settings.default_branch
+msgid "client.repos.settings.default_branch"
+msgstr "Vaikeharu"
+
+#: client.repos.settings.clone_url
+msgid "client.repos.settings.clone_url"
+msgstr "Kloonimise URL"
+
+#: client.repos.settings.copy
+msgid "client.repos.settings.copy"
+msgstr "Kopeeri"
+
+#: client.repos.settings.save
+msgid "client.repos.settings.save"
+msgstr "Salvesta muudatused"
+
+#: client.repos.settings.cancel
+msgid "client.repos.settings.cancel"
+msgstr "Tühista"
+
+#: client.repos.settings.danger_zone
+msgid "client.repos.settings.danger_zone"
+msgstr "Ohutsoon"
+
+#: client.repos.settings.delete_title
+msgid "client.repos.settings.delete_title"
+msgstr "Kustuta hoidla"
+
+#: client.repos.settings.delete_warning
+msgid "client.repos.settings.delete_warning"
+msgstr "Seda toimingut ei saa tagasi võtta. See kustutab hoidla ja kogu selle sisu jäädavalt."
+
+#: client.repos.settings.delete_button
+msgid "client.repos.settings.delete_button"
+msgstr "Kustuta see hoidla"
+
+#: client.repos.settings.delete_confirm
+msgid "client.repos.settings.delete_confirm"
+msgstr "Kinnitamiseks sisesta hoidla nimi:"
+
+#: client.repos.settings.delete_confirm_button
+msgid "client.repos.settings.delete_confirm_button"
+msgstr "Mõistan, kustuta see hoidla"

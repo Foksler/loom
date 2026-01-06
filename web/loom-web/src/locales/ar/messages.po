@@ -1486,6 +1486,10 @@ msgstr "فتح في Weaver"
 msgid "client.repos.weaver.create_failed"
 msgstr "فشل إنشاء Weaver"
 
+#: client.repos.weaver.no_org
+msgid "client.repos.weaver.no_org"
+msgstr "لم يتم تحديد أي منظمة"
+
 #: client.repos.branch.find
 msgid "client.repos.branch.find"
 msgstr "البحث عن فرع..."
@@ -1497,6 +1501,22 @@ msgstr "لا توجد فروع"
 #: client.repos.branch.default
 msgid "client.repos.branch.default"
 msgstr "افتراضي"
+
+#: client.repos.branches.title
+msgid "client.repos.branches.title"
+msgstr "الفروع"
+
+#: client.repos.branches.default
+msgid "client.repos.branches.default"
+msgstr "افتراضي"
+
+#: client.repos.branches.empty
+msgid "client.repos.branches.empty"
+msgstr "لم يتم العثور على فروع"
+
+#: client.repos.branches.compare
+msgid "client.repos.branches.compare"
+msgstr "مقارنة"
 
 #: client.repos.commits.minutes_ago
 msgid "client.repos.commits.minutes_ago"
@@ -1589,6 +1609,78 @@ msgstr "الإيداعات"
 #: client.repos.compare.identical
 msgid "client.repos.compare.identical"
 msgstr "هذه الفروع متطابقة"
+
+#: client.repos.settings.general
+msgid "client.repos.settings.general"
+msgstr "عام"
+
+#: client.repos.settings.name
+msgid "client.repos.settings.name"
+msgstr "اسم المستودع"
+
+#: client.repos.settings.visibility
+msgid "client.repos.settings.visibility"
+msgstr "الرؤية"
+
+#: client.repos.settings.private
+msgid "client.repos.settings.private"
+msgstr "خاص"
+
+#: client.repos.settings.public
+msgid "client.repos.settings.public"
+msgstr "عام"
+
+#: client.repos.settings.visibility_private_desc
+msgid "client.repos.settings.visibility_private_desc"
+msgstr "أنت والمتعاونون فقط يمكنكم الوصول إلى هذا المستودع"
+
+#: client.repos.settings.visibility_public_desc
+msgid "client.repos.settings.visibility_public_desc"
+msgstr "يمكن لأي شخص استنساخ هذا المستودع"
+
+#: client.repos.settings.default_branch
+msgid "client.repos.settings.default_branch"
+msgstr "الفرع الافتراضي"
+
+#: client.repos.settings.clone_url
+msgid "client.repos.settings.clone_url"
+msgstr "رابط الاستنساخ"
+
+#: client.repos.settings.copy
+msgid "client.repos.settings.copy"
+msgstr "نسخ"
+
+#: client.repos.settings.save
+msgid "client.repos.settings.save"
+msgstr "حفظ التغييرات"
+
+#: client.repos.settings.cancel
+msgid "client.repos.settings.cancel"
+msgstr "إلغاء"
+
+#: client.repos.settings.danger_zone
+msgid "client.repos.settings.danger_zone"
+msgstr "منطقة الخطر"
+
+#: client.repos.settings.delete_title
+msgid "client.repos.settings.delete_title"
+msgstr "حذف المستودع"
+
+#: client.repos.settings.delete_warning
+msgid "client.repos.settings.delete_warning"
+msgstr "لا يمكن التراجع عن هذا الإجراء. سيؤدي هذا إلى حذف المستودع وجميع محتوياته نهائياً."
+
+#: client.repos.settings.delete_button
+msgid "client.repos.settings.delete_button"
+msgstr "حذف هذا المستودع"
+
+#: client.repos.settings.delete_confirm
+msgid "client.repos.settings.delete_confirm"
+msgstr "اكتب اسم المستودع للتأكيد:"
+
+#: client.repos.settings.delete_confirm_button
+msgid "client.repos.settings.delete_confirm_button"
+msgstr "أفهم، احذف هذا المستودع"
 
 #: admin.anthropic.title
 msgid "admin.anthropic.title"

@@ -1486,6 +1486,10 @@ msgstr "Abrir en Weaver"
 msgid "client.repos.weaver.create_failed"
 msgstr "Error al crear weaver"
 
+#: client.repos.weaver.no_org
+msgid "client.repos.weaver.no_org"
+msgstr "No se ha seleccionado ninguna organización"
+
 #: client.repos.branch.find
 msgid "client.repos.branch.find"
 msgstr "Buscar una rama..."
@@ -1497,6 +1501,22 @@ msgstr "No se encontraron ramas"
 #: client.repos.branch.default
 msgid "client.repos.branch.default"
 msgstr "predeterminada"
+
+#: client.repos.branches.title
+msgid "client.repos.branches.title"
+msgstr "Ramas"
+
+#: client.repos.branches.default
+msgid "client.repos.branches.default"
+msgstr "Predeterminada"
+
+#: client.repos.branches.empty
+msgid "client.repos.branches.empty"
+msgstr "No se encontraron ramas"
+
+#: client.repos.branches.compare
+msgid "client.repos.branches.compare"
+msgstr "Comparar"
 
 #: client.repos.commits.minutes_ago
 msgid "client.repos.commits.minutes_ago"
@@ -1589,6 +1609,78 @@ msgstr "Commits"
 #: client.repos.compare.identical
 msgid "client.repos.compare.identical"
 msgstr "Estas ramas son idénticas"
+
+#: client.repos.settings.general
+msgid "client.repos.settings.general"
+msgstr "General"
+
+#: client.repos.settings.name
+msgid "client.repos.settings.name"
+msgstr "Nombre del repositorio"
+
+#: client.repos.settings.visibility
+msgid "client.repos.settings.visibility"
+msgstr "Visibilidad"
+
+#: client.repos.settings.private
+msgid "client.repos.settings.private"
+msgstr "Privado"
+
+#: client.repos.settings.public
+msgid "client.repos.settings.public"
+msgstr "Público"
+
+#: client.repos.settings.visibility_private_desc
+msgid "client.repos.settings.visibility_private_desc"
+msgstr "Solo tú y los colaboradores pueden acceder a este repositorio"
+
+#: client.repos.settings.visibility_public_desc
+msgid "client.repos.settings.visibility_public_desc"
+msgstr "Cualquiera puede clonar este repositorio"
+
+#: client.repos.settings.default_branch
+msgid "client.repos.settings.default_branch"
+msgstr "Rama predeterminada"
+
+#: client.repos.settings.clone_url
+msgid "client.repos.settings.clone_url"
+msgstr "URL de clonación"
+
+#: client.repos.settings.copy
+msgid "client.repos.settings.copy"
+msgstr "Copiar"
+
+#: client.repos.settings.save
+msgid "client.repos.settings.save"
+msgstr "Guardar cambios"
+
+#: client.repos.settings.cancel
+msgid "client.repos.settings.cancel"
+msgstr "Cancelar"
+
+#: client.repos.settings.danger_zone
+msgid "client.repos.settings.danger_zone"
+msgstr "Zona de peligro"
+
+#: client.repos.settings.delete_title
+msgid "client.repos.settings.delete_title"
+msgstr "Eliminar repositorio"
+
+#: client.repos.settings.delete_warning
+msgid "client.repos.settings.delete_warning"
+msgstr "Esta acción no se puede deshacer. Esto eliminará permanentemente el repositorio y todo su contenido."
+
+#: client.repos.settings.delete_button
+msgid "client.repos.settings.delete_button"
+msgstr "Eliminar este repositorio"
+
+#: client.repos.settings.delete_confirm
+msgid "client.repos.settings.delete_confirm"
+msgstr "Escribe el nombre del repositorio para confirmar:"
+
+#: client.repos.settings.delete_confirm_button
+msgid "client.repos.settings.delete_confirm_button"
+msgstr "Entiendo, eliminar este repositorio"
 
 #: admin.anthropic.title
 msgid "admin.anthropic.title"

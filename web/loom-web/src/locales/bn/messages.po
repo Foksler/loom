@@ -1690,6 +1690,10 @@ msgstr "Weaver-এ খুলুন"
 msgid "client.repos.weaver.create_failed"
 msgstr "Weaver তৈরি করতে ব্যর্থ"
 
+#: client.repos.weaver.no_org
+msgid "client.repos.weaver.no_org"
+msgstr "কোনো সংগঠন নির্বাচিত হয়নি"
+
 #: client.repos.branch.find
 msgid "client.repos.branch.find"
 msgstr "ব্রাঞ্চ খুঁজুন..."
@@ -1701,6 +1705,22 @@ msgstr "কোনো ব্রাঞ্চ পাওয়া যায়নি
 #: client.repos.branch.default
 msgid "client.repos.branch.default"
 msgstr "ডিফল্ট"
+
+#: client.repos.branches.title
+msgid "client.repos.branches.title"
+msgstr "শাখা"
+
+#: client.repos.branches.default
+msgid "client.repos.branches.default"
+msgstr "ডিফল্ট"
+
+#: client.repos.branches.empty
+msgid "client.repos.branches.empty"
+msgstr "কোনো শাখা পাওয়া যায়নি"
+
+#: client.repos.branches.compare
+msgid "client.repos.branches.compare"
+msgstr "তুলনা করুন"
 
 #: client.repos.commits.minutes_ago
 msgid "client.repos.commits.minutes_ago"
@@ -1793,3 +1813,75 @@ msgstr "কমিট"
 #: client.repos.compare.identical
 msgid "client.repos.compare.identical"
 msgstr "এই ব্রাঞ্চগুলো অভিন্ন"
+
+#: client.repos.settings.general
+msgid "client.repos.settings.general"
+msgstr "সাধারণ"
+
+#: client.repos.settings.name
+msgid "client.repos.settings.name"
+msgstr "রিপোজিটরির নাম"
+
+#: client.repos.settings.visibility
+msgid "client.repos.settings.visibility"
+msgstr "দৃশ্যমানতা"
+
+#: client.repos.settings.private
+msgid "client.repos.settings.private"
+msgstr "প্রাইভেট"
+
+#: client.repos.settings.public
+msgid "client.repos.settings.public"
+msgstr "পাবলিক"
+
+#: client.repos.settings.visibility_private_desc
+msgid "client.repos.settings.visibility_private_desc"
+msgstr "শুধুমাত্র আপনি এবং সহযোগীরা এই রিপোজিটরিতে অ্যাক্সেস করতে পারবেন"
+
+#: client.repos.settings.visibility_public_desc
+msgid "client.repos.settings.visibility_public_desc"
+msgstr "যে কেউ এই রিপোজিটরি ক্লোন করতে পারবে"
+
+#: client.repos.settings.default_branch
+msgid "client.repos.settings.default_branch"
+msgstr "ডিফল্ট ব্রাঞ্চ"
+
+#: client.repos.settings.clone_url
+msgid "client.repos.settings.clone_url"
+msgstr "ক্লোন URL"
+
+#: client.repos.settings.copy
+msgid "client.repos.settings.copy"
+msgstr "কপি করুন"
+
+#: client.repos.settings.save
+msgid "client.repos.settings.save"
+msgstr "পরিবর্তন সংরক্ষণ করুন"
+
+#: client.repos.settings.cancel
+msgid "client.repos.settings.cancel"
+msgstr "বাতিল"
+
+#: client.repos.settings.danger_zone
+msgid "client.repos.settings.danger_zone"
+msgstr "বিপদ অঞ্চল"
+
+#: client.repos.settings.delete_title
+msgid "client.repos.settings.delete_title"
+msgstr "রিপোজিটরি মুছুন"
+
+#: client.repos.settings.delete_warning
+msgid "client.repos.settings.delete_warning"
+msgstr "এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না। এটি রিপোজিটরি এবং এর সমস্ত বিষয়বস্তু স্থায়ীভাবে মুছে ফেলবে।"
+
+#: client.repos.settings.delete_button
+msgid "client.repos.settings.delete_button"
+msgstr "এই রিপোজিটরি মুছুন"
+
+#: client.repos.settings.delete_confirm
+msgid "client.repos.settings.delete_confirm"
+msgstr "নিশ্চিত করতে রিপোজিটরির নাম টাইপ করুন:"
+
+#: client.repos.settings.delete_confirm_button
+msgid "client.repos.settings.delete_confirm_button"
+msgstr "আমি বুঝেছি, এই রিপোজিটরি মুছুন"
