@@ -1007,6 +1007,20 @@ async fn main() -> Result<()> {
 		return credential_helper::run(cred_args.clone()).await;
 	}
 
+	// Fast path for attach command - skip full initialization to avoid tracing
+	// interfering with terminal I/O
+	if let Some(Command::Attach { weaver_id }) = &args.command {
+		let token = auth::load_token(&args.server_url).await;
+		return run_weaver_attach(&args.server_url, token, weaver_id).await;
+	}
+	if let Some(Command::Weaver {
+		command: WeaverCommand::Attach { weaver_id },
+	}) = &args.command
+	{
+		let token = auth::load_token(&args.server_url).await;
+		return run_weaver_attach(&args.server_url, token, weaver_id).await;
+	}
+
 	let cli_overrides = CliOverrides::from(&args);
 	let config = load_config_with_cli(cli_overrides).context("failed to load configuration")?;
 

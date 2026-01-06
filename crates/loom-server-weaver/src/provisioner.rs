@@ -521,6 +521,22 @@ fn build_pod_spec(
 		});
 	}
 
+	// Always inject LOOM_SERVER_URL so the loom CLI can connect to the LLM proxy
+	if !config.server_url.is_empty() {
+		env_vars.push(EnvVar {
+			name: "LOOM_SERVER_URL".to_string(),
+			value: Some(config.server_url.clone()),
+			value_from: None,
+		});
+	}
+
+	// Weaver ID is always useful for identification/logging
+	env_vars.push(EnvVar {
+		name: "LOOM_WEAVER_ID".to_string(),
+		value: Some(id.to_string()),
+		value_from: None,
+	});
+
 	if let Some(ref secrets_url) = config.secrets_server_url {
 		env_vars.push(EnvVar {
 			name: "LOOM_SECRETS_SERVER_URL".to_string(),
@@ -542,18 +558,6 @@ fn build_pod_spec(
 			value: Some("true".to_string()),
 			value_from: None,
 		});
-		env_vars.push(EnvVar {
-			name: "LOOM_WEAVER_ID".to_string(),
-			value: Some(id.to_string()),
-			value_from: None,
-		});
-		if let Some(ref wg_server_url) = config.wg_server_url {
-			env_vars.push(EnvVar {
-				name: "LOOM_SERVER_URL".to_string(),
-				value: Some(wg_server_url.clone()),
-				value_from: None,
-			});
-		}
 	}
 
 	let mut limits = BTreeMap::new();

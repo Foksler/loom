@@ -79,8 +79,6 @@ pub struct WeaverConfigLayer {
 	pub secrets_allow_insecure: Option<bool>,
 	/// Enable WireGuard tunnel for weaver pods
 	pub wg_enabled: Option<bool>,
-	/// URL to loom-server for WireGuard registration
-	pub wg_server_url: Option<String>,
 	/// Enable audit sidecar for weaver pods
 	pub audit_enabled: Option<bool>,
 	/// Audit sidecar container image
@@ -106,7 +104,6 @@ impl std::fmt::Debug for WeaverConfigLayer {
 			.field("secrets_server_url", &self.secrets_server_url)
 			.field("secrets_allow_insecure", &self.secrets_allow_insecure)
 			.field("wg_enabled", &self.wg_enabled)
-			.field("wg_server_url", &self.wg_server_url)
 			.field("audit_enabled", &self.audit_enabled)
 			.field("audit_image", &self.audit_image)
 			.field("audit_batch_interval_ms", &self.audit_batch_interval_ms)
@@ -154,9 +151,6 @@ impl WeaverConfigLayer {
 		}
 		if other.wg_enabled.is_some() {
 			self.wg_enabled = other.wg_enabled;
-		}
-		if other.wg_server_url.is_some() {
-			self.wg_server_url = other.wg_server_url;
 		}
 		if other.audit_enabled.is_some() {
 			self.audit_enabled = other.audit_enabled;
@@ -208,7 +202,6 @@ impl WeaverConfigLayer {
 			secrets_server_url: self.secrets_server_url,
 			secrets_allow_insecure: self.secrets_allow_insecure.unwrap_or(false),
 			wg_enabled: self.wg_enabled,
-			wg_server_url: self.wg_server_url,
 			audit_enabled: self.audit_enabled.unwrap_or(false),
 			audit_image: self
 				.audit_image
@@ -237,8 +230,6 @@ pub struct WeaverConfig {
 	pub secrets_allow_insecure: bool,
 	/// Enable WireGuard tunnel for weaver pods
 	pub wg_enabled: Option<bool>,
-	/// URL to loom-server for WireGuard registration
-	pub wg_server_url: Option<String>,
 	/// Enable audit sidecar for weaver pods
 	pub audit_enabled: bool,
 	/// Audit sidecar container image
@@ -264,7 +255,6 @@ impl std::fmt::Debug for WeaverConfig {
 			.field("secrets_server_url", &self.secrets_server_url)
 			.field("secrets_allow_insecure", &self.secrets_allow_insecure)
 			.field("wg_enabled", &self.wg_enabled)
-			.field("wg_server_url", &self.wg_server_url)
 			.field("audit_enabled", &self.audit_enabled)
 			.field("audit_image", &self.audit_image)
 			.field("audit_batch_interval_ms", &self.audit_batch_interval_ms)
@@ -288,7 +278,6 @@ impl Default for WeaverConfig {
 			secrets_server_url: None,
 			secrets_allow_insecure: false,
 			wg_enabled: None,
-			wg_server_url: None,
 			audit_enabled: false,
 			audit_image: "ghcr.io/ghuntley/loom-audit-sidecar:latest".to_string(),
 			audit_batch_interval_ms: 100,
@@ -421,7 +410,7 @@ mod tests {
 				secrets_server_url: None,
 				secrets_allow_insecure: None,
 				wg_enabled: None,
-				wg_server_url: None,
+				..Default::default()
 			};
 			let config = layer.resolve().unwrap();
 

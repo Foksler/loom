@@ -637,19 +637,23 @@ Enable WireGuard tunnel support in the weaver provisioner config:
 ```nix
 services.loom-server.weaver = {
   wgEnabled = true;
-  wgServerUrl = "https://loom.ghuntley.com";
 };
 ```
 
 ### 16.3 Environment Variables
 
-When `wg_enabled` is true, the following environment variables are injected into weaver pods:
+The following environment variables are **always** injected into weaver pods:
+
+| Variable | Description |
+|----------|-------------|
+| `LOOM_SERVER_URL` | URL to the loom server (for LLM proxy, secrets, etc.) |
+| `LOOM_WEAVER_ID` | The weaver's UUID7 identifier |
+
+When `wg_enabled` is true, the following additional variable is injected:
 
 | Variable | Description |
 |----------|-------------|
 | `LOOM_WG_ENABLED` | Set to `"true"` when WireGuard is enabled |
-| `LOOM_WEAVER_ID` | The weaver's UUID7 identifier |
-| `LOOM_SERVER_URL` | URL to the loom server for WG registration |
 
 ### 16.4 Pod Labels
 

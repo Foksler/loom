@@ -485,7 +485,6 @@ async fn initialize_weaver_infrastructure(config: &ServerConfig) -> WeaverInfras
 		secrets_server_url: config.weaver.secrets_server_url.clone(),
 		secrets_allow_insecure: config.weaver.secrets_allow_insecure,
 		wg_enabled: config.weaver.wg_enabled.unwrap_or(true),
-		wg_server_url: config.weaver.wg_server_url.clone(),
 		audit_enabled: config.weaver.audit_enabled,
 		audit_image: config.weaver.audit_image.clone(),
 		audit_batch_interval_ms: config.weaver.audit_batch_interval_ms,

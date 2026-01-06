@@ -211,8 +211,6 @@ impl WeaverClient {
 	pub async fn attach_terminal(&self, id: &str) -> Result<()> {
 		let url = self.attach_url(id)?;
 
-		tracing::info!(weaver_id = %id, url = %url, "Connecting to weaver terminal");
-
 		let mut request = url.as_str().into_client_request()?;
 		if let Some(token) = &self.auth_token {
 			let auth_value = format!("Bearer {}", token.expose())
@@ -272,7 +270,6 @@ impl WeaverClient {
 					}
 				}
 				Err(e) => {
-					tracing::error!(error = %e, "WebSocket error");
 					return Err(anyhow::anyhow!("WebSocket error: {e}"));
 				}
 				_ => {}
