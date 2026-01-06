@@ -81,6 +81,14 @@ pub struct WeaverConfigLayer {
 	pub wg_enabled: Option<bool>,
 	/// URL to loom-server for WireGuard registration
 	pub wg_server_url: Option<String>,
+	/// Enable audit sidecar for weaver pods
+	pub audit_enabled: Option<bool>,
+	/// Audit sidecar container image
+	pub audit_image: Option<String>,
+	/// Audit batch interval in milliseconds
+	pub audit_batch_interval_ms: Option<u32>,
+	/// Audit buffer max size in bytes
+	pub audit_buffer_max_bytes: Option<u64>,
 }
 
 impl std::fmt::Debug for WeaverConfigLayer {
@@ -99,6 +107,10 @@ impl std::fmt::Debug for WeaverConfigLayer {
 			.field("secrets_allow_insecure", &self.secrets_allow_insecure)
 			.field("wg_enabled", &self.wg_enabled)
 			.field("wg_server_url", &self.wg_server_url)
+			.field("audit_enabled", &self.audit_enabled)
+			.field("audit_image", &self.audit_image)
+			.field("audit_batch_interval_ms", &self.audit_batch_interval_ms)
+			.field("audit_buffer_max_bytes", &self.audit_buffer_max_bytes)
 			.finish()
 	}
 }
@@ -146,6 +158,18 @@ impl WeaverConfigLayer {
 		if other.wg_server_url.is_some() {
 			self.wg_server_url = other.wg_server_url;
 		}
+		if other.audit_enabled.is_some() {
+			self.audit_enabled = other.audit_enabled;
+		}
+		if other.audit_image.is_some() {
+			self.audit_image = other.audit_image;
+		}
+		if other.audit_batch_interval_ms.is_some() {
+			self.audit_batch_interval_ms = other.audit_batch_interval_ms;
+		}
+		if other.audit_buffer_max_bytes.is_some() {
+			self.audit_buffer_max_bytes = other.audit_buffer_max_bytes;
+		}
 	}
 
 	/// Resolves this layer into a runtime configuration.
@@ -185,6 +209,12 @@ impl WeaverConfigLayer {
 			secrets_allow_insecure: self.secrets_allow_insecure.unwrap_or(false),
 			wg_enabled: self.wg_enabled,
 			wg_server_url: self.wg_server_url,
+			audit_enabled: self.audit_enabled.unwrap_or(false),
+			audit_image: self
+				.audit_image
+				.unwrap_or_else(|| "ghcr.io/ghuntley/loom-audit-sidecar:latest".to_string()),
+			audit_batch_interval_ms: self.audit_batch_interval_ms.unwrap_or(100),
+			audit_buffer_max_bytes: self.audit_buffer_max_bytes.unwrap_or(256 * 1024 * 1024),
 		})
 	}
 }
@@ -209,6 +239,14 @@ pub struct WeaverConfig {
 	pub wg_enabled: Option<bool>,
 	/// URL to loom-server for WireGuard registration
 	pub wg_server_url: Option<String>,
+	/// Enable audit sidecar for weaver pods
+	pub audit_enabled: bool,
+	/// Audit sidecar container image
+	pub audit_image: String,
+	/// Audit batch interval in milliseconds
+	pub audit_batch_interval_ms: u32,
+	/// Audit buffer max size in bytes
+	pub audit_buffer_max_bytes: u64,
 }
 
 impl std::fmt::Debug for WeaverConfig {
@@ -227,6 +265,10 @@ impl std::fmt::Debug for WeaverConfig {
 			.field("secrets_allow_insecure", &self.secrets_allow_insecure)
 			.field("wg_enabled", &self.wg_enabled)
 			.field("wg_server_url", &self.wg_server_url)
+			.field("audit_enabled", &self.audit_enabled)
+			.field("audit_image", &self.audit_image)
+			.field("audit_batch_interval_ms", &self.audit_batch_interval_ms)
+			.field("audit_buffer_max_bytes", &self.audit_buffer_max_bytes)
 			.finish()
 	}
 }
@@ -247,6 +289,10 @@ impl Default for WeaverConfig {
 			secrets_allow_insecure: false,
 			wg_enabled: None,
 			wg_server_url: None,
+			audit_enabled: false,
+			audit_image: "ghcr.io/ghuntley/loom-audit-sidecar:latest".to_string(),
+			audit_batch_interval_ms: 100,
+			audit_buffer_max_bytes: 256 * 1024 * 1024,
 		}
 	}
 }

@@ -262,6 +262,10 @@ fn load_weaver_from_env() -> Result<WeaverConfigLayer, ConfigError> {
 		secrets_allow_insecure: env_bool("LOOM_SERVER_WEAVER_SECRETS_ALLOW_INSECURE"),
 		wg_enabled: env_bool("LOOM_SERVER_WEAVER_WG_ENABLED"),
 		wg_server_url: env_var("LOOM_SERVER_WEAVER_WG_SERVER_URL"),
+		audit_enabled: env_bool("LOOM_SERVER_WEAVER_AUDIT_ENABLED"),
+		audit_image: env_var("LOOM_SERVER_WEAVER_AUDIT_IMAGE"),
+		audit_batch_interval_ms: env_u32("LOOM_SERVER_WEAVER_AUDIT_BATCH_INTERVAL_MS")?,
+		audit_buffer_max_bytes: env_u64("LOOM_SERVER_WEAVER_AUDIT_BUFFER_MAX_BYTES")?,
 	})
 }
 

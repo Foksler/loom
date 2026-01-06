@@ -486,17 +486,10 @@ async fn initialize_weaver_infrastructure(config: &ServerConfig) -> WeaverInfras
 		secrets_allow_insecure: config.weaver.secrets_allow_insecure,
 		wg_enabled: config.weaver.wg_enabled.unwrap_or(true),
 		wg_server_url: config.weaver.wg_server_url.clone(),
-		audit_enabled: config.audit.enabled,
-		audit_image: std::env::var("LOOM_SERVER_WEAVER_AUDIT_IMAGE")
-			.unwrap_or_else(|_| "ghcr.io/ghuntley/loom-audit-sidecar:latest".to_string()),
-		audit_batch_interval_ms: std::env::var("LOOM_SERVER_WEAVER_AUDIT_BATCH_INTERVAL_MS")
-			.ok()
-			.and_then(|v| v.parse().ok())
-			.unwrap_or(100),
-		audit_buffer_max_bytes: std::env::var("LOOM_SERVER_WEAVER_AUDIT_BUFFER_MAX_BYTES")
-			.ok()
-			.and_then(|v| v.parse().ok())
-			.unwrap_or(256 * 1024 * 1024),
+		audit_enabled: config.weaver.audit_enabled,
+		audit_image: config.weaver.audit_image.clone(),
+		audit_batch_interval_ms: config.weaver.audit_batch_interval_ms,
+		audit_buffer_max_bytes: config.weaver.audit_buffer_max_bytes,
 		server_url: config.http.base_url.clone(),
 	};
 
