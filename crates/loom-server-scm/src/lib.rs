@@ -19,8 +19,8 @@ pub use maintenance::{
 	MaintenanceResult, MaintenanceTask, RepoMaintenanceResult, SqliteMaintenanceJobStore,
 };
 pub use protection::{
-	check_push_allowed, matches_pattern, ProtectionStore, ProtectionViolation, PushCheck,
-	SqliteProtectionStore,
+	check_push_allowed, matches_pattern, BranchProtectionRuleRecord, ProtectionRepository,
+	ProtectionStore, ProtectionViolation, PushCheck,
 };
 pub use repo::{
 	validate_repo_name, RepoStore, RepoTeamAccessStore, SqliteRepoStore, SqliteRepoTeamAccessStore,

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Proprietary
 
 use chrono::{DateTime, Utc};
+use loom_server_db::BranchProtectionRuleRecord;
 use loom_server_scm::BranchProtectionRule;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
@@ -35,6 +36,20 @@ pub struct ProtectionRuleResponse {
 
 impl From<BranchProtectionRule> for ProtectionRuleResponse {
 	fn from(rule: BranchProtectionRule) -> Self {
+		Self {
+			id: rule.id,
+			repo_id: rule.repo_id,
+			pattern: rule.pattern,
+			block_direct_push: rule.block_direct_push,
+			block_force_push: rule.block_force_push,
+			block_deletion: rule.block_deletion,
+			created_at: rule.created_at,
+		}
+	}
+}
+
+impl From<BranchProtectionRuleRecord> for ProtectionRuleResponse {
+	fn from(rule: BranchProtectionRuleRecord) -> Self {
 		Self {
 			id: rule.id,
 			repo_id: rule.repo_id,

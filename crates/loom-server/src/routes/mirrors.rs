@@ -478,7 +478,7 @@ pub async fn delete_mirror(
 			);
 			StatusCode::NO_CONTENT.into_response()
 		}
-		Err(loom_server_scm_mirror::MirrorError::NotFound) => (
+		Err(loom_server_db::DbError::NotFound(_)) => (
 			StatusCode::NOT_FOUND,
 			Json(RepoErrorResponse {
 				error: "not_found".to_string(),

@@ -475,28 +475,6 @@ impl SessionRepository {
 		Ok(completed)
 	}
 
-	/// Clean up expired device codes.
-	///
-	/// # Returns
-	/// Number of expired codes deleted.
-	#[tracing::instrument(skip(self))]
-	pub async fn cleanup_expired_device_codes(&self) -> Result<i64, DbError> {
-		let result = sqlx::query(
-			r#"
-			DELETE FROM device_codes
-			WHERE expires_at < datetime('now')
-			"#,
-		)
-		.execute(&self.pool)
-		.await?;
-
-		let count = result.rows_affected() as i64;
-		if count > 0 {
-			tracing::debug!(count, "cleaned up expired device codes");
-		}
-		Ok(count)
-	}
-
 	/// Create a new magic link for passwordless email authentication.
 	///
 	/// # Arguments
@@ -986,6 +964,95 @@ impl SessionRepository {
 		let count = result.rows_affected() as i64;
 		if count > 0 {
 			tracing::debug!(count, "cleaned up expired/used ws tokens");
+		}
+		Ok(count)
+	}
+
+	/// Clean up expired sessions.
+	///
+	/// Should be called periodically to prevent table growth.
+	///
+	/// # Returns
+	/// Number of expired sessions deleted.
+	#[tracing::instrument(skip(self))]
+	pub async fn cleanup_expired_sessions(&self) -> Result<u64, DbError> {
+		let now = Utc::now().to_rfc3339();
+
+		let result = sqlx::query("DELETE FROM sessions WHERE expires_at < ?")
+			.bind(&now)
+			.execute(&self.pool)
+			.await?;
+
+		let count = result.rows_affected();
+		if count > 0 {
+			tracing::debug!(count, "cleaned up expired sessions");
+		}
+		Ok(count)
+	}
+
+	/// Clean up expired access tokens.
+	///
+	/// Only deletes tokens that are both expired and not already revoked.
+	///
+	/// # Returns
+	/// Number of expired tokens deleted.
+	#[tracing::instrument(skip(self))]
+	pub async fn cleanup_expired_access_tokens(&self) -> Result<u64, DbError> {
+		let now = Utc::now().to_rfc3339();
+
+		let result =
+			sqlx::query("DELETE FROM access_tokens WHERE expires_at < ? AND revoked_at IS NULL")
+				.bind(&now)
+				.execute(&self.pool)
+				.await?;
+
+		let count = result.rows_affected();
+		if count > 0 {
+			tracing::debug!(count, "cleaned up expired access tokens");
+		}
+		Ok(count)
+	}
+
+	/// Clean up expired device codes.
+	///
+	/// Should be called periodically to prevent table growth.
+	///
+	/// # Returns
+	/// Number of expired device codes deleted.
+	#[tracing::instrument(skip(self))]
+	pub async fn cleanup_expired_device_codes(&self) -> Result<u64, DbError> {
+		let now = Utc::now().to_rfc3339();
+
+		let result = sqlx::query("DELETE FROM device_codes WHERE expires_at < ?")
+			.bind(&now)
+			.execute(&self.pool)
+			.await?;
+
+		let count = result.rows_affected();
+		if count > 0 {
+			tracing::debug!(count, "cleaned up expired device codes");
+		}
+		Ok(count)
+	}
+
+	/// Clean up expired magic links.
+	///
+	/// Should be called periodically to prevent table growth.
+	///
+	/// # Returns
+	/// Number of expired magic links deleted.
+	#[tracing::instrument(skip(self))]
+	pub async fn cleanup_expired_magic_links(&self) -> Result<u64, DbError> {
+		let now = Utc::now().to_rfc3339();
+
+		let result = sqlx::query("DELETE FROM magic_links WHERE expires_at < ?")
+			.bind(&now)
+			.execute(&self.pool)
+			.await?;
+
+		let count = result.rows_affected();
+		if count > 0 {
+			tracing::debug!(count, "cleaned up expired magic links");
 		}
 		Ok(count)
 	}

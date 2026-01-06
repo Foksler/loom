@@ -15,15 +15,19 @@ use axum::{
 };
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::SessionId;
-use uuid::Uuid;
 
 pub use loom_server_api::sessions::*;
 
 use crate::{
 	api::AppState,
+	api_response::id_parse_error,
 	auth_middleware::RequireAuth,
 	i18n::{resolve_user_locale, t},
+	impl_api_error_response,
+	validation::parse_uuid,
 };
+
+impl_api_error_response!(SessionErrorResponse);
 
 #[utoipa::path(
     get,
@@ -111,19 +115,9 @@ pub async fn revoke_session(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	// Parse the session ID
-	let session_id = match Uuid::parse_str(&session_id) {
+	let session_id = match parse_uuid(&session_id, &t(locale, "server.api.session.invalid_id")) {
 		Ok(uuid) => SessionId::new(uuid),
-		Err(_) => {
-			return (
-				StatusCode::BAD_REQUEST,
-				Json(SessionErrorResponse {
-					error: "invalid_id".to_string(),
-					message: t(locale, "server.api.session.invalid_id").to_string(),
-				}),
-			)
-				.into_response();
-		}
+		Err(e) => return id_parse_error::<SessionErrorResponse>(e).into_response(),
 	};
 
 	// Get all sessions for the user to verify ownership

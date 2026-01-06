@@ -230,11 +230,14 @@ impl SqliteWebhookStore {
 			owner_id: record.owner_id,
 			url: record.url,
 			secret: record.secret,
-			payload_format: record.payload_format.parse::<PayloadFormat>().map_err(|_| {
-				ScmError::Database(sqlx::Error::Decode(
-					format!("invalid payload_format: {}", record.payload_format).into(),
-				))
-			})?,
+			payload_format: record
+				.payload_format
+				.parse::<PayloadFormat>()
+				.map_err(|_| {
+					ScmError::Database(sqlx::Error::Decode(
+						format!("invalid payload_format: {}", record.payload_format).into(),
+					))
+				})?,
 			events: record.events,
 			enabled: record.enabled,
 			created_at: record.created_at,
@@ -311,7 +314,11 @@ impl WebhookStore for SqliteWebhookStore {
 	}
 
 	async fn list_by_repo(&self, repo_id: Uuid) -> Result<Vec<Webhook>> {
-		let records = self.db.list_webhooks_by_repo(repo_id).await.map_err(db_err)?;
+		let records = self
+			.db
+			.list_webhooks_by_repo(repo_id)
+			.await
+			.map_err(db_err)?;
 		records.into_iter().map(Self::record_to_webhook).collect()
 	}
 
@@ -330,21 +337,33 @@ impl WebhookStore for SqliteWebhookStore {
 
 	async fn create_delivery(&self, delivery: &WebhookDelivery) -> Result<WebhookDelivery> {
 		let record = Self::delivery_to_record(delivery);
-		self.db.create_webhook_delivery(&record).await.map_err(db_err)?;
+		self
+			.db
+			.create_webhook_delivery(&record)
+			.await
+			.map_err(db_err)?;
 		Ok(delivery.clone())
 	}
 
 	async fn update_delivery(&self, delivery: &WebhookDelivery) -> Result<()> {
 		let record = Self::delivery_to_record(delivery);
-		self.db.update_webhook_delivery(&record).await.map_err(|e| match e {
-			loom_server_db::DbError::NotFound(_) => ScmError::NotFound,
-			loom_server_db::DbError::Sqlx(e) => ScmError::Database(e),
-			_ => ScmError::Database(sqlx::Error::Protocol(e.to_string())),
-		})
+		self
+			.db
+			.update_webhook_delivery(&record)
+			.await
+			.map_err(|e| match e {
+				loom_server_db::DbError::NotFound(_) => ScmError::NotFound,
+				loom_server_db::DbError::Sqlx(e) => ScmError::Database(e),
+				_ => ScmError::Database(sqlx::Error::Protocol(e.to_string())),
+			})
 	}
 
 	async fn get_pending_deliveries(&self) -> Result<Vec<WebhookDelivery>> {
-		let records = self.db.get_pending_webhook_deliveries().await.map_err(db_err)?;
+		let records = self
+			.db
+			.get_pending_webhook_deliveries()
+			.await
+			.map_err(db_err)?;
 		records.into_iter().map(Self::record_to_delivery).collect()
 	}
 

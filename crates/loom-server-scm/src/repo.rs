@@ -204,14 +204,16 @@ impl SqliteRepoTeamAccessStore {
 #[async_trait]
 impl RepoTeamAccessStore for SqliteRepoTeamAccessStore {
 	async fn grant_team_access(&self, repo_id: Uuid, team_id: Uuid, role: RepoRole) -> Result<()> {
-		self.db
+		self
+			.db
 			.grant_team_access(repo_id, team_id, role.as_str())
 			.await
 			.map_err(db_err)
 	}
 
 	async fn revoke_team_access(&self, repo_id: Uuid, team_id: Uuid) -> Result<()> {
-		self.db
+		self
+			.db
 			.revoke_team_access(repo_id, team_id)
 			.await
 			.map_err(|e| match e {
@@ -222,7 +224,11 @@ impl RepoTeamAccessStore for SqliteRepoTeamAccessStore {
 	}
 
 	async fn list_repo_team_access(&self, repo_id: Uuid) -> Result<Vec<RepoTeamAccess>> {
-		let records = self.db.list_repo_team_access(repo_id).await.map_err(db_err)?;
+		let records = self
+			.db
+			.list_repo_team_access(repo_id)
+			.await
+			.map_err(db_err)?;
 		records
 			.into_iter()
 			.map(Self::record_to_team_access)

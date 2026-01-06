@@ -18,7 +18,7 @@ use axum::{
 };
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::types::{OrgId, OrgRole};
-use loom_server_scm::{BranchProtectionRule, OwnerType, ProtectionStore, RepoStore};
+use loom_server_scm::{BranchProtectionRuleRecord, OwnerType, ProtectionStore, RepoStore};
 use uuid::Uuid;
 
 pub use loom_server_api::protection::*;
@@ -211,10 +211,15 @@ pub async fn create_protection_rule(
 		}
 	};
 
-	let mut rule = BranchProtectionRule::new(id, payload.pattern.clone());
-	rule.block_direct_push = payload.block_direct_push;
-	rule.block_force_push = payload.block_force_push;
-	rule.block_deletion = payload.block_deletion;
+	let rule = BranchProtectionRuleRecord {
+		id: Uuid::new_v4(),
+		repo_id: id,
+		pattern: payload.pattern.clone(),
+		block_direct_push: payload.block_direct_push,
+		block_force_push: payload.block_force_push,
+		block_deletion: payload.block_deletion,
+		created_at: chrono::Utc::now(),
+	};
 
 	match protection_store.create(&rule).await {
 		Ok(created) => {
@@ -243,7 +248,7 @@ pub async fn create_protection_rule(
 			)
 				.into_response()
 		}
-		Err(loom_server_scm::ScmError::AlreadyExists) => (
+		Err(loom_server_db::DbError::Conflict(_)) => (
 			StatusCode::CONFLICT,
 			Json(RepoErrorResponse {
 				error: "already_exists".to_string(),
@@ -364,7 +369,7 @@ pub async fn delete_protection_rule(
 			);
 			StatusCode::NO_CONTENT.into_response()
 		}
-		Err(loom_server_scm::ScmError::NotFound) => (
+		Err(loom_server_db::DbError::NotFound(_)) => (
 			StatusCode::NOT_FOUND,
 			Json(RepoErrorResponse {
 				error: "not_found".to_string(),

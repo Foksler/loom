@@ -28,6 +28,9 @@ pub enum MirrorError {
 	#[error("database error: {0}")]
 	Database(#[from] sqlx::Error),
 
+	#[error("db error: {0}")]
+	Db(#[from] loom_server_db::DbError),
+
 	#[error("io error: {0}")]
 	Io(#[from] std::io::Error),
 

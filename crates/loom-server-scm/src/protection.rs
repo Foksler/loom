@@ -1,13 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights
 // reserved. SPDX-License-Identifier: Proprietary
 
-use async_trait::async_trait;
-use chrono::{DateTime, Utc};
-use sqlx::{Row, SqlitePool};
-use uuid::Uuid;
-
-use crate::error::{Result, ScmError};
-use crate::types::BranchProtectionRule;
+pub use loom_server_db::{BranchProtectionRuleRecord, ProtectionRepository, ProtectionStore};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProtectionViolation {
@@ -52,124 +46,6 @@ pub struct PushCheck {
 	pub user_is_admin: bool,
 }
 
-#[async_trait]
-pub trait ProtectionStore: Send + Sync {
-	async fn create(&self, rule: &BranchProtectionRule) -> Result<BranchProtectionRule>;
-	async fn list_by_repo(&self, repo_id: Uuid) -> Result<Vec<BranchProtectionRule>>;
-	async fn get_by_id(&self, id: Uuid) -> Result<Option<BranchProtectionRule>>;
-	async fn delete(&self, id: Uuid) -> Result<()>;
-}
-
-pub struct SqliteProtectionStore {
-	pool: SqlitePool,
-}
-
-impl SqliteProtectionStore {
-	pub fn new(pool: SqlitePool) -> Self {
-		Self { pool }
-	}
-
-	fn row_to_rule(&self, row: &sqlx::sqlite::SqliteRow) -> Result<BranchProtectionRule> {
-		let id_str: String = row.get("id");
-		let repo_id_str: String = row.get("repo_id");
-		let created_at_str: String = row.get("created_at");
-		let block_direct_push: i32 = row.get("block_direct_push");
-		let block_force_push: i32 = row.get("block_force_push");
-		let block_deletion: i32 = row.get("block_deletion");
-
-		Ok(BranchProtectionRule {
-			id: Uuid::parse_str(&id_str)
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			repo_id: Uuid::parse_str(&repo_id_str)
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-			pattern: row.get("pattern"),
-			block_direct_push: block_direct_push != 0,
-			block_force_push: block_force_push != 0,
-			block_deletion: block_deletion != 0,
-			created_at: DateTime::parse_from_rfc3339(&created_at_str)
-				.map(|d| d.with_timezone(&Utc))
-				.map_err(|e| ScmError::Database(sqlx::Error::Decode(e.into())))?,
-		})
-	}
-}
-
-#[async_trait]
-impl ProtectionStore for SqliteProtectionStore {
-	async fn create(&self, rule: &BranchProtectionRule) -> Result<BranchProtectionRule> {
-		sqlx::query(
-			r#"
-			INSERT INTO branch_protection_rules (id, repo_id, pattern, block_direct_push, block_force_push, block_deletion, created_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?)
-			"#,
-		)
-		.bind(rule.id.to_string())
-		.bind(rule.repo_id.to_string())
-		.bind(&rule.pattern)
-		.bind(rule.block_direct_push as i32)
-		.bind(rule.block_force_push as i32)
-		.bind(rule.block_deletion as i32)
-		.bind(rule.created_at.to_rfc3339())
-		.execute(&self.pool)
-		.await
-		.map_err(|e| match e {
-			sqlx::Error::Database(ref db_err) if db_err.is_unique_violation() => {
-				ScmError::AlreadyExists
-			}
-			_ => ScmError::Database(e),
-		})?;
-
-		Ok(rule.clone())
-	}
-
-	async fn list_by_repo(&self, repo_id: Uuid) -> Result<Vec<BranchProtectionRule>> {
-		let rows = sqlx::query(
-			r#"
-			SELECT id, repo_id, pattern, block_direct_push, block_force_push, block_deletion, created_at
-			FROM branch_protection_rules
-			WHERE repo_id = ?
-			ORDER BY created_at ASC
-			"#,
-		)
-		.bind(repo_id.to_string())
-		.fetch_all(&self.pool)
-		.await?;
-
-		rows.iter().map(|r| self.row_to_rule(r)).collect()
-	}
-
-	async fn get_by_id(&self, id: Uuid) -> Result<Option<BranchProtectionRule>> {
-		let row = sqlx::query(
-			r#"
-			SELECT id, repo_id, pattern, block_direct_push, block_force_push, block_deletion, created_at
-			FROM branch_protection_rules
-			WHERE id = ?
-			"#,
-		)
-		.bind(id.to_string())
-		.fetch_optional(&self.pool)
-		.await?;
-
-		row.map(|r| self.row_to_rule(&r)).transpose()
-	}
-
-	async fn delete(&self, id: Uuid) -> Result<()> {
-		let result = sqlx::query(
-			r#"
-			DELETE FROM branch_protection_rules WHERE id = ?
-			"#,
-		)
-		.bind(id.to_string())
-		.execute(&self.pool)
-		.await?;
-
-		if result.rows_affected() == 0 {
-			return Err(ScmError::NotFound);
-		}
-
-		Ok(())
-	}
-}
-
 pub fn matches_pattern(pattern: &str, branch: &str) -> bool {
 	if pattern == branch {
 		return true;
@@ -187,7 +63,7 @@ pub fn matches_pattern(pattern: &str, branch: &str) -> bool {
 }
 
 pub fn check_push_allowed(
-	rules: &[BranchProtectionRule],
+	rules: &[BranchProtectionRuleRecord],
 	check: &PushCheck,
 ) -> std::result::Result<(), ProtectionViolation> {
 	if check.user_is_admin {
@@ -227,6 +103,20 @@ pub fn check_push_allowed(
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use chrono::Utc;
+	use uuid::Uuid;
+
+	fn make_rule(repo_id: Uuid, pattern: &str) -> BranchProtectionRuleRecord {
+		BranchProtectionRuleRecord {
+			id: Uuid::new_v4(),
+			repo_id,
+			pattern: pattern.to_string(),
+			block_direct_push: true,
+			block_force_push: true,
+			block_deletion: true,
+			created_at: Utc::now(),
+		}
+	}
 
 	#[test]
 	fn test_matches_pattern_exact() {
@@ -253,10 +143,7 @@ mod tests {
 
 	#[test]
 	fn test_check_push_allowed_admin_bypass() {
-		let rules = vec![BranchProtectionRule::new(
-			Uuid::new_v4(),
-			"cannon".to_string(),
-		)];
+		let rules = vec![make_rule(Uuid::new_v4(), "cannon")];
 		let check = PushCheck {
 			branch: "cannon".to_string(),
 			is_force_push: true,
@@ -268,10 +155,7 @@ mod tests {
 
 	#[test]
 	fn test_check_push_allowed_direct_push_blocked() {
-		let rules = vec![BranchProtectionRule::new(
-			Uuid::new_v4(),
-			"cannon".to_string(),
-		)];
+		let rules = vec![make_rule(Uuid::new_v4(), "cannon")];
 		let check = PushCheck {
 			branch: "cannon".to_string(),
 			is_force_push: false,
@@ -287,7 +171,7 @@ mod tests {
 
 	#[test]
 	fn test_check_push_allowed_force_push_blocked() {
-		let mut rule = BranchProtectionRule::new(Uuid::new_v4(), "cannon".to_string());
+		let mut rule = make_rule(Uuid::new_v4(), "cannon");
 		rule.block_direct_push = false;
 		let rules = vec![rule];
 		let check = PushCheck {
@@ -305,7 +189,7 @@ mod tests {
 
 	#[test]
 	fn test_check_push_allowed_deletion_blocked() {
-		let mut rule = BranchProtectionRule::new(Uuid::new_v4(), "cannon".to_string());
+		let mut rule = make_rule(Uuid::new_v4(), "cannon");
 		rule.block_direct_push = false;
 		rule.block_force_push = false;
 		let rules = vec![rule];
@@ -324,10 +208,7 @@ mod tests {
 
 	#[test]
 	fn test_check_push_allowed_unprotected_branch() {
-		let rules = vec![BranchProtectionRule::new(
-			Uuid::new_v4(),
-			"cannon".to_string(),
-		)];
+		let rules = vec![make_rule(Uuid::new_v4(), "cannon")];
 		let check = PushCheck {
 			branch: "feature/new-thing".to_string(),
 			is_force_push: true,
@@ -339,10 +220,7 @@ mod tests {
 
 	#[test]
 	fn test_check_push_allowed_wildcard_pattern() {
-		let rules = vec![BranchProtectionRule::new(
-			Uuid::new_v4(),
-			"release/*".to_string(),
-		)];
+		let rules = vec![make_rule(Uuid::new_v4(), "release/*")];
 		let check = PushCheck {
 			branch: "release/v1.0".to_string(),
 			is_force_push: false,

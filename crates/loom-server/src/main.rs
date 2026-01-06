@@ -117,8 +117,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	// Register session cleanup job
 	{
 		use loom_server::jobs::SessionCleanupJob;
+		use loom_server_db::SessionRepository;
 		scheduler.register_periodic(
-			Arc::new(SessionCleanupJob::new(pool.clone())),
+			Arc::new(SessionCleanupJob::new(SessionRepository::new(pool.clone()))),
 			Duration::from_secs(config.auth.session_cleanup_interval_secs),
 		);
 	}

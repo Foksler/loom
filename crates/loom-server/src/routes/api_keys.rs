@@ -35,17 +35,22 @@ use axum::{
 };
 use chrono::Utc;
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
-use loom_server_auth::{hash_token, Action, ApiKeyScope, OrgId, Visibility};
+use loom_server_auth::{hash_token, Action, ApiKeyScope, Visibility};
 
 pub use loom_server_api::api_keys::*;
 
 use crate::{
 	abac_middleware::{build_subject_attrs, org_resource},
 	api::AppState,
+	api_response::id_parse_error,
 	auth_middleware::RequireAuth,
 	authorize,
 	i18n::{resolve_user_locale, t},
+	impl_api_error_response,
+	validation::parse_org_id as shared_parse_org_id,
 };
+
+impl_api_error_response!(ApiKeyErrorResponse);
 
 /// List all API keys for an organization.
 ///
@@ -99,18 +104,9 @@ pub async fn list_api_keys(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match org_id.parse::<uuid::Uuid>() {
-		Ok(id) => OrgId::new(id),
-		Err(_) => {
-			return (
-				StatusCode::BAD_REQUEST,
-				Json(ApiKeyErrorResponse {
-					error: "invalid_org_id".to_string(),
-					message: t(locale, "server.api.api_key.invalid_org_id").to_string(),
-				}),
-			)
-				.into_response();
-		}
+	let org_id = match shared_parse_org_id(&org_id, &t(locale, "server.api.api_key.invalid_org_id")) {
+		Ok(id) => id,
+		Err(e) => return id_parse_error::<ApiKeyErrorResponse>(e).into_response(),
 	};
 
 	if state
@@ -247,18 +243,9 @@ pub async fn create_api_key(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match org_id.parse::<uuid::Uuid>() {
-		Ok(id) => OrgId::new(id),
-		Err(_) => {
-			return (
-				StatusCode::BAD_REQUEST,
-				Json(ApiKeyErrorResponse {
-					error: "invalid_org_id".to_string(),
-					message: t(locale, "server.api.api_key.invalid_org_id").to_string(),
-				}),
-			)
-				.into_response();
-		}
+	let org_id = match shared_parse_org_id(&org_id, &t(locale, "server.api.api_key.invalid_org_id")) {
+		Ok(id) => id,
+		Err(e) => return id_parse_error::<ApiKeyErrorResponse>(e).into_response(),
 	};
 
 	if state
@@ -443,18 +430,9 @@ pub async fn revoke_api_key(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match org_id.parse::<uuid::Uuid>() {
-		Ok(id) => OrgId::new(id),
-		Err(_) => {
-			return (
-				StatusCode::BAD_REQUEST,
-				Json(ApiKeyErrorResponse {
-					error: "invalid_org_id".to_string(),
-					message: t(locale, "server.api.api_key.invalid_org_id").to_string(),
-				}),
-			)
-				.into_response();
-		}
+	let org_id = match shared_parse_org_id(&org_id, &t(locale, "server.api.api_key.invalid_org_id")) {
+		Ok(id) => id,
+		Err(e) => return id_parse_error::<ApiKeyErrorResponse>(e).into_response(),
 	};
 
 	if state
@@ -652,18 +630,9 @@ pub async fn get_api_key_usage(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match org_id.parse::<uuid::Uuid>() {
-		Ok(id) => OrgId::new(id),
-		Err(_) => {
-			return (
-				StatusCode::BAD_REQUEST,
-				Json(ApiKeyErrorResponse {
-					error: "invalid_org_id".to_string(),
-					message: t(locale, "server.api.api_key.invalid_org_id").to_string(),
-				}),
-			)
-				.into_response();
-		}
+	let org_id = match shared_parse_org_id(&org_id, &t(locale, "server.api.api_key.invalid_org_id")) {
+		Ok(id) => id,
+		Err(e) => return id_parse_error::<ApiKeyErrorResponse>(e).into_response(),
 	};
 
 	if state

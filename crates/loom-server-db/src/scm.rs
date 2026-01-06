@@ -175,6 +175,21 @@ impl ScmRepository {
 		Ok(())
 	}
 
+	/// List all non-deleted repository IDs, ordered by creation time.
+	/// Used for maintenance sweeps across all repositories.
+	#[tracing::instrument(skip(self))]
+	pub async fn list_all_repo_ids(&self) -> Result<Vec<Uuid>, DbError> {
+		let rows = sqlx::query_scalar::<_, String>(
+			r#"SELECT id FROM repos WHERE deleted_at IS NULL ORDER BY created_at ASC"#,
+		)
+		.fetch_all(&self.pool)
+		.await?;
+
+		rows.into_iter()
+			.map(|id_str| Uuid::parse_str(&id_str).map_err(|e| DbError::Internal(e.to_string())))
+			.collect()
+	}
+
 	// =========================================================================
 	// Repo Team Access
 	// =========================================================================
@@ -361,7 +376,10 @@ impl ScmRepository {
 	// =========================================================================
 
 	#[tracing::instrument(skip(self, delivery), fields(delivery_id = %delivery.id, webhook_id = %delivery.webhook_id))]
-	pub async fn create_webhook_delivery(&self, delivery: &WebhookDeliveryRecord) -> Result<(), DbError> {
+	pub async fn create_webhook_delivery(
+		&self,
+		delivery: &WebhookDeliveryRecord,
+	) -> Result<(), DbError> {
 		let payload_json = serde_json::to_string(&delivery.payload)?;
 
 		sqlx::query(
@@ -387,7 +405,10 @@ impl ScmRepository {
 	}
 
 	#[tracing::instrument(skip(self, delivery), fields(delivery_id = %delivery.id))]
-	pub async fn update_webhook_delivery(&self, delivery: &WebhookDeliveryRecord) -> Result<(), DbError> {
+	pub async fn update_webhook_delivery(
+		&self,
+		delivery: &WebhookDeliveryRecord,
+	) -> Result<(), DbError> {
 		let result = sqlx::query(
 			r#"
 			UPDATE webhook_deliveries
@@ -413,7 +434,9 @@ impl ScmRepository {
 	}
 
 	#[tracing::instrument(skip(self))]
-	pub async fn get_pending_webhook_deliveries(&self) -> Result<Vec<WebhookDeliveryRecord>, DbError> {
+	pub async fn get_pending_webhook_deliveries(
+		&self,
+	) -> Result<Vec<WebhookDeliveryRecord>, DbError> {
 		let now = Utc::now().to_rfc3339();
 		let rows = sqlx::query(
 			r#"
@@ -751,8 +774,7 @@ fn row_to_delivery(row: &sqlx::sqlite::SqliteRow) -> Result<WebhookDeliveryRecor
 
 	Ok(WebhookDeliveryRecord {
 		id: Uuid::parse_str(&id_str).map_err(|e| DbError::Internal(e.to_string()))?,
-		webhook_id: Uuid::parse_str(&webhook_id_str)
-			.map_err(|e| DbError::Internal(e.to_string()))?,
+		webhook_id: Uuid::parse_str(&webhook_id_str).map_err(|e| DbError::Internal(e.to_string()))?,
 		event: row.get("event"),
 		payload: serde_json::from_str(&payload_str)?,
 		response_code: row.get("response_code"),

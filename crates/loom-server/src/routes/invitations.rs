@@ -40,7 +40,7 @@ use axum::{
 };
 use chrono::Utc;
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
-use loom_server_auth::{hash_token, org::OrgVisibility, Action, OrgId, OrgRole, Visibility};
+use loom_server_auth::{hash_token, org::OrgVisibility, Action, OrgRole, Visibility};
 use loom_server_email::EmailRequest;
 use uuid::Uuid;
 
@@ -52,7 +52,11 @@ use crate::{
 	auth_middleware::RequireAuth,
 	authorize,
 	i18n::{resolve_user_locale, t},
+	impl_api_error_response, parse_id, parse_role,
+	validation::{parse_org_id as shared_parse_org_id, parse_org_role},
 };
+
+impl_api_error_response!(InvitationErrorResponse);
 
 fn generate_invitation_token() -> String {
 	format!("{}{}", Uuid::new_v4().simple(), Uuid::new_v4().simple())
@@ -63,27 +67,6 @@ fn org_visibility_to_abac(v: OrgVisibility) -> Visibility {
 		OrgVisibility::Public => Visibility::Public,
 		OrgVisibility::Unlisted => Visibility::Organization,
 		OrgVisibility::Private => Visibility::Private,
-	}
-}
-
-fn parse_org_id(id_str: &str, locale: &str) -> Result<OrgId, InvitationErrorResponse> {
-	Uuid::parse_str(id_str)
-		.map(OrgId::new)
-		.map_err(|_| InvitationErrorResponse {
-			error: "invalid_id".to_string(),
-			message: t(locale, "server.api.org.invalid_id").to_string(),
-		})
-}
-
-fn parse_role(role_str: &str, locale: &str) -> Result<OrgRole, InvitationErrorResponse> {
-	match role_str.to_lowercase().as_str() {
-		"owner" => Ok(OrgRole::Owner),
-		"admin" => Ok(OrgRole::Admin),
-		"member" => Ok(OrgRole::Member),
-		_ => Err(InvitationErrorResponse {
-			error: "invalid_role".to_string(),
-			message: t(locale, "server.api.org.invalid_role").to_string(),
-		}),
 	}
 }
 
@@ -137,10 +120,10 @@ pub async fn list_invitations(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match parse_org_id(&org_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let org_id = parse_id!(
+		InvitationErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
 
 	let org = match state.org_repo.get_org_by_id(&org_id).await {
 		Ok(Some(org)) => org,
@@ -304,10 +287,10 @@ pub async fn create_invitation(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match parse_org_id(&org_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let org_id = parse_id!(
+		InvitationErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
 
 	let org = match state.org_repo.get_org_by_id(&org_id).await {
 		Ok(Some(org)) => org,
@@ -352,10 +335,10 @@ pub async fn create_invitation(
 	}
 
 	let role = match payload.role.as_deref() {
-		Some(r) => match parse_role(r, locale) {
-			Ok(role) => role,
-			Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-		},
+		Some(r) => parse_role!(
+			InvitationErrorResponse,
+			parse_org_role(r, &t(locale, "server.api.org.invalid_role"))
+		),
 		None => OrgRole::Member,
 	};
 
@@ -495,10 +478,10 @@ pub async fn cancel_invitation(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match parse_org_id(&org_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let org_id = parse_id!(
+		InvitationErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
 
 	let org = match state.org_repo.get_org_by_id(&org_id).await {
 		Ok(Some(org)) => org,
@@ -998,10 +981,10 @@ pub async fn list_join_requests(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match parse_org_id(&org_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let org_id = parse_id!(
+		InvitationErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
 
 	let org = match state.org_repo.get_org_by_id(&org_id).await {
 		Ok(Some(org)) => org,
@@ -1149,10 +1132,10 @@ pub async fn create_join_request(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match parse_org_id(&org_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let org_id = parse_id!(
+		InvitationErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
 
 	let org = match state.org_repo.get_org_by_id(&org_id).await {
 		Ok(Some(org)) => org,
@@ -1304,10 +1287,10 @@ pub async fn approve_join_request(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match parse_org_id(&org_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let org_id = parse_id!(
+		InvitationErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
 
 	let org = match state.org_repo.get_org_by_id(&org_id).await {
 		Ok(Some(org)) => org,
@@ -1521,10 +1504,10 @@ pub async fn reject_join_request(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match parse_org_id(&org_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let org_id = parse_id!(
+		InvitationErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
 
 	let org = match state.org_repo.get_org_by_id(&org_id).await {
 		Ok(Some(org)) => org,

@@ -9,6 +9,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+loom-server-db = { path = "../loom-server-db" }
 loom-server-scm = { path = "../loom-server-scm" }
 loom-cli-credentials = { path = "../loom-cli-credentials" }
 loom-common-http = { path = "../loom-common-http" }

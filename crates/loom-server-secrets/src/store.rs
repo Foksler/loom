@@ -205,13 +205,17 @@ impl SecretStore for SqliteSecretStore {
 			updated_at: now_str.clone(),
 		};
 
-		self.repo.insert_secret(&secret_params).await.map_err(|e| match e {
-			loom_server_db::DbError::Conflict(_) => {
-				SecretsError::SecretAlreadyExists(request.name.clone())
-			}
-			loom_server_db::DbError::Sqlx(e) => SecretsError::Database(e),
-			other => SecretsError::Database(sqlx::Error::Protocol(other.to_string())),
-		})?;
+		self
+			.repo
+			.insert_secret(&secret_params)
+			.await
+			.map_err(|e| match e {
+				loom_server_db::DbError::Conflict(_) => {
+					SecretsError::SecretAlreadyExists(request.name.clone())
+				}
+				loom_server_db::DbError::Sqlx(e) => SecretsError::Database(e),
+				other => SecretsError::Database(sqlx::Error::Protocol(other.to_string())),
+			})?;
 
 		let version_params = CreateVersionParams {
 			id: version_id.to_string(),
@@ -225,7 +229,8 @@ impl SecretStore for SqliteSecretStore {
 			expires_at: None,
 		};
 
-		self.repo
+		self
+			.repo
 			.insert_version(&version_params)
 			.await
 			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
@@ -340,7 +345,8 @@ impl SecretStore for SqliteSecretStore {
 			expires_at: expires_at_str,
 		};
 
-		self.repo
+		self
+			.repo
 			.insert_version_in_tx(&mut tx, &version_params)
 			.await
 			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
@@ -414,7 +420,8 @@ impl SecretStore for SqliteSecretStore {
 	}
 
 	async fn disable_version(&self, version_id: SecretVersionId) -> SecretsResult<()> {
-		self.repo
+		self
+			.repo
 			.disable_version(&version_id.to_string())
 			.await
 			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
@@ -423,7 +430,8 @@ impl SecretStore for SqliteSecretStore {
 	}
 
 	async fn delete_secret(&self, id: SecretId) -> SecretsResult<()> {
-		self.repo
+		self
+			.repo
 			.delete_secret(&id.to_string())
 			.await
 			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
@@ -441,7 +449,8 @@ impl SecretStore for SqliteSecretStore {
 			created_at: now_str,
 		};
 
-		self.repo
+		self
+			.repo
 			.store_dek(&params)
 			.await
 			.map_err(|e| SecretsError::Database(sqlx::Error::Protocol(e.to_string())))?;
@@ -529,18 +538,12 @@ fn parse_secret_row(row: &SecretRow) -> SecretsResult<StoredSecret> {
 		created_at: DateTime::parse_from_rfc3339(&row.created_at)
 			.map(|dt| dt.with_timezone(&Utc))
 			.map_err(|_| {
-				SecretsError::CorruptedData(format!(
-					"invalid created_at timestamp: {}",
-					row.created_at
-				))
+				SecretsError::CorruptedData(format!("invalid created_at timestamp: {}", row.created_at))
 			})?,
 		updated_at: DateTime::parse_from_rfc3339(&row.updated_at)
 			.map(|dt| dt.with_timezone(&Utc))
 			.map_err(|_| {
-				SecretsError::CorruptedData(format!(
-					"invalid updated_at timestamp: {}",
-					row.updated_at
-				))
+				SecretsError::CorruptedData(format!("invalid updated_at timestamp: {}", row.updated_at))
 			})?,
 	})
 }
@@ -566,10 +569,7 @@ fn parse_version_row(row: &SecretVersionRow) -> SecretsResult<StoredSecretVersio
 		created_at: DateTime::parse_from_rfc3339(&row.created_at)
 			.map(|dt| dt.with_timezone(&Utc))
 			.map_err(|_| {
-				SecretsError::CorruptedData(format!(
-					"invalid created_at timestamp: {}",
-					row.created_at
-				))
+				SecretsError::CorruptedData(format!("invalid created_at timestamp: {}", row.created_at))
 			})?,
 		expires_at: row
 			.expires_at

@@ -145,9 +145,10 @@ impl SecretsRepository {
 				tracing::debug!(secret_id = %params.id, name = %params.name, "secret created");
 				Ok(())
 			}
-			Err(e) if is_unique_constraint_error(&e) => {
-				Err(DbError::Conflict(format!("secret already exists: {}", params.name)))
-			}
+			Err(e) if is_unique_constraint_error(&e) => Err(DbError::Conflict(format!(
+				"secret already exists: {}",
+				params.name
+			))),
 			Err(e) => Err(DbError::Sqlx(e)),
 		}
 	}
@@ -377,7 +378,11 @@ impl SecretsRepository {
 
 	/// Get a specific version of a secret.
 	#[tracing::instrument(skip(self), fields(secret_id = %secret_id, version = %version))]
-	pub async fn get_version(&self, secret_id: &str, version: i32) -> Result<Option<SecretVersionRow>> {
+	pub async fn get_version(
+		&self,
+		secret_id: &str,
+		version: i32,
+	) -> Result<Option<SecretVersionRow>> {
 		let row = sqlx::query(
 			r#"
 			SELECT v.id, v.secret_id, v.version, v.ciphertext, v.nonce, v.dek_id, v.created_by, v.created_at, v.expires_at, v.disabled_at

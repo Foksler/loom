@@ -89,7 +89,7 @@ pub struct AppState {
 	pub job_scheduler: Option<Arc<JobScheduler>>,
 	pub job_repository: Option<Arc<JobRepository>>,
 	pub scm_repo_store: Option<Arc<loom_server_scm::SqliteRepoStore>>,
-	pub scm_protection_store: Option<Arc<loom_server_scm::SqliteProtectionStore>>,
+	pub scm_protection_store: Option<Arc<loom_server_scm::ProtectionRepository>>,
 	pub scm_webhook_store: Option<Arc<loom_server_scm::SqliteWebhookStore>>,
 	pub scm_maintenance_store: Option<Arc<loom_server_scm::SqliteMaintenanceJobStore>>,
 	pub scm_team_access_store: Option<Arc<loom_server_scm::SqliteRepoTeamAccessStore>>,
@@ -147,7 +147,7 @@ pub async fn create_app_state(
 	let scm_repo = ScmRepository::new(pool.clone());
 	let scm_repo_store = Arc::new(loom_server_scm::SqliteRepoStore::new(scm_repo.clone()));
 	let scm_protection_store =
-		Arc::new(loom_server_scm::SqliteProtectionStore::new(pool.clone()));
+		Arc::new(loom_server_scm::ProtectionRepository::new(pool.clone()));
 	let scm_webhook_store = Arc::new(loom_server_scm::SqliteWebhookStore::new(scm_repo.clone()));
 	let scm_maintenance_store =
 		Arc::new(loom_server_scm::SqliteMaintenanceJobStore::new(scm_repo.clone()));

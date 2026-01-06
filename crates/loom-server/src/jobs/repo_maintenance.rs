@@ -5,9 +5,9 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use async_trait::async_trait;
+use loom_server_db::scm::ScmRepository;
 use loom_server_jobs::{Job, JobContext, JobError, JobOutput};
 use loom_server_scm::MaintenanceTask;
-use sqlx::SqlitePool;
 use tracing::instrument;
 use uuid::Uuid;
 
@@ -97,16 +97,21 @@ impl Job for RepoMaintenanceJob {
 }
 
 pub struct GlobalMaintenanceJob {
-	pool: SqlitePool,
+	scm_repo: ScmRepository,
 	repos_dir: PathBuf,
 	task: MaintenanceTask,
 	stagger_ms: u64,
 }
 
 impl GlobalMaintenanceJob {
-	pub fn new(pool: SqlitePool, repos_dir: PathBuf, task: MaintenanceTask, stagger_ms: u64) -> Self {
+	pub fn new(
+		scm_repo: ScmRepository,
+		repos_dir: PathBuf,
+		task: MaintenanceTask,
+		stagger_ms: u64,
+	) -> Self {
 		Self {
-			pool,
+			scm_repo,
 			repos_dir,
 			task,
 			stagger_ms,
@@ -134,24 +139,18 @@ impl Job for GlobalMaintenanceJob {
 			return Err(JobError::Cancelled);
 		}
 
-		let rows = sqlx::query_scalar::<_, String>(
-			r#"SELECT id FROM repos WHERE deleted_at IS NULL ORDER BY created_at ASC"#,
-		)
-		.fetch_all(&self.pool)
-		.await
-		.map_err(|e| JobError::Failed {
+		let repo_ids = self.scm_repo.list_all_repo_ids().await.map_err(|e| JobError::Failed {
 			message: e.to_string(),
 			retryable: true,
 		})?;
 
-		let repo_paths: Vec<(Uuid, PathBuf)> = rows
+		let repo_paths: Vec<(Uuid, PathBuf)> = repo_ids
 			.into_iter()
-			.filter_map(|id_str| {
-				Uuid::parse_str(&id_str).ok().map(|id| {
-					let prefix = &id_str[..2];
-					let path = self.repos_dir.join(prefix).join(&id_str).join("git");
-					(id, path)
-				})
+			.map(|id| {
+				let id_str = id.to_string();
+				let prefix = &id_str[..2];
+				let path = self.repos_dir.join(prefix).join(&id_str).join("git");
+				(id, path)
 			})
 			.filter(|(_, path)| path.exists())
 			.collect();

@@ -11,7 +11,10 @@ pub use loom_server_db::{DocSearchHit as SearchHit, DocSearchParams as SearchPar
 /// Search documentation using FTS5.
 ///
 /// Returns ranked results with highlighted snippets.
-pub async fn search_docs(repo: &DocsRepository, params: &DocSearchParams) -> Result<Vec<DocSearchHit>> {
+pub async fn search_docs(
+	repo: &DocsRepository,
+	params: &DocSearchParams,
+) -> Result<Vec<DocSearchHit>> {
 	let hits = repo.search(params).await?;
 	Ok(hits)
 }

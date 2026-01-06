@@ -317,12 +317,20 @@ fn db_err(e: loom_server_db::DbError) -> ScmError {
 impl MaintenanceJobStore for SqliteMaintenanceJobStore {
 	async fn create(&self, job: &MaintenanceJob) -> Result<MaintenanceJob> {
 		let record = Self::job_to_record(job);
-		self.db.create_maintenance_job(&record).await.map_err(db_err)?;
+		self
+			.db
+			.create_maintenance_job(&record)
+			.await
+			.map_err(db_err)?;
 		Ok(job.clone())
 	}
 
 	async fn get_by_id(&self, id: Uuid) -> Result<Option<MaintenanceJob>> {
-		let record = self.db.get_maintenance_job_by_id(id).await.map_err(db_err)?;
+		let record = self
+			.db
+			.get_maintenance_job_by_id(id)
+			.await
+			.map_err(db_err)?;
 		record.map(Self::record_to_job).transpose()
 	}
 
@@ -336,7 +344,11 @@ impl MaintenanceJobStore for SqliteMaintenanceJobStore {
 	}
 
 	async fn list_pending(&self) -> Result<Vec<MaintenanceJob>> {
-		let records = self.db.list_pending_maintenance_jobs().await.map_err(db_err)?;
+		let records = self
+			.db
+			.list_pending_maintenance_jobs()
+			.await
+			.map_err(db_err)?;
 		records.into_iter().map(Self::record_to_job).collect()
 	}
 
@@ -346,7 +358,8 @@ impl MaintenanceJobStore for SqliteMaintenanceJobStore {
 		status: MaintenanceJobStatus,
 		error: Option<String>,
 	) -> Result<()> {
-		self.db
+		self
+			.db
 			.update_maintenance_job_status(id, status.as_str(), error.as_deref())
 			.await
 			.map_err(|e| match e {
@@ -357,7 +370,8 @@ impl MaintenanceJobStore for SqliteMaintenanceJobStore {
 	}
 
 	async fn mark_started(&self, id: Uuid) -> Result<()> {
-		self.db
+		self
+			.db
 			.mark_maintenance_job_started(id)
 			.await
 			.map_err(|e| match e {
@@ -373,7 +387,8 @@ impl MaintenanceJobStore for SqliteMaintenanceJobStore {
 		status: MaintenanceJobStatus,
 		error: Option<String>,
 	) -> Result<()> {
-		self.db
+		self
+			.db
 			.mark_maintenance_job_finished(id, status.as_str(), error.as_deref())
 			.await
 			.map_err(|e| match e {

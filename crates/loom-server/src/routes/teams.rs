@@ -17,62 +17,28 @@ use axum::{
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::{
 	team::Team,
-	types::{OrgId, TeamId, TeamRole, UserId},
+	types::{TeamId, TeamRole},
 	Action,
 };
-use uuid::Uuid;
 
 pub use loom_server_api::teams::*;
 
 use crate::{
 	abac_middleware::{build_subject_attrs, team_resource},
 	api::AppState,
+	api_response::{bad_request, conflict},
 	auth_middleware::RequireAuth,
 	authorize,
 	i18n::{resolve_user_locale, t},
-	validation::validate_slug,
+	impl_api_error_response, parse_id,
+	validate_slug_or_error,
+	validation::{
+		parse_org_id as shared_parse_org_id, parse_team_id as shared_parse_team_id,
+		parse_user_id as shared_parse_user_id, validate_slug_with_error,
+	},
 };
 
-fn validate_team_slug(slug: &str, locale: &str) -> Result<(), TeamErrorResponse> {
-	if !validate_slug(slug, 2, 50) {
-		return Err(TeamErrorResponse {
-			error: "invalid_slug".to_string(),
-			message: if slug.len() < 2 || slug.len() > 50 {
-				t(locale, "server.api.team.invalid_slug_length").to_string()
-			} else {
-				t(locale, "server.api.team.invalid_slug_format").to_string()
-			},
-		});
-	}
-	Ok(())
-}
-
-fn parse_org_id(id_str: &str, locale: &str) -> Result<OrgId, TeamErrorResponse> {
-	Uuid::parse_str(id_str)
-		.map(OrgId::new)
-		.map_err(|_| TeamErrorResponse {
-			error: "invalid_id".to_string(),
-			message: t(locale, "server.api.org.invalid_id").to_string(),
-		})
-}
-
-fn parse_team_id(id_str: &str, locale: &str) -> Result<TeamId, TeamErrorResponse> {
-	Uuid::parse_str(id_str)
-		.map(TeamId::new)
-		.map_err(|_| TeamErrorResponse {
-			error: "invalid_id".to_string(),
-			message: t(locale, "server.api.team.invalid_id").to_string(),
-		})
-}
-
-fn parse_user_id(id_str: &str, locale: &str) -> Result<UserId, TeamErrorResponse> {
-	Uuid::parse_str(id_str)
-		.map(UserId::new)
-		.map_err(|_| TeamErrorResponse {
-			error: "invalid_id".to_string(),
-			message: t(locale, "server.api.user.invalid_id").to_string(),
-		})
-}
+impl_api_error_response!(TeamErrorResponse);
 
 #[utoipa::path(
     get,
@@ -115,10 +81,10 @@ pub async fn list_teams(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match parse_org_id(&org_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let org_id = parse_id!(
+		TeamErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
 
 	let org = match state.org_repo.get_org_by_id(&org_id).await {
 		Ok(Some(org)) => org,
@@ -261,23 +227,24 @@ pub async fn create_team(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match parse_org_id(&org_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let org_id = parse_id!(
+		TeamErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
 
-	if let Err(e) = validate_team_slug(&payload.slug, locale) {
-		return (StatusCode::BAD_REQUEST, Json(e)).into_response();
-	}
+	validate_slug_or_error!(
+		TeamErrorResponse,
+		validate_slug_with_error(
+			&payload.slug,
+			2,
+			50,
+			&t(locale, "server.api.team.invalid_slug_length"),
+			&t(locale, "server.api.team.invalid_slug_format")
+		)
+	);
 
 	if payload.name.is_empty() || payload.name.len() > 100 {
-		return (
-			StatusCode::BAD_REQUEST,
-			Json(TeamErrorResponse {
-				error: "invalid_name".to_string(),
-				message: t(locale, "server.api.team.invalid_name_length").to_string(),
-			}),
-		)
+		return bad_request::<TeamErrorResponse>("invalid_name", t(locale, "server.api.team.invalid_name_length"))
 			.into_response();
 	}
 
@@ -417,15 +384,15 @@ pub async fn get_team(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match parse_org_id(&org_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let org_id = parse_id!(
+		TeamErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
 
-	let team_id = match parse_team_id(&team_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let team_id = parse_id!(
+		TeamErrorResponse,
+		shared_parse_team_id(&team_id, &t(locale, "server.api.team.invalid_id"))
+	);
 
 	let team = match state.team_repo.get_team_by_id(&team_id).await {
 		Ok(Some(team)) => team,
@@ -536,15 +503,15 @@ pub async fn update_team(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match parse_org_id(&org_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let org_id = parse_id!(
+		TeamErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
 
-	let team_id = match parse_team_id(&team_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let team_id = parse_id!(
+		TeamErrorResponse,
+		shared_parse_team_id(&team_id, &t(locale, "server.api.team.invalid_id"))
+	);
 
 	let mut team = match state.team_repo.get_team_by_id(&team_id).await {
 		Ok(Some(team)) => team,
@@ -604,19 +571,20 @@ pub async fn update_team(
 	}
 
 	if let Some(ref slug) = payload.slug {
-		if let Err(e) = validate_team_slug(slug, locale) {
-			return (StatusCode::BAD_REQUEST, Json(e)).into_response();
-		}
+		validate_slug_or_error!(
+			TeamErrorResponse,
+			validate_slug_with_error(
+				slug,
+				2,
+				50,
+				&t(locale, "server.api.team.invalid_slug_length"),
+				&t(locale, "server.api.team.invalid_slug_format")
+			)
+		);
 
 		if slug != &team.slug {
 			if let Ok(Some(_)) = state.team_repo.get_team_by_slug(&org_id, slug).await {
-				return (
-					StatusCode::CONFLICT,
-					Json(TeamErrorResponse {
-						error: "slug_exists".to_string(),
-						message: t(locale, "server.api.team.slug_exists").to_string(),
-					}),
-				)
+				return conflict::<TeamErrorResponse>("slug_exists", t(locale, "server.api.team.slug_exists"))
 					.into_response();
 			}
 		}
@@ -705,15 +673,15 @@ pub async fn delete_team(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match parse_org_id(&org_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let org_id = parse_id!(
+		TeamErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
 
-	let team_id = match parse_team_id(&team_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let team_id = parse_id!(
+		TeamErrorResponse,
+		shared_parse_team_id(&team_id, &t(locale, "server.api.team.invalid_id"))
+	);
 
 	let team = match state.team_repo.get_team_by_id(&team_id).await {
 		Ok(Some(team)) => team,
@@ -838,15 +806,15 @@ pub async fn list_team_members(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match parse_org_id(&org_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let org_id = parse_id!(
+		TeamErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
 
-	let team_id = match parse_team_id(&team_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let team_id = parse_id!(
+		TeamErrorResponse,
+		shared_parse_team_id(&team_id, &t(locale, "server.api.team.invalid_id"))
+	);
 
 	let team = match state.team_repo.get_team_by_id(&team_id).await {
 		Ok(Some(team)) => team,
@@ -987,20 +955,20 @@ pub async fn add_team_member(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match parse_org_id(&org_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let org_id = parse_id!(
+		TeamErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
 
-	let team_id = match parse_team_id(&team_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let team_id = parse_id!(
+		TeamErrorResponse,
+		shared_parse_team_id(&team_id, &t(locale, "server.api.team.invalid_id"))
+	);
 
-	let target_user_id = match parse_user_id(&payload.user_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let target_user_id = parse_id!(
+		TeamErrorResponse,
+		shared_parse_user_id(&payload.user_id, &t(locale, "server.api.user.invalid_id"))
+	);
 
 	let team = match state.team_repo.get_team_by_id(&team_id).await {
 		Ok(Some(team)) => team,
@@ -1177,20 +1145,20 @@ pub async fn remove_team_member(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let org_id = match parse_org_id(&org_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let org_id = parse_id!(
+		TeamErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
 
-	let team_id = match parse_team_id(&team_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let team_id = parse_id!(
+		TeamErrorResponse,
+		shared_parse_team_id(&team_id, &t(locale, "server.api.team.invalid_id"))
+	);
 
-	let target_user_id = match parse_user_id(&user_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let target_user_id = parse_id!(
+		TeamErrorResponse,
+		shared_parse_user_id(&user_id, &t(locale, "server.api.user.invalid_id"))
+	);
 
 	let team = match state.team_repo.get_team_by_id(&team_id).await {
 		Ok(Some(team)) => team,

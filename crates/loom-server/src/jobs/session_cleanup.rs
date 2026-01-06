@@ -2,17 +2,17 @@
 // SPDX-License-Identifier: Proprietary
 
 use async_trait::async_trait;
+use loom_server_db::SessionRepository;
 use loom_server_jobs::{Job, JobContext, JobError, JobOutput};
-use sqlx::SqlitePool;
 use tracing::instrument;
 
 pub struct SessionCleanupJob {
-	pool: SqlitePool,
+	session_repo: SessionRepository,
 }
 
 impl SessionCleanupJob {
-	pub fn new(pool: SqlitePool) -> Self {
-		Self { pool }
+	pub fn new(session_repo: SessionRepository) -> Self {
+		Self { session_repo }
 	}
 }
 
@@ -36,49 +36,42 @@ impl Job for SessionCleanupJob {
 			return Err(JobError::Cancelled);
 		}
 
-		let now = chrono::Utc::now().to_rfc3339();
-
-		let sessions_result = sqlx::query("DELETE FROM sessions WHERE expires_at < ?")
-			.bind(&now)
-			.execute(&self.pool)
+		let sessions_deleted = self
+			.session_repo
+			.cleanup_expired_sessions()
 			.await
 			.map_err(|e| JobError::Failed {
 				message: e.to_string(),
 				retryable: true,
 			})?;
 
-		let tokens_result =
-			sqlx::query("DELETE FROM access_tokens WHERE expires_at < ? AND revoked_at IS NULL")
-				.bind(&now)
-				.execute(&self.pool)
-				.await
-				.map_err(|e| JobError::Failed {
-					message: e.to_string(),
-					retryable: true,
-				})?;
-
-		let device_result = sqlx::query("DELETE FROM device_codes WHERE expires_at < ?")
-			.bind(&now)
-			.execute(&self.pool)
+		let tokens_deleted = self
+			.session_repo
+			.cleanup_expired_access_tokens()
 			.await
 			.map_err(|e| JobError::Failed {
 				message: e.to_string(),
 				retryable: true,
 			})?;
 
-		let magic_result = sqlx::query("DELETE FROM magic_links WHERE expires_at < ?")
-			.bind(&now)
-			.execute(&self.pool)
+		let device_codes_deleted = self
+			.session_repo
+			.cleanup_expired_device_codes()
 			.await
 			.map_err(|e| JobError::Failed {
 				message: e.to_string(),
 				retryable: true,
 			})?;
 
-		let sessions_deleted = sessions_result.rows_affected();
-		let tokens_deleted = tokens_result.rows_affected();
-		let device_codes_deleted = device_result.rows_affected();
-		let magic_links_deleted = magic_result.rows_affected();
+		let magic_links_deleted = self
+			.session_repo
+			.cleanup_expired_magic_links()
+			.await
+			.map_err(|e| JobError::Failed {
+				message: e.to_string(),
+				retryable: true,
+			})?;
+
 		let total = sessions_deleted + tokens_deleted + device_codes_deleted + magic_links_deleted;
 
 		tracing::info!(

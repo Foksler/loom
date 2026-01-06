@@ -5073,6 +5073,7 @@ dependencies = [
 name = "loom-server-db"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "chrono",
  "loom-common-secret",
  "loom-common-thread",
@@ -5160,6 +5161,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "chrono",
+ "loom-server-db",
  "serde",
  "serde_json",
  "sqlx",
@@ -5378,6 +5380,7 @@ dependencies = [
  "loom-cli-credentials",
  "loom-common-http",
  "loom-common-secret",
+ "loom-server-db",
  "loom-server-scm",
  "proptest",
  "reqwest",

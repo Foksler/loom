@@ -16,8 +16,7 @@ use axum::{
 };
 use chrono::Utc;
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
-use loom_server_auth::{validate_username, Action, UserId, ACCOUNT_DELETION_GRACE_DAYS};
-use uuid::Uuid;
+use loom_server_auth::{validate_username, Action, ACCOUNT_DELETION_GRACE_DAYS};
 
 pub use loom_server_api::users::*;
 
@@ -26,16 +25,11 @@ use crate::{
 	api::AppState,
 	auth_middleware::RequireAuth,
 	i18n::{resolve_user_locale, t},
+	impl_api_error_response, parse_id,
+	validation::parse_user_id as shared_parse_user_id,
 };
 
-fn parse_user_id(id: &str, locale: &str) -> Result<UserId, UserErrorResponse> {
-	Uuid::parse_str(id)
-		.map(UserId::new)
-		.map_err(|_| UserErrorResponse {
-			error: "bad_request".to_string(),
-			message: t(locale, "server.api.user.invalid_id").to_string(),
-		})
-}
+impl_api_error_response!(UserErrorResponse);
 
 #[utoipa::path(
     get,
@@ -80,10 +74,10 @@ pub async fn get_user_profile(
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
-	let target_user_id = match parse_user_id(&user_id, locale) {
-		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-	};
+	let target_user_id = parse_id!(
+		UserErrorResponse,
+		shared_parse_user_id(&user_id, &t(locale, "server.api.user.invalid_id"))
+	);
 
 	let target_user = match state.user_repo.get_user_by_id(&target_user_id).await {
 		Ok(Some(user)) => user,

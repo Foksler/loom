@@ -29,25 +29,14 @@ pub use loom_server_api::secrets::*;
 
 use crate::{
 	api::AppState,
+	api_response::id_parse_error,
 	auth_middleware::RequireAuth,
 	i18n::{resolve_user_locale, t},
+	impl_api_error_response,
+	validation::{parse_org_id as shared_parse_org_id, parse_uuid},
 };
 
-fn parse_org_id(id_str: &str, locale: &str) -> Result<OrgId, SecretErrorResponse> {
-	Uuid::parse_str(id_str)
-		.map(OrgId::new)
-		.map_err(|_| SecretErrorResponse {
-			error: "invalid_id".to_string(),
-			message: t(locale, "server.api.org.invalid_id").to_string(),
-		})
-}
-
-fn parse_repo_id(id_str: &str, locale: &str) -> Result<Uuid, SecretErrorResponse> {
-	Uuid::parse_str(id_str).map_err(|_| SecretErrorResponse {
-		error: "invalid_id".to_string(),
-		message: t(locale, "server.api.repo.invalid_id").to_string(),
-	})
-}
+impl_api_error_response!(SecretErrorResponse);
 
 async fn get_secrets_service(
 	state: &AppState,
@@ -228,9 +217,9 @@ pub async fn list_org_secrets(
 	Path(org_id): Path<String>,
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
-	let org_id = match parse_org_id(&org_id, locale) {
+	let org_id = match shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id")) {
 		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+		Err(e) => return id_parse_error::<SecretErrorResponse>(e).into_response(),
 	};
 
 	if let Err(resp) = verify_org_membership(&state, &org_id, &current_user.user.id, locale).await {
@@ -305,9 +294,9 @@ pub async fn create_org_secret(
 	Json(payload): Json<CreateSecretRequest>,
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
-	let org_id = match parse_org_id(&org_id, locale) {
+	let org_id = match shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id")) {
 		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+		Err(e) => return id_parse_error::<SecretErrorResponse>(e).into_response(),
 	};
 
 	if let Err(resp) = verify_org_admin(&state, &org_id, &current_user.user.id, locale).await {
@@ -394,9 +383,9 @@ pub async fn get_org_secret(
 	Path((org_id, name)): Path<(String, String)>,
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
-	let org_id = match parse_org_id(&org_id, locale) {
+	let org_id = match shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id")) {
 		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+		Err(e) => return id_parse_error::<SecretErrorResponse>(e).into_response(),
 	};
 
 	if let Err(resp) = verify_org_membership(&state, &org_id, &current_user.user.id, locale).await {
@@ -469,9 +458,9 @@ pub async fn update_org_secret(
 	Json(payload): Json<UpdateSecretRequest>,
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
-	let org_id = match parse_org_id(&org_id, locale) {
+	let org_id = match shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id")) {
 		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+		Err(e) => return id_parse_error::<SecretErrorResponse>(e).into_response(),
 	};
 
 	if let Err(resp) = verify_org_admin(&state, &org_id, &current_user.user.id, locale).await {
@@ -566,9 +555,9 @@ pub async fn delete_org_secret(
 	Path((org_id, name)): Path<(String, String)>,
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
-	let org_id = match parse_org_id(&org_id, locale) {
+	let org_id = match shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id")) {
 		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+		Err(e) => return id_parse_error::<SecretErrorResponse>(e).into_response(),
 	};
 
 	if let Err(resp) = verify_org_admin(&state, &org_id, &current_user.user.id, locale).await {
@@ -655,9 +644,9 @@ pub async fn list_repo_secrets(
 	Path(repo_id): Path<String>,
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
-	let repo_id = match parse_repo_id(&repo_id, locale) {
+	let repo_id = match parse_uuid(&repo_id, &t(locale, "server.api.repo.invalid_id")) {
 		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+		Err(e) => return id_parse_error::<SecretErrorResponse>(e).into_response(),
 	};
 
 	let org_id = match verify_repo_access(&state, repo_id, &current_user.user.id, locale).await {
@@ -733,9 +722,9 @@ pub async fn create_repo_secret(
 	Json(payload): Json<CreateSecretRequest>,
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
-	let repo_id = match parse_repo_id(&repo_id, locale) {
+	let repo_id = match parse_uuid(&repo_id, &t(locale, "server.api.repo.invalid_id")) {
 		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+		Err(e) => return id_parse_error::<SecretErrorResponse>(e).into_response(),
 	};
 
 	let org_id = match verify_repo_access(&state, repo_id, &current_user.user.id, locale).await {
@@ -826,9 +815,9 @@ pub async fn get_repo_secret(
 	Path((repo_id, name)): Path<(String, String)>,
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
-	let repo_id = match parse_repo_id(&repo_id, locale) {
+	let repo_id = match parse_uuid(&repo_id, &t(locale, "server.api.repo.invalid_id")) {
 		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+		Err(e) => return id_parse_error::<SecretErrorResponse>(e).into_response(),
 	};
 
 	let org_id = match verify_repo_access(&state, repo_id, &current_user.user.id, locale).await {
@@ -907,9 +896,9 @@ pub async fn update_repo_secret(
 	Json(payload): Json<UpdateSecretRequest>,
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
-	let repo_id = match parse_repo_id(&repo_id, locale) {
+	let repo_id = match parse_uuid(&repo_id, &t(locale, "server.api.repo.invalid_id")) {
 		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+		Err(e) => return id_parse_error::<SecretErrorResponse>(e).into_response(),
 	};
 
 	let org_id = match verify_repo_access(&state, repo_id, &current_user.user.id, locale).await {
@@ -1010,9 +999,9 @@ pub async fn delete_repo_secret(
 	Path((repo_id, name)): Path<(String, String)>,
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
-	let repo_id = match parse_repo_id(&repo_id, locale) {
+	let repo_id = match parse_uuid(&repo_id, &t(locale, "server.api.repo.invalid_id")) {
 		Ok(id) => id,
-		Err(e) => return (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+		Err(e) => return id_parse_error::<SecretErrorResponse>(e).into_response(),
 	};
 
 	let org_id = match verify_repo_access(&state, repo_id, &current_user.user.id, locale).await {

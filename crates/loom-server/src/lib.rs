@@ -9,6 +9,7 @@
 pub mod abac_middleware;
 pub mod api;
 pub mod api_docs;
+pub mod api_response;
 pub mod auth_middleware;
 pub mod client_info;
 pub mod db;

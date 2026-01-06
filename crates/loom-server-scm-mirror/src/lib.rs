@@ -18,7 +18,7 @@ pub use pull::{
 	check_repo_exists, get_clone_url, pull_mirror, pull_mirror_with_recovery, PullResult,
 };
 pub use push::push_mirror;
-pub use store::{PushMirrorStore, SqliteExternalMirrorStore, SqlitePushMirrorStore};
+pub use store::{MirrorRepository, PushMirrorStore, SqliteExternalMirrorStore, SqlitePushMirrorStore};
 pub use types::{
 	CreateExternalMirror, CreatePushMirror, ExternalMirror, MirrorBranchRule, Platform, PushMirror,
 };

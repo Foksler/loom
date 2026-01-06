@@ -4,24 +4,15 @@
 use std::path::Path;
 use std::time::Duration;
 
-use async_trait::async_trait;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use tracing::{info, instrument, warn};
 use uuid::Uuid;
+
+pub use loom_server_db::ExternalMirrorStore;
 
 use crate::error::Result;
 use crate::pull::check_repo_exists;
 use crate::types::ExternalMirror;
-
-#[async_trait]
-pub trait ExternalMirrorStore: Send + Sync {
-	async fn get_by_id(&self, id: Uuid) -> Result<Option<ExternalMirror>>;
-	async fn get_by_repo_id(&self, repo_id: Uuid) -> Result<Option<ExternalMirror>>;
-	async fn find_stale(&self, stale_threshold: DateTime<Utc>) -> Result<Vec<ExternalMirror>>;
-	async fn delete(&self, id: Uuid) -> Result<()>;
-	async fn update_last_accessed(&self, id: Uuid, at: DateTime<Utc>) -> Result<()>;
-	async fn update_last_synced(&self, id: Uuid, at: DateTime<Utc>) -> Result<()>;
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CleanupDecision {
@@ -44,7 +35,7 @@ pub async fn find_stale_mirrors(
 	stale_after: Duration,
 ) -> Result<Vec<ExternalMirror>> {
 	let threshold = Utc::now() - chrono::Duration::from_std(stale_after).unwrap_or_default();
-	store.find_stale(threshold).await
+	Ok(store.find_stale(threshold).await?)
 }
 
 #[instrument(skip(store), fields(mirror_id = %mirror.id, platform = ?mirror.platform))]
@@ -165,7 +156,7 @@ pub async fn delete_mirror(
 }
 
 pub async fn touch_mirror(store: &impl ExternalMirrorStore, id: Uuid) -> Result<()> {
-	store.update_last_accessed(id, Utc::now()).await
+	Ok(store.update_last_accessed(id, Utc::now()).await?)
 }
 
 pub async fn run_cleanup_job(
@@ -212,6 +203,8 @@ pub async fn run_cleanup_job(
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use async_trait::async_trait;
+	use chrono::DateTime;
 	use crate::types::Platform;
 	use std::sync::{Arc, Mutex};
 
@@ -247,7 +240,7 @@ mod tests {
 
 	#[async_trait]
 	impl ExternalMirrorStore for FakeExternalMirrorStore {
-		async fn get_by_id(&self, id: Uuid) -> Result<Option<ExternalMirror>> {
+		async fn get_by_id(&self, id: Uuid) -> loom_server_db::Result<Option<ExternalMirror>> {
 			Ok(
 				self
 					.mirrors
@@ -259,7 +252,7 @@ mod tests {
 			)
 		}
 
-		async fn get_by_repo_id(&self, repo_id: Uuid) -> Result<Option<ExternalMirror>> {
+		async fn get_by_repo_id(&self, repo_id: Uuid) -> loom_server_db::Result<Option<ExternalMirror>> {
 			Ok(
 				self
 					.mirrors
@@ -271,7 +264,7 @@ mod tests {
 			)
 		}
 
-		async fn find_stale(&self, stale_threshold: DateTime<Utc>) -> Result<Vec<ExternalMirror>> {
+		async fn find_stale(&self, stale_threshold: DateTime<Utc>) -> loom_server_db::Result<Vec<ExternalMirror>> {
 			Ok(
 				self
 					.mirrors
@@ -288,18 +281,18 @@ mod tests {
 			)
 		}
 
-		async fn delete(&self, id: Uuid) -> Result<()> {
+		async fn delete(&self, id: Uuid) -> loom_server_db::Result<()> {
 			self.deleted_ids.lock().unwrap().push(id);
 			self.mirrors.lock().unwrap().retain(|m| m.id != id);
 			Ok(())
 		}
 
-		async fn update_last_accessed(&self, id: Uuid, at: DateTime<Utc>) -> Result<()> {
+		async fn update_last_accessed(&self, id: Uuid, at: DateTime<Utc>) -> loom_server_db::Result<()> {
 			self.accessed_updates.lock().unwrap().push((id, at));
 			Ok(())
 		}
 
-		async fn update_last_synced(&self, id: Uuid, at: DateTime<Utc>) -> Result<()> {
+		async fn update_last_synced(&self, id: Uuid, at: DateTime<Utc>) -> loom_server_db::Result<()> {
 			self.synced_updates.lock().unwrap().push((id, at));
 			Ok(())
 		}
