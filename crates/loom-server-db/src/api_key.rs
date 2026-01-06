@@ -55,7 +55,8 @@ impl ApiKeyStore for ApiKeyRepository {
 		scopes: &[ApiKeyScope],
 		created_by: &UserId,
 	) -> Result<String, DbError> {
-		self.create_api_key(org_id, name, token_hash, scopes, created_by)
+		self
+			.create_api_key(org_id, name, token_hash, scopes, created_by)
 			.await
 	}
 
@@ -86,7 +87,8 @@ impl ApiKeyStore for ApiKeyRepository {
 		endpoint: &str,
 		method: &str,
 	) -> Result<(), DbError> {
-		self.log_usage(api_key_id, ip_address, endpoint, method)
+		self
+			.log_usage(api_key_id, ip_address, endpoint, method)
 			.await
 	}
 
@@ -510,7 +512,140 @@ fn parse_api_key_usage_row(row: &sqlx::sqlite::SqliteRow) -> Result<ApiKeyUsage,
 mod tests {
 	use super::*;
 	use proptest::prelude::*;
+	use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 	use std::collections::HashSet;
+	use std::str::FromStr;
+
+	async fn create_api_key_test_pool() -> SqlitePool {
+		let options = SqliteConnectOptions::from_str(":memory:")
+			.unwrap()
+			.create_if_missing(true);
+
+		let pool = SqlitePoolOptions::new()
+			.max_connections(1)
+			.connect_with(options)
+			.await
+			.expect("Failed to create test pool");
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS api_keys (
+				id TEXT PRIMARY KEY,
+				org_id TEXT NOT NULL,
+				name TEXT NOT NULL,
+				token_hash TEXT NOT NULL UNIQUE,
+				scopes TEXT NOT NULL,
+				created_by TEXT NOT NULL,
+				created_at TEXT NOT NULL,
+				last_used_at TEXT,
+				revoked_at TEXT,
+				revoked_by TEXT
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS api_key_usage (
+				id TEXT PRIMARY KEY,
+				api_key_id TEXT NOT NULL,
+				timestamp TEXT NOT NULL,
+				ip_address TEXT,
+				endpoint TEXT NOT NULL,
+				method TEXT NOT NULL
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		pool
+	}
+
+	async fn make_repo() -> ApiKeyRepository {
+		let pool = create_api_key_test_pool().await;
+		ApiKeyRepository::new(pool)
+	}
+
+	#[tokio::test]
+	async fn test_create_and_get_api_key() {
+		let repo = make_repo().await;
+		let org_id = OrgId::generate();
+		let created_by = UserId::generate();
+		let scopes = vec![ApiKeyScope::ThreadsRead, ApiKeyScope::ThreadsWrite];
+
+		let id = repo
+			.create_api_key(&org_id, "Test Key", "hash123", &scopes, &created_by)
+			.await
+			.unwrap();
+
+		let api_key = repo.get_api_key_by_id(&id).await.unwrap();
+		assert!(api_key.is_some());
+		let api_key = api_key.unwrap();
+		assert_eq!(api_key.id.to_string(), id);
+		assert_eq!(api_key.org_id, org_id);
+		assert_eq!(api_key.name, "Test Key");
+		assert_eq!(api_key.token_hash, "hash123");
+		assert_eq!(api_key.scopes, scopes);
+		assert_eq!(api_key.created_by, created_by);
+		assert!(api_key.revoked_at.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_get_api_key_not_found() {
+		let repo = make_repo().await;
+		let result = repo
+			.get_api_key_by_id("nonexistent-api-key-id")
+			.await
+			.unwrap();
+		assert!(result.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_get_by_key_hash() {
+		let repo = make_repo().await;
+		let org_id = OrgId::generate();
+		let created_by = UserId::generate();
+		let token_hash = "unique_hash_456";
+
+		let id = repo
+			.create_api_key(&org_id, "Hash Test Key", token_hash, &[], &created_by)
+			.await
+			.unwrap();
+
+		let api_key = repo.get_api_key_by_hash(token_hash).await.unwrap();
+		assert!(api_key.is_some());
+		let api_key = api_key.unwrap();
+		assert_eq!(api_key.id.to_string(), id);
+		assert_eq!(api_key.token_hash, token_hash);
+	}
+
+	#[tokio::test]
+	async fn test_revoke_api_key() {
+		let repo = make_repo().await;
+		let org_id = OrgId::generate();
+		let created_by = UserId::generate();
+		let revoked_by = UserId::generate();
+
+		let id = repo
+			.create_api_key(&org_id, "Revokable Key", "hash789", &[], &created_by)
+			.await
+			.unwrap();
+
+		let api_key = repo.get_api_key_by_id(&id).await.unwrap().unwrap();
+		assert!(api_key.revoked_at.is_none());
+
+		let revoked = repo.revoke_api_key(&id, &revoked_by).await.unwrap();
+		assert!(revoked);
+
+		let api_key = repo.get_api_key_by_id(&id).await.unwrap().unwrap();
+		assert!(api_key.revoked_at.is_some());
+		assert_eq!(api_key.revoked_by, Some(revoked_by));
+	}
 
 	proptest! {
 		#[test]

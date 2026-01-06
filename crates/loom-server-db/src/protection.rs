@@ -147,3 +147,131 @@ fn row_to_rule(row: &sqlx::sqlite::SqliteRow) -> Result<BranchProtectionRuleReco
 			.map_err(|e| DbError::Internal(e.to_string()))?,
 	})
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+	use std::str::FromStr;
+
+	async fn create_protection_test_pool() -> SqlitePool {
+		let options = SqliteConnectOptions::from_str(":memory:")
+			.unwrap()
+			.create_if_missing(true);
+
+		let pool = SqlitePoolOptions::new()
+			.max_connections(1)
+			.connect_with(options)
+			.await
+			.expect("Failed to create test pool");
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS branch_protection_rules (
+				id TEXT PRIMARY KEY,
+				repo_id TEXT NOT NULL,
+				pattern TEXT NOT NULL,
+				block_direct_push INTEGER NOT NULL DEFAULT 0,
+				block_force_push INTEGER NOT NULL DEFAULT 0,
+				block_deletion INTEGER NOT NULL DEFAULT 0,
+				created_at TEXT NOT NULL,
+				UNIQUE(repo_id, pattern)
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		pool
+	}
+
+	async fn make_repo() -> ProtectionRepository {
+		let pool = create_protection_test_pool().await;
+		ProtectionRepository::new(pool)
+	}
+
+	fn make_rule(repo_id: Uuid, pattern: &str) -> BranchProtectionRuleRecord {
+		BranchProtectionRuleRecord {
+			id: Uuid::new_v4(),
+			repo_id,
+			pattern: pattern.to_string(),
+			block_direct_push: true,
+			block_force_push: true,
+			block_deletion: false,
+			created_at: Utc::now(),
+		}
+	}
+
+	#[tokio::test]
+	async fn test_create_and_get_rule() {
+		let repo = make_repo().await;
+		let repo_id = Uuid::new_v4();
+		let rule = make_rule(repo_id, "main");
+
+		let created = repo.create(&rule).await.unwrap();
+		assert_eq!(created.id, rule.id);
+		assert_eq!(created.pattern, "main");
+		assert!(created.block_direct_push);
+		assert!(created.block_force_push);
+		assert!(!created.block_deletion);
+
+		let fetched = repo.get_by_id(rule.id).await.unwrap();
+		assert!(fetched.is_some());
+		let fetched = fetched.unwrap();
+		assert_eq!(fetched.id, rule.id);
+		assert_eq!(fetched.repo_id, repo_id);
+		assert_eq!(fetched.pattern, "main");
+	}
+
+	#[tokio::test]
+	async fn test_get_rule_not_found() {
+		let repo = make_repo().await;
+		let result = repo.get_by_id(Uuid::new_v4()).await.unwrap();
+		assert!(result.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_list_rules_for_repo() {
+		let repo = make_repo().await;
+		let repo_id = Uuid::new_v4();
+		let other_repo_id = Uuid::new_v4();
+
+		let rule1 = make_rule(repo_id, "main");
+		let rule2 = make_rule(repo_id, "develop");
+		let rule3 = make_rule(other_repo_id, "main");
+
+		repo.create(&rule1).await.unwrap();
+		repo.create(&rule2).await.unwrap();
+		repo.create(&rule3).await.unwrap();
+
+		let rules = repo.list_by_repo(repo_id).await.unwrap();
+		assert_eq!(rules.len(), 2);
+		let patterns: Vec<_> = rules.iter().map(|r| r.pattern.as_str()).collect();
+		assert!(patterns.contains(&"main"));
+		assert!(patterns.contains(&"develop"));
+
+		let other_rules = repo.list_by_repo(other_repo_id).await.unwrap();
+		assert_eq!(other_rules.len(), 1);
+		assert_eq!(other_rules[0].pattern, "main");
+	}
+
+	#[tokio::test]
+	async fn test_delete_rule() {
+		let repo = make_repo().await;
+		let repo_id = Uuid::new_v4();
+		let rule = make_rule(repo_id, "main");
+
+		repo.create(&rule).await.unwrap();
+		let fetched = repo.get_by_id(rule.id).await.unwrap();
+		assert!(fetched.is_some());
+
+		repo.delete(rule.id).await.unwrap();
+
+		let fetched_after = repo.get_by_id(rule.id).await.unwrap();
+		assert!(fetched_after.is_none());
+
+		let delete_again = repo.delete(rule.id).await;
+		assert!(matches!(delete_again, Err(DbError::NotFound(_))));
+	}
+}

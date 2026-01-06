@@ -188,17 +188,18 @@ impl AuditStore for AuditRepository {
 		limit: Option<i64>,
 		offset: Option<i64>,
 	) -> Result<(Vec<AuditLogEntry>, i64)> {
-		self.query_logs(
-			event_type,
-			actor_id,
-			resource_type,
-			resource_id,
-			from,
-			to,
-			limit,
-			offset,
-		)
-		.await
+		self
+			.query_logs(
+				event_type,
+				actor_id,
+				resource_type,
+				resource_id,
+				from,
+				to,
+				limit,
+				offset,
+			)
+			.await
 	}
 }
 
@@ -254,5 +255,256 @@ fn parse_event_type(s: &str) -> Option<AuditEventType> {
 		"mirror_synced" => Some(AuditEventType::MirrorSynced),
 		"webhook_received" => Some(AuditEventType::WebhookReceived),
 		_ => None,
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use chrono::Duration;
+	use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+	use std::str::FromStr;
+
+	async fn create_audit_test_pool() -> SqlitePool {
+		let options = SqliteConnectOptions::from_str(":memory:")
+			.unwrap()
+			.create_if_missing(true);
+
+		let pool = SqlitePoolOptions::new()
+			.max_connections(1)
+			.connect_with(options)
+			.await
+			.expect("Failed to create test pool");
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS audit_logs (
+				id TEXT PRIMARY KEY,
+				timestamp TEXT NOT NULL,
+				event_type TEXT NOT NULL,
+				actor_user_id TEXT,
+				impersonating_user_id TEXT,
+				resource_type TEXT,
+				resource_id TEXT,
+				action TEXT NOT NULL,
+				ip_address TEXT,
+				user_agent TEXT,
+				details TEXT,
+				created_at TEXT NOT NULL
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		pool
+	}
+
+	async fn insert_audit_log(
+		pool: &SqlitePool,
+		id: &str,
+		timestamp: DateTime<Utc>,
+		event_type: &str,
+		actor_user_id: Option<&str>,
+		resource_type: Option<&str>,
+		resource_id: Option<&str>,
+	) {
+		let now = Utc::now().to_rfc3339();
+		sqlx::query(
+			r#"
+			INSERT INTO audit_logs (id, timestamp, event_type, actor_user_id, resource_type, resource_id, action, created_at)
+			VALUES (?, ?, ?, ?, ?, ?, 'test_action', ?)
+			"#,
+		)
+		.bind(id)
+		.bind(timestamp.to_rfc3339())
+		.bind(event_type)
+		.bind(actor_user_id)
+		.bind(resource_type)
+		.bind(resource_id)
+		.bind(now)
+		.execute(pool)
+		.await
+		.unwrap();
+	}
+
+	#[tokio::test]
+	async fn test_query_logs_empty() {
+		let pool = create_audit_test_pool().await;
+		let repo = AuditRepository::new(pool);
+
+		let (logs, count) = repo
+			.query_logs(None, None, None, None, None, None, None, None)
+			.await
+			.unwrap();
+
+		assert!(logs.is_empty());
+		assert_eq!(count, 0);
+	}
+
+	#[tokio::test]
+	async fn test_query_logs_with_data() {
+		let pool = create_audit_test_pool().await;
+		let repo = AuditRepository::new(pool.clone());
+
+		let user_id = Uuid::new_v4().to_string();
+		let now = Utc::now();
+
+		insert_audit_log(
+			&pool,
+			&Uuid::new_v4().to_string(),
+			now,
+			"login",
+			Some(&user_id),
+			Some("session"),
+			Some("session-123"),
+		)
+		.await;
+
+		insert_audit_log(
+			&pool,
+			&Uuid::new_v4().to_string(),
+			now - Duration::minutes(5),
+			"logout",
+			Some(&user_id),
+			Some("session"),
+			Some("session-456"),
+		)
+		.await;
+
+		let (logs, count) = repo
+			.query_logs(None, None, None, None, None, None, None, None)
+			.await
+			.unwrap();
+
+		assert_eq!(logs.len(), 2);
+		assert_eq!(count, 2);
+		assert_eq!(logs[0].event_type, AuditEventType::Login);
+		assert_eq!(logs[1].event_type, AuditEventType::Logout);
+	}
+
+	#[tokio::test]
+	async fn test_query_logs_with_filters() {
+		let pool = create_audit_test_pool().await;
+		let repo = AuditRepository::new(pool.clone());
+
+		let user1 = Uuid::new_v4().to_string();
+		let user2 = Uuid::new_v4().to_string();
+		let now = Utc::now();
+
+		insert_audit_log(
+			&pool,
+			&Uuid::new_v4().to_string(),
+			now,
+			"login",
+			Some(&user1),
+			Some("session"),
+			Some("s1"),
+		)
+		.await;
+
+		insert_audit_log(
+			&pool,
+			&Uuid::new_v4().to_string(),
+			now - Duration::hours(1),
+			"logout",
+			Some(&user1),
+			Some("session"),
+			Some("s2"),
+		)
+		.await;
+
+		insert_audit_log(
+			&pool,
+			&Uuid::new_v4().to_string(),
+			now - Duration::hours(2),
+			"api_key_created",
+			Some(&user2),
+			Some("api_key"),
+			Some("key1"),
+		)
+		.await;
+
+		let (logs, count) = repo
+			.query_logs(Some("login"), None, None, None, None, None, None, None)
+			.await
+			.unwrap();
+		assert_eq!(logs.len(), 1);
+		assert_eq!(count, 1);
+		assert_eq!(logs[0].event_type, AuditEventType::Login);
+
+		let (logs, count) = repo
+			.query_logs(None, Some(&user1), None, None, None, None, None, None)
+			.await
+			.unwrap();
+		assert_eq!(logs.len(), 2);
+		assert_eq!(count, 2);
+
+		let from = now - Duration::minutes(30);
+		let (logs, count) = repo
+			.query_logs(None, None, None, None, Some(from), None, None, None)
+			.await
+			.unwrap();
+		assert_eq!(logs.len(), 1);
+		assert_eq!(count, 1);
+		assert_eq!(logs[0].event_type, AuditEventType::Login);
+
+		let to = now - Duration::minutes(30);
+		let (logs, count) = repo
+			.query_logs(None, None, None, None, None, Some(to), None, None)
+			.await
+			.unwrap();
+		assert_eq!(logs.len(), 2);
+		assert_eq!(count, 2);
+
+		let (logs, count) = repo
+			.query_logs(None, None, Some("api_key"), None, None, None, None, None)
+			.await
+			.unwrap();
+		assert_eq!(logs.len(), 1);
+		assert_eq!(count, 1);
+		assert_eq!(logs[0].event_type, AuditEventType::ApiKeyCreated);
+	}
+
+	#[tokio::test]
+	async fn test_query_logs_pagination() {
+		let pool = create_audit_test_pool().await;
+		let repo = AuditRepository::new(pool.clone());
+
+		let user_id = Uuid::new_v4().to_string();
+		let now = Utc::now();
+
+		for i in 0..5 {
+			insert_audit_log(
+				&pool,
+				&Uuid::new_v4().to_string(),
+				now - Duration::minutes(i),
+				"login",
+				Some(&user_id),
+				None,
+				None,
+			)
+			.await;
+		}
+
+		let (logs, count) = repo
+			.query_logs(None, None, None, None, None, None, Some(2), None)
+			.await
+			.unwrap();
+		assert_eq!(logs.len(), 2);
+		assert_eq!(count, 5);
+
+		let (logs, _) = repo
+			.query_logs(None, None, None, None, None, None, Some(2), Some(2))
+			.await
+			.unwrap();
+		assert_eq!(logs.len(), 2);
+
+		let (logs, _) = repo
+			.query_logs(None, None, None, None, None, None, Some(2), Some(4))
+			.await
+			.unwrap();
+		assert_eq!(logs.len(), 1);
 	}
 }

@@ -52,10 +52,8 @@ pub trait ScmStore: Send + Sync {
 	async fn list_webhooks_by_org(&self, org_id: Uuid) -> Result<Vec<WebhookRecord>, DbError>;
 	async fn delete_webhook(&self, id: Uuid) -> Result<(), DbError>;
 
-	async fn create_webhook_delivery(&self, delivery: &WebhookDeliveryRecord)
-		-> Result<(), DbError>;
-	async fn update_webhook_delivery(&self, delivery: &WebhookDeliveryRecord)
-		-> Result<(), DbError>;
+	async fn create_webhook_delivery(&self, delivery: &WebhookDeliveryRecord) -> Result<(), DbError>;
+	async fn update_webhook_delivery(&self, delivery: &WebhookDeliveryRecord) -> Result<(), DbError>;
 	async fn get_pending_webhook_deliveries(&self) -> Result<Vec<WebhookDeliveryRecord>, DbError>;
 	async fn get_webhook_for_delivery(
 		&self,
@@ -265,7 +263,8 @@ impl ScmRepository {
 		.fetch_all(&self.pool)
 		.await?;
 
-		rows.into_iter()
+		rows
+			.into_iter()
 			.map(|id_str| Uuid::parse_str(&id_str).map_err(|e| DbError::Internal(e.to_string())))
 			.collect()
 	}
@@ -810,17 +809,11 @@ impl ScmStore for ScmRepository {
 		ScmRepository::delete_webhook(self, id).await
 	}
 
-	async fn create_webhook_delivery(
-		&self,
-		delivery: &WebhookDeliveryRecord,
-	) -> Result<(), DbError> {
+	async fn create_webhook_delivery(&self, delivery: &WebhookDeliveryRecord) -> Result<(), DbError> {
 		ScmRepository::create_webhook_delivery(self, delivery).await
 	}
 
-	async fn update_webhook_delivery(
-		&self,
-		delivery: &WebhookDeliveryRecord,
-	) -> Result<(), DbError> {
+	async fn update_webhook_delivery(&self, delivery: &WebhookDeliveryRecord) -> Result<(), DbError> {
 		ScmRepository::update_webhook_delivery(self, delivery).await
 	}
 
@@ -1062,4 +1055,168 @@ fn row_to_maintenance_job(row: &sqlx::sqlite::SqliteRow) -> Result<MaintenanceJo
 			.map(|d| d.with_timezone(&Utc))
 			.map_err(|e| DbError::Internal(e.to_string()))?,
 	})
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	async fn make_repo() -> ScmRepository {
+		let pool = crate::testing::create_scm_test_pool().await;
+		ScmRepository::new(pool)
+	}
+
+	fn make_repo_record(id: Uuid, owner_id: Uuid, name: &str) -> RepoRecord {
+		let now = Utc::now();
+		RepoRecord {
+			id,
+			owner_type: "org".to_string(),
+			owner_id,
+			name: name.to_string(),
+			visibility: "private".to_string(),
+			default_branch: "cannon".to_string(),
+			deleted_at: None,
+			created_at: now,
+			updated_at: now,
+		}
+	}
+
+	#[tokio::test]
+	async fn test_create_and_get_repo() {
+		let repo = make_repo().await;
+		let repo_id = Uuid::parse_str("a1b2c3d4-e5f6-7890-abcd-ef1234567890").unwrap();
+		let org_id = Uuid::parse_str("11111111-2222-3333-4444-555555555555").unwrap();
+
+		let record = make_repo_record(repo_id, org_id, "my-project");
+		repo.create_repo(&record).await.unwrap();
+
+		let fetched = repo.get_repo_by_id(repo_id).await.unwrap();
+		assert!(fetched.is_some());
+
+		let fetched = fetched.unwrap();
+		assert_eq!(fetched.id, repo_id);
+		assert_eq!(fetched.owner_type, "org");
+		assert_eq!(fetched.owner_id, org_id);
+		assert_eq!(fetched.name, "my-project");
+		assert_eq!(fetched.visibility, "private");
+		assert_eq!(fetched.default_branch, "cannon");
+		assert!(fetched.deleted_at.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_get_repo_not_found() {
+		let repo = make_repo().await;
+		let nonexistent_id = Uuid::parse_str("deadbeef-dead-beef-dead-beefdeadbeef").unwrap();
+
+		let result = repo.get_repo_by_id(nonexistent_id).await.unwrap();
+		assert!(result.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_list_repos_by_org() {
+		let repo = make_repo().await;
+		let org1_id = Uuid::parse_str("11111111-1111-1111-1111-111111111111").unwrap();
+		let org2_id = Uuid::parse_str("22222222-2222-2222-2222-222222222222").unwrap();
+
+		let repo1_id = Uuid::parse_str("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa").unwrap();
+		let repo2_id = Uuid::parse_str("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb").unwrap();
+		let repo3_id = Uuid::parse_str("cccccccc-cccc-cccc-cccc-cccccccccccc").unwrap();
+
+		repo
+			.create_repo(&make_repo_record(repo1_id, org1_id, "alpha"))
+			.await
+			.unwrap();
+		repo
+			.create_repo(&make_repo_record(repo2_id, org1_id, "beta"))
+			.await
+			.unwrap();
+		repo
+			.create_repo(&make_repo_record(repo3_id, org2_id, "gamma"))
+			.await
+			.unwrap();
+
+		let org1_repos = repo.list_repos_by_owner("org", org1_id).await.unwrap();
+		assert_eq!(org1_repos.len(), 2);
+		assert_eq!(org1_repos[0].name, "alpha");
+		assert_eq!(org1_repos[1].name, "beta");
+
+		let org2_repos = repo.list_repos_by_owner("org", org2_id).await.unwrap();
+		assert_eq!(org2_repos.len(), 1);
+		assert_eq!(org2_repos[0].name, "gamma");
+	}
+
+	#[tokio::test]
+	async fn test_list_all_repo_ids() {
+		let repo = make_repo().await;
+		let org_id = Uuid::parse_str("11111111-1111-1111-1111-111111111111").unwrap();
+
+		let repo1_id = Uuid::parse_str("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa").unwrap();
+		let repo2_id = Uuid::parse_str("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb").unwrap();
+		let repo3_id = Uuid::parse_str("cccccccc-cccc-cccc-cccc-cccccccccccc").unwrap();
+
+		repo
+			.create_repo(&make_repo_record(repo1_id, org_id, "repo-one"))
+			.await
+			.unwrap();
+		repo
+			.create_repo(&make_repo_record(repo2_id, org_id, "repo-two"))
+			.await
+			.unwrap();
+		repo
+			.create_repo(&make_repo_record(repo3_id, org_id, "repo-three"))
+			.await
+			.unwrap();
+
+		let all_ids = repo.list_all_repo_ids().await.unwrap();
+		assert_eq!(all_ids.len(), 3);
+		assert!(all_ids.contains(&repo1_id));
+		assert!(all_ids.contains(&repo2_id));
+		assert!(all_ids.contains(&repo3_id));
+	}
+
+	#[tokio::test]
+	async fn test_soft_delete_excludes_from_queries() {
+		let repo = make_repo().await;
+		let org_id = Uuid::parse_str("11111111-1111-1111-1111-111111111111").unwrap();
+		let repo_id = Uuid::parse_str("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa").unwrap();
+
+		repo
+			.create_repo(&make_repo_record(repo_id, org_id, "to-delete"))
+			.await
+			.unwrap();
+
+		assert!(repo.get_repo_by_id(repo_id).await.unwrap().is_some());
+
+		repo.soft_delete_repo(repo_id).await.unwrap();
+
+		assert!(repo.get_repo_by_id(repo_id).await.unwrap().is_none());
+
+		let all_ids = repo.list_all_repo_ids().await.unwrap();
+		assert!(!all_ids.contains(&repo_id));
+	}
+
+	#[tokio::test]
+	async fn test_get_repo_by_owner_and_name() {
+		let repo = make_repo().await;
+		let org_id = Uuid::parse_str("11111111-1111-1111-1111-111111111111").unwrap();
+		let repo_id = Uuid::parse_str("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa").unwrap();
+
+		repo
+			.create_repo(&make_repo_record(repo_id, org_id, "unique-name"))
+			.await
+			.unwrap();
+
+		let found = repo
+			.get_repo_by_owner_and_name("org", org_id, "unique-name")
+			.await
+			.unwrap();
+		assert!(found.is_some());
+		assert_eq!(found.unwrap().id, repo_id);
+
+		let not_found = repo
+			.get_repo_by_owner_and_name("org", org_id, "nonexistent")
+			.await
+			.unwrap();
+		assert!(not_found.is_none());
+	}
 }

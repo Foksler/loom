@@ -71,8 +71,7 @@ pub trait UserStore: Send + Sync {
 		scim_external_id: Option<&str>,
 		provisioned_by_scim: bool,
 	) -> Result<(), DbError>;
-	async fn update_display_name(&self, user_id: &UserId, display_name: &str)
-		-> Result<(), DbError>;
+	async fn update_display_name(&self, user_id: &UserId, display_name: &str) -> Result<(), DbError>;
 	async fn update_user_for_scim(
 		&self,
 		user_id: &UserId,
@@ -1058,7 +1057,8 @@ impl UserStore for UserRepository {
 		provider: &str,
 		provider_user_id: &str,
 	) -> Result<Option<Identity>, DbError> {
-		self.get_identity_by_provider(provider, provider_user_id)
+		self
+			.get_identity_by_provider(provider, provider_user_id)
 			.await
 	}
 
@@ -1073,7 +1073,8 @@ impl UserStore for UserRepository {
 		avatar_url: Option<&str>,
 		preferred_username: Option<&str>,
 	) -> Result<User, DbError> {
-		self.find_or_create_user_by_email(email, display_name, avatar_url, preferred_username)
+		self
+			.find_or_create_user_by_email(email, display_name, avatar_url, preferred_username)
 			.await
 	}
 
@@ -1112,15 +1113,12 @@ impl UserStore for UserRepository {
 		scim_external_id: Option<&str>,
 		provisioned_by_scim: bool,
 	) -> Result<(), DbError> {
-		self.update_scim_fields(user_id, scim_external_id, provisioned_by_scim)
+		self
+			.update_scim_fields(user_id, scim_external_id, provisioned_by_scim)
 			.await
 	}
 
-	async fn update_display_name(
-		&self,
-		user_id: &UserId,
-		display_name: &str,
-	) -> Result<(), DbError> {
+	async fn update_display_name(&self, user_id: &UserId, display_name: &str) -> Result<(), DbError> {
 		self.update_display_name(user_id, display_name).await
 	}
 
@@ -1132,7 +1130,8 @@ impl UserStore for UserRepository {
 		locale: Option<&str>,
 		deleted_at: Option<&str>,
 	) -> Result<(), DbError> {
-		self.update_user_for_scim(user_id, display_name, scim_external_id, locale, deleted_at)
+		self
+			.update_user_for_scim(user_id, display_name, scim_external_id, locale, deleted_at)
 			.await
 	}
 }

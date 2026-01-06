@@ -498,7 +498,8 @@ impl JobStore for JobRepository {
 		error: Option<String>,
 		metadata: Option<serde_json::Value>,
 	) -> Result<()> {
-		self.record_run_complete(run_id, status, error, metadata)
+		self
+			.record_run_complete(run_id, status, error, metadata)
 			.await
 	}
 

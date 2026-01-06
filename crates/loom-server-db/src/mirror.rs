@@ -574,7 +574,8 @@ impl ExternalMirrorStore for MirrorRepository {
 		owner: &str,
 		repo: &str,
 	) -> Result<Option<ExternalMirror>> {
-		self.get_external_mirror_by_external(platform, owner, repo)
+		self
+			.get_external_mirror_by_external(platform, owner, repo)
 			.await
 	}
 
@@ -680,4 +681,191 @@ fn row_to_external_mirror(
 			.map(|dt| dt.with_timezone(&Utc))
 			.map_err(|e| DbError::Internal(format!("Invalid created_at: {e}")))?,
 	})
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+	use std::str::FromStr;
+
+	async fn create_mirror_test_pool() -> SqlitePool {
+		let options = SqliteConnectOptions::from_str(":memory:")
+			.unwrap()
+			.create_if_missing(true);
+
+		let pool = SqlitePoolOptions::new()
+			.max_connections(1)
+			.connect_with(options)
+			.await
+			.expect("Failed to create test pool");
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS repo_mirrors (
+				id TEXT PRIMARY KEY,
+				repo_id TEXT NOT NULL,
+				remote_url TEXT NOT NULL,
+				credential_key TEXT NOT NULL,
+				enabled INTEGER NOT NULL DEFAULT 1,
+				last_pushed_at TEXT,
+				last_error TEXT,
+				created_at TEXT NOT NULL
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS mirror_branch_rules (
+				mirror_id TEXT NOT NULL REFERENCES repo_mirrors(id) ON DELETE CASCADE,
+				pattern TEXT NOT NULL,
+				enabled INTEGER NOT NULL DEFAULT 1,
+				PRIMARY KEY (mirror_id, pattern)
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS external_mirrors (
+				id TEXT PRIMARY KEY,
+				platform TEXT NOT NULL,
+				external_owner TEXT NOT NULL,
+				external_repo TEXT NOT NULL,
+				repo_id TEXT NOT NULL,
+				last_synced_at TEXT,
+				last_accessed_at TEXT,
+				created_at TEXT NOT NULL,
+				UNIQUE(platform, external_owner, external_repo)
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		pool
+	}
+
+	async fn make_repo() -> MirrorRepository {
+		let pool = create_mirror_test_pool().await;
+		MirrorRepository::new(pool)
+	}
+
+	#[tokio::test]
+	async fn test_create_and_get_push_mirror() {
+		let repo = make_repo().await;
+		let repo_id = Uuid::new_v4();
+
+		let create_params = CreatePushMirror {
+			repo_id,
+			remote_url: "https://github.com/example/repo.git".to_string(),
+			credential_key: "github-token".to_string(),
+			enabled: true,
+		};
+
+		let mirror = repo.create_push_mirror(&create_params).await.unwrap();
+		assert_eq!(mirror.repo_id, repo_id);
+		assert_eq!(mirror.remote_url, "https://github.com/example/repo.git");
+		assert_eq!(mirror.credential_key, "github-token");
+		assert!(mirror.enabled);
+		assert!(mirror.last_pushed_at.is_none());
+		assert!(mirror.last_error.is_none());
+
+		let fetched = repo.get_push_mirror_by_id(mirror.id).await.unwrap();
+		assert!(fetched.is_some());
+		let fetched = fetched.unwrap();
+		assert_eq!(fetched.id, mirror.id);
+		assert_eq!(fetched.repo_id, repo_id);
+		assert_eq!(fetched.remote_url, "https://github.com/example/repo.git");
+		assert_eq!(fetched.credential_key, "github-token");
+		assert!(fetched.enabled);
+	}
+
+	#[tokio::test]
+	async fn test_get_push_mirror_not_found() {
+		let repo = make_repo().await;
+		let non_existent_id = Uuid::new_v4();
+
+		let result = repo.get_push_mirror_by_id(non_existent_id).await.unwrap();
+		assert!(result.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_create_and_get_external_mirror() {
+		let repo = make_repo().await;
+		let repo_id = Uuid::new_v4();
+
+		let create_params = CreateExternalMirror {
+			platform: Platform::GitHub,
+			external_owner: "octocat".to_string(),
+			external_repo: "hello-world".to_string(),
+			repo_id,
+		};
+
+		let mirror = repo.create_external_mirror(&create_params).await.unwrap();
+		assert_eq!(mirror.platform, Platform::GitHub);
+		assert_eq!(mirror.external_owner, "octocat");
+		assert_eq!(mirror.external_repo, "hello-world");
+		assert_eq!(mirror.repo_id, repo_id);
+		assert!(mirror.last_synced_at.is_none());
+		assert!(mirror.last_accessed_at.is_some());
+
+		let fetched = repo.get_external_mirror_by_id(mirror.id).await.unwrap();
+		assert!(fetched.is_some());
+		let fetched = fetched.unwrap();
+		assert_eq!(fetched.id, mirror.id);
+		assert_eq!(fetched.platform, Platform::GitHub);
+		assert_eq!(fetched.external_owner, "octocat");
+		assert_eq!(fetched.external_repo, "hello-world");
+		assert_eq!(fetched.repo_id, repo_id);
+	}
+
+	#[tokio::test]
+	async fn test_list_push_mirrors_for_repo() {
+		let repo = make_repo().await;
+		let repo_id_1 = Uuid::new_v4();
+		let repo_id_2 = Uuid::new_v4();
+
+		let create_params_1a = CreatePushMirror {
+			repo_id: repo_id_1,
+			remote_url: "https://github.com/example/repo1.git".to_string(),
+			credential_key: "key-1a".to_string(),
+			enabled: true,
+		};
+		let create_params_1b = CreatePushMirror {
+			repo_id: repo_id_1,
+			remote_url: "https://gitlab.com/example/repo1.git".to_string(),
+			credential_key: "key-1b".to_string(),
+			enabled: false,
+		};
+		let create_params_2 = CreatePushMirror {
+			repo_id: repo_id_2,
+			remote_url: "https://github.com/other/repo.git".to_string(),
+			credential_key: "key-2".to_string(),
+			enabled: true,
+		};
+
+		repo.create_push_mirror(&create_params_1a).await.unwrap();
+		repo.create_push_mirror(&create_params_1b).await.unwrap();
+		repo.create_push_mirror(&create_params_2).await.unwrap();
+
+		let mirrors_1 = repo.list_push_mirrors_by_repo(repo_id_1).await.unwrap();
+		assert_eq!(mirrors_1.len(), 2);
+		assert!(mirrors_1.iter().all(|m| m.repo_id == repo_id_1));
+
+		let mirrors_2 = repo.list_push_mirrors_by_repo(repo_id_2).await.unwrap();
+		assert_eq!(mirrors_2.len(), 1);
+		assert_eq!(mirrors_2[0].repo_id, repo_id_2);
+
+		let mirrors_empty = repo.list_push_mirrors_by_repo(Uuid::new_v4()).await.unwrap();
+		assert!(mirrors_empty.is_empty());
+	}
 }

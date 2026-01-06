@@ -35,11 +35,7 @@ pub trait OrgStore: Send + Sync {
 	async fn restore_org(&self, id: &OrgId) -> Result<(), DbError>;
 	async fn list_orgs_for_user(&self, user_id: &UserId) -> Result<Vec<Organization>, DbError>;
 	async fn ensure_personal_org(&self, user_id: &UserId) -> Result<Organization, DbError>;
-	async fn list_public_orgs(
-		&self,
-		limit: i32,
-		offset: i32,
-	) -> Result<Vec<Organization>, DbError>;
+	async fn list_public_orgs(&self, limit: i32, offset: i32) -> Result<Vec<Organization>, DbError>;
 	async fn add_member(
 		&self,
 		org_id: &OrgId,
@@ -82,15 +78,8 @@ pub trait OrgStore: Send + Sync {
 	async fn accept_invitation(&self, id: &str) -> Result<(), DbError>;
 	async fn get_invitation_by_id(&self, id: &str) -> Result<Option<OrgInvitation>, DbError>;
 	async fn delete_invitation(&self, id: &str) -> Result<bool, DbError>;
-	async fn list_pending_invitations(
-		&self,
-		org_id: &OrgId,
-	) -> Result<Vec<OrgInvitation>, DbError>;
-	async fn create_join_request(
-		&self,
-		org_id: &OrgId,
-		user_id: &UserId,
-	) -> Result<String, DbError>;
+	async fn list_pending_invitations(&self, org_id: &OrgId) -> Result<Vec<OrgInvitation>, DbError>;
+	async fn create_join_request(&self, org_id: &OrgId, user_id: &UserId) -> Result<String, DbError>;
 	async fn get_join_request(&self, id: &str) -> Result<Option<OrgJoinRequest>, DbError>;
 	async fn list_pending_join_requests(
 		&self,
@@ -1313,11 +1302,7 @@ impl OrgStore for OrgRepository {
 		self.ensure_personal_org(user_id).await
 	}
 
-	async fn list_public_orgs(
-		&self,
-		limit: i32,
-		offset: i32,
-	) -> Result<Vec<Organization>, DbError> {
+	async fn list_public_orgs(&self, limit: i32, offset: i32) -> Result<Vec<Organization>, DbError> {
 		self.list_public_orgs(limit, offset).await
 	}
 
@@ -1337,7 +1322,8 @@ impl OrgStore for OrgRepository {
 		role: OrgRole,
 		provisioned_by: Option<&str>,
 	) -> Result<(), DbError> {
-		self.add_member_with_provenance(org_id, user_id, role, provisioned_by)
+		self
+			.add_member_with_provenance(org_id, user_id, role, provisioned_by)
 			.await
 	}
 
@@ -1378,7 +1364,8 @@ impl OrgStore for OrgRepository {
 		invited_by: &UserId,
 		token_hash: &str,
 	) -> Result<String, DbError> {
-		self.create_invitation(org_id, email, role, invited_by, token_hash)
+		self
+			.create_invitation(org_id, email, role, invited_by, token_hash)
 			.await
 	}
 
@@ -1401,18 +1388,11 @@ impl OrgStore for OrgRepository {
 		self.delete_invitation(id).await
 	}
 
-	async fn list_pending_invitations(
-		&self,
-		org_id: &OrgId,
-	) -> Result<Vec<OrgInvitation>, DbError> {
+	async fn list_pending_invitations(&self, org_id: &OrgId) -> Result<Vec<OrgInvitation>, DbError> {
 		self.list_pending_invitations(org_id).await
 	}
 
-	async fn create_join_request(
-		&self,
-		org_id: &OrgId,
-		user_id: &UserId,
-	) -> Result<String, DbError> {
+	async fn create_join_request(&self, org_id: &OrgId, user_id: &UserId) -> Result<String, DbError> {
 		self.create_join_request(org_id, user_id).await
 	}
 
@@ -1463,7 +1443,9 @@ impl OrgStore for OrgRepository {
 mod tests {
 	use super::*;
 	use proptest::prelude::*;
+	use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 	use std::collections::HashSet;
+	use std::str::FromStr;
 
 	proptest! {
 		#[test]
@@ -1495,5 +1477,196 @@ mod tests {
 			prop_assert!(limit >= 0, "limit must be non-negative");
 			prop_assert!(offset >= 0, "offset must be non-negative");
 		}
+	}
+
+	async fn create_org_test_pool() -> SqlitePool {
+		let options = SqliteConnectOptions::from_str(":memory:")
+			.unwrap()
+			.create_if_missing(true);
+
+		let pool = SqlitePoolOptions::new()
+			.max_connections(1)
+			.connect_with(options)
+			.await
+			.expect("Failed to create test pool");
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS users (
+				id TEXT PRIMARY KEY,
+				display_name TEXT NOT NULL,
+				username TEXT UNIQUE,
+				primary_email TEXT UNIQUE,
+				avatar_url TEXT,
+				email_visible INTEGER DEFAULT 1,
+				is_system_admin INTEGER DEFAULT 0,
+				is_support INTEGER DEFAULT 0,
+				is_auditor INTEGER DEFAULT 0,
+				created_at TEXT NOT NULL,
+				updated_at TEXT NOT NULL,
+				deleted_at TEXT,
+				locale TEXT DEFAULT NULL
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS organizations (
+				id TEXT PRIMARY KEY,
+				name TEXT NOT NULL,
+				slug TEXT UNIQUE NOT NULL,
+				visibility TEXT NOT NULL DEFAULT 'public',
+				is_personal INTEGER DEFAULT 0,
+				created_at TEXT NOT NULL,
+				updated_at TEXT NOT NULL,
+				deleted_at TEXT
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS org_memberships (
+				id TEXT PRIMARY KEY,
+				org_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+				user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+				role TEXT NOT NULL,
+				created_at TEXT NOT NULL,
+				provisioned_by TEXT,
+				UNIQUE(org_id, user_id)
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		pool
+	}
+
+	async fn make_org_repo() -> OrgRepository {
+		let pool = create_org_test_pool().await;
+		OrgRepository::new(pool)
+	}
+
+	fn make_test_org(slug: &str, name: &str) -> Organization {
+		let now = Utc::now();
+		Organization {
+			id: OrgId::generate(),
+			name: name.to_string(),
+			slug: slug.to_string(),
+			visibility: OrgVisibility::Private,
+			is_personal: false,
+			created_at: now,
+			updated_at: now,
+			deleted_at: None,
+		}
+	}
+
+	async fn insert_test_user(pool: &SqlitePool, user_id: &UserId) {
+		let now = Utc::now().to_rfc3339();
+		sqlx::query(
+			r#"
+			INSERT INTO users (id, display_name, created_at, updated_at)
+			VALUES (?, 'Test User', ?, ?)
+			"#,
+		)
+		.bind(user_id.to_string())
+		.bind(&now)
+		.bind(&now)
+		.execute(pool)
+		.await
+		.unwrap();
+	}
+
+	#[tokio::test]
+	async fn test_create_and_get_org() {
+		let repo = make_org_repo().await;
+		let org = make_test_org("test-org", "Test Organization");
+
+		repo.create_org(&org).await.unwrap();
+
+		let fetched = repo.get_org_by_id(&org.id).await.unwrap();
+		assert!(fetched.is_some());
+		let fetched = fetched.unwrap();
+		assert_eq!(fetched.id, org.id);
+		assert_eq!(fetched.name, "Test Organization");
+		assert_eq!(fetched.slug, "test-org");
+		assert_eq!(fetched.visibility, OrgVisibility::Private);
+		assert!(!fetched.is_personal);
+	}
+
+	#[tokio::test]
+	async fn test_get_org_not_found() {
+		let repo = make_org_repo().await;
+		let non_existent_id = OrgId::generate();
+
+		let result = repo.get_org_by_id(&non_existent_id).await.unwrap();
+		assert!(result.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_add_and_get_member() {
+		let pool = create_org_test_pool().await;
+		let repo = OrgRepository::new(pool.clone());
+
+		let org = make_test_org("member-org", "Member Test Org");
+		repo.create_org(&org).await.unwrap();
+
+		let user_id = UserId::generate();
+		insert_test_user(&pool, &user_id).await;
+
+		repo
+			.add_member(&org.id, &user_id, OrgRole::Admin)
+			.await
+			.unwrap();
+
+		let membership = repo.get_membership(&org.id, &user_id).await.unwrap();
+		assert!(membership.is_some());
+		let membership = membership.unwrap();
+		assert_eq!(membership.org_id, org.id);
+		assert_eq!(membership.user_id, user_id);
+		assert_eq!(membership.role, OrgRole::Admin);
+	}
+
+	#[tokio::test]
+	async fn test_list_orgs_for_user() {
+		let pool = create_org_test_pool().await;
+		let repo = OrgRepository::new(pool.clone());
+
+		let user_id = UserId::generate();
+		insert_test_user(&pool, &user_id).await;
+
+		let org1 = make_test_org("org-one", "Org One");
+		let org2 = make_test_org("org-two", "Org Two");
+		let org3 = make_test_org("org-three", "Org Three");
+
+		repo.create_org(&org1).await.unwrap();
+		repo.create_org(&org2).await.unwrap();
+		repo.create_org(&org3).await.unwrap();
+
+		repo
+			.add_member(&org1.id, &user_id, OrgRole::Owner)
+			.await
+			.unwrap();
+		repo
+			.add_member(&org2.id, &user_id, OrgRole::Member)
+			.await
+			.unwrap();
+
+		let orgs = repo.list_orgs_for_user(&user_id).await.unwrap();
+		assert_eq!(orgs.len(), 2);
+
+		let org_ids: HashSet<_> = orgs.iter().map(|o| o.id.clone()).collect();
+		assert!(org_ids.contains(&org1.id));
+		assert!(org_ids.contains(&org2.id));
+		assert!(!org_ids.contains(&org3.id));
 	}
 }

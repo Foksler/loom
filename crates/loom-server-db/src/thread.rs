@@ -23,11 +23,8 @@ pub struct ThreadSearchHit {
 /// Trait for thread database operations.
 #[async_trait]
 pub trait ThreadStore: Send + Sync {
-	async fn upsert(
-		&self,
-		thread: &Thread,
-		expected_version: Option<u64>,
-	) -> Result<Thread, DbError>;
+	async fn upsert(&self, thread: &Thread, expected_version: Option<u64>)
+		-> Result<Thread, DbError>;
 
 	async fn get(&self, id: &ThreadId) -> Result<Option<Thread>, DbError>;
 
@@ -42,14 +39,9 @@ pub trait ThreadStore: Send + Sync {
 
 	async fn get_thread_owner_user_id(&self, thread_id: &str) -> Result<Option<String>, DbError>;
 
-	async fn set_owner_user_id(
-		&self,
-		thread_id: &str,
-		owner_user_id: &str,
-	) -> Result<bool, DbError>;
+	async fn set_owner_user_id(&self, thread_id: &str, owner_user_id: &str) -> Result<bool, DbError>;
 
-	async fn set_shared_with_support(&self, thread_id: &str, shared: bool)
-		-> Result<bool, DbError>;
+	async fn set_shared_with_support(&self, thread_id: &str, shared: bool) -> Result<bool, DbError>;
 
 	async fn health_check(&self) -> Result<(), DbError>;
 
@@ -82,8 +74,7 @@ pub trait ThreadStore: Send + Sync {
 		repos: &[crate::types::GithubRepo],
 	) -> Result<(), DbError>;
 
-	async fn remove_github_installation_repos(&self, repository_ids: &[i64])
-		-> Result<(), DbError>;
+	async fn remove_github_installation_repos(&self, repository_ids: &[i64]) -> Result<(), DbError>;
 
 	async fn get_github_installation_for_repo(
 		&self,
@@ -1133,19 +1124,11 @@ impl ThreadStore for ThreadRepository {
 		ThreadRepository::get_thread_owner_user_id(self, thread_id).await
 	}
 
-	async fn set_owner_user_id(
-		&self,
-		thread_id: &str,
-		owner_user_id: &str,
-	) -> Result<bool, DbError> {
+	async fn set_owner_user_id(&self, thread_id: &str, owner_user_id: &str) -> Result<bool, DbError> {
 		ThreadRepository::set_owner_user_id(self, thread_id, owner_user_id).await
 	}
 
-	async fn set_shared_with_support(
-		&self,
-		thread_id: &str,
-		shared: bool,
-	) -> Result<bool, DbError> {
+	async fn set_shared_with_support(&self, thread_id: &str, shared: bool) -> Result<bool, DbError> {
 		ThreadRepository::set_shared_with_support(self, thread_id, shared).await
 	}
 
@@ -1195,10 +1178,7 @@ impl ThreadStore for ThreadRepository {
 		ThreadRepository::add_github_installation_repos(self, installation_id, repos).await
 	}
 
-	async fn remove_github_installation_repos(
-		&self,
-		repository_ids: &[i64],
-	) -> Result<(), DbError> {
+	async fn remove_github_installation_repos(&self, repository_ids: &[i64]) -> Result<(), DbError> {
 		ThreadRepository::remove_github_installation_repos(self, repository_ids).await
 	}
 
@@ -1238,6 +1218,7 @@ impl AgentStateKindExt for loom_common_thread::AgentStateKind {
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use loom_common_thread::Thread;
 
 	#[test]
 	fn test_normalize_cache_query() {
@@ -1261,5 +1242,166 @@ mod tests {
 			ThreadRepository::normalize_cache_query("already normalized"),
 			"already normalized"
 		);
+	}
+
+	async fn create_thread_test_pool() -> SqlitePool {
+		let pool = SqlitePool::connect(":memory:").await.unwrap();
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS threads (
+				id TEXT PRIMARY KEY NOT NULL,
+				version INTEGER NOT NULL DEFAULT 1,
+				created_at TEXT NOT NULL,
+				updated_at TEXT NOT NULL,
+				last_activity_at TEXT NOT NULL,
+				deleted_at TEXT,
+				workspace_root TEXT,
+				cwd TEXT,
+				loom_version TEXT,
+				provider TEXT,
+				model TEXT,
+				git_branch TEXT,
+				git_remote_url TEXT,
+				repo_id INTEGER,
+				git_initial_branch TEXT,
+				git_initial_commit_sha TEXT,
+				git_current_commit_sha TEXT,
+				git_start_dirty INTEGER,
+				git_end_dirty INTEGER,
+				title TEXT,
+				tags TEXT,
+				is_pinned INTEGER NOT NULL DEFAULT 0,
+				message_count INTEGER NOT NULL DEFAULT 0,
+				agent_state_kind TEXT NOT NULL,
+				agent_state JSON NOT NULL,
+				conversation JSON NOT NULL,
+				metadata JSON NOT NULL,
+				full_json JSON NOT NULL,
+				visibility TEXT DEFAULT 'private',
+				is_shared_with_support INTEGER DEFAULT 0,
+				owner_user_id TEXT
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS thread_repos (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				slug TEXT NOT NULL UNIQUE,
+				created_at TEXT NOT NULL
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS thread_commits (
+				thread_id TEXT NOT NULL,
+				repo_id INTEGER NOT NULL,
+				commit_sha TEXT NOT NULL,
+				branch TEXT,
+				is_dirty INTEGER,
+				observed_at TEXT,
+				is_initial INTEGER,
+				is_final INTEGER,
+				PRIMARY KEY (thread_id, commit_sha)
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		pool
+	}
+
+	#[tokio::test]
+	async fn test_upsert_and_get_thread() {
+		let pool = create_thread_test_pool().await;
+		let repo = ThreadRepository::new(pool);
+
+		let mut thread = Thread::new();
+		thread.metadata.title = Some("Test Thread".to_string());
+		thread.workspace_root = Some("/home/user/project".to_string());
+
+		let result = repo.upsert(&thread, None).await.unwrap();
+		assert_eq!(result.id, thread.id);
+		assert_eq!(result.metadata.title, Some("Test Thread".to_string()));
+
+		let fetched = repo.get(&thread.id).await.unwrap();
+		assert!(fetched.is_some());
+		let fetched = fetched.unwrap();
+		assert_eq!(fetched.id, thread.id);
+		assert_eq!(fetched.metadata.title, Some("Test Thread".to_string()));
+		assert_eq!(fetched.workspace_root, Some("/home/user/project".to_string()));
+	}
+
+	#[tokio::test]
+	async fn test_get_thread_not_found() {
+		let pool = create_thread_test_pool().await;
+		let repo = ThreadRepository::new(pool);
+
+		let non_existent_id = ThreadId::new();
+		let result = repo.get(&non_existent_id).await.unwrap();
+		assert!(result.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_list_threads_for_user() {
+		let pool = create_thread_test_pool().await;
+		let repo = ThreadRepository::new(pool);
+
+		let mut thread1 = Thread::new();
+		thread1.metadata.title = Some("Thread 1".to_string());
+		thread1.workspace_root = Some("/home/user/project".to_string());
+
+		let mut thread2 = Thread::new();
+		thread2.metadata.title = Some("Thread 2".to_string());
+		thread2.workspace_root = Some("/home/user/project".to_string());
+
+		let mut thread3 = Thread::new();
+		thread3.metadata.title = Some("Thread 3".to_string());
+		thread3.workspace_root = Some("/home/user/other".to_string());
+
+		repo.upsert(&thread1, None).await.unwrap();
+		repo.upsert(&thread2, None).await.unwrap();
+		repo.upsert(&thread3, None).await.unwrap();
+
+		let all_threads = repo.list(None, 100, 0).await.unwrap();
+		assert_eq!(all_threads.len(), 3);
+
+		let workspace_threads = repo
+			.list(Some("/home/user/project"), 100, 0)
+			.await
+			.unwrap();
+		assert_eq!(workspace_threads.len(), 2);
+	}
+
+	#[tokio::test]
+	async fn test_delete_thread() {
+		let pool = create_thread_test_pool().await;
+		let repo = ThreadRepository::new(pool);
+
+		let thread = Thread::new();
+		repo.upsert(&thread, None).await.unwrap();
+
+		let fetched = repo.get(&thread.id).await.unwrap();
+		assert!(fetched.is_some());
+
+		let deleted = repo.delete(&thread.id).await.unwrap();
+		assert!(deleted);
+
+		let fetched_after_delete = repo.get(&thread.id).await.unwrap();
+		assert!(fetched_after_delete.is_none());
+
+		let deleted_again = repo.delete(&thread.id).await.unwrap();
+		assert!(!deleted_again);
 	}
 }

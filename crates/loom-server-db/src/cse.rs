@@ -181,6 +181,8 @@ impl CseStore for CseRepository {
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+	use std::str::FromStr;
 
 	#[test]
 	fn test_normalize_cache_query() {
@@ -195,5 +197,108 @@ mod tests {
 			normalize_cache_query("already normalized"),
 			"already normalized"
 		);
+	}
+
+	async fn create_cse_test_pool() -> SqlitePool {
+		let options = SqliteConnectOptions::from_str(":memory:")
+			.unwrap()
+			.create_if_missing(true);
+
+		let pool = SqlitePoolOptions::new()
+			.max_connections(1)
+			.connect_with(options)
+			.await
+			.expect("Failed to create test pool");
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS cse_cache (
+				query TEXT NOT NULL,
+				max_results INTEGER NOT NULL,
+				response_json TEXT NOT NULL,
+				created_at TEXT NOT NULL,
+				PRIMARY KEY (query, max_results)
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		pool
+	}
+
+	async fn make_repo() -> CseRepository {
+		let pool = create_cse_test_pool().await;
+		CseRepository::new(pool)
+	}
+
+	#[tokio::test]
+	async fn test_cache_and_get_results() {
+		let repo = make_repo().await;
+		let query = "rust programming";
+		let max_results = 10;
+		let response_json = r#"{"results": [{"title": "Rust Lang"}]}"#;
+
+		repo.cache_results(query, max_results, response_json)
+			.await
+			.unwrap();
+
+		let cached = repo.get_cached_results(query, max_results).await.unwrap();
+		assert!(cached.is_some());
+		assert_eq!(cached.unwrap(), response_json);
+
+		let cached_normalized = repo
+			.get_cached_results("  Rust   Programming  ", max_results)
+			.await
+			.unwrap();
+		assert!(cached_normalized.is_some());
+		assert_eq!(cached_normalized.unwrap(), response_json);
+
+		let different_max = repo.get_cached_results(query, 5).await.unwrap();
+		assert!(different_max.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_get_cache_miss() {
+		let repo = make_repo().await;
+		let result = repo
+			.get_cached_results("nonexistent query", 10)
+			.await
+			.unwrap();
+		assert!(result.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_cleanup_expired() {
+		let repo = make_repo().await;
+
+		let old_time = (Utc::now() - Duration::hours(48)).to_rfc3339();
+		sqlx::query(
+			r#"
+			INSERT INTO cse_cache (query, max_results, response_json, created_at)
+			VALUES (?1, ?2, ?3, ?4)
+			"#,
+		)
+		.bind("old query")
+		.bind(10_i64)
+		.bind(r#"{"results": []}"#)
+		.bind(&old_time)
+		.execute(repo.pool())
+		.await
+		.unwrap();
+
+		repo.cache_results("new query", 10, r#"{"results": []}"#)
+			.await
+			.unwrap();
+
+		let deleted = repo.cleanup_expired().await.unwrap();
+		assert_eq!(deleted, 1);
+
+		let old_cached = repo.get_cached_results("old query", 10).await.unwrap();
+		assert!(old_cached.is_none());
+
+		let new_cached = repo.get_cached_results("new query", 10).await.unwrap();
+		assert!(new_cached.is_some());
 	}
 }

@@ -474,7 +474,8 @@ impl WgTunnelStore for WgTunnelRepository {
 		assigned_ip: Ipv6Addr,
 		derp_region: Option<u16>,
 	) -> Result<(), DbError> {
-		self.insert_weaver(weaver_id, public_key, assigned_ip, derp_region)
+		self
+			.insert_weaver(weaver_id, public_key, assigned_ip, derp_region)
 			.await
 	}
 
@@ -534,7 +535,8 @@ impl WgTunnelStore for WgTunnelRepository {
 		weaver_id: Uuid,
 		client_ip: Ipv6Addr,
 	) -> Result<(), DbError> {
-		self.insert_session(id, device_id, weaver_id, client_ip)
+		self
+			.insert_session(id, device_id, weaver_id, client_ip)
 			.await
 	}
 
@@ -543,7 +545,9 @@ impl WgTunnelStore for WgTunnelRepository {
 		device_id: Uuid,
 		weaver_id: Uuid,
 	) -> Result<Option<SessionRowTuple>, DbError> {
-		self.get_session_by_device_weaver(device_id, weaver_id).await
+		self
+			.get_session_by_device_weaver(device_id, weaver_id)
+			.await
 	}
 
 	async fn list_sessions_for_device(
@@ -592,11 +596,178 @@ impl WgTunnelStore for WgTunnelRepository {
 		allocation_type: &str,
 		entity_id: Uuid,
 	) -> Result<(), DbError> {
-		self.insert_ip_allocation(ip, allocation_type, entity_id)
+		self
+			.insert_ip_allocation(ip, allocation_type, entity_id)
 			.await
 	}
 
 	async fn release_ip(&self, ip: Ipv6Addr) -> Result<u64, DbError> {
 		self.release_ip(ip).await
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+	use std::str::FromStr;
+
+	async fn create_wgtunnel_test_pool() -> SqlitePool {
+		let options = SqliteConnectOptions::from_str(":memory:")
+			.unwrap()
+			.create_if_missing(true);
+
+		let pool = SqlitePoolOptions::new()
+			.max_connections(1)
+			.connect_with(options)
+			.await
+			.expect("Failed to create test pool");
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS wg_weavers (
+				weaver_id TEXT PRIMARY KEY,
+				public_key BLOB NOT NULL,
+				assigned_ip TEXT NOT NULL,
+				derp_home_region INTEGER,
+				endpoint TEXT,
+				registered_at TEXT NOT NULL,
+				last_seen_at TEXT
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS wg_devices (
+				id TEXT PRIMARY KEY,
+				user_id TEXT NOT NULL,
+				public_key BLOB NOT NULL,
+				name TEXT,
+				created_at TEXT NOT NULL,
+				last_seen_at TEXT,
+				revoked_at TEXT
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS wg_sessions (
+				id TEXT PRIMARY KEY,
+				device_id TEXT NOT NULL,
+				weaver_id TEXT NOT NULL,
+				client_ip TEXT NOT NULL,
+				created_at TEXT NOT NULL,
+				last_handshake_at TEXT
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS wg_ip_allocations (
+				ip TEXT PRIMARY KEY,
+				allocation_type TEXT NOT NULL,
+				entity_id TEXT NOT NULL,
+				allocated_at TEXT NOT NULL,
+				released_at TEXT
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		pool
+	}
+
+	async fn make_repo() -> WgTunnelRepository {
+		let pool = create_wgtunnel_test_pool().await;
+		WgTunnelRepository::new(pool)
+	}
+
+	#[tokio::test]
+	async fn test_create_and_get_weaver() {
+		let repo = make_repo().await;
+		let weaver_id = Uuid::new_v4();
+		let public_key = vec![0x01, 0x02, 0x03, 0x04, 0x05];
+		let assigned_ip: Ipv6Addr = "fd00::1".parse().unwrap();
+		let derp_region = Some(1u16);
+
+		repo
+			.insert_weaver(weaver_id, &public_key, assigned_ip, derp_region)
+			.await
+			.unwrap();
+
+		let weaver = repo.get_weaver(weaver_id).await.unwrap();
+		assert!(weaver.is_some());
+		let (id, pk, ip, derp, _endpoint, _registered_at, _last_seen) = weaver.unwrap();
+		assert_eq!(id, weaver_id.to_string());
+		assert_eq!(pk, public_key);
+		assert_eq!(ip, assigned_ip.to_string());
+		assert_eq!(derp, Some(1i64));
+	}
+
+	#[tokio::test]
+	async fn test_get_weaver_not_found() {
+		let repo = make_repo().await;
+		let nonexistent_id = Uuid::new_v4();
+
+		let result = repo.get_weaver(nonexistent_id).await.unwrap();
+		assert!(result.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_create_and_get_device() {
+		let repo = make_repo().await;
+		let device_id = Uuid::new_v4();
+		let user_id = Uuid::new_v4();
+		let public_key = vec![0xaa, 0xbb, 0xcc, 0xdd];
+		let device_name = Some("test-device");
+
+		repo
+			.insert_device(device_id, user_id, &public_key, device_name)
+			.await
+			.unwrap();
+
+		let device = repo.get_device(device_id).await.unwrap();
+		assert!(device.is_some());
+		let (id, uid, pk, name, _created_at, _last_seen, _revoked_at) = device.unwrap();
+		assert_eq!(id, device_id.to_string());
+		assert_eq!(uid, user_id.to_string());
+		assert_eq!(pk, public_key);
+		assert_eq!(name, Some("test-device".to_string()));
+	}
+
+	#[tokio::test]
+	async fn test_allocate_ip() {
+		let repo = make_repo().await;
+		let entity_id = Uuid::new_v4();
+		let ip = "fd00::100";
+		let allocation_type = "weaver";
+
+		repo
+			.insert_ip_allocation(ip, allocation_type, entity_id)
+			.await
+			.unwrap();
+
+		let allocation = repo.get_allocation_for_entity(entity_id).await.unwrap();
+		assert!(allocation.is_some());
+		let (allocated_ip,) = allocation.unwrap();
+		assert_eq!(allocated_ip, ip);
+
+		let all_ips = repo.get_allocated_ips_by_type(allocation_type).await.unwrap();
+		assert_eq!(all_ips.len(), 1);
+		assert_eq!(all_ips[0].0, ip);
 	}
 }

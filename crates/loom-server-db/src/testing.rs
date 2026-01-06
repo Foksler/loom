@@ -110,3 +110,83 @@ pub async fn create_job_test_pool() -> SqlitePool {
 	create_job_runs_table(&pool).await;
 	pool
 }
+
+pub async fn create_sessions_table(pool: &SqlitePool) {
+	sqlx::query(
+		r#"
+		CREATE TABLE IF NOT EXISTS sessions (
+			id TEXT PRIMARY KEY,
+			user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			session_type TEXT NOT NULL,
+			token_hash TEXT,
+			created_at TEXT NOT NULL,
+			last_used_at TEXT NOT NULL,
+			expires_at TEXT NOT NULL,
+			ip_address TEXT,
+			user_agent TEXT,
+			geo_city TEXT,
+			geo_country TEXT
+		)
+		"#,
+	)
+	.execute(pool)
+	.await
+	.unwrap();
+
+	sqlx::query("CREATE INDEX IF NOT EXISTS idx_sessions_token_hash ON sessions(token_hash)")
+		.execute(pool)
+		.await
+		.unwrap();
+}
+
+pub async fn create_session_test_pool() -> SqlitePool {
+	let pool = create_test_pool().await;
+	create_users_table(&pool).await;
+	create_sessions_table(&pool).await;
+	pool
+}
+
+pub async fn create_repos_table(pool: &SqlitePool) {
+	sqlx::query(
+		r#"
+		CREATE TABLE IF NOT EXISTS repos (
+			id TEXT PRIMARY KEY NOT NULL,
+			owner_type TEXT NOT NULL CHECK (owner_type IN ('user', 'org')),
+			owner_id TEXT NOT NULL,
+			name TEXT NOT NULL,
+			visibility TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'public')),
+			default_branch TEXT NOT NULL DEFAULT 'cannon',
+			deleted_at TEXT,
+			created_at TEXT NOT NULL,
+			updated_at TEXT NOT NULL,
+			UNIQUE (owner_type, owner_id, name)
+		)
+		"#,
+	)
+	.execute(pool)
+	.await
+	.unwrap();
+}
+
+pub async fn create_repo_team_access_table(pool: &SqlitePool) {
+	sqlx::query(
+		r#"
+		CREATE TABLE IF NOT EXISTS repo_team_access (
+			repo_id TEXT NOT NULL REFERENCES repos(id) ON DELETE CASCADE,
+			team_id TEXT NOT NULL,
+			role TEXT NOT NULL CHECK (role IN ('read', 'write', 'admin')),
+			PRIMARY KEY (repo_id, team_id)
+		)
+		"#,
+	)
+	.execute(pool)
+	.await
+	.unwrap();
+}
+
+pub async fn create_scm_test_pool() -> SqlitePool {
+	let pool = create_test_pool().await;
+	create_repos_table(&pool).await;
+	create_repo_team_access_table(&pool).await;
+	pool
+}

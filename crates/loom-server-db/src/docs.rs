@@ -183,3 +183,145 @@ impl DocsStore for DocsRepository {
 		self.search(params).await
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	async fn create_docs_test_pool() -> SqlitePool {
+		let pool = SqlitePool::connect(":memory:").await.unwrap();
+		sqlx::query(
+			r#"
+			CREATE VIRTUAL TABLE IF NOT EXISTS docs_fts USING fts5(
+				doc_id UNINDEXED,
+				path UNINDEXED,
+				title,
+				summary,
+				body,
+				diataxis UNINDEXED,
+				tags,
+				updated_at UNINDEXED,
+				tokenize = 'unicode61',
+				prefix = '2 3'
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+		pool
+	}
+
+	#[tokio::test]
+	async fn test_insert_and_search_docs() {
+		let pool = create_docs_test_pool().await;
+		let repo = DocsRepository::new(pool);
+
+		let entries = vec![
+			DocIndexEntry {
+				doc_id: "getting-started".to_string(),
+				path: "/docs/getting-started".to_string(),
+				title: "Getting Started Guide".to_string(),
+				summary: "Learn how to get started with Loom".to_string(),
+				body: "This guide will help you install and configure Loom for your project."
+					.to_string(),
+				diataxis: "tutorial".to_string(),
+				tags: "beginner setup installation".to_string(),
+				updated_at: "2025-01-01T00:00:00Z".to_string(),
+			},
+			DocIndexEntry {
+				doc_id: "api-reference".to_string(),
+				path: "/docs/api-reference".to_string(),
+				title: "API Reference".to_string(),
+				summary: "Complete API documentation".to_string(),
+				body: "Detailed reference for all API endpoints and methods.".to_string(),
+				diataxis: "reference".to_string(),
+				tags: "api endpoints methods".to_string(),
+				updated_at: "2025-01-01T00:00:00Z".to_string(),
+			},
+		];
+
+		repo.insert_docs(&entries).await.unwrap();
+
+		let params = DocSearchParams {
+			query: "getting started".to_string(),
+			diataxis: None,
+			limit: 10,
+			offset: 0,
+		};
+		let results = repo.search(&params).await.unwrap();
+		assert_eq!(results.len(), 1);
+		assert_eq!(results[0].title, "Getting Started Guide");
+
+		let params = DocSearchParams {
+			query: "API".to_string(),
+			diataxis: None,
+			limit: 10,
+			offset: 0,
+		};
+		let results = repo.search(&params).await.unwrap();
+		assert_eq!(results.len(), 1);
+		assert_eq!(results[0].title, "API Reference");
+	}
+
+	#[tokio::test]
+	async fn test_search_no_results() {
+		let pool = create_docs_test_pool().await;
+		let repo = DocsRepository::new(pool);
+
+		let entries = vec![DocIndexEntry {
+			doc_id: "getting-started".to_string(),
+			path: "/docs/getting-started".to_string(),
+			title: "Getting Started Guide".to_string(),
+			summary: "Learn how to get started".to_string(),
+			body: "This guide will help you.".to_string(),
+			diataxis: "tutorial".to_string(),
+			tags: "beginner".to_string(),
+			updated_at: "2025-01-01T00:00:00Z".to_string(),
+		}];
+
+		repo.insert_docs(&entries).await.unwrap();
+
+		let params = DocSearchParams {
+			query: "nonexistent".to_string(),
+			diataxis: None,
+			limit: 10,
+			offset: 0,
+		};
+		let results = repo.search(&params).await.unwrap();
+		assert!(results.is_empty());
+	}
+
+	#[tokio::test]
+	async fn test_clear_docs() {
+		let pool = create_docs_test_pool().await;
+		let repo = DocsRepository::new(pool);
+
+		let entries = vec![DocIndexEntry {
+			doc_id: "test-doc".to_string(),
+			path: "/docs/test".to_string(),
+			title: "Test Document".to_string(),
+			summary: "A test document".to_string(),
+			body: "Test content here.".to_string(),
+			diataxis: "reference".to_string(),
+			tags: "test".to_string(),
+			updated_at: "2025-01-01T00:00:00Z".to_string(),
+		}];
+
+		repo.insert_docs(&entries).await.unwrap();
+
+		let params = DocSearchParams {
+			query: "test".to_string(),
+			diataxis: None,
+			limit: 10,
+			offset: 0,
+		};
+		let results = repo.search(&params).await.unwrap();
+		assert_eq!(results.len(), 1);
+
+		repo.clear_docs().await.unwrap();
+
+		let results = repo.search(&params).await.unwrap();
+		assert!(results.is_empty());
+	}
+}

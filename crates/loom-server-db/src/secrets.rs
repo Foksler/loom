@@ -120,8 +120,7 @@ pub trait SecretsStore: Send + Sync {
 	) -> Result<Option<SecretRow>>;
 	async fn list_secrets(&self, filter: &SecretFilterParams) -> Result<Vec<SecretRow>>;
 	async fn get_current_version(&self, secret_id: &str) -> Result<Option<SecretVersionRow>>;
-	async fn get_version(&self, secret_id: &str, version: i32)
-		-> Result<Option<SecretVersionRow>>;
+	async fn get_version(&self, secret_id: &str, version: i32) -> Result<Option<SecretVersionRow>>;
 	async fn disable_version(&self, version_id: &str) -> Result<()>;
 	async fn delete_secret(&self, id: &str) -> Result<()>;
 	async fn store_dek(&self, params: &StoreDekParams) -> Result<()>;
@@ -527,11 +526,7 @@ impl SecretsStore for SecretsRepository {
 		SecretsRepository::get_current_version(self, secret_id).await
 	}
 
-	async fn get_version(
-		&self,
-		secret_id: &str,
-		version: i32,
-	) -> Result<Option<SecretVersionRow>> {
+	async fn get_version(&self, secret_id: &str, version: i32) -> Result<Option<SecretVersionRow>> {
 		SecretsRepository::get_version(self, secret_id, version).await
 	}
 
@@ -588,4 +583,245 @@ fn is_unique_constraint_error(e: &sqlx::Error) -> bool {
 		return db_err.message().contains("UNIQUE constraint failed");
 	}
 	false
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+	use std::str::FromStr;
+
+	async fn create_secrets_test_pool() -> sqlx::SqlitePool {
+		let options = SqliteConnectOptions::from_str(":memory:")
+			.unwrap()
+			.create_if_missing(true);
+
+		let pool = SqlitePoolOptions::new()
+			.max_connections(1)
+			.connect_with(options)
+			.await
+			.expect("Failed to create test pool");
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS secrets (
+				id TEXT PRIMARY KEY,
+				org_id TEXT NOT NULL,
+				scope TEXT NOT NULL,
+				repo_id TEXT,
+				weaver_id TEXT,
+				name TEXT NOT NULL,
+				description TEXT,
+				current_version INTEGER NOT NULL DEFAULT 1,
+				created_by TEXT NOT NULL,
+				created_at TEXT NOT NULL,
+				updated_at TEXT NOT NULL,
+				deleted_at TEXT
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE UNIQUE INDEX IF NOT EXISTS idx_secrets_unique_name
+			ON secrets(org_id, scope, COALESCE(repo_id, ''), COALESCE(weaver_id, ''), name)
+			WHERE deleted_at IS NULL
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS secret_versions (
+				id TEXT PRIMARY KEY,
+				secret_id TEXT NOT NULL REFERENCES secrets(id),
+				version INTEGER NOT NULL,
+				ciphertext BLOB NOT NULL,
+				nonce BLOB NOT NULL,
+				dek_id TEXT NOT NULL,
+				created_by TEXT NOT NULL,
+				created_at TEXT NOT NULL,
+				expires_at TEXT,
+				disabled_at TEXT,
+				UNIQUE(secret_id, version)
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS encrypted_deks (
+				id TEXT PRIMARY KEY,
+				encrypted_key BLOB NOT NULL,
+				nonce BLOB NOT NULL,
+				kek_version INTEGER NOT NULL,
+				created_at TEXT NOT NULL
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		pool
+	}
+
+	async fn make_repo() -> SecretsRepository {
+		let pool = create_secrets_test_pool().await;
+		SecretsRepository::new(pool)
+	}
+
+	fn make_secret_params(id: &str, name: &str) -> CreateSecretParams {
+		let now = chrono::Utc::now().to_rfc3339();
+		CreateSecretParams {
+			id: id.to_string(),
+			org_id: "org-01234567-89ab-cdef-0123-456789abcdef".to_string(),
+			scope: "organization".to_string(),
+			repo_id: None,
+			weaver_id: None,
+			name: name.to_string(),
+			description: Some("Test secret description".to_string()),
+			created_by: "user-01234567-89ab-cdef-0123-456789abcdef".to_string(),
+			created_at: now.clone(),
+			updated_at: now,
+		}
+	}
+
+	#[tokio::test]
+	async fn test_insert_and_get_secret() {
+		let repo = make_repo().await;
+		let secret_id = "secret-01234567-89ab-cdef-0123-456789abcdef";
+		let params = make_secret_params(secret_id, "API_KEY");
+
+		repo.insert_secret(&params).await.unwrap();
+
+		let secret = repo.get_secret(secret_id).await.unwrap();
+		assert!(secret.is_some());
+		let secret = secret.unwrap();
+		assert_eq!(secret.id, secret_id);
+		assert_eq!(secret.name, "API_KEY");
+		assert_eq!(secret.scope, "organization");
+		assert_eq!(secret.current_version, 1);
+		assert_eq!(
+			secret.description,
+			Some("Test secret description".to_string())
+		);
+	}
+
+	#[tokio::test]
+	async fn test_get_secret_not_found() {
+		let repo = make_repo().await;
+		let result = repo.get_secret("nonexistent-secret-id").await.unwrap();
+		assert!(result.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_insert_duplicate_name_conflict() {
+		let repo = make_repo().await;
+		let params1 = make_secret_params("secret-1111", "DUPLICATE_KEY");
+		let params2 = make_secret_params("secret-2222", "DUPLICATE_KEY");
+
+		repo.insert_secret(&params1).await.unwrap();
+
+		let result = repo.insert_secret(&params2).await;
+		assert!(result.is_err());
+		match result {
+			Err(DbError::Conflict(msg)) => {
+				assert!(msg.contains("DUPLICATE_KEY"));
+			}
+			other => panic!("Expected Conflict error, got: {:?}", other),
+		}
+	}
+
+	#[tokio::test]
+	async fn test_soft_delete_secret() {
+		let repo = make_repo().await;
+		let secret_id = "secret-to-delete";
+		let params = make_secret_params(secret_id, "DELETABLE_SECRET");
+
+		repo.insert_secret(&params).await.unwrap();
+
+		let secret = repo.get_secret(secret_id).await.unwrap();
+		assert!(secret.is_some());
+
+		repo.delete_secret(secret_id).await.unwrap();
+
+		let secret_after = repo.get_secret(secret_id).await.unwrap();
+		assert!(secret_after.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_list_secrets_with_filter() {
+		let repo = make_repo().await;
+		let params1 = make_secret_params("secret-aaa", "SECRET_A");
+		let mut params2 = make_secret_params("secret-bbb", "SECRET_B");
+		params2.org_id = "org-different".to_string();
+
+		repo.insert_secret(&params1).await.unwrap();
+		repo.insert_secret(&params2).await.unwrap();
+
+		let filter = SecretFilterParams {
+			org_id: Some(params1.org_id.clone()),
+			..Default::default()
+		};
+		let secrets = repo.list_secrets(&filter).await.unwrap();
+		assert_eq!(secrets.len(), 1);
+		assert_eq!(secrets[0].name, "SECRET_A");
+	}
+
+	#[tokio::test]
+	async fn test_insert_and_get_version() {
+		let repo = make_repo().await;
+		let secret_id = "secret-with-version";
+		let secret_params = make_secret_params(secret_id, "VERSIONED_SECRET");
+		repo.insert_secret(&secret_params).await.unwrap();
+
+		let version_params = CreateVersionParams {
+			id: "version-01234567".to_string(),
+			secret_id: secret_id.to_string(),
+			version: 1,
+			ciphertext: vec![0x01, 0x02, 0x03, 0x04],
+			nonce: vec![0xaa, 0xbb, 0xcc, 0xdd],
+			dek_id: "dek-01234567".to_string(),
+			created_by: "user-01234567".to_string(),
+			created_at: chrono::Utc::now().to_rfc3339(),
+			expires_at: None,
+		};
+		repo.insert_version(&version_params).await.unwrap();
+
+		let version = repo.get_current_version(secret_id).await.unwrap();
+		assert!(version.is_some());
+		let version = version.unwrap();
+		assert_eq!(version.version, 1);
+		assert_eq!(version.ciphertext, vec![0x01, 0x02, 0x03, 0x04]);
+		assert_eq!(version.nonce, vec![0xaa, 0xbb, 0xcc, 0xdd]);
+	}
+
+	#[tokio::test]
+	async fn test_store_and_get_dek() {
+		let repo = make_repo().await;
+		let dek_params = StoreDekParams {
+			id: "dek-01234567-89ab-cdef".to_string(),
+			encrypted_key: vec![0x10, 0x20, 0x30, 0x40, 0x50],
+			nonce: vec![0x11, 0x22, 0x33],
+			kek_version: 1,
+			created_at: chrono::Utc::now().to_rfc3339(),
+		};
+
+		repo.store_dek(&dek_params).await.unwrap();
+
+		let dek = repo.get_dek(&dek_params.id).await.unwrap();
+		assert!(dek.is_some());
+		let dek = dek.unwrap();
+		assert_eq!(dek.encrypted_key, vec![0x10, 0x20, 0x30, 0x40, 0x50]);
+		assert_eq!(dek.kek_version, 1);
+	}
 }

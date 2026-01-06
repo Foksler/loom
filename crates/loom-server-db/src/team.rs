@@ -75,8 +75,7 @@ pub trait TeamStore: Send + Sync {
 	) -> Result<(), DbError>;
 	async fn remove_member(&self, team_id: &TeamId, user_id: &UserId) -> Result<bool, DbError>;
 	async fn list_members(&self, team_id: &TeamId) -> Result<Vec<TeamMembership>, DbError>;
-	async fn get_teams_for_user(&self, user_id: &UserId)
-		-> Result<Vec<(Team, TeamRole)>, DbError>;
+	async fn get_teams_for_user(&self, user_id: &UserId) -> Result<Vec<(Team, TeamRole)>, DbError>;
 }
 
 /// A team with SCIM-specific fields for provisioning.
@@ -942,10 +941,7 @@ impl TeamStore for TeamRepository {
 		self.list_members(team_id).await
 	}
 
-	async fn get_teams_for_user(
-		&self,
-		user_id: &UserId,
-	) -> Result<Vec<(Team, TeamRole)>, DbError> {
+	async fn get_teams_for_user(&self, user_id: &UserId) -> Result<Vec<(Team, TeamRole)>, DbError> {
 		self.get_teams_for_user(user_id).await
 	}
 }
@@ -966,7 +962,9 @@ fn slug_from_name(name: &str) -> String {
 mod tests {
 	use super::*;
 	use proptest::prelude::*;
+	use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 	use std::collections::HashSet;
+	use std::str::FromStr;
 
 	proptest! {
 		#[test]
@@ -990,5 +988,238 @@ mod tests {
 			let id = Uuid::new_v4();
 			prop_assert!(id.to_string().len() == 36, "UUID should be 36 characters");
 		}
+	}
+
+	async fn create_team_test_pool() -> SqlitePool {
+		let options = SqliteConnectOptions::from_str(":memory:")
+			.unwrap()
+			.create_if_missing(true);
+
+		let pool = SqlitePoolOptions::new()
+			.max_connections(1)
+			.connect_with(options)
+			.await
+			.expect("Failed to create test pool");
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS users (
+				id TEXT PRIMARY KEY,
+				display_name TEXT NOT NULL,
+				username TEXT UNIQUE,
+				primary_email TEXT UNIQUE,
+				avatar_url TEXT,
+				email_visible INTEGER DEFAULT 1,
+				is_system_admin INTEGER DEFAULT 0,
+				is_support INTEGER DEFAULT 0,
+				is_auditor INTEGER DEFAULT 0,
+				created_at TEXT NOT NULL,
+				updated_at TEXT NOT NULL,
+				deleted_at TEXT,
+				locale TEXT DEFAULT NULL
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS organizations (
+				id TEXT PRIMARY KEY,
+				name TEXT NOT NULL,
+				slug TEXT UNIQUE NOT NULL,
+				visibility TEXT NOT NULL DEFAULT 'public',
+				is_personal INTEGER DEFAULT 0,
+				created_at TEXT NOT NULL,
+				updated_at TEXT NOT NULL,
+				deleted_at TEXT
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS teams (
+				id TEXT PRIMARY KEY,
+				org_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+				name TEXT NOT NULL,
+				slug TEXT NOT NULL,
+				created_at TEXT NOT NULL,
+				updated_at TEXT NOT NULL,
+				scim_external_id TEXT,
+				scim_managed INTEGER NOT NULL DEFAULT 0,
+				UNIQUE(org_id, slug)
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS team_memberships (
+				id TEXT PRIMARY KEY,
+				team_id TEXT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+				user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+				role TEXT NOT NULL,
+				created_at TEXT NOT NULL,
+				UNIQUE(team_id, user_id)
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		pool
+	}
+
+	async fn make_team_repo() -> TeamRepository {
+		let pool = create_team_test_pool().await;
+		TeamRepository::new(pool)
+	}
+
+	fn make_test_team(org_id: &OrgId, slug: &str, name: &str) -> Team {
+		let now = Utc::now();
+		Team {
+			id: TeamId::generate(),
+			org_id: org_id.clone(),
+			name: name.to_string(),
+			slug: slug.to_string(),
+			created_at: now,
+			updated_at: now,
+		}
+	}
+
+	async fn insert_test_org(pool: &SqlitePool, org_id: &OrgId) {
+		let now = Utc::now().to_rfc3339();
+		sqlx::query(
+			r#"
+			INSERT INTO organizations (id, name, slug, visibility, created_at, updated_at)
+			VALUES (?, 'Test Org', ?, 'private', ?, ?)
+			"#,
+		)
+		.bind(org_id.to_string())
+		.bind(format!("org-{}", Uuid::new_v4()))
+		.bind(&now)
+		.bind(&now)
+		.execute(pool)
+		.await
+		.unwrap();
+	}
+
+	async fn insert_test_user(pool: &SqlitePool, user_id: &UserId) {
+		let now = Utc::now().to_rfc3339();
+		sqlx::query(
+			r#"
+			INSERT INTO users (id, display_name, created_at, updated_at)
+			VALUES (?, 'Test User', ?, ?)
+			"#,
+		)
+		.bind(user_id.to_string())
+		.bind(&now)
+		.bind(&now)
+		.execute(pool)
+		.await
+		.unwrap();
+	}
+
+	#[tokio::test]
+	async fn test_create_and_get_team() {
+		let pool = create_team_test_pool().await;
+		let repo = TeamRepository::new(pool.clone());
+
+		let org_id = OrgId::generate();
+		insert_test_org(&pool, &org_id).await;
+
+		let team = make_test_team(&org_id, "engineering", "Engineering");
+		repo.create_team(&team).await.unwrap();
+
+		let fetched = repo.get_team_by_id(&team.id).await.unwrap();
+		assert!(fetched.is_some());
+		let fetched = fetched.unwrap();
+		assert_eq!(fetched.id, team.id);
+		assert_eq!(fetched.org_id, org_id);
+		assert_eq!(fetched.name, "Engineering");
+		assert_eq!(fetched.slug, "engineering");
+	}
+
+	#[tokio::test]
+	async fn test_get_team_not_found() {
+		let repo = make_team_repo().await;
+		let non_existent_id = TeamId::generate();
+
+		let result = repo.get_team_by_id(&non_existent_id).await.unwrap();
+		assert!(result.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_add_and_remove_member() {
+		let pool = create_team_test_pool().await;
+		let repo = TeamRepository::new(pool.clone());
+
+		let org_id = OrgId::generate();
+		insert_test_org(&pool, &org_id).await;
+
+		let team = make_test_team(&org_id, "backend", "Backend Team");
+		repo.create_team(&team).await.unwrap();
+
+		let user_id = UserId::generate();
+		insert_test_user(&pool, &user_id).await;
+
+		repo
+			.add_member(&team.id, &user_id, TeamRole::Member)
+			.await
+			.unwrap();
+
+		let membership = repo.get_membership(&team.id, &user_id).await.unwrap();
+		assert!(membership.is_some());
+		let membership = membership.unwrap();
+		assert_eq!(membership.team_id, team.id);
+		assert_eq!(membership.user_id, user_id);
+		assert_eq!(membership.role, TeamRole::Member);
+
+		let removed = repo.remove_member(&team.id, &user_id).await.unwrap();
+		assert!(removed);
+
+		let membership_after = repo.get_membership(&team.id, &user_id).await.unwrap();
+		assert!(membership_after.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_list_teams_for_org() {
+		let pool = create_team_test_pool().await;
+		let repo = TeamRepository::new(pool.clone());
+
+		let org1 = OrgId::generate();
+		let org2 = OrgId::generate();
+		insert_test_org(&pool, &org1).await;
+		insert_test_org(&pool, &org2).await;
+
+		let team1 = make_test_team(&org1, "team-a", "Team A");
+		let team2 = make_test_team(&org1, "team-b", "Team B");
+		let team3 = make_test_team(&org2, "team-c", "Team C");
+
+		repo.create_team(&team1).await.unwrap();
+		repo.create_team(&team2).await.unwrap();
+		repo.create_team(&team3).await.unwrap();
+
+		let org1_teams = repo.list_teams_for_org(&org1).await.unwrap();
+		assert_eq!(org1_teams.len(), 2);
+
+		let team_ids: HashSet<_> = org1_teams.iter().map(|t| t.id.clone()).collect();
+		assert!(team_ids.contains(&team1.id));
+		assert!(team_ids.contains(&team2.id));
+		assert!(!team_ids.contains(&team3.id));
+
+		let org2_teams = repo.list_teams_for_org(&org2).await.unwrap();
+		assert_eq!(org2_teams.len(), 1);
+		assert_eq!(org2_teams[0].id, team3.id);
 	}
 }

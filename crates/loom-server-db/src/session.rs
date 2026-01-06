@@ -24,8 +24,7 @@ use crate::error::DbError;
 #[async_trait]
 pub trait SessionStore: Send + Sync {
 	async fn create_session(&self, session: &Session, token_hash: &str) -> Result<(), DbError>;
-	async fn get_session_by_token_hash(&self, token_hash: &str)
-		-> Result<Option<Session>, DbError>;
+	async fn get_session_by_token_hash(&self, token_hash: &str) -> Result<Option<Session>, DbError>;
 	async fn get_sessions_for_user(&self, user_id: &UserId) -> Result<Vec<Session>, DbError>;
 	async fn update_session_last_used(&self, id: &SessionId) -> Result<(), DbError>;
 	async fn delete_session(&self, id: &SessionId) -> Result<bool, DbError>;
@@ -87,10 +86,7 @@ impl SessionStore for SessionRepository {
 		self.create_session(session, token_hash).await
 	}
 
-	async fn get_session_by_token_hash(
-		&self,
-		token_hash: &str,
-	) -> Result<Option<Session>, DbError> {
+	async fn get_session_by_token_hash(&self, token_hash: &str) -> Result<Option<Session>, DbError> {
 		self.get_session_by_token_hash(token_hash).await
 	}
 
@@ -117,7 +113,8 @@ impl SessionStore for SessionRepository {
 		label: &str,
 		session_type: SessionType,
 	) -> Result<String, DbError> {
-		self.create_access_token(user_id, token_hash, label, session_type)
+		self
+			.create_access_token(user_id, token_hash, label, session_type)
 			.await
 	}
 
@@ -147,11 +144,7 @@ impl SessionStore for SessionRepository {
 		self.get_device_code(device_code).await
 	}
 
-	async fn complete_device_code(
-		&self,
-		user_code: &str,
-		user_id: &UserId,
-	) -> Result<bool, DbError> {
+	async fn complete_device_code(&self, user_code: &str, user_id: &UserId) -> Result<bool, DbError> {
 		self.complete_device_code(user_code, user_id).await
 	}
 
@@ -184,7 +177,8 @@ impl SessionStore for SessionRepository {
 		target_user_id: &UserId,
 		reason: &str,
 	) -> Result<String, DbError> {
-		self.create_impersonation_session(admin_user_id, target_user_id, reason)
+		self
+			.create_impersonation_session(admin_user_id, target_user_id, reason)
 			.await
 	}
 

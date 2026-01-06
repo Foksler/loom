@@ -18,8 +18,7 @@ use crate::error::DbError;
 #[async_trait]
 pub trait ShareStore: Send + Sync {
 	async fn create_share_link(&self, share_link: &ShareLink) -> Result<(), DbError>;
-	async fn get_share_link_by_thread(&self, thread_id: &str)
-		-> Result<Option<ShareLink>, DbError>;
+	async fn get_share_link_by_thread(&self, thread_id: &str) -> Result<Option<ShareLink>, DbError>;
 	async fn get_share_link_by_hash(&self, token_hash: &str) -> Result<Option<ShareLink>, DbError>;
 	async fn revoke_share_link(&self, thread_id: &str) -> Result<i64, DbError>;
 	async fn create_support_access(&self, support_access: &SupportAccess) -> Result<(), DbError>;
@@ -51,10 +50,7 @@ impl ShareStore for ShareRepository {
 		self.create_share_link(share_link).await
 	}
 
-	async fn get_share_link_by_thread(
-		&self,
-		thread_id: &str,
-	) -> Result<Option<ShareLink>, DbError> {
+	async fn get_share_link_by_thread(&self, thread_id: &str) -> Result<Option<ShareLink>, DbError> {
 		self.get_share_link_by_thread(thread_id).await
 	}
 
@@ -98,7 +94,8 @@ impl ShareStore for ShareRepository {
 		approved_by: &UserId,
 		expires_at: DateTime<Utc>,
 	) -> Result<bool, DbError> {
-		self.approve_support_access(id, approved_by, expires_at)
+		self
+			.approve_support_access(id, approved_by, expires_at)
 			.await
 	}
 
@@ -545,7 +542,134 @@ fn parse_support_access_row(row: &sqlx::sqlite::SqliteRow) -> Result<SupportAcce
 mod tests {
 	use super::*;
 	use proptest::prelude::*;
+	use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 	use std::collections::HashSet;
+	use std::str::FromStr;
+
+	async fn create_share_test_pool() -> SqlitePool {
+		let options = SqliteConnectOptions::from_str(":memory:")
+			.unwrap()
+			.create_if_missing(true);
+
+		let pool = SqlitePoolOptions::new()
+			.max_connections(1)
+			.connect_with(options)
+			.await
+			.expect("Failed to create test pool");
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS share_links (
+				id TEXT PRIMARY KEY,
+				thread_id TEXT NOT NULL,
+				token_hash TEXT NOT NULL UNIQUE,
+				created_by TEXT NOT NULL,
+				created_at TEXT NOT NULL,
+				expires_at TEXT,
+				revoked_at TEXT
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query(
+			r#"
+			CREATE TABLE IF NOT EXISTS support_access (
+				id TEXT PRIMARY KEY,
+				thread_id TEXT NOT NULL,
+				requested_by TEXT NOT NULL,
+				approved_by TEXT,
+				requested_at TEXT NOT NULL,
+				approved_at TEXT,
+				expires_at TEXT,
+				revoked_at TEXT
+			)
+			"#,
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		pool
+	}
+
+	async fn make_repo() -> ShareRepository {
+		let pool = create_share_test_pool().await;
+		ShareRepository::new(pool)
+	}
+
+	fn make_share_link(thread_id: &str, token_hash: &str) -> ShareLink {
+		ShareLink {
+			id: Uuid::new_v4(),
+			thread_id: thread_id.to_string(),
+			token_hash: token_hash.to_string(),
+			created_by: UserId::generate(),
+			created_at: Utc::now(),
+			expires_at: None,
+			revoked_at: None,
+		}
+	}
+
+	#[tokio::test]
+	async fn test_create_and_get_share() {
+		let repo = make_repo().await;
+		let share_link = make_share_link("T-abc12345", "token_hash_123");
+
+		repo.create_share_link(&share_link).await.unwrap();
+
+		let result = repo.get_share_link_by_thread("T-abc12345").await.unwrap();
+		assert!(result.is_some());
+		let result = result.unwrap();
+		assert_eq!(result.id, share_link.id);
+		assert_eq!(result.thread_id, "T-abc12345");
+		assert_eq!(result.token_hash, "token_hash_123");
+		assert_eq!(result.created_by, share_link.created_by);
+		assert!(result.revoked_at.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_get_share_not_found() {
+		let repo = make_repo().await;
+		let result = repo
+			.get_share_link_by_thread("T-nonexistent")
+			.await
+			.unwrap();
+		assert!(result.is_none());
+	}
+
+	#[tokio::test]
+	async fn test_get_by_token() {
+		let repo = make_repo().await;
+		let token_hash = "unique_token_hash_456";
+		let share_link = make_share_link("T-def67890", token_hash);
+
+		repo.create_share_link(&share_link).await.unwrap();
+
+		let result = repo.get_share_link_by_hash(token_hash).await.unwrap();
+		assert!(result.is_some());
+		let result = result.unwrap();
+		assert_eq!(result.id, share_link.id);
+		assert_eq!(result.token_hash, token_hash);
+	}
+
+	#[tokio::test]
+	async fn test_delete_share() {
+		let repo = make_repo().await;
+		let share_link = make_share_link("T-revoke123", "revoke_hash_789");
+
+		repo.create_share_link(&share_link).await.unwrap();
+
+		let result = repo.get_share_link_by_thread("T-revoke123").await.unwrap();
+		assert!(result.is_some());
+
+		let revoked_count = repo.revoke_share_link("T-revoke123").await.unwrap();
+		assert_eq!(revoked_count, 1);
+
+		let result = repo.get_share_link_by_thread("T-revoke123").await.unwrap();
+		assert!(result.is_none());
+	}
 
 	proptest! {
 		#[test]
