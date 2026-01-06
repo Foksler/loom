@@ -1441,7 +1441,7 @@ async fn run_weaver_new(
 	}
 
 	let org_id = match org_id {
-		Some(id) => id,
+		Some(org_ref) => client.resolve_org_id(&org_ref).await?,
 		None => {
 			let personal_org = client.get_personal_org().await?;
 			personal_org.id

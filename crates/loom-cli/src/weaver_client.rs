@@ -185,6 +185,19 @@ impl WeaverClient {
 			.ok_or_else(|| anyhow::anyhow!("No personal organization found"))
 	}
 
+	pub async fn resolve_org_id(&self, org_ref: &str) -> Result<String> {
+		if looks_like_uuid(org_ref) {
+			return Ok(org_ref.to_string());
+		}
+
+		let orgs = self.list_orgs().await?;
+		orgs.orgs
+			.into_iter()
+			.find(|o| o.slug == org_ref || o.name == org_ref)
+			.map(|o| o.id)
+			.ok_or_else(|| anyhow::anyhow!("Organization not found: {}", org_ref))
+	}
+
 	pub fn attach_url(&self, id: &str) -> Result<Url> {
 		let mut url = self.base_url.join(&format!("api/weaver/{id}/attach"))?;
 		match url.scheme() {
@@ -269,4 +282,14 @@ impl WeaverClient {
 		stdin_task.abort();
 		Ok(())
 	}
+}
+
+fn looks_like_uuid(s: &str) -> bool {
+	let s = s.trim();
+	if s.len() < 32 {
+		return false;
+	}
+	s.chars()
+		.filter(|c| *c != '-')
+		.all(|c| c.is_ascii_hexdigit())
 }
