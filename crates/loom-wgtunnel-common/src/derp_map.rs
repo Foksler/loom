@@ -63,6 +63,8 @@ pub struct DerpNode {
 	pub stun_port: u16,
 	#[serde(default)]
 	pub stun_only: bool,
+	#[serde(default)]
+	pub can_port80: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -151,6 +153,7 @@ mod tests {
 					derp_port: 443,
 					stun_port: 3478,
 					stun_only: false,
+					can_port80: true,
 				}],
 				avoid: false,
 			},
