@@ -46,7 +46,7 @@ describe('ReposApiClient', () => {
 			const result = await client.createRepo(request);
 
 			expect(mockFetch).toHaveBeenCalledWith(
-				'http://localhost:3000/api/v1/repos',
+				'http://localhost:3000/api/repos',
 				expect.objectContaining({
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
@@ -84,7 +84,7 @@ describe('ReposApiClient', () => {
 			const result = await client.createRepo(request);
 
 			expect(mockFetch).toHaveBeenCalledWith(
-				'http://localhost:3000/api/v1/repos',
+				'http://localhost:3000/api/repos',
 				expect.objectContaining({
 					method: 'POST',
 					body: JSON.stringify(request),

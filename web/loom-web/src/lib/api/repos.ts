@@ -197,7 +197,7 @@ class ReposApiClient {
 	}
 
 	async createRepo(request: CreateRepoRequest): Promise<Repository> {
-		return this.request<Repository>('/api/v1/repos', {
+		return this.request<Repository>('/api/repos', {
 			method: 'POST',
 			body: JSON.stringify(request),
 		});
