@@ -186,7 +186,7 @@
     role = "server";
     clusterInit = true;
     disableTraefik = true;  # We use nginx via loom-web
-    bindAddress = "0.0.0.0";  # Required for kubectl exec to work (kubelet must listen on node IP)
+    bindAddress = "51.161.140.159";  # Must match node IP for kubectl exec to work
     ghcrSecret = {
       enable = true;
       username = "ghuntley";
