@@ -5077,6 +5077,7 @@ dependencies = [
  "chrono",
  "loom-common-secret",
  "loom-common-thread",
+ "loom-server-audit",
  "loom-server-auth",
  "proptest",
  "serde",

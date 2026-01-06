@@ -12,6 +12,7 @@ description = "Database layer for Loom server"
 [dependencies]
 async-trait = { workspace = true }
 chrono = { version = "0.4", features = ["serde"] }
+loom-server-audit = { path = "../loom-server-audit" }
 loom-server-auth = { path = "../loom-server-auth" }
 loom-common-secret = { path = "../loom-common-secret" }
 loom-common-thread = { path = "../loom-common-thread" }

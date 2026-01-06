@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Proprietary
 
 pub mod api_key;
+pub mod audit;
 pub mod cse;
 pub mod docs;
 mod error;
@@ -21,6 +22,7 @@ pub mod user;
 pub mod wgtunnel;
 
 pub use api_key::ApiKeyRepository;
+pub use audit::AuditQueryRepository;
 pub use cse::{normalize_cache_query, CseRepository};
 pub use docs::{DocIndexEntry, DocSearchHit, DocSearchParams, DocsRepository};
 pub use error::{DbError, Result};
