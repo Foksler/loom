@@ -54,6 +54,10 @@ members = [
 	"crates/loom-cli-spool",
 	"crates/loom-redact",
 	"crates/loom-common-webhook",
+	"crates/loom-weaver-audit-sidecar",
+	"crates/loom-weaver-ebpf-common",
+	"crates/loom-weaver-secrets",
+	"crates/loom-weaver-wgtunnel",
 	]
 
 [workspace.package]
