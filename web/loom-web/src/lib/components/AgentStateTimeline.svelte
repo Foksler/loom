@@ -5,6 +5,7 @@
 <script lang="ts">
   import type { AgentStateKind } from '../api/types';
   import { ThreadDivider } from '$lib/ui';
+  import { i18n } from '$lib/i18n';
 
   interface Props {
     currentState: AgentStateKind;
@@ -15,11 +16,11 @@
 
   let { currentState, retries = 0, pendingToolCalls = [], weaverColor = 'var(--weaver-indigo)' }: Props = $props();
 
-  const states: { key: AgentStateKind; label: string }[] = [
-    { key: 'waiting_input', label: 'Idle' },
-    { key: 'thinking', label: 'Weaving' },
-    { key: 'streaming', label: 'Threading' },
-    { key: 'tool_executing', label: 'Shuttle Pass' },
+  const states: { key: AgentStateKind; labelKey: string }[] = [
+    { key: 'waiting_input', labelKey: 'state.idle' },
+    { key: 'thinking', labelKey: 'state.weaving' },
+    { key: 'streaming', labelKey: 'state.threading' },
+    { key: 'tool_executing', labelKey: 'state.shuttlePass' },
   ];
 
   function isActive(stateKey: AgentStateKind): boolean {
@@ -52,7 +53,7 @@
         class="timeline-label"
         class:timeline-label-active={isActive(state.key)}
       >
-        {state.label}
+        {i18n.t(state.labelKey)}
         {#if isActive(state.key) && state.key === 'tool_executing' && pendingToolCalls.length > 0}
           <span class="timeline-count">({pendingToolCalls.length})</span>
         {/if}
@@ -70,7 +71,7 @@
   {#if currentState === 'error'}
     <div class="timeline-error">
       <span class="timeline-error-dot"></span>
-      <span class="timeline-error-label">Broken Thread (retry {retries})</span>
+      <span class="timeline-error-label">{i18n.t('state.brokenThread', { retries })}</span>
     </div>
   {/if}
 </div>

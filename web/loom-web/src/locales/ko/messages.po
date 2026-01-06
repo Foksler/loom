@@ -1885,3 +1885,171 @@ msgstr "확인을 위해 저장소 이름을 입력하세요:"
 #: client.repos.settings.delete_confirm_button
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "이해했습니다, 이 저장소를 삭제합니다"
+
+#: thread.noThreadsFound
+msgid "thread.noThreadsFound"
+msgstr "스레드를 찾을 수 없습니다"
+
+#: thread.time.justNow
+msgid "thread.time.justNow"
+msgstr "방금"
+
+#: thread.time.minutesAgo
+msgid "thread.time.minutesAgo"
+msgstr "{count}분 전"
+
+#: thread.time.hoursAgo
+msgid "thread.time.hoursAgo"
+msgstr "{count}시간 전"
+
+#: thread.time.daysAgo
+msgid "thread.time.daysAgo"
+msgstr "{count}일 전"
+
+#: thread.messageCount
+msgid "thread.messageCount"
+msgstr "{count}개 메시지"
+
+#: thread.selectToView
+msgid "thread.selectToView"
+msgstr "보려면 스레드를 선택하세요"
+
+#: thread.createToStart
+msgid "thread.createToStart"
+msgstr "또는 새 스레드를 만들어 시작하세요"
+
+#: error.goHome
+msgid "error.goHome"
+msgstr "홈으로"
+
+#: support.access.requested
+msgid "support.access.requested"
+msgstr "액세스 요청됨"
+
+#: support.access.requestSent
+msgid "support.access.requestSent"
+msgstr "요청이 스레드 소유자에게 전송되었습니다. 승인되면 이 스레드를 볼 수 있습니다."
+
+#: support.access.requestId
+msgid "support.access.requestId"
+msgstr "요청 ID:"
+
+#: support.access.required
+msgid "support.access.required"
+msgstr "액세스 필요"
+
+#: support.access.notShared
+msgid "support.access.notShared"
+msgstr "이 스레드는 지원팀과 공유되지 않았습니다. 지원팀 멤버로서 스레드 소유자에게 액세스를 요청할 수 있습니다."
+
+#: support.access.requesting
+msgid "support.access.requesting"
+msgstr "요청 중..."
+
+#: support.access.requestButton
+msgid "support.access.requestButton"
+msgstr "액세스 요청"
+
+#: support.access.note
+msgid "support.access.note"
+msgstr "스레드 소유자에게 알림이 전송되며 요청을 승인하거나 거부할 수 있습니다. 승인되면 31일 동안 액세스가 허용됩니다."
+
+#: support.access.errorAlreadyRequested
+msgid "support.access.errorAlreadyRequested"
+msgstr "이 스레드에 대한 액세스가 이미 요청되었습니다. 소유자 승인을 기다려 주세요."
+
+#: support.access.errorAlreadyActive
+msgid "support.access.errorAlreadyActive"
+msgstr "이 스레드에 대한 액세스 권한이 이미 있습니다. 페이지를 새로고침해 보세요."
+
+#: support.access.errorFailed
+msgid "support.access.errorFailed"
+msgstr "액세스 요청에 실패했습니다. 다시 시도해 주세요."
+
+#: support.access.errorUnexpected
+msgid "support.access.errorUnexpected"
+msgstr "예기치 않은 오류가 발생했습니다."
+
+#: state.idle
+msgid "state.idle"
+msgstr "대기"
+
+#: state.weaving
+msgid "state.weaving"
+msgstr "직조 중"
+
+#: state.threading
+msgid "state.threading"
+msgstr "실 꿰기"
+
+#: state.shuttlePass
+msgid "state.shuttlePass"
+msgstr "셔틀 패스"
+
+#: state.brokenThread
+msgid "state.brokenThread"
+msgstr "실 끊김 (재시도 {retries})"
+
+#: tool.showError
+msgid "tool.showError"
+msgstr "오류 표시"
+
+#: tool.showOutput
+msgid "tool.showOutput"
+msgstr "출력 표시"
+
+#: docs.title
+msgid "docs.title"
+msgstr "Loom 문서"
+
+#: docs.redirecting
+msgid "docs.redirecting"
+msgstr "튜토리얼로 리디렉션 중..."
+
+#: docs.tutorials.title
+msgid "docs.tutorials.title"
+msgstr "튜토리얼"
+
+#: docs.tutorials.description
+msgid "docs.tutorials.description"
+msgstr "프로젝트를 완성하기 위한 일련의 단계를 안내하는 학습 지향 레슨."
+
+#: docs.tutorials.empty
+msgid "docs.tutorials.empty"
+msgstr "아직 튜토리얼이 없습니다."
+
+#: docs.explanation.title
+msgid "docs.explanation.title"
+msgstr "설명"
+
+#: docs.explanation.description
+msgid "docs.explanation.description"
+msgstr "개념, 결정 사항, 큰 그림을 설명하는 토론 및 배경 자료."
+
+#: docs.explanation.empty
+msgid "docs.explanation.empty"
+msgstr "아직 설명이 없습니다."
+
+#: docs.reference.title
+msgid "docs.reference.title"
+msgstr "레퍼런스"
+
+#: docs.reference.description
+msgid "docs.reference.description"
+msgstr "API, 설정 및 내부 구조에 대한 상세 정보가 포함된 기술 레퍼런스 자료."
+
+#: docs.reference.empty
+msgid "docs.reference.empty"
+msgstr "아직 레퍼런스 문서가 없습니다."
+
+#: docs.howTo.title
+msgid "docs.howTo.title"
+msgstr "사용 가이드"
+
+#: docs.howTo.description
+msgid "docs.howTo.description"
+msgstr "특정 목표를 달성하는 방법을 보여주는 작업 지향 가이드."
+
+#: docs.howTo.empty
+msgid "docs.howTo.empty"
+msgstr "아직 사용 가이드가 없습니다."

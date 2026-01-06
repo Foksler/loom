@@ -4,13 +4,14 @@
 -->
 <script lang="ts">
 	import { LoomFrame } from '$lib/ui';
+	import { i18n } from '$lib/i18n';
 </script>
 
 <div class="threads-empty">
 	<LoomFrame variant="full">
 		<div class="content">
-			<p class="title">Select a thread to view</p>
-			<p class="subtitle">Or create a new thread to get started</p>
+			<p class="title">{i18n.t('thread.selectToView')}</p>
+			<p class="subtitle">{i18n.t('thread.createToStart')}</p>
 		</div>
 	</LoomFrame>
 </div>

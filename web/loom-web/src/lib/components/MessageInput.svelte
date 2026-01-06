@@ -5,6 +5,7 @@
 
 <script lang="ts">
 	import { Button } from '../ui';
+	import { i18n } from '$lib/i18n';
 
 	interface Props {
 		disabled?: boolean;
@@ -12,7 +13,7 @@
 		onSubmit?: (content: string) => void;
 	}
 
-	let { disabled = false, placeholder = 'Type a message...', onSubmit }: Props = $props();
+	let { disabled = false, placeholder = i18n.t('message.placeholder'), onSubmit }: Props = $props();
 
 	let inputValue = $state('');
 
@@ -43,7 +44,7 @@
 			onkeydown={handleKeydown}
 		></textarea>
 		<Button variant="primary" disabled={disabled || !inputValue.trim()} onclick={handleSubmit}>
-			Send
+			{i18n.t('message.send')}
 		</Button>
 	</div>
 </div>

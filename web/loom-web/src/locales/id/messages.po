@@ -1885,3 +1885,171 @@ msgstr "Ketik nama repositori untuk mengonfirmasi:"
 #: client.repos.settings.delete_confirm_button
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "Saya mengerti, hapus repositori ini"
+
+#: thread.noThreadsFound
+msgid "thread.noThreadsFound"
+msgstr "Tidak ada thread ditemukan"
+
+#: thread.time.justNow
+msgid "thread.time.justNow"
+msgstr "Baru saja"
+
+#: thread.time.minutesAgo
+msgid "thread.time.minutesAgo"
+msgstr "{count}m lalu"
+
+#: thread.time.hoursAgo
+msgid "thread.time.hoursAgo"
+msgstr "{count}j lalu"
+
+#: thread.time.daysAgo
+msgid "thread.time.daysAgo"
+msgstr "{count}h lalu"
+
+#: thread.messageCount
+msgid "thread.messageCount"
+msgstr "{count} pesan"
+
+#: thread.selectToView
+msgid "thread.selectToView"
+msgstr "Pilih thread untuk dilihat"
+
+#: thread.createToStart
+msgid "thread.createToStart"
+msgstr "Atau buat thread baru untuk memulai"
+
+#: error.goHome
+msgid "error.goHome"
+msgstr "Ke Beranda"
+
+#: support.access.requested
+msgid "support.access.requested"
+msgstr "Akses Diminta"
+
+#: support.access.requestSent
+msgid "support.access.requestSent"
+msgstr "Permintaan Anda telah dikirim ke pemilik thread. Anda akan dapat melihat thread ini setelah mereka menyetujui permintaan Anda."
+
+#: support.access.requestId
+msgid "support.access.requestId"
+msgstr "ID Permintaan:"
+
+#: support.access.required
+msgid "support.access.required"
+msgstr "Akses Diperlukan"
+
+#: support.access.notShared
+msgid "support.access.notShared"
+msgstr "Thread ini belum dibagikan dengan dukungan. Sebagai anggota tim dukungan, Anda dapat meminta akses dari pemilik thread."
+
+#: support.access.requesting
+msgid "support.access.requesting"
+msgstr "Meminta..."
+
+#: support.access.requestButton
+msgid "support.access.requestButton"
+msgstr "Minta Akses"
+
+#: support.access.note
+msgid "support.access.note"
+msgstr "Pemilik thread akan menerima notifikasi dan dapat menyetujui atau menolak permintaan Anda. Jika disetujui, akses akan diberikan selama 31 hari."
+
+#: support.access.errorAlreadyRequested
+msgid "support.access.errorAlreadyRequested"
+msgstr "Akses sudah diminta untuk thread ini. Menunggu persetujuan pemilik."
+
+#: support.access.errorAlreadyActive
+msgid "support.access.errorAlreadyActive"
+msgstr "Anda sudah memiliki akses aktif ke thread ini. Coba refresh halaman."
+
+#: support.access.errorFailed
+msgid "support.access.errorFailed"
+msgstr "Gagal meminta akses. Silakan coba lagi."
+
+#: support.access.errorUnexpected
+msgid "support.access.errorUnexpected"
+msgstr "Terjadi kesalahan yang tidak terduga."
+
+#: state.idle
+msgid "state.idle"
+msgstr "Menganggur"
+
+#: state.weaving
+msgid "state.weaving"
+msgstr "Menenun"
+
+#: state.threading
+msgid "state.threading"
+msgstr "Memasang Benang"
+
+#: state.shuttlePass
+msgid "state.shuttlePass"
+msgstr "Shuttle Pass"
+
+#: state.brokenThread
+msgid "state.brokenThread"
+msgstr "Benang Putus (percobaan ulang {retries})"
+
+#: tool.showError
+msgid "tool.showError"
+msgstr "Tampilkan kesalahan"
+
+#: tool.showOutput
+msgid "tool.showOutput"
+msgstr "Tampilkan output"
+
+#: docs.title
+msgid "docs.title"
+msgstr "Dokumentasi Loom"
+
+#: docs.redirecting
+msgid "docs.redirecting"
+msgstr "Mengalihkan ke tutorial..."
+
+#: docs.tutorials.title
+msgid "docs.tutorials.title"
+msgstr "Tutorial"
+
+#: docs.tutorials.description
+msgid "docs.tutorials.description"
+msgstr "Pelajaran berorientasi pembelajaran yang membawa Anda melalui serangkaian langkah untuk menyelesaikan proyek."
+
+#: docs.tutorials.empty
+msgid "docs.tutorials.empty"
+msgstr "Belum ada tutorial yang tersedia."
+
+#: docs.explanation.title
+msgid "docs.explanation.title"
+msgstr "Penjelasan"
+
+#: docs.explanation.description
+msgid "docs.explanation.description"
+msgstr "Diskusi dan materi latar belakang yang menjelaskan konsep, keputusan, dan gambaran besar."
+
+#: docs.explanation.empty
+msgid "docs.explanation.empty"
+msgstr "Belum ada penjelasan yang tersedia."
+
+#: docs.reference.title
+msgid "docs.reference.title"
+msgstr "Referensi"
+
+#: docs.reference.description
+msgid "docs.reference.description"
+msgstr "Materi referensi teknis dengan informasi detail tentang API, konfigurasi, dan internal."
+
+#: docs.reference.empty
+msgid "docs.reference.empty"
+msgstr "Belum ada dokumentasi referensi yang tersedia."
+
+#: docs.howTo.title
+msgid "docs.howTo.title"
+msgstr "Panduan Cara"
+
+#: docs.howTo.description
+msgid "docs.howTo.description"
+msgstr "Panduan berorientasi tugas yang menunjukkan cara mencapai tujuan tertentu."
+
+#: docs.howTo.empty
+msgid "docs.howTo.empty"
+msgstr "Belum ada panduan cara yang tersedia."

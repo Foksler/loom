@@ -1885,3 +1885,171 @@ msgstr "पुष्टि के लिए रिपॉजिटरी का �
 #: client.repos.settings.delete_confirm_button
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "मैं समझता हूं, इस रिपॉजिटरी को हटाएं"
+
+#: thread.noThreadsFound
+msgid "thread.noThreadsFound"
+msgstr "कोई थ्रेड नहीं मिला"
+
+#: thread.time.justNow
+msgid "thread.time.justNow"
+msgstr "अभी"
+
+#: thread.time.minutesAgo
+msgid "thread.time.minutesAgo"
+msgstr "{count} मिनट पहले"
+
+#: thread.time.hoursAgo
+msgid "thread.time.hoursAgo"
+msgstr "{count} घंटे पहले"
+
+#: thread.time.daysAgo
+msgid "thread.time.daysAgo"
+msgstr "{count} दिन पहले"
+
+#: thread.messageCount
+msgid "thread.messageCount"
+msgstr "{count} संदेश"
+
+#: thread.selectToView
+msgid "thread.selectToView"
+msgstr "देखने के लिए थ्रेड चुनें"
+
+#: thread.createToStart
+msgid "thread.createToStart"
+msgstr "या शुरू करने के लिए नया थ्रेड बनाएं"
+
+#: error.goHome
+msgid "error.goHome"
+msgstr "होम पर जाएं"
+
+#: support.access.requested
+msgid "support.access.requested"
+msgstr "एक्सेस का अनुरोध किया गया"
+
+#: support.access.requestSent
+msgid "support.access.requestSent"
+msgstr "आपका अनुरोध थ्रेड मालिक को भेज दिया गया है। जब वे आपके अनुरोध को स्वीकृत करेंगे तब आप इस थ्रेड को देख सकेंगे।"
+
+#: support.access.requestId
+msgid "support.access.requestId"
+msgstr "अनुरोध ID:"
+
+#: support.access.required
+msgid "support.access.required"
+msgstr "एक्सेस आवश्यक"
+
+#: support.access.notShared
+msgid "support.access.notShared"
+msgstr "यह थ्रेड सपोर्ट के साथ साझा नहीं किया गया है। सपोर्ट टीम के सदस्य के रूप में, आप थ्रेड मालिक से एक्सेस का अनुरोध कर सकते हैं।"
+
+#: support.access.requesting
+msgid "support.access.requesting"
+msgstr "अनुरोध कर रहा है..."
+
+#: support.access.requestButton
+msgid "support.access.requestButton"
+msgstr "एक्सेस का अनुरोध करें"
+
+#: support.access.note
+msgid "support.access.note"
+msgstr "थ्रेड मालिक को सूचना मिलेगी और वे आपके अनुरोध को स्वीकृत या अस्वीकृत कर सकते हैं। स्वीकृत होने पर, 31 दिनों के लिए एक्सेस दिया जाएगा।"
+
+#: support.access.errorAlreadyRequested
+msgid "support.access.errorAlreadyRequested"
+msgstr "इस थ्रेड के लिए पहले से एक्सेस का अनुरोध किया जा चुका है। मालिक की स्वीकृति की प्रतीक्षा में।"
+
+#: support.access.errorAlreadyActive
+msgid "support.access.errorAlreadyActive"
+msgstr "आपके पास पहले से इस थ्रेड तक सक्रिय एक्सेस है। पेज रिफ्रेश करने का प्रयास करें।"
+
+#: support.access.errorFailed
+msgid "support.access.errorFailed"
+msgstr "एक्सेस का अनुरोध विफल रहा। कृपया पुनः प्रयास करें।"
+
+#: support.access.errorUnexpected
+msgid "support.access.errorUnexpected"
+msgstr "एक अप्रत्याशित त्रुटि हुई।"
+
+#: state.idle
+msgid "state.idle"
+msgstr "निष्क्रिय"
+
+#: state.weaving
+msgid "state.weaving"
+msgstr "बुनाई"
+
+#: state.threading
+msgid "state.threading"
+msgstr "थ्रेडिंग"
+
+#: state.shuttlePass
+msgid "state.shuttlePass"
+msgstr "शटल पास"
+
+#: state.brokenThread
+msgid "state.brokenThread"
+msgstr "टूटा हुआ थ्रेड (पुनः प्रयास {retries})"
+
+#: tool.showError
+msgid "tool.showError"
+msgstr "त्रुटि दिखाएं"
+
+#: tool.showOutput
+msgid "tool.showOutput"
+msgstr "आउटपुट दिखाएं"
+
+#: docs.title
+msgid "docs.title"
+msgstr "Loom डॉक्स"
+
+#: docs.redirecting
+msgid "docs.redirecting"
+msgstr "ट्यूटोरियल पर रीडायरेक्ट हो रहा है..."
+
+#: docs.tutorials.title
+msgid "docs.tutorials.title"
+msgstr "ट्यूटोरियल"
+
+#: docs.tutorials.description
+msgid "docs.tutorials.description"
+msgstr "सीखने-उन्मुख पाठ जो आपको एक प्रोजेक्ट पूरा करने के चरणों से गुजारते हैं।"
+
+#: docs.tutorials.empty
+msgid "docs.tutorials.empty"
+msgstr "अभी तक कोई ट्यूटोरियल उपलब्ध नहीं है।"
+
+#: docs.explanation.title
+msgid "docs.explanation.title"
+msgstr "व्याख्या"
+
+#: docs.explanation.description
+msgid "docs.explanation.description"
+msgstr "चर्चा और पृष्ठभूमि सामग्री जो अवधारणाओं, निर्णयों और बड़ी तस्वीर की व्याख्या करती है।"
+
+#: docs.explanation.empty
+msgid "docs.explanation.empty"
+msgstr "अभी तक कोई व्याख्या उपलब्ध नहीं है।"
+
+#: docs.reference.title
+msgid "docs.reference.title"
+msgstr "संदर्भ"
+
+#: docs.reference.description
+msgid "docs.reference.description"
+msgstr "API, कॉन्फ़िगरेशन और आंतरिक विवरण के बारे में विस्तृत जानकारी वाली तकनीकी संदर्भ सामग्री।"
+
+#: docs.reference.empty
+msgid "docs.reference.empty"
+msgstr "अभी तक कोई संदर्भ दस्तावेज़ उपलब्ध नहीं है।"
+
+#: docs.howTo.title
+msgid "docs.howTo.title"
+msgstr "कैसे करें गाइड"
+
+#: docs.howTo.description
+msgid "docs.howTo.description"
+msgstr "कार्य-उन्मुख गाइड जो आपको विशिष्ट लक्ष्यों को प्राप्त करने का तरीका दिखाती हैं।"
+
+#: docs.howTo.empty
+msgid "docs.howTo.empty"
+msgstr "अभी तक कोई कैसे करें गाइड उपलब्ध नहीं है।"

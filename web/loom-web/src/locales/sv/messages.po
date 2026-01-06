@@ -1885,3 +1885,171 @@ msgstr "Skriv repositoriumnamnet för att bekräfta:"
 #: client.repos.settings.delete_confirm_button
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "Jag förstår, ta bort detta repositorium"
+
+#: thread.noThreadsFound
+msgid "thread.noThreadsFound"
+msgstr "Inga trådar hittades"
+
+#: thread.time.justNow
+msgid "thread.time.justNow"
+msgstr "Just nu"
+
+#: thread.time.minutesAgo
+msgid "thread.time.minutesAgo"
+msgstr "{count} min sedan"
+
+#: thread.time.hoursAgo
+msgid "thread.time.hoursAgo"
+msgstr "{count} tim sedan"
+
+#: thread.time.daysAgo
+msgid "thread.time.daysAgo"
+msgstr "{count} d sedan"
+
+#: thread.messageCount
+msgid "thread.messageCount"
+msgstr "{count} meddelanden"
+
+#: thread.selectToView
+msgid "thread.selectToView"
+msgstr "Välj en tråd att visa"
+
+#: thread.createToStart
+msgid "thread.createToStart"
+msgstr "Eller skapa en ny tråd för att komma igång"
+
+#: error.goHome
+msgid "error.goHome"
+msgstr "Gå till startsidan"
+
+#: support.access.requested
+msgid "support.access.requested"
+msgstr "Åtkomst begärd"
+
+#: support.access.requestSent
+msgid "support.access.requestSent"
+msgstr "Din begäran har skickats till trådägaren. Du kommer att kunna se denna tråd när de godkänner din begäran."
+
+#: support.access.requestId
+msgid "support.access.requestId"
+msgstr "Begäran-ID:"
+
+#: support.access.required
+msgid "support.access.required"
+msgstr "Åtkomst krävs"
+
+#: support.access.notShared
+msgid "support.access.notShared"
+msgstr "Denna tråd har inte delats med support. Som supportteammedlem kan du begära åtkomst från trådägaren."
+
+#: support.access.requesting
+msgid "support.access.requesting"
+msgstr "Begär..."
+
+#: support.access.requestButton
+msgid "support.access.requestButton"
+msgstr "Begär åtkomst"
+
+#: support.access.note
+msgid "support.access.note"
+msgstr "Trådägaren kommer att få en avisering och kan godkänna eller neka din begäran. Om godkänd beviljas åtkomst i 31 dagar."
+
+#: support.access.errorAlreadyRequested
+msgid "support.access.errorAlreadyRequested"
+msgstr "Åtkomst har redan begärts för denna tråd. Väntar på ägarens godkännande."
+
+#: support.access.errorAlreadyActive
+msgid "support.access.errorAlreadyActive"
+msgstr "Du har redan aktiv åtkomst till denna tråd. Försök att uppdatera sidan."
+
+#: support.access.errorFailed
+msgid "support.access.errorFailed"
+msgstr "Kunde inte begära åtkomst. Försök igen."
+
+#: support.access.errorUnexpected
+msgid "support.access.errorUnexpected"
+msgstr "Ett oväntat fel inträffade."
+
+#: state.idle
+msgid "state.idle"
+msgstr "Vilande"
+
+#: state.weaving
+msgid "state.weaving"
+msgstr "Vävning"
+
+#: state.threading
+msgid "state.threading"
+msgstr "Trädning"
+
+#: state.shuttlePass
+msgid "state.shuttlePass"
+msgstr "Skyttelpass"
+
+#: state.brokenThread
+msgid "state.brokenThread"
+msgstr "Bruten tråd (försök {retries})"
+
+#: tool.showError
+msgid "tool.showError"
+msgstr "Visa fel"
+
+#: tool.showOutput
+msgid "tool.showOutput"
+msgstr "Visa utdata"
+
+#: docs.title
+msgid "docs.title"
+msgstr "Loom-dokumentation"
+
+#: docs.redirecting
+msgid "docs.redirecting"
+msgstr "Omdirigerar till handledningar..."
+
+#: docs.tutorials.title
+msgid "docs.tutorials.title"
+msgstr "Handledningar"
+
+#: docs.tutorials.description
+msgid "docs.tutorials.description"
+msgstr "Lärandeorienterade lektioner som tar dig genom en serie steg för att slutföra ett projekt."
+
+#: docs.tutorials.empty
+msgid "docs.tutorials.empty"
+msgstr "Inga handledningar tillgängliga ännu."
+
+#: docs.explanation.title
+msgid "docs.explanation.title"
+msgstr "Förklaringar"
+
+#: docs.explanation.description
+msgid "docs.explanation.description"
+msgstr "Diskussioner och bakgrundsmaterial som förklarar koncept, beslut och helheten."
+
+#: docs.explanation.empty
+msgid "docs.explanation.empty"
+msgstr "Inga förklaringar tillgängliga ännu."
+
+#: docs.reference.title
+msgid "docs.reference.title"
+msgstr "Referens"
+
+#: docs.reference.description
+msgid "docs.reference.description"
+msgstr "Tekniskt referensmaterial med detaljerad information om API:er, konfiguration och internals."
+
+#: docs.reference.empty
+msgid "docs.reference.empty"
+msgstr "Ingen referensdokumentation tillgänglig ännu."
+
+#: docs.howTo.title
+msgid "docs.howTo.title"
+msgstr "Hur-gör-man-guider"
+
+#: docs.howTo.description
+msgid "docs.howTo.description"
+msgstr "Uppgiftsorienterade guider som visar hur du uppnår specifika mål."
+
+#: docs.howTo.empty
+msgid "docs.howTo.empty"
+msgstr "Inga hur-gör-man-guider tillgängliga ännu."

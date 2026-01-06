@@ -1885,3 +1885,171 @@ msgstr "Kinnitamiseks sisesta hoidla nimi:"
 #: client.repos.settings.delete_confirm_button
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "Mõistan, kustuta see hoidla"
+
+#: thread.noThreadsFound
+msgid "thread.noThreadsFound"
+msgstr "Lõime ei leitud"
+
+#: thread.time.justNow
+msgid "thread.time.justNow"
+msgstr "Just praegu"
+
+#: thread.time.minutesAgo
+msgid "thread.time.minutesAgo"
+msgstr "{count}m tagasi"
+
+#: thread.time.hoursAgo
+msgid "thread.time.hoursAgo"
+msgstr "{count}t tagasi"
+
+#: thread.time.daysAgo
+msgid "thread.time.daysAgo"
+msgstr "{count}p tagasi"
+
+#: thread.messageCount
+msgid "thread.messageCount"
+msgstr "{count} sõnumit"
+
+#: thread.selectToView
+msgid "thread.selectToView"
+msgstr "Valige lõim vaatamiseks"
+
+#: thread.createToStart
+msgid "thread.createToStart"
+msgstr "Või looge alustamiseks uus lõim"
+
+#: error.goHome
+msgid "error.goHome"
+msgstr "Mine avalehele"
+
+#: support.access.requested
+msgid "support.access.requested"
+msgstr "Juurdepääs taotletud"
+
+#: support.access.requestSent
+msgid "support.access.requestSent"
+msgstr "Teie taotlus on saadetud lõime omanikule. Saate seda lõime vaadata pärast seda, kui nad teie taotluse heaks kiidavad."
+
+#: support.access.requestId
+msgid "support.access.requestId"
+msgstr "Taotluse ID:"
+
+#: support.access.required
+msgid "support.access.required"
+msgstr "Juurdepääs nõutav"
+
+#: support.access.notShared
+msgid "support.access.notShared"
+msgstr "Seda lõime pole toega jagatud. Toemeeskonna liikmena saate lõime omanikult juurdepääsu taotleda."
+
+#: support.access.requesting
+msgid "support.access.requesting"
+msgstr "Taotlemine..."
+
+#: support.access.requestButton
+msgid "support.access.requestButton"
+msgstr "Taotle juurdepääsu"
+
+#: support.access.note
+msgid "support.access.note"
+msgstr "Lõime omanik saab teavituse ja saab teie taotluse heaks kiita või tagasi lükata. Heakskiitmisel antakse juurdepääs 31 päevaks."
+
+#: support.access.errorAlreadyRequested
+msgid "support.access.errorAlreadyRequested"
+msgstr "Juurdepääs sellele lõimele on juba taotletud. Ootame omaniku heakskiitu."
+
+#: support.access.errorAlreadyActive
+msgid "support.access.errorAlreadyActive"
+msgstr "Teil on juba aktiivne juurdepääs sellele lõimele. Proovige lehte värskendada."
+
+#: support.access.errorFailed
+msgid "support.access.errorFailed"
+msgstr "Juurdepääsu taotlemine ebaõnnestus. Palun proovige uuesti."
+
+#: support.access.errorUnexpected
+msgid "support.access.errorUnexpected"
+msgstr "Tekkis ootamatu viga."
+
+#: state.idle
+msgid "state.idle"
+msgstr "Jõude"
+
+#: state.weaving
+msgid "state.weaving"
+msgstr "Kudumine"
+
+#: state.threading
+msgid "state.threading"
+msgstr "Lõngastamine"
+
+#: state.shuttlePass
+msgid "state.shuttlePass"
+msgstr "Süstikukäik"
+
+#: state.brokenThread
+msgid "state.brokenThread"
+msgstr "Katkenud lõng (kordus {retries})"
+
+#: tool.showError
+msgid "tool.showError"
+msgstr "Näita viga"
+
+#: tool.showOutput
+msgid "tool.showOutput"
+msgstr "Näita väljundit"
+
+#: docs.title
+msgid "docs.title"
+msgstr "Loom Dokumentatsioon"
+
+#: docs.redirecting
+msgid "docs.redirecting"
+msgstr "Suunamine õpetuste juurde..."
+
+#: docs.tutorials.title
+msgid "docs.tutorials.title"
+msgstr "Õpetused"
+
+#: docs.tutorials.description
+msgid "docs.tutorials.description"
+msgstr "Õppimisele suunatud tunnid, mis viivad teid läbi sammude projekti lõpetamiseks."
+
+#: docs.tutorials.empty
+msgid "docs.tutorials.empty"
+msgstr "Õpetusi pole veel saadaval."
+
+#: docs.explanation.title
+msgid "docs.explanation.title"
+msgstr "Selgitus"
+
+#: docs.explanation.description
+msgid "docs.explanation.description"
+msgstr "Arutelu- ja taustamaterjal, mis selgitab kontseptsioone, otsuseid ja suuremat pilti."
+
+#: docs.explanation.empty
+msgid "docs.explanation.empty"
+msgstr "Selgitusi pole veel saadaval."
+
+#: docs.reference.title
+msgid "docs.reference.title"
+msgstr "Viited"
+
+#: docs.reference.description
+msgid "docs.reference.description"
+msgstr "Tehniline viitematerjal üksikasjaliku teabega API-de, konfiguratsiooni ja sisemiste osade kohta."
+
+#: docs.reference.empty
+msgid "docs.reference.empty"
+msgstr "Viitedokumentatsiooni pole veel saadaval."
+
+#: docs.howTo.title
+msgid "docs.howTo.title"
+msgstr "Juhendid"
+
+#: docs.howTo.description
+msgid "docs.howTo.description"
+msgstr "Ülesandele suunatud juhendid, mis näitavad, kuidas konkreetseid eesmärke saavutada."
+
+#: docs.howTo.empty
+msgid "docs.howTo.empty"
+msgstr "Juhendeid pole veel saadaval."

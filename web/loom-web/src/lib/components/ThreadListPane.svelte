@@ -11,6 +11,7 @@
 	import { Input, Skeleton, Button, ThreadDivider } from '../ui';
 	import ThreadListItem from './ThreadListItem.svelte';
 	import { logger } from '../logging';
+	import { i18n } from '$lib/i18n';
 
 	interface Props {
 		selectedThreadId?: string | null;
@@ -102,7 +103,7 @@
 
 <div class="thread-list-pane">
 	<div class="search-section">
-		<Input type="search" placeholder="Search threads..." bind:value={searchInput} />
+		<Input type="search" placeholder={i18n.t('thread.search')} bind:value={searchInput} />
 	</div>
 
 	<ThreadDivider variant="simple" class="search-divider" />
@@ -120,11 +121,11 @@
 		{:else if snapshot.value === 'error'}
 			<div class="error-state">
 				<p class="error-message">{snapshot.context.error}</p>
-				<Button variant="secondary" onclick={() => actor.send({ type: 'FETCH' })}>Retry</Button>
+				<Button variant="secondary" onclick={() => actor.send({ type: 'FETCH' })}>{i18n.t('general.retry')}</Button>
 			</div>
 		{:else if snapshot.context.threads.length === 0}
 			<div class="empty-state">
-				{snapshot.context.searchQuery ? 'No threads found' : 'No threads yet'}
+				{snapshot.context.searchQuery ? i18n.t('thread.noThreadsFound') : i18n.t('thread.noThreads')}
 			</div>
 		{:else}
 			<div class="thread-items">
@@ -147,7 +148,7 @@
 				disabled={snapshot.context.offset === 0}
 				onclick={() => actor.send({ type: 'PREV_PAGE' })}
 			>
-				Previous
+				{i18n.t('general.previous')}
 			</Button>
 			<span class="page-info">
 				{snapshot.context.offset + 1}-{Math.min(
@@ -161,7 +162,7 @@
 				disabled={snapshot.context.offset + snapshot.context.limit >= snapshot.context.total}
 				onclick={() => actor.send({ type: 'NEXT_PAGE' })}
 			>
-				Next
+				{i18n.t('general.next')}
 			</Button>
 		</div>
 	{/if}

@@ -4,6 +4,7 @@
 -->
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { i18n } from '$lib/i18n';
 	import { LinkCard } from '$lib/docs/components';
 
 	interface Props {
@@ -18,9 +19,9 @@
 </script>
 
 <div class="category-page">
-	<h1>Reference</h1>
+	<h1>{i18n.t('docs.reference.title')}</h1>
 	<p class="category-description">
-		Technical reference material with detailed information about APIs, configuration, and internals.
+		{i18n.t('docs.reference.description')}
 	</p>
 
 	<div class="doc-list">
@@ -29,7 +30,7 @@
 		{/each}
 
 		{#if refs.length === 0}
-			<p class="empty-message">No reference documentation available yet.</p>
+			<p class="empty-message">{i18n.t('docs.reference.empty')}</p>
 		{/if}
 	</div>
 </div>

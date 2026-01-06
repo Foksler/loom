@@ -5,6 +5,7 @@
 
 <script lang="ts">
 	import type { ThreadSummary } from '../api/types';
+	import { i18n } from '$lib/i18n';
 
 	interface Props {
 		thread: ThreadSummary;
@@ -22,10 +23,10 @@
 		const diffHours = Math.floor(diffMs / 3600000);
 		const diffDays = Math.floor(diffMs / 86400000);
 
-		if (diffMins < 1) return 'Just now';
-		if (diffMins < 60) return `${diffMins}m ago`;
-		if (diffHours < 24) return `${diffHours}h ago`;
-		if (diffDays < 7) return `${diffDays}d ago`;
+		if (diffMins < 1) return i18n.t('thread.time.justNow');
+		if (diffMins < 60) return i18n.t('thread.time.minutesAgo', { count: diffMins });
+		if (diffHours < 24) return i18n.t('thread.time.hoursAgo', { count: diffHours });
+		if (diffDays < 7) return i18n.t('thread.time.daysAgo', { count: diffDays });
 		return date.toLocaleDateString();
 	}
 </script>
@@ -50,7 +51,7 @@
 		</div>
 
 		<div class="thread-meta">
-			<span class="message-count">{thread.message_count} messages</span>
+			<span class="message-count">{i18n.t('thread.messageCount', { count: thread.message_count })}</span>
 		</div>
 	</div>
 </button>

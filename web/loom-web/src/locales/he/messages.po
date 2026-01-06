@@ -1849,3 +1849,171 @@ msgstr "משימות רקע"
 #: admin.health.auth_providers
 msgid "admin.health.auth_providers"
 msgstr "ספקי אימות"
+
+#: thread.noThreadsFound
+msgid "thread.noThreadsFound"
+msgstr "לא נמצאו שרשורים"
+
+#: thread.time.justNow
+msgid "thread.time.justNow"
+msgstr "עכשיו"
+
+#: thread.time.minutesAgo
+msgid "thread.time.minutesAgo"
+msgstr "לפני {count} דקות"
+
+#: thread.time.hoursAgo
+msgid "thread.time.hoursAgo"
+msgstr "לפני {count} שעות"
+
+#: thread.time.daysAgo
+msgid "thread.time.daysAgo"
+msgstr "לפני {count} ימים"
+
+#: thread.messageCount
+msgid "thread.messageCount"
+msgstr "{count} הודעות"
+
+#: thread.selectToView
+msgid "thread.selectToView"
+msgstr "בחר שרשור לצפייה"
+
+#: thread.createToStart
+msgid "thread.createToStart"
+msgstr "או צור שרשור חדש כדי להתחיל"
+
+#: error.goHome
+msgid "error.goHome"
+msgstr "לדף הבית"
+
+#: support.access.requested
+msgid "support.access.requested"
+msgstr "הגישה התבקשה"
+
+#: support.access.requestSent
+msgid "support.access.requestSent"
+msgstr "הבקשה שלך נשלחה לבעל השרשור. תוכל לצפות בשרשור זה לאחר שיאשר את בקשתך."
+
+#: support.access.requestId
+msgid "support.access.requestId"
+msgstr "מזהה בקשה:"
+
+#: support.access.required
+msgid "support.access.required"
+msgstr "נדרשת גישה"
+
+#: support.access.notShared
+msgid "support.access.notShared"
+msgstr "שרשור זה לא שותף עם התמיכה. כחבר צוות תמיכה, תוכל לבקש גישה מבעל השרשור."
+
+#: support.access.requesting
+msgid "support.access.requesting"
+msgstr "מבקש..."
+
+#: support.access.requestButton
+msgid "support.access.requestButton"
+msgstr "בקש גישה"
+
+#: support.access.note
+msgid "support.access.note"
+msgstr "בעל השרשור יקבל התראה ויוכל לאשר או לדחות את בקשתך. אם יאושר, הגישה תינתן ל-31 יום."
+
+#: support.access.errorAlreadyRequested
+msgid "support.access.errorAlreadyRequested"
+msgstr "הגישה לשרשור זה כבר התבקשה. ממתין לאישור הבעלים."
+
+#: support.access.errorAlreadyActive
+msgid "support.access.errorAlreadyActive"
+msgstr "כבר יש לך גישה פעילה לשרשור זה. נסה לרענן את הדף."
+
+#: support.access.errorFailed
+msgid "support.access.errorFailed"
+msgstr "בקשת הגישה נכשלה. נסה שוב."
+
+#: support.access.errorUnexpected
+msgid "support.access.errorUnexpected"
+msgstr "אירעה שגיאה בלתי צפויה."
+
+#: state.idle
+msgid "state.idle"
+msgstr "לא פעיל"
+
+#: state.weaving
+msgid "state.weaving"
+msgstr "אורג"
+
+#: state.threading
+msgid "state.threading"
+msgstr "משחיל"
+
+#: state.shuttlePass
+msgid "state.shuttlePass"
+msgstr "העברת סיר"
+
+#: state.brokenThread
+msgid "state.brokenThread"
+msgstr "חוט קרוע (ניסיון {retries})"
+
+#: tool.showError
+msgid "tool.showError"
+msgstr "הצג שגיאה"
+
+#: tool.showOutput
+msgid "tool.showOutput"
+msgstr "הצג פלט"
+
+#: docs.title
+msgid "docs.title"
+msgstr "תיעוד Loom"
+
+#: docs.redirecting
+msgid "docs.redirecting"
+msgstr "מפנה למדריכים..."
+
+#: docs.tutorials.title
+msgid "docs.tutorials.title"
+msgstr "מדריכים"
+
+#: docs.tutorials.description
+msgid "docs.tutorials.description"
+msgstr "שיעורים מוכווני למידה שלוקחים אותך דרך סדרת שלבים להשלמת פרויקט."
+
+#: docs.tutorials.empty
+msgid "docs.tutorials.empty"
+msgstr "אין מדריכים זמינים עדיין."
+
+#: docs.explanation.title
+msgid "docs.explanation.title"
+msgstr "הסברים"
+
+#: docs.explanation.description
+msgid "docs.explanation.description"
+msgstr "חומרי דיון ורקע המסבירים מושגים, החלטות והתמונה הרחבה."
+
+#: docs.explanation.empty
+msgid "docs.explanation.empty"
+msgstr "אין הסברים זמינים עדיין."
+
+#: docs.reference.title
+msgid "docs.reference.title"
+msgstr "עיון"
+
+#: docs.reference.description
+msgid "docs.reference.description"
+msgstr "חומר עיון טכני עם מידע מפורט על ממשקי API, הגדרות ומבנה פנימי."
+
+#: docs.reference.empty
+msgid "docs.reference.empty"
+msgstr "אין תיעוד עיון זמין עדיין."
+
+#: docs.howTo.title
+msgid "docs.howTo.title"
+msgstr "מדריכי הוראות"
+
+#: docs.howTo.description
+msgid "docs.howTo.description"
+msgstr "מדריכים מוכווני משימות שמראים לך כיצד להשיג יעדים ספציפיים."
+
+#: docs.howTo.empty
+msgid "docs.howTo.empty"
+msgstr "אין מדריכי הוראות זמינים עדיין."

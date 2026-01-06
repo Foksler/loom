@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { Button, LoomFrame } from '$lib/ui';
+  import { i18n } from '$lib/i18n';
 </script>
 
 <div class="error-container">
@@ -10,10 +11,10 @@
         {$page.status}
       </h1>
       <p class="error-message">
-        {$page.error?.message || 'An unexpected error occurred'}
+        {$page.error?.message || i18n.t('general.error')}
       </p>
       <Button variant="primary" onclick={() => window.location.href = '/'}>
-        Go Home
+        {i18n.t('error.goHome')}
       </Button>
     </div>
   </LoomFrame>

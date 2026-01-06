@@ -1849,3 +1849,171 @@ msgstr "المهام الخلفية"
 #: admin.health.auth_providers
 msgid "admin.health.auth_providers"
 msgstr "موفرو المصادقة"
+
+#: thread.noThreadsFound
+msgid "thread.noThreadsFound"
+msgstr "لم يتم العثور على محادثات"
+
+#: thread.time.justNow
+msgid "thread.time.justNow"
+msgstr "الآن"
+
+#: thread.time.minutesAgo
+msgid "thread.time.minutesAgo"
+msgstr "منذ {count} دقيقة"
+
+#: thread.time.hoursAgo
+msgid "thread.time.hoursAgo"
+msgstr "منذ {count} ساعة"
+
+#: thread.time.daysAgo
+msgid "thread.time.daysAgo"
+msgstr "منذ {count} يوم"
+
+#: thread.messageCount
+msgid "thread.messageCount"
+msgstr "{count} رسائل"
+
+#: thread.selectToView
+msgid "thread.selectToView"
+msgstr "اختر محادثة للعرض"
+
+#: thread.createToStart
+msgid "thread.createToStart"
+msgstr "أو أنشئ محادثة جديدة للبدء"
+
+#: error.goHome
+msgid "error.goHome"
+msgstr "الرئيسية"
+
+#: support.access.requested
+msgid "support.access.requested"
+msgstr "تم طلب الوصول"
+
+#: support.access.requestSent
+msgid "support.access.requestSent"
+msgstr "تم إرسال طلبك إلى مالك المحادثة. ستتمكن من عرض هذه المحادثة بمجرد الموافقة على طلبك."
+
+#: support.access.requestId
+msgid "support.access.requestId"
+msgstr "معرف الطلب:"
+
+#: support.access.required
+msgid "support.access.required"
+msgstr "الوصول مطلوب"
+
+#: support.access.notShared
+msgid "support.access.notShared"
+msgstr "لم تتم مشاركة هذه المحادثة مع الدعم. كعضو في فريق الدعم، يمكنك طلب الوصول من مالك المحادثة."
+
+#: support.access.requesting
+msgid "support.access.requesting"
+msgstr "جارٍ الطلب..."
+
+#: support.access.requestButton
+msgid "support.access.requestButton"
+msgstr "طلب الوصول"
+
+#: support.access.note
+msgid "support.access.note"
+msgstr "سيتلقى مالك المحادثة إشعارًا ويمكنه الموافقة على طلبك أو رفضه. في حالة الموافقة، سيتم منح الوصول لمدة 31 يومًا."
+
+#: support.access.errorAlreadyRequested
+msgid "support.access.errorAlreadyRequested"
+msgstr "تم طلب الوصول لهذه المحادثة بالفعل. في انتظار موافقة المالك."
+
+#: support.access.errorAlreadyActive
+msgid "support.access.errorAlreadyActive"
+msgstr "لديك بالفعل وصول نشط لهذه المحادثة. حاول تحديث الصفحة."
+
+#: support.access.errorFailed
+msgid "support.access.errorFailed"
+msgstr "فشل طلب الوصول. يرجى المحاولة مرة أخرى."
+
+#: support.access.errorUnexpected
+msgid "support.access.errorUnexpected"
+msgstr "حدث خطأ غير متوقع."
+
+#: state.idle
+msgid "state.idle"
+msgstr "خامل"
+
+#: state.weaving
+msgid "state.weaving"
+msgstr "جارٍ النسج"
+
+#: state.threading
+msgid "state.threading"
+msgstr "جارٍ التخييط"
+
+#: state.shuttlePass
+msgid "state.shuttlePass"
+msgstr "تمرير المكوك"
+
+#: state.brokenThread
+msgid "state.brokenThread"
+msgstr "خيط مقطوع (محاولة {retries})"
+
+#: tool.showError
+msgid "tool.showError"
+msgstr "إظهار الخطأ"
+
+#: tool.showOutput
+msgid "tool.showOutput"
+msgstr "إظهار المخرجات"
+
+#: docs.title
+msgid "docs.title"
+msgstr "وثائق Loom"
+
+#: docs.redirecting
+msgid "docs.redirecting"
+msgstr "جارٍ التوجيه إلى الدروس..."
+
+#: docs.tutorials.title
+msgid "docs.tutorials.title"
+msgstr "الدروس التعليمية"
+
+#: docs.tutorials.description
+msgid "docs.tutorials.description"
+msgstr "دروس تعليمية موجهة ترشدك خلال سلسلة من الخطوات لإكمال مشروع."
+
+#: docs.tutorials.empty
+msgid "docs.tutorials.empty"
+msgstr "لا تتوفر دروس تعليمية حتى الآن."
+
+#: docs.explanation.title
+msgid "docs.explanation.title"
+msgstr "الشروحات"
+
+#: docs.explanation.description
+msgid "docs.explanation.description"
+msgstr "مواد للنقاش والخلفية تشرح المفاهيم والقرارات والصورة الأكبر."
+
+#: docs.explanation.empty
+msgid "docs.explanation.empty"
+msgstr "لا تتوفر شروحات حتى الآن."
+
+#: docs.reference.title
+msgid "docs.reference.title"
+msgstr "المرجع"
+
+#: docs.reference.description
+msgid "docs.reference.description"
+msgstr "مواد مرجعية تقنية مع معلومات تفصيلية حول واجهات البرمجة والإعدادات والأجزاء الداخلية."
+
+#: docs.reference.empty
+msgid "docs.reference.empty"
+msgstr "لا تتوفر وثائق مرجعية حتى الآن."
+
+#: docs.howTo.title
+msgid "docs.howTo.title"
+msgstr "أدلة إرشادية"
+
+#: docs.howTo.description
+msgid "docs.howTo.description"
+msgstr "أدلة موجهة نحو المهام توضح لك كيفية تحقيق أهداف محددة."
+
+#: docs.howTo.empty
+msgid "docs.howTo.empty"
+msgstr "لا تتوفر أدلة إرشادية حتى الآن."

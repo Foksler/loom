@@ -14,6 +14,7 @@
   import { Card, Button, LoomFrame } from '$lib/ui';
   import { getApiClient } from '$lib/api';
   import { logger } from '$lib/logging';
+  import { i18n } from '$lib/i18n';
   import type { SupportAccessRequest } from '$lib/api/types';
 
   interface Props {
@@ -47,18 +48,18 @@
         try {
           const parsed = JSON.parse((error as { body?: string }).body || '{}');
           if (parsed.code === 'already_requested') {
-            errorMessage = 'Access has already been requested for this thread. Waiting for owner approval.';
+            errorMessage = i18n.t('support.access.errorAlreadyRequested');
             requestState = 'requested';
           } else if (parsed.code === 'already_active') {
-            errorMessage = 'You already have active access to this thread. Try refreshing the page.';
+            errorMessage = i18n.t('support.access.errorAlreadyActive');
           } else {
-            errorMessage = parsed.message || 'Failed to request access. Please try again.';
+            errorMessage = parsed.message || i18n.t('support.access.errorFailed');
           }
         } catch {
-          errorMessage = 'Failed to request access. Please try again.';
+          errorMessage = i18n.t('support.access.errorFailed');
         }
       } else {
-        errorMessage = 'An unexpected error occurred.';
+        errorMessage = i18n.t('support.access.errorUnexpected');
       }
       
       logger.error('Failed to request support access', { threadId, error: String(error) });
@@ -75,13 +76,13 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h2 class="access-title">Access Requested</h2>
+        <h2 class="access-title">{i18n.t('support.access.requested')}</h2>
         <p class="access-description">
-          Your request has been sent to the thread owner. You'll be able to view this thread once they approve your request.
+          {i18n.t('support.access.requestSent')}
         </p>
         {#if pendingRequest}
           <p class="access-request-id">
-            Request ID: {pendingRequest.request_id.slice(0, 8)}...
+            {i18n.t('support.access.requestId')} {pendingRequest.request_id.slice(0, 8)}...
           </p>
         {/if}
       {:else}
@@ -90,9 +91,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m0 0v2m0-2h2m-2 0H10m5-6a3 3 0 11-6 0 3 3 0 016 0zm-3 10a9 9 0 100-18 9 9 0 000 18z" />
           </svg>
         </div>
-        <h2 class="access-title">Access Required</h2>
+        <h2 class="access-title">{i18n.t('support.access.required')}</h2>
         <p class="access-description">
-          This thread has not been shared with support. As a support team member, you can request access from the thread owner.
+          {i18n.t('support.access.notShared')}
         </p>
         
         {#if errorMessage}
@@ -112,16 +113,15 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Requesting...
+              {i18n.t('support.access.requesting')}
             </span>
           {:else}
-            Request Access
+            {i18n.t('support.access.requestButton')}
           {/if}
         </Button>
         
         <p class="access-note">
-          The thread owner will receive a notification and can approve or deny your request.
-          If approved, access will be granted for 31 days.
+          {i18n.t('support.access.note')}
         </p>
       {/if}
     </div>

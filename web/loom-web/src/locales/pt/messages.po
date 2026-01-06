@@ -1849,3 +1849,171 @@ msgstr "Tarefas em segundo plano"
 #: admin.health.auth_providers
 msgid "admin.health.auth_providers"
 msgstr "Provedores de autenticação"
+
+#: thread.noThreadsFound
+msgid "thread.noThreadsFound"
+msgstr "Nenhuma conversa encontrada"
+
+#: thread.time.justNow
+msgid "thread.time.justNow"
+msgstr "Agora mesmo"
+
+#: thread.time.minutesAgo
+msgid "thread.time.minutesAgo"
+msgstr "há {count}m"
+
+#: thread.time.hoursAgo
+msgid "thread.time.hoursAgo"
+msgstr "há {count}h"
+
+#: thread.time.daysAgo
+msgid "thread.time.daysAgo"
+msgstr "há {count}d"
+
+#: thread.messageCount
+msgid "thread.messageCount"
+msgstr "{count} mensagens"
+
+#: thread.selectToView
+msgid "thread.selectToView"
+msgstr "Selecione uma conversa para visualizar"
+
+#: thread.createToStart
+msgid "thread.createToStart"
+msgstr "Ou crie uma nova conversa para começar"
+
+#: error.goHome
+msgid "error.goHome"
+msgstr "Ir para o início"
+
+#: support.access.requested
+msgid "support.access.requested"
+msgstr "Acesso solicitado"
+
+#: support.access.requestSent
+msgid "support.access.requestSent"
+msgstr "Sua solicitação foi enviada ao proprietário da conversa. Você poderá visualizar esta conversa assim que sua solicitação for aprovada."
+
+#: support.access.requestId
+msgid "support.access.requestId"
+msgstr "ID da solicitação:"
+
+#: support.access.required
+msgid "support.access.required"
+msgstr "Acesso necessário"
+
+#: support.access.notShared
+msgid "support.access.notShared"
+msgstr "Esta conversa não foi compartilhada com o suporte. Como membro da equipe de suporte, você pode solicitar acesso ao proprietário da conversa."
+
+#: support.access.requesting
+msgid "support.access.requesting"
+msgstr "Solicitando..."
+
+#: support.access.requestButton
+msgid "support.access.requestButton"
+msgstr "Solicitar acesso"
+
+#: support.access.note
+msgid "support.access.note"
+msgstr "O proprietário da conversa receberá uma notificação e poderá aprovar ou negar sua solicitação. Se aprovado, o acesso será concedido por 31 dias."
+
+#: support.access.errorAlreadyRequested
+msgid "support.access.errorAlreadyRequested"
+msgstr "O acesso já foi solicitado para esta conversa. Aguardando aprovação do proprietário."
+
+#: support.access.errorAlreadyActive
+msgid "support.access.errorAlreadyActive"
+msgstr "Você já tem acesso ativo a esta conversa. Tente atualizar a página."
+
+#: support.access.errorFailed
+msgid "support.access.errorFailed"
+msgstr "Falha ao solicitar acesso. Por favor, tente novamente."
+
+#: support.access.errorUnexpected
+msgid "support.access.errorUnexpected"
+msgstr "Ocorreu um erro inesperado."
+
+#: state.idle
+msgid "state.idle"
+msgstr "Inativo"
+
+#: state.weaving
+msgid "state.weaving"
+msgstr "Tecendo"
+
+#: state.threading
+msgid "state.threading"
+msgstr "Enfiando"
+
+#: state.shuttlePass
+msgid "state.shuttlePass"
+msgstr "Passagem da lançadeira"
+
+#: state.brokenThread
+msgid "state.brokenThread"
+msgstr "Fio quebrado (tentativa {retries})"
+
+#: tool.showError
+msgid "tool.showError"
+msgstr "Mostrar erro"
+
+#: tool.showOutput
+msgid "tool.showOutput"
+msgstr "Mostrar saída"
+
+#: docs.title
+msgid "docs.title"
+msgstr "Documentação do Loom"
+
+#: docs.redirecting
+msgid "docs.redirecting"
+msgstr "Redirecionando para tutoriais..."
+
+#: docs.tutorials.title
+msgid "docs.tutorials.title"
+msgstr "Tutoriais"
+
+#: docs.tutorials.description
+msgid "docs.tutorials.description"
+msgstr "Lições orientadas ao aprendizado que guiam você através de uma série de passos para completar um projeto."
+
+#: docs.tutorials.empty
+msgid "docs.tutorials.empty"
+msgstr "Nenhum tutorial disponível ainda."
+
+#: docs.explanation.title
+msgid "docs.explanation.title"
+msgstr "Explicação"
+
+#: docs.explanation.description
+msgid "docs.explanation.description"
+msgstr "Material de discussão e contexto que explica conceitos, decisões e o panorama geral."
+
+#: docs.explanation.empty
+msgid "docs.explanation.empty"
+msgstr "Nenhuma explicação disponível ainda."
+
+#: docs.reference.title
+msgid "docs.reference.title"
+msgstr "Referência"
+
+#: docs.reference.description
+msgid "docs.reference.description"
+msgstr "Material de referência técnica com informações detalhadas sobre APIs, configuração e internos."
+
+#: docs.reference.empty
+msgid "docs.reference.empty"
+msgstr "Nenhuma documentação de referência disponível ainda."
+
+#: docs.howTo.title
+msgid "docs.howTo.title"
+msgstr "Guias práticos"
+
+#: docs.howTo.description
+msgid "docs.howTo.description"
+msgstr "Guias orientados a tarefas que mostram como alcançar objetivos específicos."
+
+#: docs.howTo.empty
+msgid "docs.howTo.empty"
+msgstr "Nenhum guia prático disponível ainda."

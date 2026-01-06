@@ -5,6 +5,7 @@
 <script lang="ts">
   import type { ToolExecutionStatus } from '../api/types';
   import { ToolStatusBadge } from '../ui';
+  import { i18n } from '$lib/i18n';
 
   interface Props {
     execution: ToolExecutionStatus;
@@ -27,7 +28,7 @@
   {#if execution.status === 'completed' || execution.status === 'failed'}
     <details class="execution-details">
       <summary class="execution-summary">
-        {execution.error ? 'Show error' : 'Show output'}
+        {execution.error ? i18n.t('tool.showError') : i18n.t('tool.showOutput')}
       </summary>
       <pre class="execution-output" class:execution-output-error={execution.error}>{execution.error ?? JSON.stringify(execution.result, null, 2)}</pre>
     </details>

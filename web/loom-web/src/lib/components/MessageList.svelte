@@ -7,6 +7,7 @@
 	import type { MessageSnapshot } from '../api/types';
 	import { ThreadDivider } from '../ui';
 	import MessageBubble from './MessageBubble.svelte';
+	import { i18n } from '$lib/i18n';
 
 	interface Props {
 		messages: MessageSnapshot[];
@@ -39,7 +40,7 @@
 
 <div bind:this={containerRef} class="message-list">
 	{#if messages.length === 0 && !isStreaming}
-		<div class="empty-state">Start a conversation...</div>
+		<div class="empty-state">{i18n.t('message.placeholder')}</div>
 	{:else}
 		{#each messages as message, index (message.id || message.created_at)}
 			{#if shouldShowDivider(message, index)}

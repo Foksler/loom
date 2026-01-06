@@ -1885,3 +1885,171 @@ msgstr "確認のためリポジトリ名を入力してください："
 #: client.repos.settings.delete_confirm_button
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "理解しました、このリポジトリを削除します"
+
+#: thread.noThreadsFound
+msgid "thread.noThreadsFound"
+msgstr "スレッドが見つかりません"
+
+#: thread.time.justNow
+msgid "thread.time.justNow"
+msgstr "たった今"
+
+#: thread.time.minutesAgo
+msgid "thread.time.minutesAgo"
+msgstr "{count}分前"
+
+#: thread.time.hoursAgo
+msgid "thread.time.hoursAgo"
+msgstr "{count}時間前"
+
+#: thread.time.daysAgo
+msgid "thread.time.daysAgo"
+msgstr "{count}日前"
+
+#: thread.messageCount
+msgid "thread.messageCount"
+msgstr "{count}件のメッセージ"
+
+#: thread.selectToView
+msgid "thread.selectToView"
+msgstr "スレッドを選択して表示"
+
+#: thread.createToStart
+msgid "thread.createToStart"
+msgstr "または新規スレッドを作成して開始"
+
+#: error.goHome
+msgid "error.goHome"
+msgstr "ホームへ"
+
+#: support.access.requested
+msgid "support.access.requested"
+msgstr "アクセスをリクエスト済み"
+
+#: support.access.requestSent
+msgid "support.access.requestSent"
+msgstr "リクエストがスレッドオーナーに送信されました。承認されると、このスレッドを表示できるようになります。"
+
+#: support.access.requestId
+msgid "support.access.requestId"
+msgstr "リクエストID："
+
+#: support.access.required
+msgid "support.access.required"
+msgstr "アクセスが必要です"
+
+#: support.access.notShared
+msgid "support.access.notShared"
+msgstr "このスレッドはサポートと共有されていません。サポートチームのメンバーとして、スレッドオーナーにアクセスをリクエストできます。"
+
+#: support.access.requesting
+msgid "support.access.requesting"
+msgstr "リクエスト中..."
+
+#: support.access.requestButton
+msgid "support.access.requestButton"
+msgstr "アクセスをリクエスト"
+
+#: support.access.note
+msgid "support.access.note"
+msgstr "スレッドオーナーに通知が届き、リクエストを承認または拒否できます。承認された場合、アクセスは31日間有効です。"
+
+#: support.access.errorAlreadyRequested
+msgid "support.access.errorAlreadyRequested"
+msgstr "このスレッドへのアクセスは既にリクエスト済みです。オーナーの承認をお待ちください。"
+
+#: support.access.errorAlreadyActive
+msgid "support.access.errorAlreadyActive"
+msgstr "このスレッドへのアクセス権は既にあります。ページを更新してみてください。"
+
+#: support.access.errorFailed
+msgid "support.access.errorFailed"
+msgstr "アクセスのリクエストに失敗しました。もう一度お試しください。"
+
+#: support.access.errorUnexpected
+msgid "support.access.errorUnexpected"
+msgstr "予期しないエラーが発生しました。"
+
+#: state.idle
+msgid "state.idle"
+msgstr "待機中"
+
+#: state.weaving
+msgid "state.weaving"
+msgstr "織り込み中"
+
+#: state.threading
+msgid "state.threading"
+msgstr "糸通し中"
+
+#: state.shuttlePass
+msgid "state.shuttlePass"
+msgstr "シャトルパス"
+
+#: state.brokenThread
+msgid "state.brokenThread"
+msgstr "糸切れ（リトライ {retries}）"
+
+#: tool.showError
+msgid "tool.showError"
+msgstr "エラーを表示"
+
+#: tool.showOutput
+msgid "tool.showOutput"
+msgstr "出力を表示"
+
+#: docs.title
+msgid "docs.title"
+msgstr "Loom ドキュメント"
+
+#: docs.redirecting
+msgid "docs.redirecting"
+msgstr "チュートリアルにリダイレクト中..."
+
+#: docs.tutorials.title
+msgid "docs.tutorials.title"
+msgstr "チュートリアル"
+
+#: docs.tutorials.description
+msgid "docs.tutorials.description"
+msgstr "プロジェクトを完成させるための一連のステップを案内する学習指向のレッスン。"
+
+#: docs.tutorials.empty
+msgid "docs.tutorials.empty"
+msgstr "チュートリアルはまだありません。"
+
+#: docs.explanation.title
+msgid "docs.explanation.title"
+msgstr "解説"
+
+#: docs.explanation.description
+msgid "docs.explanation.description"
+msgstr "概念、決定事項、全体像を説明する議論と背景資料。"
+
+#: docs.explanation.empty
+msgid "docs.explanation.empty"
+msgstr "解説はまだありません。"
+
+#: docs.reference.title
+msgid "docs.reference.title"
+msgstr "リファレンス"
+
+#: docs.reference.description
+msgid "docs.reference.description"
+msgstr "API、設定、内部構造に関する詳細情報を含む技術リファレンス資料。"
+
+#: docs.reference.empty
+msgid "docs.reference.empty"
+msgstr "リファレンスドキュメントはまだありません。"
+
+#: docs.howTo.title
+msgid "docs.howTo.title"
+msgstr "ハウツーガイド"
+
+#: docs.howTo.description
+msgid "docs.howTo.description"
+msgstr "特定の目標を達成する方法を示すタスク指向のガイド。"
+
+#: docs.howTo.empty
+msgid "docs.howTo.empty"
+msgstr "ハウツーガイドはまだありません。"

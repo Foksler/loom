@@ -4,6 +4,7 @@
 -->
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { i18n } from '$lib/i18n';
 	import { LinkCard } from '$lib/docs/components';
 
 	interface Props {
@@ -18,9 +19,9 @@
 </script>
 
 <div class="category-page">
-	<h1>Tutorials</h1>
+	<h1>{i18n.t('docs.tutorials.title')}</h1>
 	<p class="category-description">
-		Learning-oriented lessons that take you through a series of steps to complete a project.
+		{i18n.t('docs.tutorials.description')}
 	</p>
 
 	<div class="doc-list">
@@ -29,7 +30,7 @@
 		{/each}
 
 		{#if tutorials.length === 0}
-			<p class="empty-message">No tutorials available yet.</p>
+			<p class="empty-message">{i18n.t('docs.tutorials.empty')}</p>
 		{/if}
 	</div>
 </div>

@@ -1885,3 +1885,171 @@ msgstr "输入仓库名称以确认："
 #: client.repos.settings.delete_confirm_button
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "我了解，删除此仓库"
+
+#: thread.noThreadsFound
+msgid "thread.noThreadsFound"
+msgstr "未找到会话"
+
+#: thread.time.justNow
+msgid "thread.time.justNow"
+msgstr "刚刚"
+
+#: thread.time.minutesAgo
+msgid "thread.time.minutesAgo"
+msgstr "{count}分钟前"
+
+#: thread.time.hoursAgo
+msgid "thread.time.hoursAgo"
+msgstr "{count}小时前"
+
+#: thread.time.daysAgo
+msgid "thread.time.daysAgo"
+msgstr "{count}天前"
+
+#: thread.messageCount
+msgid "thread.messageCount"
+msgstr "{count}条消息"
+
+#: thread.selectToView
+msgid "thread.selectToView"
+msgstr "选择会话以查看"
+
+#: thread.createToStart
+msgid "thread.createToStart"
+msgstr "或创建新会话开始"
+
+#: error.goHome
+msgid "error.goHome"
+msgstr "返回首页"
+
+#: support.access.requested
+msgid "support.access.requested"
+msgstr "已请求访问"
+
+#: support.access.requestSent
+msgid "support.access.requestSent"
+msgstr "您的请求已发送给会话所有者。获得批准后，您将能够查看此会话。"
+
+#: support.access.requestId
+msgid "support.access.requestId"
+msgstr "请求 ID："
+
+#: support.access.required
+msgid "support.access.required"
+msgstr "需要访问权限"
+
+#: support.access.notShared
+msgid "support.access.notShared"
+msgstr "此会话未与支持团队共享。作为支持团队成员，您可以向会话所有者请求访问权限。"
+
+#: support.access.requesting
+msgid "support.access.requesting"
+msgstr "请求中..."
+
+#: support.access.requestButton
+msgid "support.access.requestButton"
+msgstr "请求访问"
+
+#: support.access.note
+msgid "support.access.note"
+msgstr "会话所有者将收到通知，并可以批准或拒绝您的请求。如果获得批准，访问权限将持续31天。"
+
+#: support.access.errorAlreadyRequested
+msgid "support.access.errorAlreadyRequested"
+msgstr "已请求访问此会话。请等待所有者批准。"
+
+#: support.access.errorAlreadyActive
+msgid "support.access.errorAlreadyActive"
+msgstr "您已拥有此会话的访问权限。请尝试刷新页面。"
+
+#: support.access.errorFailed
+msgid "support.access.errorFailed"
+msgstr "请求访问失败。请重试。"
+
+#: support.access.errorUnexpected
+msgid "support.access.errorUnexpected"
+msgstr "发生意外错误。"
+
+#: state.idle
+msgid "state.idle"
+msgstr "空闲"
+
+#: state.weaving
+msgid "state.weaving"
+msgstr "编织中"
+
+#: state.threading
+msgid "state.threading"
+msgstr "穿线中"
+
+#: state.shuttlePass
+msgid "state.shuttlePass"
+msgstr "梭子传递"
+
+#: state.brokenThread
+msgid "state.brokenThread"
+msgstr "线断（重试 {retries}）"
+
+#: tool.showError
+msgid "tool.showError"
+msgstr "显示错误"
+
+#: tool.showOutput
+msgid "tool.showOutput"
+msgstr "显示输出"
+
+#: docs.title
+msgid "docs.title"
+msgstr "Loom 文档"
+
+#: docs.redirecting
+msgid "docs.redirecting"
+msgstr "正在跳转到教程..."
+
+#: docs.tutorials.title
+msgid "docs.tutorials.title"
+msgstr "教程"
+
+#: docs.tutorials.description
+msgid "docs.tutorials.description"
+msgstr "以学习为导向的课程，带您逐步完成项目。"
+
+#: docs.tutorials.empty
+msgid "docs.tutorials.empty"
+msgstr "暂无教程。"
+
+#: docs.explanation.title
+msgid "docs.explanation.title"
+msgstr "解释"
+
+#: docs.explanation.description
+msgid "docs.explanation.description"
+msgstr "解释概念、决策和全局的讨论和背景材料。"
+
+#: docs.explanation.empty
+msgid "docs.explanation.empty"
+msgstr "暂无解释。"
+
+#: docs.reference.title
+msgid "docs.reference.title"
+msgstr "参考"
+
+#: docs.reference.description
+msgid "docs.reference.description"
+msgstr "包含 API、配置和内部结构详细信息的技术参考资料。"
+
+#: docs.reference.empty
+msgid "docs.reference.empty"
+msgstr "暂无参考文档。"
+
+#: docs.howTo.title
+msgid "docs.howTo.title"
+msgstr "操作指南"
+
+#: docs.howTo.description
+msgid "docs.howTo.description"
+msgstr "以任务为导向的指南，展示如何实现特定目标。"
+
+#: docs.howTo.empty
+msgid "docs.howTo.empty"
+msgstr "暂无操作指南。"

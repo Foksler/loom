@@ -4,6 +4,7 @@
 -->
 <script lang="ts">
 	import { DocSearch, Sidebar } from '$lib/docs/components';
+	import { i18n } from '$lib/i18n';
 	import type { LayoutData } from './$types';
 
 	interface Props {
@@ -17,7 +18,7 @@
 <div class="docs-layout">
 	<aside class="sidebar">
 		<div class="sidebar-header">
-			<a href="/docs" class="sidebar-logo">Loom Docs</a>
+			<a href="/docs" class="sidebar-logo">{i18n.t('docs.title')}</a>
 			<div class="sidebar-search">
 				<DocSearch />
 			</div>

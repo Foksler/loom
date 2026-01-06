@@ -1885,3 +1885,171 @@ msgstr "Typ de naam van de repository om te bevestigen:"
 #: client.repos.settings.delete_confirm_button
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "Ik begrijp het, verwijder deze repository"
+
+#: thread.noThreadsFound
+msgid "thread.noThreadsFound"
+msgstr "Geen threads gevonden"
+
+#: thread.time.justNow
+msgid "thread.time.justNow"
+msgstr "Zojuist"
+
+#: thread.time.minutesAgo
+msgid "thread.time.minutesAgo"
+msgstr "{count}m geleden"
+
+#: thread.time.hoursAgo
+msgid "thread.time.hoursAgo"
+msgstr "{count}u geleden"
+
+#: thread.time.daysAgo
+msgid "thread.time.daysAgo"
+msgstr "{count}d geleden"
+
+#: thread.messageCount
+msgid "thread.messageCount"
+msgstr "{count} berichten"
+
+#: thread.selectToView
+msgid "thread.selectToView"
+msgstr "Selecteer een thread om te bekijken"
+
+#: thread.createToStart
+msgid "thread.createToStart"
+msgstr "Of maak een nieuwe thread om te beginnen"
+
+#: error.goHome
+msgid "error.goHome"
+msgstr "Naar home"
+
+#: support.access.requested
+msgid "support.access.requested"
+msgstr "Toegang aangevraagd"
+
+#: support.access.requestSent
+msgid "support.access.requestSent"
+msgstr "Je aanvraag is verzonden naar de thread-eigenaar. Je kunt deze thread bekijken zodra zij je aanvraag goedkeuren."
+
+#: support.access.requestId
+msgid "support.access.requestId"
+msgstr "Aanvraag-ID:"
+
+#: support.access.required
+msgid "support.access.required"
+msgstr "Toegang vereist"
+
+#: support.access.notShared
+msgid "support.access.notShared"
+msgstr "Deze thread is niet gedeeld met support. Als lid van het supportteam kun je toegang aanvragen bij de thread-eigenaar."
+
+#: support.access.requesting
+msgid "support.access.requesting"
+msgstr "Aanvragen..."
+
+#: support.access.requestButton
+msgid "support.access.requestButton"
+msgstr "Toegang aanvragen"
+
+#: support.access.note
+msgid "support.access.note"
+msgstr "De thread-eigenaar ontvangt een melding en kan je aanvraag goedkeuren of afwijzen. Bij goedkeuring krijg je 31 dagen toegang."
+
+#: support.access.errorAlreadyRequested
+msgid "support.access.errorAlreadyRequested"
+msgstr "Toegang is al aangevraagd voor deze thread. Wacht op goedkeuring van de eigenaar."
+
+#: support.access.errorAlreadyActive
+msgid "support.access.errorAlreadyActive"
+msgstr "Je hebt al actieve toegang tot deze thread. Probeer de pagina te vernieuwen."
+
+#: support.access.errorFailed
+msgid "support.access.errorFailed"
+msgstr "Toegang aanvragen mislukt. Probeer het opnieuw."
+
+#: support.access.errorUnexpected
+msgid "support.access.errorUnexpected"
+msgstr "Er is een onverwachte fout opgetreden."
+
+#: state.idle
+msgid "state.idle"
+msgstr "Inactief"
+
+#: state.weaving
+msgid "state.weaving"
+msgstr "Weven"
+
+#: state.threading
+msgid "state.threading"
+msgstr "Inrijgen"
+
+#: state.shuttlePass
+msgid "state.shuttlePass"
+msgstr "Schietspoel"
+
+#: state.brokenThread
+msgid "state.brokenThread"
+msgstr "Gebroken draad (poging {retries})"
+
+#: tool.showError
+msgid "tool.showError"
+msgstr "Toon fout"
+
+#: tool.showOutput
+msgid "tool.showOutput"
+msgstr "Toon uitvoer"
+
+#: docs.title
+msgid "docs.title"
+msgstr "Loom Documentatie"
+
+#: docs.redirecting
+msgid "docs.redirecting"
+msgstr "Doorsturen naar tutorials..."
+
+#: docs.tutorials.title
+msgid "docs.tutorials.title"
+msgstr "Tutorials"
+
+#: docs.tutorials.description
+msgid "docs.tutorials.description"
+msgstr "Leerzame lessen die je stap voor stap door een project leiden."
+
+#: docs.tutorials.empty
+msgid "docs.tutorials.empty"
+msgstr "Nog geen tutorials beschikbaar."
+
+#: docs.explanation.title
+msgid "docs.explanation.title"
+msgstr "Uitleg"
+
+#: docs.explanation.description
+msgid "docs.explanation.description"
+msgstr "Discussie en achtergrondmateriaal dat concepten, beslissingen en het grotere geheel uitlegt."
+
+#: docs.explanation.empty
+msgid "docs.explanation.empty"
+msgstr "Nog geen uitleg beschikbaar."
+
+#: docs.reference.title
+msgid "docs.reference.title"
+msgstr "Referentie"
+
+#: docs.reference.description
+msgid "docs.reference.description"
+msgstr "Technische referentiedocumentatie met gedetailleerde informatie over API's, configuratie en interne werking."
+
+#: docs.reference.empty
+msgid "docs.reference.empty"
+msgstr "Nog geen referentiedocumentatie beschikbaar."
+
+#: docs.howTo.title
+msgid "docs.howTo.title"
+msgstr "Handleidingen"
+
+#: docs.howTo.description
+msgid "docs.howTo.description"
+msgstr "Taakgerichte handleidingen die laten zien hoe je specifieke doelen bereikt."
+
+#: docs.howTo.empty
+msgid "docs.howTo.empty"
+msgstr "Nog geen handleidingen beschikbaar."

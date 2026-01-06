@@ -1885,3 +1885,171 @@ msgstr "Введите название репозитория для подтв
 #: client.repos.settings.delete_confirm_button
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "Я понимаю, удалить этот репозиторий"
+
+#: thread.noThreadsFound
+msgid "thread.noThreadsFound"
+msgstr "Треды не найдены"
+
+#: thread.time.justNow
+msgid "thread.time.justNow"
+msgstr "Только что"
+
+#: thread.time.minutesAgo
+msgid "thread.time.minutesAgo"
+msgstr "{count} мин. назад"
+
+#: thread.time.hoursAgo
+msgid "thread.time.hoursAgo"
+msgstr "{count} ч. назад"
+
+#: thread.time.daysAgo
+msgid "thread.time.daysAgo"
+msgstr "{count} д. назад"
+
+#: thread.messageCount
+msgid "thread.messageCount"
+msgstr "{count} сообщений"
+
+#: thread.selectToView
+msgid "thread.selectToView"
+msgstr "Выберите тред для просмотра"
+
+#: thread.createToStart
+msgid "thread.createToStart"
+msgstr "Или создайте новый тред для начала"
+
+#: error.goHome
+msgid "error.goHome"
+msgstr "На главную"
+
+#: support.access.requested
+msgid "support.access.requested"
+msgstr "Доступ запрошен"
+
+#: support.access.requestSent
+msgid "support.access.requestSent"
+msgstr "Ваш запрос отправлен владельцу треда. Вы сможете просмотреть этот тред после его одобрения."
+
+#: support.access.requestId
+msgid "support.access.requestId"
+msgstr "ID запроса:"
+
+#: support.access.required
+msgid "support.access.required"
+msgstr "Требуется доступ"
+
+#: support.access.notShared
+msgid "support.access.notShared"
+msgstr "Этот тред не был предоставлен службе поддержки. Как член команды поддержки, вы можете запросить доступ у владельца треда."
+
+#: support.access.requesting
+msgid "support.access.requesting"
+msgstr "Запрос..."
+
+#: support.access.requestButton
+msgid "support.access.requestButton"
+msgstr "Запросить доступ"
+
+#: support.access.note
+msgid "support.access.note"
+msgstr "Владелец треда получит уведомление и сможет одобрить или отклонить ваш запрос. В случае одобрения доступ будет предоставлен на 31 день."
+
+#: support.access.errorAlreadyRequested
+msgid "support.access.errorAlreadyRequested"
+msgstr "Доступ к этому треду уже запрошен. Ожидание одобрения владельца."
+
+#: support.access.errorAlreadyActive
+msgid "support.access.errorAlreadyActive"
+msgstr "У вас уже есть активный доступ к этому треду. Попробуйте обновить страницу."
+
+#: support.access.errorFailed
+msgid "support.access.errorFailed"
+msgstr "Не удалось запросить доступ. Пожалуйста, попробуйте снова."
+
+#: support.access.errorUnexpected
+msgid "support.access.errorUnexpected"
+msgstr "Произошла непредвиденная ошибка."
+
+#: state.idle
+msgid "state.idle"
+msgstr "Ожидание"
+
+#: state.weaving
+msgid "state.weaving"
+msgstr "Плетение"
+
+#: state.threading
+msgid "state.threading"
+msgstr "Продевание"
+
+#: state.shuttlePass
+msgid "state.shuttlePass"
+msgstr "Проход челнока"
+
+#: state.brokenThread
+msgid "state.brokenThread"
+msgstr "Обрыв нити (попытка {retries})"
+
+#: tool.showError
+msgid "tool.showError"
+msgstr "Показать ошибку"
+
+#: tool.showOutput
+msgid "tool.showOutput"
+msgstr "Показать вывод"
+
+#: docs.title
+msgid "docs.title"
+msgstr "Документация Loom"
+
+#: docs.redirecting
+msgid "docs.redirecting"
+msgstr "Перенаправление на учебные материалы..."
+
+#: docs.tutorials.title
+msgid "docs.tutorials.title"
+msgstr "Учебные материалы"
+
+#: docs.tutorials.description
+msgid "docs.tutorials.description"
+msgstr "Обучающие уроки, которые проведут вас через серию шагов для завершения проекта."
+
+#: docs.tutorials.empty
+msgid "docs.tutorials.empty"
+msgstr "Учебные материалы пока недоступны."
+
+#: docs.explanation.title
+msgid "docs.explanation.title"
+msgstr "Объяснения"
+
+#: docs.explanation.description
+msgid "docs.explanation.description"
+msgstr "Обсуждения и справочные материалы, объясняющие концепции, решения и общую картину."
+
+#: docs.explanation.empty
+msgid "docs.explanation.empty"
+msgstr "Объяснения пока недоступны."
+
+#: docs.reference.title
+msgid "docs.reference.title"
+msgstr "Справочник"
+
+#: docs.reference.description
+msgid "docs.reference.description"
+msgstr "Техническая справочная документация с подробной информацией об API, конфигурации и внутренней структуре."
+
+#: docs.reference.empty
+msgid "docs.reference.empty"
+msgstr "Справочная документация пока недоступна."
+
+#: docs.howTo.title
+msgid "docs.howTo.title"
+msgstr "Практические руководства"
+
+#: docs.howTo.description
+msgid "docs.howTo.description"
+msgstr "Руководства, ориентированные на задачи, которые показывают, как достичь конкретных целей."
+
+#: docs.howTo.empty
+msgid "docs.howTo.empty"
+msgstr "Практические руководства пока недоступны."
