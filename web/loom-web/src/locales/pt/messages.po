@@ -1370,6 +1370,46 @@ msgstr "Branch padrão:"
 msgid "client.repos.list.updated"
 msgstr "Atualizado"
 
+#: client.repos.create.title
+msgid "client.repos.create.title"
+msgstr "Criar Repositório"
+
+#: client.repos.create.name
+msgid "client.repos.create.name"
+msgstr "Nome do repositório"
+
+#: client.repos.create.name_placeholder
+msgid "client.repos.create.name_placeholder"
+msgstr "meu-projeto-incrivel"
+
+#: client.repos.create.visibility
+msgid "client.repos.create.visibility"
+msgstr "Visibilidade"
+
+#: client.repos.create.private
+msgid "client.repos.create.private"
+msgstr "Privado"
+
+#: client.repos.create.public
+msgid "client.repos.create.public"
+msgstr "Público"
+
+#: client.repos.create.submit
+msgid "client.repos.create.submit"
+msgstr "Criar Repositório"
+
+#: client.repos.create.cancel
+msgid "client.repos.create.cancel"
+msgstr "Cancelar"
+
+#: client.repos.create.error
+msgid "client.repos.create.error"
+msgstr "Falha ao criar repositório"
+
+#: client.repos.create.name_invalid
+msgid "client.repos.create.name_invalid"
+msgstr "Nome de repositório inválido. Use letras, números, pontos, hífens ou underscores."
+
 #: client.repos.header.clone
 msgid "client.repos.header.clone"
 msgstr "Clonar"

@@ -1574,6 +1574,46 @@ msgstr "默认分支："
 msgid "client.repos.list.updated"
 msgstr "更新于"
 
+#: client.repos.create.title
+msgid "client.repos.create.title"
+msgstr "创建仓库"
+
+#: client.repos.create.name
+msgid "client.repos.create.name"
+msgstr "仓库名称"
+
+#: client.repos.create.name_placeholder
+msgid "client.repos.create.name_placeholder"
+msgstr "我的精彩项目"
+
+#: client.repos.create.visibility
+msgid "client.repos.create.visibility"
+msgstr "可见性"
+
+#: client.repos.create.private
+msgid "client.repos.create.private"
+msgstr "私有"
+
+#: client.repos.create.public
+msgid "client.repos.create.public"
+msgstr "公开"
+
+#: client.repos.create.submit
+msgid "client.repos.create.submit"
+msgstr "创建仓库"
+
+#: client.repos.create.cancel
+msgid "client.repos.create.cancel"
+msgstr "取消"
+
+#: client.repos.create.error
+msgid "client.repos.create.error"
+msgstr "创建仓库失败"
+
+#: client.repos.create.name_invalid
+msgid "client.repos.create.name_invalid"
+msgstr "仓库名称无效。请使用字母、数字、点、连字符或下划线。"
+
 #: client.repos.header.clone
 msgid "client.repos.header.clone"
 msgstr "克隆"

@@ -1574,6 +1574,46 @@ msgstr "ডিফল্ট ব্রাঞ্চ:"
 msgid "client.repos.list.updated"
 msgstr "আপডেট করা হয়েছে"
 
+#: client.repos.create.title
+msgid "client.repos.create.title"
+msgstr "রিপোজিটরি তৈরি করুন"
+
+#: client.repos.create.name
+msgid "client.repos.create.name"
+msgstr "রিপোজিটরির নাম"
+
+#: client.repos.create.name_placeholder
+msgid "client.repos.create.name_placeholder"
+msgstr "আমার-দারুণ-প্রজেক্ট"
+
+#: client.repos.create.visibility
+msgid "client.repos.create.visibility"
+msgstr "দৃশ্যমানতা"
+
+#: client.repos.create.private
+msgid "client.repos.create.private"
+msgstr "প্রাইভেট"
+
+#: client.repos.create.public
+msgid "client.repos.create.public"
+msgstr "পাবলিক"
+
+#: client.repos.create.submit
+msgid "client.repos.create.submit"
+msgstr "রিপোজিটরি তৈরি করুন"
+
+#: client.repos.create.cancel
+msgid "client.repos.create.cancel"
+msgstr "বাতিল"
+
+#: client.repos.create.error
+msgid "client.repos.create.error"
+msgstr "রিপোজিটরি তৈরি করতে ব্যর্থ"
+
+#: client.repos.create.name_invalid
+msgid "client.repos.create.name_invalid"
+msgstr "অবৈধ রিপোজিটরি নাম। অক্ষর, সংখ্যা, বিন্দু, ড্যাশ বা আন্ডারস্কোর ব্যবহার করুন।"
+
 #: client.repos.header.clone
 msgid "client.repos.header.clone"
 msgstr "ক্লোন"

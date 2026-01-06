@@ -1531,6 +1531,46 @@ msgstr "Default branch:"
 msgid "client.repos.list.updated"
 msgstr "Updated"
 
+#: client.repos.create.title
+msgid "client.repos.create.title"
+msgstr "Create Repository"
+
+#: client.repos.create.name
+msgid "client.repos.create.name"
+msgstr "Repository name"
+
+#: client.repos.create.name_placeholder
+msgid "client.repos.create.name_placeholder"
+msgstr "my-awesome-project"
+
+#: client.repos.create.visibility
+msgid "client.repos.create.visibility"
+msgstr "Visibility"
+
+#: client.repos.create.private
+msgid "client.repos.create.private"
+msgstr "Private"
+
+#: client.repos.create.public
+msgid "client.repos.create.public"
+msgstr "Public"
+
+#: client.repos.create.submit
+msgid "client.repos.create.submit"
+msgstr "Create Repository"
+
+#: client.repos.create.cancel
+msgid "client.repos.create.cancel"
+msgstr "Cancel"
+
+#: client.repos.create.error
+msgid "client.repos.create.error"
+msgstr "Failed to create repository"
+
+#: client.repos.create.name_invalid
+msgid "client.repos.create.name_invalid"
+msgstr "Invalid repository name. Use letters, numbers, dots, dashes, or underscores."
+
 #: client.repos.header.clone
 msgid "client.repos.header.clone"
 msgstr "Clone"

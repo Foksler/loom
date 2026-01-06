@@ -1574,6 +1574,46 @@ msgstr "Ветка по умолчанию:"
 msgid "client.repos.list.updated"
 msgstr "Обновлено"
 
+#: client.repos.create.title
+msgid "client.repos.create.title"
+msgstr "Создать репозиторий"
+
+#: client.repos.create.name
+msgid "client.repos.create.name"
+msgstr "Название репозитория"
+
+#: client.repos.create.name_placeholder
+msgid "client.repos.create.name_placeholder"
+msgstr "мой-крутой-проект"
+
+#: client.repos.create.visibility
+msgid "client.repos.create.visibility"
+msgstr "Видимость"
+
+#: client.repos.create.private
+msgid "client.repos.create.private"
+msgstr "Приватный"
+
+#: client.repos.create.public
+msgid "client.repos.create.public"
+msgstr "Публичный"
+
+#: client.repos.create.submit
+msgid "client.repos.create.submit"
+msgstr "Создать репозиторий"
+
+#: client.repos.create.cancel
+msgid "client.repos.create.cancel"
+msgstr "Отмена"
+
+#: client.repos.create.error
+msgid "client.repos.create.error"
+msgstr "Не удалось создать репозиторий"
+
+#: client.repos.create.name_invalid
+msgid "client.repos.create.name_invalid"
+msgstr "Недопустимое название репозитория. Используйте буквы, цифры, точки, дефисы или подчёркивания."
+
 #: client.repos.header.clone
 msgid "client.repos.header.clone"
 msgstr "Клонировать"

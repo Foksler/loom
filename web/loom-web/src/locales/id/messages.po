@@ -1574,6 +1574,46 @@ msgstr "Cabang default:"
 msgid "client.repos.list.updated"
 msgstr "Diperbarui"
 
+#: client.repos.create.title
+msgid "client.repos.create.title"
+msgstr "Buat Repositori"
+
+#: client.repos.create.name
+msgid "client.repos.create.name"
+msgstr "Nama repositori"
+
+#: client.repos.create.name_placeholder
+msgid "client.repos.create.name_placeholder"
+msgstr "proyek-keren-saya"
+
+#: client.repos.create.visibility
+msgid "client.repos.create.visibility"
+msgstr "Visibilitas"
+
+#: client.repos.create.private
+msgid "client.repos.create.private"
+msgstr "Privat"
+
+#: client.repos.create.public
+msgid "client.repos.create.public"
+msgstr "Publik"
+
+#: client.repos.create.submit
+msgid "client.repos.create.submit"
+msgstr "Buat Repositori"
+
+#: client.repos.create.cancel
+msgid "client.repos.create.cancel"
+msgstr "Batal"
+
+#: client.repos.create.error
+msgid "client.repos.create.error"
+msgstr "Gagal membuat repositori"
+
+#: client.repos.create.name_invalid
+msgid "client.repos.create.name_invalid"
+msgstr "Nama repositori tidak valid. Gunakan huruf, angka, titik, tanda hubung, atau garis bawah."
+
 #: client.repos.header.clone
 msgid "client.repos.header.clone"
 msgstr "Klon"

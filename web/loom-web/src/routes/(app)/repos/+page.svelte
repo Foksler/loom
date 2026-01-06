@@ -6,12 +6,15 @@
 	import { getReposClient, type Repository } from '$lib/api/repos';
 	import { getApiClient } from '$lib/api/client';
 	import { Card, Badge, Button, Input, ThreadDivider, LoomFrame } from '$lib/ui';
+	import { CreateRepoModal } from '$lib/components/repos';
 	import { i18n } from '$lib/i18n';
 
 	let repos = $state<Repository[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let searchQuery = $state('');
+	let showCreateModal = $state(false);
+	let currentUserId = $state<string | null>(null);
 
 	const client = getReposClient();
 	const apiClient = getApiClient();
@@ -30,6 +33,7 @@
 
 		try {
 			const user = await apiClient.getCurrentUser();
+			currentUserId = user.id;
 			const response = await client.listRepos(user.id);
 			repos = response.repos;
 		} catch (e) {
@@ -37,6 +41,11 @@
 		} finally {
 			loading = false;
 		}
+	}
+
+	function handleRepoCreated(repo: Repository) {
+		repos = [repo, ...repos];
+		showCreateModal = false;
 	}
 
 	function formatDate(dateStr: string): string {
@@ -59,7 +68,7 @@
 <div class="repos-page">
 	<div class="header">
 		<h1 class="title">{i18n._('client.repos.list.title')}</h1>
-		<Button variant="primary">
+		<Button variant="primary" onclick={() => (showCreateModal = true)}>
 			<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
 			</svg>
@@ -107,7 +116,7 @@
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
 					</svg>
 					<p class="empty-text">{i18n._('client.repos.list.empty')}</p>
-					<Button variant="primary">
+					<Button variant="primary" onclick={() => (showCreateModal = true)}>
 						{i18n._('client.repos.list.create_first')}
 					</Button>
 				{/if}
@@ -144,6 +153,15 @@
 		</div>
 	{/if}
 </div>
+
+{#if currentUserId}
+	<CreateRepoModal
+		open={showCreateModal}
+		onclose={() => (showCreateModal = false)}
+		oncreate={handleRepoCreated}
+		userId={currentUserId}
+	/>
+{/if}
 
 <style>
 	.repos-page {

@@ -1370,6 +1370,46 @@ msgstr "الفرع الافتراضي:"
 msgid "client.repos.list.updated"
 msgstr "تم التحديث"
 
+#: client.repos.create.title
+msgid "client.repos.create.title"
+msgstr "إنشاء مستودع"
+
+#: client.repos.create.name
+msgid "client.repos.create.name"
+msgstr "اسم المستودع"
+
+#: client.repos.create.name_placeholder
+msgid "client.repos.create.name_placeholder"
+msgstr "مشروعي-الرائع"
+
+#: client.repos.create.visibility
+msgid "client.repos.create.visibility"
+msgstr "الرؤية"
+
+#: client.repos.create.private
+msgid "client.repos.create.private"
+msgstr "خاص"
+
+#: client.repos.create.public
+msgid "client.repos.create.public"
+msgstr "عام"
+
+#: client.repos.create.submit
+msgid "client.repos.create.submit"
+msgstr "إنشاء المستودع"
+
+#: client.repos.create.cancel
+msgid "client.repos.create.cancel"
+msgstr "إلغاء"
+
+#: client.repos.create.error
+msgid "client.repos.create.error"
+msgstr "فشل إنشاء المستودع"
+
+#: client.repos.create.name_invalid
+msgid "client.repos.create.name_invalid"
+msgstr "اسم المستودع غير صالح. استخدم الأحرف والأرقام والنقاط والشرطات أو الشرطات السفلية."
+
 #: client.repos.header.clone
 msgid "client.repos.header.clone"
 msgstr "استنساخ"

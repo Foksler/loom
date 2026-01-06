@@ -1574,6 +1574,46 @@ msgstr "डिफ़ॉल्ट ब्रांच:"
 msgid "client.repos.list.updated"
 msgstr "अपडेट किया गया"
 
+#: client.repos.create.title
+msgid "client.repos.create.title"
+msgstr "रिपॉजिटरी बनाएं"
+
+#: client.repos.create.name
+msgid "client.repos.create.name"
+msgstr "रिपॉजिटरी का नाम"
+
+#: client.repos.create.name_placeholder
+msgid "client.repos.create.name_placeholder"
+msgstr "मेरा-शानदार-प्रोजेक्ट"
+
+#: client.repos.create.visibility
+msgid "client.repos.create.visibility"
+msgstr "दृश्यता"
+
+#: client.repos.create.private
+msgid "client.repos.create.private"
+msgstr "निजी"
+
+#: client.repos.create.public
+msgid "client.repos.create.public"
+msgstr "सार्वजनिक"
+
+#: client.repos.create.submit
+msgid "client.repos.create.submit"
+msgstr "रिपॉजिटरी बनाएं"
+
+#: client.repos.create.cancel
+msgid "client.repos.create.cancel"
+msgstr "रद्द करें"
+
+#: client.repos.create.error
+msgid "client.repos.create.error"
+msgstr "रिपॉजिटरी बनाने में विफल"
+
+#: client.repos.create.name_invalid
+msgid "client.repos.create.name_invalid"
+msgstr "अमान्य रिपॉजिटरी नाम। अक्षर, संख्या, बिंदु, डैश या अंडरस्कोर का उपयोग करें।"
+
 #: client.repos.header.clone
 msgid "client.repos.header.clone"
 msgstr "क्लोन"

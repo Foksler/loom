@@ -1574,6 +1574,46 @@ msgstr "デフォルトブランチ："
 msgid "client.repos.list.updated"
 msgstr "更新日"
 
+#: client.repos.create.title
+msgid "client.repos.create.title"
+msgstr "リポジトリを作成"
+
+#: client.repos.create.name
+msgid "client.repos.create.name"
+msgstr "リポジトリ名"
+
+#: client.repos.create.name_placeholder
+msgid "client.repos.create.name_placeholder"
+msgstr "my-awesome-project"
+
+#: client.repos.create.visibility
+msgid "client.repos.create.visibility"
+msgstr "公開設定"
+
+#: client.repos.create.private
+msgid "client.repos.create.private"
+msgstr "プライベート"
+
+#: client.repos.create.public
+msgid "client.repos.create.public"
+msgstr "パブリック"
+
+#: client.repos.create.submit
+msgid "client.repos.create.submit"
+msgstr "リポジトリを作成"
+
+#: client.repos.create.cancel
+msgid "client.repos.create.cancel"
+msgstr "キャンセル"
+
+#: client.repos.create.error
+msgid "client.repos.create.error"
+msgstr "リポジトリの作成に失敗しました"
+
+#: client.repos.create.name_invalid
+msgid "client.repos.create.name_invalid"
+msgstr "リポジトリ名が無効です。英字、数字、ドット、ハイフン、アンダースコアを使用してください。"
+
 #: client.repos.header.clone
 msgid "client.repos.header.clone"
 msgstr "クローン"

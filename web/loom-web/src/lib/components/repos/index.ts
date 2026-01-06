@@ -13,3 +13,4 @@ export { default as CommitDiff } from './CommitDiff.svelte';
 export { default as BlameView } from './BlameView.svelte';
 export { default as CompareView } from './CompareView.svelte';
 export { default as OpenInWeaverButton } from './OpenInWeaverButton.svelte';
+export { default as CreateRepoModal } from './CreateRepoModal.svelte';

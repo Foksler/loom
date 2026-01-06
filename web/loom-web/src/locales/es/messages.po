@@ -1370,6 +1370,46 @@ msgstr "Rama predeterminada:"
 msgid "client.repos.list.updated"
 msgstr "Actualizado"
 
+#: client.repos.create.title
+msgid "client.repos.create.title"
+msgstr "Crear Repositorio"
+
+#: client.repos.create.name
+msgid "client.repos.create.name"
+msgstr "Nombre del repositorio"
+
+#: client.repos.create.name_placeholder
+msgid "client.repos.create.name_placeholder"
+msgstr "mi-proyecto-increible"
+
+#: client.repos.create.visibility
+msgid "client.repos.create.visibility"
+msgstr "Visibilidad"
+
+#: client.repos.create.private
+msgid "client.repos.create.private"
+msgstr "Privado"
+
+#: client.repos.create.public
+msgid "client.repos.create.public"
+msgstr "Público"
+
+#: client.repos.create.submit
+msgid "client.repos.create.submit"
+msgstr "Crear Repositorio"
+
+#: client.repos.create.cancel
+msgid "client.repos.create.cancel"
+msgstr "Cancelar"
+
+#: client.repos.create.error
+msgid "client.repos.create.error"
+msgstr "Error al crear el repositorio"
+
+#: client.repos.create.name_invalid
+msgid "client.repos.create.name_invalid"
+msgstr "Nombre de repositorio inválido. Use letras, números, puntos, guiones o guiones bajos."
+
 #: client.repos.header.clone
 msgid "client.repos.header.clone"
 msgstr "Clonar"

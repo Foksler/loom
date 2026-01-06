@@ -1574,6 +1574,46 @@ msgstr "Standardgren:"
 msgid "client.repos.list.updated"
 msgstr "Uppdaterad"
 
+#: client.repos.create.title
+msgid "client.repos.create.title"
+msgstr "Skapa repositorium"
+
+#: client.repos.create.name
+msgid "client.repos.create.name"
+msgstr "Repositoriumnamn"
+
+#: client.repos.create.name_placeholder
+msgid "client.repos.create.name_placeholder"
+msgstr "mitt-fantastiska-projekt"
+
+#: client.repos.create.visibility
+msgid "client.repos.create.visibility"
+msgstr "Synlighet"
+
+#: client.repos.create.private
+msgid "client.repos.create.private"
+msgstr "Privat"
+
+#: client.repos.create.public
+msgid "client.repos.create.public"
+msgstr "Offentlig"
+
+#: client.repos.create.submit
+msgid "client.repos.create.submit"
+msgstr "Skapa repositorium"
+
+#: client.repos.create.cancel
+msgid "client.repos.create.cancel"
+msgstr "Avbryt"
+
+#: client.repos.create.error
+msgid "client.repos.create.error"
+msgstr "Kunde inte skapa repositorium"
+
+#: client.repos.create.name_invalid
+msgid "client.repos.create.name_invalid"
+msgstr "Ogiltigt repositoriumnamn. Använd bokstäver, siffror, punkter, bindestreck eller understreck."
+
 #: client.repos.header.clone
 msgid "client.repos.header.clone"
 msgstr "Klona"

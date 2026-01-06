@@ -1370,6 +1370,46 @@ msgstr "Branche par défaut :"
 msgid "client.repos.list.updated"
 msgstr "Mis à jour"
 
+#: client.repos.create.title
+msgid "client.repos.create.title"
+msgstr "Créer un dépôt"
+
+#: client.repos.create.name
+msgid "client.repos.create.name"
+msgstr "Nom du dépôt"
+
+#: client.repos.create.name_placeholder
+msgid "client.repos.create.name_placeholder"
+msgstr "mon-super-projet"
+
+#: client.repos.create.visibility
+msgid "client.repos.create.visibility"
+msgstr "Visibilité"
+
+#: client.repos.create.private
+msgid "client.repos.create.private"
+msgstr "Privé"
+
+#: client.repos.create.public
+msgid "client.repos.create.public"
+msgstr "Public"
+
+#: client.repos.create.submit
+msgid "client.repos.create.submit"
+msgstr "Créer le dépôt"
+
+#: client.repos.create.cancel
+msgid "client.repos.create.cancel"
+msgstr "Annuler"
+
+#: client.repos.create.error
+msgid "client.repos.create.error"
+msgstr "Échec de la création du dépôt"
+
+#: client.repos.create.name_invalid
+msgid "client.repos.create.name_invalid"
+msgstr "Nom de dépôt invalide. Utilisez des lettres, chiffres, points, tirets ou underscores."
+
 #: client.repos.header.clone
 msgid "client.repos.header.clone"
 msgstr "Cloner"

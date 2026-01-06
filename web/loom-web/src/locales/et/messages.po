@@ -1574,6 +1574,46 @@ msgstr "Vaikeharu:"
 msgid "client.repos.list.updated"
 msgstr "Uuendatud"
 
+#: client.repos.create.title
+msgid "client.repos.create.title"
+msgstr "Loo hoidla"
+
+#: client.repos.create.name
+msgid "client.repos.create.name"
+msgstr "Hoidla nimi"
+
+#: client.repos.create.name_placeholder
+msgid "client.repos.create.name_placeholder"
+msgstr "minu-vinge-projekt"
+
+#: client.repos.create.visibility
+msgid "client.repos.create.visibility"
+msgstr "Nähtavus"
+
+#: client.repos.create.private
+msgid "client.repos.create.private"
+msgstr "Privaatne"
+
+#: client.repos.create.public
+msgid "client.repos.create.public"
+msgstr "Avalik"
+
+#: client.repos.create.submit
+msgid "client.repos.create.submit"
+msgstr "Loo hoidla"
+
+#: client.repos.create.cancel
+msgid "client.repos.create.cancel"
+msgstr "Tühista"
+
+#: client.repos.create.error
+msgid "client.repos.create.error"
+msgstr "Hoidla loomine ebaõnnestus"
+
+#: client.repos.create.name_invalid
+msgid "client.repos.create.name_invalid"
+msgstr "Vigane hoidla nimi. Kasuta tähti, numbreid, punkte, kriipse või alakriipse."
+
 #: client.repos.header.clone
 msgid "client.repos.header.clone"
 msgstr "Klooni"

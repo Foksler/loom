@@ -62,6 +62,13 @@ export interface CompareResult {
 	behind_by: number;
 }
 
+export interface CreateRepoRequest {
+	owner_type: 'org' | 'user';
+	owner_id: string;
+	name: string;
+	visibility: 'private' | 'public';
+}
+
 export interface ListReposParams {
 	limit?: number;
 	offset?: number;
@@ -187,6 +194,13 @@ class ReposApiClient {
 		return this.request<CompareResult>(
 			`/api/repos/${encodeURIComponent(owner)}/${encodeURIComponent(name)}/compare/${encodeURIComponent(base)}...${encodeURIComponent(head)}`
 		);
+	}
+
+	async createRepo(request: CreateRepoRequest): Promise<Repository> {
+		return this.request<Repository>('/api/v1/repos', {
+			method: 'POST',
+			body: JSON.stringify(request),
+		});
 	}
 }
 

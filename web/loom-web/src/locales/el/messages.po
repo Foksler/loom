@@ -1574,6 +1574,46 @@ msgstr "Προεπιλεγμένος κλάδος:"
 msgid "client.repos.list.updated"
 msgstr "Ενημερώθηκε"
 
+#: client.repos.create.title
+msgid "client.repos.create.title"
+msgstr "Δημιουργία Αποθετηρίου"
+
+#: client.repos.create.name
+msgid "client.repos.create.name"
+msgstr "Όνομα αποθετηρίου"
+
+#: client.repos.create.name_placeholder
+msgid "client.repos.create.name_placeholder"
+msgstr "το-υπέροχο-έργο-μου"
+
+#: client.repos.create.visibility
+msgid "client.repos.create.visibility"
+msgstr "Ορατότητα"
+
+#: client.repos.create.private
+msgid "client.repos.create.private"
+msgstr "Ιδιωτικό"
+
+#: client.repos.create.public
+msgid "client.repos.create.public"
+msgstr "Δημόσιο"
+
+#: client.repos.create.submit
+msgid "client.repos.create.submit"
+msgstr "Δημιουργία Αποθετηρίου"
+
+#: client.repos.create.cancel
+msgid "client.repos.create.cancel"
+msgstr "Ακύρωση"
+
+#: client.repos.create.error
+msgid "client.repos.create.error"
+msgstr "Αποτυχία δημιουργίας αποθετηρίου"
+
+#: client.repos.create.name_invalid
+msgid "client.repos.create.name_invalid"
+msgstr "Μη έγκυρο όνομα αποθετηρίου. Χρησιμοποιήστε γράμματα, αριθμούς, τελείες, παύλες ή κάτω παύλες."
+
 #: client.repos.header.clone
 msgid "client.repos.header.clone"
 msgstr "Κλωνοποίηση"

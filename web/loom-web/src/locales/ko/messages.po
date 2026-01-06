@@ -1574,6 +1574,46 @@ msgstr "기본 브랜치:"
 msgid "client.repos.list.updated"
 msgstr "업데이트됨"
 
+#: client.repos.create.title
+msgid "client.repos.create.title"
+msgstr "저장소 만들기"
+
+#: client.repos.create.name
+msgid "client.repos.create.name"
+msgstr "저장소 이름"
+
+#: client.repos.create.name_placeholder
+msgid "client.repos.create.name_placeholder"
+msgstr "my-awesome-project"
+
+#: client.repos.create.visibility
+msgid "client.repos.create.visibility"
+msgstr "공개 설정"
+
+#: client.repos.create.private
+msgid "client.repos.create.private"
+msgstr "비공개"
+
+#: client.repos.create.public
+msgid "client.repos.create.public"
+msgstr "공개"
+
+#: client.repos.create.submit
+msgid "client.repos.create.submit"
+msgstr "저장소 만들기"
+
+#: client.repos.create.cancel
+msgid "client.repos.create.cancel"
+msgstr "취소"
+
+#: client.repos.create.error
+msgid "client.repos.create.error"
+msgstr "저장소 생성에 실패했습니다"
+
+#: client.repos.create.name_invalid
+msgid "client.repos.create.name_invalid"
+msgstr "저장소 이름이 유효하지 않습니다. 문자, 숫자, 점, 대시 또는 밑줄을 사용하세요."
+
 #: client.repos.header.clone
 msgid "client.repos.header.clone"
 msgstr "클론"
