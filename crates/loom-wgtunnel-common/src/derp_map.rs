@@ -27,13 +27,32 @@ pub type Result<T> = std::result::Result<T, DerpMapError>;
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "PascalCase")]
 pub struct DerpMap {
-	#[serde(default)]
+	#[serde(default, deserialize_with = "deserialize_string_key_map")]
 	pub regions: HashMap<u16, DerpRegion>,
+}
+
+fn deserialize_string_key_map<'de, D>(
+	deserializer: D,
+) -> std::result::Result<HashMap<u16, DerpRegion>, D::Error>
+where
+	D: serde::Deserializer<'de>,
+{
+	use serde::de::Error;
+	let string_map: HashMap<String, DerpRegion> = HashMap::deserialize(deserializer)?;
+	string_map
+		.into_iter()
+		.map(|(k, v)| {
+			k.parse::<u16>()
+				.map(|id| (id, v))
+				.map_err(|_| D::Error::custom(format!("invalid region id: {}", k)))
+		})
+		.collect()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct DerpRegion {
+	#[serde(rename = "RegionID")]
 	pub region_id: u16,
 	pub region_code: String,
 	pub region_name: String,
@@ -51,6 +70,7 @@ pub struct DerpRegion {
 #[serde(rename_all = "PascalCase")]
 pub struct DerpNode {
 	pub name: String,
+	#[serde(rename = "RegionID")]
 	pub region_id: u16,
 	pub host_name: String,
 	#[serde(default, rename = "IPv4")]
