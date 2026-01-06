@@ -10,6 +10,7 @@
 //! - Magic links (passwordless email auth)
 //! - Impersonation sessions (admin support)
 
+use async_trait::async_trait;
 use chrono::{Duration, Utc};
 use loom_server_auth::{
 	access_token::ACCESS_TOKEN_EXPIRY_DAYS, device_code::DEVICE_CODE_EXPIRY_MINUTES,
@@ -19,6 +20,220 @@ use sqlx::{sqlite::SqlitePool, Row};
 use uuid::Uuid;
 
 use crate::error::DbError;
+
+#[async_trait]
+pub trait SessionStore: Send + Sync {
+	async fn create_session(&self, session: &Session, token_hash: &str) -> Result<(), DbError>;
+	async fn get_session_by_token_hash(&self, token_hash: &str)
+		-> Result<Option<Session>, DbError>;
+	async fn get_sessions_for_user(&self, user_id: &UserId) -> Result<Vec<Session>, DbError>;
+	async fn update_session_last_used(&self, id: &SessionId) -> Result<(), DbError>;
+	async fn delete_session(&self, id: &SessionId) -> Result<bool, DbError>;
+	async fn delete_all_sessions_for_user(&self, user_id: &UserId) -> Result<i64, DbError>;
+	async fn create_access_token(
+		&self,
+		user_id: &UserId,
+		token_hash: &str,
+		label: &str,
+		session_type: SessionType,
+	) -> Result<String, DbError>;
+	async fn get_access_token_by_hash(
+		&self,
+		token_hash: &str,
+	) -> Result<Option<(String, UserId)>, DbError>;
+	async fn update_access_token_last_used(&self, id: &str) -> Result<(), DbError>;
+	async fn revoke_access_token(&self, id: &str) -> Result<bool, DbError>;
+	async fn create_device_code(&self, device_code: &str, user_code: &str) -> Result<(), DbError>;
+	async fn get_device_code(
+		&self,
+		device_code: &str,
+	) -> Result<Option<(String, Option<UserId>, bool)>, DbError>;
+	async fn complete_device_code(&self, user_code: &str, user_id: &UserId) -> Result<bool, DbError>;
+	async fn create_magic_link(&self, email: &str, token_hash: &str) -> Result<String, DbError>;
+	async fn get_magic_link_by_hash(
+		&self,
+		token_hash: &str,
+	) -> Result<Option<(String, String, bool)>, DbError>;
+	async fn get_pending_magic_links(&self) -> Result<Vec<(String, String, String)>, DbError>;
+	async fn claim_magic_link(&self, id: &str) -> Result<bool, DbError>;
+	async fn invalidate_magic_links_for_email(&self, email: &str) -> Result<(), DbError>;
+	async fn create_impersonation_session(
+		&self,
+		admin_user_id: &UserId,
+		target_user_id: &UserId,
+		reason: &str,
+	) -> Result<String, DbError>;
+	async fn get_active_impersonation_session(
+		&self,
+		admin_user_id: &UserId,
+	) -> Result<Option<(String, UserId)>, DbError>;
+	async fn end_impersonation_session(&self, session_id: &str) -> Result<bool, DbError>;
+	async fn end_all_impersonation_sessions(&self, admin_user_id: &UserId) -> Result<i64, DbError>;
+	async fn create_ws_token(&self, user_id: &UserId, token_hash: &str) -> Result<String, DbError>;
+	async fn validate_and_consume_ws_token(
+		&self,
+		token_hash: &str,
+	) -> Result<Option<UserId>, DbError>;
+	async fn cleanup_expired_ws_tokens(&self) -> Result<i64, DbError>;
+	async fn cleanup_expired_sessions(&self) -> Result<u64, DbError>;
+	async fn cleanup_expired_access_tokens(&self) -> Result<u64, DbError>;
+	async fn cleanup_expired_device_codes(&self) -> Result<u64, DbError>;
+	async fn cleanup_expired_magic_links(&self) -> Result<u64, DbError>;
+}
+
+#[async_trait]
+impl SessionStore for SessionRepository {
+	async fn create_session(&self, session: &Session, token_hash: &str) -> Result<(), DbError> {
+		self.create_session(session, token_hash).await
+	}
+
+	async fn get_session_by_token_hash(
+		&self,
+		token_hash: &str,
+	) -> Result<Option<Session>, DbError> {
+		self.get_session_by_token_hash(token_hash).await
+	}
+
+	async fn get_sessions_for_user(&self, user_id: &UserId) -> Result<Vec<Session>, DbError> {
+		self.get_sessions_for_user(user_id).await
+	}
+
+	async fn update_session_last_used(&self, id: &SessionId) -> Result<(), DbError> {
+		self.update_session_last_used(id).await
+	}
+
+	async fn delete_session(&self, id: &SessionId) -> Result<bool, DbError> {
+		self.delete_session(id).await
+	}
+
+	async fn delete_all_sessions_for_user(&self, user_id: &UserId) -> Result<i64, DbError> {
+		self.delete_all_sessions_for_user(user_id).await
+	}
+
+	async fn create_access_token(
+		&self,
+		user_id: &UserId,
+		token_hash: &str,
+		label: &str,
+		session_type: SessionType,
+	) -> Result<String, DbError> {
+		self.create_access_token(user_id, token_hash, label, session_type)
+			.await
+	}
+
+	async fn get_access_token_by_hash(
+		&self,
+		token_hash: &str,
+	) -> Result<Option<(String, UserId)>, DbError> {
+		self.get_access_token_by_hash(token_hash).await
+	}
+
+	async fn update_access_token_last_used(&self, id: &str) -> Result<(), DbError> {
+		self.update_access_token_last_used(id).await
+	}
+
+	async fn revoke_access_token(&self, id: &str) -> Result<bool, DbError> {
+		self.revoke_access_token(id).await
+	}
+
+	async fn create_device_code(&self, device_code: &str, user_code: &str) -> Result<(), DbError> {
+		self.create_device_code(device_code, user_code).await
+	}
+
+	async fn get_device_code(
+		&self,
+		device_code: &str,
+	) -> Result<Option<(String, Option<UserId>, bool)>, DbError> {
+		self.get_device_code(device_code).await
+	}
+
+	async fn complete_device_code(
+		&self,
+		user_code: &str,
+		user_id: &UserId,
+	) -> Result<bool, DbError> {
+		self.complete_device_code(user_code, user_id).await
+	}
+
+	async fn create_magic_link(&self, email: &str, token_hash: &str) -> Result<String, DbError> {
+		self.create_magic_link(email, token_hash).await
+	}
+
+	async fn get_magic_link_by_hash(
+		&self,
+		token_hash: &str,
+	) -> Result<Option<(String, String, bool)>, DbError> {
+		self.get_magic_link_by_hash(token_hash).await
+	}
+
+	async fn get_pending_magic_links(&self) -> Result<Vec<(String, String, String)>, DbError> {
+		self.get_pending_magic_links().await
+	}
+
+	async fn claim_magic_link(&self, id: &str) -> Result<bool, DbError> {
+		self.claim_magic_link(id).await
+	}
+
+	async fn invalidate_magic_links_for_email(&self, email: &str) -> Result<(), DbError> {
+		self.invalidate_magic_links_for_email(email).await
+	}
+
+	async fn create_impersonation_session(
+		&self,
+		admin_user_id: &UserId,
+		target_user_id: &UserId,
+		reason: &str,
+	) -> Result<String, DbError> {
+		self.create_impersonation_session(admin_user_id, target_user_id, reason)
+			.await
+	}
+
+	async fn get_active_impersonation_session(
+		&self,
+		admin_user_id: &UserId,
+	) -> Result<Option<(String, UserId)>, DbError> {
+		self.get_active_impersonation_session(admin_user_id).await
+	}
+
+	async fn end_impersonation_session(&self, session_id: &str) -> Result<bool, DbError> {
+		self.end_impersonation_session(session_id).await
+	}
+
+	async fn end_all_impersonation_sessions(&self, admin_user_id: &UserId) -> Result<i64, DbError> {
+		self.end_all_impersonation_sessions(admin_user_id).await
+	}
+
+	async fn create_ws_token(&self, user_id: &UserId, token_hash: &str) -> Result<String, DbError> {
+		self.create_ws_token(user_id, token_hash).await
+	}
+
+	async fn validate_and_consume_ws_token(
+		&self,
+		token_hash: &str,
+	) -> Result<Option<UserId>, DbError> {
+		self.validate_and_consume_ws_token(token_hash).await
+	}
+
+	async fn cleanup_expired_ws_tokens(&self) -> Result<i64, DbError> {
+		self.cleanup_expired_ws_tokens().await
+	}
+
+	async fn cleanup_expired_sessions(&self) -> Result<u64, DbError> {
+		self.cleanup_expired_sessions().await
+	}
+
+	async fn cleanup_expired_access_tokens(&self) -> Result<u64, DbError> {
+		self.cleanup_expired_access_tokens().await
+	}
+
+	async fn cleanup_expired_device_codes(&self) -> Result<u64, DbError> {
+		self.cleanup_expired_device_codes().await
+	}
+
+	async fn cleanup_expired_magic_links(&self) -> Result<u64, DbError> {
+		self.cleanup_expired_magic_links().await
+	}
+}
 
 /// Repository for session database operations.
 ///

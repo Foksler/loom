@@ -1,12 +1,92 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use loom_common_secret::SecretString;
 use sqlx::{sqlite::SqlitePool, Row};
 use uuid::Uuid;
 
 use crate::error::DbError;
+
+#[async_trait]
+pub trait ScmStore: Send + Sync {
+	async fn create_repo(&self, repo: &RepoRecord) -> Result<(), DbError>;
+	async fn get_repo_by_id(&self, id: Uuid) -> Result<Option<RepoRecord>, DbError>;
+	async fn get_repo_by_owner_and_name(
+		&self,
+		owner_type: &str,
+		owner_id: Uuid,
+		name: &str,
+	) -> Result<Option<RepoRecord>, DbError>;
+	async fn list_repos_by_owner(
+		&self,
+		owner_type: &str,
+		owner_id: Uuid,
+	) -> Result<Vec<RepoRecord>, DbError>;
+	async fn update_repo(&self, repo: &RepoRecord) -> Result<(), DbError>;
+	async fn soft_delete_repo(&self, id: Uuid) -> Result<(), DbError>;
+	async fn hard_delete_repo(&self, id: Uuid) -> Result<(), DbError>;
+	async fn list_all_repo_ids(&self) -> Result<Vec<Uuid>, DbError>;
+
+	async fn grant_team_access(
+		&self,
+		repo_id: Uuid,
+		team_id: Uuid,
+		role: &str,
+	) -> Result<(), DbError>;
+	async fn revoke_team_access(&self, repo_id: Uuid, team_id: Uuid) -> Result<(), DbError>;
+	async fn list_repo_team_access(
+		&self,
+		repo_id: Uuid,
+	) -> Result<Vec<RepoTeamAccessRecord>, DbError>;
+	async fn get_user_roles_via_teams(
+		&self,
+		user_id: Uuid,
+		repo_id: Uuid,
+	) -> Result<Vec<String>, DbError>;
+
+	async fn create_webhook(&self, webhook: &WebhookRecord) -> Result<(), DbError>;
+	async fn get_webhook_by_id(&self, id: Uuid) -> Result<Option<WebhookRecord>, DbError>;
+	async fn list_webhooks_by_repo(&self, repo_id: Uuid) -> Result<Vec<WebhookRecord>, DbError>;
+	async fn list_webhooks_by_org(&self, org_id: Uuid) -> Result<Vec<WebhookRecord>, DbError>;
+	async fn delete_webhook(&self, id: Uuid) -> Result<(), DbError>;
+
+	async fn create_webhook_delivery(&self, delivery: &WebhookDeliveryRecord)
+		-> Result<(), DbError>;
+	async fn update_webhook_delivery(&self, delivery: &WebhookDeliveryRecord)
+		-> Result<(), DbError>;
+	async fn get_pending_webhook_deliveries(&self) -> Result<Vec<WebhookDeliveryRecord>, DbError>;
+	async fn get_webhook_for_delivery(
+		&self,
+		delivery_id: Uuid,
+	) -> Result<Option<WebhookRecord>, DbError>;
+
+	async fn create_maintenance_job(&self, job: &MaintenanceJobRecord) -> Result<(), DbError>;
+	async fn get_maintenance_job_by_id(
+		&self,
+		id: Uuid,
+	) -> Result<Option<MaintenanceJobRecord>, DbError>;
+	async fn list_maintenance_jobs_by_repo(
+		&self,
+		repo_id: Uuid,
+		limit: u32,
+	) -> Result<Vec<MaintenanceJobRecord>, DbError>;
+	async fn list_pending_maintenance_jobs(&self) -> Result<Vec<MaintenanceJobRecord>, DbError>;
+	async fn update_maintenance_job_status(
+		&self,
+		id: Uuid,
+		status: &str,
+		error: Option<&str>,
+	) -> Result<(), DbError>;
+	async fn mark_maintenance_job_started(&self, id: Uuid) -> Result<(), DbError>;
+	async fn mark_maintenance_job_finished(
+		&self,
+		id: Uuid,
+		status: &str,
+		error: Option<&str>,
+	) -> Result<(), DbError>;
+}
 
 #[derive(Clone)]
 pub struct ScmRepository {
@@ -636,6 +716,168 @@ impl ScmRepository {
 		}
 
 		Ok(())
+	}
+}
+
+#[async_trait]
+impl ScmStore for ScmRepository {
+	async fn create_repo(&self, repo: &RepoRecord) -> Result<(), DbError> {
+		ScmRepository::create_repo(self, repo).await
+	}
+
+	async fn get_repo_by_id(&self, id: Uuid) -> Result<Option<RepoRecord>, DbError> {
+		ScmRepository::get_repo_by_id(self, id).await
+	}
+
+	async fn get_repo_by_owner_and_name(
+		&self,
+		owner_type: &str,
+		owner_id: Uuid,
+		name: &str,
+	) -> Result<Option<RepoRecord>, DbError> {
+		ScmRepository::get_repo_by_owner_and_name(self, owner_type, owner_id, name).await
+	}
+
+	async fn list_repos_by_owner(
+		&self,
+		owner_type: &str,
+		owner_id: Uuid,
+	) -> Result<Vec<RepoRecord>, DbError> {
+		ScmRepository::list_repos_by_owner(self, owner_type, owner_id).await
+	}
+
+	async fn update_repo(&self, repo: &RepoRecord) -> Result<(), DbError> {
+		ScmRepository::update_repo(self, repo).await
+	}
+
+	async fn soft_delete_repo(&self, id: Uuid) -> Result<(), DbError> {
+		ScmRepository::soft_delete_repo(self, id).await
+	}
+
+	async fn hard_delete_repo(&self, id: Uuid) -> Result<(), DbError> {
+		ScmRepository::hard_delete_repo(self, id).await
+	}
+
+	async fn list_all_repo_ids(&self) -> Result<Vec<Uuid>, DbError> {
+		ScmRepository::list_all_repo_ids(self).await
+	}
+
+	async fn grant_team_access(
+		&self,
+		repo_id: Uuid,
+		team_id: Uuid,
+		role: &str,
+	) -> Result<(), DbError> {
+		ScmRepository::grant_team_access(self, repo_id, team_id, role).await
+	}
+
+	async fn revoke_team_access(&self, repo_id: Uuid, team_id: Uuid) -> Result<(), DbError> {
+		ScmRepository::revoke_team_access(self, repo_id, team_id).await
+	}
+
+	async fn list_repo_team_access(
+		&self,
+		repo_id: Uuid,
+	) -> Result<Vec<RepoTeamAccessRecord>, DbError> {
+		ScmRepository::list_repo_team_access(self, repo_id).await
+	}
+
+	async fn get_user_roles_via_teams(
+		&self,
+		user_id: Uuid,
+		repo_id: Uuid,
+	) -> Result<Vec<String>, DbError> {
+		ScmRepository::get_user_roles_via_teams(self, user_id, repo_id).await
+	}
+
+	async fn create_webhook(&self, webhook: &WebhookRecord) -> Result<(), DbError> {
+		ScmRepository::create_webhook(self, webhook).await
+	}
+
+	async fn get_webhook_by_id(&self, id: Uuid) -> Result<Option<WebhookRecord>, DbError> {
+		ScmRepository::get_webhook_by_id(self, id).await
+	}
+
+	async fn list_webhooks_by_repo(&self, repo_id: Uuid) -> Result<Vec<WebhookRecord>, DbError> {
+		ScmRepository::list_webhooks_by_repo(self, repo_id).await
+	}
+
+	async fn list_webhooks_by_org(&self, org_id: Uuid) -> Result<Vec<WebhookRecord>, DbError> {
+		ScmRepository::list_webhooks_by_org(self, org_id).await
+	}
+
+	async fn delete_webhook(&self, id: Uuid) -> Result<(), DbError> {
+		ScmRepository::delete_webhook(self, id).await
+	}
+
+	async fn create_webhook_delivery(
+		&self,
+		delivery: &WebhookDeliveryRecord,
+	) -> Result<(), DbError> {
+		ScmRepository::create_webhook_delivery(self, delivery).await
+	}
+
+	async fn update_webhook_delivery(
+		&self,
+		delivery: &WebhookDeliveryRecord,
+	) -> Result<(), DbError> {
+		ScmRepository::update_webhook_delivery(self, delivery).await
+	}
+
+	async fn get_pending_webhook_deliveries(&self) -> Result<Vec<WebhookDeliveryRecord>, DbError> {
+		ScmRepository::get_pending_webhook_deliveries(self).await
+	}
+
+	async fn get_webhook_for_delivery(
+		&self,
+		delivery_id: Uuid,
+	) -> Result<Option<WebhookRecord>, DbError> {
+		ScmRepository::get_webhook_for_delivery(self, delivery_id).await
+	}
+
+	async fn create_maintenance_job(&self, job: &MaintenanceJobRecord) -> Result<(), DbError> {
+		ScmRepository::create_maintenance_job(self, job).await
+	}
+
+	async fn get_maintenance_job_by_id(
+		&self,
+		id: Uuid,
+	) -> Result<Option<MaintenanceJobRecord>, DbError> {
+		ScmRepository::get_maintenance_job_by_id(self, id).await
+	}
+
+	async fn list_maintenance_jobs_by_repo(
+		&self,
+		repo_id: Uuid,
+		limit: u32,
+	) -> Result<Vec<MaintenanceJobRecord>, DbError> {
+		ScmRepository::list_maintenance_jobs_by_repo(self, repo_id, limit).await
+	}
+
+	async fn list_pending_maintenance_jobs(&self) -> Result<Vec<MaintenanceJobRecord>, DbError> {
+		ScmRepository::list_pending_maintenance_jobs(self).await
+	}
+
+	async fn update_maintenance_job_status(
+		&self,
+		id: Uuid,
+		status: &str,
+		error: Option<&str>,
+	) -> Result<(), DbError> {
+		ScmRepository::update_maintenance_job_status(self, id, status, error).await
+	}
+
+	async fn mark_maintenance_job_started(&self, id: Uuid) -> Result<(), DbError> {
+		ScmRepository::mark_maintenance_job_started(self, id).await
+	}
+
+	async fn mark_maintenance_job_finished(
+		&self,
+		id: Uuid,
+		status: &str,
+		error: Option<&str>,
+	) -> Result<(), DbError> {
+		ScmRepository::mark_maintenance_job_finished(self, id, status, error).await
 	}
 }
 

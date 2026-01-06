@@ -9,6 +9,7 @@
 //! - Session tracking
 //! - IP allocation
 
+use async_trait::async_trait;
 use sqlx::sqlite::SqlitePool;
 use std::net::Ipv6Addr;
 use uuid::Uuid;
@@ -393,5 +394,209 @@ impl WgTunnelRepository {
 				.await?;
 
 		Ok(result.rows_affected())
+	}
+}
+
+#[async_trait]
+pub trait WgTunnelStore: Send + Sync {
+	async fn insert_weaver(
+		&self,
+		weaver_id: Uuid,
+		public_key: &[u8],
+		assigned_ip: Ipv6Addr,
+		derp_region: Option<u16>,
+	) -> Result<(), DbError>;
+	async fn get_weaver(&self, weaver_id: Uuid) -> Result<Option<WeaverRowTuple>, DbError>;
+	async fn delete_weaver(&self, weaver_id: Uuid) -> Result<u64, DbError>;
+	async fn update_weaver_endpoint(&self, weaver_id: Uuid, endpoint: &str) -> Result<u64, DbError>;
+	async fn update_weaver_last_seen(&self, weaver_id: Uuid) -> Result<u64, DbError>;
+	async fn insert_device(
+		&self,
+		id: Uuid,
+		user_id: Uuid,
+		public_key: &[u8],
+		name: Option<&str>,
+	) -> Result<(), DbError>;
+	async fn list_devices_for_user(&self, user_id: Uuid) -> Result<Vec<DeviceRowTuple>, DbError>;
+	async fn get_device(&self, id: Uuid) -> Result<Option<DeviceRowTuple>, DbError>;
+	async fn get_device_by_public_key(
+		&self,
+		public_key: &[u8],
+	) -> Result<Option<DeviceRowTuple>, DbError>;
+	async fn revoke_device(&self, id: Uuid, user_id: Uuid) -> Result<u64, DbError>;
+	async fn update_device_last_seen(&self, id: Uuid) -> Result<u64, DbError>;
+	async fn insert_session(
+		&self,
+		id: Uuid,
+		device_id: Uuid,
+		weaver_id: Uuid,
+		client_ip: Ipv6Addr,
+	) -> Result<(), DbError>;
+	async fn get_session_by_device_weaver(
+		&self,
+		device_id: Uuid,
+		weaver_id: Uuid,
+	) -> Result<Option<SessionRowTuple>, DbError>;
+	async fn list_sessions_for_device(
+		&self,
+		device_id: Uuid,
+	) -> Result<Vec<SessionRowTuple>, DbError>;
+	async fn list_sessions_for_weaver(
+		&self,
+		weaver_id: Uuid,
+	) -> Result<Vec<SessionRowTuple>, DbError>;
+	async fn get_session(&self, id: Uuid) -> Result<Option<SessionRowTuple>, DbError>;
+	async fn delete_session(&self, id: Uuid) -> Result<u64, DbError>;
+	async fn update_session_handshake(&self, id: Uuid) -> Result<u64, DbError>;
+	async fn get_allocated_ips_by_type(
+		&self,
+		allocation_type: &str,
+	) -> Result<Vec<IpAllocationRow>, DbError>;
+	async fn get_allocation_for_entity(
+		&self,
+		entity_id: Uuid,
+	) -> Result<Option<IpAllocationRow>, DbError>;
+	async fn insert_ip_allocation(
+		&self,
+		ip: &str,
+		allocation_type: &str,
+		entity_id: Uuid,
+	) -> Result<(), DbError>;
+	async fn release_ip(&self, ip: Ipv6Addr) -> Result<u64, DbError>;
+}
+
+#[async_trait]
+impl WgTunnelStore for WgTunnelRepository {
+	async fn insert_weaver(
+		&self,
+		weaver_id: Uuid,
+		public_key: &[u8],
+		assigned_ip: Ipv6Addr,
+		derp_region: Option<u16>,
+	) -> Result<(), DbError> {
+		self.insert_weaver(weaver_id, public_key, assigned_ip, derp_region)
+			.await
+	}
+
+	async fn get_weaver(&self, weaver_id: Uuid) -> Result<Option<WeaverRowTuple>, DbError> {
+		self.get_weaver(weaver_id).await
+	}
+
+	async fn delete_weaver(&self, weaver_id: Uuid) -> Result<u64, DbError> {
+		self.delete_weaver(weaver_id).await
+	}
+
+	async fn update_weaver_endpoint(&self, weaver_id: Uuid, endpoint: &str) -> Result<u64, DbError> {
+		self.update_weaver_endpoint(weaver_id, endpoint).await
+	}
+
+	async fn update_weaver_last_seen(&self, weaver_id: Uuid) -> Result<u64, DbError> {
+		self.update_weaver_last_seen(weaver_id).await
+	}
+
+	async fn insert_device(
+		&self,
+		id: Uuid,
+		user_id: Uuid,
+		public_key: &[u8],
+		name: Option<&str>,
+	) -> Result<(), DbError> {
+		self.insert_device(id, user_id, public_key, name).await
+	}
+
+	async fn list_devices_for_user(&self, user_id: Uuid) -> Result<Vec<DeviceRowTuple>, DbError> {
+		self.list_devices_for_user(user_id).await
+	}
+
+	async fn get_device(&self, id: Uuid) -> Result<Option<DeviceRowTuple>, DbError> {
+		self.get_device(id).await
+	}
+
+	async fn get_device_by_public_key(
+		&self,
+		public_key: &[u8],
+	) -> Result<Option<DeviceRowTuple>, DbError> {
+		self.get_device_by_public_key(public_key).await
+	}
+
+	async fn revoke_device(&self, id: Uuid, user_id: Uuid) -> Result<u64, DbError> {
+		self.revoke_device(id, user_id).await
+	}
+
+	async fn update_device_last_seen(&self, id: Uuid) -> Result<u64, DbError> {
+		self.update_device_last_seen(id).await
+	}
+
+	async fn insert_session(
+		&self,
+		id: Uuid,
+		device_id: Uuid,
+		weaver_id: Uuid,
+		client_ip: Ipv6Addr,
+	) -> Result<(), DbError> {
+		self.insert_session(id, device_id, weaver_id, client_ip)
+			.await
+	}
+
+	async fn get_session_by_device_weaver(
+		&self,
+		device_id: Uuid,
+		weaver_id: Uuid,
+	) -> Result<Option<SessionRowTuple>, DbError> {
+		self.get_session_by_device_weaver(device_id, weaver_id).await
+	}
+
+	async fn list_sessions_for_device(
+		&self,
+		device_id: Uuid,
+	) -> Result<Vec<SessionRowTuple>, DbError> {
+		self.list_sessions_for_device(device_id).await
+	}
+
+	async fn list_sessions_for_weaver(
+		&self,
+		weaver_id: Uuid,
+	) -> Result<Vec<SessionRowTuple>, DbError> {
+		self.list_sessions_for_weaver(weaver_id).await
+	}
+
+	async fn get_session(&self, id: Uuid) -> Result<Option<SessionRowTuple>, DbError> {
+		self.get_session(id).await
+	}
+
+	async fn delete_session(&self, id: Uuid) -> Result<u64, DbError> {
+		self.delete_session(id).await
+	}
+
+	async fn update_session_handshake(&self, id: Uuid) -> Result<u64, DbError> {
+		self.update_session_handshake(id).await
+	}
+
+	async fn get_allocated_ips_by_type(
+		&self,
+		allocation_type: &str,
+	) -> Result<Vec<IpAllocationRow>, DbError> {
+		self.get_allocated_ips_by_type(allocation_type).await
+	}
+
+	async fn get_allocation_for_entity(
+		&self,
+		entity_id: Uuid,
+	) -> Result<Option<IpAllocationRow>, DbError> {
+		self.get_allocation_for_entity(entity_id).await
+	}
+
+	async fn insert_ip_allocation(
+		&self,
+		ip: &str,
+		allocation_type: &str,
+		entity_id: Uuid,
+	) -> Result<(), DbError> {
+		self.insert_ip_allocation(ip, allocation_type, entity_id)
+			.await
+	}
+
+	async fn release_ip(&self, ip: Ipv6Addr) -> Result<u64, DbError> {
+		self.release_ip(ip).await
 	}
 }

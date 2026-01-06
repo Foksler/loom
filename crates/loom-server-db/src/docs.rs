@@ -3,6 +3,7 @@
 
 //! Documentation search repository for FTS5 operations.
 
+use async_trait::async_trait;
 use sqlx::{sqlite::SqlitePool, FromRow};
 
 use crate::error::DbError;
@@ -158,5 +159,27 @@ impl DocsRepository {
 
 		tracing::debug!(count = hits.len(), "docs search completed");
 		Ok(hits)
+	}
+}
+
+#[async_trait]
+pub trait DocsStore: Send + Sync {
+	async fn clear_docs(&self) -> Result<(), DbError>;
+	async fn insert_docs(&self, entries: &[DocIndexEntry]) -> Result<(), DbError>;
+	async fn search(&self, params: &DocSearchParams) -> Result<Vec<DocSearchHit>, DbError>;
+}
+
+#[async_trait]
+impl DocsStore for DocsRepository {
+	async fn clear_docs(&self) -> Result<(), DbError> {
+		self.clear_docs().await
+	}
+
+	async fn insert_docs(&self, entries: &[DocIndexEntry]) -> Result<(), DbError> {
+		self.insert_docs(entries).await
+	}
+
+	async fn search(&self, params: &DocSearchParams) -> Result<Vec<DocSearchHit>, DbError> {
+		self.search(params).await
 	}
 }

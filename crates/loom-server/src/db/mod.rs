@@ -11,7 +11,7 @@ pub mod cse;
 
 use sqlx::sqlite::SqlitePool;
 
-pub use audit::AuditQueryRepository;
+pub use audit::AuditRepository;
 
 use crate::error::ServerError;
 

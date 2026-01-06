@@ -9,6 +9,7 @@
 //! - Invitations (email-based)
 //! - Join requests (for public orgs)
 
+use async_trait::async_trait;
 use chrono::Utc;
 use loom_server_auth::{
 	org::{OrgInvitation, OrgJoinRequest, OrgMembership, OrgVisibility, Organization},
@@ -19,6 +20,99 @@ use sqlx::{sqlite::SqlitePool, Row};
 use uuid::Uuid;
 
 use crate::error::DbError;
+
+#[async_trait]
+pub trait OrgStore: Send + Sync {
+	async fn create_org(&self, org: &Organization) -> Result<(), DbError>;
+	async fn get_org_by_id(&self, id: &OrgId) -> Result<Option<Organization>, DbError>;
+	async fn get_org_by_id_including_deleted(
+		&self,
+		id: &OrgId,
+	) -> Result<Option<Organization>, DbError>;
+	async fn get_org_by_slug(&self, slug: &str) -> Result<Option<Organization>, DbError>;
+	async fn update_org(&self, org: &Organization) -> Result<(), DbError>;
+	async fn soft_delete_org(&self, id: &OrgId) -> Result<(), DbError>;
+	async fn restore_org(&self, id: &OrgId) -> Result<(), DbError>;
+	async fn list_orgs_for_user(&self, user_id: &UserId) -> Result<Vec<Organization>, DbError>;
+	async fn ensure_personal_org(&self, user_id: &UserId) -> Result<Organization, DbError>;
+	async fn list_public_orgs(
+		&self,
+		limit: i32,
+		offset: i32,
+	) -> Result<Vec<Organization>, DbError>;
+	async fn add_member(
+		&self,
+		org_id: &OrgId,
+		user_id: &UserId,
+		role: OrgRole,
+	) -> Result<(), DbError>;
+	async fn add_member_with_provenance(
+		&self,
+		org_id: &OrgId,
+		user_id: &UserId,
+		role: OrgRole,
+		provisioned_by: Option<&str>,
+	) -> Result<(), DbError>;
+	async fn get_membership(
+		&self,
+		org_id: &OrgId,
+		user_id: &UserId,
+	) -> Result<Option<OrgMembership>, DbError>;
+	async fn update_member_role(
+		&self,
+		org_id: &OrgId,
+		user_id: &UserId,
+		role: OrgRole,
+	) -> Result<(), DbError>;
+	async fn remove_member(&self, org_id: &OrgId, user_id: &UserId) -> Result<bool, DbError>;
+	async fn list_members(&self, org_id: &OrgId) -> Result<Vec<(OrgMembership, User)>, DbError>;
+	async fn count_owners(&self, org_id: &OrgId) -> Result<i64, DbError>;
+	async fn create_invitation(
+		&self,
+		org_id: &OrgId,
+		email: &str,
+		role: OrgRole,
+		invited_by: &UserId,
+		token_hash: &str,
+	) -> Result<String, DbError>;
+	async fn get_invitation_by_token_hash(
+		&self,
+		token_hash: &str,
+	) -> Result<Option<OrgInvitation>, DbError>;
+	async fn accept_invitation(&self, id: &str) -> Result<(), DbError>;
+	async fn get_invitation_by_id(&self, id: &str) -> Result<Option<OrgInvitation>, DbError>;
+	async fn delete_invitation(&self, id: &str) -> Result<bool, DbError>;
+	async fn list_pending_invitations(
+		&self,
+		org_id: &OrgId,
+	) -> Result<Vec<OrgInvitation>, DbError>;
+	async fn create_join_request(
+		&self,
+		org_id: &OrgId,
+		user_id: &UserId,
+	) -> Result<String, DbError>;
+	async fn get_join_request(&self, id: &str) -> Result<Option<OrgJoinRequest>, DbError>;
+	async fn list_pending_join_requests(
+		&self,
+		org_id: &OrgId,
+	) -> Result<Vec<OrgJoinRequest>, DbError>;
+	async fn list_pending_join_requests_with_users(
+		&self,
+		org_id: &OrgId,
+	) -> Result<Vec<(OrgJoinRequest, User)>, DbError>;
+	async fn has_pending_join_request(
+		&self,
+		org_id: &OrgId,
+		user_id: &UserId,
+	) -> Result<bool, DbError>;
+	async fn approve_join_request(&self, id: &str, handled_by: &UserId) -> Result<(), DbError>;
+	async fn reject_join_request(&self, id: &str, handled_by: &UserId) -> Result<(), DbError>;
+	async fn create_personal_org(
+		&self,
+		user_id: &UserId,
+		display_name: &str,
+	) -> Result<Organization, DbError>;
+}
 
 /// Repository for organization database operations.
 ///
@@ -1175,6 +1269,193 @@ impl OrgRepository {
 			handled_by: handled_by.and_then(|h| Uuid::parse_str(&h).map(UserId::new).ok()),
 			approved: approved.map(|a| a != 0),
 		})
+	}
+}
+
+#[async_trait]
+impl OrgStore for OrgRepository {
+	async fn create_org(&self, org: &Organization) -> Result<(), DbError> {
+		self.create_org(org).await
+	}
+
+	async fn get_org_by_id(&self, id: &OrgId) -> Result<Option<Organization>, DbError> {
+		self.get_org_by_id(id).await
+	}
+
+	async fn get_org_by_id_including_deleted(
+		&self,
+		id: &OrgId,
+	) -> Result<Option<Organization>, DbError> {
+		self.get_org_by_id_including_deleted(id).await
+	}
+
+	async fn get_org_by_slug(&self, slug: &str) -> Result<Option<Organization>, DbError> {
+		self.get_org_by_slug(slug).await
+	}
+
+	async fn update_org(&self, org: &Organization) -> Result<(), DbError> {
+		self.update_org(org).await
+	}
+
+	async fn soft_delete_org(&self, id: &OrgId) -> Result<(), DbError> {
+		self.soft_delete_org(id).await
+	}
+
+	async fn restore_org(&self, id: &OrgId) -> Result<(), DbError> {
+		self.restore_org(id).await
+	}
+
+	async fn list_orgs_for_user(&self, user_id: &UserId) -> Result<Vec<Organization>, DbError> {
+		self.list_orgs_for_user(user_id).await
+	}
+
+	async fn ensure_personal_org(&self, user_id: &UserId) -> Result<Organization, DbError> {
+		self.ensure_personal_org(user_id).await
+	}
+
+	async fn list_public_orgs(
+		&self,
+		limit: i32,
+		offset: i32,
+	) -> Result<Vec<Organization>, DbError> {
+		self.list_public_orgs(limit, offset).await
+	}
+
+	async fn add_member(
+		&self,
+		org_id: &OrgId,
+		user_id: &UserId,
+		role: OrgRole,
+	) -> Result<(), DbError> {
+		self.add_member(org_id, user_id, role).await
+	}
+
+	async fn add_member_with_provenance(
+		&self,
+		org_id: &OrgId,
+		user_id: &UserId,
+		role: OrgRole,
+		provisioned_by: Option<&str>,
+	) -> Result<(), DbError> {
+		self.add_member_with_provenance(org_id, user_id, role, provisioned_by)
+			.await
+	}
+
+	async fn get_membership(
+		&self,
+		org_id: &OrgId,
+		user_id: &UserId,
+	) -> Result<Option<OrgMembership>, DbError> {
+		self.get_membership(org_id, user_id).await
+	}
+
+	async fn update_member_role(
+		&self,
+		org_id: &OrgId,
+		user_id: &UserId,
+		role: OrgRole,
+	) -> Result<(), DbError> {
+		self.update_member_role(org_id, user_id, role).await
+	}
+
+	async fn remove_member(&self, org_id: &OrgId, user_id: &UserId) -> Result<bool, DbError> {
+		self.remove_member(org_id, user_id).await
+	}
+
+	async fn list_members(&self, org_id: &OrgId) -> Result<Vec<(OrgMembership, User)>, DbError> {
+		self.list_members(org_id).await
+	}
+
+	async fn count_owners(&self, org_id: &OrgId) -> Result<i64, DbError> {
+		self.count_owners(org_id).await
+	}
+
+	async fn create_invitation(
+		&self,
+		org_id: &OrgId,
+		email: &str,
+		role: OrgRole,
+		invited_by: &UserId,
+		token_hash: &str,
+	) -> Result<String, DbError> {
+		self.create_invitation(org_id, email, role, invited_by, token_hash)
+			.await
+	}
+
+	async fn get_invitation_by_token_hash(
+		&self,
+		token_hash: &str,
+	) -> Result<Option<OrgInvitation>, DbError> {
+		self.get_invitation_by_token_hash(token_hash).await
+	}
+
+	async fn accept_invitation(&self, id: &str) -> Result<(), DbError> {
+		self.accept_invitation(id).await
+	}
+
+	async fn get_invitation_by_id(&self, id: &str) -> Result<Option<OrgInvitation>, DbError> {
+		self.get_invitation_by_id(id).await
+	}
+
+	async fn delete_invitation(&self, id: &str) -> Result<bool, DbError> {
+		self.delete_invitation(id).await
+	}
+
+	async fn list_pending_invitations(
+		&self,
+		org_id: &OrgId,
+	) -> Result<Vec<OrgInvitation>, DbError> {
+		self.list_pending_invitations(org_id).await
+	}
+
+	async fn create_join_request(
+		&self,
+		org_id: &OrgId,
+		user_id: &UserId,
+	) -> Result<String, DbError> {
+		self.create_join_request(org_id, user_id).await
+	}
+
+	async fn get_join_request(&self, id: &str) -> Result<Option<OrgJoinRequest>, DbError> {
+		self.get_join_request(id).await
+	}
+
+	async fn list_pending_join_requests(
+		&self,
+		org_id: &OrgId,
+	) -> Result<Vec<OrgJoinRequest>, DbError> {
+		self.list_pending_join_requests(org_id).await
+	}
+
+	async fn list_pending_join_requests_with_users(
+		&self,
+		org_id: &OrgId,
+	) -> Result<Vec<(OrgJoinRequest, User)>, DbError> {
+		self.list_pending_join_requests_with_users(org_id).await
+	}
+
+	async fn has_pending_join_request(
+		&self,
+		org_id: &OrgId,
+		user_id: &UserId,
+	) -> Result<bool, DbError> {
+		self.has_pending_join_request(org_id, user_id).await
+	}
+
+	async fn approve_join_request(&self, id: &str, handled_by: &UserId) -> Result<(), DbError> {
+		self.approve_join_request(id, handled_by).await
+	}
+
+	async fn reject_join_request(&self, id: &str, handled_by: &UserId) -> Result<(), DbError> {
+		self.reject_join_request(id, handled_by).await
+	}
+
+	async fn create_personal_org(
+		&self,
+		user_id: &UserId,
+		display_name: &str,
+	) -> Result<Organization, DbError> {
+		self.create_personal_org(user_id, display_name).await
 	}
 }
 

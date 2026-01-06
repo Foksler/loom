@@ -7,12 +7,105 @@
 //! - Share links (read-only external thread access)
 //! - Support access (temporary debug access for support staff)
 
+use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use loom_server_auth::{ShareLink, SupportAccess, UserId};
 use sqlx::{sqlite::SqlitePool, Row};
 use uuid::Uuid;
 
 use crate::error::DbError;
+
+#[async_trait]
+pub trait ShareStore: Send + Sync {
+	async fn create_share_link(&self, share_link: &ShareLink) -> Result<(), DbError>;
+	async fn get_share_link_by_thread(&self, thread_id: &str)
+		-> Result<Option<ShareLink>, DbError>;
+	async fn get_share_link_by_hash(&self, token_hash: &str) -> Result<Option<ShareLink>, DbError>;
+	async fn revoke_share_link(&self, thread_id: &str) -> Result<i64, DbError>;
+	async fn create_support_access(&self, support_access: &SupportAccess) -> Result<(), DbError>;
+	async fn get_pending_support_access(
+		&self,
+		thread_id: &str,
+	) -> Result<Option<SupportAccess>, DbError>;
+	async fn get_active_support_access(
+		&self,
+		thread_id: &str,
+		user_id: &UserId,
+	) -> Result<Option<SupportAccess>, DbError>;
+	async fn get_any_active_support_access(
+		&self,
+		thread_id: &str,
+	) -> Result<Option<SupportAccess>, DbError>;
+	async fn approve_support_access(
+		&self,
+		id: &Uuid,
+		approved_by: &UserId,
+		expires_at: DateTime<Utc>,
+	) -> Result<bool, DbError>;
+	async fn revoke_support_access(&self, id: &Uuid) -> Result<bool, DbError>;
+}
+
+#[async_trait]
+impl ShareStore for ShareRepository {
+	async fn create_share_link(&self, share_link: &ShareLink) -> Result<(), DbError> {
+		self.create_share_link(share_link).await
+	}
+
+	async fn get_share_link_by_thread(
+		&self,
+		thread_id: &str,
+	) -> Result<Option<ShareLink>, DbError> {
+		self.get_share_link_by_thread(thread_id).await
+	}
+
+	async fn get_share_link_by_hash(&self, token_hash: &str) -> Result<Option<ShareLink>, DbError> {
+		self.get_share_link_by_hash(token_hash).await
+	}
+
+	async fn revoke_share_link(&self, thread_id: &str) -> Result<i64, DbError> {
+		self.revoke_share_link(thread_id).await
+	}
+
+	async fn create_support_access(&self, support_access: &SupportAccess) -> Result<(), DbError> {
+		self.create_support_access(support_access).await
+	}
+
+	async fn get_pending_support_access(
+		&self,
+		thread_id: &str,
+	) -> Result<Option<SupportAccess>, DbError> {
+		self.get_pending_support_access(thread_id).await
+	}
+
+	async fn get_active_support_access(
+		&self,
+		thread_id: &str,
+		user_id: &UserId,
+	) -> Result<Option<SupportAccess>, DbError> {
+		self.get_active_support_access(thread_id, user_id).await
+	}
+
+	async fn get_any_active_support_access(
+		&self,
+		thread_id: &str,
+	) -> Result<Option<SupportAccess>, DbError> {
+		self.get_any_active_support_access(thread_id).await
+	}
+
+	async fn approve_support_access(
+		&self,
+		id: &Uuid,
+		approved_by: &UserId,
+		expires_at: DateTime<Utc>,
+	) -> Result<bool, DbError> {
+		self.approve_support_access(id, approved_by, expires_at)
+			.await
+	}
+
+	async fn revoke_support_access(&self, id: &Uuid) -> Result<bool, DbError> {
+		self.revoke_support_access(id).await
+	}
+}
 
 /// Repository for share link and support access database operations.
 #[derive(Clone)]

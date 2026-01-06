@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+use async_trait::async_trait;
 use chrono::{DateTime, SecondsFormat, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
@@ -446,53 +447,90 @@ impl JobRepository {
 	}
 }
 
+#[async_trait]
+pub trait JobStore: Send + Sync {
+	async fn upsert_definition(&self, def: &JobDefinition) -> Result<()>;
+	async fn get_definition(&self, id: &str) -> Result<Option<JobDefinition>>;
+	async fn list_definitions(&self) -> Result<Vec<JobDefinition>>;
+	async fn set_enabled(&self, id: &str, enabled: bool) -> Result<()>;
+	async fn record_run_start(&self, run: &JobRun) -> Result<()>;
+	async fn record_run_complete(
+		&self,
+		run_id: &str,
+		status: JobStatus,
+		error: Option<String>,
+		metadata: Option<serde_json::Value>,
+	) -> Result<()>;
+	async fn get_run(&self, run_id: &str) -> Result<Option<JobRun>>;
+	async fn list_runs(&self, job_id: &str, limit: u32, offset: u32) -> Result<Vec<JobRun>>;
+	async fn get_last_run(&self, job_id: &str) -> Result<Option<JobRun>>;
+	async fn count_consecutive_failures(&self, job_id: &str) -> Result<u32>;
+	async fn delete_old_runs(&self, before: DateTime<Utc>) -> Result<u64>;
+	async fn cleanup_old_runs(&self, retention_days: u32) -> Result<u64>;
+}
+
+#[async_trait]
+impl JobStore for JobRepository {
+	async fn upsert_definition(&self, def: &JobDefinition) -> Result<()> {
+		self.upsert_definition(def).await
+	}
+
+	async fn get_definition(&self, id: &str) -> Result<Option<JobDefinition>> {
+		self.get_definition(id).await
+	}
+
+	async fn list_definitions(&self) -> Result<Vec<JobDefinition>> {
+		self.list_definitions().await
+	}
+
+	async fn set_enabled(&self, id: &str, enabled: bool) -> Result<()> {
+		self.set_enabled(id, enabled).await
+	}
+
+	async fn record_run_start(&self, run: &JobRun) -> Result<()> {
+		self.record_run_start(run).await
+	}
+
+	async fn record_run_complete(
+		&self,
+		run_id: &str,
+		status: JobStatus,
+		error: Option<String>,
+		metadata: Option<serde_json::Value>,
+	) -> Result<()> {
+		self.record_run_complete(run_id, status, error, metadata)
+			.await
+	}
+
+	async fn get_run(&self, run_id: &str) -> Result<Option<JobRun>> {
+		self.get_run(run_id).await
+	}
+
+	async fn list_runs(&self, job_id: &str, limit: u32, offset: u32) -> Result<Vec<JobRun>> {
+		self.list_runs(job_id, limit, offset).await
+	}
+
+	async fn get_last_run(&self, job_id: &str) -> Result<Option<JobRun>> {
+		self.get_last_run(job_id).await
+	}
+
+	async fn count_consecutive_failures(&self, job_id: &str) -> Result<u32> {
+		self.count_consecutive_failures(job_id).await
+	}
+
+	async fn delete_old_runs(&self, before: DateTime<Utc>) -> Result<u64> {
+		self.delete_old_runs(before).await
+	}
+
+	async fn cleanup_old_runs(&self, retention_days: u32) -> Result<u64> {
+		self.cleanup_old_runs(retention_days).await
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
-
-	async fn setup_db() -> SqlitePool {
-		let pool = SqlitePool::connect(":memory:").await.unwrap();
-
-		sqlx::query(
-			r#"
-            CREATE TABLE IF NOT EXISTS job_definitions (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                description TEXT,
-                job_type TEXT NOT NULL,
-                interval_secs INTEGER,
-                enabled INTEGER NOT NULL DEFAULT 1,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            )
-            "#,
-		)
-		.execute(&pool)
-		.await
-		.unwrap();
-
-		sqlx::query(
-			r#"
-            CREATE TABLE IF NOT EXISTS job_runs (
-                id TEXT PRIMARY KEY,
-                job_id TEXT NOT NULL REFERENCES job_definitions(id),
-                status TEXT NOT NULL,
-                started_at TEXT NOT NULL,
-                completed_at TEXT,
-                duration_ms INTEGER,
-                error_message TEXT,
-                retry_count INTEGER NOT NULL DEFAULT 0,
-                triggered_by TEXT NOT NULL,
-                metadata TEXT
-            )
-            "#,
-		)
-		.execute(&pool)
-		.await
-		.unwrap();
-
-		pool
-	}
+	use crate::testing::create_job_test_pool;
 
 	fn make_definition(id: &str, name: &str) -> JobDefinition {
 		JobDefinition {
@@ -507,7 +545,7 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_upsert_and_get_definition() {
-		let pool = setup_db().await;
+		let pool = create_job_test_pool().await;
 		let repo = JobRepository::new(pool);
 
 		let def = make_definition("job-1", "Test Job");
@@ -532,7 +570,7 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_list_definitions() {
-		let pool = setup_db().await;
+		let pool = create_job_test_pool().await;
 		let repo = JobRepository::new(pool);
 
 		repo
@@ -557,7 +595,7 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_set_enabled() {
-		let pool = setup_db().await;
+		let pool = create_job_test_pool().await;
 		let repo = JobRepository::new(pool);
 
 		let def = make_definition("job-1", "Test Job");
@@ -574,7 +612,7 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_set_enabled_not_found() {
-		let pool = setup_db().await;
+		let pool = create_job_test_pool().await;
 		let repo = JobRepository::new(pool);
 
 		let result = repo.set_enabled("nonexistent", true).await;
@@ -583,7 +621,7 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_record_and_get_run() {
-		let pool = setup_db().await;
+		let pool = create_job_test_pool().await;
 		let repo = JobRepository::new(pool);
 
 		let def = make_definition("job-1", "Test Job");
@@ -612,7 +650,7 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_record_run_complete() {
-		let pool = setup_db().await;
+		let pool = create_job_test_pool().await;
 		let repo = JobRepository::new(pool);
 
 		let def = make_definition("job-1", "Test Job");
@@ -652,7 +690,7 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_get_last_run() {
-		let pool = setup_db().await;
+		let pool = create_job_test_pool().await;
 		let repo = JobRepository::new(pool);
 
 		let def = make_definition("job-1", "Test Job");
@@ -694,7 +732,7 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_count_consecutive_failures_all_failed() {
-		let pool = setup_db().await;
+		let pool = create_job_test_pool().await;
 		let repo = JobRepository::new(pool);
 
 		let def = make_definition("job-1", "Test Job");
@@ -726,7 +764,7 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_count_consecutive_failures_with_success() {
-		let pool = setup_db().await;
+		let pool = create_job_test_pool().await;
 		let repo = JobRepository::new(pool);
 
 		let def = make_definition("job-1", "Test Job");
@@ -776,7 +814,7 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_count_consecutive_failures_no_runs() {
-		let pool = setup_db().await;
+		let pool = create_job_test_pool().await;
 		let repo = JobRepository::new(pool);
 
 		let count = repo
@@ -788,7 +826,7 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_cleanup_old_runs() {
-		let pool = setup_db().await;
+		let pool = create_job_test_pool().await;
 		let repo = JobRepository::new(pool.clone());
 
 		let def = make_definition("job-1", "Test Job");
@@ -846,7 +884,7 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_delete_old_runs_before_cutoff() {
-		let pool = setup_db().await;
+		let pool = create_job_test_pool().await;
 		let repo = JobRepository::new(pool.clone());
 
 		let def = make_definition("job-1", "Test Job");

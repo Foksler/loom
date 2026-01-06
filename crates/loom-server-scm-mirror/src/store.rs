@@ -119,6 +119,24 @@ impl ExternalMirrorStore for SqliteExternalMirrorStore {
 	async fn update_last_synced(&self, id: Uuid, at: DateTime<Utc>) -> loom_server_db::Result<()> {
 		self.repo.update_external_mirror_last_synced(id, at).await
 	}
+
+	async fn create(
+		&self,
+		mirror: &CreateExternalMirror,
+	) -> loom_server_db::Result<ExternalMirror> {
+		self.repo.create_external_mirror(mirror).await
+	}
+
+	async fn get_by_external(
+		&self,
+		platform: Platform,
+		owner: &str,
+		name: &str,
+	) -> loom_server_db::Result<Option<ExternalMirror>> {
+		self.repo
+			.get_external_mirror_by_external(platform, owner, name)
+			.await
+	}
 }
 
 #[cfg(test)]

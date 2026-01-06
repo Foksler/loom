@@ -96,8 +96,15 @@ pub trait PushMirrorStore: Send + Sync {
 
 #[async_trait]
 pub trait ExternalMirrorStore: Send + Sync {
+	async fn create(&self, mirror: &CreateExternalMirror) -> Result<ExternalMirror>;
 	async fn get_by_id(&self, id: Uuid) -> Result<Option<ExternalMirror>>;
 	async fn get_by_repo_id(&self, repo_id: Uuid) -> Result<Option<ExternalMirror>>;
+	async fn get_by_external(
+		&self,
+		platform: Platform,
+		owner: &str,
+		repo: &str,
+	) -> Result<Option<ExternalMirror>>;
 	async fn find_stale(&self, stale_threshold: DateTime<Utc>) -> Result<Vec<ExternalMirror>>;
 	async fn delete(&self, id: Uuid) -> Result<()>;
 	async fn update_last_accessed(&self, id: Uuid, at: DateTime<Utc>) -> Result<()>;
@@ -549,12 +556,26 @@ impl PushMirrorStore for MirrorRepository {
 
 #[async_trait]
 impl ExternalMirrorStore for MirrorRepository {
+	async fn create(&self, mirror: &CreateExternalMirror) -> Result<ExternalMirror> {
+		self.create_external_mirror(mirror).await
+	}
+
 	async fn get_by_id(&self, id: Uuid) -> Result<Option<ExternalMirror>> {
 		self.get_external_mirror_by_id(id).await
 	}
 
 	async fn get_by_repo_id(&self, repo_id: Uuid) -> Result<Option<ExternalMirror>> {
 		self.get_external_mirror_by_repo_id(repo_id).await
+	}
+
+	async fn get_by_external(
+		&self,
+		platform: Platform,
+		owner: &str,
+		repo: &str,
+	) -> Result<Option<ExternalMirror>> {
+		self.get_external_mirror_by_external(platform, owner, repo)
+			.await
 	}
 
 	async fn find_stale(&self, stale_threshold: DateTime<Utc>) -> Result<Vec<ExternalMirror>> {

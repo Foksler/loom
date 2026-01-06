@@ -7,6 +7,7 @@
 //! For extended functionality (CSE cache, GitHub integration), see loom-server's
 //! ThreadRepository which wraps this one.
 
+use async_trait::async_trait;
 use loom_common_thread::{Thread, ThreadId, ThreadSummary, ThreadVisibility};
 use sqlx::{sqlite::SqlitePool, Row};
 
@@ -17,6 +18,82 @@ use crate::error::DbError;
 pub struct ThreadSearchHit {
 	pub summary: ThreadSummary,
 	pub score: f64,
+}
+
+/// Trait for thread database operations.
+#[async_trait]
+pub trait ThreadStore: Send + Sync {
+	async fn upsert(
+		&self,
+		thread: &Thread,
+		expected_version: Option<u64>,
+	) -> Result<Thread, DbError>;
+
+	async fn get(&self, id: &ThreadId) -> Result<Option<Thread>, DbError>;
+
+	async fn list(
+		&self,
+		workspace: Option<&str>,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ThreadSummary>, DbError>;
+
+	async fn delete(&self, id: &ThreadId) -> Result<bool, DbError>;
+
+	async fn get_thread_owner_user_id(&self, thread_id: &str) -> Result<Option<String>, DbError>;
+
+	async fn set_owner_user_id(
+		&self,
+		thread_id: &str,
+		owner_user_id: &str,
+	) -> Result<bool, DbError>;
+
+	async fn set_shared_with_support(&self, thread_id: &str, shared: bool)
+		-> Result<bool, DbError>;
+
+	async fn health_check(&self) -> Result<(), DbError>;
+
+	async fn count(&self, workspace: Option<&str>) -> Result<u64, DbError>;
+
+	async fn search(
+		&self,
+		query: &str,
+		workspace: Option<&str>,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ThreadSearchHit>, DbError>;
+
+	async fn upsert_github_installation(
+		&self,
+		installation: &crate::types::GithubInstallation,
+	) -> Result<(), DbError>;
+
+	async fn delete_github_installation(&self, installation_id: i64) -> Result<bool, DbError>;
+
+	async fn update_github_installation_suspension(
+		&self,
+		installation_id: i64,
+		suspended_at: Option<&str>,
+	) -> Result<bool, DbError>;
+
+	async fn add_github_installation_repos(
+		&self,
+		installation_id: i64,
+		repos: &[crate::types::GithubRepo],
+	) -> Result<(), DbError>;
+
+	async fn remove_github_installation_repos(&self, repository_ids: &[i64])
+		-> Result<(), DbError>;
+
+	async fn get_github_installation_for_repo(
+		&self,
+		owner: &str,
+		name: &str,
+	) -> Result<Option<crate::types::GithubInstallationInfo>, DbError>;
+
+	async fn list_github_installations(
+		&self,
+	) -> Result<Vec<crate::types::GithubInstallation>, DbError>;
 }
 
 /// Get or create a repo entry in the thread_repos table, returning its id.
@@ -1022,6 +1099,121 @@ impl ThreadRepository {
 			.collect();
 
 		Ok(installations)
+	}
+}
+
+#[async_trait]
+impl ThreadStore for ThreadRepository {
+	async fn upsert(
+		&self,
+		thread: &Thread,
+		expected_version: Option<u64>,
+	) -> Result<Thread, DbError> {
+		ThreadRepository::upsert(self, thread, expected_version).await
+	}
+
+	async fn get(&self, id: &ThreadId) -> Result<Option<Thread>, DbError> {
+		ThreadRepository::get(self, id).await
+	}
+
+	async fn list(
+		&self,
+		workspace: Option<&str>,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ThreadSummary>, DbError> {
+		ThreadRepository::list(self, workspace, limit, offset).await
+	}
+
+	async fn delete(&self, id: &ThreadId) -> Result<bool, DbError> {
+		ThreadRepository::delete(self, id).await
+	}
+
+	async fn get_thread_owner_user_id(&self, thread_id: &str) -> Result<Option<String>, DbError> {
+		ThreadRepository::get_thread_owner_user_id(self, thread_id).await
+	}
+
+	async fn set_owner_user_id(
+		&self,
+		thread_id: &str,
+		owner_user_id: &str,
+	) -> Result<bool, DbError> {
+		ThreadRepository::set_owner_user_id(self, thread_id, owner_user_id).await
+	}
+
+	async fn set_shared_with_support(
+		&self,
+		thread_id: &str,
+		shared: bool,
+	) -> Result<bool, DbError> {
+		ThreadRepository::set_shared_with_support(self, thread_id, shared).await
+	}
+
+	async fn health_check(&self) -> Result<(), DbError> {
+		ThreadRepository::health_check(self).await
+	}
+
+	async fn count(&self, workspace: Option<&str>) -> Result<u64, DbError> {
+		ThreadRepository::count(self, workspace).await
+	}
+
+	async fn search(
+		&self,
+		query: &str,
+		workspace: Option<&str>,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ThreadSearchHit>, DbError> {
+		ThreadRepository::search(self, query, workspace, limit, offset).await
+	}
+
+	async fn upsert_github_installation(
+		&self,
+		installation: &crate::types::GithubInstallation,
+	) -> Result<(), DbError> {
+		ThreadRepository::upsert_github_installation(self, installation).await
+	}
+
+	async fn delete_github_installation(&self, installation_id: i64) -> Result<bool, DbError> {
+		ThreadRepository::delete_github_installation(self, installation_id).await
+	}
+
+	async fn update_github_installation_suspension(
+		&self,
+		installation_id: i64,
+		suspended_at: Option<&str>,
+	) -> Result<bool, DbError> {
+		ThreadRepository::update_github_installation_suspension(self, installation_id, suspended_at)
+			.await
+	}
+
+	async fn add_github_installation_repos(
+		&self,
+		installation_id: i64,
+		repos: &[crate::types::GithubRepo],
+	) -> Result<(), DbError> {
+		ThreadRepository::add_github_installation_repos(self, installation_id, repos).await
+	}
+
+	async fn remove_github_installation_repos(
+		&self,
+		repository_ids: &[i64],
+	) -> Result<(), DbError> {
+		ThreadRepository::remove_github_installation_repos(self, repository_ids).await
+	}
+
+	async fn get_github_installation_for_repo(
+		&self,
+		owner: &str,
+		name: &str,
+	) -> Result<Option<crate::types::GithubInstallationInfo>, DbError> {
+		ThreadRepository::get_github_installation_for_repo(self, owner, name).await
+	}
+
+	async fn list_github_installations(
+		&self,
+	) -> Result<Vec<crate::types::GithubInstallation>, DbError> {
+		ThreadRepository::list_github_installations(self).await
 	}
 }
 

@@ -6,6 +6,7 @@
 //! This module provides database access for team management within organizations.
 //! Teams group users for access control and collaboration.
 
+use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use loom_server_auth::{
 	team::{Team, TeamMembership},
@@ -16,6 +17,67 @@ use sqlx::{sqlite::SqlitePool, Row};
 use uuid::Uuid;
 
 use crate::error::DbError;
+
+#[async_trait]
+pub trait TeamStore: Send + Sync {
+	async fn create_team(&self, team: &Team) -> Result<(), DbError>;
+	async fn get_team_by_id(&self, id: &TeamId) -> Result<Option<Team>, DbError>;
+	async fn get_team_by_slug(&self, org_id: &OrgId, slug: &str) -> Result<Option<Team>, DbError>;
+	async fn update_team(&self, team: &Team) -> Result<(), DbError>;
+	async fn delete_team(&self, id: &TeamId) -> Result<bool, DbError>;
+	async fn list_teams_for_org(&self, org_id: &OrgId) -> Result<Vec<Team>, DbError>;
+	async fn create_scim_team(
+		&self,
+		org_id: &OrgId,
+		name: &str,
+		scim_external_id: Option<&str>,
+	) -> Result<TeamId, DbError>;
+	async fn update_scim_team(
+		&self,
+		team_id: &TeamId,
+		name: &str,
+		scim_external_id: Option<&str>,
+	) -> Result<(), DbError>;
+	async fn delete_scim_team(&self, team_id: &TeamId, org_id: &OrgId) -> Result<bool, DbError>;
+	async fn set_team_members(&self, team_id: &TeamId, user_ids: &[UserId]) -> Result<(), DbError>;
+	async fn list_scim_teams(
+		&self,
+		org_id: &OrgId,
+		limit: i64,
+		offset: i64,
+	) -> Result<Vec<ScimTeam>, DbError>;
+	async fn count_teams_in_org(&self, org_id: &OrgId) -> Result<i64, DbError>;
+	async fn get_team_with_scim_fields(
+		&self,
+		team_id: &TeamId,
+		org_id: &OrgId,
+	) -> Result<Option<ScimTeam>, DbError>;
+	async fn list_scim_group_members(
+		&self,
+		team_id: &TeamId,
+	) -> Result<Vec<(UserId, Option<String>)>, DbError>;
+	async fn add_member(
+		&self,
+		team_id: &TeamId,
+		user_id: &UserId,
+		role: TeamRole,
+	) -> Result<(), DbError>;
+	async fn get_membership(
+		&self,
+		team_id: &TeamId,
+		user_id: &UserId,
+	) -> Result<Option<TeamMembership>, DbError>;
+	async fn update_member_role(
+		&self,
+		team_id: &TeamId,
+		user_id: &UserId,
+		role: TeamRole,
+	) -> Result<(), DbError>;
+	async fn remove_member(&self, team_id: &TeamId, user_id: &UserId) -> Result<bool, DbError>;
+	async fn list_members(&self, team_id: &TeamId) -> Result<Vec<TeamMembership>, DbError>;
+	async fn get_teams_for_user(&self, user_id: &UserId)
+		-> Result<Vec<(Team, TeamRole)>, DbError>;
+}
 
 /// A team with SCIM-specific fields for provisioning.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -763,6 +825,128 @@ impl TeamRepository {
 				.map_err(|e| DbError::Internal(format!("Invalid updated_at: {e}")))?
 				.with_timezone(&Utc),
 		})
+	}
+}
+
+#[async_trait]
+impl TeamStore for TeamRepository {
+	async fn create_team(&self, team: &Team) -> Result<(), DbError> {
+		self.create_team(team).await
+	}
+
+	async fn get_team_by_id(&self, id: &TeamId) -> Result<Option<Team>, DbError> {
+		self.get_team_by_id(id).await
+	}
+
+	async fn get_team_by_slug(&self, org_id: &OrgId, slug: &str) -> Result<Option<Team>, DbError> {
+		self.get_team_by_slug(org_id, slug).await
+	}
+
+	async fn update_team(&self, team: &Team) -> Result<(), DbError> {
+		self.update_team(team).await
+	}
+
+	async fn delete_team(&self, id: &TeamId) -> Result<bool, DbError> {
+		self.delete_team(id).await
+	}
+
+	async fn list_teams_for_org(&self, org_id: &OrgId) -> Result<Vec<Team>, DbError> {
+		self.list_teams_for_org(org_id).await
+	}
+
+	async fn create_scim_team(
+		&self,
+		org_id: &OrgId,
+		name: &str,
+		scim_external_id: Option<&str>,
+	) -> Result<TeamId, DbError> {
+		self.create_scim_team(org_id, name, scim_external_id).await
+	}
+
+	async fn update_scim_team(
+		&self,
+		team_id: &TeamId,
+		name: &str,
+		scim_external_id: Option<&str>,
+	) -> Result<(), DbError> {
+		self.update_scim_team(team_id, name, scim_external_id).await
+	}
+
+	async fn delete_scim_team(&self, team_id: &TeamId, org_id: &OrgId) -> Result<bool, DbError> {
+		self.delete_scim_team(team_id, org_id).await
+	}
+
+	async fn set_team_members(&self, team_id: &TeamId, user_ids: &[UserId]) -> Result<(), DbError> {
+		self.set_team_members(team_id, user_ids).await
+	}
+
+	async fn list_scim_teams(
+		&self,
+		org_id: &OrgId,
+		limit: i64,
+		offset: i64,
+	) -> Result<Vec<ScimTeam>, DbError> {
+		self.list_scim_teams(org_id, limit, offset).await
+	}
+
+	async fn count_teams_in_org(&self, org_id: &OrgId) -> Result<i64, DbError> {
+		self.count_teams_in_org(org_id).await
+	}
+
+	async fn get_team_with_scim_fields(
+		&self,
+		team_id: &TeamId,
+		org_id: &OrgId,
+	) -> Result<Option<ScimTeam>, DbError> {
+		self.get_team_with_scim_fields(team_id, org_id).await
+	}
+
+	async fn list_scim_group_members(
+		&self,
+		team_id: &TeamId,
+	) -> Result<Vec<(UserId, Option<String>)>, DbError> {
+		self.list_scim_group_members(team_id).await
+	}
+
+	async fn add_member(
+		&self,
+		team_id: &TeamId,
+		user_id: &UserId,
+		role: TeamRole,
+	) -> Result<(), DbError> {
+		self.add_member(team_id, user_id, role).await
+	}
+
+	async fn get_membership(
+		&self,
+		team_id: &TeamId,
+		user_id: &UserId,
+	) -> Result<Option<TeamMembership>, DbError> {
+		self.get_membership(team_id, user_id).await
+	}
+
+	async fn update_member_role(
+		&self,
+		team_id: &TeamId,
+		user_id: &UserId,
+		role: TeamRole,
+	) -> Result<(), DbError> {
+		self.update_member_role(team_id, user_id, role).await
+	}
+
+	async fn remove_member(&self, team_id: &TeamId, user_id: &UserId) -> Result<bool, DbError> {
+		self.remove_member(team_id, user_id).await
+	}
+
+	async fn list_members(&self, team_id: &TeamId) -> Result<Vec<TeamMembership>, DbError> {
+		self.list_members(team_id).await
+	}
+
+	async fn get_teams_for_user(
+		&self,
+		user_id: &UserId,
+	) -> Result<Vec<(Team, TeamRole)>, DbError> {
+		self.get_teams_for_user(user_id).await
 	}
 }
 

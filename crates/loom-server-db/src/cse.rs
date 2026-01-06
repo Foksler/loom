@@ -3,6 +3,7 @@
 
 //! CSE (Custom Search Engine) cache repository for database operations.
 
+use async_trait::async_trait;
 use chrono::{Duration, Utc};
 use sqlx::sqlite::SqlitePool;
 
@@ -135,6 +136,46 @@ pub fn normalize_cache_query(query: &str) -> String {
 		.collect::<Vec<_>>()
 		.join(" ")
 		.to_lowercase()
+}
+
+#[async_trait]
+pub trait CseStore: Send + Sync {
+	async fn get_cached_results(
+		&self,
+		query: &str,
+		max_results: u32,
+	) -> Result<Option<String>, DbError>;
+	async fn cache_results(
+		&self,
+		query: &str,
+		max_results: u32,
+		response_json: &str,
+	) -> Result<(), DbError>;
+	async fn cleanup_expired(&self) -> Result<u64, DbError>;
+}
+
+#[async_trait]
+impl CseStore for CseRepository {
+	async fn get_cached_results(
+		&self,
+		query: &str,
+		max_results: u32,
+	) -> Result<Option<String>, DbError> {
+		self.get_cached_results(query, max_results).await
+	}
+
+	async fn cache_results(
+		&self,
+		query: &str,
+		max_results: u32,
+		response_json: &str,
+	) -> Result<(), DbError> {
+		self.cache_results(query, max_results, response_json).await
+	}
+
+	async fn cleanup_expired(&self) -> Result<u64, DbError> {
+		self.cleanup_expired().await
+	}
 }
 
 #[cfg(test)]

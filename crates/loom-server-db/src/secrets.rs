@@ -9,6 +9,7 @@
 //! - Encrypted DEK storage
 //! - Scope-based queries
 
+use async_trait::async_trait;
 use chrono::Utc;
 use sqlx::{sqlite::SqlitePool, Row};
 
@@ -102,6 +103,29 @@ pub struct SecretFilterParams {
 	pub repo_id: Option<String>,
 	pub weaver_id: Option<String>,
 	pub name: Option<String>,
+}
+
+#[async_trait]
+pub trait SecretsStore: Send + Sync {
+	async fn insert_secret(&self, params: &CreateSecretParams) -> Result<()>;
+	async fn insert_version(&self, params: &CreateVersionParams) -> Result<()>;
+	async fn get_secret(&self, id: &str) -> Result<Option<SecretRow>>;
+	async fn get_secret_by_name(
+		&self,
+		org_id: &str,
+		scope: &str,
+		repo_id: Option<&str>,
+		weaver_id: Option<&str>,
+		name: &str,
+	) -> Result<Option<SecretRow>>;
+	async fn list_secrets(&self, filter: &SecretFilterParams) -> Result<Vec<SecretRow>>;
+	async fn get_current_version(&self, secret_id: &str) -> Result<Option<SecretVersionRow>>;
+	async fn get_version(&self, secret_id: &str, version: i32)
+		-> Result<Option<SecretVersionRow>>;
+	async fn disable_version(&self, version_id: &str) -> Result<()>;
+	async fn delete_secret(&self, id: &str) -> Result<()>;
+	async fn store_dek(&self, params: &StoreDekParams) -> Result<()>;
+	async fn get_dek(&self, id: &str) -> Result<Option<EncryptedDekRow>>;
 }
 
 /// Repository for secrets database operations.
@@ -467,6 +491,64 @@ impl SecretsRepository {
 	/// Begin a new transaction.
 	pub async fn begin(&self) -> Result<sqlx::Transaction<'_, sqlx::Sqlite>> {
 		Ok(self.pool.begin().await?)
+	}
+}
+
+#[async_trait]
+impl SecretsStore for SecretsRepository {
+	async fn insert_secret(&self, params: &CreateSecretParams) -> Result<()> {
+		SecretsRepository::insert_secret(self, params).await
+	}
+
+	async fn insert_version(&self, params: &CreateVersionParams) -> Result<()> {
+		SecretsRepository::insert_version(self, params).await
+	}
+
+	async fn get_secret(&self, id: &str) -> Result<Option<SecretRow>> {
+		SecretsRepository::get_secret(self, id).await
+	}
+
+	async fn get_secret_by_name(
+		&self,
+		org_id: &str,
+		scope: &str,
+		repo_id: Option<&str>,
+		weaver_id: Option<&str>,
+		name: &str,
+	) -> Result<Option<SecretRow>> {
+		SecretsRepository::get_secret_by_name(self, org_id, scope, repo_id, weaver_id, name).await
+	}
+
+	async fn list_secrets(&self, filter: &SecretFilterParams) -> Result<Vec<SecretRow>> {
+		SecretsRepository::list_secrets(self, filter).await
+	}
+
+	async fn get_current_version(&self, secret_id: &str) -> Result<Option<SecretVersionRow>> {
+		SecretsRepository::get_current_version(self, secret_id).await
+	}
+
+	async fn get_version(
+		&self,
+		secret_id: &str,
+		version: i32,
+	) -> Result<Option<SecretVersionRow>> {
+		SecretsRepository::get_version(self, secret_id, version).await
+	}
+
+	async fn disable_version(&self, version_id: &str) -> Result<()> {
+		SecretsRepository::disable_version(self, version_id).await
+	}
+
+	async fn delete_secret(&self, id: &str) -> Result<()> {
+		SecretsRepository::delete_secret(self, id).await
+	}
+
+	async fn store_dek(&self, params: &StoreDekParams) -> Result<()> {
+		SecretsRepository::store_dek(self, params).await
+	}
+
+	async fn get_dek(&self, id: &str) -> Result<Option<EncryptedDekRow>> {
+		SecretsRepository::get_dek(self, id).await
 	}
 }
 

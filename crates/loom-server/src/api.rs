@@ -42,7 +42,7 @@ use loom_server_config::QueueOverflowPolicy;
 
 use crate::{
 	db::{
-		ApiKeyRepository, AuditQueryRepository, OrgRepository, SessionRepository, ShareRepository,
+		ApiKeyRepository, AuditRepository, OrgRepository, SessionRepository, ShareRepository,
 		TeamRepository, ThreadRepository, UserRepository,
 	},
 	llm_proxy,
@@ -96,7 +96,7 @@ pub struct AppState {
 	pub push_mirror_store: Option<Arc<loom_server_scm_mirror::SqlitePushMirrorStore>>,
 	pub external_mirror_store: Option<Arc<loom_server_scm_mirror::SqliteExternalMirrorStore>>,
 	pub log_buffer: loom_server_logs::LogBuffer,
-	pub audit_query_repo: Arc<AuditQueryRepository>,
+	pub audit_repo: Arc<AuditRepository>,
 	pub k8s_client: Option<Arc<dyn K8sClient>>,
 	pub svid_issuer: Option<Arc<SvidIssuer<SoftwareKeyBackend>>>,
 	pub secrets_service: Option<Arc<SecretsService<SoftwareKeyBackend, SqliteSecretStore>>>,
@@ -159,7 +159,7 @@ pub async fn create_app_state(
 	let external_mirror_store = Arc::new(loom_server_scm_mirror::SqliteExternalMirrorStore::new(
 		pool.clone(),
 	));
-	let audit_query_repo = Arc::new(AuditQueryRepository::new(pool.clone()));
+	let audit_repo = Arc::new(AuditRepository::new(pool.clone()));
 	let auth_config = loom_server_auth::middleware::AuthConfig {
 		dev_mode: config.auth.dev_mode,
 		session_cookie_name: loom_server_auth::middleware::SESSION_COOKIE_NAME.to_string(),
@@ -322,7 +322,7 @@ pub async fn create_app_state(
 		push_mirror_store: Some(push_mirror_store),
 		external_mirror_store: Some(external_mirror_store),
 		log_buffer: log_buffer.unwrap_or_default(),
-		audit_query_repo,
+		audit_repo,
 		k8s_client,
 		svid_issuer,
 		secrets_service,

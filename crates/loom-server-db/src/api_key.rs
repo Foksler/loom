@@ -6,6 +6,7 @@
 //! This module provides database access for API key management.
 //! API keys are organization-scoped and used for programmatic access.
 
+use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use loom_server_auth::{ApiKey, ApiKeyId, ApiKeyScope, ApiKeyUsage, OrgId, UserId};
 use sqlx::{sqlite::SqlitePool, Row};
@@ -13,6 +14,91 @@ use std::net::IpAddr;
 use uuid::Uuid;
 
 use crate::error::DbError;
+
+#[async_trait]
+pub trait ApiKeyStore: Send + Sync {
+	async fn create_api_key(
+		&self,
+		org_id: &OrgId,
+		name: &str,
+		token_hash: &str,
+		scopes: &[ApiKeyScope],
+		created_by: &UserId,
+	) -> Result<String, DbError>;
+	async fn get_api_key_by_id(&self, id: &str) -> Result<Option<ApiKey>, DbError>;
+	async fn get_api_key_by_hash(&self, token_hash: &str) -> Result<Option<ApiKey>, DbError>;
+	async fn list_api_keys_for_org(&self, org_id: &OrgId) -> Result<Vec<ApiKey>, DbError>;
+	async fn revoke_api_key(&self, id: &str, revoked_by: &UserId) -> Result<bool, DbError>;
+	async fn update_last_used(&self, id: &str) -> Result<(), DbError>;
+	async fn log_usage(
+		&self,
+		api_key_id: &str,
+		ip_address: Option<&str>,
+		endpoint: &str,
+		method: &str,
+	) -> Result<(), DbError>;
+	async fn get_usage_logs(
+		&self,
+		api_key_id: &str,
+		limit: i32,
+		offset: i32,
+	) -> Result<(Vec<ApiKeyUsage>, i64), DbError>;
+}
+
+#[async_trait]
+impl ApiKeyStore for ApiKeyRepository {
+	async fn create_api_key(
+		&self,
+		org_id: &OrgId,
+		name: &str,
+		token_hash: &str,
+		scopes: &[ApiKeyScope],
+		created_by: &UserId,
+	) -> Result<String, DbError> {
+		self.create_api_key(org_id, name, token_hash, scopes, created_by)
+			.await
+	}
+
+	async fn get_api_key_by_id(&self, id: &str) -> Result<Option<ApiKey>, DbError> {
+		self.get_api_key_by_id(id).await
+	}
+
+	async fn get_api_key_by_hash(&self, token_hash: &str) -> Result<Option<ApiKey>, DbError> {
+		self.get_api_key_by_hash(token_hash).await
+	}
+
+	async fn list_api_keys_for_org(&self, org_id: &OrgId) -> Result<Vec<ApiKey>, DbError> {
+		self.list_api_keys_for_org(org_id).await
+	}
+
+	async fn revoke_api_key(&self, id: &str, revoked_by: &UserId) -> Result<bool, DbError> {
+		self.revoke_api_key(id, revoked_by).await
+	}
+
+	async fn update_last_used(&self, id: &str) -> Result<(), DbError> {
+		self.update_last_used(id).await
+	}
+
+	async fn log_usage(
+		&self,
+		api_key_id: &str,
+		ip_address: Option<&str>,
+		endpoint: &str,
+		method: &str,
+	) -> Result<(), DbError> {
+		self.log_usage(api_key_id, ip_address, endpoint, method)
+			.await
+	}
+
+	async fn get_usage_logs(
+		&self,
+		api_key_id: &str,
+		limit: i32,
+		offset: i32,
+	) -> Result<(Vec<ApiKeyUsage>, i64), DbError> {
+		self.get_usage_logs(api_key_id, limit, offset).await
+	}
+}
 
 /// Repository for API key database operations.
 ///

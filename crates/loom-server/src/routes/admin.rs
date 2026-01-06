@@ -1083,7 +1083,7 @@ pub async fn list_audit_logs(
 	}
 
 	let (logs, total) = match state
-		.audit_query_repo
+		.audit_repo
 		.query_logs(
 			params.event_type.as_deref(),
 			params.actor_id.as_deref(),

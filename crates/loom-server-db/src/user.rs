@@ -6,6 +6,7 @@
 //! This module provides database access for user and identity management.
 //! Users can have multiple identities (e.g., GitHub, Google, MagicLink).
 
+use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use loom_server_auth::{Identity, IdentityId, OrgId, Provider, User, UserId};
 use serde::{Deserialize, Serialize};
@@ -13,6 +14,74 @@ use sqlx::{sqlite::SqlitePool, Row};
 use uuid::Uuid;
 
 use crate::error::DbError;
+
+#[async_trait]
+pub trait UserStore: Send + Sync {
+	async fn create_user(&self, user: &User) -> Result<(), DbError>;
+	async fn get_user_by_id(&self, id: &UserId) -> Result<Option<User>, DbError>;
+	async fn get_user_by_display_name(&self, display_name: &str) -> Result<Option<User>, DbError>;
+	async fn get_user_by_email(&self, email: &str) -> Result<Option<User>, DbError>;
+	async fn update_user(&self, user: &User) -> Result<(), DbError>;
+	async fn soft_delete_user(&self, id: &UserId) -> Result<(), DbError>;
+	async fn restore_user(&self, id: &UserId) -> Result<(), DbError>;
+	async fn update_locale(&self, id: &UserId, locale: Option<&str>) -> Result<(), DbError>;
+	async fn get_user_by_username(&self, username: &str) -> Result<Option<User>, DbError>;
+	async fn is_username_available(&self, username: &str) -> Result<bool, DbError>;
+	async fn generate_unique_username(&self, base: &str) -> Result<String, DbError>;
+	async fn update_username(&self, user_id: &UserId, username: &str) -> Result<(), DbError>;
+	async fn list_users(
+		&self,
+		limit: i32,
+		offset: i32,
+		search: Option<&str>,
+	) -> Result<(Vec<User>, i64), DbError>;
+	async fn count_system_admins(&self) -> Result<i64, DbError>;
+	async fn create_identity(&self, identity: &Identity) -> Result<(), DbError>;
+	async fn get_identities_for_user(&self, user_id: &UserId) -> Result<Vec<Identity>, DbError>;
+	async fn get_identity_by_provider(
+		&self,
+		provider: &str,
+		provider_user_id: &str,
+	) -> Result<Option<Identity>, DbError>;
+	async fn delete_identity(&self, id: &IdentityId) -> Result<bool, DbError>;
+	async fn find_or_create_user_by_email(
+		&self,
+		email: &str,
+		display_name: &str,
+		avatar_url: Option<&str>,
+		preferred_username: Option<&str>,
+	) -> Result<User, DbError>;
+	async fn count_users(&self) -> Result<i64, DbError>;
+	async fn make_first_user_admin(&self, user_id: &UserId) -> Result<(), DbError>;
+	async fn list_users_in_org(
+		&self,
+		org_id: &OrgId,
+		limit: i64,
+		offset: i64,
+	) -> Result<Vec<ScimUserRow>, DbError>;
+	async fn count_users_in_org(&self, org_id: &OrgId) -> Result<i64, DbError>;
+	async fn get_user_in_org(
+		&self,
+		user_id: &UserId,
+		org_id: &OrgId,
+	) -> Result<Option<ScimUserRow>, DbError>;
+	async fn update_scim_fields(
+		&self,
+		user_id: &UserId,
+		scim_external_id: Option<&str>,
+		provisioned_by_scim: bool,
+	) -> Result<(), DbError>;
+	async fn update_display_name(&self, user_id: &UserId, display_name: &str)
+		-> Result<(), DbError>;
+	async fn update_user_for_scim(
+		&self,
+		user_id: &UserId,
+		display_name: Option<&str>,
+		scim_external_id: Option<&str>,
+		locale: Option<&str>,
+		deleted_at: Option<&str>,
+	) -> Result<(), DbError>;
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScimUserRow {
@@ -913,66 +982,171 @@ impl UserRepository {
 	}
 }
 
+#[async_trait]
+impl UserStore for UserRepository {
+	async fn create_user(&self, user: &User) -> Result<(), DbError> {
+		self.create_user(user).await
+	}
+
+	async fn get_user_by_id(&self, id: &UserId) -> Result<Option<User>, DbError> {
+		self.get_user_by_id(id).await
+	}
+
+	async fn get_user_by_display_name(&self, display_name: &str) -> Result<Option<User>, DbError> {
+		self.get_user_by_display_name(display_name).await
+	}
+
+	async fn get_user_by_email(&self, email: &str) -> Result<Option<User>, DbError> {
+		self.get_user_by_email(email).await
+	}
+
+	async fn update_user(&self, user: &User) -> Result<(), DbError> {
+		self.update_user(user).await
+	}
+
+	async fn soft_delete_user(&self, id: &UserId) -> Result<(), DbError> {
+		self.soft_delete_user(id).await
+	}
+
+	async fn restore_user(&self, id: &UserId) -> Result<(), DbError> {
+		self.restore_user(id).await
+	}
+
+	async fn update_locale(&self, id: &UserId, locale: Option<&str>) -> Result<(), DbError> {
+		self.update_locale(id, locale).await
+	}
+
+	async fn get_user_by_username(&self, username: &str) -> Result<Option<User>, DbError> {
+		self.get_user_by_username(username).await
+	}
+
+	async fn is_username_available(&self, username: &str) -> Result<bool, DbError> {
+		self.is_username_available(username).await
+	}
+
+	async fn generate_unique_username(&self, base: &str) -> Result<String, DbError> {
+		self.generate_unique_username(base).await
+	}
+
+	async fn update_username(&self, user_id: &UserId, username: &str) -> Result<(), DbError> {
+		self.update_username(user_id, username).await
+	}
+
+	async fn list_users(
+		&self,
+		limit: i32,
+		offset: i32,
+		search: Option<&str>,
+	) -> Result<(Vec<User>, i64), DbError> {
+		self.list_users(limit, offset, search).await
+	}
+
+	async fn count_system_admins(&self) -> Result<i64, DbError> {
+		self.count_system_admins().await
+	}
+
+	async fn create_identity(&self, identity: &Identity) -> Result<(), DbError> {
+		self.create_identity(identity).await
+	}
+
+	async fn get_identities_for_user(&self, user_id: &UserId) -> Result<Vec<Identity>, DbError> {
+		self.get_identities_for_user(user_id).await
+	}
+
+	async fn get_identity_by_provider(
+		&self,
+		provider: &str,
+		provider_user_id: &str,
+	) -> Result<Option<Identity>, DbError> {
+		self.get_identity_by_provider(provider, provider_user_id)
+			.await
+	}
+
+	async fn delete_identity(&self, id: &IdentityId) -> Result<bool, DbError> {
+		self.delete_identity(id).await
+	}
+
+	async fn find_or_create_user_by_email(
+		&self,
+		email: &str,
+		display_name: &str,
+		avatar_url: Option<&str>,
+		preferred_username: Option<&str>,
+	) -> Result<User, DbError> {
+		self.find_or_create_user_by_email(email, display_name, avatar_url, preferred_username)
+			.await
+	}
+
+	async fn count_users(&self) -> Result<i64, DbError> {
+		self.count_users().await
+	}
+
+	async fn make_first_user_admin(&self, user_id: &UserId) -> Result<(), DbError> {
+		self.make_first_user_admin(user_id).await
+	}
+
+	async fn list_users_in_org(
+		&self,
+		org_id: &OrgId,
+		limit: i64,
+		offset: i64,
+	) -> Result<Vec<ScimUserRow>, DbError> {
+		self.list_users_in_org(org_id, limit, offset).await
+	}
+
+	async fn count_users_in_org(&self, org_id: &OrgId) -> Result<i64, DbError> {
+		self.count_users_in_org(org_id).await
+	}
+
+	async fn get_user_in_org(
+		&self,
+		user_id: &UserId,
+		org_id: &OrgId,
+	) -> Result<Option<ScimUserRow>, DbError> {
+		self.get_user_in_org(user_id, org_id).await
+	}
+
+	async fn update_scim_fields(
+		&self,
+		user_id: &UserId,
+		scim_external_id: Option<&str>,
+		provisioned_by_scim: bool,
+	) -> Result<(), DbError> {
+		self.update_scim_fields(user_id, scim_external_id, provisioned_by_scim)
+			.await
+	}
+
+	async fn update_display_name(
+		&self,
+		user_id: &UserId,
+		display_name: &str,
+	) -> Result<(), DbError> {
+		self.update_display_name(user_id, display_name).await
+	}
+
+	async fn update_user_for_scim(
+		&self,
+		user_id: &UserId,
+		display_name: Option<&str>,
+		scim_external_id: Option<&str>,
+		locale: Option<&str>,
+		deleted_at: Option<&str>,
+	) -> Result<(), DbError> {
+		self.update_user_for_scim(user_id, display_name, scim_external_id, locale, deleted_at)
+			.await
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use crate::testing::create_user_test_pool;
 	use proptest::prelude::*;
-	use sqlx::sqlite::SqlitePool;
 	use std::collections::HashSet;
-
-	async fn create_test_pool() -> SqlitePool {
-		let pool = SqlitePool::connect(":memory:").await.unwrap();
-
-		sqlx::query(
-			r#"
-			CREATE TABLE IF NOT EXISTS users (
-				id TEXT PRIMARY KEY,
-				display_name TEXT NOT NULL,
-				username TEXT UNIQUE,
-				primary_email TEXT UNIQUE,
-				avatar_url TEXT,
-				email_visible INTEGER DEFAULT 1,
-				is_system_admin INTEGER DEFAULT 0,
-				is_support INTEGER DEFAULT 0,
-				is_auditor INTEGER DEFAULT 0,
-				created_at TEXT NOT NULL,
-				updated_at TEXT NOT NULL,
-				deleted_at TEXT,
-				locale TEXT DEFAULT NULL
-			)
-			"#,
-		)
-		.execute(&pool)
-		.await
-		.unwrap();
-
-		sqlx::query(
-			r#"
-			CREATE TABLE IF NOT EXISTS identities (
-				id TEXT PRIMARY KEY,
-				user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-				provider TEXT NOT NULL,
-				provider_user_id TEXT NOT NULL,
-				email TEXT NOT NULL,
-				email_verified INTEGER DEFAULT 0,
-				access_token TEXT,
-				refresh_token TEXT,
-				token_expires_at TEXT,
-				created_at TEXT NOT NULL,
-				UNIQUE(provider, provider_user_id)
-			)
-			"#,
-		)
-		.execute(&pool)
-		.await
-		.unwrap();
-
-		pool
-	}
 
 	#[tokio::test]
 	async fn test_first_user_becomes_system_admin() {
-		let pool = create_test_pool().await;
+		let pool = create_user_test_pool().await;
 		let repo = UserRepository::new(pool);
 
 		let user = repo
@@ -988,7 +1162,7 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_second_user_is_not_system_admin() {
-		let pool = create_test_pool().await;
+		let pool = create_user_test_pool().await;
 		let repo = UserRepository::new(pool);
 
 		let first = repo
@@ -1015,7 +1189,7 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_existing_user_retains_admin_status() {
-		let pool = create_test_pool().await;
+		let pool = create_user_test_pool().await;
 		let repo = UserRepository::new(pool);
 
 		let first = repo

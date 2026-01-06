@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use loom_server_audit::{AuditEventType, AuditLogEntry, UserId};
 use sqlx::{sqlite::SqlitePool, Row};
@@ -8,11 +9,27 @@ use uuid::Uuid;
 
 use crate::error::Result;
 
-pub struct AuditQueryRepository {
+#[async_trait]
+pub trait AuditStore: Send + Sync {
+	#[allow(clippy::too_many_arguments)]
+	async fn query_logs(
+		&self,
+		event_type: Option<&str>,
+		actor_id: Option<&str>,
+		resource_type: Option<&str>,
+		resource_id: Option<&str>,
+		from: Option<DateTime<Utc>>,
+		to: Option<DateTime<Utc>>,
+		limit: Option<i64>,
+		offset: Option<i64>,
+	) -> Result<(Vec<AuditLogEntry>, i64)>;
+}
+
+pub struct AuditRepository {
 	pool: SqlitePool,
 }
 
-impl AuditQueryRepository {
+impl AuditRepository {
 	pub fn new(pool: SqlitePool) -> Self {
 		Self { pool }
 	}
@@ -155,6 +172,33 @@ impl AuditQueryRepository {
 			.collect();
 
 		Ok((logs, total))
+	}
+}
+
+#[async_trait]
+impl AuditStore for AuditRepository {
+	async fn query_logs(
+		&self,
+		event_type: Option<&str>,
+		actor_id: Option<&str>,
+		resource_type: Option<&str>,
+		resource_id: Option<&str>,
+		from: Option<DateTime<Utc>>,
+		to: Option<DateTime<Utc>>,
+		limit: Option<i64>,
+		offset: Option<i64>,
+	) -> Result<(Vec<AuditLogEntry>, i64)> {
+		self.query_logs(
+			event_type,
+			actor_id,
+			resource_type,
+			resource_id,
+			from,
+			to,
+			limit,
+			offset,
+		)
+		.await
 	}
 }
 
