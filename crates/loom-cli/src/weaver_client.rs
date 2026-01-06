@@ -47,6 +47,21 @@ pub struct ListWeaversResponse {
 	pub count: u32,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct OrgResponse {
+	pub id: String,
+	#[allow(dead_code)]
+	pub name: String,
+	#[allow(dead_code)]
+	pub slug: String,
+	pub is_personal: bool,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ListOrgsResponse {
+	pub orgs: Vec<OrgResponse>,
+}
+
 pub struct WeaverClient {
 	base_url: Url,
 	http: reqwest::Client,
@@ -142,6 +157,32 @@ impl WeaverClient {
 		}
 
 		Ok(())
+	}
+
+	pub async fn list_orgs(&self) -> Result<ListOrgsResponse> {
+		let url = self.base_url.join("api/orgs")?;
+		let mut req = self.http.get(url);
+		if let Some(token) = &self.auth_token {
+			req = req.header("Authorization", format!("Bearer {}", token.expose()));
+		}
+		let response = req.send().await?;
+
+		if !response.status().is_success() {
+			let status = response.status();
+			let body = response.text().await.unwrap_or_default();
+			anyhow::bail!("Failed to list orgs: {status} - {body}");
+		}
+
+		let list: ListOrgsResponse = response.json().await?;
+		Ok(list)
+	}
+
+	pub async fn get_personal_org(&self) -> Result<OrgResponse> {
+		let orgs = self.list_orgs().await?;
+		orgs.orgs
+			.into_iter()
+			.find(|o| o.is_personal)
+			.ok_or_else(|| anyhow::anyhow!("No personal organization found"))
 	}
 
 	pub fn attach_url(&self, id: &str) -> Result<Url> {

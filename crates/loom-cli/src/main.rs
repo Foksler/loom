@@ -112,9 +112,9 @@ enum WeaverCommand {
 		/// Container image to use
 		#[arg(long, short)]
 		image: Option<String>,
-		/// Organization ID (required)
+		/// Organization ID (defaults to personal org if not specified)
 		#[arg(long, short)]
-		org: String,
+		org: Option<String>,
 		/// Git repository to clone (public https URL)
 		#[arg(long)]
 		repo: Option<String>,
@@ -194,9 +194,9 @@ enum Command {
 		/// Container image to use
 		#[arg(long, short)]
 		image: Option<String>,
-		/// Organization ID (required)
+		/// Organization ID (defaults to personal org if not specified)
 		#[arg(long, short)]
-		org: String,
+		org: Option<String>,
 		/// Git repository to clone (public https URL)
 		#[arg(long)]
 		repo: Option<String>,
@@ -1429,7 +1429,7 @@ async fn run_weaver_new(
 	server_url: &str,
 	token: Option<loom_common_secret::SecretString>,
 	image: Option<String>,
-	org_id: String,
+	org_id: Option<String>,
 	repo: Option<String>,
 	branch: Option<String>,
 	env: Vec<String>,
@@ -1439,6 +1439,14 @@ async fn run_weaver_new(
 	if let Some(token) = token {
 		client = client.with_token(token);
 	}
+
+	let org_id = match org_id {
+		Some(id) => id,
+		None => {
+			let personal_org = client.get_personal_org().await?;
+			personal_org.id
+		}
+	};
 
 	let mut env_map = std::collections::HashMap::new();
 	for e in env {
