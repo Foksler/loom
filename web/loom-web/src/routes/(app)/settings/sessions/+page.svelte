@@ -22,7 +22,7 @@
 			const response = await client.listSessions();
 			sessions = response.sessions;
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to load sessions';
+			error = e instanceof Error ? e.message : i18n._('settings.sessions.loadError');
 		} finally {
 			loading = false;
 		}
@@ -38,7 +38,7 @@
 			await client.revokeSession(sessionId);
 			sessions = sessions.filter((s) => s.id !== sessionId);
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to revoke session';
+			error = e instanceof Error ? e.message : i18n._('settings.sessions.revokeError');
 		} finally {
 			revokingId = null;
 		}

@@ -3,6 +3,7 @@
  SPDX-License-Identifier: Proprietary
 -->
 <script lang="ts">
+	import { i18n } from '$lib/i18n';
 	import type { NavItem } from '../types';
 
 	interface Props {
@@ -18,7 +19,7 @@
 		<div class="prev-next-grid">
 			{#if prev}
 				<a href={prev.path} class="prev-next-link prev">
-					<span class="prev-next-label">Previous</span>
+					<span class="prev-next-label">{i18n('general.previous')}</span>
 					<span class="prev-next-title">← {prev.title}</span>
 				</a>
 			{:else}
@@ -27,7 +28,7 @@
 
 			{#if next}
 				<a href={next.path} class="prev-next-link next">
-					<span class="prev-next-label">Next</span>
+					<span class="prev-next-label">{i18n('general.next')}</span>
 					<span class="prev-next-title">{next.title} →</span>
 				</a>
 			{/if}

@@ -131,18 +131,18 @@
 		const now = new Date();
 		const diffMs = date.getTime() - now.getTime();
 		if (diffMs <= 0) {
-			return 'Expired';
+			return i18n._('admin.anthropic.expired');
 		}
 		const diffMins = Math.floor(diffMs / 60000);
 		if (diffMins < 60) {
-			return `in ${diffMins} minutes`;
+			return i18n._('admin.anthropic.expiresInMinutes', { count: diffMins });
 		}
 		const diffHours = Math.floor(diffMins / 60);
 		if (diffHours < 24) {
-			return `in ${diffHours} hours`;
+			return i18n._('admin.anthropic.expiresInHours', { count: diffHours });
 		}
 		const diffDays = Math.floor(diffHours / 24);
-		return `in ${diffDays} days`;
+		return i18n._('admin.anthropic.expiresInDays', { count: diffDays });
 	}
 
 	$effect(() => {
@@ -211,7 +211,7 @@
 								</div>
 								{#if account.status === 'cooling_down' && account.cooldown_remaining_secs}
 									<div class="text-sm text-fg-muted mt-1">
-										{formatCooldown(account.cooldown_remaining_secs)} remaining
+										{formatCooldown(account.cooldown_remaining_secs)} {i18n._('admin.anthropic.remaining')}
 									</div>
 								{/if}
 								{#if account.last_error}
@@ -221,7 +221,7 @@
 								{/if}
 								{#if account.expires_at}
 									<div class="text-sm text-fg-muted mt-1">
-										Token expires: {formatExpiry(account.expires_at)}
+										{i18n._('admin.anthropic.tokenExpires')} {formatExpiry(account.expires_at)}
 									</div>
 								{/if}
 							</div>
@@ -242,7 +242,7 @@
 
 		{#if summary}
 			<div class="mt-6 text-sm text-fg-muted text-center">
-				{summary.available} available, {summary.cooling_down} cooling, {summary.disabled} disabled ({summary.total} total)
+				{summary.available} {i18n._('admin.anthropic.summary.available')}, {summary.cooling_down} {i18n._('admin.anthropic.summary.cooling')}, {summary.disabled} {i18n._('admin.anthropic.summary.disabled')} ({summary.total} {i18n._('admin.anthropic.summary.total')})
 			</div>
 		{/if}
 	{/if}

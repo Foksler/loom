@@ -189,7 +189,7 @@
 			status: c.bin_dir.status,
 			latency: c.bin_dir.latency_ms,
 			error: c.bin_dir.error,
-			extra: c.bin_dir.file_count !== undefined ? `${c.bin_dir.file_count} files` : undefined,
+			extra: c.bin_dir.file_count !== undefined ? i18n._('admin.health.fileCount', { count: c.bin_dir.file_count }) : undefined,
 		});
 
 		components.push({

@@ -37,7 +37,7 @@
 			const response = await client.listRepos(user.id);
 			repos = response.repos;
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to load repositories';
+			error = e instanceof Error ? e.message : i18n._('client.repos.list.loadError');
 		} finally {
 			loading = false;
 		}

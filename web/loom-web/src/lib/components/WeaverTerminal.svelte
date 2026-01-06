@@ -118,7 +118,7 @@
 			connectionStatus = 'disconnected';
 			stopKeepAlive();
 			if (event.code !== 1000) {
-				errorMessage = `Connection closed: ${event.reason || 'Unknown reason'}`;
+				errorMessage = `${i18n._('weavers.terminal.connectionClosed')} ${event.reason || i18n._('weavers.terminal.unknownReason')}`;
 			}
 			onDisconnect?.();
 		};
@@ -126,7 +126,7 @@
 		ws.onerror = () => {
 			connectionStatus = 'error';
 			stopKeepAlive();
-			errorMessage = 'Failed to connect to weaver';
+			errorMessage = i18n._('weavers.terminal.connectFailed');
 		};
 	}
 

@@ -37,11 +37,11 @@
 	async function loadJobs() {
 		try {
 			const res = await fetch('/api/admin/jobs', { credentials: 'include' });
-			if (!res.ok) throw new Error('Failed to load jobs');
+			if (!res.ok) throw new Error(i18n._('jobs.loadError'));
 			const data = await res.json();
 			jobs = data.jobs;
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Unknown error';
+			error = e instanceof Error ? e.message : i18n._('general.unknownError');
 		} finally {
 			loading = false;
 		}
@@ -54,10 +54,10 @@
 				method: 'POST',
 				credentials: 'include',
 			});
-			if (!res.ok) throw new Error('Failed to trigger job');
+			if (!res.ok) throw new Error(i18n._('jobs.triggerError'));
 			await loadJobs();
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Unknown error';
+			error = e instanceof Error ? e.message : i18n._('general.unknownError');
 		} finally {
 			triggerLoading = null;
 		}

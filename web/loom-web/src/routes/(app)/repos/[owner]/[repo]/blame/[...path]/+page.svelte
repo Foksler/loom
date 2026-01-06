@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import type { Repository, Branch, BlameLine } from '$lib/api/repos';
 	import { BlameView, BranchSelector } from '$lib/components/repos';
+	import { i18n } from '$lib/i18n';
 
 	interface Props {
 		data: {
@@ -37,7 +38,7 @@
 </script>
 
 <svelte:head>
-	<title>Blame: {fileName} - {data.repo.owner_id}/{data.repo.name}</title>
+	<title>{i18n('client.repos.blame.title')} {fileName} - {data.repo.owner_id}/{data.repo.name}</title>
 </svelte:head>
 
 <div class="space-y-4">
@@ -65,7 +66,7 @@
 		</div>
 
 		<a href="{basePath}/blob/{data.currentRef}/{data.currentPath}" class="text-sm text-accent hover:underline">
-			View file
+			{i18n('client.repos.blame.viewFile')}
 		</a>
 	</div>
 

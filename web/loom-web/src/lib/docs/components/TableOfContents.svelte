@@ -3,6 +3,7 @@
  SPDX-License-Identifier: Proprietary
 -->
 <script lang="ts">
+	import { i18n } from '$lib/i18n';
 	import type { TocItem } from '../types';
 
 	interface Props {
@@ -14,8 +15,8 @@
 </script>
 
 {#if items.length > 0}
-	<nav class="toc" aria-label="On this page">
-		<h4 class="toc-title">On this page</h4>
+	<nav class="toc" aria-label={i18n('docs.toc.title')}>
+		<h4 class="toc-title">{i18n('docs.toc.title')}</h4>
 		<ul class="toc-list">
 			{#each items as item}
 				<li class="toc-item" class:depth-3={item.depth === 3}>

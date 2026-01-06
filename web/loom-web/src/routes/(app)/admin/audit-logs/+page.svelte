@@ -94,25 +94,25 @@
 <LoomFrame>
 	<div class="audit-logs-page">
 		<div class="header">
-			<h1>Security Audit Logs</h1>
+			<h1>{i18n.t('admin.auditLogs.title')}</h1>
 			<div class="filters">
 				<select bind:value={eventTypeFilter} onchange={() => { offset = 0; loadLogs(); }}>
-					<option value="">All Events</option>
-					<option value="login">Login</option>
-					<option value="logout">Logout</option>
-					<option value="login_failed">Login Failed</option>
-					<option value="access_denied">Access Denied</option>
-					<option value="session_revoked">Session Revoked</option>
-					<option value="api_key_created">API Key Created</option>
-					<option value="api_key_revoked">API Key Revoked</option>
-					<option value="org_created">Org Created</option>
-					<option value="member_added">Member Added</option>
-					<option value="member_removed">Member Removed</option>
-					<option value="impersonation_started">Impersonation Started</option>
-					<option value="impersonation_ended">Impersonation Ended</option>
+					<option value="">{i18n.t('admin.auditLogs.event.all')}</option>
+					<option value="login">{i18n.t('admin.auditLogs.event.login')}</option>
+					<option value="logout">{i18n.t('admin.auditLogs.event.logout')}</option>
+					<option value="login_failed">{i18n.t('admin.auditLogs.event.loginFailed')}</option>
+					<option value="access_denied">{i18n.t('admin.auditLogs.event.accessDenied')}</option>
+					<option value="session_revoked">{i18n.t('admin.auditLogs.event.sessionRevoked')}</option>
+					<option value="api_key_created">{i18n.t('admin.auditLogs.event.apiKeyCreated')}</option>
+					<option value="api_key_revoked">{i18n.t('admin.auditLogs.event.apiKeyRevoked')}</option>
+					<option value="org_created">{i18n.t('admin.auditLogs.event.orgCreated')}</option>
+					<option value="member_added">{i18n.t('admin.auditLogs.event.memberAdded')}</option>
+					<option value="member_removed">{i18n.t('admin.auditLogs.event.memberRemoved')}</option>
+					<option value="impersonation_started">{i18n.t('admin.auditLogs.event.impersonationStarted')}</option>
+					<option value="impersonation_ended">{i18n.t('admin.auditLogs.event.impersonationEnded')}</option>
 				</select>
 				<button onclick={loadLogs} disabled={loading}>
-					{loading ? 'Loading...' : 'Refresh'}
+					{loading ? i18n.t('general.loading') : i18n.t('general.refresh')}
 				</button>
 			</div>
 		</div>
@@ -122,19 +122,19 @@
 		{/if}
 
 		{#if loading && logs.length === 0}
-			<div class="loading">Loading audit logs...</div>
+			<div class="loading">{i18n.t('admin.auditLogs.loading')}</div>
 		{:else if logs.length === 0}
-			<div class="empty">No audit logs found.</div>
+			<div class="empty">{i18n.t('admin.auditLogs.empty')}</div>
 		{:else}
 			<div class="logs-table-container">
 				<table class="logs-table">
 					<thead>
 						<tr>
-							<th>Timestamp</th>
-							<th>Event</th>
-							<th>Actor</th>
-							<th>Resource</th>
-							<th>Details</th>
+							<th>{i18n.t('admin.auditLogs.column.timestamp')}</th>
+							<th>{i18n.t('admin.auditLogs.column.event')}</th>
+							<th>{i18n.t('admin.auditLogs.column.actor')}</th>
+							<th>{i18n.t('admin.auditLogs.column.resource')}</th>
+							<th>{i18n.t('admin.auditLogs.column.details')}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -149,7 +149,7 @@
 								<td class="actor">
 									{log.actor_user_id || '-'}
 									{#if log.impersonating_user_id}
-										<span class="impersonating">(via {log.impersonating_user_id})</span>
+										<span class="impersonating">({i18n.t('admin.auditLogs.via', { userId: log.impersonating_user_id })})</span>
 									{/if}
 								</td>
 								<td class="resource">
@@ -173,9 +173,9 @@
 			</div>
 
 			<div class="pagination">
-				<button onclick={prevPage} disabled={offset === 0}>Previous</button>
-				<span>Showing {offset + 1} - {Math.min(offset + limit, total)} of {total}</span>
-				<button onclick={nextPage} disabled={offset + limit >= total}>Next</button>
+				<button onclick={prevPage} disabled={offset === 0}>{i18n.t('general.previous')}</button>
+				<span>{i18n.t('admin.auditLogs.showing', { start: offset + 1, end: Math.min(offset + limit, total), total })}</span>
+				<button onclick={nextPage} disabled={offset + limit >= total}>{i18n.t('general.next')}</button>
 			</div>
 		{/if}
 	</div>

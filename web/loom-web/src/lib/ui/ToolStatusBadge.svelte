@@ -4,6 +4,7 @@
 -->
 <script lang="ts">
 	import type { ToolExecutionStatus } from '../api/types';
+	import { i18n } from '$lib/i18n';
 
 	export type ShuttleState = 'pending' | 'passing' | 'complete' | 'failed';
 
@@ -16,10 +17,10 @@
 	let { status, weaverColor = 'var(--color-thread)', size = 'md' }: Props = $props();
 
 	const statusMapping: Record<string, { displayState: ShuttleState; label: string }> = {
-		pending: { displayState: 'pending', label: 'Shuttle Ready' },
-		running: { displayState: 'passing', label: 'Shuttle Pass' },
-		completed: { displayState: 'complete', label: 'Complete' },
-		failed: { displayState: 'failed', label: 'Broken Thread' },
+		pending: { displayState: 'pending', label: i18n.t('tool.shuttleReady') },
+		running: { displayState: 'passing', label: i18n.t('state.shuttlePass') },
+		completed: { displayState: 'complete', label: i18n.t('state.complete') },
+		failed: { displayState: 'failed', label: i18n.t('state.brokenThread') },
 	};
 
 	const config = $derived(() => {

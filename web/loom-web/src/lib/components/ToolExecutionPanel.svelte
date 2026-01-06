@@ -6,6 +6,7 @@
   import type { ToolExecutionStatus } from '../api/types';
   import { ToolStatusBadge, Card, ThreadDivider } from '../ui';
   import ToolExecutionRow from './ToolExecutionRow.svelte';
+  import { i18n } from '$lib/i18n';
 
   interface Props {
     executions: ToolExecutionStatus[];
@@ -26,7 +27,7 @@
       onclick={() => isExpanded = !effectiveExpanded}
     >
       <span class="panel-title">
-        Shuttle Passes ({executions.length})
+        {i18n._('tool.shuttlePasses')} ({executions.length})
       </span>
       <span class="panel-toggle" class:panel-toggle-open={effectiveExpanded}>
         ▼

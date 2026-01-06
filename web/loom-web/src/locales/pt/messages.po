@@ -2017,3 +2017,303 @@ msgstr "Guias orientados a tarefas que mostram como alcançar objetivos específ
 #: docs.howTo.empty
 msgid "docs.howTo.empty"
 msgstr "Nenhum guia prático disponível ainda."
+
+#: admin.auditLogs.title
+msgid "admin.auditLogs.title"
+msgstr "Registros de auditoria de segurança"
+
+#: admin.auditLogs.loading
+msgid "admin.auditLogs.loading"
+msgstr "Carregando registros de auditoria..."
+
+#: admin.auditLogs.empty
+msgid "admin.auditLogs.empty"
+msgstr "Nenhum registro de auditoria encontrado."
+
+#: admin.auditLogs.showing
+msgid "admin.auditLogs.showing"
+msgstr "Mostrando {start} - {end} de {total}"
+
+#: admin.auditLogs.via
+msgid "admin.auditLogs.via"
+msgstr "via {userId}"
+
+#: admin.auditLogs.event.all
+msgid "admin.auditLogs.event.all"
+msgstr "Todos os eventos"
+
+#: admin.auditLogs.event.login
+msgid "admin.auditLogs.event.login"
+msgstr "Login"
+
+#: admin.auditLogs.event.logout
+msgid "admin.auditLogs.event.logout"
+msgstr "Logout"
+
+#: admin.auditLogs.event.loginFailed
+msgid "admin.auditLogs.event.loginFailed"
+msgstr "Login falhou"
+
+#: admin.auditLogs.event.accessDenied
+msgid "admin.auditLogs.event.accessDenied"
+msgstr "Acesso negado"
+
+#: admin.auditLogs.event.sessionRevoked
+msgid "admin.auditLogs.event.sessionRevoked"
+msgstr "Sessão revogada"
+
+#: admin.auditLogs.event.apiKeyCreated
+msgid "admin.auditLogs.event.apiKeyCreated"
+msgstr "Chave API criada"
+
+#: admin.auditLogs.event.apiKeyRevoked
+msgid "admin.auditLogs.event.apiKeyRevoked"
+msgstr "Chave API revogada"
+
+#: admin.auditLogs.event.orgCreated
+msgid "admin.auditLogs.event.orgCreated"
+msgstr "Organização criada"
+
+#: admin.auditLogs.event.memberAdded
+msgid "admin.auditLogs.event.memberAdded"
+msgstr "Membro adicionado"
+
+#: admin.auditLogs.event.memberRemoved
+msgid "admin.auditLogs.event.memberRemoved"
+msgstr "Membro removido"
+
+#: admin.auditLogs.event.impersonationStarted
+msgid "admin.auditLogs.event.impersonationStarted"
+msgstr "Personificação iniciada"
+
+#: admin.auditLogs.event.impersonationEnded
+msgid "admin.auditLogs.event.impersonationEnded"
+msgstr "Personificação encerrada"
+
+#: admin.auditLogs.column.timestamp
+msgid "admin.auditLogs.column.timestamp"
+msgstr "Data/Hora"
+
+#: admin.auditLogs.column.event
+msgid "admin.auditLogs.column.event"
+msgstr "Evento"
+
+#: admin.auditLogs.column.actor
+msgid "admin.auditLogs.column.actor"
+msgstr "Ator"
+
+#: admin.auditLogs.column.resource
+msgid "admin.auditLogs.column.resource"
+msgstr "Recurso"
+
+#: admin.auditLogs.column.details
+msgid "admin.auditLogs.column.details"
+msgstr "Detalhes"
+
+#: admin.anthropic.expired
+msgid "admin.anthropic.expired"
+msgstr "Expirado"
+
+#: admin.anthropic.expiresInMinutes
+msgid "admin.anthropic.expiresInMinutes"
+msgstr "em {count} minutos"
+
+#: admin.anthropic.expiresInHours
+msgid "admin.anthropic.expiresInHours"
+msgstr "em {count} horas"
+
+#: admin.anthropic.expiresInDays
+msgid "admin.anthropic.expiresInDays"
+msgstr "em {count} dias"
+
+#: admin.anthropic.remaining
+msgid "admin.anthropic.remaining"
+msgstr "restante"
+
+#: admin.anthropic.tokenExpires
+msgid "admin.anthropic.tokenExpires"
+msgstr "Token expira:"
+
+#: admin.anthropic.summary.available
+msgid "admin.anthropic.summary.available"
+msgstr "disponível"
+
+#: admin.anthropic.summary.cooling
+msgid "admin.anthropic.summary.cooling"
+msgstr "esfriando"
+
+#: admin.anthropic.summary.disabled
+msgid "admin.anthropic.summary.disabled"
+msgstr "desabilitado"
+
+#: admin.anthropic.summary.total
+msgid "admin.anthropic.summary.total"
+msgstr "total"
+
+#: client.repos.blame.title
+msgid "client.repos.blame.title"
+msgstr "Blame:"
+
+#: client.repos.blame.viewFile
+msgid "client.repos.blame.viewFile"
+msgstr "Ver arquivo"
+
+#: client.repos.compare.title
+msgid "client.repos.compare.title"
+msgstr "Comparar"
+
+#: client.repos.compare.base
+msgid "client.repos.compare.base"
+msgstr "base:"
+
+#: client.repos.compare.compare
+msgid "client.repos.compare.compare"
+msgstr "comparar:"
+
+#: client.repos.commits.title
+msgid "client.repos.commits.title"
+msgstr "Commits"
+
+#: client.repos.commits.count
+msgid "client.repos.commits.count"
+msgstr "commits"
+
+#: client.repos.commits.newer
+msgid "client.repos.commits.newer"
+msgstr "Mais recentes"
+
+#: client.repos.commits.older
+msgid "client.repos.commits.older"
+msgstr "Mais antigos"
+
+#: state.waiting
+msgid "state.waiting"
+msgstr "Aguardando"
+
+#: state.complete
+msgid "state.complete"
+msgstr "Concluído"
+
+#: tool.shuttleReady
+msgid "tool.shuttleReady"
+msgstr "Shuttle pronto"
+
+#: tool.shuttlePasses
+msgid "tool.shuttlePasses"
+msgstr "Passagens do Shuttle"
+
+#: message.toolResult
+msgid "message.toolResult"
+msgstr "🔧 Resultado da ferramenta"
+
+#: weavers.terminal.connectionClosed
+msgid "weavers.terminal.connectionClosed"
+msgstr "Conexão fechada:"
+
+#: weavers.terminal.unknownReason
+msgid "weavers.terminal.unknownReason"
+msgstr "Razão desconhecida"
+
+#: weavers.terminal.connectFailed
+msgid "weavers.terminal.connectFailed"
+msgstr "Falha ao conectar ao weaver"
+
+#: docs.toc.title
+msgid "docs.toc.title"
+msgstr "Nesta página"
+
+#: docs.breadcrumbs.docs
+msgid "docs.breadcrumbs.docs"
+msgstr "Documentação"
+
+#: docs.search.placeholder
+msgid "docs.search.placeholder"
+msgstr "Buscar docs..."
+
+#: docs.search.placeholderFull
+msgid "docs.search.placeholderFull"
+msgstr "Buscar documentação..."
+
+#: docs.search.close
+msgid "docs.search.close"
+msgstr "Fechar busca"
+
+#: docs.search.category.tutorial
+msgid "docs.search.category.tutorial"
+msgstr "Tutorial"
+
+#: docs.search.category.howTo
+msgid "docs.search.category.howTo"
+msgstr "Guia prático"
+
+#: docs.search.category.reference
+msgid "docs.search.category.reference"
+msgstr "Referência"
+
+#: docs.search.category.explanation
+msgid "docs.search.category.explanation"
+msgstr "Explicação"
+
+#: docs.search.noResults
+msgid "docs.search.noResults"
+msgstr "Nenhum resultado encontrado para"
+
+#: docs.search.hint
+msgid "docs.search.hint"
+msgstr "Digite para buscar documentação"
+
+#: docs.search.key.navigate
+msgid "docs.search.key.navigate"
+msgstr "para navegar"
+
+#: docs.search.key.select
+msgid "docs.search.key.select"
+msgstr "para selecionar"
+
+#: docs.search.key.close
+msgid "docs.search.key.close"
+msgstr "para fechar"
+
+#: docs.callout.info
+msgid "docs.callout.info"
+msgstr "Informação"
+
+#: docs.callout.tip
+msgid "docs.callout.tip"
+msgstr "Dica"
+
+#: docs.callout.warning
+msgid "docs.callout.warning"
+msgstr "Aviso"
+
+#: docs.callout.danger
+msgid "docs.callout.danger"
+msgstr "Perigo"
+
+#: settings.sessions.loadError
+msgid "settings.sessions.loadError"
+msgstr "Falha ao carregar sessões"
+
+#: settings.sessions.revokeError
+msgid "settings.sessions.revokeError"
+msgstr "Falha ao revogar sessão"
+
+#: jobs.loadError
+msgid "jobs.loadError"
+msgstr "Falha ao carregar trabalhos"
+
+#: jobs.triggerError
+msgid "jobs.triggerError"
+msgstr "Falha ao iniciar trabalho"
+
+#: general.unknownError
+msgid "general.unknownError"
+msgstr "Erro desconhecido"
+
+#: client.repos.list.loadError
+msgid "client.repos.list.loadError"
+msgstr "Falha ao carregar repositórios"
+
+#: admin.health.fileCount
+msgid "admin.health.fileCount"
+msgstr "{count} arquivos"

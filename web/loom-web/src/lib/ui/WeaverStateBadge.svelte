@@ -3,6 +3,8 @@
   SPDX-License-Identifier: Proprietary
 -->
 <script lang="ts">
+	import { i18n } from '$lib/i18n';
+
 	export type WeaverState = 'idle' | 'weaving' | 'waiting' | 'error' | 'complete';
 
 	interface Props {
@@ -14,11 +16,11 @@
 	let { state, weaverColor = 'var(--color-thread)', size = 'md' }: Props = $props();
 
 	const stateLabels: Record<WeaverState, string> = {
-		idle: 'Idle',
-		weaving: 'Weaving',
-		waiting: 'Waiting',
-		error: 'Broken Thread',
-		complete: 'Complete',
+		idle: i18n.t('state.idle'),
+		weaving: i18n.t('state.weaving'),
+		waiting: i18n.t('state.waiting'),
+		error: i18n.t('state.brokenThread'),
+		complete: i18n.t('state.complete'),
 	};
 </script>
 

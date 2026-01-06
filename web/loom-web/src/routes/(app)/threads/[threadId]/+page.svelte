@@ -6,6 +6,7 @@
   import { getApiClient } from '$lib/api';
   import { ApiError } from '$lib/api/types';
   import { createRealtimeClient, LoomWebSocketClient, type LlmEvent, type ToolEvent } from '$lib/realtime';
+  import { i18n } from '$lib/i18n';
   import {
     MessageList,
     MessageInput,
@@ -249,7 +250,7 @@
           class="text-accent hover:underline"
           onclick={() => threadId && loadThread(threadId)}
         >
-          Try again
+          {i18n._('general.retry')}
         </button>
       </Card>
     </div>

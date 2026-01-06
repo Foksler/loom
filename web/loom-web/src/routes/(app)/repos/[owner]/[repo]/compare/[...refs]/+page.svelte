@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import type { Repository, Branch, CompareResult } from '$lib/api/repos';
 	import { CompareView, BranchSelector } from '$lib/components/repos';
+	import { i18n } from '$lib/i18n';
 
 	interface Props {
 		data: {
@@ -29,13 +30,13 @@
 </script>
 
 <svelte:head>
-	<title>Compare {data.baseRef}...{data.headRef} - {data.repo.owner_id}/{data.repo.name}</title>
+	<title>{i18n('client.repos.compare.title')} {data.baseRef}...{data.headRef} - {data.repo.owner_id}/{data.repo.name}</title>
 </svelte:head>
 
 <div class="space-y-4">
 	<div class="flex items-center gap-4 flex-wrap">
 		<div class="flex items-center gap-2">
-			<span class="text-sm text-fg-muted">base:</span>
+			<span class="text-sm text-fg-muted">{i18n('client.repos.compare.base')}</span>
 			<BranchSelector
 				branches={data.branches}
 				currentRef={data.baseRef}
@@ -48,7 +49,7 @@
 		</svg>
 
 		<div class="flex items-center gap-2">
-			<span class="text-sm text-fg-muted">compare:</span>
+			<span class="text-sm text-fg-muted">{i18n('client.repos.compare.compare')}</span>
 			<BranchSelector
 				branches={data.branches}
 				currentRef={data.headRef}

@@ -3,6 +3,7 @@
  SPDX-License-Identifier: Proprietary
 -->
 <script lang="ts">
+	import { i18n } from '$lib/i18n';
 	import { CATEGORY_TITLES, type DiataxisCategoryType } from '../types';
 
 	interface Props {
@@ -18,7 +19,7 @@
 <nav class="breadcrumbs" aria-label="Breadcrumb">
 	<ol class="breadcrumb-list">
 		<li class="breadcrumb-item">
-			<a href="/docs" class="breadcrumb-link">Docs</a>
+			<a href="/docs" class="breadcrumb-link">{i18n('docs.breadcrumbs.docs')}</a>
 		</li>
 		<li class="breadcrumb-separator" aria-hidden="true">/</li>
 		<li class="breadcrumb-item">

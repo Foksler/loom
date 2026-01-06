@@ -3,6 +3,7 @@
  SPDX-License-Identifier: Proprietary
 -->
 <script lang="ts">
+	import { i18n } from '$lib/i18n';
 	import type { Snippet } from 'svelte';
 
 	interface Props {
@@ -21,10 +22,10 @@
 	};
 
 	const defaultTitles: Record<string, string> = {
-		info: 'Info',
-		tip: 'Tip',
-		warning: 'Warning',
-		danger: 'Danger',
+		info: i18n('docs.callout.info'),
+		tip: i18n('docs.callout.tip'),
+		warning: i18n('docs.callout.warning'),
+		danger: i18n('docs.callout.danger'),
 	};
 </script>
 

@@ -7,6 +7,7 @@
 	import type { Repository, Branch, CommitInfo } from '$lib/api/repos';
 	import { CommitList, BranchSelector } from '$lib/components/repos';
 	import { Button } from '$lib/ui';
+	import { i18n } from '$lib/i18n';
 
 	interface Props {
 		data: {
@@ -48,7 +49,7 @@
 </script>
 
 <svelte:head>
-	<title>Commits - {data.repo.owner_id}/{data.repo.name}</title>
+	<title>{i18n('client.repos.commits.title')} - {data.repo.owner_id}/{data.repo.name}</title>
 </svelte:head>
 
 <div class="space-y-4">
@@ -60,7 +61,7 @@
 				onSelect={handleBranchChange}
 			/>
 			<span class="text-sm text-fg-muted">
-				<strong class="text-fg">{data.total}</strong> commits
+				<strong class="text-fg">{data.total}</strong> {i18n('client.repos.commits.count')}
 			</span>
 		</div>
 	</div>
@@ -74,13 +75,13 @@
 	{#if hasMore || hasPrev}
 		<div class="flex justify-between items-center pt-4">
 			<Button variant="secondary" size="sm" disabled={!hasPrev} onclick={prevPage}>
-				Newer
+				{i18n('client.repos.commits.newer')}
 			</Button>
 			<span class="text-sm text-fg-muted">
 				{data.offset + 1}-{Math.min(data.offset + data.limit, data.total)} of {data.total}
 			</span>
 			<Button variant="secondary" size="sm" disabled={!hasMore} onclick={nextPage}>
-				Older
+				{i18n('client.repos.commits.older')}
 			</Button>
 		</div>
 	{/if}

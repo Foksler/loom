@@ -4,6 +4,7 @@
 -->
 <script lang="ts">
 	import type { AgentStateKind } from '../api/types';
+	import { i18n } from '$lib/i18n';
 
 	export type WeaverDisplayState = 'idle' | 'weaving' | 'waiting' | 'error' | 'complete';
 
@@ -16,13 +17,13 @@
 	let { state, weaverColor = 'var(--color-thread)', size = 'md' }: Props = $props();
 
 	const stateMapping: Record<AgentStateKind, { displayState: WeaverDisplayState; label: string }> = {
-		idle: { displayState: 'idle', label: 'Idle' },
-		thinking: { displayState: 'weaving', label: 'Weaving' },
-		streaming: { displayState: 'weaving', label: 'Weaving' },
-		tool_pending: { displayState: 'waiting', label: 'Waiting' },
-		tool_executing: { displayState: 'weaving', label: 'Shuttle Pass' },
-		waiting_input: { displayState: 'waiting', label: 'Waiting' },
-		error: { displayState: 'error', label: 'Broken Thread' },
+		idle: { displayState: 'idle', label: i18n.t('state.idle') },
+		thinking: { displayState: 'weaving', label: i18n.t('state.weaving') },
+		streaming: { displayState: 'weaving', label: i18n.t('state.weaving') },
+		tool_pending: { displayState: 'waiting', label: i18n.t('state.waiting') },
+		tool_executing: { displayState: 'weaving', label: i18n.t('state.shuttlePass') },
+		waiting_input: { displayState: 'waiting', label: i18n.t('state.waiting') },
+		error: { displayState: 'error', label: i18n.t('state.brokenThread') },
 	};
 
 	const config = $derived(stateMapping[state] || stateMapping.idle);

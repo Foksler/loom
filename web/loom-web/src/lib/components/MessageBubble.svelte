@@ -5,6 +5,7 @@
 
 <script lang="ts">
 	import type { MessageSnapshot } from '../api/types';
+	import { i18n } from '$lib/i18n';
 
 	interface Props {
 		message: MessageSnapshot;
@@ -30,7 +31,7 @@
 	>
 		{#if message.role === 'tool'}
 			<div class="tool-label">
-				🔧 Tool Result{#if message.tool_call_id}
+				{i18n._('message.toolResult')}{#if message.tool_call_id}
 					<span class="tool-id">({message.tool_call_id})</span>
 				{/if}
 			</div>
