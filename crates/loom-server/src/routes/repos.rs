@@ -70,6 +70,136 @@ fn repo_to_response(repo: Repository, clone_url: String) -> RepoResponse {
 	}
 }
 
+fn generate_initial_readme(repo_name: &str) -> String {
+	format!(
+		r#"# {repo_name}
+
+Hello World! Welcome to your new repository.
+
+## Getting Started
+
+Clone this repository:
+
+```bash
+git clone <your-clone-url>
+cd {repo_name}
+```
+
+## GitHub Flavored Markdown Examples
+
+This README demonstrates various GitHub Flavored Markdown features for testing markdown rendering.
+
+### Text Formatting
+
+- **Bold text** using `**bold**`
+- *Italic text* using `*italic*`
+- ~~Strikethrough~~ using `~~strikethrough~~`
+- `Inline code` using backticks
+- ***Bold and italic*** using `***bold and italic***`
+
+### Links and Images
+
+- [External link](https://example.com)
+- [Link with title](https://example.com "Example Title")
+- Autolinked URL: https://example.com
+- Email autolink: user@example.com
+
+### Lists
+
+#### Unordered List
+- Item 1
+- Item 2
+  - Nested item 2.1
+  - Nested item 2.2
+- Item 3
+
+#### Ordered List
+1. First item
+2. Second item
+   1. Nested item 2.1
+   2. Nested item 2.2
+3. Third item
+
+### Task List
+
+- [x] Completed task
+- [ ] Incomplete task
+- [ ] Another task to do
+
+### Code Blocks
+
+```rust
+fn main() {{
+    println!("Hello, World!");
+}}
+```
+
+```python
+def hello():
+    print("Hello, World!")
+```
+
+```javascript
+const greeting = () => console.log("Hello, World!");
+```
+
+### Tables
+
+| Feature | Supported | Notes |
+|---------|-----------|-------|
+| Headers | Yes | Using `#` syntax |
+| Tables | Yes | GFM extension |
+| Task lists | Yes | `- [x]` syntax |
+| Footnotes | Partial | Depends on renderer |
+
+### Blockquotes
+
+> This is a blockquote.
+> It can span multiple lines.
+>
+> > Nested blockquotes are also possible.
+
+### Horizontal Rule
+
+---
+
+### Headings
+
+The document uses headings from `#` (H1) through `######` (H6).
+
+### Emoji (if supported)
+
+:rocket: :tada: :sparkles:
+
+### Footnotes
+
+Here's a sentence with a footnote[^1].
+
+[^1]: This is the footnote content.
+
+### Alerts (GitHub specific)
+
+> [!NOTE]
+> Useful information that users should know.
+
+> [!TIP]
+> Helpful advice for doing things better.
+
+> [!WARNING]
+> Urgent info that needs immediate attention.
+
+## Contributing
+
+Feel free to open issues and pull requests!
+
+## License
+
+Add your license information here.
+"#,
+		repo_name = repo_name
+	)
+}
+
 #[utoipa::path(
     post,
     path = "/api/v1/repos",
@@ -253,21 +383,39 @@ pub async fn create_repo(
 			.into_response();
 	}
 
-	if let Err(e) = GitRepository::init_bare(&git_path) {
-		tracing::error!(error = %e, "Failed to init bare git repo");
-		let _ = scm_store.hard_delete(created_repo.id).await;
-		return (
-			StatusCode::INTERNAL_SERVER_ERROR,
-			Json(RepoErrorResponse {
-				error: "internal_error".to_string(),
-				message: t(locale, "server.api.scm.failed_to_init_git_repo").to_string(),
-			}),
-		)
-			.into_response();
-	}
+	let git_repo = match GitRepository::init_bare(&git_path) {
+		Ok(repo) => repo,
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to init bare git repo");
+			let _ = scm_store.hard_delete(created_repo.id).await;
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(RepoErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.scm.failed_to_init_git_repo").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
 
-	if let Ok(git_repo) = GitRepository::open(&git_path) {
-		let _ = git_repo.set_default_branch(&created_repo.default_branch);
+	let _ = git_repo.set_default_branch(&created_repo.default_branch);
+
+	// Create initial commit with README.md
+	let readme_content = generate_initial_readme(&created_repo.name);
+	if let Err(e) = git_repo.create_initial_commit(
+		&created_repo.default_branch,
+		"README.md",
+		readme_content.as_bytes(),
+		"Initial commit\n\nCreated repository with README.md",
+		&current_user.user.display_name,
+		current_user
+			.user
+			.primary_email
+			.as_deref()
+			.unwrap_or("noreply@loom.dev"),
+	) {
+		tracing::warn!(error = %e, "Failed to create initial commit (repo still usable)");
 	}
 
 	tracing::info!(

@@ -5474,6 +5474,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "smallvec",
  "sqlx",
  "tempfile",
  "thiserror 1.0.69",

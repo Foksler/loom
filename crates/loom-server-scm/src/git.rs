@@ -285,6 +285,65 @@ impl GitRepository {
 		Ok(())
 	}
 
+	#[instrument(skip(self, content), fields(branch = %branch, filename = %filename))]
+	pub fn create_initial_commit(
+		&self,
+		branch: &str,
+		filename: &str,
+		content: &[u8],
+		commit_message: &str,
+		author_name: &str,
+		author_email: &str,
+	) -> Result<String> {
+		let repo = self.repo()?;
+
+		// Create blob from content
+		let blob_id = repo
+			.write_blob(content)
+			.map_err(|e| ScmError::GitError(format!("Failed to write blob: {}", e)))?;
+
+		// Create tree with single file entry
+		let tree_entry = gix::objs::tree::Entry {
+			mode: gix::objs::tree::EntryKind::Blob.into(),
+			filename: filename.into(),
+			oid: blob_id.detach(),
+		};
+		let tree = gix::objs::Tree { entries: vec![tree_entry] };
+		let tree_id = repo
+			.write_object(&tree)
+			.map_err(|e| ScmError::GitError(format!("Failed to write tree: {}", e)))?;
+
+		// Create commit
+		let time = gix::date::Time::now_local_or_utc();
+		let signature = gix::actor::SignatureRef {
+			name: author_name.into(),
+			email: author_email.into(),
+			time,
+		};
+		let commit = gix::objs::Commit {
+			tree: tree_id.detach(),
+			parents: smallvec::smallvec![],
+			author: signature.to_owned(),
+			committer: signature.to_owned(),
+			encoding: None,
+			message: commit_message.into(),
+			extra_headers: vec![],
+		};
+		let commit_id = repo
+			.write_object(&commit)
+			.map_err(|e| ScmError::GitError(format!("Failed to write commit: {}", e)))?;
+
+		// Update branch ref to point to commit
+		let ref_name = format!("refs/heads/{}", branch);
+		let ref_path = self.path.join(&ref_name);
+		if let Some(parent) = ref_path.parent() {
+			std::fs::create_dir_all(parent)?;
+		}
+		std::fs::write(&ref_path, format!("{}\n", commit_id))?;
+
+		Ok(commit_id.to_string())
+	}
+
 	fn resolve_to_oid(&self, repo: &gix::Repository, refname: &str) -> Result<ObjectId> {
 		if let Ok(oid) = ObjectId::from_hex(refname.as_bytes()) {
 			return Ok(oid);

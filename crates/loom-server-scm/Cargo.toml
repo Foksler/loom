@@ -15,6 +15,7 @@ loom-common-secret = { path = "../loom-common-secret" }
 loom-server-db = { path = "../loom-server-db" }
 serde = { workspace = true }
 serde_json = { workspace = true }
+smallvec = "1.13"
 sqlx = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
