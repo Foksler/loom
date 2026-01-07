@@ -1343,3 +1343,48 @@ msgstr "Cancelar"
 #: Admin Users - Confirm delete button
 msgid "admin.users.confirm"
 msgstr "Confirmar exclusão"
+
+# ============================================================================
+# SCM Git Browser API
+# ============================================================================
+
+#: API: SCM Browser - Failed to open repository
+msgid "server.api.scm.browser.failed_to_open_repo"
+msgstr "Failed to open repository"
+
+#: API: SCM Browser - File path required
+msgid "server.api.scm.browser.file_path_required"
+msgstr "File path is required"
+
+#: API: SCM Browser - Ref not found
+msgid "server.api.scm.browser.ref_not_found"
+msgstr "Reference not found: {ref}"
+
+#: API: SCM Browser - Failed to get object
+msgid "server.api.scm.browser.failed_to_get_object"
+msgstr "Failed to get object"
+
+#: API: SCM Browser - Failed to get commit
+msgid "server.api.scm.browser.failed_to_get_commit"
+msgstr "Failed to get commit"
+
+#: API: SCM Browser - Failed to get tree
+msgid "server.api.scm.browser.failed_to_get_tree"
+msgstr "Failed to get tree"
+
+#: API: SCM Browser - Failed to lookup path
+msgid "server.api.scm.browser.failed_to_lookup_path"
+msgstr "Failed to lookup path"
+
+#: API: SCM Browser - Path not found
+msgid "server.api.scm.browser.path_not_found"
+msgstr "Path not found: {path}"
+
+#: API: SCM Browser - Not a file
+msgid "server.api.scm.browser.not_a_file"
+msgstr "Not a file: {path}"
+
+#: API: SCM Browser - Not a directory
+msgid "server.api.scm.browser.not_a_directory"
+msgstr "Not a directory: {path}"
+
