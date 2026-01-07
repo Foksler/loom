@@ -376,6 +376,117 @@ pub async fn get_blob(
 }
 
 #[tracing::instrument(skip(state))]
+pub async fn get_raw(
+	OptionalAuth(user): OptionalAuth,
+	State(state): State<AppState>,
+	Path((owner, name, ref_and_path)): Path<(String, String, String)>,
+) -> Result<impl IntoResponse, ServerError> {
+	let locale = resolve_optional_locale(user.as_ref(), &state.default_locale);
+
+	let repo = resolve_repo(&owner, &name, &state, locale).await?;
+	check_read_access(&repo, user.as_ref(), &state, locale).await?;
+
+	let repo_path = get_repo_path_by_id(repo.id);
+
+	let git_repo = gix::open(&repo_path).map_err(|e| {
+		tracing::error!(error = %e, "Failed to open git repository");
+		ServerError::Internal("Failed to open repository".to_string())
+	})?;
+
+	let (git_ref, file_path) = parse_ref_and_path(&ref_and_path, &git_repo)?;
+
+	if file_path.is_empty() {
+		return Err(ServerError::BadRequest("File path is required".to_string()));
+	}
+
+	let commit = git_repo
+		.rev_parse_single(git_ref.as_bytes())
+		.map_err(|e| ServerError::NotFound(format!("Ref not found: {}", e)))?
+		.object()
+		.map_err(|e| ServerError::Internal(format!("Failed to get object: {}", e)))?
+		.peel_to_commit()
+		.map_err(|e| ServerError::Internal(format!("Failed to peel to commit: {}", e)))?;
+
+	let tree = commit
+		.tree()
+		.map_err(|e| ServerError::Internal(format!("Failed to get tree: {}", e)))?;
+
+	let entry = tree
+		.lookup_entry_by_path(file_path.as_str())
+		.map_err(|e| ServerError::Internal(format!("Failed to lookup path: {}", e)))?
+		.ok_or_else(|| ServerError::NotFound(format!("Path not found: {}", file_path)))?;
+
+	let object = entry
+		.object()
+		.map_err(|e| ServerError::Internal(format!("Failed to get object: {}", e)))?;
+
+	if object.kind != gix::object::Kind::Blob {
+		return Err(ServerError::NotFound(format!("Not a file: {}", file_path)));
+	}
+
+	let content_type = get_content_type_for_path(&file_path);
+	let filename = file_path.rsplit('/').next().unwrap_or(&file_path);
+
+	Ok((
+		[
+			(axum::http::header::CONTENT_TYPE, content_type),
+			(
+				axum::http::header::CONTENT_DISPOSITION,
+				format!("inline; filename=\"{}\"", filename),
+			),
+		],
+		object.data.to_vec(),
+	))
+}
+
+fn get_content_type_for_path(path: &str) -> String {
+	let ext = path.rsplit('.').next().unwrap_or("").to_lowercase();
+	match ext.as_str() {
+		// Text
+		"txt" => "text/plain; charset=utf-8",
+		"md" | "markdown" => "text/markdown; charset=utf-8",
+		"html" | "htm" => "text/html; charset=utf-8",
+		"css" => "text/css; charset=utf-8",
+		"js" | "mjs" => "text/javascript; charset=utf-8",
+		"json" => "application/json; charset=utf-8",
+		"xml" => "application/xml; charset=utf-8",
+		"yaml" | "yml" => "text/yaml; charset=utf-8",
+		"toml" => "text/toml; charset=utf-8",
+		"csv" => "text/csv; charset=utf-8",
+		// Code
+		"rs" => "text/x-rust; charset=utf-8",
+		"py" => "text/x-python; charset=utf-8",
+		"rb" => "text/x-ruby; charset=utf-8",
+		"go" => "text/x-go; charset=utf-8",
+		"java" => "text/x-java; charset=utf-8",
+		"c" | "h" => "text/x-c; charset=utf-8",
+		"cpp" | "hpp" | "cc" | "cxx" => "text/x-c++; charset=utf-8",
+		"ts" | "tsx" => "text/typescript; charset=utf-8",
+		"jsx" => "text/jsx; charset=utf-8",
+		"sh" | "bash" | "zsh" => "text/x-shellscript; charset=utf-8",
+		"sql" => "text/x-sql; charset=utf-8",
+		"nix" => "text/x-nix; charset=utf-8",
+		"svelte" => "text/x-svelte; charset=utf-8",
+		"vue" => "text/x-vue; charset=utf-8",
+		// Images
+		"png" => "image/png",
+		"jpg" | "jpeg" => "image/jpeg",
+		"gif" => "image/gif",
+		"svg" => "image/svg+xml",
+		"webp" => "image/webp",
+		"ico" => "image/x-icon",
+		// Other
+		"pdf" => "application/pdf",
+		"zip" => "application/zip",
+		"gz" | "gzip" => "application/gzip",
+		"tar" => "application/x-tar",
+		"wasm" => "application/wasm",
+		_ => "application/octet-stream",
+	}
+	.to_string()
+}
+
+#[tracing::instrument(skip(state))]
 pub async fn list_commits(
 	OptionalAuth(user): OptionalAuth,
 	State(state): State<AppState>,
@@ -739,6 +850,10 @@ pub fn router() -> crate::OptionalAuthRouter {
 		.route(
 			"/api/repos/{owner}/{name}/blob/{*ref_and_path}",
 			get(get_blob),
+		)
+		.route(
+			"/api/repos/{owner}/{name}/raw/{*ref_and_path}",
+			get(get_raw),
 		)
 		.route(
 			"/api/repos/{owner}/{name}/commits/{git_ref}",

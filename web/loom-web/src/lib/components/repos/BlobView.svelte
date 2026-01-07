@@ -106,7 +106,9 @@
 					{copied ? i18n.t('client.repos.blob.copied') : i18n.t('client.repos.blob.copy')}
 				</Button>
 			{/if}
-			<Button variant="ghost" size="sm">{i18n.t('client.repos.blob.raw')}</Button>
+			<a href="/api/repos/{owner}/{repo}/raw/{currentRef}/{path}" target="_blank" rel="noopener">
+				<Button variant="ghost" size="sm">{i18n.t('client.repos.blob.raw')}</Button>
+			</a>
 		</div>
 	</div>
 
