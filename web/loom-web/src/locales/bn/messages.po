@@ -2521,3 +2521,19 @@ msgstr "যোগদানের অনুরোধ"
 #: org.joinPolicy.inviteOnly
 msgid "org.joinPolicy.inviteOnly"
 msgstr "শুধুমাত্র আমন্ত্রণে"
+
+#: org.tabs.members
+msgid "org.tabs.members"
+msgstr "সদস্য"
+
+#: org.tabs.teams
+msgid "org.tabs.teams"
+msgstr "টিম"
+
+#: org.tabs.apiKeys
+msgid "org.tabs.apiKeys"
+msgstr "API কী"
+
+#: org.tabs.settings
+msgid "org.tabs.settings"
+msgstr "সেটিংস"

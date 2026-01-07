@@ -2521,3 +2521,19 @@ msgstr "Запрос на присоединение"
 #: org.joinPolicy.inviteOnly
 msgid "org.joinPolicy.inviteOnly"
 msgstr "Только по приглашению"
+
+#: org.tabs.members
+msgid "org.tabs.members"
+msgstr "Участники"
+
+#: org.tabs.teams
+msgid "org.tabs.teams"
+msgstr "Команды"
+
+#: org.tabs.apiKeys
+msgid "org.tabs.apiKeys"
+msgstr "API-ключи"
+
+#: org.tabs.settings
+msgid "org.tabs.settings"
+msgstr "Настройки"

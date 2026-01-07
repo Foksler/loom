@@ -2521,3 +2521,19 @@ msgstr "Minta Bergabung"
 #: org.joinPolicy.inviteOnly
 msgid "org.joinPolicy.inviteOnly"
 msgstr "Hanya Undangan"
+
+#: org.tabs.members
+msgid "org.tabs.members"
+msgstr "Anggota"
+
+#: org.tabs.teams
+msgid "org.tabs.teams"
+msgstr "Tim"
+
+#: org.tabs.apiKeys
+msgid "org.tabs.apiKeys"
+msgstr "Kunci API"
+
+#: org.tabs.settings
+msgid "org.tabs.settings"
+msgstr "Pengaturan"

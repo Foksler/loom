@@ -2521,3 +2521,19 @@ msgstr "가입 요청"
 #: org.joinPolicy.inviteOnly
 msgid "org.joinPolicy.inviteOnly"
 msgstr "초대만"
+
+#: org.tabs.members
+msgid "org.tabs.members"
+msgstr "멤버"
+
+#: org.tabs.teams
+msgid "org.tabs.teams"
+msgstr "팀"
+
+#: org.tabs.apiKeys
+msgid "org.tabs.apiKeys"
+msgstr "API 키"
+
+#: org.tabs.settings
+msgid "org.tabs.settings"
+msgstr "설정"

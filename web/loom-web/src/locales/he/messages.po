@@ -2485,3 +2485,19 @@ msgstr "בקש להצטרף"
 #: org.joinPolicy.inviteOnly
 msgid "org.joinPolicy.inviteOnly"
 msgstr "בהזמנה בלבד"
+
+#: org.tabs.members
+msgid "org.tabs.members"
+msgstr "חברים"
+
+#: org.tabs.teams
+msgid "org.tabs.teams"
+msgstr "צוותים"
+
+#: org.tabs.apiKeys
+msgid "org.tabs.apiKeys"
+msgstr "מפתחות API"
+
+#: org.tabs.settings
+msgid "org.tabs.settings"
+msgstr "הגדרות"

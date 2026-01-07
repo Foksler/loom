@@ -2521,3 +2521,19 @@ msgstr "Begär att Gå med"
 #: org.joinPolicy.inviteOnly
 msgid "org.joinPolicy.inviteOnly"
 msgstr "Endast på Inbjudan"
+
+#: org.tabs.members
+msgid "org.tabs.members"
+msgstr "Medlemmar"
+
+#: org.tabs.teams
+msgid "org.tabs.teams"
+msgstr "Team"
+
+#: org.tabs.apiKeys
+msgid "org.tabs.apiKeys"
+msgstr "API-nycklar"
+
+#: org.tabs.settings
+msgid "org.tabs.settings"
+msgstr "Inställningar"

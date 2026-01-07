@@ -2521,3 +2521,19 @@ msgstr "参加リクエスト"
 #: org.joinPolicy.inviteOnly
 msgid "org.joinPolicy.inviteOnly"
 msgstr "招待のみ"
+
+#: org.tabs.members
+msgid "org.tabs.members"
+msgstr "メンバー"
+
+#: org.tabs.teams
+msgid "org.tabs.teams"
+msgstr "チーム"
+
+#: org.tabs.apiKeys
+msgid "org.tabs.apiKeys"
+msgstr "APIキー"
+
+#: org.tabs.settings
+msgid "org.tabs.settings"
+msgstr "設定"

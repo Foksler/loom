@@ -2485,3 +2485,19 @@ msgstr "طلب الانضمام"
 #: org.joinPolicy.inviteOnly
 msgid "org.joinPolicy.inviteOnly"
 msgstr "بالدعوة فقط"
+
+#: org.tabs.members
+msgid "org.tabs.members"
+msgstr "الأعضاء"
+
+#: org.tabs.teams
+msgid "org.tabs.teams"
+msgstr "الفرق"
+
+#: org.tabs.apiKeys
+msgid "org.tabs.apiKeys"
+msgstr "مفاتيح API"
+
+#: org.tabs.settings
+msgid "org.tabs.settings"
+msgstr "الإعدادات"

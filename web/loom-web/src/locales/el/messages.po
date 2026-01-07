@@ -2521,3 +2521,19 @@ msgstr "Αίτηση Εγγραφής"
 #: org.joinPolicy.inviteOnly
 msgid "org.joinPolicy.inviteOnly"
 msgstr "Μόνο με Πρόσκληση"
+
+#: org.tabs.members
+msgid "org.tabs.members"
+msgstr "Μέλη"
+
+#: org.tabs.teams
+msgid "org.tabs.teams"
+msgstr "Ομάδες"
+
+#: org.tabs.apiKeys
+msgid "org.tabs.apiKeys"
+msgstr "Κλειδιά API"
+
+#: org.tabs.settings
+msgid "org.tabs.settings"
+msgstr "Ρυθμίσεις"

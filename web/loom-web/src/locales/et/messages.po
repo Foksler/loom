@@ -2521,3 +2521,19 @@ msgstr "Taotlus liitumiseks"
 #: org.joinPolicy.inviteOnly
 msgid "org.joinPolicy.inviteOnly"
 msgstr "Ainult kutsega"
+
+#: org.tabs.members
+msgid "org.tabs.members"
+msgstr "Liikmed"
+
+#: org.tabs.teams
+msgid "org.tabs.teams"
+msgstr "Meeskonnad"
+
+#: org.tabs.apiKeys
+msgid "org.tabs.apiKeys"
+msgstr "API võtmed"
+
+#: org.tabs.settings
+msgid "org.tabs.settings"
+msgstr "Seaded"

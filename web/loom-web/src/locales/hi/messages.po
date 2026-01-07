@@ -2521,3 +2521,19 @@ msgstr "जुड़ने का अनुरोध"
 #: org.joinPolicy.inviteOnly
 msgid "org.joinPolicy.inviteOnly"
 msgstr "केवल आमंत्रण से"
+
+#: org.tabs.members
+msgid "org.tabs.members"
+msgstr "सदस्य"
+
+#: org.tabs.teams
+msgid "org.tabs.teams"
+msgstr "टीमें"
+
+#: org.tabs.apiKeys
+msgid "org.tabs.apiKeys"
+msgstr "API कुंजियाँ"
+
+#: org.tabs.settings
+msgid "org.tabs.settings"
+msgstr "सेटिंग्स"

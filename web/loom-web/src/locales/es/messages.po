@@ -2485,3 +2485,19 @@ msgstr "Solicitar unirse"
 #: org.joinPolicy.inviteOnly
 msgid "org.joinPolicy.inviteOnly"
 msgstr "Solo por invitación"
+
+#: org.tabs.members
+msgid "org.tabs.members"
+msgstr "Miembros"
+
+#: org.tabs.teams
+msgid "org.tabs.teams"
+msgstr "Equipos"
+
+#: org.tabs.apiKeys
+msgid "org.tabs.apiKeys"
+msgstr "Claves API"
+
+#: org.tabs.settings
+msgid "org.tabs.settings"
+msgstr "Configuración"

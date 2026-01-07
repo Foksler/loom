@@ -2521,3 +2521,19 @@ msgstr "Aanvraag om Toe te Treden"
 #: org.joinPolicy.inviteOnly
 msgid "org.joinPolicy.inviteOnly"
 msgstr "Alleen op Uitnodiging"
+
+#: org.tabs.members
+msgid "org.tabs.members"
+msgstr "Leden"
+
+#: org.tabs.teams
+msgid "org.tabs.teams"
+msgstr "Teams"
+
+#: org.tabs.apiKeys
+msgid "org.tabs.apiKeys"
+msgstr "API-sleutels"
+
+#: org.tabs.settings
+msgid "org.tabs.settings"
+msgstr "Instellingen"

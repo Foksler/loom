@@ -2521,3 +2521,19 @@ msgstr "Richiedi Adesione"
 #: org.joinPolicy.inviteOnly
 msgid "org.joinPolicy.inviteOnly"
 msgstr "Solo su Invito"
+
+#: org.tabs.members
+msgid "org.tabs.members"
+msgstr "Membri"
+
+#: org.tabs.teams
+msgid "org.tabs.teams"
+msgstr "Team"
+
+#: org.tabs.apiKeys
+msgid "org.tabs.apiKeys"
+msgstr "Chiavi API"
+
+#: org.tabs.settings
+msgid "org.tabs.settings"
+msgstr "Impostazioni"

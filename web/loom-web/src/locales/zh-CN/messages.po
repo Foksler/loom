@@ -2521,3 +2521,19 @@ msgstr "申请加入"
 #: org.joinPolicy.inviteOnly
 msgid "org.joinPolicy.inviteOnly"
 msgstr "仅限邀请"
+
+#: org.tabs.members
+msgid "org.tabs.members"
+msgstr "成员"
+
+#: org.tabs.teams
+msgid "org.tabs.teams"
+msgstr "团队"
+
+#: org.tabs.apiKeys
+msgid "org.tabs.apiKeys"
+msgstr "API 密钥"
+
+#: org.tabs.settings
+msgid "org.tabs.settings"
+msgstr "设置"
