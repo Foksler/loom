@@ -2353,3 +2353,171 @@ msgstr "Αποτυχία φόρτωσης αποθετηρίων"
 #: admin.health.fileCount
 msgid "admin.health.fileCount"
 msgstr "{count} αρχεία"
+
+#: admin.audit.title
+msgid "admin.audit.title"
+msgstr "Αρχεία Ελέγχου"
+
+#: admin.audit.description
+msgid "admin.audit.description"
+msgstr "Προβολή αρχείων ελέγχου ασφαλείας"
+
+#: auth.login.redirecting
+msgid "auth.login.redirecting"
+msgstr "Ανακατεύθυνση..."
+
+#: org.title
+msgid "org.title"
+msgstr "Οργανισμός"
+
+#: org.members.add
+msgid "org.members.add"
+msgstr "Προσθήκη Μέλους"
+
+#: org.members.addTitle
+msgid "org.members.addTitle"
+msgstr "Προσθήκη Μέλους"
+
+#: org.members.email
+msgid "org.members.email"
+msgstr "Διεύθυνση Email"
+
+#: org.members.empty
+msgid "org.members.empty"
+msgstr "Δεν υπάρχουν μέλη ακόμα"
+
+#: org.members.invite
+msgid "org.members.invite"
+msgstr "Αποστολή Πρόσκλησης"
+
+#: org.members.remove
+msgid "org.members.remove"
+msgstr "Αφαίρεση"
+
+#: org.members.removeConfirm
+msgid "org.members.removeConfirm"
+msgstr "Είστε σίγουροι ότι θέλετε να αφαιρέσετε αυτό το μέλος;"
+
+#: org.roles.admin
+msgid "org.roles.admin"
+msgstr "Διαχειριστής"
+
+#: org.roles.member
+msgid "org.roles.member"
+msgstr "Μέλος"
+
+#: org.teams.create
+msgid "org.teams.create"
+msgstr "Δημιουργία Ομάδας"
+
+#: org.teams.createTitle
+msgid "org.teams.createTitle"
+msgstr "Δημιουργία Νέας Ομάδας"
+
+#: org.teams.empty
+msgid "org.teams.empty"
+msgstr "Δεν υπάρχουν ομάδες ακόμα"
+
+#: org.teams.memberCount
+msgid "org.teams.memberCount"
+msgstr "μέλη"
+
+#: org.teams.name
+msgid "org.teams.name"
+msgstr "Όνομα Ομάδας"
+
+#: org.teams.slug
+msgid "org.teams.slug"
+msgstr "Slug URL"
+
+#: org.apiKeys.create
+msgid "org.apiKeys.create"
+msgstr "Δημιουργία Κλειδιού API"
+
+#: org.apiKeys.createTitle
+msgid "org.apiKeys.createTitle"
+msgstr "Δημιουργία Νέου Κλειδιού API"
+
+#: org.apiKeys.created
+msgid "org.apiKeys.created"
+msgstr "Το Κλειδί API Δημιουργήθηκε"
+
+#: org.apiKeys.copyWarning
+msgid "org.apiKeys.copyWarning"
+msgstr "Αντιγράψτε αυτό το κλειδί τώρα. Δεν θα μπορείτε να το δείτε ξανά."
+
+#: org.apiKeys.empty
+msgid "org.apiKeys.empty"
+msgstr "Δεν υπάρχουν κλειδιά API ακόμα"
+
+#: org.apiKeys.lastUsed
+msgid "org.apiKeys.lastUsed"
+msgstr "Τελευταία Χρήση"
+
+#: org.apiKeys.name
+msgid "org.apiKeys.name"
+msgstr "Όνομα Κλειδιού"
+
+#: org.apiKeys.revoke
+msgid "org.apiKeys.revoke"
+msgstr "Ανάκληση"
+
+#: org.apiKeys.revokeConfirm
+msgid "org.apiKeys.revokeConfirm"
+msgstr "Είστε σίγουροι ότι θέλετε να ανακαλέσετε αυτό το κλειδί API;"
+
+#: org.apiKeys.scopes
+msgid "org.apiKeys.scopes"
+msgstr "Δικαιώματα"
+
+#: org.settings.name
+msgid "org.settings.name"
+msgstr "Όνομα Οργανισμού"
+
+#: org.settings.visibility
+msgid "org.settings.visibility"
+msgstr "Ορατότητα"
+
+#: org.settings.joinPolicy
+msgid "org.settings.joinPolicy"
+msgstr "Πολιτική Εγγραφής"
+
+#: org.settings.saved
+msgid "org.settings.saved"
+msgstr "Οι ρυθμίσεις αποθηκεύτηκαν"
+
+#: org.settings.dangerZone
+msgid "org.settings.dangerZone"
+msgstr "Επικίνδυνη Ζώνη"
+
+#: org.settings.deleteWarning
+msgid "org.settings.deleteWarning"
+msgstr "Μόλις διαγράψετε έναν οργανισμό, δεν υπάρχει επιστροφή."
+
+#: org.settings.delete
+msgid "org.settings.delete"
+msgstr "Διαγραφή Οργανισμού"
+
+#: org.settings.deleteConfirm
+msgid "org.settings.deleteConfirm"
+msgstr "Είστε σίγουροι ότι θέλετε να διαγράψετε αυτόν τον οργανισμό; Αυτό δεν μπορεί να αναιρεθεί."
+
+#: org.visibility.public
+msgid "org.visibility.public"
+msgstr "Δημόσιο"
+
+#: org.visibility.private
+msgid "org.visibility.private"
+msgstr "Ιδιωτικό"
+
+#: org.joinPolicy.open
+msgid "org.joinPolicy.open"
+msgstr "Ανοιχτό"
+
+#: org.joinPolicy.request
+msgid "org.joinPolicy.request"
+msgstr "Αίτηση Εγγραφής"
+
+#: org.joinPolicy.inviteOnly
+msgid "org.joinPolicy.inviteOnly"
+msgstr "Μόνο με Πρόσκληση"

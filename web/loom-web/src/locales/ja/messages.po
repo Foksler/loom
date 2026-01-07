@@ -2353,3 +2353,171 @@ msgstr "リポジトリの読み込みに失敗しました"
 #: admin.health.fileCount
 msgid "admin.health.fileCount"
 msgstr "{count} ファイル"
+
+#: admin.audit.title
+msgid "admin.audit.title"
+msgstr "監査ログ"
+
+#: admin.audit.description
+msgid "admin.audit.description"
+msgstr "セキュリティ監査ログを表示"
+
+#: auth.login.redirecting
+msgid "auth.login.redirecting"
+msgstr "リダイレクト中..."
+
+#: org.title
+msgid "org.title"
+msgstr "組織"
+
+#: org.members.add
+msgid "org.members.add"
+msgstr "メンバーを追加"
+
+#: org.members.addTitle
+msgid "org.members.addTitle"
+msgstr "メンバーを追加"
+
+#: org.members.email
+msgid "org.members.email"
+msgstr "メールアドレス"
+
+#: org.members.empty
+msgid "org.members.empty"
+msgstr "メンバーがいません"
+
+#: org.members.invite
+msgid "org.members.invite"
+msgstr "招待を送信"
+
+#: org.members.remove
+msgid "org.members.remove"
+msgstr "削除"
+
+#: org.members.removeConfirm
+msgid "org.members.removeConfirm"
+msgstr "このメンバーを削除してもよろしいですか？"
+
+#: org.roles.admin
+msgid "org.roles.admin"
+msgstr "管理者"
+
+#: org.roles.member
+msgid "org.roles.member"
+msgstr "メンバー"
+
+#: org.teams.create
+msgid "org.teams.create"
+msgstr "チームを作成"
+
+#: org.teams.createTitle
+msgid "org.teams.createTitle"
+msgstr "新しいチームを作成"
+
+#: org.teams.empty
+msgid "org.teams.empty"
+msgstr "チームがありません"
+
+#: org.teams.memberCount
+msgid "org.teams.memberCount"
+msgstr "メンバー"
+
+#: org.teams.name
+msgid "org.teams.name"
+msgstr "チーム名"
+
+#: org.teams.slug
+msgid "org.teams.slug"
+msgstr "URLスラッグ"
+
+#: org.apiKeys.create
+msgid "org.apiKeys.create"
+msgstr "APIキーを作成"
+
+#: org.apiKeys.createTitle
+msgid "org.apiKeys.createTitle"
+msgstr "新しいAPIキーを作成"
+
+#: org.apiKeys.created
+msgid "org.apiKeys.created"
+msgstr "APIキーが作成されました"
+
+#: org.apiKeys.copyWarning
+msgid "org.apiKeys.copyWarning"
+msgstr "今すぐこのキーをコピーしてください。再度表示することはできません。"
+
+#: org.apiKeys.empty
+msgid "org.apiKeys.empty"
+msgstr "APIキーがありません"
+
+#: org.apiKeys.lastUsed
+msgid "org.apiKeys.lastUsed"
+msgstr "最終使用"
+
+#: org.apiKeys.name
+msgid "org.apiKeys.name"
+msgstr "キー名"
+
+#: org.apiKeys.revoke
+msgid "org.apiKeys.revoke"
+msgstr "取り消す"
+
+#: org.apiKeys.revokeConfirm
+msgid "org.apiKeys.revokeConfirm"
+msgstr "このAPIキーを取り消してもよろしいですか？"
+
+#: org.apiKeys.scopes
+msgid "org.apiKeys.scopes"
+msgstr "スコープ"
+
+#: org.settings.name
+msgid "org.settings.name"
+msgstr "組織名"
+
+#: org.settings.visibility
+msgid "org.settings.visibility"
+msgstr "公開設定"
+
+#: org.settings.joinPolicy
+msgid "org.settings.joinPolicy"
+msgstr "参加ポリシー"
+
+#: org.settings.saved
+msgid "org.settings.saved"
+msgstr "設定が保存されました"
+
+#: org.settings.dangerZone
+msgid "org.settings.dangerZone"
+msgstr "危険ゾーン"
+
+#: org.settings.deleteWarning
+msgid "org.settings.deleteWarning"
+msgstr "組織を削除すると、元に戻すことはできません。"
+
+#: org.settings.delete
+msgid "org.settings.delete"
+msgstr "組織を削除"
+
+#: org.settings.deleteConfirm
+msgid "org.settings.deleteConfirm"
+msgstr "この組織を削除してもよろしいですか？この操作は取り消せません。"
+
+#: org.visibility.public
+msgid "org.visibility.public"
+msgstr "公開"
+
+#: org.visibility.private
+msgid "org.visibility.private"
+msgstr "非公開"
+
+#: org.joinPolicy.open
+msgid "org.joinPolicy.open"
+msgstr "オープン"
+
+#: org.joinPolicy.request
+msgid "org.joinPolicy.request"
+msgstr "参加リクエスト"
+
+#: org.joinPolicy.inviteOnly
+msgid "org.joinPolicy.inviteOnly"
+msgstr "招待のみ"

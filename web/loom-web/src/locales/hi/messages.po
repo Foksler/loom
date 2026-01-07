@@ -2353,3 +2353,171 @@ msgstr "रिपॉजिटरी लोड करने में विफ�
 #: admin.health.fileCount
 msgid "admin.health.fileCount"
 msgstr "{count} फाइलें"
+
+#: admin.audit.title
+msgid "admin.audit.title"
+msgstr "ऑडिट लॉग"
+
+#: admin.audit.description
+msgid "admin.audit.description"
+msgstr "सुरक्षा ऑडिट लॉग देखें"
+
+#: auth.login.redirecting
+msgid "auth.login.redirecting"
+msgstr "पुनर्निर्देशित हो रहा है..."
+
+#: org.title
+msgid "org.title"
+msgstr "संगठन"
+
+#: org.members.add
+msgid "org.members.add"
+msgstr "सदस्य जोड़ें"
+
+#: org.members.addTitle
+msgid "org.members.addTitle"
+msgstr "सदस्य जोड़ें"
+
+#: org.members.email
+msgid "org.members.email"
+msgstr "ईमेल पता"
+
+#: org.members.empty
+msgid "org.members.empty"
+msgstr "अभी तक कोई सदस्य नहीं"
+
+#: org.members.invite
+msgid "org.members.invite"
+msgstr "आमंत्रण भेजें"
+
+#: org.members.remove
+msgid "org.members.remove"
+msgstr "हटाएं"
+
+#: org.members.removeConfirm
+msgid "org.members.removeConfirm"
+msgstr "क्या आप वाकई इस सदस्य को हटाना चाहते हैं?"
+
+#: org.roles.admin
+msgid "org.roles.admin"
+msgstr "व्यवस्थापक"
+
+#: org.roles.member
+msgid "org.roles.member"
+msgstr "सदस्य"
+
+#: org.teams.create
+msgid "org.teams.create"
+msgstr "टीम बनाएं"
+
+#: org.teams.createTitle
+msgid "org.teams.createTitle"
+msgstr "नई टीम बनाएं"
+
+#: org.teams.empty
+msgid "org.teams.empty"
+msgstr "अभी तक कोई टीम नहीं"
+
+#: org.teams.memberCount
+msgid "org.teams.memberCount"
+msgstr "सदस्य"
+
+#: org.teams.name
+msgid "org.teams.name"
+msgstr "टीम का नाम"
+
+#: org.teams.slug
+msgid "org.teams.slug"
+msgstr "URL स्लग"
+
+#: org.apiKeys.create
+msgid "org.apiKeys.create"
+msgstr "API कुंजी बनाएं"
+
+#: org.apiKeys.createTitle
+msgid "org.apiKeys.createTitle"
+msgstr "नई API कुंजी बनाएं"
+
+#: org.apiKeys.created
+msgid "org.apiKeys.created"
+msgstr "API कुंजी बनाई गई"
+
+#: org.apiKeys.copyWarning
+msgid "org.apiKeys.copyWarning"
+msgstr "इस कुंजी को अभी कॉपी करें। आप इसे दोबारा नहीं देख पाएंगे।"
+
+#: org.apiKeys.empty
+msgid "org.apiKeys.empty"
+msgstr "अभी तक कोई API कुंजी नहीं"
+
+#: org.apiKeys.lastUsed
+msgid "org.apiKeys.lastUsed"
+msgstr "अंतिम उपयोग"
+
+#: org.apiKeys.name
+msgid "org.apiKeys.name"
+msgstr "कुंजी का नाम"
+
+#: org.apiKeys.revoke
+msgid "org.apiKeys.revoke"
+msgstr "रद्द करें"
+
+#: org.apiKeys.revokeConfirm
+msgid "org.apiKeys.revokeConfirm"
+msgstr "क्या आप वाकई इस API कुंजी को रद्द करना चाहते हैं?"
+
+#: org.apiKeys.scopes
+msgid "org.apiKeys.scopes"
+msgstr "दायरे"
+
+#: org.settings.name
+msgid "org.settings.name"
+msgstr "संगठन का नाम"
+
+#: org.settings.visibility
+msgid "org.settings.visibility"
+msgstr "दृश्यता"
+
+#: org.settings.joinPolicy
+msgid "org.settings.joinPolicy"
+msgstr "जुड़ने की नीति"
+
+#: org.settings.saved
+msgid "org.settings.saved"
+msgstr "सेटिंग्स सहेजी गईं"
+
+#: org.settings.dangerZone
+msgid "org.settings.dangerZone"
+msgstr "खतरे का क्षेत्र"
+
+#: org.settings.deleteWarning
+msgid "org.settings.deleteWarning"
+msgstr "एक बार जब आप संगठन को हटा देते हैं, तो वापस नहीं जा सकते।"
+
+#: org.settings.delete
+msgid "org.settings.delete"
+msgstr "संगठन हटाएं"
+
+#: org.settings.deleteConfirm
+msgid "org.settings.deleteConfirm"
+msgstr "क्या आप वाकई इस संगठन को हटाना चाहते हैं? यह पूर्ववत नहीं किया जा सकता।"
+
+#: org.visibility.public
+msgid "org.visibility.public"
+msgstr "सार्वजनिक"
+
+#: org.visibility.private
+msgid "org.visibility.private"
+msgstr "निजी"
+
+#: org.joinPolicy.open
+msgid "org.joinPolicy.open"
+msgstr "खुला"
+
+#: org.joinPolicy.request
+msgid "org.joinPolicy.request"
+msgstr "जुड़ने का अनुरोध"
+
+#: org.joinPolicy.inviteOnly
+msgid "org.joinPolicy.inviteOnly"
+msgstr "केवल आमंत्रण से"

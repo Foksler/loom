@@ -2353,3 +2353,171 @@ msgstr "Hoidlate laadimine ebaõnnestus"
 #: admin.health.fileCount
 msgid "admin.health.fileCount"
 msgstr "{count} faili"
+
+#: admin.audit.title
+msgid "admin.audit.title"
+msgstr "Auditeerimise logid"
+
+#: admin.audit.description
+msgid "admin.audit.description"
+msgstr "Vaata turvalisuse auditeerimise logisid"
+
+#: auth.login.redirecting
+msgid "auth.login.redirecting"
+msgstr "Suunamine..."
+
+#: org.title
+msgid "org.title"
+msgstr "Organisatsioon"
+
+#: org.members.add
+msgid "org.members.add"
+msgstr "Lisa liige"
+
+#: org.members.addTitle
+msgid "org.members.addTitle"
+msgstr "Lisa liige"
+
+#: org.members.email
+msgid "org.members.email"
+msgstr "E-posti aadress"
+
+#: org.members.empty
+msgid "org.members.empty"
+msgstr "Liikmeid pole veel"
+
+#: org.members.invite
+msgid "org.members.invite"
+msgstr "Saada kutse"
+
+#: org.members.remove
+msgid "org.members.remove"
+msgstr "Eemalda"
+
+#: org.members.removeConfirm
+msgid "org.members.removeConfirm"
+msgstr "Kas olete kindel, et soovite selle liikme eemaldada?"
+
+#: org.roles.admin
+msgid "org.roles.admin"
+msgstr "Administraator"
+
+#: org.roles.member
+msgid "org.roles.member"
+msgstr "Liige"
+
+#: org.teams.create
+msgid "org.teams.create"
+msgstr "Loo meeskond"
+
+#: org.teams.createTitle
+msgid "org.teams.createTitle"
+msgstr "Loo uus meeskond"
+
+#: org.teams.empty
+msgid "org.teams.empty"
+msgstr "Meeskondi pole veel"
+
+#: org.teams.memberCount
+msgid "org.teams.memberCount"
+msgstr "liiget"
+
+#: org.teams.name
+msgid "org.teams.name"
+msgstr "Meeskonna nimi"
+
+#: org.teams.slug
+msgid "org.teams.slug"
+msgstr "URL-i lühend"
+
+#: org.apiKeys.create
+msgid "org.apiKeys.create"
+msgstr "Loo API võti"
+
+#: org.apiKeys.createTitle
+msgid "org.apiKeys.createTitle"
+msgstr "Loo uus API võti"
+
+#: org.apiKeys.created
+msgid "org.apiKeys.created"
+msgstr "API võti loodud"
+
+#: org.apiKeys.copyWarning
+msgid "org.apiKeys.copyWarning"
+msgstr "Kopeerige see võti kohe. Te ei näe seda enam."
+
+#: org.apiKeys.empty
+msgid "org.apiKeys.empty"
+msgstr "API võtmeid pole veel"
+
+#: org.apiKeys.lastUsed
+msgid "org.apiKeys.lastUsed"
+msgstr "Viimati kasutatud"
+
+#: org.apiKeys.name
+msgid "org.apiKeys.name"
+msgstr "Võtme nimi"
+
+#: org.apiKeys.revoke
+msgid "org.apiKeys.revoke"
+msgstr "Tühista"
+
+#: org.apiKeys.revokeConfirm
+msgid "org.apiKeys.revokeConfirm"
+msgstr "Kas olete kindel, et soovite selle API võtme tühistada?"
+
+#: org.apiKeys.scopes
+msgid "org.apiKeys.scopes"
+msgstr "Õigused"
+
+#: org.settings.name
+msgid "org.settings.name"
+msgstr "Organisatsiooni nimi"
+
+#: org.settings.visibility
+msgid "org.settings.visibility"
+msgstr "Nähtavus"
+
+#: org.settings.joinPolicy
+msgid "org.settings.joinPolicy"
+msgstr "Liitumispoliitika"
+
+#: org.settings.saved
+msgid "org.settings.saved"
+msgstr "Seaded salvestatud"
+
+#: org.settings.dangerZone
+msgid "org.settings.dangerZone"
+msgstr "Ohutsoon"
+
+#: org.settings.deleteWarning
+msgid "org.settings.deleteWarning"
+msgstr "Kui kustutate organisatsiooni, ei saa seda tagasi võtta."
+
+#: org.settings.delete
+msgid "org.settings.delete"
+msgstr "Kustuta organisatsioon"
+
+#: org.settings.deleteConfirm
+msgid "org.settings.deleteConfirm"
+msgstr "Kas olete kindel, et soovite selle organisatsiooni kustutada? Seda ei saa tagasi võtta."
+
+#: org.visibility.public
+msgid "org.visibility.public"
+msgstr "Avalik"
+
+#: org.visibility.private
+msgid "org.visibility.private"
+msgstr "Privaatne"
+
+#: org.joinPolicy.open
+msgid "org.joinPolicy.open"
+msgstr "Avatud"
+
+#: org.joinPolicy.request
+msgid "org.joinPolicy.request"
+msgstr "Taotlus liitumiseks"
+
+#: org.joinPolicy.inviteOnly
+msgid "org.joinPolicy.inviteOnly"
+msgstr "Ainult kutsega"

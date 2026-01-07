@@ -2353,3 +2353,171 @@ msgstr "저장소를 불러오지 못했습니다"
 #: admin.health.fileCount
 msgid "admin.health.fileCount"
 msgstr "{count}개 파일"
+
+#: admin.audit.title
+msgid "admin.audit.title"
+msgstr "감사 로그"
+
+#: admin.audit.description
+msgid "admin.audit.description"
+msgstr "보안 감사 로그 보기"
+
+#: auth.login.redirecting
+msgid "auth.login.redirecting"
+msgstr "리디렉션 중..."
+
+#: org.title
+msgid "org.title"
+msgstr "조직"
+
+#: org.members.add
+msgid "org.members.add"
+msgstr "멤버 추가"
+
+#: org.members.addTitle
+msgid "org.members.addTitle"
+msgstr "멤버 추가"
+
+#: org.members.email
+msgid "org.members.email"
+msgstr "이메일 주소"
+
+#: org.members.empty
+msgid "org.members.empty"
+msgstr "아직 멤버가 없습니다"
+
+#: org.members.invite
+msgid "org.members.invite"
+msgstr "초대 보내기"
+
+#: org.members.remove
+msgid "org.members.remove"
+msgstr "제거"
+
+#: org.members.removeConfirm
+msgid "org.members.removeConfirm"
+msgstr "이 멤버를 제거하시겠습니까?"
+
+#: org.roles.admin
+msgid "org.roles.admin"
+msgstr "관리자"
+
+#: org.roles.member
+msgid "org.roles.member"
+msgstr "멤버"
+
+#: org.teams.create
+msgid "org.teams.create"
+msgstr "팀 생성"
+
+#: org.teams.createTitle
+msgid "org.teams.createTitle"
+msgstr "새 팀 생성"
+
+#: org.teams.empty
+msgid "org.teams.empty"
+msgstr "아직 팀이 없습니다"
+
+#: org.teams.memberCount
+msgid "org.teams.memberCount"
+msgstr "멤버"
+
+#: org.teams.name
+msgid "org.teams.name"
+msgstr "팀 이름"
+
+#: org.teams.slug
+msgid "org.teams.slug"
+msgstr "URL 슬러그"
+
+#: org.apiKeys.create
+msgid "org.apiKeys.create"
+msgstr "API 키 생성"
+
+#: org.apiKeys.createTitle
+msgid "org.apiKeys.createTitle"
+msgstr "새 API 키 생성"
+
+#: org.apiKeys.created
+msgid "org.apiKeys.created"
+msgstr "API 키가 생성되었습니다"
+
+#: org.apiKeys.copyWarning
+msgid "org.apiKeys.copyWarning"
+msgstr "지금 이 키를 복사하세요. 다시 볼 수 없습니다."
+
+#: org.apiKeys.empty
+msgid "org.apiKeys.empty"
+msgstr "아직 API 키가 없습니다"
+
+#: org.apiKeys.lastUsed
+msgid "org.apiKeys.lastUsed"
+msgstr "마지막 사용"
+
+#: org.apiKeys.name
+msgid "org.apiKeys.name"
+msgstr "키 이름"
+
+#: org.apiKeys.revoke
+msgid "org.apiKeys.revoke"
+msgstr "취소"
+
+#: org.apiKeys.revokeConfirm
+msgid "org.apiKeys.revokeConfirm"
+msgstr "이 API 키를 취소하시겠습니까?"
+
+#: org.apiKeys.scopes
+msgid "org.apiKeys.scopes"
+msgstr "범위"
+
+#: org.settings.name
+msgid "org.settings.name"
+msgstr "조직 이름"
+
+#: org.settings.visibility
+msgid "org.settings.visibility"
+msgstr "공개 여부"
+
+#: org.settings.joinPolicy
+msgid "org.settings.joinPolicy"
+msgstr "가입 정책"
+
+#: org.settings.saved
+msgid "org.settings.saved"
+msgstr "설정이 저장되었습니다"
+
+#: org.settings.dangerZone
+msgid "org.settings.dangerZone"
+msgstr "위험 구역"
+
+#: org.settings.deleteWarning
+msgid "org.settings.deleteWarning"
+msgstr "조직을 삭제하면 되돌릴 수 없습니다."
+
+#: org.settings.delete
+msgid "org.settings.delete"
+msgstr "조직 삭제"
+
+#: org.settings.deleteConfirm
+msgid "org.settings.deleteConfirm"
+msgstr "이 조직을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다."
+
+#: org.visibility.public
+msgid "org.visibility.public"
+msgstr "공개"
+
+#: org.visibility.private
+msgid "org.visibility.private"
+msgstr "비공개"
+
+#: org.joinPolicy.open
+msgid "org.joinPolicy.open"
+msgstr "공개"
+
+#: org.joinPolicy.request
+msgid "org.joinPolicy.request"
+msgstr "가입 요청"
+
+#: org.joinPolicy.inviteOnly
+msgid "org.joinPolicy.inviteOnly"
+msgstr "초대만"

@@ -2353,3 +2353,171 @@ msgstr "রিপোজিটরি লোড করতে ব্যর্থ"
 #: admin.health.fileCount
 msgid "admin.health.fileCount"
 msgstr "{count} ফাইল"
+
+#: admin.audit.title
+msgid "admin.audit.title"
+msgstr "অডিট লগ"
+
+#: admin.audit.description
+msgid "admin.audit.description"
+msgstr "নিরাপত্তা অডিট লগ দেখুন"
+
+#: auth.login.redirecting
+msgid "auth.login.redirecting"
+msgstr "পুনঃনির্দেশ করা হচ্ছে..."
+
+#: org.title
+msgid "org.title"
+msgstr "সংস্থা"
+
+#: org.members.add
+msgid "org.members.add"
+msgstr "সদস্য যোগ করুন"
+
+#: org.members.addTitle
+msgid "org.members.addTitle"
+msgstr "সদস্য যোগ করুন"
+
+#: org.members.email
+msgid "org.members.email"
+msgstr "ইমেল ঠিকানা"
+
+#: org.members.empty
+msgid "org.members.empty"
+msgstr "এখনও কোনো সদস্য নেই"
+
+#: org.members.invite
+msgid "org.members.invite"
+msgstr "আমন্ত্রণ পাঠান"
+
+#: org.members.remove
+msgid "org.members.remove"
+msgstr "সরান"
+
+#: org.members.removeConfirm
+msgid "org.members.removeConfirm"
+msgstr "আপনি কি নিশ্চিত যে আপনি এই সদস্যকে সরাতে চান?"
+
+#: org.roles.admin
+msgid "org.roles.admin"
+msgstr "প্রশাসক"
+
+#: org.roles.member
+msgid "org.roles.member"
+msgstr "সদস্য"
+
+#: org.teams.create
+msgid "org.teams.create"
+msgstr "টিম তৈরি করুন"
+
+#: org.teams.createTitle
+msgid "org.teams.createTitle"
+msgstr "নতুন টিম তৈরি করুন"
+
+#: org.teams.empty
+msgid "org.teams.empty"
+msgstr "এখনও কোনো টিম নেই"
+
+#: org.teams.memberCount
+msgid "org.teams.memberCount"
+msgstr "সদস্য"
+
+#: org.teams.name
+msgid "org.teams.name"
+msgstr "টিমের নাম"
+
+#: org.teams.slug
+msgid "org.teams.slug"
+msgstr "URL স্লাগ"
+
+#: org.apiKeys.create
+msgid "org.apiKeys.create"
+msgstr "API কী তৈরি করুন"
+
+#: org.apiKeys.createTitle
+msgid "org.apiKeys.createTitle"
+msgstr "নতুন API কী তৈরি করুন"
+
+#: org.apiKeys.created
+msgid "org.apiKeys.created"
+msgstr "API কী তৈরি হয়েছে"
+
+#: org.apiKeys.copyWarning
+msgid "org.apiKeys.copyWarning"
+msgstr "এই কী এখনই কপি করুন। আপনি এটি আবার দেখতে পারবেন না।"
+
+#: org.apiKeys.empty
+msgid "org.apiKeys.empty"
+msgstr "এখনও কোনো API কী নেই"
+
+#: org.apiKeys.lastUsed
+msgid "org.apiKeys.lastUsed"
+msgstr "সর্বশেষ ব্যবহার"
+
+#: org.apiKeys.name
+msgid "org.apiKeys.name"
+msgstr "কী-এর নাম"
+
+#: org.apiKeys.revoke
+msgid "org.apiKeys.revoke"
+msgstr "বাতিল করুন"
+
+#: org.apiKeys.revokeConfirm
+msgid "org.apiKeys.revokeConfirm"
+msgstr "আপনি কি নিশ্চিত যে আপনি এই API কী বাতিল করতে চান?"
+
+#: org.apiKeys.scopes
+msgid "org.apiKeys.scopes"
+msgstr "সুযোগ"
+
+#: org.settings.name
+msgid "org.settings.name"
+msgstr "সংস্থার নাম"
+
+#: org.settings.visibility
+msgid "org.settings.visibility"
+msgstr "দৃশ্যমানতা"
+
+#: org.settings.joinPolicy
+msgid "org.settings.joinPolicy"
+msgstr "যোগদান নীতি"
+
+#: org.settings.saved
+msgid "org.settings.saved"
+msgstr "সেটিংস সংরক্ষিত"
+
+#: org.settings.dangerZone
+msgid "org.settings.dangerZone"
+msgstr "বিপদ অঞ্চল"
+
+#: org.settings.deleteWarning
+msgid "org.settings.deleteWarning"
+msgstr "একবার আপনি একটি সংস্থা মুছে ফেললে, ফিরে যাওয়ার কোনো উপায় নেই।"
+
+#: org.settings.delete
+msgid "org.settings.delete"
+msgstr "সংস্থা মুছুন"
+
+#: org.settings.deleteConfirm
+msgid "org.settings.deleteConfirm"
+msgstr "আপনি কি নিশ্চিত যে আপনি এই সংস্থা মুছতে চান? এটি পূর্বাবস্থায় ফেরানো যাবে না।"
+
+#: org.visibility.public
+msgid "org.visibility.public"
+msgstr "সার্বজনীন"
+
+#: org.visibility.private
+msgid "org.visibility.private"
+msgstr "ব্যক্তিগত"
+
+#: org.joinPolicy.open
+msgid "org.joinPolicy.open"
+msgstr "খোলা"
+
+#: org.joinPolicy.request
+msgid "org.joinPolicy.request"
+msgstr "যোগদানের অনুরোধ"
+
+#: org.joinPolicy.inviteOnly
+msgid "org.joinPolicy.inviteOnly"
+msgstr "শুধুমাত্র আমন্ত্রণে"

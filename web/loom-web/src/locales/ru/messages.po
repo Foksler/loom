@@ -2353,3 +2353,171 @@ msgstr "Не удалось загрузить репозитории"
 #: admin.health.fileCount
 msgid "admin.health.fileCount"
 msgstr "{count} файлов"
+
+#: admin.audit.title
+msgid "admin.audit.title"
+msgstr "Журналы аудита"
+
+#: admin.audit.description
+msgid "admin.audit.description"
+msgstr "Просмотр журналов аудита безопасности"
+
+#: auth.login.redirecting
+msgid "auth.login.redirecting"
+msgstr "Перенаправление..."
+
+#: org.title
+msgid "org.title"
+msgstr "Организация"
+
+#: org.members.add
+msgid "org.members.add"
+msgstr "Добавить участника"
+
+#: org.members.addTitle
+msgid "org.members.addTitle"
+msgstr "Добавить участника"
+
+#: org.members.email
+msgid "org.members.email"
+msgstr "Адрес электронной почты"
+
+#: org.members.empty
+msgid "org.members.empty"
+msgstr "Пока нет участников"
+
+#: org.members.invite
+msgid "org.members.invite"
+msgstr "Отправить приглашение"
+
+#: org.members.remove
+msgid "org.members.remove"
+msgstr "Удалить"
+
+#: org.members.removeConfirm
+msgid "org.members.removeConfirm"
+msgstr "Вы уверены, что хотите удалить этого участника?"
+
+#: org.roles.admin
+msgid "org.roles.admin"
+msgstr "Администратор"
+
+#: org.roles.member
+msgid "org.roles.member"
+msgstr "Участник"
+
+#: org.teams.create
+msgid "org.teams.create"
+msgstr "Создать команду"
+
+#: org.teams.createTitle
+msgid "org.teams.createTitle"
+msgstr "Создать новую команду"
+
+#: org.teams.empty
+msgid "org.teams.empty"
+msgstr "Пока нет команд"
+
+#: org.teams.memberCount
+msgid "org.teams.memberCount"
+msgstr "участников"
+
+#: org.teams.name
+msgid "org.teams.name"
+msgstr "Название команды"
+
+#: org.teams.slug
+msgid "org.teams.slug"
+msgstr "URL-идентификатор"
+
+#: org.apiKeys.create
+msgid "org.apiKeys.create"
+msgstr "Создать API-ключ"
+
+#: org.apiKeys.createTitle
+msgid "org.apiKeys.createTitle"
+msgstr "Создать новый API-ключ"
+
+#: org.apiKeys.created
+msgid "org.apiKeys.created"
+msgstr "API-ключ создан"
+
+#: org.apiKeys.copyWarning
+msgid "org.apiKeys.copyWarning"
+msgstr "Скопируйте этот ключ сейчас. Вы не сможете увидеть его снова."
+
+#: org.apiKeys.empty
+msgid "org.apiKeys.empty"
+msgstr "Пока нет API-ключей"
+
+#: org.apiKeys.lastUsed
+msgid "org.apiKeys.lastUsed"
+msgstr "Последнее использование"
+
+#: org.apiKeys.name
+msgid "org.apiKeys.name"
+msgstr "Название ключа"
+
+#: org.apiKeys.revoke
+msgid "org.apiKeys.revoke"
+msgstr "Отозвать"
+
+#: org.apiKeys.revokeConfirm
+msgid "org.apiKeys.revokeConfirm"
+msgstr "Вы уверены, что хотите отозвать этот API-ключ?"
+
+#: org.apiKeys.scopes
+msgid "org.apiKeys.scopes"
+msgstr "Области доступа"
+
+#: org.settings.name
+msgid "org.settings.name"
+msgstr "Название организации"
+
+#: org.settings.visibility
+msgid "org.settings.visibility"
+msgstr "Видимость"
+
+#: org.settings.joinPolicy
+msgid "org.settings.joinPolicy"
+msgstr "Политика присоединения"
+
+#: org.settings.saved
+msgid "org.settings.saved"
+msgstr "Настройки сохранены"
+
+#: org.settings.dangerZone
+msgid "org.settings.dangerZone"
+msgstr "Опасная зона"
+
+#: org.settings.deleteWarning
+msgid "org.settings.deleteWarning"
+msgstr "После удаления организации пути назад нет."
+
+#: org.settings.delete
+msgid "org.settings.delete"
+msgstr "Удалить организацию"
+
+#: org.settings.deleteConfirm
+msgid "org.settings.deleteConfirm"
+msgstr "Вы уверены, что хотите удалить эту организацию? Это действие нельзя отменить."
+
+#: org.visibility.public
+msgid "org.visibility.public"
+msgstr "Публичная"
+
+#: org.visibility.private
+msgid "org.visibility.private"
+msgstr "Частная"
+
+#: org.joinPolicy.open
+msgid "org.joinPolicy.open"
+msgstr "Открытая"
+
+#: org.joinPolicy.request
+msgid "org.joinPolicy.request"
+msgstr "Запрос на присоединение"
+
+#: org.joinPolicy.inviteOnly
+msgid "org.joinPolicy.inviteOnly"
+msgstr "Только по приглашению"

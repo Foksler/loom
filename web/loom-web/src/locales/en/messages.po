@@ -2310,3 +2310,171 @@ msgstr "Failed to load repositories"
 #: admin.health.fileCount
 msgid "admin.health.fileCount"
 msgstr "{count} files"
+
+#: admin.audit.title
+msgid "admin.audit.title"
+msgstr "Audit Logs"
+
+#: admin.audit.description
+msgid "admin.audit.description"
+msgstr "View security audit logs"
+
+#: auth.login.redirecting
+msgid "auth.login.redirecting"
+msgstr "Redirecting..."
+
+#: org.title
+msgid "org.title"
+msgstr "Organization"
+
+#: org.members.add
+msgid "org.members.add"
+msgstr "Add Member"
+
+#: org.members.addTitle
+msgid "org.members.addTitle"
+msgstr "Add Member"
+
+#: org.members.email
+msgid "org.members.email"
+msgstr "Email Address"
+
+#: org.members.empty
+msgid "org.members.empty"
+msgstr "No members yet"
+
+#: org.members.invite
+msgid "org.members.invite"
+msgstr "Send Invite"
+
+#: org.members.remove
+msgid "org.members.remove"
+msgstr "Remove"
+
+#: org.members.removeConfirm
+msgid "org.members.removeConfirm"
+msgstr "Are you sure you want to remove this member?"
+
+#: org.roles.admin
+msgid "org.roles.admin"
+msgstr "Admin"
+
+#: org.roles.member
+msgid "org.roles.member"
+msgstr "Member"
+
+#: org.teams.create
+msgid "org.teams.create"
+msgstr "Create Team"
+
+#: org.teams.createTitle
+msgid "org.teams.createTitle"
+msgstr "Create New Team"
+
+#: org.teams.empty
+msgid "org.teams.empty"
+msgstr "No teams yet"
+
+#: org.teams.memberCount
+msgid "org.teams.memberCount"
+msgstr "members"
+
+#: org.teams.name
+msgid "org.teams.name"
+msgstr "Team Name"
+
+#: org.teams.slug
+msgid "org.teams.slug"
+msgstr "URL Slug"
+
+#: org.apiKeys.create
+msgid "org.apiKeys.create"
+msgstr "Create API Key"
+
+#: org.apiKeys.createTitle
+msgid "org.apiKeys.createTitle"
+msgstr "Create New API Key"
+
+#: org.apiKeys.created
+msgid "org.apiKeys.created"
+msgstr "API Key Created"
+
+#: org.apiKeys.copyWarning
+msgid "org.apiKeys.copyWarning"
+msgstr "Copy this key now. You won't be able to see it again."
+
+#: org.apiKeys.empty
+msgid "org.apiKeys.empty"
+msgstr "No API keys yet"
+
+#: org.apiKeys.lastUsed
+msgid "org.apiKeys.lastUsed"
+msgstr "Last Used"
+
+#: org.apiKeys.name
+msgid "org.apiKeys.name"
+msgstr "Key Name"
+
+#: org.apiKeys.revoke
+msgid "org.apiKeys.revoke"
+msgstr "Revoke"
+
+#: org.apiKeys.revokeConfirm
+msgid "org.apiKeys.revokeConfirm"
+msgstr "Are you sure you want to revoke this API key?"
+
+#: org.apiKeys.scopes
+msgid "org.apiKeys.scopes"
+msgstr "Scopes"
+
+#: org.settings.name
+msgid "org.settings.name"
+msgstr "Organization Name"
+
+#: org.settings.visibility
+msgid "org.settings.visibility"
+msgstr "Visibility"
+
+#: org.settings.joinPolicy
+msgid "org.settings.joinPolicy"
+msgstr "Join Policy"
+
+#: org.settings.saved
+msgid "org.settings.saved"
+msgstr "Settings saved"
+
+#: org.settings.dangerZone
+msgid "org.settings.dangerZone"
+msgstr "Danger Zone"
+
+#: org.settings.deleteWarning
+msgid "org.settings.deleteWarning"
+msgstr "Once you delete an organization, there is no going back."
+
+#: org.settings.delete
+msgid "org.settings.delete"
+msgstr "Delete Organization"
+
+#: org.settings.deleteConfirm
+msgid "org.settings.deleteConfirm"
+msgstr "Are you sure you want to delete this organization? This cannot be undone."
+
+#: org.visibility.public
+msgid "org.visibility.public"
+msgstr "Public"
+
+#: org.visibility.private
+msgid "org.visibility.private"
+msgstr "Private"
+
+#: org.joinPolicy.open
+msgid "org.joinPolicy.open"
+msgstr "Open"
+
+#: org.joinPolicy.request
+msgid "org.joinPolicy.request"
+msgstr "Request to Join"
+
+#: org.joinPolicy.inviteOnly
+msgid "org.joinPolicy.inviteOnly"
+msgstr "Invite Only"

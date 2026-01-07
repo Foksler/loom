@@ -2353,3 +2353,171 @@ msgstr "Gagal memuat repositori"
 #: admin.health.fileCount
 msgid "admin.health.fileCount"
 msgstr "{count} file"
+
+#: admin.audit.title
+msgid "admin.audit.title"
+msgstr "Log Audit"
+
+#: admin.audit.description
+msgid "admin.audit.description"
+msgstr "Lihat log audit keamanan"
+
+#: auth.login.redirecting
+msgid "auth.login.redirecting"
+msgstr "Mengalihkan..."
+
+#: org.title
+msgid "org.title"
+msgstr "Organisasi"
+
+#: org.members.add
+msgid "org.members.add"
+msgstr "Tambah Anggota"
+
+#: org.members.addTitle
+msgid "org.members.addTitle"
+msgstr "Tambah Anggota"
+
+#: org.members.email
+msgid "org.members.email"
+msgstr "Alamat Email"
+
+#: org.members.empty
+msgid "org.members.empty"
+msgstr "Belum ada anggota"
+
+#: org.members.invite
+msgid "org.members.invite"
+msgstr "Kirim Undangan"
+
+#: org.members.remove
+msgid "org.members.remove"
+msgstr "Hapus"
+
+#: org.members.removeConfirm
+msgid "org.members.removeConfirm"
+msgstr "Apakah Anda yakin ingin menghapus anggota ini?"
+
+#: org.roles.admin
+msgid "org.roles.admin"
+msgstr "Admin"
+
+#: org.roles.member
+msgid "org.roles.member"
+msgstr "Anggota"
+
+#: org.teams.create
+msgid "org.teams.create"
+msgstr "Buat Tim"
+
+#: org.teams.createTitle
+msgid "org.teams.createTitle"
+msgstr "Buat Tim Baru"
+
+#: org.teams.empty
+msgid "org.teams.empty"
+msgstr "Belum ada tim"
+
+#: org.teams.memberCount
+msgid "org.teams.memberCount"
+msgstr "anggota"
+
+#: org.teams.name
+msgid "org.teams.name"
+msgstr "Nama Tim"
+
+#: org.teams.slug
+msgid "org.teams.slug"
+msgstr "Slug URL"
+
+#: org.apiKeys.create
+msgid "org.apiKeys.create"
+msgstr "Buat Kunci API"
+
+#: org.apiKeys.createTitle
+msgid "org.apiKeys.createTitle"
+msgstr "Buat Kunci API Baru"
+
+#: org.apiKeys.created
+msgid "org.apiKeys.created"
+msgstr "Kunci API Dibuat"
+
+#: org.apiKeys.copyWarning
+msgid "org.apiKeys.copyWarning"
+msgstr "Salin kunci ini sekarang. Anda tidak akan bisa melihatnya lagi."
+
+#: org.apiKeys.empty
+msgid "org.apiKeys.empty"
+msgstr "Belum ada kunci API"
+
+#: org.apiKeys.lastUsed
+msgid "org.apiKeys.lastUsed"
+msgstr "Terakhir Digunakan"
+
+#: org.apiKeys.name
+msgid "org.apiKeys.name"
+msgstr "Nama Kunci"
+
+#: org.apiKeys.revoke
+msgid "org.apiKeys.revoke"
+msgstr "Cabut"
+
+#: org.apiKeys.revokeConfirm
+msgid "org.apiKeys.revokeConfirm"
+msgstr "Apakah Anda yakin ingin mencabut kunci API ini?"
+
+#: org.apiKeys.scopes
+msgid "org.apiKeys.scopes"
+msgstr "Cakupan"
+
+#: org.settings.name
+msgid "org.settings.name"
+msgstr "Nama Organisasi"
+
+#: org.settings.visibility
+msgid "org.settings.visibility"
+msgstr "Visibilitas"
+
+#: org.settings.joinPolicy
+msgid "org.settings.joinPolicy"
+msgstr "Kebijakan Bergabung"
+
+#: org.settings.saved
+msgid "org.settings.saved"
+msgstr "Pengaturan disimpan"
+
+#: org.settings.dangerZone
+msgid "org.settings.dangerZone"
+msgstr "Zona Bahaya"
+
+#: org.settings.deleteWarning
+msgid "org.settings.deleteWarning"
+msgstr "Setelah Anda menghapus organisasi, tidak ada jalan kembali."
+
+#: org.settings.delete
+msgid "org.settings.delete"
+msgstr "Hapus Organisasi"
+
+#: org.settings.deleteConfirm
+msgid "org.settings.deleteConfirm"
+msgstr "Apakah Anda yakin ingin menghapus organisasi ini? Ini tidak dapat dibatalkan."
+
+#: org.visibility.public
+msgid "org.visibility.public"
+msgstr "Publik"
+
+#: org.visibility.private
+msgid "org.visibility.private"
+msgstr "Privat"
+
+#: org.joinPolicy.open
+msgid "org.joinPolicy.open"
+msgstr "Terbuka"
+
+#: org.joinPolicy.request
+msgid "org.joinPolicy.request"
+msgstr "Minta Bergabung"
+
+#: org.joinPolicy.inviteOnly
+msgid "org.joinPolicy.inviteOnly"
+msgstr "Hanya Undangan"

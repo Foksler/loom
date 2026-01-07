@@ -2353,3 +2353,171 @@ msgstr "Kunde inte ladda arkiv"
 #: admin.health.fileCount
 msgid "admin.health.fileCount"
 msgstr "{count} filer"
+
+#: admin.audit.title
+msgid "admin.audit.title"
+msgstr "Granskningsloggar"
+
+#: admin.audit.description
+msgid "admin.audit.description"
+msgstr "Visa säkerhetsgranskningsloggar"
+
+#: auth.login.redirecting
+msgid "auth.login.redirecting"
+msgstr "Omdirigerar..."
+
+#: org.title
+msgid "org.title"
+msgstr "Organisation"
+
+#: org.members.add
+msgid "org.members.add"
+msgstr "Lägg till Medlem"
+
+#: org.members.addTitle
+msgid "org.members.addTitle"
+msgstr "Lägg till Medlem"
+
+#: org.members.email
+msgid "org.members.email"
+msgstr "E-postadress"
+
+#: org.members.empty
+msgid "org.members.empty"
+msgstr "Inga medlemmar ännu"
+
+#: org.members.invite
+msgid "org.members.invite"
+msgstr "Skicka Inbjudan"
+
+#: org.members.remove
+msgid "org.members.remove"
+msgstr "Ta bort"
+
+#: org.members.removeConfirm
+msgid "org.members.removeConfirm"
+msgstr "Är du säker på att du vill ta bort denna medlem?"
+
+#: org.roles.admin
+msgid "org.roles.admin"
+msgstr "Administratör"
+
+#: org.roles.member
+msgid "org.roles.member"
+msgstr "Medlem"
+
+#: org.teams.create
+msgid "org.teams.create"
+msgstr "Skapa Team"
+
+#: org.teams.createTitle
+msgid "org.teams.createTitle"
+msgstr "Skapa Nytt Team"
+
+#: org.teams.empty
+msgid "org.teams.empty"
+msgstr "Inga team ännu"
+
+#: org.teams.memberCount
+msgid "org.teams.memberCount"
+msgstr "medlemmar"
+
+#: org.teams.name
+msgid "org.teams.name"
+msgstr "Teamnamn"
+
+#: org.teams.slug
+msgid "org.teams.slug"
+msgstr "URL-slug"
+
+#: org.apiKeys.create
+msgid "org.apiKeys.create"
+msgstr "Skapa API-nyckel"
+
+#: org.apiKeys.createTitle
+msgid "org.apiKeys.createTitle"
+msgstr "Skapa Ny API-nyckel"
+
+#: org.apiKeys.created
+msgid "org.apiKeys.created"
+msgstr "API-nyckel Skapad"
+
+#: org.apiKeys.copyWarning
+msgid "org.apiKeys.copyWarning"
+msgstr "Kopiera denna nyckel nu. Du kommer inte kunna se den igen."
+
+#: org.apiKeys.empty
+msgid "org.apiKeys.empty"
+msgstr "Inga API-nycklar ännu"
+
+#: org.apiKeys.lastUsed
+msgid "org.apiKeys.lastUsed"
+msgstr "Senast Använd"
+
+#: org.apiKeys.name
+msgid "org.apiKeys.name"
+msgstr "Nyckelnamn"
+
+#: org.apiKeys.revoke
+msgid "org.apiKeys.revoke"
+msgstr "Återkalla"
+
+#: org.apiKeys.revokeConfirm
+msgid "org.apiKeys.revokeConfirm"
+msgstr "Är du säker på att du vill återkalla denna API-nyckel?"
+
+#: org.apiKeys.scopes
+msgid "org.apiKeys.scopes"
+msgstr "Omfattning"
+
+#: org.settings.name
+msgid "org.settings.name"
+msgstr "Organisationsnamn"
+
+#: org.settings.visibility
+msgid "org.settings.visibility"
+msgstr "Synlighet"
+
+#: org.settings.joinPolicy
+msgid "org.settings.joinPolicy"
+msgstr "Anslutningspolicy"
+
+#: org.settings.saved
+msgid "org.settings.saved"
+msgstr "Inställningar sparade"
+
+#: org.settings.dangerZone
+msgid "org.settings.dangerZone"
+msgstr "Farozon"
+
+#: org.settings.deleteWarning
+msgid "org.settings.deleteWarning"
+msgstr "När du tar bort en organisation finns det ingen återvändo."
+
+#: org.settings.delete
+msgid "org.settings.delete"
+msgstr "Ta bort Organisation"
+
+#: org.settings.deleteConfirm
+msgid "org.settings.deleteConfirm"
+msgstr "Är du säker på att du vill ta bort denna organisation? Detta kan inte ångras."
+
+#: org.visibility.public
+msgid "org.visibility.public"
+msgstr "Offentlig"
+
+#: org.visibility.private
+msgid "org.visibility.private"
+msgstr "Privat"
+
+#: org.joinPolicy.open
+msgid "org.joinPolicy.open"
+msgstr "Öppen"
+
+#: org.joinPolicy.request
+msgid "org.joinPolicy.request"
+msgstr "Begär att Gå med"
+
+#: org.joinPolicy.inviteOnly
+msgid "org.joinPolicy.inviteOnly"
+msgstr "Endast på Inbjudan"

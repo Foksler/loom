@@ -2317,3 +2317,171 @@ msgstr "فشل تحميل المستودعات"
 #: admin.health.fileCount
 msgid "admin.health.fileCount"
 msgstr "{count} ملفات"
+
+#: admin.audit.title
+msgid "admin.audit.title"
+msgstr "سجلات المراجعة"
+
+#: admin.audit.description
+msgid "admin.audit.description"
+msgstr "عرض سجلات المراجعة الأمنية"
+
+#: auth.login.redirecting
+msgid "auth.login.redirecting"
+msgstr "جارٍ إعادة التوجيه..."
+
+#: org.title
+msgid "org.title"
+msgstr "المؤسسة"
+
+#: org.members.add
+msgid "org.members.add"
+msgstr "إضافة عضو"
+
+#: org.members.addTitle
+msgid "org.members.addTitle"
+msgstr "إضافة عضو"
+
+#: org.members.email
+msgid "org.members.email"
+msgstr "البريد الإلكتروني"
+
+#: org.members.empty
+msgid "org.members.empty"
+msgstr "لا يوجد أعضاء حتى الآن"
+
+#: org.members.invite
+msgid "org.members.invite"
+msgstr "إرسال دعوة"
+
+#: org.members.remove
+msgid "org.members.remove"
+msgstr "إزالة"
+
+#: org.members.removeConfirm
+msgid "org.members.removeConfirm"
+msgstr "هل أنت متأكد من أنك تريد إزالة هذا العضو؟"
+
+#: org.roles.admin
+msgid "org.roles.admin"
+msgstr "مدير"
+
+#: org.roles.member
+msgid "org.roles.member"
+msgstr "عضو"
+
+#: org.teams.create
+msgid "org.teams.create"
+msgstr "إنشاء فريق"
+
+#: org.teams.createTitle
+msgid "org.teams.createTitle"
+msgstr "إنشاء فريق جديد"
+
+#: org.teams.empty
+msgid "org.teams.empty"
+msgstr "لا توجد فرق حتى الآن"
+
+#: org.teams.memberCount
+msgid "org.teams.memberCount"
+msgstr "أعضاء"
+
+#: org.teams.name
+msgid "org.teams.name"
+msgstr "اسم الفريق"
+
+#: org.teams.slug
+msgid "org.teams.slug"
+msgstr "معرف URL"
+
+#: org.apiKeys.create
+msgid "org.apiKeys.create"
+msgstr "إنشاء مفتاح API"
+
+#: org.apiKeys.createTitle
+msgid "org.apiKeys.createTitle"
+msgstr "إنشاء مفتاح API جديد"
+
+#: org.apiKeys.created
+msgid "org.apiKeys.created"
+msgstr "تم إنشاء مفتاح API"
+
+#: org.apiKeys.copyWarning
+msgid "org.apiKeys.copyWarning"
+msgstr "انسخ هذا المفتاح الآن. لن تتمكن من رؤيته مرة أخرى."
+
+#: org.apiKeys.empty
+msgid "org.apiKeys.empty"
+msgstr "لا توجد مفاتيح API حتى الآن"
+
+#: org.apiKeys.lastUsed
+msgid "org.apiKeys.lastUsed"
+msgstr "آخر استخدام"
+
+#: org.apiKeys.name
+msgid "org.apiKeys.name"
+msgstr "اسم المفتاح"
+
+#: org.apiKeys.revoke
+msgid "org.apiKeys.revoke"
+msgstr "إلغاء"
+
+#: org.apiKeys.revokeConfirm
+msgid "org.apiKeys.revokeConfirm"
+msgstr "هل أنت متأكد من أنك تريد إلغاء مفتاح API هذا؟"
+
+#: org.apiKeys.scopes
+msgid "org.apiKeys.scopes"
+msgstr "الصلاحيات"
+
+#: org.settings.name
+msgid "org.settings.name"
+msgstr "اسم المؤسسة"
+
+#: org.settings.visibility
+msgid "org.settings.visibility"
+msgstr "الظهور"
+
+#: org.settings.joinPolicy
+msgid "org.settings.joinPolicy"
+msgstr "سياسة الانضمام"
+
+#: org.settings.saved
+msgid "org.settings.saved"
+msgstr "تم حفظ الإعدادات"
+
+#: org.settings.dangerZone
+msgid "org.settings.dangerZone"
+msgstr "منطقة الخطر"
+
+#: org.settings.deleteWarning
+msgid "org.settings.deleteWarning"
+msgstr "بمجرد حذف المؤسسة، لا يمكن التراجع."
+
+#: org.settings.delete
+msgid "org.settings.delete"
+msgstr "حذف المؤسسة"
+
+#: org.settings.deleteConfirm
+msgid "org.settings.deleteConfirm"
+msgstr "هل أنت متأكد من أنك تريد حذف هذه المؤسسة؟ لا يمكن التراجع عن هذا الإجراء."
+
+#: org.visibility.public
+msgid "org.visibility.public"
+msgstr "عام"
+
+#: org.visibility.private
+msgid "org.visibility.private"
+msgstr "خاص"
+
+#: org.joinPolicy.open
+msgid "org.joinPolicy.open"
+msgstr "مفتوح"
+
+#: org.joinPolicy.request
+msgid "org.joinPolicy.request"
+msgstr "طلب الانضمام"
+
+#: org.joinPolicy.inviteOnly
+msgid "org.joinPolicy.inviteOnly"
+msgstr "بالدعوة فقط"

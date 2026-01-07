@@ -2353,3 +2353,171 @@ msgstr "Repositories laden mislukt"
 #: admin.health.fileCount
 msgid "admin.health.fileCount"
 msgstr "{count} bestanden"
+
+#: admin.audit.title
+msgid "admin.audit.title"
+msgstr "Auditlogboeken"
+
+#: admin.audit.description
+msgid "admin.audit.description"
+msgstr "Beveiligingsauditlogboeken bekijken"
+
+#: auth.login.redirecting
+msgid "auth.login.redirecting"
+msgstr "Omleiden..."
+
+#: org.title
+msgid "org.title"
+msgstr "Organisatie"
+
+#: org.members.add
+msgid "org.members.add"
+msgstr "Lid Toevoegen"
+
+#: org.members.addTitle
+msgid "org.members.addTitle"
+msgstr "Lid Toevoegen"
+
+#: org.members.email
+msgid "org.members.email"
+msgstr "E-mailadres"
+
+#: org.members.empty
+msgid "org.members.empty"
+msgstr "Nog geen leden"
+
+#: org.members.invite
+msgid "org.members.invite"
+msgstr "Uitnodiging Versturen"
+
+#: org.members.remove
+msgid "org.members.remove"
+msgstr "Verwijderen"
+
+#: org.members.removeConfirm
+msgid "org.members.removeConfirm"
+msgstr "Weet u zeker dat u dit lid wilt verwijderen?"
+
+#: org.roles.admin
+msgid "org.roles.admin"
+msgstr "Beheerder"
+
+#: org.roles.member
+msgid "org.roles.member"
+msgstr "Lid"
+
+#: org.teams.create
+msgid "org.teams.create"
+msgstr "Team Maken"
+
+#: org.teams.createTitle
+msgid "org.teams.createTitle"
+msgstr "Nieuw Team Maken"
+
+#: org.teams.empty
+msgid "org.teams.empty"
+msgstr "Nog geen teams"
+
+#: org.teams.memberCount
+msgid "org.teams.memberCount"
+msgstr "leden"
+
+#: org.teams.name
+msgid "org.teams.name"
+msgstr "Teamnaam"
+
+#: org.teams.slug
+msgid "org.teams.slug"
+msgstr "URL-slug"
+
+#: org.apiKeys.create
+msgid "org.apiKeys.create"
+msgstr "API-sleutel Maken"
+
+#: org.apiKeys.createTitle
+msgid "org.apiKeys.createTitle"
+msgstr "Nieuwe API-sleutel Maken"
+
+#: org.apiKeys.created
+msgid "org.apiKeys.created"
+msgstr "API-sleutel Gemaakt"
+
+#: org.apiKeys.copyWarning
+msgid "org.apiKeys.copyWarning"
+msgstr "Kopieer deze sleutel nu. U kunt hem niet opnieuw zien."
+
+#: org.apiKeys.empty
+msgid "org.apiKeys.empty"
+msgstr "Nog geen API-sleutels"
+
+#: org.apiKeys.lastUsed
+msgid "org.apiKeys.lastUsed"
+msgstr "Laatst Gebruikt"
+
+#: org.apiKeys.name
+msgid "org.apiKeys.name"
+msgstr "Sleutelnaam"
+
+#: org.apiKeys.revoke
+msgid "org.apiKeys.revoke"
+msgstr "Intrekken"
+
+#: org.apiKeys.revokeConfirm
+msgid "org.apiKeys.revokeConfirm"
+msgstr "Weet u zeker dat u deze API-sleutel wilt intrekken?"
+
+#: org.apiKeys.scopes
+msgid "org.apiKeys.scopes"
+msgstr "Scopes"
+
+#: org.settings.name
+msgid "org.settings.name"
+msgstr "Organisatienaam"
+
+#: org.settings.visibility
+msgid "org.settings.visibility"
+msgstr "Zichtbaarheid"
+
+#: org.settings.joinPolicy
+msgid "org.settings.joinPolicy"
+msgstr "Toelatingsbeleid"
+
+#: org.settings.saved
+msgid "org.settings.saved"
+msgstr "Instellingen opgeslagen"
+
+#: org.settings.dangerZone
+msgid "org.settings.dangerZone"
+msgstr "Gevarenzone"
+
+#: org.settings.deleteWarning
+msgid "org.settings.deleteWarning"
+msgstr "Zodra u een organisatie verwijdert, is er geen weg terug."
+
+#: org.settings.delete
+msgid "org.settings.delete"
+msgstr "Organisatie Verwijderen"
+
+#: org.settings.deleteConfirm
+msgid "org.settings.deleteConfirm"
+msgstr "Weet u zeker dat u deze organisatie wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
+
+#: org.visibility.public
+msgid "org.visibility.public"
+msgstr "Openbaar"
+
+#: org.visibility.private
+msgid "org.visibility.private"
+msgstr "Privé"
+
+#: org.joinPolicy.open
+msgid "org.joinPolicy.open"
+msgstr "Open"
+
+#: org.joinPolicy.request
+msgid "org.joinPolicy.request"
+msgstr "Aanvraag om Toe te Treden"
+
+#: org.joinPolicy.inviteOnly
+msgid "org.joinPolicy.inviteOnly"
+msgstr "Alleen op Uitnodiging"
