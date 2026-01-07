@@ -7,6 +7,7 @@ mod admin;
 mod auth;
 mod authz_git_tests;
 mod orgs;
+mod repos;
 mod threads;
 mod users;
 mod weaver;
