@@ -390,38 +390,91 @@ pub async fn get_raw(
 
 	let git_repo = gix::open(&repo_path).map_err(|e| {
 		tracing::error!(error = %e, "Failed to open git repository");
-		ServerError::Internal("Failed to open repository".to_string())
+		ServerError::Internal(
+			loom_common_i18n::t(locale, "server.api.scm.browser.failed_to_open_repo").to_string(),
+		)
 	})?;
 
 	let (git_ref, file_path) = parse_ref_and_path(&ref_and_path, &git_repo)?;
 
 	if file_path.is_empty() {
-		return Err(ServerError::BadRequest("File path is required".to_string()));
+		return Err(ServerError::BadRequest(
+			loom_common_i18n::t(locale, "server.api.scm.browser.file_path_required").to_string(),
+		));
 	}
 
 	let commit = git_repo
 		.rev_parse_single(git_ref.as_bytes())
-		.map_err(|e| ServerError::NotFound(format!("Ref not found: {}", e)))?
+		.map_err(|_| {
+			ServerError::NotFound(
+				loom_common_i18n::t_fmt(
+					locale,
+					"server.api.scm.browser.ref_not_found",
+					&[("ref", &git_ref)],
+				)
+				.to_string(),
+			)
+		})?
 		.object()
-		.map_err(|e| ServerError::Internal(format!("Failed to get object: {}", e)))?
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get object");
+			ServerError::Internal(
+				loom_common_i18n::t(locale, "server.api.scm.browser.failed_to_get_object")
+					.to_string(),
+			)
+		})?
 		.peel_to_commit()
-		.map_err(|e| ServerError::Internal(format!("Failed to peel to commit: {}", e)))?;
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get commit");
+			ServerError::Internal(
+				loom_common_i18n::t(locale, "server.api.scm.browser.failed_to_get_commit")
+					.to_string(),
+			)
+		})?;
 
-	let tree = commit
-		.tree()
-		.map_err(|e| ServerError::Internal(format!("Failed to get tree: {}", e)))?;
+	let tree = commit.tree().map_err(|e| {
+		tracing::error!(error = %e, "Failed to get tree");
+		ServerError::Internal(
+			loom_common_i18n::t(locale, "server.api.scm.browser.failed_to_get_tree").to_string(),
+		)
+	})?;
 
 	let entry = tree
 		.lookup_entry_by_path(file_path.as_str())
-		.map_err(|e| ServerError::Internal(format!("Failed to lookup path: {}", e)))?
-		.ok_or_else(|| ServerError::NotFound(format!("Path not found: {}", file_path)))?;
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to lookup path");
+			ServerError::Internal(
+				loom_common_i18n::t(locale, "server.api.scm.browser.failed_to_lookup_path")
+					.to_string(),
+			)
+		})?
+		.ok_or_else(|| {
+			ServerError::NotFound(
+				loom_common_i18n::t_fmt(
+					locale,
+					"server.api.scm.browser.path_not_found",
+					&[("path", &file_path)],
+				)
+				.to_string(),
+			)
+		})?;
 
-	let object = entry
-		.object()
-		.map_err(|e| ServerError::Internal(format!("Failed to get object: {}", e)))?;
+	let object = entry.object().map_err(|e| {
+		tracing::error!(error = %e, "Failed to get object");
+		ServerError::Internal(
+			loom_common_i18n::t(locale, "server.api.scm.browser.failed_to_get_object").to_string(),
+		)
+	})?;
 
 	if object.kind != gix::object::Kind::Blob {
-		return Err(ServerError::NotFound(format!("Not a file: {}", file_path)));
+		return Err(ServerError::NotFound(
+			loom_common_i18n::t_fmt(
+				locale,
+				"server.api.scm.browser.not_a_file",
+				&[("path", &file_path)],
+			)
+			.to_string(),
+		));
 	}
 
 	let content_type = get_content_type_for_path(&file_path);
