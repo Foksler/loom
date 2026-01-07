@@ -26,7 +26,7 @@
 	let autoScroll = $state(true);
 
 	// Filtered logs based on client-side filters
-	const filteredLogs = $derived(() => {
+	const filteredLogs = $derived.by(() => {
 		return allLogs.filter((log) => {
 			// Level filter
 			if (log.level === 'trace' && !showTrace) return false;
@@ -302,7 +302,7 @@
 
 		<!-- Result count -->
 		<div class="mt-2 text-xs text-fg-muted">
-			{i18n._('admin.logs.showing_count', { shown: filteredLogs().length, total: allLogs.length })}
+			{i18n._('admin.logs.showing_count', { shown: filteredLogs.length, total: allLogs.length })}
 		</div>
 	</Card>
 
@@ -315,7 +315,7 @@
 		>
 			{#if loading && allLogs.length === 0}
 				<div class="text-gray-400 text-center py-8">{i18n._('general.loading')}</div>
-			{:else if filteredLogs().length === 0}
+			{:else if filteredLogs.length === 0}
 				<div class="text-gray-400 text-center py-8">
 					{#if allLogs.length === 0}
 						{i18n._('admin.logs.no_logs')}
@@ -326,7 +326,7 @@
 			{:else}
 				<table class="w-full">
 					<tbody>
-						{#each filteredLogs() as log (log.id)}
+						{#each filteredLogs as log (log.id)}
 							<tr class="hover:bg-gray-800/50 border-b border-gray-800/50">
 								<td class="px-2 py-1 text-gray-500 whitespace-nowrap align-top w-24">
 									{formatTimestamp(log.timestamp)}

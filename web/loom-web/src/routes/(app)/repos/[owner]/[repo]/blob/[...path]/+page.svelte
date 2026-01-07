@@ -26,7 +26,7 @@
 		goto(`/repos/${data.repo.owner_id}/${data.repo.name}/blob/${ref}/${data.currentPath}`);
 	}
 
-	const breadcrumbs = $derived(() => {
+	const breadcrumbs = $derived.by(() => {
 		const parts = data.currentPath.split('/');
 		return parts.slice(0, -1).map((part, i) => ({
 			name: part,
@@ -54,7 +54,7 @@
 				<a href="{basePath}/tree/{data.currentRef}" class="text-accent hover:underline font-medium">
 					{data.repo.name}
 				</a>
-				{#each breadcrumbs() as crumb}
+				{#each breadcrumbs as crumb}
 					<span class="text-fg-muted">/</span>
 					<a href="{basePath}/tree/{data.currentRef}/{crumb.path}" class="text-accent hover:underline">
 						{crumb.name}

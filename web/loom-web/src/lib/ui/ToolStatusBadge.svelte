@@ -23,7 +23,7 @@
 		failed: { displayState: 'failed', label: i18n.t('state.brokenThread') },
 	};
 
-	const config = $derived(() => {
+	const config = $derived.by(() => {
 		if (status.status === 'completed' && status.error) {
 			return statusMapping.failed;
 		}
@@ -32,11 +32,11 @@
 </script>
 
 <span
-	class="badge badge-{config().displayState} badge-{size}"
+	class="badge badge-{config.displayState} badge-{size}"
 	style="--weaver-color: {weaverColor}"
 >
 	<span class="badge-dot"></span>
-	{config().label}
+	{config.label}
 </span>
 
 <style>

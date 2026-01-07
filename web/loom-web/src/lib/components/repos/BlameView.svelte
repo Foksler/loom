@@ -27,7 +27,7 @@
 		startLine: number;
 	}
 
-	const blameBlocks = $derived(() => {
+	const blameBlocks = $derived.by(() => {
 		const blocks: BlameBlock[] = [];
 		let currentBlock: BlameBlock | null = null;
 
@@ -84,7 +84,7 @@
 	<div class="blame-content">
 		<table class="blame-table">
 			<tbody>
-				{#each blameBlocks() as block, blockIndex}
+				{#each blameBlocks as block, blockIndex}
 					{#each block.lines as line, lineIndex}
 						<tr class="blame-row" style="--block-color: {getBlockColor(blockIndex)}">
 							{#if lineIndex === 0}

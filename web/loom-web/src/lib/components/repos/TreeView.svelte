@@ -54,7 +54,7 @@
 		return `${basePath}/blob/${currentRef}/${pathPrefix}${entry.name}`;
 	}
 
-	const breadcrumbs = $derived(() => {
+	const breadcrumbs = $derived.by(() => {
 		if (!currentPath) return [];
 		const parts = currentPath.split('/');
 		return parts.map((part, i) => ({
@@ -69,9 +69,9 @@
 		<a href="{basePath}/tree/{currentRef}" class="breadcrumb-link">
 			{repo}
 		</a>
-		{#each breadcrumbs() as crumb, i}
+		{#each breadcrumbs as crumb, i}
 			<span class="breadcrumb-separator">/</span>
-			{#if i === breadcrumbs().length - 1}
+			{#if i === breadcrumbs.length - 1}
 				<span class="breadcrumb-current">{crumb.name}</span>
 			{:else}
 				<a href="{basePath}/tree/{currentRef}/{crumb.path}" class="breadcrumb-link">
