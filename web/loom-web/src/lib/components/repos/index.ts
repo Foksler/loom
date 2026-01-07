@@ -14,3 +14,4 @@ export { default as BlameView } from './BlameView.svelte';
 export { default as CompareView } from './CompareView.svelte';
 export { default as OpenInWeaverButton } from './OpenInWeaverButton.svelte';
 export { default as CreateRepoModal } from './CreateRepoModal.svelte';
+export { default as MarkdownContent } from './MarkdownContent.svelte';
