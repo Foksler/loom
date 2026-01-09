@@ -19,7 +19,7 @@ pub use error::{K8sError, K8sResult};
 pub use kube_client::KubeClient;
 pub use token_review::{MockTokenReviewer, TokenReviewResult};
 pub use types::{
-	AttachedProcess, Container, ContainerPort, EnvVar, HostPathVolumeSource, LocalObjectReference,
-	LogOptions, LogStream, Namespace, Pod, PodSpec, PodStatus, ResourceRequirements,
-	SecurityContext, Volume, VolumeMount,
+	AttachedProcess, Container, ContainerPort, EmptyDirVolumeSource, EnvVar, HostPathVolumeSource,
+	LocalObjectReference, LogOptions, LogStream, Namespace, Pod, PodSpec, PodStatus,
+	ResourceRequirements, SecurityContext, Volume, VolumeMount,
 };

@@ -12,8 +12,8 @@ use k8s_openapi::api::core::v1::Capabilities;
 use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
 use loom_server_k8s::{
-	AttachedProcess, Container, ContainerPort, EnvVar, HostPathVolumeSource, K8sClient,
-	LocalObjectReference, LogOptions, LogStream, Pod, PodSpec, ResourceRequirements,
+	AttachedProcess, Container, ContainerPort, EmptyDirVolumeSource, EnvVar, HostPathVolumeSource,
+	K8sClient, LocalObjectReference, LogOptions, LogStream, Pod, PodSpec, ResourceRequirements,
 	SecurityContext, Volume, VolumeMount,
 };
 
@@ -42,9 +42,11 @@ const DEFAULT_MEMORY_LIMIT: &str = "16Gi";
 const VOLUME_TRACEFS: &str = "tracefs";
 const VOLUME_DEBUGFS: &str = "debugfs";
 const VOLUME_BPF: &str = "bpf";
+const VOLUME_TMP: &str = "tmp";
 const PATH_TRACEFS: &str = "/sys/kernel/tracing";
 const PATH_DEBUGFS: &str = "/sys/kernel/debug";
 const PATH_BPF: &str = "/sys/fs/bpf";
+const PATH_TMP: &str = "/tmp";
 const POLL_INTERVAL_MS: u64 = 500;
 const MAX_LABEL_LENGTH: usize = 63;
 const DEFAULT_REGISTRY: &str = "docker.io";
@@ -725,6 +727,12 @@ fn build_pod_spec(
 				read_only: Some(false), // BPF maps need write access
 				..Default::default()
 			},
+			VolumeMount {
+				name: VOLUME_TMP.to_string(),
+				mount_path: PATH_TMP.to_string(),
+				read_only: Some(false), // Event buffer writes to /tmp
+				..Default::default()
+			},
 		];
 
 		let sidecar_container = Container {
@@ -769,6 +777,12 @@ fn build_pod_spec(
 					path: PATH_BPF.to_string(),
 					type_: Some("DirectoryOrCreate".to_string()),
 				}),
+				..Default::default()
+			},
+			// Writable /tmp for audit event buffer (container has readOnlyRootFilesystem)
+			Volume {
+				name: VOLUME_TMP.to_string(),
+				empty_dir: Some(EmptyDirVolumeSource::default()),
 				..Default::default()
 			},
 		])
