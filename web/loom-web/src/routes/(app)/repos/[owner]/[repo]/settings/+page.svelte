@@ -3,7 +3,8 @@
   SPDX-License-Identifier: Proprietary
 -->
 <script lang="ts">
-	import type { Repository } from '$lib/api/repos';
+	import { goto } from '$app/navigation';
+	import { getReposClient, type Repository } from '$lib/api/repos';
 	import { Card, Button, Input, Badge } from '$lib/ui';
 	import { i18n } from '$lib/i18n';
 
@@ -27,6 +28,33 @@
 	let saving = $state(false);
 	let deleting = $state(false);
 	let showDeleteConfirm = $state(false);
+	let deleteConfirmInput = $state('');
+	let deleteError = $state('');
+
+	const expectedDeleteConfirm = $derived(`${data.repo.owner_id}/${data.repo.name}`);
+	const canDelete = $derived(deleteConfirmInput === expectedDeleteConfirm);
+
+	async function handleDelete() {
+		if (!canDelete) return;
+
+		deleting = true;
+		deleteError = '';
+
+		try {
+			const client = getReposClient();
+			await client.deleteRepo(data.repo.id);
+			await goto('/repos');
+		} catch (err) {
+			deleteError = err instanceof Error ? err.message : i18n._('client.repos.settings.delete_error');
+			deleting = false;
+		}
+	}
+
+	function closeDeleteModal() {
+		showDeleteConfirm = false;
+		deleteConfirmInput = '';
+		deleteError = '';
+	}
 </script>
 
 <svelte:head>
@@ -132,15 +160,31 @@
 		{#if showDeleteConfirm}
 			<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 				<div class="bg-bg border border-border rounded-lg p-6 max-w-md w-full mx-4">
-					<h3 class="text-lg font-medium text-fg mb-4">{i18n._('client.repos.settings.delete_confirm')}</h3>
+					<h3 class="text-lg font-medium text-fg mb-2">{i18n._('client.repos.settings.delete_confirm')}</h3>
 					<p class="text-sm text-fg-muted mb-4">
-						This will permanently delete <strong class="text-fg">{data.repo.owner_id}/{data.repo.name}</strong> and all of its contents including commits, branches, and settings.
+						{i18n._('client.repos.settings.delete_confirm_desc')}
 					</p>
+					<div class="mb-4">
+						<label for="delete-confirm-input" class="block text-sm text-fg-muted mb-1.5">
+							{i18n._('client.repos.settings.delete_type_name')} <strong class="text-fg">{expectedDeleteConfirm}</strong>
+						</label>
+						<input
+							id="delete-confirm-input"
+							type="text"
+							bind:value={deleteConfirmInput}
+							class="w-full h-10 px-3 rounded-md border border-border bg-bg text-fg font-mono text-sm"
+							placeholder={expectedDeleteConfirm}
+							autocomplete="off"
+						/>
+					</div>
+					{#if deleteError}
+						<p class="text-sm text-error mb-4">{deleteError}</p>
+					{/if}
 					<div class="flex justify-end gap-2">
-						<Button variant="secondary" onclick={() => (showDeleteConfirm = false)}>
+						<Button variant="secondary" onclick={closeDeleteModal} disabled={deleting}>
 							{i18n._('client.repos.settings.cancel')}
 						</Button>
-						<Button variant="danger" loading={deleting} disabled={deleting}>
+						<Button variant="danger" loading={deleting} disabled={deleting || !canDelete} onclick={handleDelete}>
 							{i18n._('client.repos.settings.delete_confirm_button')}
 						</Button>
 					</div>

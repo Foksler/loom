@@ -1886,6 +1886,19 @@ msgstr "पुष्टि के लिए रिपॉजिटरी का �
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "मैं समझता हूं, इस रिपॉजिटरी को हटाएं"
 
+
+#: client.repos.settings.delete_confirm_desc
+msgid "client.repos.settings.delete_confirm_desc"
+msgstr ""
+
+#: client.repos.settings.delete_type_name
+msgid "client.repos.settings.delete_type_name"
+msgstr ""
+
+#: client.repos.settings.delete_error
+msgid "client.repos.settings.delete_error"
+msgstr ""
+
 #: thread.noThreadsFound
 msgid "thread.noThreadsFound"
 msgstr "कोई थ्रेड नहीं मिला"

@@ -1886,6 +1886,19 @@ msgstr "Ketik nama repositori untuk mengonfirmasi:"
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "Saya mengerti, hapus repositori ini"
 
+
+#: client.repos.settings.delete_confirm_desc
+msgid "client.repos.settings.delete_confirm_desc"
+msgstr ""
+
+#: client.repos.settings.delete_type_name
+msgid "client.repos.settings.delete_type_name"
+msgstr ""
+
+#: client.repos.settings.delete_error
+msgid "client.repos.settings.delete_error"
+msgstr ""
+
 #: thread.noThreadsFound
 msgid "thread.noThreadsFound"
 msgstr "Tidak ada thread ditemukan"

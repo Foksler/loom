@@ -1886,6 +1886,19 @@ msgstr "確認のためリポジトリ名を入力してください："
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "理解しました、このリポジトリを削除します"
 
+
+#: client.repos.settings.delete_confirm_desc
+msgid "client.repos.settings.delete_confirm_desc"
+msgstr ""
+
+#: client.repos.settings.delete_type_name
+msgid "client.repos.settings.delete_type_name"
+msgstr ""
+
+#: client.repos.settings.delete_error
+msgid "client.repos.settings.delete_error"
+msgstr ""
+
 #: thread.noThreadsFound
 msgid "thread.noThreadsFound"
 msgstr "スレッドが見つかりません"

@@ -1682,6 +1682,19 @@ msgstr "Tapez le nom du dépôt pour confirmer :"
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "Je comprends, supprimer ce dépôt"
 
+
+#: client.repos.settings.delete_confirm_desc
+msgid "client.repos.settings.delete_confirm_desc"
+msgstr ""
+
+#: client.repos.settings.delete_type_name
+msgid "client.repos.settings.delete_type_name"
+msgstr ""
+
+#: client.repos.settings.delete_error
+msgid "client.repos.settings.delete_error"
+msgstr ""
+
 #: admin.anthropic.title
 msgid "admin.anthropic.title"
 msgstr "Comptes Claude Max"

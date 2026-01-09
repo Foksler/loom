@@ -380,6 +380,116 @@ async fn test_repo_list_authorization() {
 }
 
 #[tokio::test]
+async fn test_repo_delete_removes_repo() {
+	let app = TestApp::new().await;
+	let owner = &app.fixtures.org_a.owner;
+	let user_id = owner.user.id.to_string();
+
+	// Create a repo
+	let create_response = app
+		.post(
+			"/api/repos",
+			Some(owner),
+			json!({
+				"owner_type": "user",
+				"owner_id": user_id,
+				"name": "repo-to-permanently-delete",
+				"visibility": "private"
+			}),
+		)
+		.await;
+	assert_eq!(create_response.status(), StatusCode::CREATED);
+
+	let body = axum::body::to_bytes(create_response.into_body(), usize::MAX)
+		.await
+		.unwrap();
+	let created_repo: serde_json::Value = serde_json::from_slice(&body).unwrap();
+	let repo_id = created_repo["id"].as_str().unwrap();
+
+	// Verify repo exists
+	let get_response = app
+		.get(&format!("/api/repos/{repo_id}"), Some(owner))
+		.await;
+	assert_eq!(get_response.status(), StatusCode::OK);
+
+	// Delete the repo
+	let delete_response = app
+		.delete(&format!("/api/repos/{repo_id}"), Some(owner))
+		.await;
+	assert_eq!(delete_response.status(), StatusCode::NO_CONTENT);
+
+	// Verify repo no longer exists (soft deleted)
+	let get_response_after = app
+		.get(&format!("/api/repos/{repo_id}"), Some(owner))
+		.await;
+	assert_eq!(
+		get_response_after.status(),
+		StatusCode::NOT_FOUND,
+		"Deleted repo should return 404"
+	);
+}
+
+#[tokio::test]
+async fn test_repo_delete_org_repo_authorization() {
+	let app = TestApp::new().await;
+	let owner = &app.fixtures.org_a.owner;
+	let member = &app.fixtures.org_a.member;
+	let other_user = &app.fixtures.org_b.owner;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	// Create an org repo
+	let create_response = app
+		.post(
+			"/api/repos",
+			Some(owner),
+			json!({
+				"owner_type": "org",
+				"owner_id": org_id,
+				"name": "org-repo-delete-test",
+				"visibility": "private"
+			}),
+		)
+		.await;
+	assert_eq!(create_response.status(), StatusCode::CREATED);
+
+	let body = axum::body::to_bytes(create_response.into_body(), usize::MAX)
+		.await
+		.unwrap();
+	let created_repo: serde_json::Value = serde_json::from_slice(&body).unwrap();
+	let repo_id = created_repo["id"].as_str().unwrap();
+
+	// Member cannot delete org repo
+	let member_delete = app
+		.delete(&format!("/api/repos/{repo_id}"), Some(member))
+		.await;
+	assert_eq!(
+		member_delete.status(),
+		StatusCode::FORBIDDEN,
+		"Org member should not be able to delete org repo"
+	);
+
+	// Non-member cannot delete org repo
+	let other_delete = app
+		.delete(&format!("/api/repos/{repo_id}"), Some(other_user))
+		.await;
+	assert_eq!(
+		other_delete.status(),
+		StatusCode::FORBIDDEN,
+		"Non-member should not be able to delete org repo"
+	);
+
+	// Owner can delete org repo
+	let owner_delete = app
+		.delete(&format!("/api/repos/{repo_id}"), Some(owner))
+		.await;
+	assert_eq!(
+		owner_delete.status(),
+		StatusCode::NO_CONTENT,
+		"Org owner should be able to delete org repo"
+	);
+}
+
+#[tokio::test]
 async fn test_repo_duplicate_name_conflict() {
 	let app = TestApp::new().await;
 	let owner = &app.fixtures.org_a.owner;

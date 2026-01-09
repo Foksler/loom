@@ -1679,6 +1679,18 @@ msgstr "Type the repository name to confirm:"
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "I understand, delete this repository"
 
+#: client.repos.settings.delete_confirm_desc
+msgid "client.repos.settings.delete_confirm_desc"
+msgstr "This will permanently delete this repository and all of its contents including commits, branches, and settings. This action cannot be undone."
+
+#: client.repos.settings.delete_type_name
+msgid "client.repos.settings.delete_type_name"
+msgstr "Please type"
+
+#: client.repos.settings.delete_error
+msgid "client.repos.settings.delete_error"
+msgstr "Failed to delete repository. Please try again."
+
 #: client.repos.tree.empty
 msgid "client.repos.tree.empty"
 msgstr "This directory is empty"

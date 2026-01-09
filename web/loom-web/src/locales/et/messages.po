@@ -1886,6 +1886,19 @@ msgstr "Kinnitamiseks sisesta hoidla nimi:"
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "Mõistan, kustuta see hoidla"
 
+
+#: client.repos.settings.delete_confirm_desc
+msgid "client.repos.settings.delete_confirm_desc"
+msgstr ""
+
+#: client.repos.settings.delete_type_name
+msgid "client.repos.settings.delete_type_name"
+msgstr ""
+
+#: client.repos.settings.delete_error
+msgid "client.repos.settings.delete_error"
+msgstr ""
+
 #: thread.noThreadsFound
 msgid "thread.noThreadsFound"
 msgstr "Lõime ei leitud"

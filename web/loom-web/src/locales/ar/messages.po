@@ -1682,6 +1682,19 @@ msgstr "اكتب اسم المستودع للتأكيد:"
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "أفهم، احذف هذا المستودع"
 
+
+#: client.repos.settings.delete_confirm_desc
+msgid "client.repos.settings.delete_confirm_desc"
+msgstr ""
+
+#: client.repos.settings.delete_type_name
+msgid "client.repos.settings.delete_type_name"
+msgstr ""
+
+#: client.repos.settings.delete_error
+msgid "client.repos.settings.delete_error"
+msgstr ""
+
 #: admin.anthropic.title
 msgid "admin.anthropic.title"
 msgstr "حسابات Claude Max"

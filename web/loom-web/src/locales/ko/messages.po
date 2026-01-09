@@ -1886,6 +1886,19 @@ msgstr "확인을 위해 저장소 이름을 입력하세요:"
 msgid "client.repos.settings.delete_confirm_button"
 msgstr "이해했습니다, 이 저장소를 삭제합니다"
 
+
+#: client.repos.settings.delete_confirm_desc
+msgid "client.repos.settings.delete_confirm_desc"
+msgstr ""
+
+#: client.repos.settings.delete_type_name
+msgid "client.repos.settings.delete_type_name"
+msgstr ""
+
+#: client.repos.settings.delete_error
+msgid "client.repos.settings.delete_error"
+msgstr ""
+
 #: thread.noThreadsFound
 msgid "thread.noThreadsFound"
 msgstr "스레드를 찾을 수 없습니다"

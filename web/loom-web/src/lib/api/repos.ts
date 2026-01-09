@@ -202,6 +202,12 @@ class ReposApiClient {
 			body: JSON.stringify(request),
 		});
 	}
+
+	async deleteRepo(id: string): Promise<void> {
+		return this.request<void>(`/api/repos/${encodeURIComponent(id)}`, {
+			method: 'DELETE',
+		});
+	}
 }
 
 let defaultClient: ReposApiClient | null = null;
