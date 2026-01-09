@@ -38,9 +38,11 @@ pub enum ClientError {
 
 pub type Result<T> = std::result::Result<T, ClientError>;
 
+/// Request body for SVID token exchange (matches server's TokenRequest)
 #[derive(Debug, Clone, Serialize)]
 struct SvidExchangeRequest {
-	weaver_id: String,
+	pod_name: String,
+	pod_namespace: String,
 }
 
 /// Request body format expected by the server
@@ -62,10 +64,15 @@ struct WeaverAuditEventPayload {
 	details: serde_json::Value,
 }
 
+/// Response from SVID token exchange (matches server's SvidResponse)
 #[derive(Debug, Clone, Deserialize)]
 struct SvidExchangeResponse {
-	svid: String,
+	token: String,
+	#[allow(dead_code)]
+	token_type: String,
 	expires_at: DateTime<Utc>,
+	#[allow(dead_code)]
+	spiffe_id: String,
 }
 
 #[derive(Debug, Clone)]
@@ -86,6 +93,8 @@ pub struct AuditClient {
 	server_url: String,
 	weaver_id: String,
 	org_id: String,
+	pod_name: String,
+	pod_namespace: String,
 	sa_token_path: String,
 	allow_no_auth: bool,
 	cached_svid: Arc<RwLock<Option<CachedSvid>>>,
@@ -103,6 +112,8 @@ impl AuditClient {
 			server_url: config.server_url.clone(),
 			weaver_id: config.weaver_id.clone(),
 			org_id: config.org_id.clone(),
+			pod_name: config.pod_name.clone(),
+			pod_namespace: config.pod_namespace.clone(),
 			sa_token_path: config.sa_token_path.clone(),
 			allow_no_auth: config.allow_no_auth,
 			cached_svid: Arc::new(RwLock::new(None)),
@@ -196,15 +207,16 @@ impl AuditClient {
 		match self.exchange_sa_token_for_svid(&sa_token).await {
 			Ok(svid_response) => {
 				let new_svid = CachedSvid {
-					token: svid_response.svid.clone(),
+					token: svid_response.token.clone(),
 					expires_at: svid_response.expires_at,
 				};
 				*cached = Some(new_svid);
 				tracing::debug!(
 					expires_at = %svid_response.expires_at,
+					spiffe_id = %svid_response.spiffe_id,
 					"Successfully obtained SVID"
 				);
-				Ok(svid_response.svid)
+				Ok(svid_response.token)
 			}
 			Err(e) => {
 				tracing::warn!(
@@ -221,7 +233,8 @@ impl AuditClient {
 		let url = format!("{}/internal/weaver-auth/token", self.server_url);
 
 		let request_body = SvidExchangeRequest {
-			weaver_id: self.weaver_id.clone(),
+			pod_name: self.pod_name.clone(),
+			pod_namespace: self.pod_namespace.clone(),
 		};
 
 		let response = self

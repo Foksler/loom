@@ -21,6 +21,8 @@ pub struct Config {
 	pub weaver_id: String,
 	pub org_id: String,
 	pub owner_user_id: String,
+	pub pod_name: String,
+	pub pod_namespace: String,
 	pub server_url: String,
 	pub batch_interval: Duration,
 	pub buffer_max_bytes: u64,
@@ -38,6 +40,8 @@ impl Config {
 		let weaver_id = require_env("LOOM_WEAVER_ID")?;
 		let org_id = require_env("LOOM_ORG_ID")?;
 		let owner_user_id = require_env("LOOM_OWNER_USER_ID")?;
+		let pod_name = require_env("LOOM_POD_NAME")?;
+		let pod_namespace = require_env("LOOM_POD_NAMESPACE")?;
 		let server_url = require_env("LOOM_SERVER_URL")?;
 
 		let batch_interval_ms: u64 = optional_env_parse("LOOM_AUDIT_BATCH_INTERVAL_MS", 100)?;
@@ -72,6 +76,8 @@ impl Config {
 			weaver_id,
 			org_id,
 			owner_user_id,
+			pod_name,
+			pod_namespace,
 			server_url,
 			batch_interval: Duration::from_millis(batch_interval_ms),
 			buffer_max_bytes,

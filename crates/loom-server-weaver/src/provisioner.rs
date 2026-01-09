@@ -12,9 +12,9 @@ use k8s_openapi::api::core::v1::Capabilities;
 use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
 use loom_server_k8s::{
-	AttachedProcess, Container, ContainerPort, EmptyDirVolumeSource, EnvVar, HostPathVolumeSource,
-	K8sClient, LocalObjectReference, LogOptions, LogStream, Pod, PodSpec, ResourceRequirements,
-	SecurityContext, Volume, VolumeMount,
+	AttachedProcess, Container, ContainerPort, EmptyDirVolumeSource, EnvVar, EnvVarSource,
+	HostPathVolumeSource, K8sClient, LocalObjectReference, LogOptions, LogStream,
+	ObjectFieldSelector, Pod, PodSpec, ResourceRequirements, SecurityContext, Volume, VolumeMount,
 };
 
 use crate::config::WeaverConfig;
@@ -661,6 +661,30 @@ fn build_pod_spec(
 				name: "LOOM_OWNER_USER_ID".to_string(),
 				value: Some(req.owner_user_id.clone().unwrap_or_default()),
 				value_from: None,
+			},
+			// Pod name from Kubernetes downward API for SVID exchange
+			EnvVar {
+				name: "LOOM_POD_NAME".to_string(),
+				value: None,
+				value_from: Some(EnvVarSource {
+					field_ref: Some(ObjectFieldSelector {
+						api_version: Some("v1".to_string()),
+						field_path: "metadata.name".to_string(),
+					}),
+					..Default::default()
+				}),
+			},
+			// Pod namespace from Kubernetes downward API for SVID exchange
+			EnvVar {
+				name: "LOOM_POD_NAMESPACE".to_string(),
+				value: None,
+				value_from: Some(EnvVarSource {
+					field_ref: Some(ObjectFieldSelector {
+						api_version: Some("v1".to_string()),
+						field_path: "metadata.namespace".to_string(),
+					}),
+					..Default::default()
+				}),
 			},
 			EnvVar {
 				name: "LOOM_SERVER_URL".to_string(),
