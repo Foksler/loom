@@ -59,29 +59,35 @@ jobs:
       - name: Login to GHCR
         if: github.ref == 'refs/heads/trunk' || github.event_name == 'release'
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | ./result-skopeo/bin/skopeo login ghcr.io -u ${{ github.actor }} --password-stdin
+          # Use custom authfile location to avoid /run/containers permission issues
+          export REGISTRY_AUTH_FILE="${RUNNER_TEMP}/auth.json"
+          echo "${{ secrets.GITHUB_TOKEN }}" | ./result-skopeo/bin/skopeo login ghcr.io -u ${{ github.actor }} --password-stdin --authfile "${REGISTRY_AUTH_FILE}"
 
       - name: Push audit-sidecar image
         if: github.ref == 'refs/heads/trunk' || github.event_name == 'release'
         run: |
+          export REGISTRY_AUTH_FILE="${RUNNER_TEMP}/auth.json"
           # Get short SHA for tagging
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          
+
           # Push with SHA tag
           ./result-skopeo/bin/skopeo copy \
+            --authfile "${REGISTRY_AUTH_FILE}" \
             docker-archive:result-audit-sidecar-image \
             docker://ghcr.io/${{ github.repository_owner }}/loom-audit-sidecar:${SHORT_SHA}
-          
+
           # Push latest tag on trunk
           if [[ "${{ github.ref }}" == "refs/heads/trunk" ]]; then
             ./result-skopeo/bin/skopeo copy \
+              --authfile "${REGISTRY_AUTH_FILE}" \
               docker-archive:result-audit-sidecar-image \
               docker://ghcr.io/${{ github.repository_owner }}/loom-audit-sidecar:latest
           fi
-          
+
           # Push version tag on release
           if [[ "${{ github.event_name }}" == "release" ]]; then
             ./result-skopeo/bin/skopeo copy \
+              --authfile "${REGISTRY_AUTH_FILE}" \
               docker-archive:result-audit-sidecar-image \
               docker://ghcr.io/${{ github.repository_owner }}/loom-audit-sidecar:${{ github.event.release.tag_name }}
           fi
