@@ -547,7 +547,11 @@ in
       };
 
       audit = {
-        enable = mkEnableOption "eBPF audit sidecar for weavers";
+        enable = mkOption {
+          type = types.bool;
+          default = true;
+          description = "Enable eBPF audit sidecar for weavers. Enabled by default when weaver is enabled.";
+        };
 
         image = mkOption {
           type = types.str;
