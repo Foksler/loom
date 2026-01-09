@@ -275,6 +275,7 @@
       enable = true;
       namespace = "loom-weavers";
       imagePullSecrets = [ "ghcr-secret" ];
+      audit.enable = true;
     };
 
     secrets = {
