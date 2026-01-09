@@ -13,9 +13,13 @@ description = "CLI implementation for loom spool commands"
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
+colored = "2"
+hex = { workspace = true }
+itertools = "0.14"
 loom-common-spool = { path = "../loom-common-spool" }
 thiserror.workspace = true
 tokio.workspace = true
+tracing = { workspace = true }
 
 [dev-dependencies]
 proptest.workspace = true

@@ -5,16 +5,21 @@
 name = "loom-common-spool"
 version.workspace = true
 authors.workspace = true
-edition = "2024"
+edition.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Core library for Loom's version control system (tapestry)"
 
 [dependencies]
 chrono = { workspace = true }
-gix = "0.72"
+dirs = { workspace = true }
+hex = { workspace = true }
+hostname = "0.4"
+jj-lib = "0.28"
 serde = { workspace = true }
 thiserror = { workspace = true }
+toml = { workspace = true }
+tracing = { workspace = true }
 
 [dev-dependencies]
 proptest = { workspace = true }

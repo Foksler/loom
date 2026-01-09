@@ -12,7 +12,7 @@ description = "Shared build and version information for Loom"
 
 [dependencies]
 serde = { workspace = true, optional = true }
-shadow-rs = "0.36"
+shadow-rs = { version = "0.36", default-features = false }
 utoipa = { workspace = true, optional = true }
 
 [features]
@@ -21,4 +21,4 @@ serde = ["dep:serde"]
 utoipa = ["dep:utoipa"]
 
 [build-dependencies]
-shadow-rs = "0.36"
+shadow-rs = { version = "0.36", default-features = false }
