@@ -148,10 +148,9 @@ fn try_sys_enter_connect(ctx: TracePointContext) -> Result<(), i64> {
 	let read_len = if addrlen as usize > 128 { 128 } else { addrlen as usize };
 
 	unsafe {
-		if aya_ebpf::helpers::bpf_probe_read_user(
-			event.addr.as_mut_ptr() as *mut _,
-			read_len as u32,
-			addr_ptr as *const _,
+		if aya_ebpf::helpers::bpf_probe_read_user_buf(
+			addr_ptr as *const u8,
+			&mut event.addr[..read_len],
 		)
 		.is_ok()
 		{
