@@ -383,11 +383,28 @@ cgit-style interface for browsing repositories.
 | Feature | Description |
 |---------|-------------|
 | File browser | Navigate directory tree at any ref |
+| README rendering | GitHub-flavored markdown with emoji support |
 | Commit history | Log view with pagination |
 | Commit detail | Diff viewer for single commit |
 | Blame | Line-by-line annotation |
 | Branch comparison | Diff between two refs |
 | Syntax highlighting | Language-aware code display |
+
+### Markdown Rendering
+
+README files are rendered below the file tree using GitHub-flavored markdown (GFM).
+
+**Features:**
+- Full GFM support via `marked` library
+- GitHub emoji shortcode support (`:smile:` → 😄)
+- Custom GitHub emojis rendered as images (`:octocat:`, `:shipit:`, etc.)
+- Syntax highlighting for code blocks
+- Tables, task lists, and other GFM extensions
+
+**Implementation:**
+- `MarkdownContent` component in `web/loom-web/src/lib/components/repos/`
+- Uses `gemoji` package for Unicode emoji database (~1900 emojis)
+- Custom GitHub emojis fetched from GitHub's CDN
 
 ### Routes
 

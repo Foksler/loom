@@ -3,7 +3,9 @@
   SPDX-License-Identifier: Proprietary
 -->
 <script lang="ts">
-	import { marked } from 'marked';
+	import { Marked } from 'marked';
+	import { markedEmoji } from 'marked-emoji';
+	import { nameToEmoji } from 'gemoji';
 
 	interface Props {
 		content: string;
@@ -11,12 +13,55 @@
 
 	let { content }: Props = $props();
 
+	// GitHub-specific custom emojis (not part of Unicode)
+	// These are rendered as images from GitHub's CDN
+	const githubCustomEmojis: Record<string, string> = {
+		accessibility: 'https://github.githubassets.com/images/icons/emoji/accessibility.png?v8',
+		atom: 'https://github.githubassets.com/images/icons/emoji/atom.png?v8',
+		basecamp: 'https://github.githubassets.com/images/icons/emoji/basecamp.png?v8',
+		basecampy: 'https://github.githubassets.com/images/icons/emoji/basecampy.png?v8',
+		bowtie: 'https://github.githubassets.com/images/icons/emoji/bowtie.png?v8',
+		copilot: 'https://github.githubassets.com/images/icons/emoji/copilot.png?v8',
+		dependabot: 'https://github.githubassets.com/images/icons/emoji/dependabot.png?v8',
+		electron: 'https://github.githubassets.com/images/icons/emoji/electron.png?v8',
+		feelsgood: 'https://github.githubassets.com/images/icons/emoji/feelsgood.png?v8',
+		finnadie: 'https://github.githubassets.com/images/icons/emoji/finnadie.png?v8',
+		fishsticks: 'https://github.githubassets.com/images/icons/emoji/fishsticks.png?v8',
+		goberserk: 'https://github.githubassets.com/images/icons/emoji/goberserk.png?v8',
+		godmode: 'https://github.githubassets.com/images/icons/emoji/godmode.png?v8',
+		hurtrealbad: 'https://github.githubassets.com/images/icons/emoji/hurtrealbad.png?v8',
+		neckbeard: 'https://github.githubassets.com/images/icons/emoji/neckbeard.png?v8',
+		octocat: 'https://github.githubassets.com/images/icons/emoji/octocat.png?v8',
+		rage1: 'https://github.githubassets.com/images/icons/emoji/rage1.png?v8',
+		rage2: 'https://github.githubassets.com/images/icons/emoji/rage2.png?v8',
+		rage3: 'https://github.githubassets.com/images/icons/emoji/rage3.png?v8',
+		rage4: 'https://github.githubassets.com/images/icons/emoji/rage4.png?v8',
+		shipit: 'https://github.githubassets.com/images/icons/emoji/shipit.png?v8',
+		suspect: 'https://github.githubassets.com/images/icons/emoji/suspect.png?v8',
+		trollface: 'https://github.githubassets.com/images/icons/emoji/trollface.png?v8'
+	};
+
+	// Merge gemoji unicode emojis with GitHub custom emojis
+	const allEmojis: Record<string, string> = { ...nameToEmoji, ...githubCustomEmojis };
+
 	const html = $derived.by(() => {
-		marked.setOptions({
+		const markedInstance = new Marked({
 			gfm: true,
 			breaks: true
 		});
-		return marked.parse(content) as string;
+		markedInstance.use(
+			markedEmoji({
+				emojis: allEmojis,
+				renderer: (token) => {
+					// Check if emoji is a URL (custom GitHub emoji) or unicode
+					if (token.emoji.startsWith('https://')) {
+						return `<img src="${token.emoji}" alt=":${token.name}:" class="emoji" />`;
+					}
+					return token.emoji;
+				}
+			})
+		);
+		return markedInstance.parse(content) as string;
 	});
 </script>
 
@@ -177,5 +222,14 @@
 
 	.prose :global(del) {
 		color: var(--color-fg-muted);
+	}
+
+	/* Emoji images (GitHub custom emojis) */
+	.prose :global(.emoji) {
+		height: 1.2em;
+		width: 1.2em;
+		vertical-align: -0.2em;
+		display: inline-block;
+		border-radius: 0;
 	}
 </style>
