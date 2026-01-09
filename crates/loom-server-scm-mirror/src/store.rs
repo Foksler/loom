@@ -108,6 +108,16 @@ impl ExternalMirrorStore for SqliteExternalMirrorStore {
 		self.repo.find_stale_external_mirrors(stale_threshold).await
 	}
 
+	async fn list_needing_sync(
+		&self,
+		sync_threshold: DateTime<Utc>,
+		limit: usize,
+	) -> loom_server_db::Result<Vec<ExternalMirror>> {
+		self.repo
+			.list_external_mirrors_needing_sync(sync_threshold, limit)
+			.await
+	}
+
 	async fn delete(&self, id: Uuid) -> loom_server_db::Result<()> {
 		self.repo.delete_external_mirror(id).await
 	}
@@ -559,5 +569,96 @@ mod external_mirror_tests {
 
 		let result = store.update_last_synced(Uuid::new_v4(), Utc::now()).await;
 		assert!(result.is_err());
+	}
+
+	#[tokio::test]
+	async fn test_list_needing_sync() {
+		let pool = create_test_pool().await;
+		let store = SqliteExternalMirrorStore::new(pool);
+
+		// Create mirror that has never been synced
+		let create1 = CreateExternalMirror {
+			platform: Platform::GitHub,
+			external_owner: "never-synced".to_string(),
+			external_repo: "repo1".to_string(),
+			repo_id: Uuid::new_v4(),
+		};
+		let mirror1 = store.create(&create1).await.unwrap();
+		assert!(mirror1.last_synced_at.is_none());
+
+		// Create mirror and sync it recently
+		let create2 = CreateExternalMirror {
+			platform: Platform::GitHub,
+			external_owner: "recently-synced".to_string(),
+			external_repo: "repo2".to_string(),
+			repo_id: Uuid::new_v4(),
+		};
+		let mirror2 = store.create(&create2).await.unwrap();
+		store
+			.update_last_synced(mirror2.id, Utc::now())
+			.await
+			.unwrap();
+
+		// Query with threshold in the future - should find the never-synced one
+		let threshold = Utc::now() - chrono::Duration::hours(6);
+		let needing_sync = store.list_needing_sync(threshold, 100).await.unwrap();
+
+		// Only the never-synced mirror should be returned
+		assert_eq!(needing_sync.len(), 1);
+		assert_eq!(needing_sync[0].id, mirror1.id);
+	}
+
+	#[tokio::test]
+	async fn test_list_needing_sync_respects_limit() {
+		let pool = create_test_pool().await;
+		let store = SqliteExternalMirrorStore::new(pool);
+
+		// Create 5 mirrors that have never been synced
+		for i in 0..5 {
+			let create = CreateExternalMirror {
+				platform: Platform::GitHub,
+				external_owner: format!("owner{}", i),
+				external_repo: format!("repo{}", i),
+				repo_id: Uuid::new_v4(),
+			};
+			store.create(&create).await.unwrap();
+		}
+
+		// Query with limit of 2
+		let threshold = Utc::now() - chrono::Duration::hours(6);
+		let needing_sync = store.list_needing_sync(threshold, 2).await.unwrap();
+		assert_eq!(needing_sync.len(), 2);
+
+		// Query with limit of 10 (more than available)
+		let needing_sync = store.list_needing_sync(threshold, 10).await.unwrap();
+		assert_eq!(needing_sync.len(), 5);
+	}
+
+	#[tokio::test]
+	async fn test_list_needing_sync_old_sync_included() {
+		let pool = create_test_pool().await;
+		let store = SqliteExternalMirrorStore::new(pool);
+
+		// Create mirror and sync it a long time ago
+		let create = CreateExternalMirror {
+			platform: Platform::GitHub,
+			external_owner: "old-sync".to_string(),
+			external_repo: "repo".to_string(),
+			repo_id: Uuid::new_v4(),
+		};
+		let mirror = store.create(&create).await.unwrap();
+
+		// Manually set last_synced_at to 24 hours ago
+		let old_sync_time = Utc::now() - chrono::Duration::hours(24);
+		store
+			.update_last_synced(mirror.id, old_sync_time)
+			.await
+			.unwrap();
+
+		// Query with 6 hour threshold - should find it
+		let threshold = Utc::now() - chrono::Duration::hours(6);
+		let needing_sync = store.list_needing_sync(threshold, 100).await.unwrap();
+		assert_eq!(needing_sync.len(), 1);
+		assert_eq!(needing_sync[0].id, mirror.id);
 	}
 }

@@ -240,6 +240,13 @@ mod tests {
 
 	#[async_trait]
 	impl ExternalMirrorStore for FakeExternalMirrorStore {
+		async fn create(
+			&self,
+			_mirror: &loom_server_db::CreateExternalMirror,
+		) -> loom_server_db::Result<ExternalMirror> {
+			unimplemented!()
+		}
+
 		async fn get_by_id(&self, id: Uuid) -> loom_server_db::Result<Option<ExternalMirror>> {
 			Ok(
 				self
@@ -264,6 +271,15 @@ mod tests {
 			)
 		}
 
+		async fn get_by_external(
+			&self,
+			_platform: Platform,
+			_owner: &str,
+			_repo: &str,
+		) -> loom_server_db::Result<Option<ExternalMirror>> {
+			unimplemented!()
+		}
+
 		async fn find_stale(&self, stale_threshold: DateTime<Utc>) -> loom_server_db::Result<Vec<ExternalMirror>> {
 			Ok(
 				self
@@ -276,6 +292,28 @@ mod tests {
 							.map(|t| t < stale_threshold)
 							.unwrap_or(true)
 					})
+					.cloned()
+					.collect(),
+			)
+		}
+
+		async fn list_needing_sync(
+			&self,
+			sync_threshold: DateTime<Utc>,
+			limit: usize,
+		) -> loom_server_db::Result<Vec<ExternalMirror>> {
+			Ok(
+				self
+					.mirrors
+					.lock()
+					.unwrap()
+					.iter()
+					.filter(|m| {
+						m.last_synced_at
+							.map(|t| t < sync_threshold)
+							.unwrap_or(true)
+					})
+					.take(limit)
 					.cloned()
 					.collect(),
 			)

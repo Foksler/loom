@@ -3,6 +3,7 @@
 
 mod job_history_cleanup;
 mod mirror_cleanup;
+mod mirror_sync;
 mod oauth_state_cleanup;
 mod repo_maintenance;
 mod session_cleanup;
@@ -12,6 +13,7 @@ mod webhook_retry;
 
 pub use job_history_cleanup::JobHistoryCleanupJob;
 pub use mirror_cleanup::MirrorCleanupJob;
+pub use mirror_sync::MirrorSyncJob;
 pub use oauth_state_cleanup::OAuthStateCleanupJob;
 pub use repo_maintenance::{GlobalMaintenanceJob, RepoMaintenanceJob};
 pub use session_cleanup::SessionCleanupJob;

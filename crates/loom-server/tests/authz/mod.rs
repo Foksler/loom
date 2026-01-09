@@ -6,6 +6,7 @@ pub mod support;
 mod admin;
 mod auth;
 mod authz_git_tests;
+mod authz_scm_team_tests;
 mod orgs;
 mod repos;
 mod threads;

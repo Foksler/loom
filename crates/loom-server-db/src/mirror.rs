@@ -106,6 +106,12 @@ pub trait ExternalMirrorStore: Send + Sync {
 		repo: &str,
 	) -> Result<Option<ExternalMirror>>;
 	async fn find_stale(&self, stale_threshold: DateTime<Utc>) -> Result<Vec<ExternalMirror>>;
+	/// Find mirrors that need syncing (last_synced_at is null or before threshold).
+	async fn list_needing_sync(
+		&self,
+		sync_threshold: DateTime<Utc>,
+		limit: usize,
+	) -> Result<Vec<ExternalMirror>>;
 	async fn delete(&self, id: Uuid) -> Result<()>;
 	async fn update_last_accessed(&self, id: Uuid, at: DateTime<Utc>) -> Result<()>;
 	async fn update_last_synced(&self, id: Uuid, at: DateTime<Utc>) -> Result<()>;
@@ -520,6 +526,41 @@ impl MirrorRepository {
 
 		Ok(())
 	}
+
+	#[tracing::instrument(skip(self))]
+	pub async fn list_external_mirrors_needing_sync(
+		&self,
+		sync_threshold: DateTime<Utc>,
+		limit: usize,
+	) -> Result<Vec<ExternalMirror>> {
+		let threshold_str = sync_threshold.to_rfc3339();
+		let limit_i64 = limit as i64;
+
+		let rows: Vec<(
+			String,
+			String,
+			String,
+			String,
+			String,
+			Option<String>,
+			Option<String>,
+			String,
+		)> = sqlx::query_as(
+			r#"
+			SELECT id, platform, external_owner, external_repo, repo_id, last_synced_at, last_accessed_at, created_at
+			FROM external_mirrors
+			WHERE last_synced_at IS NULL OR last_synced_at < ?
+			ORDER BY last_synced_at ASC NULLS FIRST
+			LIMIT ?
+			"#,
+		)
+		.bind(&threshold_str)
+		.bind(limit_i64)
+		.fetch_all(&self.pool)
+		.await?;
+
+		rows.into_iter().map(row_to_external_mirror).collect()
+	}
 }
 
 #[async_trait]
@@ -581,6 +622,16 @@ impl ExternalMirrorStore for MirrorRepository {
 
 	async fn find_stale(&self, stale_threshold: DateTime<Utc>) -> Result<Vec<ExternalMirror>> {
 		self.find_stale_external_mirrors(stale_threshold).await
+	}
+
+	async fn list_needing_sync(
+		&self,
+		sync_threshold: DateTime<Utc>,
+		limit: usize,
+	) -> Result<Vec<ExternalMirror>> {
+		self
+			.list_external_mirrors_needing_sync(sync_threshold, limit)
+			.await
 	}
 
 	async fn delete(&self, id: Uuid) -> Result<()> {
