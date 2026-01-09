@@ -10,6 +10,9 @@ pub struct JobsConfigLayer {
 	pub alert_enabled: Option<bool>,
 	pub alert_recipients: Option<Vec<String>>,
 	pub history_retention_days: Option<u32>,
+	pub scm_maintenance_enabled: Option<bool>,
+	pub scm_maintenance_interval_secs: Option<u64>,
+	pub scm_maintenance_stagger_ms: Option<u64>,
 }
 
 impl JobsConfigLayer {
@@ -23,6 +26,15 @@ impl JobsConfigLayer {
 		if other.history_retention_days.is_some() {
 			self.history_retention_days = other.history_retention_days;
 		}
+		if other.scm_maintenance_enabled.is_some() {
+			self.scm_maintenance_enabled = other.scm_maintenance_enabled;
+		}
+		if other.scm_maintenance_interval_secs.is_some() {
+			self.scm_maintenance_interval_secs = other.scm_maintenance_interval_secs;
+		}
+		if other.scm_maintenance_stagger_ms.is_some() {
+			self.scm_maintenance_stagger_ms = other.scm_maintenance_stagger_ms;
+		}
 	}
 
 	pub fn finalize(self) -> JobsConfig {
@@ -30,6 +42,9 @@ impl JobsConfigLayer {
 			alert_enabled: self.alert_enabled.unwrap_or(false),
 			alert_recipients: self.alert_recipients.unwrap_or_default(),
 			history_retention_days: self.history_retention_days.unwrap_or(90),
+			scm_maintenance_enabled: self.scm_maintenance_enabled.unwrap_or(true),
+			scm_maintenance_interval_secs: self.scm_maintenance_interval_secs.unwrap_or(86400), // 24 hours
+			scm_maintenance_stagger_ms: self.scm_maintenance_stagger_ms.unwrap_or(100),
 		}
 	}
 }
@@ -39,6 +54,9 @@ pub struct JobsConfig {
 	pub alert_enabled: bool,
 	pub alert_recipients: Vec<String>,
 	pub history_retention_days: u32,
+	pub scm_maintenance_enabled: bool,
+	pub scm_maintenance_interval_secs: u64,
+	pub scm_maintenance_stagger_ms: u64,
 }
 
 impl Default for JobsConfig {
@@ -47,6 +65,9 @@ impl Default for JobsConfig {
 			alert_enabled: false,
 			alert_recipients: Vec::new(),
 			history_retention_days: 90,
+			scm_maintenance_enabled: true,
+			scm_maintenance_interval_secs: 86400, // 24 hours
+			scm_maintenance_stagger_ms: 100,
 		}
 	}
 }

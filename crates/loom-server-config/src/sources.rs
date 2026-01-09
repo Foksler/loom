@@ -360,6 +360,9 @@ fn load_jobs_from_env() -> Result<JobsConfigLayer, ConfigError> {
 		alert_enabled: env_bool("LOOM_SERVER_JOB_ALERT_ENABLED"),
 		alert_recipients,
 		history_retention_days: env_u32("LOOM_SERVER_JOB_HISTORY_RETENTION_DAYS")?,
+		scm_maintenance_enabled: env_bool("LOOM_SERVER_SCM_MAINTENANCE_ENABLED"),
+		scm_maintenance_interval_secs: env_u64("LOOM_SERVER_SCM_MAINTENANCE_INTERVAL_SECS")?,
+		scm_maintenance_stagger_ms: env_u64("LOOM_SERVER_SCM_MAINTENANCE_STAGGER_MS")?,
 	})
 }
 

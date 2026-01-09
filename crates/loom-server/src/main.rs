@@ -158,6 +158,34 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		}
 	}
 
+	// Register SCM git maintenance job if enabled
+	if config.jobs.scm_maintenance_enabled {
+		use loom_server::jobs::GlobalMaintenanceJob;
+		use loom_server_db::scm::ScmRepository;
+		use loom_server_scm::MaintenanceTask;
+		use std::path::PathBuf;
+
+		let scm_repo = ScmRepository::new(pool.clone());
+		let repos_dir = PathBuf::from(&config.paths.data_dir).join("repos");
+
+		tracing::info!(
+			repos_dir = %repos_dir.display(),
+			interval_secs = config.jobs.scm_maintenance_interval_secs,
+			stagger_ms = config.jobs.scm_maintenance_stagger_ms,
+			"Registering SCM git maintenance job"
+		);
+
+		scheduler.register_periodic(
+			Arc::new(GlobalMaintenanceJob::new(
+				scm_repo,
+				repos_dir,
+				MaintenanceTask::All,
+				config.jobs.scm_maintenance_stagger_ms,
+			)),
+			Duration::from_secs(config.jobs.scm_maintenance_interval_secs),
+		);
+	}
+
 	let scheduler = Arc::new(scheduler);
 
 	// Update state with scheduler and repository

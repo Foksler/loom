@@ -615,6 +615,24 @@ in
         default = 900;
         description = "Interval in seconds between OAuth state cleanup runs";
       };
+
+      scmMaintenanceEnabled = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Enable periodic git maintenance (gc, prune, repack, fsck) on SCM repositories";
+      };
+
+      scmMaintenanceIntervalSecs = mkOption {
+        type = types.int;
+        default = 86400;
+        description = "Interval in seconds between SCM git maintenance runs (default: 24 hours)";
+      };
+
+      scmMaintenanceStaggerMs = mkOption {
+        type = types.int;
+        default = 100;
+        description = "Delay in milliseconds between processing each repository during maintenance";
+      };
     };
 
     extraEnvironment = mkOption {
@@ -792,6 +810,10 @@ in
           LOOM_SERVER_JOB_HISTORY_RETENTION_DAYS = toString cfg.jobs.historyRetentionDays;
           LOOM_SERVER_SESSION_CLEANUP_INTERVAL_SECS = toString cfg.jobs.sessionCleanupIntervalSecs;
           LOOM_SERVER_OAUTH_STATE_CLEANUP_INTERVAL_SECS = toString cfg.jobs.oauthStateCleanupIntervalSecs;
+          LOOM_SERVER_SCM_MAINTENANCE_ENABLED = if cfg.jobs.scmMaintenanceEnabled then "true" else "false";
+          LOOM_SERVER_SCM_MAINTENANCE_INTERVAL_SECS = toString cfg.jobs.scmMaintenanceIntervalSecs;
+          LOOM_SERVER_SCM_MAINTENANCE_STAGGER_MS = toString cfg.jobs.scmMaintenanceStaggerMs;
+          LOOM_SERVER_DATA_DIR = "/var/lib/loom";
         }
         (mkIf (cfg.docsIndexPath != null) {
           LOOM_SERVER_DOCS_INDEX = toString cfg.docsIndexPath;

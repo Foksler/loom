@@ -291,6 +291,10 @@
       historyRetentionDays = 30;
       sessionCleanupIntervalSecs = 3600;
       oauthStateCleanupIntervalSecs = 900;
+      # SCM git maintenance (gc, prune, repack, fsck)
+      scmMaintenanceEnabled = true;
+      scmMaintenanceIntervalSecs = 86400;  # 24 hours
+      scmMaintenanceStaggerMs = 100;       # 100ms between repos
     };
 
     geoip = {
