@@ -59,14 +59,15 @@ jobs:
       - name: Login to GHCR
         if: github.ref == 'refs/heads/trunk' || github.event_name == 'release'
         run: |
-          # Use custom authfile location to avoid /run/containers permission issues
-          export REGISTRY_AUTH_FILE="${RUNNER_TEMP}/auth.json"
+          # Use Docker config location that cosign can also read
+          mkdir -p ~/.docker
+          export REGISTRY_AUTH_FILE="${HOME}/.docker/config.json"
           echo "${{ secrets.GITHUB_TOKEN }}" | ./result-skopeo/bin/skopeo login ghcr.io -u ${{ github.actor }} --password-stdin --authfile "${REGISTRY_AUTH_FILE}"
 
       - name: Push audit-sidecar image
         if: github.ref == 'refs/heads/trunk' || github.event_name == 'release'
         run: |
-          export REGISTRY_AUTH_FILE="${RUNNER_TEMP}/auth.json"
+          export REGISTRY_AUTH_FILE="${HOME}/.docker/config.json"
           # Get short SHA for tagging
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
 
@@ -92,6 +93,9 @@ jobs:
               docker://ghcr.io/${{ github.repository_owner }}/loom-audit-sidecar:${{ github.event.release.tag_name }}
           fi
 
+          # Output digest for cosign signing
+          echo "IMAGE_DIGEST=$(./result-skopeo/bin/skopeo inspect --authfile "${REGISTRY_AUTH_FILE}" docker://ghcr.io/${{ github.repository_owner }}/loom-audit-sidecar:${SHORT_SHA} --format '{{.Digest}}')" >> $GITHUB_ENV
+
       - name: Install cosign
         if: github.ref == 'refs/heads/trunk' || github.event_name == 'release'
         run: nix build .#cosign -o result-cosign
@@ -101,20 +105,6 @@ jobs:
         env:
           COSIGN_EXPERIMENTAL: "1"
         run: |
-          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          
-          # Sign with keyless (OIDC)
+          # Sign by digest (more secure than tag)
           ./result-cosign/bin/cosign sign --yes \
-            ghcr.io/${{ github.repository_owner }}/loom-audit-sidecar:${SHORT_SHA}
-          
-          # Sign latest tag on trunk
-          if [[ "${{ github.ref }}" == "refs/heads/trunk" ]]; then
-            ./result-cosign/bin/cosign sign --yes \
-              ghcr.io/${{ github.repository_owner }}/loom-audit-sidecar:latest
-          fi
-          
-          # Sign version tag on release
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            ./result-cosign/bin/cosign sign --yes \
-              ghcr.io/${{ github.repository_owner }}/loom-audit-sidecar:${{ github.event.release.tag_name }}
-          fi
+            ghcr.io/${{ github.repository_owner }}/loom-audit-sidecar@${IMAGE_DIGEST}
