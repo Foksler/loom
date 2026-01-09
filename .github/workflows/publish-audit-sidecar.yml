@@ -53,7 +53,8 @@ jobs:
       - name: Build tools and image
         run: |
           nix build .#skopeo -o result-skopeo
-          nix build .#audit-sidecar-image -o result-audit-sidecar-image
+          # eBPF build requires sandbox=false for build-std to fetch std library sources
+          nix build .#audit-sidecar-image -o result-audit-sidecar-image --option sandbox false
 
       - name: Login to GHCR
         if: github.ref == 'refs/heads/trunk' || github.event_name == 'release'
