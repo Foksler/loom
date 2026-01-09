@@ -43,6 +43,25 @@ struct SvidExchangeRequest {
 	weaver_id: String,
 }
 
+/// Request body format expected by the server
+#[derive(Debug, Clone, Serialize)]
+struct WeaverAuditRequest {
+	weaver_id: String,
+	org_id: String,
+	events: Vec<WeaverAuditEventPayload>,
+}
+
+/// Event payload format expected by the server
+#[derive(Debug, Clone, Serialize)]
+struct WeaverAuditEventPayload {
+	timestamp_ns: u64,
+	pid: u32,
+	tid: u32,
+	comm: String,
+	event_type: String,
+	details: serde_json::Value,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 struct SvidExchangeResponse {
 	svid: String,
@@ -66,6 +85,7 @@ pub struct AuditClient {
 	client: Client,
 	server_url: String,
 	weaver_id: String,
+	org_id: String,
 	sa_token_path: String,
 	allow_no_auth: bool,
 	cached_svid: Arc<RwLock<Option<CachedSvid>>>,
@@ -82,6 +102,7 @@ impl AuditClient {
 			client,
 			server_url: config.server_url.clone(),
 			weaver_id: config.weaver_id.clone(),
+			org_id: config.org_id.clone(),
 			sa_token_path: config.sa_token_path.clone(),
 			allow_no_auth: config.allow_no_auth,
 			cached_svid: Arc::new(RwLock::new(None)),
@@ -93,8 +114,30 @@ impl AuditClient {
 			return Ok(());
 		}
 
+		// Convert events to the payload format expected by the server
+		let event_payloads: Vec<WeaverAuditEventPayload> = events
+			.iter()
+			.map(|e| WeaverAuditEventPayload {
+				timestamp_ns: e.timestamp_ns,
+				pid: e.pid,
+				tid: e.tid,
+				comm: e.comm.clone(),
+				// Serialize event_type using serde to get snake_case format
+				event_type: serde_json::to_value(&e.event_type)
+					.and_then(|v| serde_json::from_value(v))
+					.unwrap_or_else(|_| format!("{:?}", e.event_type).to_lowercase()),
+				details: e.details.clone(),
+			})
+			.collect();
+
+		let request_body = WeaverAuditRequest {
+			weaver_id: self.weaver_id.clone(),
+			org_id: self.org_id.clone(),
+			events: event_payloads,
+		};
+
 		let url = format!("{}/internal/weaver-audit/events", self.server_url);
-		let mut request = self.client.post(&url).json(events);
+		let mut request = self.client.post(&url).json(&request_body);
 
 		match self.get_or_refresh_svid().await {
 			Ok(token) => {
