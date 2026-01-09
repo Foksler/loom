@@ -201,6 +201,7 @@
           # eBPF programs for weaver security monitoring
           loom-weaver-ebpf-pkg = pkgsWithCargo2nix.callPackage ./infra/pkgs/loom-weaver-ebpf.nix {
             fenix = fenixPkgs;
+            inherit (pkgsWithCargo2nix) bpf-linker;
           };
           
           # Audit sidecar image for eBPF-based weaver monitoring

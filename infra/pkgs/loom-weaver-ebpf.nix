@@ -7,6 +7,7 @@
 { lib
 , stdenv
 , fenix
+, bpf-linker
 }:
 
 let
@@ -27,12 +28,16 @@ stdenv.mkDerivation {
 
   inherit src;
 
-  nativeBuildInputs = [ toolchain ];
+  nativeBuildInputs = [ toolchain bpf-linker ];
+
+  # Required for build-std: Nix sandbox doesn't have network,
+  # so we need to allow network access to fetch std dependencies
+  __noChroot = true;
 
   # The crate has its own .cargo/config.toml that sets:
   # - target = "bpfel-unknown-none"
   # - build-std = ["core"]
-  # - linker and rustflags for eBPF
+  # - linker = "bpf-linker"
   buildPhase = ''
     runHook preBuild
 
