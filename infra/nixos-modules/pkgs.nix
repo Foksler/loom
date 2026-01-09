@@ -49,6 +49,7 @@
   };
 
   programs.neovim.defaultEditor = true;
+  programs.neovim.viAlias = true;
   programs.neovim.vimAlias = true;
 
   programs.mosh.enable = true;
