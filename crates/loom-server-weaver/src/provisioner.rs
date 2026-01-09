@@ -626,7 +626,7 @@ fn build_pod_spec(
 		)
 	};
 
-	let mut init_containers = None;
+	let mut containers = vec![container];
 	let mut share_process_namespace = None;
 
 	if config.audit_enabled {
@@ -706,7 +706,9 @@ fn build_pod_spec(
 			..Default::default()
 		};
 
-		init_containers = Some(vec![sidecar_container]);
+		// Add audit sidecar as a regular container (not init container)
+		// so it runs alongside the main weaver container
+		containers.push(sidecar_container);
 		share_process_namespace = Some(true);
 	}
 
@@ -719,8 +721,7 @@ fn build_pod_spec(
 			..Default::default()
 		},
 		spec: Some(PodSpec {
-			containers: vec![container],
-			init_containers,
+			containers,
 			restart_policy: Some("Never".to_string()),
 			image_pull_secrets,
 			share_process_namespace,
