@@ -12,8 +12,9 @@ use k8s_openapi::api::core::v1::Capabilities;
 use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
 use loom_server_k8s::{
-	AttachedProcess, Container, ContainerPort, EnvVar, K8sClient, LocalObjectReference, LogOptions,
-	LogStream, Pod, PodSpec, ResourceRequirements, SecurityContext,
+	AttachedProcess, Container, ContainerPort, EnvVar, HostPathVolumeSource, K8sClient,
+	LocalObjectReference, LogOptions, LogStream, Pod, PodSpec, ResourceRequirements,
+	SecurityContext, Volume, VolumeMount,
 };
 
 use crate::config::WeaverConfig;
@@ -37,6 +38,13 @@ const CONTAINER_NAME: &str = "weaver";
 const SIDECAR_CONTAINER_NAME: &str = "audit-sidecar";
 const SIDECAR_IMAGE_DEFAULT: &str = "ghcr.io/ghuntley/loom-audit-sidecar:latest";
 const DEFAULT_MEMORY_LIMIT: &str = "16Gi";
+// eBPF volume mounts for audit sidecar - required for tracepoint attachment
+const VOLUME_TRACEFS: &str = "tracefs";
+const VOLUME_DEBUGFS: &str = "debugfs";
+const VOLUME_BPF: &str = "bpf";
+const PATH_TRACEFS: &str = "/sys/kernel/tracing";
+const PATH_DEBUGFS: &str = "/sys/kernel/debug";
+const PATH_BPF: &str = "/sys/fs/bpf";
 const POLL_INTERVAL_MS: u64 = 500;
 const MAX_LABEL_LENGTH: usize = 63;
 const DEFAULT_REGISTRY: &str = "docker.io";
@@ -696,12 +704,36 @@ fn build_pod_spec(
 			},
 		];
 
+		// Volume mounts for eBPF tracepoint access
+		// These are mounted read-only for security where possible
+		let sidecar_volume_mounts = vec![
+			VolumeMount {
+				name: VOLUME_TRACEFS.to_string(),
+				mount_path: PATH_TRACEFS.to_string(),
+				read_only: Some(false), // eBPF needs write access to attach tracepoints
+				..Default::default()
+			},
+			VolumeMount {
+				name: VOLUME_DEBUGFS.to_string(),
+				mount_path: PATH_DEBUGFS.to_string(),
+				read_only: Some(false), // Required for older kernels using debugfs tracefs
+				..Default::default()
+			},
+			VolumeMount {
+				name: VOLUME_BPF.to_string(),
+				mount_path: PATH_BPF.to_string(),
+				read_only: Some(false), // BPF maps need write access
+				..Default::default()
+			},
+		];
+
 		let sidecar_container = Container {
 			name: SIDECAR_CONTAINER_NAME.to_string(),
 			image: Some(sidecar_image),
 			env: Some(sidecar_env),
 			ports: Some(sidecar_ports),
 			security_context: Some(sidecar_security_context),
+			volume_mounts: Some(sidecar_volume_mounts),
 			restart_policy: Some("Always".to_string()),
 			..Default::default()
 		};
@@ -711,6 +743,38 @@ fn build_pod_spec(
 		containers.push(sidecar_container);
 		share_process_namespace = Some(true);
 	}
+
+	// Pod volumes - only include eBPF mounts when audit is enabled
+	let volumes = if config.audit_enabled {
+		Some(vec![
+			Volume {
+				name: VOLUME_TRACEFS.to_string(),
+				host_path: Some(HostPathVolumeSource {
+					path: PATH_TRACEFS.to_string(),
+					type_: Some("Directory".to_string()),
+				}),
+				..Default::default()
+			},
+			Volume {
+				name: VOLUME_DEBUGFS.to_string(),
+				host_path: Some(HostPathVolumeSource {
+					path: PATH_DEBUGFS.to_string(),
+					type_: Some("Directory".to_string()),
+				}),
+				..Default::default()
+			},
+			Volume {
+				name: VOLUME_BPF.to_string(),
+				host_path: Some(HostPathVolumeSource {
+					path: PATH_BPF.to_string(),
+					type_: Some("DirectoryOrCreate".to_string()),
+				}),
+				..Default::default()
+			},
+		])
+	} else {
+		None
+	};
 
 	Pod {
 		metadata: ObjectMeta {
@@ -722,6 +786,7 @@ fn build_pod_spec(
 		},
 		spec: Some(PodSpec {
 			containers,
+			volumes,
 			restart_policy: Some("Never".to_string()),
 			image_pull_secrets,
 			share_process_namespace,
