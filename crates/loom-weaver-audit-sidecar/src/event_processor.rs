@@ -11,10 +11,10 @@ use tracing::{debug, trace, warn};
 use crate::metrics::Metrics;
 
 use loom_weaver_ebpf_common::{
-	DnsQueryEvent, DnsResponseEvent, EventHeader, EventType, FileEvent, MemoryExecEvent,
-	NetworkAcceptEvent, NetworkConnectEvent, NetworkListenEvent, NetworkSocketEvent,
-	PrivilegeChangeEvent, ProcessExecEvent, ProcessExitEvent, ProcessForkEvent, SandboxEscapeEvent,
-	MAX_COMM_LEN,
+	DnsQueryEvent, DnsResponseEvent, EventHeader, EventType, FileEvent, FileOpenEvent,
+	MemoryExecEvent, NetworkAcceptEvent, NetworkConnectEvent, NetworkListenEvent,
+	NetworkSocketEvent, PrivilegeChangeEvent, ProcessExecEvent, ProcessExitEvent, ProcessForkEvent,
+	SandboxEscapeEvent, MAX_COMM_LEN,
 };
 
 use crate::config::Config;
@@ -224,17 +224,28 @@ impl EventProcessor {
 	}
 
 	async fn process_file(&self, data: &[u8], event_type: EventType) -> anyhow::Result<()> {
-		let event: FileEvent =
-			read_event(data).ok_or_else(|| anyhow::anyhow!("data too small for FileEvent"))?;
-
-		let path = bytes_to_string(&event.path);
+		// FileOpen uses FileOpenEvent (304 bytes), other file events use FileEvent (320 bytes)
+		let (header, path, flags, mode) = if event_type == EventType::FileOpen {
+			let event: FileOpenEvent = read_event(data)
+				.ok_or_else(|| anyhow::anyhow!("data too small for FileOpenEvent"))?;
+			(
+				event.header,
+				bytes_to_string(&event.filename),
+				event.flags as u32,
+				0u32,
+			)
+		} else {
+			let event: FileEvent =
+				read_event(data).ok_or_else(|| anyhow::anyhow!("data too small for FileEvent"))?;
+			(event.header, bytes_to_string(&event.path), event.flags, event.mode)
+		};
 
 		let is_write = matches!(event_type, EventType::FileWrite | EventType::FileMetadata);
 		if !self.filter.should_capture_file_event(&path, is_write) {
 			return Ok(());
 		}
 
-		let details = FileEventDetails { path, flags: event.flags, mode: event.mode };
+		let details = FileEventDetails { path, flags, mode };
 
 		let audit_type = match event_type {
 			EventType::FileWrite => WeaverAuditEventType::FileWrite,
@@ -245,7 +256,7 @@ impl EventProcessor {
 		};
 
 		let comm = [0u8; MAX_COMM_LEN];
-		self.send_event(&event.header, &comm, audit_type, serde_json::to_value(details)?).await
+		self.send_event(&header, &comm, audit_type, serde_json::to_value(details)?).await
 	}
 
 	async fn process_socket(&self, data: &[u8]) -> anyhow::Result<()> {
