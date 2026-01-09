@@ -214,7 +214,7 @@
     databasePath = "/var/lib/loom-server/loom.db";
     logLevel = "trace";
     baseUrl = "https://loom.ghuntley.com";
-    signupsDisabled = false;
+    signupsDisabled = true;
     
     # CLI binary platforms to build for self-update distribution
     # Only build linux-x86_64 by default for faster builds
