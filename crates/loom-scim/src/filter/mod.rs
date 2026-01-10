@@ -6,4 +6,5 @@ pub mod eval;
 pub mod parser;
 
 pub use ast::{CompareOp, Filter, LogicalOp};
+pub use eval::evaluate_filter;
 pub use parser::FilterParser;

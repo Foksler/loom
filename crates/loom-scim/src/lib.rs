@@ -8,7 +8,7 @@ pub mod schema;
 pub mod types;
 
 pub use error::{ScimError, ScimErrorType};
-pub use filter::{Filter, FilterParser};
+pub use filter::{evaluate_filter, Filter, FilterParser};
 pub use patch::{PatchOp, PatchOperation};
 pub use schema::{Schema, SchemaAttribute};
 pub use types::{
