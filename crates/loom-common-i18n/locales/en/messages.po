@@ -1383,3 +1383,163 @@ msgstr "Cancel"
 #: Admin Users - Confirm delete button
 msgid "admin.users.confirm"
 msgstr "Confirm Delete"
+
+# ============================================================================
+# Feature Flags API responses
+# ============================================================================
+
+#: API: Flags - Flag not found
+msgid "server.api.flags.flag_not_found"
+msgstr "Flag not found"
+
+#: API: Flags - Environment not found
+msgid "server.api.flags.environment_not_found"
+msgstr "Environment not found"
+
+#: API: Flags - Strategy not found
+msgid "server.api.flags.strategy_not_found"
+msgstr "Strategy not found"
+
+#: API: Flags - Kill switch not found
+msgid "server.api.flags.kill_switch_not_found"
+msgstr "Kill switch not found"
+
+#: API: Flags - SDK key not found
+msgid "server.api.flags.sdk_key_not_found"
+msgstr "SDK key not found"
+
+#: API: Flags - Invalid flag key
+msgid "server.api.flags.invalid_flag_key"
+msgstr "Invalid flag key format. Must be lowercase alphanumeric with dots and underscores, 3-100 characters."
+
+#: API: Flags - Invalid SDK key format
+msgid "server.api.flags.invalid_sdk_key_format"
+msgstr "Invalid SDK key format"
+
+#: API: Flags - SDK key revoked
+msgid "server.api.flags.sdk_key_revoked"
+msgstr "SDK key has been revoked"
+
+#: API: Flags - Duplicate flag key
+msgid "server.api.flags.duplicate_flag_key"
+msgstr "A flag with this key already exists"
+
+#: API: Flags - Duplicate environment name
+msgid "server.api.flags.duplicate_environment_name"
+msgstr "An environment with this name already exists"
+
+#: API: Flags - Duplicate kill switch key
+msgid "server.api.flags.duplicate_kill_switch_key"
+msgstr "A kill switch with this key already exists"
+
+#: API: Flags - Prerequisite not found
+msgid "server.api.flags.prerequisite_not_found"
+msgstr "Prerequisite flag not found: {flag_key}"
+
+#: API: Flags - Circular prerequisite
+msgid "server.api.flags.circular_prerequisite"
+msgstr "Circular prerequisite dependency detected: {flag_key}"
+
+#: API: Flags - Variant not found
+msgid "server.api.flags.variant_not_found"
+msgstr "Variant not found: {variant_name}"
+
+#: API: Flags - Default variant missing
+msgid "server.api.flags.default_variant_missing"
+msgstr "Default variant must exist in variants list"
+
+#: API: Flags - Environment has active keys
+msgid "server.api.flags.environment_has_active_keys"
+msgstr "Cannot delete environment with active SDK keys"
+
+#: API: Flags - Strategy in use
+msgid "server.api.flags.strategy_in_use"
+msgstr "Cannot delete strategy that is in use by flags"
+
+#: API: Flags - Activation reason required
+msgid "server.api.flags.activation_reason_required"
+msgstr "Kill switch activation requires a reason"
+
+#: API: Flags - Flag created
+msgid "server.api.flags.flag_created"
+msgstr "Flag created successfully"
+
+#: API: Flags - Flag updated
+msgid "server.api.flags.flag_updated"
+msgstr "Flag updated successfully"
+
+#: API: Flags - Flag archived
+msgid "server.api.flags.flag_archived"
+msgstr "Flag archived successfully"
+
+#: API: Flags - Flag restored
+msgid "server.api.flags.flag_restored"
+msgstr "Flag restored successfully"
+
+#: API: Flags - Flag config updated
+msgid "server.api.flags.flag_config_updated"
+msgstr "Flag configuration updated successfully"
+
+#: API: Flags - Strategy created
+msgid "server.api.flags.strategy_created"
+msgstr "Strategy created successfully"
+
+#: API: Flags - Strategy updated
+msgid "server.api.flags.strategy_updated"
+msgstr "Strategy updated successfully"
+
+#: API: Flags - Strategy deleted
+msgid "server.api.flags.strategy_deleted"
+msgstr "Strategy deleted successfully"
+
+#: API: Flags - Kill switch created
+msgid "server.api.flags.kill_switch_created"
+msgstr "Kill switch created successfully"
+
+#: API: Flags - Kill switch updated
+msgid "server.api.flags.kill_switch_updated"
+msgstr "Kill switch updated successfully"
+
+#: API: Flags - Kill switch activated
+msgid "server.api.flags.kill_switch_activated"
+msgstr "Kill switch activated"
+
+#: API: Flags - Kill switch deactivated
+msgid "server.api.flags.kill_switch_deactivated"
+msgstr "Kill switch deactivated"
+
+#: API: Flags - Kill switch deleted
+msgid "server.api.flags.kill_switch_deleted"
+msgstr "Kill switch deleted successfully"
+
+#: API: Flags - Environment created
+msgid "server.api.flags.environment_created"
+msgstr "Environment created successfully"
+
+#: API: Flags - Environment updated
+msgid "server.api.flags.environment_updated"
+msgstr "Environment updated successfully"
+
+#: API: Flags - Environment deleted
+msgid "server.api.flags.environment_deleted"
+msgstr "Environment deleted successfully"
+
+#: API: Flags - SDK key created
+msgid "server.api.flags.sdk_key_created"
+msgstr "SDK key created successfully"
+
+#: API: Flags - SDK key revoked success
+msgid "server.api.flags.sdk_key_revoked_success"
+msgstr "SDK key revoked successfully"
+
+#: API: Flags - Invalid environment name
+msgid "server.api.flags.invalid_environment_name"
+msgstr "Invalid environment name. Must be lowercase alphanumeric with underscores, 2-50 characters."
+
+#: API: Flags - Invalid environment color
+msgid "server.api.flags.invalid_environment_color"
+msgstr "Invalid environment color. Must be a hex color code (e.g., #10b981)."
+
+#: API: Flags - Invalid kill switch key
+msgid "server.api.flags.invalid_kill_switch_key"
+msgstr "Invalid kill switch key format. Must be lowercase alphanumeric with underscores, 3-100 characters."

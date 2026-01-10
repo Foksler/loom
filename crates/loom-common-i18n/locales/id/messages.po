@@ -1392,3 +1392,163 @@ msgstr "Not a file: {path}"
 msgid "server.api.scm.browser.not_a_directory"
 msgstr "Not a directory: {path}"
 
+
+# ============================================================================
+# Feature Flags API responses
+# ============================================================================
+
+#: API: Flags - Flag not found
+msgid "server.api.flags.flag_not_found"
+msgstr "Bendera fitur tidak ditemukan"
+
+#: API: Flags - Flag created
+msgid "server.api.flags.flag_created"
+msgstr "Bendera fitur dibuat"
+
+#: API: Flags - Flag updated
+msgid "server.api.flags.flag_updated"
+msgstr "Bendera fitur diperbarui"
+
+#: API: Flags - Flag archived
+msgid "server.api.flags.flag_archived"
+msgstr "Bendera fitur diarsipkan"
+
+#: API: Flags - Flag restored
+msgid "server.api.flags.flag_restored"
+msgstr "Bendera fitur dipulihkan"
+
+#: API: Flags - Invalid flag key
+msgid "server.api.flags.invalid_flag_key"
+msgstr "Kunci bendera tidak valid"
+
+#: API: Flags - Duplicate flag key
+msgid "server.api.flags.duplicate_flag_key"
+msgstr "Kunci bendera sudah ada"
+
+#: API: Flags - Variant not found
+msgid "server.api.flags.variant_not_found"
+msgstr "Varian tidak ditemukan"
+
+#: API: Flags - Default variant missing
+msgid "server.api.flags.default_variant_missing"
+msgstr "Varian default tidak ada dalam daftar varian"
+
+#: API: Flags - Circular prerequisite
+msgid "server.api.flags.circular_prerequisite"
+msgstr "Ketergantungan prasyarat melingkar terdeteksi"
+
+#: API: Flags - Prerequisite not found
+msgid "server.api.flags.prerequisite_not_found"
+msgstr "Bendera prasyarat tidak ditemukan"
+
+#: API: Flags - Strategy not found
+msgid "server.api.flags.strategy_not_found"
+msgstr "Strategi peluncuran tidak ditemukan"
+
+#: API: Flags - Strategy created
+msgid "server.api.flags.strategy_created"
+msgstr "Strategi dibuat"
+
+#: API: Flags - Strategy updated
+msgid "server.api.flags.strategy_updated"
+msgstr "Strategi diperbarui"
+
+#: API: Flags - Strategy deleted
+msgid "server.api.flags.strategy_deleted"
+msgstr "Strategi dihapus"
+
+#: API: Flags - Strategy in use
+msgid "server.api.flags.strategy_in_use"
+msgstr "Strategi saat ini digunakan oleh bendera lain"
+
+#: API: Flags - Environment not found
+msgid "server.api.flags.environment_not_found"
+msgstr "Lingkungan tidak ditemukan"
+
+#: API: Flags - Environment created
+msgid "server.api.flags.environment_created"
+msgstr "Lingkungan dibuat"
+
+#: API: Flags - Environment updated
+msgid "server.api.flags.environment_updated"
+msgstr "Lingkungan diperbarui"
+
+#: API: Flags - Environment deleted
+msgid "server.api.flags.environment_deleted"
+msgstr "Lingkungan dihapus"
+
+#: API: Flags - Environment has active keys
+msgid "server.api.flags.environment_has_active_keys"
+msgstr "Tidak dapat menghapus lingkungan dengan kunci SDK aktif"
+
+#: API: Flags - Invalid environment name
+msgid "server.api.flags.invalid_environment_name"
+msgstr "Nama lingkungan tidak valid"
+
+#: API: Flags - Invalid environment color
+msgid "server.api.flags.invalid_environment_color"
+msgstr "Warna lingkungan tidak valid"
+
+#: API: Flags - Duplicate environment name
+msgid "server.api.flags.duplicate_environment_name"
+msgstr "Nama lingkungan sudah ada"
+
+#: API: Flags - Flag config updated
+msgid "server.api.flags.flag_config_updated"
+msgstr "Konfigurasi lingkungan diperbarui"
+
+#: API: Flags - Kill switch not found
+msgid "server.api.flags.kill_switch_not_found"
+msgstr "Sakelar darurat tidak ditemukan"
+
+#: API: Flags - Kill switch created
+msgid "server.api.flags.kill_switch_created"
+msgstr "Sakelar darurat dibuat"
+
+#: API: Flags - Kill switch updated
+msgid "server.api.flags.kill_switch_updated"
+msgstr "Sakelar darurat diperbarui"
+
+#: API: Flags - Kill switch deleted
+msgid "server.api.flags.kill_switch_deleted"
+msgstr "Sakelar darurat dihapus"
+
+#: API: Flags - Kill switch activated
+msgid "server.api.flags.kill_switch_activated"
+msgstr "Sakelar darurat diaktifkan"
+
+#: API: Flags - Kill switch deactivated
+msgid "server.api.flags.kill_switch_deactivated"
+msgstr "Sakelar darurat dinonaktifkan"
+
+#: API: Flags - Invalid kill switch key
+msgid "server.api.flags.invalid_kill_switch_key"
+msgstr "Kunci sakelar darurat tidak valid"
+
+#: API: Flags - Duplicate kill switch key
+msgid "server.api.flags.duplicate_kill_switch_key"
+msgstr "Kunci sakelar darurat sudah ada"
+
+#: API: Flags - Activation reason required
+msgid "server.api.flags.activation_reason_required"
+msgstr "Alasan aktivasi diperlukan"
+
+#: API: Flags - SDK key not found
+msgid "server.api.flags.sdk_key_not_found"
+msgstr "Kunci SDK tidak ditemukan"
+
+#: API: Flags - SDK key created
+msgid "server.api.flags.sdk_key_created"
+msgstr "Kunci SDK dibuat"
+
+#: API: Flags - SDK key revoked
+msgid "server.api.flags.sdk_key_revoked"
+msgstr "Kunci SDK dicabut"
+
+#: API: Flags - SDK key revoked success
+msgid "server.api.flags.sdk_key_revoked_success"
+msgstr "Kunci SDK berhasil dicabut"
+
+#: API: Flags - Invalid SDK key format
+msgid "server.api.flags.invalid_sdk_key_format"
+msgstr "Format kunci SDK tidak valid"

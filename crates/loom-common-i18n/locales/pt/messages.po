@@ -1388,3 +1388,163 @@ msgstr "Not a file: {path}"
 msgid "server.api.scm.browser.not_a_directory"
 msgstr "Not a directory: {path}"
 
+
+# ============================================================================
+# Feature Flags API responses
+# ============================================================================
+
+#: API: Flags - Flag not found
+msgid "server.api.flags.flag_not_found"
+msgstr "Sinalizador de recurso não encontrado"
+
+#: API: Flags - Flag created
+msgid "server.api.flags.flag_created"
+msgstr "Sinalizador de recurso criado"
+
+#: API: Flags - Flag updated
+msgid "server.api.flags.flag_updated"
+msgstr "Sinalizador de recurso atualizado"
+
+#: API: Flags - Flag archived
+msgid "server.api.flags.flag_archived"
+msgstr "Sinalizador de recurso arquivado"
+
+#: API: Flags - Flag restored
+msgid "server.api.flags.flag_restored"
+msgstr "Sinalizador de recurso restaurado"
+
+#: API: Flags - Invalid flag key
+msgid "server.api.flags.invalid_flag_key"
+msgstr "Chave de sinalizador inválida"
+
+#: API: Flags - Duplicate flag key
+msgid "server.api.flags.duplicate_flag_key"
+msgstr "Chave de sinalizador já existe"
+
+#: API: Flags - Variant not found
+msgid "server.api.flags.variant_not_found"
+msgstr "Variante não encontrada"
+
+#: API: Flags - Default variant missing
+msgid "server.api.flags.default_variant_missing"
+msgstr "A variante padrão não está na lista de variantes"
+
+#: API: Flags - Circular prerequisite
+msgid "server.api.flags.circular_prerequisite"
+msgstr "Dependência de pré-requisito circular detectada"
+
+#: API: Flags - Prerequisite not found
+msgid "server.api.flags.prerequisite_not_found"
+msgstr "Sinalizador de pré-requisito não encontrado"
+
+#: API: Flags - Strategy not found
+msgid "server.api.flags.strategy_not_found"
+msgstr "Estratégia de implantação não encontrada"
+
+#: API: Flags - Strategy created
+msgid "server.api.flags.strategy_created"
+msgstr "Estratégia criada"
+
+#: API: Flags - Strategy updated
+msgid "server.api.flags.strategy_updated"
+msgstr "Estratégia atualizada"
+
+#: API: Flags - Strategy deleted
+msgid "server.api.flags.strategy_deleted"
+msgstr "Estratégia excluída"
+
+#: API: Flags - Strategy in use
+msgid "server.api.flags.strategy_in_use"
+msgstr "A estratégia está sendo usada por outros sinalizadores"
+
+#: API: Flags - Environment not found
+msgid "server.api.flags.environment_not_found"
+msgstr "Ambiente não encontrado"
+
+#: API: Flags - Environment created
+msgid "server.api.flags.environment_created"
+msgstr "Ambiente criado"
+
+#: API: Flags - Environment updated
+msgid "server.api.flags.environment_updated"
+msgstr "Ambiente atualizado"
+
+#: API: Flags - Environment deleted
+msgid "server.api.flags.environment_deleted"
+msgstr "Ambiente excluído"
+
+#: API: Flags - Environment has active keys
+msgid "server.api.flags.environment_has_active_keys"
+msgstr "Não é possível excluir ambiente com chaves SDK ativas"
+
+#: API: Flags - Invalid environment name
+msgid "server.api.flags.invalid_environment_name"
+msgstr "Nome de ambiente inválido"
+
+#: API: Flags - Invalid environment color
+msgid "server.api.flags.invalid_environment_color"
+msgstr "Cor de ambiente inválida"
+
+#: API: Flags - Duplicate environment name
+msgid "server.api.flags.duplicate_environment_name"
+msgstr "Nome de ambiente já existe"
+
+#: API: Flags - Flag config updated
+msgid "server.api.flags.flag_config_updated"
+msgstr "Configuração de ambiente atualizada"
+
+#: API: Flags - Kill switch not found
+msgid "server.api.flags.kill_switch_not_found"
+msgstr "Interruptor de emergência não encontrado"
+
+#: API: Flags - Kill switch created
+msgid "server.api.flags.kill_switch_created"
+msgstr "Interruptor de emergência criado"
+
+#: API: Flags - Kill switch updated
+msgid "server.api.flags.kill_switch_updated"
+msgstr "Interruptor de emergência atualizado"
+
+#: API: Flags - Kill switch deleted
+msgid "server.api.flags.kill_switch_deleted"
+msgstr "Interruptor de emergência excluído"
+
+#: API: Flags - Kill switch activated
+msgid "server.api.flags.kill_switch_activated"
+msgstr "Interruptor de emergência ativado"
+
+#: API: Flags - Kill switch deactivated
+msgid "server.api.flags.kill_switch_deactivated"
+msgstr "Interruptor de emergência desativado"
+
+#: API: Flags - Invalid kill switch key
+msgid "server.api.flags.invalid_kill_switch_key"
+msgstr "Chave de interruptor de emergência inválida"
+
+#: API: Flags - Duplicate kill switch key
+msgid "server.api.flags.duplicate_kill_switch_key"
+msgstr "Chave de interruptor de emergência já existe"
+
+#: API: Flags - Activation reason required
+msgid "server.api.flags.activation_reason_required"
+msgstr "Motivo de ativação é obrigatório"
+
+#: API: Flags - SDK key not found
+msgid "server.api.flags.sdk_key_not_found"
+msgstr "Chave SDK não encontrada"
+
+#: API: Flags - SDK key created
+msgid "server.api.flags.sdk_key_created"
+msgstr "Chave SDK criada"
+
+#: API: Flags - SDK key revoked
+msgid "server.api.flags.sdk_key_revoked"
+msgstr "Chave SDK revogada"
+
+#: API: Flags - SDK key revoked success
+msgid "server.api.flags.sdk_key_revoked_success"
+msgstr "Chave SDK revogada com sucesso"
+
+#: API: Flags - Invalid SDK key format
+msgid "server.api.flags.invalid_sdk_key_format"
+msgstr "Formato de chave SDK inválido"

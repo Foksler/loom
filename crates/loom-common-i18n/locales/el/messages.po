@@ -1392,3 +1392,163 @@ msgstr "Not a file: {path}"
 msgid "server.api.scm.browser.not_a_directory"
 msgstr "Not a directory: {path}"
 
+
+# ============================================================================
+# Feature Flags API responses
+# ============================================================================
+
+#: API: Flags - Flag not found
+msgid "server.api.flags.flag_not_found"
+msgstr "Η σημαία χαρακτηριστικού δεν βρέθηκε"
+
+#: API: Flags - Flag created
+msgid "server.api.flags.flag_created"
+msgstr "Η σημαία χαρακτηριστικού δημιουργήθηκε"
+
+#: API: Flags - Flag updated
+msgid "server.api.flags.flag_updated"
+msgstr "Η σημαία χαρακτηριστικού ενημερώθηκε"
+
+#: API: Flags - Flag archived
+msgid "server.api.flags.flag_archived"
+msgstr "Η σημαία χαρακτηριστικού αρχειοθετήθηκε"
+
+#: API: Flags - Flag restored
+msgid "server.api.flags.flag_restored"
+msgstr "Η σημαία χαρακτηριστικού επαναφέρθηκε"
+
+#: API: Flags - Invalid flag key
+msgid "server.api.flags.invalid_flag_key"
+msgstr "Μη έγκυρο κλειδί σημαίας"
+
+#: API: Flags - Duplicate flag key
+msgid "server.api.flags.duplicate_flag_key"
+msgstr "Το κλειδί σημαίας υπάρχει ήδη"
+
+#: API: Flags - Variant not found
+msgid "server.api.flags.variant_not_found"
+msgstr "Η παραλλαγή δεν βρέθηκε"
+
+#: API: Flags - Default variant missing
+msgid "server.api.flags.default_variant_missing"
+msgstr "Η προεπιλεγμένη παραλλαγή δεν είναι στη λίστα παραλλαγών"
+
+#: API: Flags - Circular prerequisite
+msgid "server.api.flags.circular_prerequisite"
+msgstr "Εντοπίστηκε κυκλική εξάρτηση προαπαιτούμενου"
+
+#: API: Flags - Prerequisite not found
+msgid "server.api.flags.prerequisite_not_found"
+msgstr "Η σημαία προαπαιτούμενου δεν βρέθηκε"
+
+#: API: Flags - Strategy not found
+msgid "server.api.flags.strategy_not_found"
+msgstr "Η στρατηγική διάθεσης δεν βρέθηκε"
+
+#: API: Flags - Strategy created
+msgid "server.api.flags.strategy_created"
+msgstr "Η στρατηγική δημιουργήθηκε"
+
+#: API: Flags - Strategy updated
+msgid "server.api.flags.strategy_updated"
+msgstr "Η στρατηγική ενημερώθηκε"
+
+#: API: Flags - Strategy deleted
+msgid "server.api.flags.strategy_deleted"
+msgstr "Η στρατηγική διαγράφηκε"
+
+#: API: Flags - Strategy in use
+msgid "server.api.flags.strategy_in_use"
+msgstr "Η στρατηγική χρησιμοποιείται αυτή τη στιγμή από άλλες σημαίες"
+
+#: API: Flags - Environment not found
+msgid "server.api.flags.environment_not_found"
+msgstr "Το περιβάλλον δεν βρέθηκε"
+
+#: API: Flags - Environment created
+msgid "server.api.flags.environment_created"
+msgstr "Το περιβάλλον δημιουργήθηκε"
+
+#: API: Flags - Environment updated
+msgid "server.api.flags.environment_updated"
+msgstr "Το περιβάλλον ενημερώθηκε"
+
+#: API: Flags - Environment deleted
+msgid "server.api.flags.environment_deleted"
+msgstr "Το περιβάλλον διαγράφηκε"
+
+#: API: Flags - Environment has active keys
+msgid "server.api.flags.environment_has_active_keys"
+msgstr "Δεν είναι δυνατή η διαγραφή περιβάλλοντος με ενεργά κλειδιά SDK"
+
+#: API: Flags - Invalid environment name
+msgid "server.api.flags.invalid_environment_name"
+msgstr "Μη έγκυρο όνομα περιβάλλοντος"
+
+#: API: Flags - Invalid environment color
+msgid "server.api.flags.invalid_environment_color"
+msgstr "Μη έγκυρο χρώμα περιβάλλοντος"
+
+#: API: Flags - Duplicate environment name
+msgid "server.api.flags.duplicate_environment_name"
+msgstr "Το όνομα περιβάλλοντος υπάρχει ήδη"
+
+#: API: Flags - Flag config updated
+msgid "server.api.flags.flag_config_updated"
+msgstr "Η διαμόρφωση περιβάλλοντος ενημερώθηκε"
+
+#: API: Flags - Kill switch not found
+msgid "server.api.flags.kill_switch_not_found"
+msgstr "Ο διακόπτης διακοπής δεν βρέθηκε"
+
+#: API: Flags - Kill switch created
+msgid "server.api.flags.kill_switch_created"
+msgstr "Ο διακόπτης διακοπής δημιουργήθηκε"
+
+#: API: Flags - Kill switch updated
+msgid "server.api.flags.kill_switch_updated"
+msgstr "Ο διακόπτης διακοπής ενημερώθηκε"
+
+#: API: Flags - Kill switch deleted
+msgid "server.api.flags.kill_switch_deleted"
+msgstr "Ο διακόπτης διακοπής διαγράφηκε"
+
+#: API: Flags - Kill switch activated
+msgid "server.api.flags.kill_switch_activated"
+msgstr "Ο διακόπτης διακοπής ενεργοποιήθηκε"
+
+#: API: Flags - Kill switch deactivated
+msgid "server.api.flags.kill_switch_deactivated"
+msgstr "Ο διακόπτης διακοπής απενεργοποιήθηκε"
+
+#: API: Flags - Invalid kill switch key
+msgid "server.api.flags.invalid_kill_switch_key"
+msgstr "Μη έγκυρο κλειδί διακόπτη διακοπής"
+
+#: API: Flags - Duplicate kill switch key
+msgid "server.api.flags.duplicate_kill_switch_key"
+msgstr "Το κλειδί διακόπτη διακοπής υπάρχει ήδη"
+
+#: API: Flags - Activation reason required
+msgid "server.api.flags.activation_reason_required"
+msgstr "Απαιτείται λόγος ενεργοποίησης"
+
+#: API: Flags - SDK key not found
+msgid "server.api.flags.sdk_key_not_found"
+msgstr "Το κλειδί SDK δεν βρέθηκε"
+
+#: API: Flags - SDK key created
+msgid "server.api.flags.sdk_key_created"
+msgstr "Το κλειδί SDK δημιουργήθηκε"
+
+#: API: Flags - SDK key revoked
+msgid "server.api.flags.sdk_key_revoked"
+msgstr "Το κλειδί SDK ανακλήθηκε"
+
+#: API: Flags - SDK key revoked success
+msgid "server.api.flags.sdk_key_revoked_success"
+msgstr "Το κλειδί SDK ανακλήθηκε επιτυχώς"
+
+#: API: Flags - Invalid SDK key format
+msgid "server.api.flags.invalid_sdk_key_format"
+msgstr "Μη έγκυρη μορφή κλειδιού SDK"

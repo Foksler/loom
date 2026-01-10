@@ -277,3 +277,429 @@ crates/loom-server/migrations/
 3. **Database Repositories** - Connect route handlers to database operations
 4. **GeoIP Integration** - Add MaxMind database for session location tracking
 5. **Rate Limiting** - Add per-IP/per-user rate limits (deferred from v1)
+
+---
+---
+
+# Feature Flags & Experiments Implementation Plan
+
+Implementation checklist for the Feature Flags system. See
+[specs/feature-flags-system.md](./specs/feature-flags-system.md) for full specification.
+
+---
+
+## ✅ Phase 1: Core Types & Database (COMPLETED)
+
+**Goal:** Establish foundational types and database schema.
+
+**Spec References:**
+- Core entities: `specs/feature-flags-system.md:95-232` (Flag, Variant, Strategy, KillSwitch)
+- Evaluation types: `specs/feature-flags-system.md:204-232` (EvaluationContext, EvaluationResult)
+- Database schema: `specs/feature-flags-system.md:477-573`
+
+**Tasks:**
+- [x] Create `crates/loom-flags-core/` crate
+  - [x] `flag.rs` - Flag, Variant, VariantValue, FlagPrerequisite types
+  - [x] `strategy.rs` - Strategy, Condition, AttributeOperator, Schedule types
+  - [x] `kill_switch.rs` - KillSwitch type
+  - [x] `environment.rs` - Environment type
+  - [x] `sdk_key.rs` - SdkKey, SdkKeyType types
+  - [x] `evaluation.rs` - EvaluationContext, EvaluationResult, EvaluationReason
+  - [x] `error.rs` - Error types using thiserror
+- [x] Create `crates/loom-server-flags/` crate structure
+  - [x] `repository.rs` - FlagsRepository trait and SqliteFlagsRepository implementation
+  - [x] `evaluation.rs` - Server-side flag evaluation engine
+  - [x] `sdk_auth.rs` - SDK key hashing and verification
+  - [x] `error.rs` - FlagsServerError types
+- [x] Add database migration `030_feature_flags.sql`
+  - [x] `flag_environments` table
+  - [x] `flags` table with org_id nullable for platform flags
+  - [x] `flag_prerequisites` table
+  - [x] `flag_configs` table (per-environment)
+  - [x] `flag_strategies` table
+  - [x] `kill_switches` table
+  - [x] `sdk_keys` table
+  - [x] `exposure_logs` table
+  - [x] `flag_stats` table
+- [x] Create repository layer in `loom-server-flags/src/repository.rs`
+- [x] Add i18n translations for feature flags (server and web)
+- [x] 50 tests (40 in loom-flags-core, 9 in loom-server-flags, 1 doc test)
+
+---
+
+## Phase 2: Environment & SDK Keys
+
+**Goal:** Environment management and SDK key authentication.
+
+**Spec References:**
+- Environments: `specs/feature-flags-system.md:176-186` (Environment type)
+- Auto-created environments: `specs/feature-flags-system.md:261-269`
+- SDK keys: `specs/feature-flags-system.md:188-202` (SdkKey, SdkKeyType)
+- SDK key format: `specs/feature-flags-system.md:274-289`
+- SDK key endpoints: `specs/feature-flags-system.md:410-413`
+- Environment endpoints: `specs/feature-flags-system.md:404-408`
+
+**Tasks:**
+- [ ] Implement Environment CRUD handlers
+  - [ ] `GET /api/flags/environments`
+  - [ ] `POST /api/flags/environments`
+  - [ ] `PATCH /api/flags/environments/{id}`
+  - [ ] `DELETE /api/flags/environments/{id}`
+- [ ] Auto-create `dev` and `prod` environments on org creation
+  - [ ] Hook into org creation flow
+- [ ] Implement SDK key generation
+  - [ ] Key format: `loom_sdk_{type}_{env}_{random}`
+  - [ ] Argon2 hashing for storage
+- [ ] SDK key authentication middleware
+  - [ ] Extract Bearer token
+  - [ ] Validate against hashed keys
+  - [ ] Set environment context
+- [ ] Implement SDK key CRUD handlers
+  - [ ] `GET /api/flags/sdk-keys`
+  - [ ] `POST /api/flags/sdk-keys`
+  - [ ] `DELETE /api/flags/sdk-keys/{id}`
+
+---
+
+## Phase 3: Flag Management
+
+**Goal:** Complete flag CRUD with per-environment configuration.
+
+**Spec References:**
+- Flag type: `specs/feature-flags-system.md:97-131`
+- FlagConfig type: `specs/feature-flags-system.md:133-143`
+- Flag key format: `specs/feature-flags-system.md:249-258`
+- Flag endpoints: `specs/feature-flags-system.md:370-378`
+
+**Tasks:**
+- [ ] Flag key validation
+  - [ ] Pattern: `^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$`
+  - [ ] Length: 3-100 characters
+- [ ] Implement Flag CRUD handlers
+  - [ ] `GET /api/flags` - list flags for org
+  - [ ] `POST /api/flags` - create flag
+  - [ ] `GET /api/flags/{key}` - get flag by key
+  - [ ] `PATCH /api/flags/{key}` - update flag
+  - [ ] `DELETE /api/flags/{key}` - archive flag
+  - [ ] `POST /api/flags/{key}/restore` - restore archived flag
+- [ ] Implement FlagConfig handlers
+  - [ ] `GET /api/flags/{key}/configs` - get all environment configs
+  - [ ] `PATCH /api/flags/{key}/configs/{env}` - update environment config
+- [ ] Auto-create configs for all environments on flag creation
+- [ ] Prerequisites handling
+  - [ ] Store prerequisite relationships
+  - [ ] Validate prerequisites exist
+
+---
+
+## Phase 4: Strategy System
+
+**Goal:** Rollout strategies with targeting conditions.
+
+**Spec References:**
+- Strategy type: `specs/feature-flags-system.md:145-175` (Strategy, Condition, Schedule)
+- Evaluation engine: `specs/feature-flags-system.md:301-349`
+- Percentage hashing: `specs/feature-flags-system.md:322-328`
+- Schedule evaluation: `specs/feature-flags-system.md:330-338`
+- GeoIP resolution: `specs/feature-flags-system.md:340-349`
+- Strategy endpoints: `specs/feature-flags-system.md:380-386`
+
+**Tasks:**
+- [ ] Implement Strategy CRUD handlers
+  - [ ] `GET /api/flags/strategies`
+  - [ ] `POST /api/flags/strategies`
+  - [ ] `GET /api/flags/strategies/{id}`
+  - [ ] `PATCH /api/flags/strategies/{id}`
+  - [ ] `DELETE /api/flags/strategies/{id}`
+- [ ] Condition evaluation engine
+  - [ ] Attribute conditions (equals, contains, in, etc.)
+  - [ ] Geographic conditions (country, region, city)
+  - [ ] Environment conditions
+- [ ] Percentage hashing with murmur3
+  - [ ] Consistent hashing for sticky assignment
+  - [ ] Configurable key (user_id, org_id, session_id)
+- [ ] Schedule evaluation
+  - [ ] Time-based percentage ramps
+- [ ] GeoIP integration
+  - [ ] Integrate with existing `loom-geoip`
+  - [ ] Proxy header support (CF-Connecting-IP, X-Forwarded-For, X-Real-IP)
+
+---
+
+## Phase 5: Kill Switches
+
+**Goal:** Emergency shutoff mechanism with flag linking.
+
+**Spec References:**
+- KillSwitch type: `specs/feature-flags-system.md:178-193`
+- Kill switch design: `specs/feature-flags-system.md:291-299`
+- Activation/deactivation flow: `specs/feature-flags-system.md:301-318`
+- Kill switch endpoints: `specs/feature-flags-system.md:388-395`
+
+**Tasks:**
+- [ ] Implement Kill switch CRUD handlers
+  - [ ] `GET /api/flags/kill-switches`
+  - [ ] `POST /api/flags/kill-switches`
+  - [ ] `GET /api/flags/kill-switches/{key}`
+  - [ ] `PATCH /api/flags/kill-switches/{key}`
+  - [ ] `DELETE /api/flags/kill-switches/{key}`
+- [ ] Activation endpoint
+  - [ ] `POST /api/flags/kill-switches/{key}/activate`
+  - [ ] Required: `activation_reason` field
+  - [ ] Set `activated_at`, `activated_by`
+- [ ] Deactivation endpoint
+  - [ ] `POST /api/flags/kill-switches/{key}/deactivate`
+  - [ ] Clear activation fields
+- [ ] `killswitch:activate` permission
+  - [ ] Add to ABAC system
+  - [ ] Allow org admins by default
+
+---
+
+## Phase 6: Evaluation Engine
+
+**Goal:** Complete flag evaluation with all precedence rules.
+
+**Spec References:**
+- Evaluation order: `specs/feature-flags-system.md:303-320`
+- Precedence rules: `specs/feature-flags-system.md:241-246`
+- Evaluation endpoints: `specs/feature-flags-system.md:415-418`
+
+**Tasks:**
+- [ ] Implement full evaluation flow in `loom-server-flags/src/evaluation.rs`
+  1. Check flag exists
+  2. Check environment config (enabled/disabled)
+  3. Check kill switches (platform first, then org)
+  4. Check prerequisites
+  5. Evaluate strategy (conditions, percentage, schedule)
+  6. Return variant with reason
+- [ ] Platform vs org precedence
+  - [ ] Platform flags override org flags with same key
+  - [ ] Platform kill switches affect all orgs
+- [ ] Implement evaluation endpoints
+  - [ ] `POST /api/flags/evaluate` - evaluate all flags for context
+  - [ ] `POST /api/flags/evaluate/{key}` - evaluate single flag
+- [ ] Return EvaluationResult with reason
+
+---
+
+## Phase 7: SSE Streaming
+
+**Goal:** Real-time flag updates via Server-Sent Events.
+
+**Spec References:**
+- SSE events: `specs/feature-flags-system.md:420-450`
+- Event format: `specs/feature-flags-system.md:436-445`
+- Reconnection: `specs/feature-flags-system.md:447-450`
+
+**Tasks:**
+- [ ] Implement SSE endpoint
+  - [ ] `GET /api/flags/stream`
+  - [ ] SDK key authentication
+- [ ] Event types
+  - [ ] `init` - full state on connect
+  - [ ] `flag.updated` - flag or config changed
+  - [ ] `flag.archived` - flag archived
+  - [ ] `killswitch.activated` - kill switch activated
+  - [ ] `killswitch.deactivated` - kill switch deactivated
+  - [ ] `heartbeat` - every 30s
+- [ ] Broadcast mechanism
+  - [ ] Per-environment channels
+  - [ ] Notify on flag/kill switch changes
+- [ ] Client connection management
+  - [ ] Track connected clients
+  - [ ] Clean up disconnected clients
+
+---
+
+## Phase 8: Exposure Tracking
+
+**Goal:** Track flag evaluations for experiment analysis.
+
+**Spec References:**
+- Exposure logging: `specs/feature-flags-system.md:351-378`
+- Exposure endpoints: `specs/feature-flags-system.md:420-423`
+
+**Tasks:**
+- [ ] Implement ExposureLog creation
+  - [ ] Log on each evaluation
+  - [ ] Include flag, variant, context, reason
+- [ ] Deduplication logic
+  - [ ] Hash evaluation context
+  - [ ] Only log first per context hash per hour
+- [ ] Per-flag exposure toggle
+  - [ ] Add `exposure_tracking_enabled` to Flag
+- [ ] Implement exposure endpoints
+  - [ ] `GET /api/flags/exposures` - query exposure logs
+  - [ ] `POST /api/flags/exposures/export` - bulk export
+
+---
+
+## Phase 9: Stale Detection & Stats
+
+**Goal:** Track flag usage and identify stale flags.
+
+**Spec References:**
+- Staleness criteria: `specs/feature-flags-system.md:380-385`
+- Flag stats: `specs/feature-flags-system.md:387-394`
+- Stats endpoints: `specs/feature-flags-system.md:420-423`
+
+**Tasks:**
+- [ ] Implement FlagStats tracking
+  - [ ] Update `last_evaluated_at` on evaluation
+  - [ ] Increment evaluation counts
+- [ ] Evaluation count rollups
+  - [ ] Background job for 24h/7d/30d counts
+- [ ] Stale flag detection
+  - [ ] `GET /api/flags/stale`
+  - [ ] Return flags not evaluated in 30 days
+- [ ] Flag stats endpoint
+  - [ ] `GET /api/flags/{key}/stats`
+
+---
+
+## Phase 10: Rust SDK
+
+**Goal:** `loom-flags` crate for Rust clients.
+
+**Spec References:**
+- SDK design: `specs/feature-flags-system.md:452-493`
+- SDK behavior: `specs/feature-flags-system.md:489-497`
+- Crate structure: `specs/feature-flags-system.md:16-37`
+
+**Tasks:**
+- [ ] Create `crates/loom-flags/` crate
+- [ ] Implement FlagsClient
+  - [ ] Builder pattern for configuration
+  - [ ] SDK key authentication
+  - [ ] Base URL configuration
+- [ ] Initialization
+  - [ ] Fetch all flags on init
+  - [ ] Start SSE connection
+- [ ] Local caching
+  - [ ] In-memory flag cache
+  - [ ] Update from SSE events
+- [ ] Evaluation methods
+  - [ ] `get_bool(key, context, default)`
+  - [ ] `get_string(key, context, default)`
+  - [ ] `get_json(key, context, default)`
+  - [ ] `get_all(context)`
+- [ ] Offline mode
+  - [ ] Use last cached values when disconnected
+- [ ] Use `loom-http` for requests
+  - [ ] Retry logic
+  - [ ] User-Agent header
+
+---
+
+## Phase 11: TypeScript Packages
+
+**Goal:** `@loom/http` and `@loom/flags` packages.
+
+**Spec References:**
+- TypeScript SDK: `specs/feature-flags-system.md:474-487`
+- Package structure: `specs/feature-flags-system.md:39-53`
+
+**Tasks:**
+- [ ] Create `web/packages/http/` package (`@loom/http`)
+  - [ ] HTTP client with fetch
+  - [ ] Retry with exponential backoff
+  - [ ] Standard headers (User-Agent, Content-Type)
+  - [ ] Error handling
+- [ ] Create `web/packages/flags/` package (`@loom/flags`)
+  - [ ] FlagsClient class
+  - [ ] SDK key authentication
+  - [ ] Initialization with flag fetch
+  - [ ] SSE connection handling
+  - [ ] Local caching
+  - [ ] Evaluation methods (getBool, getString, getJson)
+  - [ ] Event emitter for updates
+  - [ ] Offline mode with cached values
+
+---
+
+## Phase 12: Audit Integration
+
+**Goal:** Full audit logging for all flag operations.
+
+**Spec References:**
+- Audit events: `specs/feature-flags-system.md:575-593`
+
+**Tasks:**
+- [ ] Add audit event types to `loom-server-audit`
+  - [ ] `FlagCreated`, `FlagUpdated`, `FlagArchived`, `FlagRestored`
+  - [ ] `FlagConfigUpdated`
+  - [ ] `StrategyCreated`, `StrategyUpdated`, `StrategyDeleted`
+  - [ ] `KillSwitchCreated`, `KillSwitchActivated`, `KillSwitchDeactivated`, `KillSwitchDeleted`
+  - [ ] `SdkKeyCreated`, `SdkKeyRevoked`
+  - [ ] `EnvironmentCreated`, `EnvironmentDeleted`
+- [ ] Integrate audit logging into all handlers
+- [ ] Test audit logging
+
+---
+
+## Phase 13: Platform Flags
+
+**Goal:** Super admin management of platform-level flags.
+
+**Spec References:**
+- Two-tier system: `specs/feature-flags-system.md:235-239`
+- Precedence: `specs/feature-flags-system.md:241-246`
+- Platform endpoints: `specs/feature-flags-system.md:425-432`
+- Permissions: `specs/feature-flags-system.md:595-618`
+
+**Tasks:**
+- [ ] Implement platform flag endpoints (super admin only)
+  - [ ] `GET /api/admin/flags`
+  - [ ] `POST /api/admin/flags`
+  - [ ] `PATCH /api/admin/flags/{key}`
+  - [ ] `DELETE /api/admin/flags/{key}`
+- [ ] Implement platform kill switch endpoints
+  - [ ] `GET /api/admin/flags/kill-switches`
+  - [ ] `POST /api/admin/flags/kill-switches`
+- [ ] Update evaluation engine for platform precedence
+  - [ ] Check platform flags first
+  - [ ] Platform overrides org config
+- [ ] Super admin impersonation support
+  - [ ] Allow super admin to manage org flags as org admin
+
+---
+
+## Feature Flags Dependencies
+
+**Rust Crates (per `specs/feature-flags-system.md:620-639`):**
+- `chrono` - timestamps
+- `serde`, `serde_json` - serialization
+- `thiserror` - error types
+- `uuid` - IDs
+- `murmur3` - percentage hashing
+- `eventsource-stream` - SSE client
+- `sqlx` - database
+
+**Integration Points:**
+- `loom-http` - HTTP client with retry
+- `loom-geoip` - GeoIP resolution
+- `loom-server-audit` - audit logging
+- `loom-db` - database layer
+- `loom-auth` - ABAC permissions
+
+---
+
+## Feature Flags Testing Strategy
+
+- [ ] Unit tests for evaluation engine
+- [ ] Unit tests for condition matching
+- [ ] Unit tests for percentage hashing (verify consistency)
+- [ ] Integration tests for API endpoints
+- [ ] Integration tests for SSE streaming
+- [ ] Property-based tests for strategy evaluation
+- [ ] SDK integration tests
+
+---
+
+## Feature Flags Deployment Notes
+
+- Database migration must run before server starts
+- Auto-create environments on org creation requires migration to existing orgs
+- SSE requires appropriate timeout settings in load balancer
+- SDK keys should be rotated if exposed

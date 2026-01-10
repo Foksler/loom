@@ -1392,3 +1392,163 @@ msgstr "Not a file: {path}"
 msgid "server.api.scm.browser.not_a_directory"
 msgstr "Not a directory: {path}"
 
+
+# ============================================================================
+# Feature Flags API responses
+# ============================================================================
+
+#: API: Flags - Flag not found
+msgid "server.api.flags.flag_not_found"
+msgstr "फ़ीचर फ़्लैग नहीं मिला"
+
+#: API: Flags - Flag created
+msgid "server.api.flags.flag_created"
+msgstr "फ़ीचर फ़्लैग बनाया गया"
+
+#: API: Flags - Flag updated
+msgid "server.api.flags.flag_updated"
+msgstr "फ़ीचर फ़्लैग अपडेट किया गया"
+
+#: API: Flags - Flag archived
+msgid "server.api.flags.flag_archived"
+msgstr "फ़ीचर फ़्लैग संग्रहीत किया गया"
+
+#: API: Flags - Flag restored
+msgid "server.api.flags.flag_restored"
+msgstr "फ़ीचर फ़्लैग पुनर्स्थापित किया गया"
+
+#: API: Flags - Invalid flag key
+msgid "server.api.flags.invalid_flag_key"
+msgstr "अमान्य फ़्लैग कुंजी"
+
+#: API: Flags - Duplicate flag key
+msgid "server.api.flags.duplicate_flag_key"
+msgstr "फ़्लैग कुंजी पहले से मौजूद है"
+
+#: API: Flags - Variant not found
+msgid "server.api.flags.variant_not_found"
+msgstr "वैरिएंट नहीं मिला"
+
+#: API: Flags - Default variant missing
+msgid "server.api.flags.default_variant_missing"
+msgstr "डिफ़ॉल्ट वैरिएंट वैरिएंट सूची में नहीं है"
+
+#: API: Flags - Circular prerequisite
+msgid "server.api.flags.circular_prerequisite"
+msgstr "चक्रीय पूर्वापेक्षा निर्भरता का पता चला"
+
+#: API: Flags - Prerequisite not found
+msgid "server.api.flags.prerequisite_not_found"
+msgstr "पूर्वापेक्षा फ़्लैग नहीं मिला"
+
+#: API: Flags - Strategy not found
+msgid "server.api.flags.strategy_not_found"
+msgstr "रोलआउट रणनीति नहीं मिली"
+
+#: API: Flags - Strategy created
+msgid "server.api.flags.strategy_created"
+msgstr "रणनीति बनाई गई"
+
+#: API: Flags - Strategy updated
+msgid "server.api.flags.strategy_updated"
+msgstr "रणनीति अपडेट की गई"
+
+#: API: Flags - Strategy deleted
+msgid "server.api.flags.strategy_deleted"
+msgstr "रणनीति हटाई गई"
+
+#: API: Flags - Strategy in use
+msgid "server.api.flags.strategy_in_use"
+msgstr "रणनीति वर्तमान में अन्य फ़्लैग द्वारा उपयोग में है"
+
+#: API: Flags - Environment not found
+msgid "server.api.flags.environment_not_found"
+msgstr "वातावरण नहीं मिला"
+
+#: API: Flags - Environment created
+msgid "server.api.flags.environment_created"
+msgstr "वातावरण बनाया गया"
+
+#: API: Flags - Environment updated
+msgid "server.api.flags.environment_updated"
+msgstr "वातावरण अपडेट किया गया"
+
+#: API: Flags - Environment deleted
+msgid "server.api.flags.environment_deleted"
+msgstr "वातावरण हटाया गया"
+
+#: API: Flags - Environment has active keys
+msgid "server.api.flags.environment_has_active_keys"
+msgstr "सक्रिय SDK कुंजियों वाले वातावरण को हटाया नहीं जा सकता"
+
+#: API: Flags - Invalid environment name
+msgid "server.api.flags.invalid_environment_name"
+msgstr "अमान्य वातावरण नाम"
+
+#: API: Flags - Invalid environment color
+msgid "server.api.flags.invalid_environment_color"
+msgstr "अमान्य वातावरण रंग"
+
+#: API: Flags - Duplicate environment name
+msgid "server.api.flags.duplicate_environment_name"
+msgstr "वातावरण नाम पहले से मौजूद है"
+
+#: API: Flags - Flag config updated
+msgid "server.api.flags.flag_config_updated"
+msgstr "वातावरण कॉन्फ़िगरेशन अपडेट किया गया"
+
+#: API: Flags - Kill switch not found
+msgid "server.api.flags.kill_switch_not_found"
+msgstr "किल स्विच नहीं मिला"
+
+#: API: Flags - Kill switch created
+msgid "server.api.flags.kill_switch_created"
+msgstr "किल स्विच बनाया गया"
+
+#: API: Flags - Kill switch updated
+msgid "server.api.flags.kill_switch_updated"
+msgstr "किल स्विच अपडेट किया गया"
+
+#: API: Flags - Kill switch deleted
+msgid "server.api.flags.kill_switch_deleted"
+msgstr "किल स्विच हटाया गया"
+
+#: API: Flags - Kill switch activated
+msgid "server.api.flags.kill_switch_activated"
+msgstr "किल स्विच सक्रिय किया गया"
+
+#: API: Flags - Kill switch deactivated
+msgid "server.api.flags.kill_switch_deactivated"
+msgstr "किल स्विच निष्क्रिय किया गया"
+
+#: API: Flags - Invalid kill switch key
+msgid "server.api.flags.invalid_kill_switch_key"
+msgstr "अमान्य किल स्विच कुंजी"
+
+#: API: Flags - Duplicate kill switch key
+msgid "server.api.flags.duplicate_kill_switch_key"
+msgstr "किल स्विच कुंजी पहले से मौजूद है"
+
+#: API: Flags - Activation reason required
+msgid "server.api.flags.activation_reason_required"
+msgstr "सक्रियण कारण आवश्यक है"
+
+#: API: Flags - SDK key not found
+msgid "server.api.flags.sdk_key_not_found"
+msgstr "SDK कुंजी नहीं मिली"
+
+#: API: Flags - SDK key created
+msgid "server.api.flags.sdk_key_created"
+msgstr "SDK कुंजी बनाई गई"
+
+#: API: Flags - SDK key revoked
+msgid "server.api.flags.sdk_key_revoked"
+msgstr "SDK कुंजी निरस्त की गई"
+
+#: API: Flags - SDK key revoked success
+msgid "server.api.flags.sdk_key_revoked_success"
+msgstr "SDK कुंजी सफलतापूर्वक निरस्त की गई"
+
+#: API: Flags - Invalid SDK key format
+msgid "server.api.flags.invalid_sdk_key_format"
+msgstr "अमान्य SDK कुंजी प्रारूप"

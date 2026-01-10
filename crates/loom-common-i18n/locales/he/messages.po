@@ -1392,3 +1392,163 @@ msgstr "Not a file: {path}"
 msgid "server.api.scm.browser.not_a_directory"
 msgstr "Not a directory: {path}"
 
+
+# ============================================================================
+# Feature Flags API responses
+# ============================================================================
+
+#: API: Flags - Flag not found
+msgid "server.api.flags.flag_not_found"
+msgstr "דגל תכונה לא נמצא"
+
+#: API: Flags - Flag created
+msgid "server.api.flags.flag_created"
+msgstr "דגל תכונה נוצר"
+
+#: API: Flags - Flag updated
+msgid "server.api.flags.flag_updated"
+msgstr "דגל תכונה עודכן"
+
+#: API: Flags - Flag archived
+msgid "server.api.flags.flag_archived"
+msgstr "דגל תכונה הועבר לארכיון"
+
+#: API: Flags - Flag restored
+msgid "server.api.flags.flag_restored"
+msgstr "דגל תכונה שוחזר"
+
+#: API: Flags - Invalid flag key
+msgid "server.api.flags.invalid_flag_key"
+msgstr "מפתח דגל לא חוקי"
+
+#: API: Flags - Duplicate flag key
+msgid "server.api.flags.duplicate_flag_key"
+msgstr "מפתח דגל כבר קיים"
+
+#: API: Flags - Variant not found
+msgid "server.api.flags.variant_not_found"
+msgstr "גרסה לא נמצאה"
+
+#: API: Flags - Default variant missing
+msgid "server.api.flags.default_variant_missing"
+msgstr "גרסת ברירת המחדל לא נמצאת ברשימת הגרסאות"
+
+#: API: Flags - Circular prerequisite
+msgid "server.api.flags.circular_prerequisite"
+msgstr "זוהתה תלות מעגלית של תנאי מוקדם"
+
+#: API: Flags - Prerequisite not found
+msgid "server.api.flags.prerequisite_not_found"
+msgstr "דגל תנאי מוקדם לא נמצא"
+
+#: API: Flags - Strategy not found
+msgid "server.api.flags.strategy_not_found"
+msgstr "אסטרטגיית פריסה לא נמצאה"
+
+#: API: Flags - Strategy created
+msgid "server.api.flags.strategy_created"
+msgstr "אסטרטגיה נוצרה"
+
+#: API: Flags - Strategy updated
+msgid "server.api.flags.strategy_updated"
+msgstr "אסטרטגיה עודכנה"
+
+#: API: Flags - Strategy deleted
+msgid "server.api.flags.strategy_deleted"
+msgstr "אסטרטגיה נמחקה"
+
+#: API: Flags - Strategy in use
+msgid "server.api.flags.strategy_in_use"
+msgstr "האסטרטגיה נמצאת כעת בשימוש על ידי דגלים אחרים"
+
+#: API: Flags - Environment not found
+msgid "server.api.flags.environment_not_found"
+msgstr "סביבה לא נמצאה"
+
+#: API: Flags - Environment created
+msgid "server.api.flags.environment_created"
+msgstr "סביבה נוצרה"
+
+#: API: Flags - Environment updated
+msgid "server.api.flags.environment_updated"
+msgstr "סביבה עודכנה"
+
+#: API: Flags - Environment deleted
+msgid "server.api.flags.environment_deleted"
+msgstr "סביבה נמחקה"
+
+#: API: Flags - Environment has active keys
+msgid "server.api.flags.environment_has_active_keys"
+msgstr "לא ניתן למחוק סביבה עם מפתחות SDK פעילים"
+
+#: API: Flags - Invalid environment name
+msgid "server.api.flags.invalid_environment_name"
+msgstr "שם סביבה לא חוקי"
+
+#: API: Flags - Invalid environment color
+msgid "server.api.flags.invalid_environment_color"
+msgstr "צבע סביבה לא חוקי"
+
+#: API: Flags - Duplicate environment name
+msgid "server.api.flags.duplicate_environment_name"
+msgstr "שם סביבה כבר קיים"
+
+#: API: Flags - Flag config updated
+msgid "server.api.flags.flag_config_updated"
+msgstr "תצורת סביבה עודכנה"
+
+#: API: Flags - Kill switch not found
+msgid "server.api.flags.kill_switch_not_found"
+msgstr "מתג חירום לא נמצא"
+
+#: API: Flags - Kill switch created
+msgid "server.api.flags.kill_switch_created"
+msgstr "מתג חירום נוצר"
+
+#: API: Flags - Kill switch updated
+msgid "server.api.flags.kill_switch_updated"
+msgstr "מתג חירום עודכן"
+
+#: API: Flags - Kill switch deleted
+msgid "server.api.flags.kill_switch_deleted"
+msgstr "מתג חירום נמחק"
+
+#: API: Flags - Kill switch activated
+msgid "server.api.flags.kill_switch_activated"
+msgstr "מתג חירום הופעל"
+
+#: API: Flags - Kill switch deactivated
+msgid "server.api.flags.kill_switch_deactivated"
+msgstr "מתג חירום הושבת"
+
+#: API: Flags - Invalid kill switch key
+msgid "server.api.flags.invalid_kill_switch_key"
+msgstr "מפתח מתג חירום לא חוקי"
+
+#: API: Flags - Duplicate kill switch key
+msgid "server.api.flags.duplicate_kill_switch_key"
+msgstr "מפתח מתג חירום כבר קיים"
+
+#: API: Flags - Activation reason required
+msgid "server.api.flags.activation_reason_required"
+msgstr "נדרשת סיבת הפעלה"
+
+#: API: Flags - SDK key not found
+msgid "server.api.flags.sdk_key_not_found"
+msgstr "מפתח SDK לא נמצא"
+
+#: API: Flags - SDK key created
+msgid "server.api.flags.sdk_key_created"
+msgstr "מפתח SDK נוצר"
+
+#: API: Flags - SDK key revoked
+msgid "server.api.flags.sdk_key_revoked"
+msgstr "מפתח SDK בוטל"
+
+#: API: Flags - SDK key revoked success
+msgid "server.api.flags.sdk_key_revoked_success"
+msgstr "מפתח SDK בוטל בהצלחה"
+
+#: API: Flags - Invalid SDK key format
+msgid "server.api.flags.invalid_sdk_key_format"
+msgstr "פורמט מפתח SDK לא חוקי"

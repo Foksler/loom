@@ -1387,3 +1387,163 @@ msgstr "Not a file: {path}"
 #: API: SCM Browser - Not a directory
 msgid "server.api.scm.browser.not_a_directory"
 msgstr "Not a directory: {path}"
+
+# ============================================================================
+# Feature Flags API responses
+# ============================================================================
+
+#: API: Flags - Flag not found
+msgid "server.api.flags.flag_not_found"
+msgstr "علم الميزة غير موجود"
+
+#: API: Flags - Flag created
+msgid "server.api.flags.flag_created"
+msgstr "تم إنشاء علم الميزة"
+
+#: API: Flags - Flag updated
+msgid "server.api.flags.flag_updated"
+msgstr "تم تحديث علم الميزة"
+
+#: API: Flags - Flag archived
+msgid "server.api.flags.flag_archived"
+msgstr "تم أرشفة علم الميزة"
+
+#: API: Flags - Flag restored
+msgid "server.api.flags.flag_restored"
+msgstr "تم استعادة علم الميزة"
+
+#: API: Flags - Invalid flag key
+msgid "server.api.flags.invalid_flag_key"
+msgstr "مفتاح العلم غير صالح"
+
+#: API: Flags - Duplicate flag key
+msgid "server.api.flags.duplicate_flag_key"
+msgstr "مفتاح العلم موجود بالفعل"
+
+#: API: Flags - Variant not found
+msgid "server.api.flags.variant_not_found"
+msgstr "المتغير غير موجود"
+
+#: API: Flags - Default variant missing
+msgid "server.api.flags.default_variant_missing"
+msgstr "المتغير الافتراضي مفقود من قائمة المتغيرات"
+
+#: API: Flags - Circular prerequisite
+msgid "server.api.flags.circular_prerequisite"
+msgstr "تم اكتشاف تبعية دائرية للمتطلبات المسبقة"
+
+#: API: Flags - Prerequisite not found
+msgid "server.api.flags.prerequisite_not_found"
+msgstr "علم المتطلب المسبق غير موجود"
+
+#: API: Flags - Strategy not found
+msgid "server.api.flags.strategy_not_found"
+msgstr "استراتيجية الإطلاق غير موجودة"
+
+#: API: Flags - Strategy created
+msgid "server.api.flags.strategy_created"
+msgstr "تم إنشاء الاستراتيجية"
+
+#: API: Flags - Strategy updated
+msgid "server.api.flags.strategy_updated"
+msgstr "تم تحديث الاستراتيجية"
+
+#: API: Flags - Strategy deleted
+msgid "server.api.flags.strategy_deleted"
+msgstr "تم حذف الاستراتيجية"
+
+#: API: Flags - Strategy in use
+msgid "server.api.flags.strategy_in_use"
+msgstr "الاستراتيجية مستخدمة حالياً من قبل أعلام أخرى"
+
+#: API: Flags - Environment not found
+msgid "server.api.flags.environment_not_found"
+msgstr "البيئة غير موجودة"
+
+#: API: Flags - Environment created
+msgid "server.api.flags.environment_created"
+msgstr "تم إنشاء البيئة"
+
+#: API: Flags - Environment updated
+msgid "server.api.flags.environment_updated"
+msgstr "تم تحديث البيئة"
+
+#: API: Flags - Environment deleted
+msgid "server.api.flags.environment_deleted"
+msgstr "تم حذف البيئة"
+
+#: API: Flags - Environment has active keys
+msgid "server.api.flags.environment_has_active_keys"
+msgstr "لا يمكن حذف البيئة مع وجود مفاتيح SDK نشطة"
+
+#: API: Flags - Invalid environment name
+msgid "server.api.flags.invalid_environment_name"
+msgstr "اسم البيئة غير صالح"
+
+#: API: Flags - Invalid environment color
+msgid "server.api.flags.invalid_environment_color"
+msgstr "لون البيئة غير صالح"
+
+#: API: Flags - Duplicate environment name
+msgid "server.api.flags.duplicate_environment_name"
+msgstr "اسم البيئة موجود بالفعل"
+
+#: API: Flags - Flag config updated
+msgid "server.api.flags.flag_config_updated"
+msgstr "تم تحديث تكوين البيئة"
+
+#: API: Flags - Kill switch not found
+msgid "server.api.flags.kill_switch_not_found"
+msgstr "مفتاح القتل غير موجود"
+
+#: API: Flags - Kill switch created
+msgid "server.api.flags.kill_switch_created"
+msgstr "تم إنشاء مفتاح القتل"
+
+#: API: Flags - Kill switch updated
+msgid "server.api.flags.kill_switch_updated"
+msgstr "تم تحديث مفتاح القتل"
+
+#: API: Flags - Kill switch deleted
+msgid "server.api.flags.kill_switch_deleted"
+msgstr "تم حذف مفتاح القتل"
+
+#: API: Flags - Kill switch activated
+msgid "server.api.flags.kill_switch_activated"
+msgstr "تم تفعيل مفتاح القتل"
+
+#: API: Flags - Kill switch deactivated
+msgid "server.api.flags.kill_switch_deactivated"
+msgstr "تم إلغاء تفعيل مفتاح القتل"
+
+#: API: Flags - Invalid kill switch key
+msgid "server.api.flags.invalid_kill_switch_key"
+msgstr "مفتاح القتل غير صالح"
+
+#: API: Flags - Duplicate kill switch key
+msgid "server.api.flags.duplicate_kill_switch_key"
+msgstr "مفتاح القتل موجود بالفعل"
+
+#: API: Flags - Activation reason required
+msgid "server.api.flags.activation_reason_required"
+msgstr "سبب التفعيل مطلوب"
+
+#: API: Flags - SDK key not found
+msgid "server.api.flags.sdk_key_not_found"
+msgstr "مفتاح SDK غير موجود"
+
+#: API: Flags - SDK key created
+msgid "server.api.flags.sdk_key_created"
+msgstr "تم إنشاء مفتاح SDK"
+
+#: API: Flags - SDK key revoked
+msgid "server.api.flags.sdk_key_revoked"
+msgstr "تم إلغاء مفتاح SDK"
+
+#: API: Flags - SDK key revoked success
+msgid "server.api.flags.sdk_key_revoked_success"
+msgstr "تم إلغاء مفتاح SDK بنجاح"
+
+#: API: Flags - Invalid SDK key format
+msgid "server.api.flags.invalid_sdk_key_format"
+msgstr "تنسيق مفتاح SDK غير صالح"

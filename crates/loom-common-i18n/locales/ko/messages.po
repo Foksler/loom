@@ -1388,3 +1388,163 @@ msgstr "Not a file: {path}"
 msgid "server.api.scm.browser.not_a_directory"
 msgstr "Not a directory: {path}"
 
+
+# ============================================================================
+# Feature Flags API responses
+# ============================================================================
+
+#: API: Flags - Flag not found
+msgid "server.api.flags.flag_not_found"
+msgstr "기능 플래그를 찾을 수 없습니다"
+
+#: API: Flags - Flag created
+msgid "server.api.flags.flag_created"
+msgstr "기능 플래그가 생성되었습니다"
+
+#: API: Flags - Flag updated
+msgid "server.api.flags.flag_updated"
+msgstr "기능 플래그가 업데이트되었습니다"
+
+#: API: Flags - Flag archived
+msgid "server.api.flags.flag_archived"
+msgstr "기능 플래그가 보관되었습니다"
+
+#: API: Flags - Flag restored
+msgid "server.api.flags.flag_restored"
+msgstr "기능 플래그가 복원되었습니다"
+
+#: API: Flags - Invalid flag key
+msgid "server.api.flags.invalid_flag_key"
+msgstr "잘못된 플래그 키"
+
+#: API: Flags - Duplicate flag key
+msgid "server.api.flags.duplicate_flag_key"
+msgstr "플래그 키가 이미 존재합니다"
+
+#: API: Flags - Variant not found
+msgid "server.api.flags.variant_not_found"
+msgstr "변형을 찾을 수 없습니다"
+
+#: API: Flags - Default variant missing
+msgid "server.api.flags.default_variant_missing"
+msgstr "기본 변형이 변형 목록에 없습니다"
+
+#: API: Flags - Circular prerequisite
+msgid "server.api.flags.circular_prerequisite"
+msgstr "순환 선행 조건 종속성이 감지되었습니다"
+
+#: API: Flags - Prerequisite not found
+msgid "server.api.flags.prerequisite_not_found"
+msgstr "선행 조건 플래그를 찾을 수 없습니다"
+
+#: API: Flags - Strategy not found
+msgid "server.api.flags.strategy_not_found"
+msgstr "롤아웃 전략을 찾을 수 없습니다"
+
+#: API: Flags - Strategy created
+msgid "server.api.flags.strategy_created"
+msgstr "전략이 생성되었습니다"
+
+#: API: Flags - Strategy updated
+msgid "server.api.flags.strategy_updated"
+msgstr "전략이 업데이트되었습니다"
+
+#: API: Flags - Strategy deleted
+msgid "server.api.flags.strategy_deleted"
+msgstr "전략이 삭제되었습니다"
+
+#: API: Flags - Strategy in use
+msgid "server.api.flags.strategy_in_use"
+msgstr "전략이 현재 다른 플래그에서 사용 중입니다"
+
+#: API: Flags - Environment not found
+msgid "server.api.flags.environment_not_found"
+msgstr "환경을 찾을 수 없습니다"
+
+#: API: Flags - Environment created
+msgid "server.api.flags.environment_created"
+msgstr "환경이 생성되었습니다"
+
+#: API: Flags - Environment updated
+msgid "server.api.flags.environment_updated"
+msgstr "환경이 업데이트되었습니다"
+
+#: API: Flags - Environment deleted
+msgid "server.api.flags.environment_deleted"
+msgstr "환경이 삭제되었습니다"
+
+#: API: Flags - Environment has active keys
+msgid "server.api.flags.environment_has_active_keys"
+msgstr "활성 SDK 키가 있는 환경은 삭제할 수 없습니다"
+
+#: API: Flags - Invalid environment name
+msgid "server.api.flags.invalid_environment_name"
+msgstr "잘못된 환경 이름"
+
+#: API: Flags - Invalid environment color
+msgid "server.api.flags.invalid_environment_color"
+msgstr "잘못된 환경 색상"
+
+#: API: Flags - Duplicate environment name
+msgid "server.api.flags.duplicate_environment_name"
+msgstr "환경 이름이 이미 존재합니다"
+
+#: API: Flags - Flag config updated
+msgid "server.api.flags.flag_config_updated"
+msgstr "환경 구성이 업데이트되었습니다"
+
+#: API: Flags - Kill switch not found
+msgid "server.api.flags.kill_switch_not_found"
+msgstr "킬 스위치를 찾을 수 없습니다"
+
+#: API: Flags - Kill switch created
+msgid "server.api.flags.kill_switch_created"
+msgstr "킬 스위치가 생성되었습니다"
+
+#: API: Flags - Kill switch updated
+msgid "server.api.flags.kill_switch_updated"
+msgstr "킬 스위치가 업데이트되었습니다"
+
+#: API: Flags - Kill switch deleted
+msgid "server.api.flags.kill_switch_deleted"
+msgstr "킬 스위치가 삭제되었습니다"
+
+#: API: Flags - Kill switch activated
+msgid "server.api.flags.kill_switch_activated"
+msgstr "킬 스위치가 활성화되었습니다"
+
+#: API: Flags - Kill switch deactivated
+msgid "server.api.flags.kill_switch_deactivated"
+msgstr "킬 스위치가 비활성화되었습니다"
+
+#: API: Flags - Invalid kill switch key
+msgid "server.api.flags.invalid_kill_switch_key"
+msgstr "잘못된 킬 스위치 키"
+
+#: API: Flags - Duplicate kill switch key
+msgid "server.api.flags.duplicate_kill_switch_key"
+msgstr "킬 스위치 키가 이미 존재합니다"
+
+#: API: Flags - Activation reason required
+msgid "server.api.flags.activation_reason_required"
+msgstr "활성화 이유가 필요합니다"
+
+#: API: Flags - SDK key not found
+msgid "server.api.flags.sdk_key_not_found"
+msgstr "SDK 키를 찾을 수 없습니다"
+
+#: API: Flags - SDK key created
+msgid "server.api.flags.sdk_key_created"
+msgstr "SDK 키가 생성되었습니다"
+
+#: API: Flags - SDK key revoked
+msgid "server.api.flags.sdk_key_revoked"
+msgstr "SDK 키가 취소되었습니다"
+
+#: API: Flags - SDK key revoked success
+msgid "server.api.flags.sdk_key_revoked_success"
+msgstr "SDK 키가 성공적으로 취소되었습니다"
+
+#: API: Flags - Invalid SDK key format
+msgid "server.api.flags.invalid_sdk_key_format"
+msgstr "잘못된 SDK 키 형식"

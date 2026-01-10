@@ -1388,3 +1388,163 @@ msgstr "Not a file: {path}"
 msgid "server.api.scm.browser.not_a_directory"
 msgstr "Not a directory: {path}"
 
+
+# ============================================================================
+# Feature Flags API responses
+# ============================================================================
+
+#: API: Flags - Flag not found
+msgid "server.api.flags.flag_not_found"
+msgstr "機能フラグが見つかりません"
+
+#: API: Flags - Flag created
+msgid "server.api.flags.flag_created"
+msgstr "機能フラグが作成されました"
+
+#: API: Flags - Flag updated
+msgid "server.api.flags.flag_updated"
+msgstr "機能フラグが更新されました"
+
+#: API: Flags - Flag archived
+msgid "server.api.flags.flag_archived"
+msgstr "機能フラグがアーカイブされました"
+
+#: API: Flags - Flag restored
+msgid "server.api.flags.flag_restored"
+msgstr "機能フラグが復元されました"
+
+#: API: Flags - Invalid flag key
+msgid "server.api.flags.invalid_flag_key"
+msgstr "無効なフラグキー"
+
+#: API: Flags - Duplicate flag key
+msgid "server.api.flags.duplicate_flag_key"
+msgstr "フラグキーは既に存在します"
+
+#: API: Flags - Variant not found
+msgid "server.api.flags.variant_not_found"
+msgstr "バリアントが見つかりません"
+
+#: API: Flags - Default variant missing
+msgid "server.api.flags.default_variant_missing"
+msgstr "デフォルトバリアントがバリアントリストにありません"
+
+#: API: Flags - Circular prerequisite
+msgid "server.api.flags.circular_prerequisite"
+msgstr "循環前提条件依存関係が検出されました"
+
+#: API: Flags - Prerequisite not found
+msgid "server.api.flags.prerequisite_not_found"
+msgstr "前提条件フラグが見つかりません"
+
+#: API: Flags - Strategy not found
+msgid "server.api.flags.strategy_not_found"
+msgstr "ロールアウト戦略が見つかりません"
+
+#: API: Flags - Strategy created
+msgid "server.api.flags.strategy_created"
+msgstr "戦略が作成されました"
+
+#: API: Flags - Strategy updated
+msgid "server.api.flags.strategy_updated"
+msgstr "戦略が更新されました"
+
+#: API: Flags - Strategy deleted
+msgid "server.api.flags.strategy_deleted"
+msgstr "戦略が削除されました"
+
+#: API: Flags - Strategy in use
+msgid "server.api.flags.strategy_in_use"
+msgstr "戦略は現在他のフラグで使用中です"
+
+#: API: Flags - Environment not found
+msgid "server.api.flags.environment_not_found"
+msgstr "環境が見つかりません"
+
+#: API: Flags - Environment created
+msgid "server.api.flags.environment_created"
+msgstr "環境が作成されました"
+
+#: API: Flags - Environment updated
+msgid "server.api.flags.environment_updated"
+msgstr "環境が更新されました"
+
+#: API: Flags - Environment deleted
+msgid "server.api.flags.environment_deleted"
+msgstr "環境が削除されました"
+
+#: API: Flags - Environment has active keys
+msgid "server.api.flags.environment_has_active_keys"
+msgstr "アクティブなSDKキーを持つ環境は削除できません"
+
+#: API: Flags - Invalid environment name
+msgid "server.api.flags.invalid_environment_name"
+msgstr "無効な環境名"
+
+#: API: Flags - Invalid environment color
+msgid "server.api.flags.invalid_environment_color"
+msgstr "無効な環境カラー"
+
+#: API: Flags - Duplicate environment name
+msgid "server.api.flags.duplicate_environment_name"
+msgstr "環境名は既に存在します"
+
+#: API: Flags - Flag config updated
+msgid "server.api.flags.flag_config_updated"
+msgstr "環境設定が更新されました"
+
+#: API: Flags - Kill switch not found
+msgid "server.api.flags.kill_switch_not_found"
+msgstr "キルスイッチが見つかりません"
+
+#: API: Flags - Kill switch created
+msgid "server.api.flags.kill_switch_created"
+msgstr "キルスイッチが作成されました"
+
+#: API: Flags - Kill switch updated
+msgid "server.api.flags.kill_switch_updated"
+msgstr "キルスイッチが更新されました"
+
+#: API: Flags - Kill switch deleted
+msgid "server.api.flags.kill_switch_deleted"
+msgstr "キルスイッチが削除されました"
+
+#: API: Flags - Kill switch activated
+msgid "server.api.flags.kill_switch_activated"
+msgstr "キルスイッチが有効化されました"
+
+#: API: Flags - Kill switch deactivated
+msgid "server.api.flags.kill_switch_deactivated"
+msgstr "キルスイッチが無効化されました"
+
+#: API: Flags - Invalid kill switch key
+msgid "server.api.flags.invalid_kill_switch_key"
+msgstr "無効なキルスイッチキー"
+
+#: API: Flags - Duplicate kill switch key
+msgid "server.api.flags.duplicate_kill_switch_key"
+msgstr "キルスイッチキーは既に存在します"
+
+#: API: Flags - Activation reason required
+msgid "server.api.flags.activation_reason_required"
+msgstr "有効化の理由が必要です"
+
+#: API: Flags - SDK key not found
+msgid "server.api.flags.sdk_key_not_found"
+msgstr "SDKキーが見つかりません"
+
+#: API: Flags - SDK key created
+msgid "server.api.flags.sdk_key_created"
+msgstr "SDKキーが作成されました"
+
+#: API: Flags - SDK key revoked
+msgid "server.api.flags.sdk_key_revoked"
+msgstr "SDKキーが取り消されました"
+
+#: API: Flags - SDK key revoked success
+msgid "server.api.flags.sdk_key_revoked_success"
+msgstr "SDKキーが正常に取り消されました"
+
+#: API: Flags - Invalid SDK key format
+msgid "server.api.flags.invalid_sdk_key_format"
+msgstr "無効なSDKキー形式"

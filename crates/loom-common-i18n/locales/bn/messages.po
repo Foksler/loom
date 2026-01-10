@@ -1392,3 +1392,163 @@ msgstr "Not a file: {path}"
 msgid "server.api.scm.browser.not_a_directory"
 msgstr "Not a directory: {path}"
 
+
+# ============================================================================
+# Feature Flags API responses
+# ============================================================================
+
+#: API: Flags - Flag not found
+msgid "server.api.flags.flag_not_found"
+msgstr "ফিচার ফ্ল্যাগ পাওয়া যায়নি"
+
+#: API: Flags - Flag created
+msgid "server.api.flags.flag_created"
+msgstr "ফিচার ফ্ল্যাগ তৈরি হয়েছে"
+
+#: API: Flags - Flag updated
+msgid "server.api.flags.flag_updated"
+msgstr "ফিচার ফ্ল্যাগ আপডেট হয়েছে"
+
+#: API: Flags - Flag archived
+msgid "server.api.flags.flag_archived"
+msgstr "ফিচার ফ্ল্যাগ আর্কাইভ হয়েছে"
+
+#: API: Flags - Flag restored
+msgid "server.api.flags.flag_restored"
+msgstr "ফিচার ফ্ল্যাগ পুনরুদ্ধার হয়েছে"
+
+#: API: Flags - Invalid flag key
+msgid "server.api.flags.invalid_flag_key"
+msgstr "অবৈধ ফ্ল্যাগ কী"
+
+#: API: Flags - Duplicate flag key
+msgid "server.api.flags.duplicate_flag_key"
+msgstr "ফ্ল্যাগ কী ইতিমধ্যে বিদ্যমান"
+
+#: API: Flags - Variant not found
+msgid "server.api.flags.variant_not_found"
+msgstr "ভ্যারিয়েন্ট পাওয়া যায়নি"
+
+#: API: Flags - Default variant missing
+msgid "server.api.flags.default_variant_missing"
+msgstr "ডিফল্ট ভ্যারিয়েন্ট ভ্যারিয়েন্ট তালিকায় নেই"
+
+#: API: Flags - Circular prerequisite
+msgid "server.api.flags.circular_prerequisite"
+msgstr "বৃত্তাকার পূর্বশর্ত নির্ভরতা সনাক্ত হয়েছে"
+
+#: API: Flags - Prerequisite not found
+msgid "server.api.flags.prerequisite_not_found"
+msgstr "পূর্বশর্ত ফ্ল্যাগ পাওয়া যায়নি"
+
+#: API: Flags - Strategy not found
+msgid "server.api.flags.strategy_not_found"
+msgstr "রোলআউট কৌশল পাওয়া যায়নি"
+
+#: API: Flags - Strategy created
+msgid "server.api.flags.strategy_created"
+msgstr "কৌশল তৈরি হয়েছে"
+
+#: API: Flags - Strategy updated
+msgid "server.api.flags.strategy_updated"
+msgstr "কৌশল আপডেট হয়েছে"
+
+#: API: Flags - Strategy deleted
+msgid "server.api.flags.strategy_deleted"
+msgstr "কৌশল মুছে ফেলা হয়েছে"
+
+#: API: Flags - Strategy in use
+msgid "server.api.flags.strategy_in_use"
+msgstr "কৌশলটি বর্তমানে অন্যান্য ফ্ল্যাগ দ্বারা ব্যবহৃত হচ্ছে"
+
+#: API: Flags - Environment not found
+msgid "server.api.flags.environment_not_found"
+msgstr "পরিবেশ পাওয়া যায়নি"
+
+#: API: Flags - Environment created
+msgid "server.api.flags.environment_created"
+msgstr "পরিবেশ তৈরি হয়েছে"
+
+#: API: Flags - Environment updated
+msgid "server.api.flags.environment_updated"
+msgstr "পরিবেশ আপডেট হয়েছে"
+
+#: API: Flags - Environment deleted
+msgid "server.api.flags.environment_deleted"
+msgstr "পরিবেশ মুছে ফেলা হয়েছে"
+
+#: API: Flags - Environment has active keys
+msgid "server.api.flags.environment_has_active_keys"
+msgstr "সক্রিয় SDK কী সহ পরিবেশ মুছে ফেলা যাবে না"
+
+#: API: Flags - Invalid environment name
+msgid "server.api.flags.invalid_environment_name"
+msgstr "অবৈধ পরিবেশের নাম"
+
+#: API: Flags - Invalid environment color
+msgid "server.api.flags.invalid_environment_color"
+msgstr "অবৈধ পরিবেশের রঙ"
+
+#: API: Flags - Duplicate environment name
+msgid "server.api.flags.duplicate_environment_name"
+msgstr "পরিবেশের নাম ইতিমধ্যে বিদ্যমান"
+
+#: API: Flags - Flag config updated
+msgid "server.api.flags.flag_config_updated"
+msgstr "পরিবেশ কনফিগারেশন আপডেট হয়েছে"
+
+#: API: Flags - Kill switch not found
+msgid "server.api.flags.kill_switch_not_found"
+msgstr "কিল সুইচ পাওয়া যায়নি"
+
+#: API: Flags - Kill switch created
+msgid "server.api.flags.kill_switch_created"
+msgstr "কিল সুইচ তৈরি হয়েছে"
+
+#: API: Flags - Kill switch updated
+msgid "server.api.flags.kill_switch_updated"
+msgstr "কিল সুইচ আপডেট হয়েছে"
+
+#: API: Flags - Kill switch deleted
+msgid "server.api.flags.kill_switch_deleted"
+msgstr "কিল সুইচ মুছে ফেলা হয়েছে"
+
+#: API: Flags - Kill switch activated
+msgid "server.api.flags.kill_switch_activated"
+msgstr "কিল সুইচ সক্রিয় হয়েছে"
+
+#: API: Flags - Kill switch deactivated
+msgid "server.api.flags.kill_switch_deactivated"
+msgstr "কিল সুইচ নিষ্ক্রিয় হয়েছে"
+
+#: API: Flags - Invalid kill switch key
+msgid "server.api.flags.invalid_kill_switch_key"
+msgstr "অবৈধ কিল সুইচ কী"
+
+#: API: Flags - Duplicate kill switch key
+msgid "server.api.flags.duplicate_kill_switch_key"
+msgstr "কিল সুইচ কী ইতিমধ্যে বিদ্যমান"
+
+#: API: Flags - Activation reason required
+msgid "server.api.flags.activation_reason_required"
+msgstr "সক্রিয়করণের কারণ প্রয়োজন"
+
+#: API: Flags - SDK key not found
+msgid "server.api.flags.sdk_key_not_found"
+msgstr "SDK কী পাওয়া যায়নি"
+
+#: API: Flags - SDK key created
+msgid "server.api.flags.sdk_key_created"
+msgstr "SDK কী তৈরি হয়েছে"
+
+#: API: Flags - SDK key revoked
+msgid "server.api.flags.sdk_key_revoked"
+msgstr "SDK কী প্রত্যাহার করা হয়েছে"
+
+#: API: Flags - SDK key revoked success
+msgid "server.api.flags.sdk_key_revoked_success"
+msgstr "SDK কী সফলভাবে প্রত্যাহার করা হয়েছে"
+
+#: API: Flags - Invalid SDK key format
+msgid "server.api.flags.invalid_sdk_key_format"
+msgstr "অবৈধ SDK কী বিন্যাস"
