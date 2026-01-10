@@ -1049,6 +1049,15 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/orgs/{org_id}/flags/kill-switches/{kill_switch_id}/deactivate",
 			post(routes::flags::deactivate_kill_switch),
 		)
+		// Flag evaluation routes
+		.route(
+			"/api/orgs/{org_id}/flags/evaluate",
+			post(routes::flags::evaluate_all_flags),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/{flag_key}/evaluate",
+			post(routes::flags::evaluate_flag_endpoint),
+		)
 		// Invitation routes (authenticated)
 		.route(
 			"/api/orgs/{org_id}/invitations",

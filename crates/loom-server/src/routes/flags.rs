@@ -20,15 +20,16 @@ use loom_flags_core::{
 pub use loom_server_api::flags::{
 	ActivateKillSwitchRequest, AttributeOperatorApi, ConditionApi, CreateEnvironmentRequest,
 	CreateFlagRequest, CreateKillSwitchRequest, CreateSdkKeyRequest, CreateSdkKeyResponse,
-	CreateStrategyRequest, EnvironmentResponse, FlagConfigResponse, FlagPrerequisiteApi, FlagResponse,
-	FlagsErrorResponse, FlagsSuccessResponse, GeoFieldApi, GeoOperatorApi, KillSwitchResponse,
-	ListEnvironmentsResponse, ListFlagConfigsResponse, ListFlagsQuery, ListFlagsResponse,
-	ListKillSwitchesResponse, ListSdkKeysResponse, ListStrategiesResponse, PercentageKeyApi,
-	ScheduleApi, ScheduleStepApi, SdkKeyResponse, SdkKeyTypeApi, StrategyResponse,
-	UpdateEnvironmentRequest, UpdateFlagConfigRequest, UpdateFlagRequest, UpdateKillSwitchRequest,
-	UpdateStrategyRequest, VariantApi, VariantValueApi,
+	CreateStrategyRequest, EnvironmentResponse, EvaluateAllFlagsRequest, EvaluateAllFlagsResponse,
+	EvaluateFlagRequest, EvaluationContextApi, EvaluationReasonApi, EvaluationResultApi,
+	FlagConfigResponse, FlagPrerequisiteApi, FlagResponse, FlagsErrorResponse, FlagsSuccessResponse,
+	GeoContextApi, GeoFieldApi, GeoOperatorApi, KillSwitchResponse, ListEnvironmentsResponse,
+	ListFlagConfigsResponse, ListFlagsQuery, ListFlagsResponse, ListKillSwitchesResponse,
+	ListSdkKeysResponse, ListStrategiesResponse, PercentageKeyApi, ScheduleApi, ScheduleStepApi,
+	SdkKeyResponse, SdkKeyTypeApi, StrategyResponse, UpdateEnvironmentRequest, UpdateFlagConfigRequest,
+	UpdateFlagRequest, UpdateKillSwitchRequest, UpdateStrategyRequest, VariantApi, VariantValueApi,
 };
-use loom_server_flags::{hash_sdk_key, FlagsRepository};
+use loom_server_flags::{evaluate_flag, hash_sdk_key, EvaluationContext, EvaluationReason, FlagsRepository, GeoContext};
 
 use crate::{
 	api::AppState,
@@ -3617,4 +3618,550 @@ pub async fn delete_kill_switch(
 			internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal")).into_response()
 		}
 	}
+}
+
+// ============================================================================
+// Evaluation Routes
+// ============================================================================
+
+/// Helper to convert API context to core context.
+fn to_core_context(api_ctx: &EvaluationContextApi) -> EvaluationContext {
+	let mut ctx = EvaluationContext::new(&api_ctx.environment);
+
+	if let Some(ref user_id) = api_ctx.user_id {
+		ctx = ctx.with_user_id(user_id);
+	}
+	if let Some(ref org_id) = api_ctx.org_id {
+		ctx = ctx.with_org_id(org_id);
+	}
+	if let Some(ref session_id) = api_ctx.session_id {
+		ctx = ctx.with_session_id(session_id);
+	}
+
+	for (key, value) in &api_ctx.attributes {
+		ctx = ctx.with_attribute(key, value.clone());
+	}
+
+	if let Some(ref geo) = api_ctx.geo {
+		let mut geo_ctx = GeoContext::new();
+		if let Some(ref country) = geo.country {
+			geo_ctx = geo_ctx.with_country(country);
+		}
+		if let Some(ref region) = geo.region {
+			geo_ctx = geo_ctx.with_region(region);
+		}
+		if let Some(ref city) = geo.city {
+			geo_ctx = geo_ctx.with_city(city);
+		}
+		ctx = ctx.with_geo(geo_ctx);
+	}
+
+	ctx
+}
+
+/// Helper to convert core evaluation reason to API reason.
+fn to_api_reason(reason: &EvaluationReason) -> EvaluationReasonApi {
+	match reason {
+		EvaluationReason::Default => EvaluationReasonApi::Default,
+		EvaluationReason::Strategy { strategy_id } => EvaluationReasonApi::Strategy {
+			strategy_id: strategy_id.to_string(),
+		},
+		EvaluationReason::KillSwitch { kill_switch_id } => EvaluationReasonApi::KillSwitch {
+			kill_switch_id: kill_switch_id.to_string(),
+		},
+		EvaluationReason::Prerequisite { missing_flag } => EvaluationReasonApi::Prerequisite {
+			missing_flag: missing_flag.clone(),
+		},
+		EvaluationReason::Disabled => EvaluationReasonApi::Disabled,
+		EvaluationReason::Error { message } => EvaluationReasonApi::Error {
+			message: message.clone(),
+		},
+	}
+}
+
+/// Helper to convert core variant value to API variant value.
+fn to_api_variant_value(value: &VariantValue) -> VariantValueApi {
+	match value {
+		VariantValue::Boolean(b) => VariantValueApi::Boolean(*b),
+		VariantValue::String(s) => VariantValueApi::String(s.clone()),
+		VariantValue::Json(v) => VariantValueApi::Json(v.clone()),
+	}
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/orgs/{org_id}/flags/evaluate",
+    params(
+        ("org_id" = String, Path, description = "Organization ID")
+    ),
+    request_body = EvaluateAllFlagsRequest,
+    responses(
+        (status = 200, description = "All flags evaluated", body = EvaluateAllFlagsResponse),
+        (status = 400, description = "Invalid request", body = FlagsErrorResponse),
+        (status = 401, description = "Not authenticated", body = FlagsErrorResponse),
+        (status = 404, description = "Organization not found", body = FlagsErrorResponse)
+    ),
+    tag = "flags"
+)]
+/// Evaluate all flags for a given context.
+///
+/// This endpoint evaluates all non-archived flags for the organization
+/// and returns the evaluation results for each flag. The evaluation
+/// takes into account:
+/// - Environment configuration (enabled/disabled)
+/// - Kill switches (platform and org level)
+/// - Prerequisites
+/// - Strategy conditions, percentage targeting, and schedules
+#[tracing::instrument(skip(state, payload), fields(%org_id, environment = %payload.context.environment))]
+pub async fn evaluate_all_flags(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(org_id): Path<String>,
+	Json(payload): Json<EvaluateAllFlagsRequest>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		FlagsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	// Check org membership
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	let flags_org_id = loom_flags_core::OrgId(org_id.into_inner());
+	let context = to_core_context(&payload.context);
+
+	// Get the environment for this context
+	let environment = match state
+		.flags_repo
+		.get_environment_by_name(flags_org_id, &payload.context.environment)
+		.await
+	{
+		Ok(Some(env)) => env,
+		Ok(None) => {
+			return bad_request::<FlagsErrorResponse>(
+				"invalid_environment",
+				t(locale, "server.api.flags.environment_not_found"),
+			)
+			.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, environment = %payload.context.environment, "Failed to get environment");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	// Get all flags for this org (non-archived)
+	let flags = match state.flags_repo.list_flags(Some(flags_org_id), false).await {
+		Ok(flags) => flags,
+		Err(e) => {
+			tracing::error!(error = %e, ?org_id, "Failed to list flags");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	// Get platform flags as well (they override org flags)
+	let platform_flags = match state.flags_repo.list_flags(None, false).await {
+		Ok(flags) => flags,
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to list platform flags");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	// Get active kill switches (platform first, then org)
+	let platform_kill_switches = match state.flags_repo.list_active_kill_switches(None).await {
+		Ok(ks) => ks,
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to list platform kill switches");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	let org_kill_switches = match state
+		.flags_repo
+		.list_active_kill_switches(Some(flags_org_id))
+		.await
+	{
+		Ok(ks) => ks,
+		Err(e) => {
+			tracing::error!(error = %e, ?org_id, "Failed to list org kill switches");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	// Combine kill switches (platform first for precedence)
+	let all_kill_switches: Vec<_> = platform_kill_switches
+		.into_iter()
+		.chain(org_kill_switches.into_iter())
+		.collect();
+
+	// Build a map of flag keys to flags, with platform flags taking precedence
+	let mut flag_map: std::collections::HashMap<String, &loom_flags_core::Flag> =
+		std::collections::HashMap::new();
+
+	// Add org flags first
+	for flag in &flags {
+		flag_map.insert(flag.key.clone(), flag);
+	}
+
+	// Platform flags override org flags
+	for flag in &platform_flags {
+		flag_map.insert(flag.key.clone(), flag);
+	}
+
+	// Evaluate each flag
+	let mut results = Vec::with_capacity(flag_map.len());
+
+	for (_, flag) in &flag_map {
+		// Get config for this environment
+		let config = match state
+			.flags_repo
+			.get_flag_config(flag.id, environment.id)
+			.await
+		{
+			Ok(config) => config,
+			Err(e) => {
+				tracing::error!(error = %e, flag_key = %flag.key, "Failed to get flag config");
+				// Return an error result for this flag
+				results.push(EvaluationResultApi {
+					flag_key: flag.key.clone(),
+					variant: flag.default_variant.clone(),
+					value: to_api_variant_value(
+						&flag
+							.get_default_variant()
+							.map(|v| v.value.clone())
+							.unwrap_or(VariantValue::Boolean(false)),
+					),
+					reason: EvaluationReasonApi::Error {
+						message: "Failed to get flag config".to_string(),
+					},
+				});
+				continue;
+			}
+		};
+
+		// Get strategy if configured
+		let strategy = match &config {
+			Some(c) => match c.strategy_id {
+				Some(strategy_id) => match state.flags_repo.get_strategy_by_id(strategy_id).await {
+					Ok(s) => s,
+					Err(e) => {
+						tracing::error!(error = %e, %strategy_id, "Failed to get strategy");
+						None
+					}
+				},
+				None => None,
+			},
+			None => None,
+		};
+
+		// Evaluate prerequisites - collect owned strings to avoid lifetime issues
+		let mut prereq_results: Vec<(String, String)> = Vec::new();
+		for prereq in &flag.prerequisites {
+			if let Some(prereq_flag) = flag_map.get(&prereq.flag_key) {
+				let prereq_config = state
+					.flags_repo
+					.get_flag_config(prereq_flag.id, environment.id)
+					.await
+					.ok()
+					.flatten();
+				let prereq_result = evaluate_flag(
+					prereq_flag,
+					prereq_config.as_ref(),
+					None,
+					&all_kill_switches,
+					&[],
+					&context,
+				);
+				prereq_results.push((prereq.flag_key.clone(), prereq_result.variant.clone()));
+			}
+		}
+
+		// Convert prereq_results to the expected format
+		let prereq_refs: Vec<(&str, &str)> = prereq_results
+			.iter()
+			.map(|(k, v)| (k.as_str(), v.as_str()))
+			.collect();
+
+		let result = evaluate_flag(
+			flag,
+			config.as_ref(),
+			strategy.as_ref(),
+			&all_kill_switches,
+			&prereq_refs,
+			&context,
+		);
+
+		results.push(EvaluationResultApi {
+			flag_key: result.flag_key,
+			variant: result.variant,
+			value: to_api_variant_value(&result.value),
+			reason: to_api_reason(&result.reason),
+		});
+	}
+
+	tracing::debug!(
+		?org_id,
+		environment = %payload.context.environment,
+		flag_count = results.len(),
+		"Evaluated all flags"
+	);
+
+	(
+		StatusCode::OK,
+		Json(EvaluateAllFlagsResponse {
+			results,
+			evaluated_at: chrono::Utc::now(),
+		}),
+	)
+		.into_response()
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/orgs/{org_id}/flags/{flag_key}/evaluate",
+    params(
+        ("org_id" = String, Path, description = "Organization ID"),
+        ("flag_key" = String, Path, description = "Flag key to evaluate")
+    ),
+    request_body = EvaluateFlagRequest,
+    responses(
+        (status = 200, description = "Flag evaluated", body = EvaluationResultApi),
+        (status = 400, description = "Invalid request", body = FlagsErrorResponse),
+        (status = 401, description = "Not authenticated", body = FlagsErrorResponse),
+        (status = 404, description = "Flag or organization not found", body = FlagsErrorResponse)
+    ),
+    tag = "flags"
+)]
+/// Evaluate a single flag for a given context.
+///
+/// This endpoint evaluates a specific flag and returns the evaluation result.
+/// Platform flags take precedence over org flags with the same key.
+#[tracing::instrument(skip(state, payload), fields(%org_id, %flag_key, environment = %payload.context.environment))]
+pub async fn evaluate_flag_endpoint(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path((org_id, flag_key)): Path<(String, String)>,
+	Json(payload): Json<EvaluateFlagRequest>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		FlagsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	// Check org membership
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	let flags_org_id = loom_flags_core::OrgId(org_id.into_inner());
+	let context = to_core_context(&payload.context);
+
+	// Get the environment for this context
+	let environment = match state
+		.flags_repo
+		.get_environment_by_name(flags_org_id, &payload.context.environment)
+		.await
+	{
+		Ok(Some(env)) => env,
+		Ok(None) => {
+			return bad_request::<FlagsErrorResponse>(
+				"invalid_environment",
+				t(locale, "server.api.flags.environment_not_found"),
+			)
+			.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, environment = %payload.context.environment, "Failed to get environment");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	// Check for platform flag first (takes precedence)
+	let flag = match state.flags_repo.get_flag_by_key(None, &flag_key).await {
+		Ok(Some(f)) => f,
+		Ok(None) => {
+			// Try org flag
+			match state
+				.flags_repo
+				.get_flag_by_key(Some(flags_org_id), &flag_key)
+				.await
+			{
+				Ok(Some(f)) => f,
+				Ok(None) => {
+					return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+						.into_response();
+				}
+				Err(e) => {
+					tracing::error!(error = %e, %flag_key, "Failed to get flag");
+					return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+						.into_response();
+				}
+			}
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %flag_key, "Failed to get platform flag");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	// Get active kill switches (platform first, then org)
+	let platform_kill_switches = match state.flags_repo.list_active_kill_switches(None).await {
+		Ok(ks) => ks,
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to list platform kill switches");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	let org_kill_switches = match state
+		.flags_repo
+		.list_active_kill_switches(Some(flags_org_id))
+		.await
+	{
+		Ok(ks) => ks,
+		Err(e) => {
+			tracing::error!(error = %e, ?org_id, "Failed to list org kill switches");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	let all_kill_switches: Vec<_> = platform_kill_switches
+		.into_iter()
+		.chain(org_kill_switches.into_iter())
+		.collect();
+
+	// Get config for this environment
+	let config = match state
+		.flags_repo
+		.get_flag_config(flag.id, environment.id)
+		.await
+	{
+		Ok(config) => config,
+		Err(e) => {
+			tracing::error!(error = %e, %flag_key, "Failed to get flag config");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	// Get strategy if configured
+	let strategy = match &config {
+		Some(c) => match c.strategy_id {
+			Some(strategy_id) => match state.flags_repo.get_strategy_by_id(strategy_id).await {
+				Ok(s) => s,
+				Err(e) => {
+					tracing::error!(error = %e, %strategy_id, "Failed to get strategy");
+					None
+				}
+			},
+			None => None,
+		},
+		None => None,
+	};
+
+	// Evaluate prerequisites
+	let mut prereq_results: Vec<(String, String)> = Vec::new();
+	for prereq in &flag.prerequisites {
+		// Try platform flag first, then org flag
+		let prereq_flag = match state.flags_repo.get_flag_by_key(None, &prereq.flag_key).await {
+			Ok(Some(f)) => Some(f),
+			Ok(None) => state
+				.flags_repo
+				.get_flag_by_key(Some(flags_org_id), &prereq.flag_key)
+				.await
+				.ok()
+				.flatten(),
+			Err(_) => None,
+		};
+
+		if let Some(prereq_flag) = prereq_flag {
+			let prereq_config = state
+				.flags_repo
+				.get_flag_config(prereq_flag.id, environment.id)
+				.await
+				.ok()
+				.flatten();
+			let prereq_result = evaluate_flag(
+				&prereq_flag,
+				prereq_config.as_ref(),
+				None,
+				&all_kill_switches,
+				&[],
+				&context,
+			);
+			prereq_results.push((prereq.flag_key.clone(), prereq_result.variant));
+		}
+	}
+
+	let prereq_refs: Vec<(&str, &str)> = prereq_results
+		.iter()
+		.map(|(k, v)| (k.as_str(), v.as_str()))
+		.collect();
+
+	let result = evaluate_flag(
+		&flag,
+		config.as_ref(),
+		strategy.as_ref(),
+		&all_kill_switches,
+		&prereq_refs,
+		&context,
+	);
+
+	tracing::debug!(
+		%flag_key,
+		variant = %result.variant,
+		?result.reason,
+		"Flag evaluated"
+	);
+
+	(
+		StatusCode::OK,
+		Json(EvaluationResultApi {
+			flag_key: result.flag_key,
+			variant: result.variant,
+			value: to_api_variant_value(&result.value),
+			reason: to_api_reason(&result.reason),
+		}),
+	)
+		.into_response()
 }

@@ -585,3 +585,109 @@ pub struct FlagsErrorResponse {
 	pub error: String,
 	pub message: String,
 }
+
+// ============================================================================
+// Evaluation Types
+// ============================================================================
+
+/// Geographic context for flag evaluation.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct GeoContextApi {
+	/// ISO 3166-1 alpha-2 country code (e.g., "US").
+	pub country: Option<String>,
+	/// Region/state code (e.g., "CA" for California).
+	pub region: Option<String>,
+	/// City name.
+	pub city: Option<String>,
+}
+
+/// Context for evaluating feature flags.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct EvaluationContextApi {
+	/// User ID for user-level targeting.
+	pub user_id: Option<String>,
+	/// Organization ID for org-level targeting.
+	pub org_id: Option<String>,
+	/// Session ID for session-level targeting.
+	pub session_id: Option<String>,
+	/// Environment name (e.g., "prod", "dev").
+	pub environment: String,
+	/// Custom attributes for targeting rules.
+	#[serde(default)]
+	pub attributes: std::collections::HashMap<String, serde_json::Value>,
+	/// Geographic context (optional, server may resolve from IP).
+	pub geo: Option<GeoContextApi>,
+}
+
+/// The reason for an evaluation result.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+#[serde(tag = "type")]
+pub enum EvaluationReasonApi {
+	/// Default variant (no strategy matched).
+	Default,
+	/// Strategy determined the variant.
+	Strategy {
+		/// ID of the strategy that matched.
+		strategy_id: String,
+	},
+	/// Kill switch forced the flag off.
+	KillSwitch {
+		/// ID of the kill switch that is active.
+		kill_switch_id: String,
+	},
+	/// Prerequisite flag not met.
+	Prerequisite {
+		/// Key of the missing prerequisite flag.
+		missing_flag: String,
+	},
+	/// Flag is disabled in this environment.
+	Disabled,
+	/// An error occurred during evaluation.
+	Error {
+		/// Error message.
+		message: String,
+	},
+}
+
+/// Result of evaluating a single flag.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct EvaluationResultApi {
+	/// The flag key that was evaluated.
+	pub flag_key: String,
+	/// The variant that was selected.
+	pub variant: String,
+	/// The value of the selected variant.
+	pub value: VariantValueApi,
+	/// The reason for this evaluation result.
+	pub reason: EvaluationReasonApi,
+}
+
+/// Request to evaluate a single flag.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct EvaluateFlagRequest {
+	/// The evaluation context.
+	pub context: EvaluationContextApi,
+}
+
+/// Request to evaluate all flags.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct EvaluateAllFlagsRequest {
+	/// The evaluation context.
+	pub context: EvaluationContextApi,
+}
+
+/// Response for evaluating all flags.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct EvaluateAllFlagsResponse {
+	/// Evaluation results for all flags.
+	pub results: Vec<EvaluationResultApi>,
+	/// When the evaluation was performed.
+	pub evaluated_at: DateTime<Utc>,
+}

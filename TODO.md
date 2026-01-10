@@ -473,7 +473,7 @@ Implementation checklist for the Feature Flags system. See
 
 ---
 
-## Phase 6: Evaluation Engine
+## ✅ Phase 6: Evaluation Engine (COMPLETED)
 
 **Goal:** Complete flag evaluation with all precedence rules.
 
@@ -483,20 +483,22 @@ Implementation checklist for the Feature Flags system. See
 - Evaluation endpoints: `specs/feature-flags-system.md:415-418`
 
 **Tasks:**
-- [ ] Implement full evaluation flow in `loom-server-flags/src/evaluation.rs`
+- [x] Implement full evaluation flow in `loom-server-flags/src/evaluation.rs`
   1. Check flag exists
   2. Check environment config (enabled/disabled)
   3. Check kill switches (platform first, then org)
   4. Check prerequisites
   5. Evaluate strategy (conditions, percentage, schedule)
   6. Return variant with reason
-- [ ] Platform vs org precedence
-  - [ ] Platform flags override org flags with same key
-  - [ ] Platform kill switches affect all orgs
-- [ ] Implement evaluation endpoints
-  - [ ] `POST /api/flags/evaluate` - evaluate all flags for context
-  - [ ] `POST /api/flags/evaluate/{key}` - evaluate single flag
-- [ ] Return EvaluationResult with reason
+- [x] Platform vs org precedence
+  - [x] Platform flags override org flags with same key
+  - [x] Platform kill switches affect all orgs
+- [x] Implement evaluation endpoints
+  - [x] `POST /api/orgs/{org_id}/flags/evaluate` - evaluate all flags for context
+  - [x] `POST /api/orgs/{org_id}/flags/{flag_key}/evaluate` - evaluate single flag
+- [x] Return EvaluationResult with reason
+- [x] API types for evaluation (EvaluationContextApi, EvaluationResultApi, EvaluationReasonApi)
+- [x] 96 tests passing (77 in loom-flags-core, 19 in loom-server-flags)
 
 ---
 
