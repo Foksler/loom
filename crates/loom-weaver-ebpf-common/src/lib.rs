@@ -501,6 +501,10 @@ pub enum EscapeType {
 	ProcSys = 6,
 	/// Attempt to use container escape techniques
 	Container = 7,
+	/// Attempt to use bpf syscall
+	Bpf = 8,
+	/// Attempt to use perf_event_open
+	PerfEvent = 9,
 }
 
 impl EscapeType {
@@ -514,6 +518,8 @@ impl EscapeType {
 			5 => Some(Self::Mount),
 			6 => Some(Self::ProcSys),
 			7 => Some(Self::Container),
+			8 => Some(Self::Bpf),
+			9 => Some(Self::PerfEvent),
 			_ => None,
 		}
 	}
@@ -555,12 +561,12 @@ mod tests {
 
 	#[test]
 	fn test_escape_type_round_trip() {
-		for i in 1..=7 {
+		for i in 1..=9 {
 			let escape_type = EscapeType::from_u32(i).unwrap();
 			assert_eq!(escape_type as u32, i);
 		}
 		assert!(EscapeType::from_u32(0).is_none());
-		assert!(EscapeType::from_u32(8).is_none());
+		assert!(EscapeType::from_u32(10).is_none());
 	}
 
 	#[test]
