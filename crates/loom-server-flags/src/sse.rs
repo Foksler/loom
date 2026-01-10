@@ -294,6 +294,33 @@ impl FlagsBroadcaster {
 		total
 	}
 
+	/// Broadcast an event to all connected clients (platform-level events).
+	///
+	/// This is used for platform-level kill switches and other events that
+	/// affect all organizations.
+	pub async fn broadcast_to_all(&self, event: FlagStreamEvent) -> usize {
+		let channels = self.channels.read().await;
+		let mut total = 0;
+
+		for (_key, state) in channels.iter() {
+			if let Ok(count) = state.sender.send(event.clone()) {
+				total += count;
+			}
+		}
+
+		if total > 0 {
+			self.total_events.fetch_add(1, Ordering::Relaxed);
+			info!(
+				event_type = event.event_type(),
+				total_receivers = total,
+				channel_count = channels.len(),
+				"Broadcast platform event to all channels"
+			);
+		}
+
+		total
+	}
+
 	/// Broadcast a heartbeat to all connected clients.
 	pub async fn broadcast_heartbeat(&self) {
 		let event = FlagStreamEvent::heartbeat();

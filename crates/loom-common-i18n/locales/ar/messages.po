@@ -1711,3 +1711,71 @@ msgstr "استخدام قيم الأعلام المخزنة مؤقتاً"
 #: Flags SDK: Cache initialized
 msgid "client.flags.status.cache_initialized"
 msgstr "تم تهيئة ذاكرة التخزين المؤقت للأعلام مع {count} أعلام"
+
+# ============================================================================
+# Platform Flags (Admin)
+# ============================================================================
+
+#: API: Platform Flags - Listed
+msgid "server.api.admin.flags.listed"
+msgstr "تم عرض أعلام المنصة"
+
+#: API: Platform Flags - Created
+msgid "server.api.admin.flags.created"
+msgstr "تم إنشاء علم المنصة بنجاح"
+
+#: API: Platform Flags - Updated
+msgid "server.api.admin.flags.updated"
+msgstr "تم تحديث علم المنصة بنجاح"
+
+#: API: Platform Flags - Archived
+msgid "server.api.admin.flags.archived"
+msgstr "تم أرشفة علم المنصة بنجاح"
+
+#: API: Platform Flags - Restored
+msgid "server.api.admin.flags.restored"
+msgstr "تم استعادة علم المنصة بنجاح"
+
+#: API: Platform Flags - Not found
+msgid "server.api.admin.flags.not_found"
+msgstr "لم يتم العثور على علم المنصة"
+
+#: API: Platform Flags - Duplicate key
+msgid "server.api.admin.flags.duplicate_key"
+msgstr "يوجد بالفعل علم منصة بهذا المفتاح"
+
+#: API: Platform Kill Switch - Listed
+msgid "server.api.admin.kill_switches.listed"
+msgstr "تم عرض مفاتيح إيقاف الطوارئ للمنصة"
+
+#: API: Platform Kill Switch - Created
+msgid "server.api.admin.kill_switches.created"
+msgstr "تم إنشاء مفتاح إيقاف الطوارئ للمنصة بنجاح"
+
+#: API: Platform Kill Switch - Updated
+msgid "server.api.admin.kill_switches.updated"
+msgstr "تم تحديث مفتاح إيقاف الطوارئ للمنصة بنجاح"
+
+#: API: Platform Kill Switch - Deleted
+msgid "server.api.admin.kill_switches.deleted"
+msgstr "تم حذف مفتاح إيقاف الطوارئ للمنصة بنجاح"
+
+#: API: Platform Kill Switch - Activated
+msgid "server.api.admin.kill_switches.activated"
+msgstr "تم تفعيل مفتاح إيقاف الطوارئ للمنصة"
+
+#: API: Platform Kill Switch - Deactivated
+msgid "server.api.admin.kill_switches.deactivated"
+msgstr "تم إلغاء تفعيل مفتاح إيقاف الطوارئ للمنصة"
+
+#: API: Platform Kill Switch - Not found
+msgid "server.api.admin.kill_switches.not_found"
+msgstr "لم يتم العثور على مفتاح إيقاف الطوارئ للمنصة"
+
+#: API: Platform Kill Switch - Duplicate key
+msgid "server.api.admin.kill_switches.duplicate_key"
+msgstr "يوجد بالفعل مفتاح إيقاف طوارئ للمنصة بهذا المفتاح"
+
+#: API: Platform Strategies - Listed
+msgid "server.api.admin.strategies.listed"
+msgstr "تم عرض استراتيجيات المنصة"

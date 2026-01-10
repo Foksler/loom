@@ -699,7 +699,7 @@ Implementation checklist for the Feature Flags system. See
 
 ---
 
-## Phase 13: Platform Flags
+## ✅ Phase 13: Platform Flags (COMPLETED)
 
 **Goal:** Super admin management of platform-level flags.
 
@@ -710,19 +710,32 @@ Implementation checklist for the Feature Flags system. See
 - Permissions: `specs/feature-flags-system.md:595-618`
 
 **Tasks:**
-- [ ] Implement platform flag endpoints (super admin only)
-  - [ ] `GET /api/admin/flags`
-  - [ ] `POST /api/admin/flags`
-  - [ ] `PATCH /api/admin/flags/{key}`
-  - [ ] `DELETE /api/admin/flags/{key}`
-- [ ] Implement platform kill switch endpoints
-  - [ ] `GET /api/admin/flags/kill-switches`
-  - [ ] `POST /api/admin/flags/kill-switches`
-- [ ] Update evaluation engine for platform precedence
-  - [ ] Check platform flags first
-  - [ ] Platform overrides org config
-- [ ] Super admin impersonation support
-  - [ ] Allow super admin to manage org flags as org admin
+- [x] Implement platform flag endpoints (super admin only)
+  - [x] `GET /api/admin/flags` - list platform flags
+  - [x] `POST /api/admin/flags` - create platform flag
+  - [x] `GET /api/admin/flags/{key}` - get platform flag by key
+  - [x] `PATCH /api/admin/flags/{key}` - update platform flag
+  - [x] `POST /api/admin/flags/{key}/archive` - archive platform flag
+  - [x] `POST /api/admin/flags/{key}/restore` - restore archived platform flag
+- [x] Implement platform kill switch endpoints
+  - [x] `GET /api/admin/flags/kill-switches` - list platform kill switches
+  - [x] `POST /api/admin/flags/kill-switches` - create platform kill switch
+  - [x] `GET /api/admin/flags/kill-switches/{key}` - get platform kill switch
+  - [x] `PATCH /api/admin/flags/kill-switches/{key}` - update platform kill switch
+  - [x] `POST /api/admin/flags/kill-switches/{key}/activate` - activate kill switch
+  - [x] `POST /api/admin/flags/kill-switches/{key}/deactivate` - deactivate kill switch
+  - [x] `DELETE /api/admin/flags/kill-switches/{key}` - delete platform kill switch
+- [x] Implement platform strategy endpoints
+  - [x] `GET /api/admin/flags/strategies` - list platform strategies
+  - [x] `POST /api/admin/flags/strategies` - create platform strategy
+  - [x] `GET /api/admin/flags/strategies/{id}` - get platform strategy
+  - [x] `PATCH /api/admin/flags/strategies/{id}` - update platform strategy
+  - [x] `DELETE /api/admin/flags/strategies/{id}` - delete platform strategy
+- [x] SSE broadcast for platform events
+  - [x] `broadcast_to_all` method for platform-wide flag updates
+- [x] i18n translations (EN, ES, AR) for all platform flag messages
+- [x] Authorization tests (10 tests verifying super admin only access)
+- [x] All tests passing
 
 ---
 

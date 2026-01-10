@@ -331,16 +331,21 @@ pub async fn run_authz_cases(app: &TestApp, cases: &[AuthzCase]) {
 			_ => app.get(&case.path, case.user.as_ref()).await,
 		};
 
-		assert_eq!(
-			response.status(),
-			case.expected_status,
-			"Case '{}': {} {} - expected {}, got {}",
-			case.name,
-			case.method,
-			case.path,
-			case.expected_status,
-			response.status()
-		);
+		if response.status() != case.expected_status {
+			// Read the response body for debugging
+			let (parts, body) = response.into_parts();
+			let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+			let body_str = String::from_utf8_lossy(&body_bytes);
+			panic!(
+				"Case '{}': {} {} - expected {}, got {}\nResponse body: {}",
+				case.name,
+				case.method,
+				case.path,
+				case.expected_status,
+				parts.status,
+				body_str
+			);
+		}
 	}
 }
 

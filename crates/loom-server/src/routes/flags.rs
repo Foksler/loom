@@ -2402,7 +2402,7 @@ pub async fn update_flag_config(
 // Strategy Routes
 // ============================================================================
 
-fn condition_to_api(c: &Condition) -> ConditionApi {
+pub(crate) fn condition_to_api(c: &Condition) -> ConditionApi {
 	match c {
 		Condition::Attribute {
 			attribute,
@@ -2428,7 +2428,7 @@ fn condition_to_api(c: &Condition) -> ConditionApi {
 	}
 }
 
-fn condition_from_api(c: &ConditionApi) -> Condition {
+pub(crate) fn condition_from_api(c: &ConditionApi) -> Condition {
 	match c {
 		ConditionApi::Attribute {
 			attribute,
@@ -2494,7 +2494,7 @@ fn geo_field_to_api(f: GeoField) -> GeoFieldApi {
 	}
 }
 
-fn geo_field_from_api(f: GeoFieldApi) -> GeoField {
+pub(crate) fn geo_field_from_api(f: GeoFieldApi) -> GeoField {
 	match f {
 		GeoFieldApi::Country => GeoField::Country,
 		GeoFieldApi::Region => GeoField::Region,
@@ -2509,14 +2509,14 @@ fn geo_operator_to_api(op: GeoOperator) -> GeoOperatorApi {
 	}
 }
 
-fn geo_operator_from_api(op: GeoOperatorApi) -> GeoOperator {
+pub(crate) fn geo_operator_from_api(op: GeoOperatorApi) -> GeoOperator {
 	match op {
 		GeoOperatorApi::In => GeoOperator::In,
 		GeoOperatorApi::NotIn => GeoOperator::NotIn,
 	}
 }
 
-fn percentage_key_to_api(pk: &PercentageKey) -> PercentageKeyApi {
+pub(crate) fn percentage_key_to_api(pk: &PercentageKey) -> PercentageKeyApi {
 	match pk {
 		PercentageKey::UserId => PercentageKeyApi::UserId,
 		PercentageKey::OrgId => PercentageKeyApi::OrgId,
@@ -2525,7 +2525,7 @@ fn percentage_key_to_api(pk: &PercentageKey) -> PercentageKeyApi {
 	}
 }
 
-fn percentage_key_from_api(pk: &PercentageKeyApi) -> PercentageKey {
+pub(crate) fn percentage_key_from_api(pk: &PercentageKeyApi) -> PercentageKey {
 	match pk {
 		PercentageKeyApi::UserId => PercentageKey::UserId,
 		PercentageKeyApi::OrgId => PercentageKey::OrgId,
@@ -2534,13 +2534,13 @@ fn percentage_key_from_api(pk: &PercentageKeyApi) -> PercentageKey {
 	}
 }
 
-fn schedule_to_api(s: &Schedule) -> ScheduleApi {
+pub(crate) fn schedule_to_api(s: &Schedule) -> ScheduleApi {
 	ScheduleApi {
 		steps: s.steps.iter().map(schedule_step_to_api).collect(),
 	}
 }
 
-fn schedule_from_api(s: &ScheduleApi) -> Schedule {
+pub(crate) fn schedule_from_api(s: &ScheduleApi) -> Schedule {
 	Schedule {
 		steps: s.steps.iter().map(schedule_step_from_api).collect(),
 	}

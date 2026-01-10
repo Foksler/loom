@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS flags (
     maintainer_user_id TEXT REFERENCES users(id),
     variants TEXT NOT NULL,  -- JSON array
     default_variant TEXT NOT NULL,
+    exposure_tracking_enabled INTEGER NOT NULL DEFAULT 0,  -- Boolean (0 = false, 1 = true)
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     archived_at TEXT,

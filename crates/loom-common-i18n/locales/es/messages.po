@@ -1712,3 +1712,71 @@ msgstr "Usando valores de bandera en caché"
 #: Flags SDK: Cache initialized
 msgid "client.flags.status.cache_initialized"
 msgstr "Caché de banderas inicializado con {count} banderas"
+
+# ============================================================================
+# Platform Flags (Admin)
+# ============================================================================
+
+#: API: Platform Flags - Listed
+msgid "server.api.admin.flags.listed"
+msgstr "Banderas de plataforma listadas"
+
+#: API: Platform Flags - Created
+msgid "server.api.admin.flags.created"
+msgstr "Bandera de plataforma creada exitosamente"
+
+#: API: Platform Flags - Updated
+msgid "server.api.admin.flags.updated"
+msgstr "Bandera de plataforma actualizada exitosamente"
+
+#: API: Platform Flags - Archived
+msgid "server.api.admin.flags.archived"
+msgstr "Bandera de plataforma archivada exitosamente"
+
+#: API: Platform Flags - Restored
+msgid "server.api.admin.flags.restored"
+msgstr "Bandera de plataforma restaurada exitosamente"
+
+#: API: Platform Flags - Not found
+msgid "server.api.admin.flags.not_found"
+msgstr "Bandera de plataforma no encontrada"
+
+#: API: Platform Flags - Duplicate key
+msgid "server.api.admin.flags.duplicate_key"
+msgstr "Ya existe una bandera de plataforma con esta clave"
+
+#: API: Platform Kill Switch - Listed
+msgid "server.api.admin.kill_switches.listed"
+msgstr "Interruptores de emergencia de plataforma listados"
+
+#: API: Platform Kill Switch - Created
+msgid "server.api.admin.kill_switches.created"
+msgstr "Interruptor de emergencia de plataforma creado exitosamente"
+
+#: API: Platform Kill Switch - Updated
+msgid "server.api.admin.kill_switches.updated"
+msgstr "Interruptor de emergencia de plataforma actualizado exitosamente"
+
+#: API: Platform Kill Switch - Deleted
+msgid "server.api.admin.kill_switches.deleted"
+msgstr "Interruptor de emergencia de plataforma eliminado exitosamente"
+
+#: API: Platform Kill Switch - Activated
+msgid "server.api.admin.kill_switches.activated"
+msgstr "Interruptor de emergencia de plataforma activado"
+
+#: API: Platform Kill Switch - Deactivated
+msgid "server.api.admin.kill_switches.deactivated"
+msgstr "Interruptor de emergencia de plataforma desactivado"
+
+#: API: Platform Kill Switch - Not found
+msgid "server.api.admin.kill_switches.not_found"
+msgstr "Interruptor de emergencia de plataforma no encontrado"
+
+#: API: Platform Kill Switch - Duplicate key
+msgid "server.api.admin.kill_switches.duplicate_key"
+msgstr "Ya existe un interruptor de emergencia de plataforma con esta clave"
+
+#: API: Platform Strategies - Listed
+msgid "server.api.admin.strategies.listed"
+msgstr "Estrategias de plataforma listadas"

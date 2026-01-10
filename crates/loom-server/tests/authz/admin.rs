@@ -224,3 +224,193 @@ async fn admin_cannot_remove_last_system_admin() {
 
 	run_authz_cases(&app, &cases).await;
 }
+
+// ============================================================================
+// Platform Flags Tests
+// ============================================================================
+
+#[tokio::test]
+async fn admin_can_list_platform_flags() {
+	let app = TestApp::new().await;
+
+	let cases = vec![AuthzCase {
+		name: "admin_can_list_platform_flags",
+		method: Method::GET,
+		path: "/api/admin/flags".to_string(),
+		user: Some(app.fixtures.admin.clone()),
+		body: None,
+		expected_status: StatusCode::OK,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn non_admin_cannot_list_platform_flags() {
+	let app = TestApp::new().await;
+
+	let cases = vec![AuthzCase {
+		name: "non_admin_cannot_list_platform_flags",
+		method: Method::GET,
+		path: "/api/admin/flags".to_string(),
+		user: Some(app.fixtures.org_a.owner.clone()),
+		body: None,
+		expected_status: StatusCode::FORBIDDEN,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn admin_can_create_platform_flag() {
+	let app = TestApp::new().await;
+
+	let cases = vec![AuthzCase {
+		name: "admin_can_create_platform_flag",
+		method: Method::POST,
+		path: "/api/admin/flags".to_string(),
+		user: Some(app.fixtures.admin.clone()),
+		body: Some(json!({
+			"key": "platform.test_flag",
+			"name": "Test Platform Flag",
+			"description": "A test platform flag",
+			"tags": ["test"],
+			"variants": [
+				{ "name": "off", "value": { "type": "Boolean", "value": false }, "weight": 50 },
+				{ "name": "on", "value": { "type": "Boolean", "value": true }, "weight": 50 }
+			],
+			"default_variant": "off"
+		})),
+		expected_status: StatusCode::CREATED,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn non_admin_cannot_create_platform_flag() {
+	let app = TestApp::new().await;
+
+	let cases = vec![AuthzCase {
+		name: "non_admin_cannot_create_platform_flag",
+		method: Method::POST,
+		path: "/api/admin/flags".to_string(),
+		user: Some(app.fixtures.org_a.owner.clone()),
+		body: Some(json!({
+			"key": "platform.forbidden_flag",
+			"name": "Forbidden Flag",
+			"variants": [
+				{ "name": "off", "value": { "type": "Boolean", "value": false }, "weight": 100 }
+			],
+			"default_variant": "off"
+		})),
+		expected_status: StatusCode::FORBIDDEN,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn admin_can_list_platform_kill_switches() {
+	let app = TestApp::new().await;
+
+	let cases = vec![AuthzCase {
+		name: "admin_can_list_platform_kill_switches",
+		method: Method::GET,
+		path: "/api/admin/flags/kill-switches".to_string(),
+		user: Some(app.fixtures.admin.clone()),
+		body: None,
+		expected_status: StatusCode::OK,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn non_admin_cannot_list_platform_kill_switches() {
+	let app = TestApp::new().await;
+
+	let cases = vec![AuthzCase {
+		name: "non_admin_cannot_list_platform_kill_switches",
+		method: Method::GET,
+		path: "/api/admin/flags/kill-switches".to_string(),
+		user: Some(app.fixtures.org_a.owner.clone()),
+		body: None,
+		expected_status: StatusCode::FORBIDDEN,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn admin_can_create_platform_kill_switch() {
+	let app = TestApp::new().await;
+
+	let cases = vec![AuthzCase {
+		name: "admin_can_create_platform_kill_switch",
+		method: Method::POST,
+		path: "/api/admin/flags/kill-switches".to_string(),
+		user: Some(app.fixtures.admin.clone()),
+		body: Some(json!({
+			"key": "platform_emergency_stop",
+			"name": "Emergency Stop",
+			"description": "Emergency kill switch for all platform flags",
+			"linked_flag_keys": ["platform_test_flag"]
+		})),
+		expected_status: StatusCode::CREATED,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn non_admin_cannot_create_platform_kill_switch() {
+	let app = TestApp::new().await;
+
+	let cases = vec![AuthzCase {
+		name: "non_admin_cannot_create_platform_kill_switch",
+		method: Method::POST,
+		path: "/api/admin/flags/kill-switches".to_string(),
+		user: Some(app.fixtures.org_a.owner.clone()),
+		body: Some(json!({
+			"key": "forbidden_ks",
+			"name": "Forbidden Kill Switch",
+			"linked_flag_keys": []
+		})),
+		expected_status: StatusCode::FORBIDDEN,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn admin_can_list_platform_strategies() {
+	let app = TestApp::new().await;
+
+	let cases = vec![AuthzCase {
+		name: "admin_can_list_platform_strategies",
+		method: Method::GET,
+		path: "/api/admin/flags/strategies".to_string(),
+		user: Some(app.fixtures.admin.clone()),
+		body: None,
+		expected_status: StatusCode::OK,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn non_admin_cannot_list_platform_strategies() {
+	let app = TestApp::new().await;
+
+	let cases = vec![AuthzCase {
+		name: "non_admin_cannot_list_platform_strategies",
+		method: Method::GET,
+		path: "/api/admin/flags/strategies".to_string(),
+		user: Some(app.fixtures.org_a.owner.clone()),
+		body: None,
+		expected_status: StatusCode::FORBIDDEN,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}

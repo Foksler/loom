@@ -1713,3 +1713,52 @@ msgstr "Using cached flag values"
 msgid "client.flags.status.cache_initialized"
 msgstr "Flag cache initialized with {count} flags"
 
+
+msgid "server.api.admin.flags.listed"
+msgstr "Listed platform flags"
+
+msgid "server.api.admin.flags.created"
+msgstr "Platform flag created successfully"
+
+msgid "server.api.admin.flags.updated"
+msgstr "Platform flag updated successfully"
+
+msgid "server.api.admin.flags.archived"
+msgstr "Platform flag archived successfully"
+
+msgid "server.api.admin.flags.restored"
+msgstr "Platform flag restored successfully"
+
+msgid "server.api.admin.flags.not_found"
+msgstr "Platform flag not found"
+
+msgid "server.api.admin.flags.duplicate_key"
+msgstr "A platform flag with this key already exists"
+
+msgid "server.api.admin.kill_switches.listed"
+msgstr "Listed platform kill switches"
+
+msgid "server.api.admin.kill_switches.created"
+msgstr "Platform kill switch created successfully"
+
+msgid "server.api.admin.kill_switches.updated"
+msgstr "Platform kill switch updated successfully"
+
+msgid "server.api.admin.kill_switches.activated"
+msgstr "Platform kill switch activated"
+
+msgid "server.api.admin.kill_switches.deactivated"
+msgstr "Platform kill switch deactivated"
+
+msgid "server.api.admin.kill_switches.deleted"
+msgstr "Platform kill switch deleted"
+
+msgid "server.api.admin.kill_switches.not_found"
+msgstr "Platform kill switch not found"
+
+msgid "server.api.admin.kill_switches.duplicate_key"
+msgstr "A platform kill switch with this key already exists"
+
+msgid "server.api.admin.strategies.listed"
+msgstr "Listed platform strategies"
+

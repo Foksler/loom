@@ -338,6 +338,16 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ServerError> {
 		}
 	}
 
+	let m30 = include_str!("../../migrations/030_feature_flags.sql");
+	for stmt in m30.split(';').filter(|s| !s.trim().is_empty()) {
+		if let Err(e) = sqlx::query(stmt).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists") && !msg.contains("duplicate column") {
+				return Err(e.into());
+			}
+		}
+	}
+
 	tracing::debug!("database migrations complete");
 	Ok(())
 }

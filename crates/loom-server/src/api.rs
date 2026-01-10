@@ -713,6 +713,57 @@ fn admin_routes(state: AppState) -> Router<AppState> {
 		// Log streaming
 		.route("/logs", get(routes::admin_logs::list_logs))
 		.route("/logs/stream", get(routes::admin_logs::stream_logs))
+		// Platform kill switches management (super admin only)
+		// Note: kill-switches routes MUST come before /flags/{key} to avoid route conflicts
+		.route(
+			"/flags/kill-switches",
+			get(routes::admin_flags::list_platform_kill_switches),
+		)
+		.route(
+			"/flags/kill-switches",
+			post(routes::admin_flags::create_platform_kill_switch),
+		)
+		.route(
+			"/flags/kill-switches/{key}",
+			get(routes::admin_flags::get_platform_kill_switch),
+		)
+		.route(
+			"/flags/kill-switches/{key}",
+			patch(routes::admin_flags::update_platform_kill_switch),
+		)
+		.route(
+			"/flags/kill-switches/{key}",
+			delete(routes::admin_flags::delete_platform_kill_switch),
+		)
+		.route(
+			"/flags/kill-switches/{key}/activate",
+			post(routes::admin_flags::activate_platform_kill_switch),
+		)
+		.route(
+			"/flags/kill-switches/{key}/deactivate",
+			post(routes::admin_flags::deactivate_platform_kill_switch),
+		)
+		// Platform strategies management (super admin only)
+		.route(
+			"/flags/strategies",
+			get(routes::admin_flags::list_platform_strategies),
+		)
+		// Platform flags management (super admin only)
+		.route("/flags", get(routes::admin_flags::list_platform_flags))
+		.route("/flags", post(routes::admin_flags::create_platform_flag))
+		.route("/flags/{key}", get(routes::admin_flags::get_platform_flag))
+		.route(
+			"/flags/{key}",
+			patch(routes::admin_flags::update_platform_flag),
+		)
+		.route(
+			"/flags/{key}",
+			delete(routes::admin_flags::archive_platform_flag),
+		)
+		.route(
+			"/flags/{key}/restore",
+			post(routes::admin_flags::restore_platform_flag),
+		)
 		.route_layer(RequireRole::admin())
 		.layer(from_fn_with_state(state.clone(), require_auth_layer))
 		.layer(from_fn_with_state(state, auth_layer))
