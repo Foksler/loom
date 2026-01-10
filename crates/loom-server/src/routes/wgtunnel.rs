@@ -95,8 +95,10 @@ fn extract_bearer_token(headers: &HeaderMap) -> Result<&str, (StatusCode, Json<E
 }
 
 fn parse_public_key(key_b64: &str) -> Result<[u8; 32], ServerError> {
+	// Try standard base64 first, then no-pad (WireGuard convention)
 	let bytes = BASE64_STANDARD
 		.decode(key_b64)
+		.or_else(|_| BASE64_STANDARD_NO_PAD.decode(key_b64))
 		.map_err(|_| ServerError::BadRequest("Invalid base64 public key".to_string()))?;
 
 	bytes
