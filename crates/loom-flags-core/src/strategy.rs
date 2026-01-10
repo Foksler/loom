@@ -101,9 +101,7 @@ impl AttributeOperator {
 			AttributeOperator::Equals => actual == expected,
 			AttributeOperator::NotEquals => actual != expected,
 			AttributeOperator::Contains => {
-				if let (Some(actual_str), Some(expected_str)) =
-					(actual.as_str(), expected.as_str())
-				{
+				if let (Some(actual_str), Some(expected_str)) = (actual.as_str(), expected.as_str()) {
 					actual_str.contains(expected_str)
 				} else if let Some(actual_arr) = actual.as_array() {
 					actual_arr.contains(expected)
@@ -112,18 +110,14 @@ impl AttributeOperator {
 				}
 			}
 			AttributeOperator::StartsWith => {
-				if let (Some(actual_str), Some(expected_str)) =
-					(actual.as_str(), expected.as_str())
-				{
+				if let (Some(actual_str), Some(expected_str)) = (actual.as_str(), expected.as_str()) {
 					actual_str.starts_with(expected_str)
 				} else {
 					false
 				}
 			}
 			AttributeOperator::EndsWith => {
-				if let (Some(actual_str), Some(expected_str)) =
-					(actual.as_str(), expected.as_str())
-				{
+				if let (Some(actual_str), Some(expected_str)) = (actual.as_str(), expected.as_str()) {
 					actual_str.ends_with(expected_str)
 				} else {
 					false
@@ -131,9 +125,7 @@ impl AttributeOperator {
 			}
 			AttributeOperator::GreaterThan => compare_values(actual, expected, |a, b| a > b),
 			AttributeOperator::LessThan => compare_values(actual, expected, |a, b| a < b),
-			AttributeOperator::GreaterThanOrEquals => {
-				compare_values(actual, expected, |a, b| a >= b)
-			}
+			AttributeOperator::GreaterThanOrEquals => compare_values(actual, expected, |a, b| a >= b),
 			AttributeOperator::LessThanOrEquals => compare_values(actual, expected, |a, b| a <= b),
 			AttributeOperator::In => {
 				if let Some(expected_arr) = expected.as_array() {
@@ -260,14 +252,8 @@ mod tests {
 	#[test]
 	fn test_attribute_operator_equals() {
 		let op = AttributeOperator::Equals;
-		assert!(op.evaluate(
-			&serde_json::json!("test"),
-			&serde_json::json!("test")
-		));
-		assert!(!op.evaluate(
-			&serde_json::json!("test"),
-			&serde_json::json!("other")
-		));
+		assert!(op.evaluate(&serde_json::json!("test"), &serde_json::json!("test")));
+		assert!(!op.evaluate(&serde_json::json!("test"), &serde_json::json!("other")));
 		assert!(op.evaluate(&serde_json::json!(42), &serde_json::json!(42)));
 		assert!(!op.evaluate(&serde_json::json!(42), &serde_json::json!(43)));
 	}
@@ -281,33 +267,18 @@ mod tests {
 			&serde_json::json!("hello world"),
 			&serde_json::json!("world")
 		));
-		assert!(!op.evaluate(
-			&serde_json::json!("hello world"),
-			&serde_json::json!("foo")
-		));
+		assert!(!op.evaluate(&serde_json::json!("hello world"), &serde_json::json!("foo")));
 
 		// Array contains
-		assert!(op.evaluate(
-			&serde_json::json!(["a", "b", "c"]),
-			&serde_json::json!("b")
-		));
-		assert!(!op.evaluate(
-			&serde_json::json!(["a", "b", "c"]),
-			&serde_json::json!("d")
-		));
+		assert!(op.evaluate(&serde_json::json!(["a", "b", "c"]), &serde_json::json!("b")));
+		assert!(!op.evaluate(&serde_json::json!(["a", "b", "c"]), &serde_json::json!("d")));
 	}
 
 	#[test]
 	fn test_attribute_operator_in() {
 		let op = AttributeOperator::In;
-		assert!(op.evaluate(
-			&serde_json::json!("b"),
-			&serde_json::json!(["a", "b", "c"])
-		));
-		assert!(!op.evaluate(
-			&serde_json::json!("d"),
-			&serde_json::json!(["a", "b", "c"])
-		));
+		assert!(op.evaluate(&serde_json::json!("b"), &serde_json::json!(["a", "b", "c"])));
+		assert!(!op.evaluate(&serde_json::json!("d"), &serde_json::json!(["a", "b", "c"])));
 	}
 
 	#[test]
@@ -366,5 +337,148 @@ mod tests {
 			schedule.evaluate(Utc.with_ymd_and_hms(2024, 2, 15, 0, 0, 0).unwrap()),
 			100
 		);
+	}
+}
+
+#[cfg(test)]
+mod proptest_tests {
+	use super::*;
+	use proptest::prelude::*;
+
+	proptest! {
+		#[test]
+		fn equals_is_symmetric(val in any::<i64>()) {
+			// Equals should be symmetric for same values
+			let json_val = serde_json::json!(val);
+			prop_assert!(AttributeOperator::Equals.evaluate(&json_val, &json_val));
+		}
+
+		#[test]
+		fn not_equals_is_inverse_of_equals(a in -1000i64..1000, b in -1000i64..1000) {
+			let json_a = serde_json::json!(a);
+			let json_b = serde_json::json!(b);
+			let eq = AttributeOperator::Equals.evaluate(&json_a, &json_b);
+			let ne = AttributeOperator::NotEquals.evaluate(&json_a, &json_b);
+			prop_assert_ne!(eq, ne);
+		}
+
+		#[test]
+		fn in_with_single_element_is_equals(val in any::<String>()) {
+			let json_val = serde_json::json!(val);
+			let json_arr = serde_json::json!([val]);
+			prop_assert!(AttributeOperator::In.evaluate(&json_val, &json_arr));
+		}
+
+		#[test]
+		fn not_in_is_inverse_of_in(val in "[a-z]{1,10}", list in proptest::collection::vec("[a-z]{1,10}", 1..5)) {
+			let json_val = serde_json::json!(val);
+			let json_arr = serde_json::json!(list);
+			let is_in = AttributeOperator::In.evaluate(&json_val, &json_arr);
+			let not_in = AttributeOperator::NotIn.evaluate(&json_val, &json_arr);
+			prop_assert_ne!(is_in, not_in);
+		}
+
+		#[test]
+		fn greater_than_is_transitive(a in 0i64..100, b in 0i64..100, c in 0i64..100) {
+			let json_a = serde_json::json!(a);
+			let json_b = serde_json::json!(b);
+			let json_c = serde_json::json!(c);
+
+			// If a > b and b > c, then a > c
+			let a_gt_b = AttributeOperator::GreaterThan.evaluate(&json_a, &json_b);
+			let b_gt_c = AttributeOperator::GreaterThan.evaluate(&json_b, &json_c);
+			let a_gt_c = AttributeOperator::GreaterThan.evaluate(&json_a, &json_c);
+
+			if a_gt_b && b_gt_c {
+				prop_assert!(a_gt_c);
+			}
+		}
+
+		#[test]
+		fn less_than_opposite_of_greater_than_or_equals(a in 0i64..100, b in 0i64..100) {
+			let json_a = serde_json::json!(a);
+			let json_b = serde_json::json!(b);
+
+			let lt = AttributeOperator::LessThan.evaluate(&json_a, &json_b);
+			let gte = AttributeOperator::GreaterThanOrEquals.evaluate(&json_a, &json_b);
+
+			// a < b XOR a >= b (exactly one must be true, unless numeric comparison fails)
+			if a != b {
+				prop_assert_ne!(lt, gte);
+			}
+		}
+
+		#[test]
+		fn contains_substring(haystack in "[a-z]{5,20}", start in 0usize..5) {
+			let needle = &haystack[start..start.min(haystack.len()-1).max(start) + 1];
+			if !needle.is_empty() {
+				let json_haystack = serde_json::json!(haystack);
+				let json_needle = serde_json::json!(needle);
+				prop_assert!(AttributeOperator::Contains.evaluate(&json_haystack, &json_needle));
+			}
+		}
+
+		#[test]
+		fn starts_with_prefix(s in "[a-z]{5,20}", len in 1usize..5) {
+			let prefix = &s[..len.min(s.len())];
+			let json_s = serde_json::json!(s);
+			let json_prefix = serde_json::json!(prefix);
+			prop_assert!(AttributeOperator::StartsWith.evaluate(&json_s, &json_prefix));
+		}
+
+		#[test]
+		fn ends_with_suffix(s in "[a-z]{5,20}", len in 1usize..5) {
+			let suffix_start = s.len().saturating_sub(len);
+			let suffix = &s[suffix_start..];
+			let json_s = serde_json::json!(s);
+			let json_suffix = serde_json::json!(suffix);
+			prop_assert!(AttributeOperator::EndsWith.evaluate(&json_s, &json_suffix));
+		}
+
+		#[test]
+		fn geo_in_is_inverse_of_not_in(country in "[A-Z]{2}", countries in proptest::collection::vec("[A-Z]{2}", 1..5)) {
+			let is_in = GeoOperator::In.evaluate(&country, &countries);
+			let not_in = GeoOperator::NotIn.evaluate(&country, &countries);
+			prop_assert_ne!(is_in, not_in);
+		}
+
+		#[test]
+		fn geo_in_is_case_insensitive(country in "[a-z]{2}") {
+			let countries = vec![country.to_uppercase()];
+			prop_assert!(GeoOperator::In.evaluate(&country, &countries));
+		}
+
+		#[test]
+		fn schedule_percentage_monotonically_increases(
+			pct1 in 0u32..50,
+			pct2 in 50u32..100
+		) {
+			use chrono::TimeZone;
+
+			let schedule = Schedule {
+				steps: vec![
+					ScheduleStep {
+						percentage: pct1,
+						start_at: Utc.with_ymd_and_hms(2020, 1, 1, 0, 0, 0).unwrap(),
+					},
+					ScheduleStep {
+						percentage: pct2,
+						start_at: Utc.with_ymd_and_hms(2025, 1, 1, 0, 0, 0).unwrap(),
+					},
+				],
+			};
+
+			// Before first step
+			let before = schedule.evaluate(Utc.with_ymd_and_hms(2019, 1, 1, 0, 0, 0).unwrap());
+			// After first step
+			let after_first = schedule.evaluate(Utc.with_ymd_and_hms(2022, 1, 1, 0, 0, 0).unwrap());
+			// After second step
+			let after_second = schedule.evaluate(Utc.with_ymd_and_hms(2030, 1, 1, 0, 0, 0).unwrap());
+
+			prop_assert_eq!(before, 0);
+			prop_assert_eq!(after_first, pct1);
+			prop_assert_eq!(after_second, pct2);
+			prop_assert!(pct1 <= pct2);
+		}
 	}
 }

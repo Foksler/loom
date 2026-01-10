@@ -308,12 +308,186 @@ pub struct ListFlagConfigsResponse {
 	pub configs: Vec<FlagConfigResponse>,
 }
 
-fn deserialize_optional_nullable<'de, D>(deserializer: D) -> Result<Option<Option<String>>, D::Error>
+fn deserialize_optional_nullable<'de, D>(
+	deserializer: D,
+) -> Result<Option<Option<String>>, D::Error>
 where
 	D: serde::Deserializer<'de>,
 {
 	let opt = Option::<Option<String>>::deserialize(deserializer)?;
 	Ok(opt)
+}
+
+// ============================================================================
+// Strategy Types
+// ============================================================================
+
+/// A condition type for API requests/responses.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+#[serde(tag = "type")]
+pub enum ConditionApi {
+	/// Attribute-based condition.
+	Attribute {
+		/// The attribute name (e.g., "plan", "created_at").
+		attribute: String,
+		/// The comparison operator.
+		operator: AttributeOperatorApi,
+		/// The value to compare against.
+		value: serde_json::Value,
+	},
+	/// Geographic-based condition.
+	Geographic {
+		/// The geographic field to check.
+		field: GeoFieldApi,
+		/// The comparison operator.
+		operator: GeoOperatorApi,
+		/// The values to compare against (e.g., ["US", "CA"]).
+		values: Vec<String>,
+	},
+	/// Environment-based condition.
+	Environment {
+		/// The environments this condition applies to.
+		environments: Vec<String>,
+	},
+}
+
+/// Operators for attribute conditions.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+#[serde(rename_all = "snake_case")]
+pub enum AttributeOperatorApi {
+	Equals,
+	NotEquals,
+	Contains,
+	StartsWith,
+	EndsWith,
+	GreaterThan,
+	LessThan,
+	GreaterThanOrEquals,
+	LessThanOrEquals,
+	In,
+	NotIn,
+}
+
+/// Geographic targeting field.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+#[serde(rename_all = "snake_case")]
+pub enum GeoFieldApi {
+	Country,
+	Region,
+	City,
+}
+
+/// Geographic targeting operator.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+#[serde(rename_all = "snake_case")]
+pub enum GeoOperatorApi {
+	In,
+	NotIn,
+}
+
+/// The key used for percentage-based distribution.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+#[serde(rename_all = "snake_case")]
+pub enum PercentageKeyApi {
+	#[default]
+	UserId,
+	OrgId,
+	SessionId,
+	Custom(String),
+}
+
+/// A step in a rollout schedule.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct ScheduleStepApi {
+	/// The percentage at this step (0-100).
+	pub percentage: u32,
+	/// When this step starts.
+	pub start_at: DateTime<Utc>,
+}
+
+/// A schedule for gradual rollout.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct ScheduleApi {
+	/// The steps in the schedule.
+	pub steps: Vec<ScheduleStepApi>,
+}
+
+/// A strategy in API responses.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct StrategyResponse {
+	/// Unique identifier for the strategy.
+	pub id: String,
+	/// Organization ID (None for platform strategies).
+	pub org_id: Option<String>,
+	/// Human-readable name.
+	pub name: String,
+	/// Optional description.
+	pub description: Option<String>,
+	/// Targeting conditions (all must match).
+	pub conditions: Vec<ConditionApi>,
+	/// Percentage rollout (0-100).
+	pub percentage: Option<u32>,
+	/// The key used for percentage-based distribution.
+	pub percentage_key: PercentageKeyApi,
+	/// Optional rollout schedule.
+	pub schedule: Option<ScheduleApi>,
+	/// When the strategy was created.
+	pub created_at: DateTime<Utc>,
+	/// When the strategy was last updated.
+	pub updated_at: DateTime<Utc>,
+}
+
+/// Request to create a new strategy.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct CreateStrategyRequest {
+	/// Human-readable name.
+	pub name: String,
+	/// Optional description.
+	pub description: Option<String>,
+	/// Targeting conditions (all must match).
+	#[serde(default)]
+	pub conditions: Vec<ConditionApi>,
+	/// Percentage rollout (0-100).
+	pub percentage: Option<u32>,
+	/// The key used for percentage-based distribution.
+	#[serde(default)]
+	pub percentage_key: PercentageKeyApi,
+	/// Optional rollout schedule.
+	pub schedule: Option<ScheduleApi>,
+}
+
+/// Request to update a strategy.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct UpdateStrategyRequest {
+	/// Human-readable name.
+	pub name: Option<String>,
+	/// Description.
+	pub description: Option<String>,
+	/// Targeting conditions (all must match).
+	pub conditions: Option<Vec<ConditionApi>>,
+	/// Percentage rollout (0-100).
+	pub percentage: Option<Option<u32>>,
+	/// The key used for percentage-based distribution.
+	pub percentage_key: Option<PercentageKeyApi>,
+	/// Optional rollout schedule.
+	pub schedule: Option<Option<ScheduleApi>>,
+}
+
+/// Response for listing strategies.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct ListStrategiesResponse {
+	pub strategies: Vec<StrategyResponse>,
 }
 
 // ============================================================================

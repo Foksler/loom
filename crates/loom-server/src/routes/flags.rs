@@ -13,16 +13,18 @@ use axum::{
 };
 use chrono::Utc;
 use loom_flags_core::{
-	Environment, EnvironmentId, Flag, FlagConfig, FlagConfigId, FlagId, FlagPrerequisite, SdkKey,
-	SdkKeyId, SdkKeyType, Variant, VariantValue,
+	AttributeOperator, Condition, Environment, EnvironmentId, Flag, FlagConfig, FlagConfigId, FlagId,
+	FlagPrerequisite, GeoField, GeoOperator, PercentageKey, Schedule, ScheduleStep, SdkKey, SdkKeyId,
+	SdkKeyType, Strategy, StrategyId, Variant, VariantValue,
 };
 pub use loom_server_api::flags::{
-	CreateEnvironmentRequest, CreateFlagRequest, CreateSdkKeyRequest, CreateSdkKeyResponse,
-	EnvironmentResponse, FlagConfigResponse, FlagPrerequisiteApi, FlagResponse,
-	FlagsErrorResponse, FlagsSuccessResponse, ListEnvironmentsResponse, ListFlagConfigsResponse,
-	ListFlagsQuery, ListFlagsResponse, ListSdkKeysResponse, SdkKeyResponse, SdkKeyTypeApi,
-	UpdateEnvironmentRequest, UpdateFlagConfigRequest, UpdateFlagRequest, VariantApi,
-	VariantValueApi,
+	AttributeOperatorApi, ConditionApi, CreateEnvironmentRequest, CreateFlagRequest,
+	CreateSdkKeyRequest, CreateSdkKeyResponse, CreateStrategyRequest, EnvironmentResponse,
+	FlagConfigResponse, FlagPrerequisiteApi, FlagResponse, FlagsErrorResponse, FlagsSuccessResponse,
+	GeoFieldApi, GeoOperatorApi, ListEnvironmentsResponse, ListFlagConfigsResponse, ListFlagsQuery,
+	ListFlagsResponse, ListSdkKeysResponse, ListStrategiesResponse, PercentageKeyApi, ScheduleApi,
+	ScheduleStepApi, SdkKeyResponse, SdkKeyTypeApi, StrategyResponse, UpdateEnvironmentRequest,
+	UpdateFlagConfigRequest, UpdateFlagRequest, UpdateStrategyRequest, VariantApi, VariantValueApi,
 };
 use loom_server_flags::{hash_sdk_key, FlagsRepository};
 
@@ -68,7 +70,11 @@ pub async fn list_environments(
 	);
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -141,7 +147,11 @@ pub async fn create_environment(
 	);
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -257,7 +267,11 @@ pub async fn get_environment(
 	};
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -345,7 +359,11 @@ pub async fn update_environment(
 	};
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -478,7 +496,11 @@ pub async fn delete_environment(
 	};
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -546,8 +568,7 @@ pub async fn delete_environment(
 		}
 		Err(e) => {
 			tracing::error!(error = %e, %env_id, "Failed to delete environment");
-			internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
-				.into_response()
+			internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal")).into_response()
 		}
 	}
 }
@@ -609,7 +630,11 @@ pub async fn list_sdk_keys(
 	};
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -716,7 +741,11 @@ pub async fn create_sdk_key(
 	};
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -847,7 +876,11 @@ pub async fn revoke_sdk_key(
 	};
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -875,7 +908,11 @@ pub async fn revoke_sdk_key(
 	};
 
 	// Verify the SDK key belongs to an environment in this org
-	let env = match state.flags_repo.get_environment_by_id(sdk_key.environment_id).await {
+	let env = match state
+		.flags_repo
+		.get_environment_by_id(sdk_key.environment_id)
+		.await
+	{
 		Ok(Some(env)) => env,
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.sdk_key_not_found"))
@@ -1025,7 +1062,11 @@ pub async fn list_flags(
 	);
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -1054,7 +1095,13 @@ pub async fn list_flags(
 
 	let flag_responses: Vec<FlagResponse> = flags.iter().map(flag_to_response).collect();
 
-	(StatusCode::OK, Json(ListFlagsResponse { flags: flag_responses })).into_response()
+	(
+		StatusCode::OK,
+		Json(ListFlagsResponse {
+			flags: flag_responses,
+		}),
+	)
+		.into_response()
 }
 
 #[utoipa::path(
@@ -1087,7 +1134,11 @@ pub async fn create_flag(
 	);
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -1111,11 +1162,8 @@ pub async fn create_flag(
 
 	// Validate variants
 	if payload.variants.is_empty() {
-		return bad_request::<FlagsErrorResponse>(
-			"no_variants",
-			"At least one variant is required",
-		)
-		.into_response();
+		return bad_request::<FlagsErrorResponse>("no_variants", "At least one variant is required")
+			.into_response();
 	}
 
 	// Check for duplicate variant names
@@ -1132,7 +1180,11 @@ pub async fn create_flag(
 	}
 
 	// Validate default variant exists
-	if !payload.variants.iter().any(|v| v.name == payload.default_variant) {
+	if !payload
+		.variants
+		.iter()
+		.any(|v| v.name == payload.default_variant)
+	{
 		return bad_request::<FlagsErrorResponse>(
 			"default_variant_missing",
 			t(locale, "server.api.flags.default_variant_missing"),
@@ -1181,7 +1233,11 @@ pub async fn create_flag(
 		maintainer_user_id,
 		variants: payload.variants.iter().map(variant_from_api).collect(),
 		default_variant: payload.default_variant,
-		prerequisites: payload.prerequisites.iter().map(prerequisite_from_api).collect(),
+		prerequisites: payload
+			.prerequisites
+			.iter()
+			.map(prerequisite_from_api)
+			.collect(),
 		created_at: now,
 		updated_at: now,
 		archived_at: None,
@@ -1263,7 +1319,11 @@ pub async fn get_flag(
 	};
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -1343,7 +1403,11 @@ pub async fn update_flag(
 	};
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -1419,11 +1483,8 @@ pub async fn update_flag(
 	// Update variants if provided
 	if let Some(ref variants) = payload.variants {
 		if variants.is_empty() {
-			return bad_request::<FlagsErrorResponse>(
-				"no_variants",
-				"At least one variant is required",
-			)
-			.into_response();
+			return bad_request::<FlagsErrorResponse>("no_variants", "At least one variant is required")
+				.into_response();
 		}
 
 		// Check for duplicate variant names
@@ -1513,7 +1574,11 @@ pub async fn archive_flag(
 	};
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -1549,11 +1614,8 @@ pub async fn archive_flag(
 	}
 
 	if flag.is_archived() {
-		return bad_request::<FlagsErrorResponse>(
-			"already_archived",
-			"Flag is already archived",
-		)
-		.into_response();
+		return bad_request::<FlagsErrorResponse>("already_archived", "Flag is already archived")
+			.into_response();
 	}
 
 	match state.flags_repo.archive_flag(flag_id).await {
@@ -1568,13 +1630,11 @@ pub async fn archive_flag(
 				.into_response()
 		}
 		Ok(false) => {
-			not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
-				.into_response()
+			not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found")).into_response()
 		}
 		Err(e) => {
 			tracing::error!(error = %e, %flag_id, "Failed to archive flag");
-			internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
-				.into_response()
+			internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal")).into_response()
 		}
 	}
 }
@@ -1618,7 +1678,11 @@ pub async fn restore_flag(
 	};
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -1670,13 +1734,11 @@ pub async fn restore_flag(
 				.into_response()
 		}
 		Ok(false) => {
-			not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
-				.into_response()
+			not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found")).into_response()
 		}
 		Err(e) => {
 			tracing::error!(error = %e, %flag_id, "Failed to restore flag");
-			internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
-				.into_response()
+			internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal")).into_response()
 		}
 	}
 }
@@ -1724,7 +1786,11 @@ pub async fn list_flag_configs(
 	};
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -1780,8 +1846,10 @@ pub async fn list_flag_configs(
 		}
 	};
 
-	let env_names: std::collections::HashMap<_, _> =
-		environments.iter().map(|e| (e.id, e.name.clone())).collect();
+	let env_names: std::collections::HashMap<_, _> = environments
+		.iter()
+		.map(|e| (e.id, e.name.clone()))
+		.collect();
 
 	let config_responses: Vec<FlagConfigResponse> = configs
 		.iter()
@@ -1800,7 +1868,13 @@ pub async fn list_flag_configs(
 		})
 		.collect();
 
-	(StatusCode::OK, Json(ListFlagConfigsResponse { configs: config_responses })).into_response()
+	(
+		StatusCode::OK,
+		Json(ListFlagConfigsResponse {
+			configs: config_responses,
+		}),
+	)
+		.into_response()
 }
 
 #[utoipa::path(
@@ -1854,7 +1928,11 @@ pub async fn get_flag_config(
 	};
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -1994,7 +2072,11 @@ pub async fn update_flag_config(
 	};
 
 	// Check org membership
-	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
 		Ok(Some(_)) => {}
 		Ok(None) => {
 			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
@@ -2096,11 +2178,8 @@ pub async fn update_flag_config(
 					}
 					Err(e) => {
 						tracing::error!(error = %e, %strategy_id, "Failed to get strategy");
-						return internal_error::<FlagsErrorResponse>(t(
-							locale,
-							"server.api.error.internal",
-						))
-						.into_response();
+						return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+							.into_response();
 					}
 				}
 			}
@@ -2132,4 +2211,719 @@ pub async fn update_flag_config(
 		}),
 	)
 		.into_response()
+}
+
+// ============================================================================
+// Strategy Routes
+// ============================================================================
+
+fn condition_to_api(c: &Condition) -> ConditionApi {
+	match c {
+		Condition::Attribute {
+			attribute,
+			operator,
+			value,
+		} => ConditionApi::Attribute {
+			attribute: attribute.clone(),
+			operator: attribute_operator_to_api(*operator),
+			value: value.clone(),
+		},
+		Condition::Geographic {
+			field,
+			operator,
+			values,
+		} => ConditionApi::Geographic {
+			field: geo_field_to_api(*field),
+			operator: geo_operator_to_api(*operator),
+			values: values.clone(),
+		},
+		Condition::Environment { environments } => ConditionApi::Environment {
+			environments: environments.clone(),
+		},
+	}
+}
+
+fn condition_from_api(c: &ConditionApi) -> Condition {
+	match c {
+		ConditionApi::Attribute {
+			attribute,
+			operator,
+			value,
+		} => Condition::Attribute {
+			attribute: attribute.clone(),
+			operator: attribute_operator_from_api(*operator),
+			value: value.clone(),
+		},
+		ConditionApi::Geographic {
+			field,
+			operator,
+			values,
+		} => Condition::Geographic {
+			field: geo_field_from_api(*field),
+			operator: geo_operator_from_api(*operator),
+			values: values.clone(),
+		},
+		ConditionApi::Environment { environments } => Condition::Environment {
+			environments: environments.clone(),
+		},
+	}
+}
+
+fn attribute_operator_to_api(op: AttributeOperator) -> AttributeOperatorApi {
+	match op {
+		AttributeOperator::Equals => AttributeOperatorApi::Equals,
+		AttributeOperator::NotEquals => AttributeOperatorApi::NotEquals,
+		AttributeOperator::Contains => AttributeOperatorApi::Contains,
+		AttributeOperator::StartsWith => AttributeOperatorApi::StartsWith,
+		AttributeOperator::EndsWith => AttributeOperatorApi::EndsWith,
+		AttributeOperator::GreaterThan => AttributeOperatorApi::GreaterThan,
+		AttributeOperator::LessThan => AttributeOperatorApi::LessThan,
+		AttributeOperator::GreaterThanOrEquals => AttributeOperatorApi::GreaterThanOrEquals,
+		AttributeOperator::LessThanOrEquals => AttributeOperatorApi::LessThanOrEquals,
+		AttributeOperator::In => AttributeOperatorApi::In,
+		AttributeOperator::NotIn => AttributeOperatorApi::NotIn,
+	}
+}
+
+fn attribute_operator_from_api(op: AttributeOperatorApi) -> AttributeOperator {
+	match op {
+		AttributeOperatorApi::Equals => AttributeOperator::Equals,
+		AttributeOperatorApi::NotEquals => AttributeOperator::NotEquals,
+		AttributeOperatorApi::Contains => AttributeOperator::Contains,
+		AttributeOperatorApi::StartsWith => AttributeOperator::StartsWith,
+		AttributeOperatorApi::EndsWith => AttributeOperator::EndsWith,
+		AttributeOperatorApi::GreaterThan => AttributeOperator::GreaterThan,
+		AttributeOperatorApi::LessThan => AttributeOperator::LessThan,
+		AttributeOperatorApi::GreaterThanOrEquals => AttributeOperator::GreaterThanOrEquals,
+		AttributeOperatorApi::LessThanOrEquals => AttributeOperator::LessThanOrEquals,
+		AttributeOperatorApi::In => AttributeOperator::In,
+		AttributeOperatorApi::NotIn => AttributeOperator::NotIn,
+	}
+}
+
+fn geo_field_to_api(f: GeoField) -> GeoFieldApi {
+	match f {
+		GeoField::Country => GeoFieldApi::Country,
+		GeoField::Region => GeoFieldApi::Region,
+		GeoField::City => GeoFieldApi::City,
+	}
+}
+
+fn geo_field_from_api(f: GeoFieldApi) -> GeoField {
+	match f {
+		GeoFieldApi::Country => GeoField::Country,
+		GeoFieldApi::Region => GeoField::Region,
+		GeoFieldApi::City => GeoField::City,
+	}
+}
+
+fn geo_operator_to_api(op: GeoOperator) -> GeoOperatorApi {
+	match op {
+		GeoOperator::In => GeoOperatorApi::In,
+		GeoOperator::NotIn => GeoOperatorApi::NotIn,
+	}
+}
+
+fn geo_operator_from_api(op: GeoOperatorApi) -> GeoOperator {
+	match op {
+		GeoOperatorApi::In => GeoOperator::In,
+		GeoOperatorApi::NotIn => GeoOperator::NotIn,
+	}
+}
+
+fn percentage_key_to_api(pk: &PercentageKey) -> PercentageKeyApi {
+	match pk {
+		PercentageKey::UserId => PercentageKeyApi::UserId,
+		PercentageKey::OrgId => PercentageKeyApi::OrgId,
+		PercentageKey::SessionId => PercentageKeyApi::SessionId,
+		PercentageKey::Custom(s) => PercentageKeyApi::Custom(s.clone()),
+	}
+}
+
+fn percentage_key_from_api(pk: &PercentageKeyApi) -> PercentageKey {
+	match pk {
+		PercentageKeyApi::UserId => PercentageKey::UserId,
+		PercentageKeyApi::OrgId => PercentageKey::OrgId,
+		PercentageKeyApi::SessionId => PercentageKey::SessionId,
+		PercentageKeyApi::Custom(s) => PercentageKey::Custom(s.clone()),
+	}
+}
+
+fn schedule_to_api(s: &Schedule) -> ScheduleApi {
+	ScheduleApi {
+		steps: s.steps.iter().map(schedule_step_to_api).collect(),
+	}
+}
+
+fn schedule_from_api(s: &ScheduleApi) -> Schedule {
+	Schedule {
+		steps: s.steps.iter().map(schedule_step_from_api).collect(),
+	}
+}
+
+fn schedule_step_to_api(s: &ScheduleStep) -> ScheduleStepApi {
+	ScheduleStepApi {
+		percentage: s.percentage,
+		start_at: s.start_at,
+	}
+}
+
+fn schedule_step_from_api(s: &ScheduleStepApi) -> ScheduleStep {
+	ScheduleStep {
+		percentage: s.percentage,
+		start_at: s.start_at,
+	}
+}
+
+fn strategy_to_response(strategy: &Strategy) -> StrategyResponse {
+	StrategyResponse {
+		id: strategy.id.to_string(),
+		org_id: strategy.org_id.map(|id| id.to_string()),
+		name: strategy.name.clone(),
+		description: strategy.description.clone(),
+		conditions: strategy.conditions.iter().map(condition_to_api).collect(),
+		percentage: strategy.percentage,
+		percentage_key: percentage_key_to_api(&strategy.percentage_key),
+		schedule: strategy.schedule.as_ref().map(schedule_to_api),
+		created_at: strategy.created_at,
+		updated_at: strategy.updated_at,
+	}
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/orgs/{org_id}/flags/strategies",
+    params(
+        ("org_id" = String, Path, description = "Organization ID")
+    ),
+    responses(
+        (status = 200, description = "List of strategies", body = ListStrategiesResponse),
+        (status = 401, description = "Not authenticated", body = FlagsErrorResponse),
+        (status = 404, description = "Organization not found", body = FlagsErrorResponse)
+    ),
+    tag = "flags"
+)]
+/// List strategies for an organization.
+#[tracing::instrument(skip(state), fields(%org_id))]
+pub async fn list_strategies(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(org_id): Path<String>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		FlagsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	// Check org membership
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	let flags_org_id = loom_flags_core::OrgId(org_id.into_inner());
+	let strategies = match state.flags_repo.list_strategies(Some(flags_org_id)).await {
+		Ok(s) => s,
+		Err(e) => {
+			tracing::error!(error = %e, ?org_id, "Failed to list strategies");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	let strategy_responses: Vec<StrategyResponse> =
+		strategies.iter().map(strategy_to_response).collect();
+
+	(
+		StatusCode::OK,
+		Json(ListStrategiesResponse {
+			strategies: strategy_responses,
+		}),
+	)
+		.into_response()
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/orgs/{org_id}/flags/strategies",
+    params(
+        ("org_id" = String, Path, description = "Organization ID")
+    ),
+    request_body = CreateStrategyRequest,
+    responses(
+        (status = 201, description = "Strategy created", body = StrategyResponse),
+        (status = 400, description = "Invalid request", body = FlagsErrorResponse),
+        (status = 401, description = "Not authenticated", body = FlagsErrorResponse)
+    ),
+    tag = "flags"
+)]
+/// Create a new strategy.
+#[tracing::instrument(skip(state, payload), fields(%org_id, name = %payload.name))]
+pub async fn create_strategy(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(org_id): Path<String>,
+	Json(payload): Json<CreateStrategyRequest>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		FlagsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	// Check org membership
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	// Validate name
+	if payload.name.is_empty() || payload.name.len() > 100 {
+		return bad_request::<FlagsErrorResponse>(
+			"invalid_name",
+			"Strategy name must be between 1 and 100 characters",
+		)
+		.into_response();
+	}
+
+	// Validate percentage if provided
+	if let Some(pct) = payload.percentage {
+		if pct > 100 {
+			return bad_request::<FlagsErrorResponse>(
+				"invalid_percentage",
+				"Percentage must be between 0 and 100",
+			)
+			.into_response();
+		}
+	}
+
+	// Validate schedule steps if provided
+	if let Some(ref schedule) = payload.schedule {
+		for step in &schedule.steps {
+			if step.percentage > 100 {
+				return bad_request::<FlagsErrorResponse>(
+					"invalid_schedule_percentage",
+					"Schedule step percentage must be between 0 and 100",
+				)
+				.into_response();
+			}
+		}
+	}
+
+	let flags_org_id = loom_flags_core::OrgId(org_id.into_inner());
+	let now = Utc::now();
+
+	let strategy = Strategy {
+		id: StrategyId::new(),
+		org_id: Some(flags_org_id),
+		name: payload.name,
+		description: payload.description,
+		conditions: payload.conditions.iter().map(condition_from_api).collect(),
+		percentage: payload.percentage,
+		percentage_key: percentage_key_from_api(&payload.percentage_key),
+		schedule: payload.schedule.as_ref().map(schedule_from_api),
+		created_at: now,
+		updated_at: now,
+	};
+
+	if let Err(e) = state.flags_repo.create_strategy(&strategy).await {
+		tracing::error!(error = %e, strategy_id = %strategy.id, "Failed to create strategy");
+		return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+			.into_response();
+	}
+
+	tracing::info!(strategy_id = %strategy.id, strategy_name = %strategy.name, "Strategy created");
+
+	(StatusCode::CREATED, Json(strategy_to_response(&strategy))).into_response()
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/orgs/{org_id}/flags/strategies/{strategy_id}",
+    params(
+        ("org_id" = String, Path, description = "Organization ID"),
+        ("strategy_id" = String, Path, description = "Strategy ID")
+    ),
+    responses(
+        (status = 200, description = "Strategy details", body = StrategyResponse),
+        (status = 401, description = "Not authenticated", body = FlagsErrorResponse),
+        (status = 404, description = "Strategy not found", body = FlagsErrorResponse)
+    ),
+    tag = "flags"
+)]
+/// Get strategy details.
+#[tracing::instrument(skip(state), fields(%org_id, %strategy_id))]
+pub async fn get_strategy(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path((org_id, strategy_id)): Path<(String, String)>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		FlagsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	let strategy_id: StrategyId = match strategy_id.parse() {
+		Ok(id) => id,
+		Err(_) => {
+			return bad_request::<FlagsErrorResponse>(
+				"invalid_id",
+				t(locale, "server.api.flags.strategy_not_found"),
+			)
+			.into_response();
+		}
+	};
+
+	// Check org membership
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	let strategy = match state.flags_repo.get_strategy_by_id(strategy_id).await {
+		Ok(Some(s)) => s,
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.strategy_not_found"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %strategy_id, "Failed to get strategy");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	// Verify strategy belongs to the org
+	match strategy.org_id {
+		Some(strategy_org_id) if strategy_org_id.0 == org_id.into_inner() => {}
+		_ => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.strategy_not_found"))
+				.into_response();
+		}
+	}
+
+	(StatusCode::OK, Json(strategy_to_response(&strategy))).into_response()
+}
+
+#[utoipa::path(
+    patch,
+    path = "/api/orgs/{org_id}/flags/strategies/{strategy_id}",
+    params(
+        ("org_id" = String, Path, description = "Organization ID"),
+        ("strategy_id" = String, Path, description = "Strategy ID")
+    ),
+    request_body = UpdateStrategyRequest,
+    responses(
+        (status = 200, description = "Strategy updated", body = StrategyResponse),
+        (status = 400, description = "Invalid request", body = FlagsErrorResponse),
+        (status = 401, description = "Not authenticated", body = FlagsErrorResponse),
+        (status = 404, description = "Strategy not found", body = FlagsErrorResponse)
+    ),
+    tag = "flags"
+)]
+/// Update a strategy.
+#[tracing::instrument(skip(state, payload), fields(%org_id, %strategy_id))]
+pub async fn update_strategy(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path((org_id, strategy_id)): Path<(String, String)>,
+	Json(payload): Json<UpdateStrategyRequest>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		FlagsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	let strategy_id: StrategyId = match strategy_id.parse() {
+		Ok(id) => id,
+		Err(_) => {
+			return bad_request::<FlagsErrorResponse>(
+				"invalid_id",
+				t(locale, "server.api.flags.strategy_not_found"),
+			)
+			.into_response();
+		}
+	};
+
+	// Check org membership
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	let mut strategy = match state.flags_repo.get_strategy_by_id(strategy_id).await {
+		Ok(Some(s)) => s,
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.strategy_not_found"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %strategy_id, "Failed to get strategy");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	// Verify strategy belongs to the org
+	match strategy.org_id {
+		Some(strategy_org_id) if strategy_org_id.0 == org_id.into_inner() => {}
+		_ => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.strategy_not_found"))
+				.into_response();
+		}
+	}
+
+	// Update name if provided
+	if let Some(ref name) = payload.name {
+		if name.is_empty() || name.len() > 100 {
+			return bad_request::<FlagsErrorResponse>(
+				"invalid_name",
+				"Strategy name must be between 1 and 100 characters",
+			)
+			.into_response();
+		}
+		strategy.name = name.clone();
+	}
+
+	// Update description if provided
+	if let Some(ref description) = payload.description {
+		strategy.description = Some(description.clone());
+	}
+
+	// Update conditions if provided
+	if let Some(ref conditions) = payload.conditions {
+		strategy.conditions = conditions.iter().map(condition_from_api).collect();
+	}
+
+	// Update percentage if provided
+	if let Some(percentage) = payload.percentage {
+		if let Some(pct) = percentage {
+			if pct > 100 {
+				return bad_request::<FlagsErrorResponse>(
+					"invalid_percentage",
+					"Percentage must be between 0 and 100",
+				)
+				.into_response();
+			}
+		}
+		strategy.percentage = percentage;
+	}
+
+	// Update percentage_key if provided
+	if let Some(ref percentage_key) = payload.percentage_key {
+		strategy.percentage_key = percentage_key_from_api(percentage_key);
+	}
+
+	// Update schedule if provided
+	if let Some(ref schedule_opt) = payload.schedule {
+		match schedule_opt {
+			Some(schedule) => {
+				for step in &schedule.steps {
+					if step.percentage > 100 {
+						return bad_request::<FlagsErrorResponse>(
+							"invalid_schedule_percentage",
+							"Schedule step percentage must be between 0 and 100",
+						)
+						.into_response();
+					}
+				}
+				strategy.schedule = Some(schedule_from_api(schedule));
+			}
+			None => strategy.schedule = None,
+		}
+	}
+
+	strategy.updated_at = Utc::now();
+
+	if let Err(e) = state.flags_repo.update_strategy(&strategy).await {
+		tracing::error!(error = %e, %strategy_id, "Failed to update strategy");
+		return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+			.into_response();
+	}
+
+	tracing::info!(%strategy_id, "Strategy updated");
+
+	(StatusCode::OK, Json(strategy_to_response(&strategy))).into_response()
+}
+
+#[utoipa::path(
+    delete,
+    path = "/api/orgs/{org_id}/flags/strategies/{strategy_id}",
+    params(
+        ("org_id" = String, Path, description = "Organization ID"),
+        ("strategy_id" = String, Path, description = "Strategy ID")
+    ),
+    responses(
+        (status = 200, description = "Strategy deleted", body = FlagsSuccessResponse),
+        (status = 400, description = "Strategy is in use", body = FlagsErrorResponse),
+        (status = 401, description = "Not authenticated", body = FlagsErrorResponse),
+        (status = 404, description = "Strategy not found", body = FlagsErrorResponse)
+    ),
+    tag = "flags"
+)]
+/// Delete a strategy.
+#[tracing::instrument(skip(state), fields(%org_id, %strategy_id))]
+pub async fn delete_strategy(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path((org_id, strategy_id)): Path<(String, String)>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		FlagsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	let strategy_id: StrategyId = match strategy_id.parse() {
+		Ok(id) => id,
+		Err(_) => {
+			return bad_request::<FlagsErrorResponse>(
+				"invalid_id",
+				t(locale, "server.api.flags.strategy_not_found"),
+			)
+			.into_response();
+		}
+	};
+
+	// Check org membership
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	let strategy = match state.flags_repo.get_strategy_by_id(strategy_id).await {
+		Ok(Some(s)) => s,
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.strategy_not_found"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %strategy_id, "Failed to get strategy");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	// Verify strategy belongs to the org
+	let flags_org_id = loom_flags_core::OrgId(org_id.into_inner());
+	match strategy.org_id {
+		Some(strategy_org_id) if strategy_org_id == flags_org_id => {}
+		_ => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.strategy_not_found"))
+				.into_response();
+		}
+	}
+
+	// Check if strategy is in use by any flag configs
+	let flags = match state.flags_repo.list_flags(Some(flags_org_id), true).await {
+		Ok(f) => f,
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to list flags");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	for flag in flags {
+		let configs = match state.flags_repo.list_flag_configs(flag.id).await {
+			Ok(c) => c,
+			Err(e) => {
+				tracing::error!(error = %e, flag_id = %flag.id, "Failed to list flag configs");
+				return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+					.into_response();
+			}
+		};
+
+		for config in configs {
+			if config.strategy_id == Some(strategy_id) {
+				return bad_request::<FlagsErrorResponse>(
+					"strategy_in_use",
+					t(locale, "server.api.flags.strategy_in_use"),
+				)
+				.into_response();
+			}
+		}
+	}
+
+	match state.flags_repo.delete_strategy(strategy_id).await {
+		Ok(true) => {
+			tracing::info!(%strategy_id, "Strategy deleted");
+			(
+				StatusCode::OK,
+				Json(FlagsSuccessResponse {
+					message: t(locale, "server.api.flags.strategy_deleted").to_string(),
+				}),
+			)
+				.into_response()
+		}
+		Ok(false) => not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.strategy_not_found"))
+			.into_response(),
+		Err(e) => {
+			tracing::error!(error = %e, %strategy_id, "Failed to delete strategy");
+			internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal")).into_response()
+		}
+	}
 }

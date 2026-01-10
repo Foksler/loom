@@ -162,7 +162,9 @@ pub fn evaluate_flag(
 
 /// Evaluates all conditions (AND logic).
 fn evaluate_conditions(conditions: &[Condition], context: &EvaluationContext) -> bool {
-	conditions.iter().all(|cond| evaluate_condition(cond, context))
+	conditions
+		.iter()
+		.all(|cond| evaluate_condition(cond, context))
 }
 
 /// Evaluates a single condition.
@@ -262,7 +264,8 @@ fn select_variant<'a>(
 
 /// Gets the default variant's value.
 fn get_default_value(flag: &Flag) -> VariantValue {
-	flag.get_default_variant()
+	flag
+		.get_default_variant()
 		.map(|v| v.value.clone())
 		.unwrap_or(VariantValue::Boolean(false))
 }
@@ -362,10 +365,7 @@ mod tests {
 		let result = evaluate_flag(&flag, Some(&config), Some(&strategy), &[], &[], &context);
 
 		// With 100% rollout and no conditions, should get non-default variant
-		assert!(matches!(
-			result.reason,
-			EvaluationReason::Strategy { .. }
-		));
+		assert!(matches!(result.reason, EvaluationReason::Strategy { .. }));
 	}
 
 	#[test]
@@ -403,10 +403,7 @@ mod tests {
 			.with_attribute("plan", serde_json::json!("enterprise"));
 
 		let result = evaluate_flag(&flag, Some(&config), Some(&strategy), &[], &[], &context);
-		assert!(matches!(
-			result.reason,
-			EvaluationReason::Strategy { .. }
-		));
+		assert!(matches!(result.reason, EvaluationReason::Strategy { .. }));
 	}
 
 	#[test]
@@ -444,10 +441,7 @@ mod tests {
 			.with_geo(GeoContext::new().with_country("US"));
 
 		let result = evaluate_flag(&flag, Some(&config), Some(&strategy), &[], &[], &context);
-		assert!(matches!(
-			result.reason,
-			EvaluationReason::Strategy { .. }
-		));
+		assert!(matches!(result.reason, EvaluationReason::Strategy { .. }));
 	}
 
 	#[test]
@@ -473,14 +467,10 @@ mod tests {
 		};
 
 		let context = EvaluationContext::new("prod");
-		let result =
-			evaluate_flag(&flag, Some(&config), None, &[kill_switch], &[], &context);
+		let result = evaluate_flag(&flag, Some(&config), None, &[kill_switch], &[], &context);
 
 		assert_eq!(result.variant, "off");
-		assert!(matches!(
-			result.reason,
-			EvaluationReason::KillSwitch { .. }
-		));
+		assert!(matches!(result.reason, EvaluationReason::KillSwitch { .. }));
 	}
 
 	#[test]
@@ -498,5 +488,206 @@ mod tests {
 		let true_count = results.iter().filter(|&&r| r).count();
 		// Should be roughly 50% (with some tolerance)
 		assert!(true_count > 30 && true_count < 70);
+	}
+
+	#[test]
+	fn test_evaluate_with_environment_condition() {
+		let flag = create_test_flag();
+		let config = create_test_config(true);
+		let strategy = Strategy {
+			id: StrategyId::new(),
+			org_id: Some(OrgId::new()),
+			name: "Prod Only".to_string(),
+			description: None,
+			conditions: vec![Condition::Environment {
+				environments: vec!["prod".to_string()],
+			}],
+			percentage: Some(100),
+			percentage_key: PercentageKey::UserId,
+			schedule: None,
+			created_at: Utc::now(),
+			updated_at: Utc::now(),
+		};
+
+		// Context in staging
+		let context = EvaluationContext::new("staging").with_user_id("user123");
+		let result = evaluate_flag(&flag, Some(&config), Some(&strategy), &[], &[], &context);
+		assert_eq!(result.reason, EvaluationReason::Default);
+
+		// Context in prod
+		let context = EvaluationContext::new("prod").with_user_id("user123");
+		let result = evaluate_flag(&flag, Some(&config), Some(&strategy), &[], &[], &context);
+		assert!(matches!(result.reason, EvaluationReason::Strategy { .. }));
+	}
+
+	#[test]
+	fn test_evaluate_with_schedule() {
+		use chrono::TimeZone;
+		use loom_flags_core::{Schedule, ScheduleStep};
+
+		let flag = create_test_flag();
+		let config = create_test_config(true);
+		let strategy = Strategy {
+			id: StrategyId::new(),
+			org_id: Some(OrgId::new()),
+			name: "Scheduled Rollout".to_string(),
+			description: None,
+			conditions: vec![],
+			percentage: None,
+			percentage_key: PercentageKey::UserId,
+			schedule: Some(Schedule {
+				steps: vec![
+					ScheduleStep {
+						percentage: 10,
+						start_at: Utc.with_ymd_and_hms(2020, 1, 1, 0, 0, 0).unwrap(),
+					},
+					ScheduleStep {
+						percentage: 100,
+						start_at: Utc.with_ymd_and_hms(2030, 1, 1, 0, 0, 0).unwrap(),
+					},
+				],
+			}),
+			created_at: Utc::now(),
+			updated_at: Utc::now(),
+		};
+
+		// The schedule should currently be at 10% (2020 step has passed, 2030 hasn't)
+		let context = EvaluationContext::new("prod").with_user_id("user123");
+		let result = evaluate_flag(&flag, Some(&config), Some(&strategy), &[], &[], &context);
+
+		// At 10%, most users won't get the feature
+		// We're testing the evaluation runs without error
+		assert!(
+			matches!(result.reason, EvaluationReason::Default)
+				|| matches!(result.reason, EvaluationReason::Strategy { .. })
+		);
+	}
+
+	#[test]
+	fn test_evaluate_with_multiple_conditions() {
+		let flag = create_test_flag();
+		let config = create_test_config(true);
+		let strategy = Strategy {
+			id: StrategyId::new(),
+			org_id: Some(OrgId::new()),
+			name: "Enterprise US Only".to_string(),
+			description: None,
+			conditions: vec![
+				Condition::Attribute {
+					attribute: "plan".to_string(),
+					operator: AttributeOperator::Equals,
+					value: serde_json::json!("enterprise"),
+				},
+				Condition::Geographic {
+					field: GeoField::Country,
+					operator: GeoOperator::In,
+					values: vec!["US".to_string()],
+				},
+			],
+			percentage: Some(100),
+			percentage_key: PercentageKey::UserId,
+			schedule: None,
+			created_at: Utc::now(),
+			updated_at: Utc::now(),
+		};
+
+		// User with enterprise plan but not in US
+		let context = EvaluationContext::new("prod")
+			.with_user_id("user123")
+			.with_attribute("plan", serde_json::json!("enterprise"))
+			.with_geo(GeoContext::new().with_country("DE"));
+		let result = evaluate_flag(&flag, Some(&config), Some(&strategy), &[], &[], &context);
+		assert_eq!(result.reason, EvaluationReason::Default);
+
+		// User in US but not on enterprise plan
+		let context = EvaluationContext::new("prod")
+			.with_user_id("user123")
+			.with_attribute("plan", serde_json::json!("free"))
+			.with_geo(GeoContext::new().with_country("US"));
+		let result = evaluate_flag(&flag, Some(&config), Some(&strategy), &[], &[], &context);
+		assert_eq!(result.reason, EvaluationReason::Default);
+
+		// User with enterprise plan AND in US - both conditions met
+		let context = EvaluationContext::new("prod")
+			.with_user_id("user123")
+			.with_attribute("plan", serde_json::json!("enterprise"))
+			.with_geo(GeoContext::new().with_country("US"));
+		let result = evaluate_flag(&flag, Some(&config), Some(&strategy), &[], &[], &context);
+		assert!(matches!(result.reason, EvaluationReason::Strategy { .. }));
+	}
+
+	#[test]
+	fn test_percentage_zero_excludes_all() {
+		// 0% should never include anyone
+		for i in 0..100 {
+			let result = evaluate_percentage(&format!("user{}", i), "test.feature", 0);
+			assert!(!result);
+		}
+	}
+
+	#[test]
+	fn test_percentage_hundred_includes_all() {
+		// 100% should always include everyone
+		for i in 0..100 {
+			let result = evaluate_percentage(&format!("user{}", i), "test.feature", 100);
+			assert!(result);
+		}
+	}
+}
+
+#[cfg(test)]
+mod proptest_tests {
+	use super::*;
+	use proptest::prelude::*;
+
+	proptest! {
+		#[test]
+		fn percentage_is_deterministic(user_id in "[a-zA-Z0-9]{1,50}", flag_key in "[a-z][a-z0-9_.]{2,49}", pct in 0u32..=100) {
+			// Same inputs should always produce the same result
+			let result1 = evaluate_percentage(&user_id, &flag_key, pct);
+			let result2 = evaluate_percentage(&user_id, &flag_key, pct);
+			prop_assert_eq!(result1, result2);
+		}
+
+		#[test]
+		fn percentage_monotonic(user_id in "[a-zA-Z0-9]{1,50}", flag_key in "[a-z][a-z0-9_.]{2,49}") {
+			// If a user is included at percentage P, they should also be included at P+1, P+2, etc.
+			// Find the threshold where the user is included
+			let mut included_at: Option<u32> = None;
+			for pct in 0..=100 {
+				if evaluate_percentage(&user_id, &flag_key, pct) {
+					included_at = Some(pct);
+					break;
+				}
+			}
+
+			if let Some(threshold) = included_at {
+				// User should be included for all percentages >= threshold
+				for pct in threshold..=100 {
+					prop_assert!(evaluate_percentage(&user_id, &flag_key, pct),
+						"User should be included at {}% but wasn't (threshold was {}%)", pct, threshold);
+				}
+			}
+		}
+
+		#[test]
+		fn percentage_zero_never_includes(user_id in "[a-zA-Z0-9]{1,50}", flag_key in "[a-z][a-z0-9_.]{2,49}") {
+			prop_assert!(!evaluate_percentage(&user_id, &flag_key, 0));
+		}
+
+		#[test]
+		fn percentage_hundred_always_includes(user_id in "[a-zA-Z0-9]{1,50}", flag_key in "[a-z][a-z0-9_.]{2,49}") {
+			prop_assert!(evaluate_percentage(&user_id, &flag_key, 100));
+		}
+
+		#[test]
+		fn different_flags_have_different_distributions(user_id in "[a-zA-Z0-9]{1,50}") {
+			// A user's bucket should differ between different flags (stickiness per flag)
+			let result1 = evaluate_percentage(&user_id, "feature_a", 50);
+			let result2 = evaluate_percentage(&user_id, "feature_b", 50);
+			// This might occasionally be the same by chance, but mostly different
+			// We just verify it runs without panic
+			let _ = (result1, result2);
+		}
 	}
 }

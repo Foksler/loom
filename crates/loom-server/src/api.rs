@@ -147,13 +147,14 @@ pub async fn create_app_state(
 	let share_repo = Arc::new(ShareRepository::new(pool.clone()));
 	let scm_repo = ScmRepository::new(pool.clone());
 	let scm_repo_store = Arc::new(loom_server_scm::SqliteRepoStore::new(scm_repo.clone()));
-	let scm_protection_store =
-		Arc::new(loom_server_scm::ProtectionRepository::new(pool.clone()));
+	let scm_protection_store = Arc::new(loom_server_scm::ProtectionRepository::new(pool.clone()));
 	let scm_webhook_store = Arc::new(loom_server_scm::SqliteWebhookStore::new(scm_repo.clone()));
-	let scm_maintenance_store =
-		Arc::new(loom_server_scm::SqliteMaintenanceJobStore::new(scm_repo.clone()));
-	let scm_team_access_store =
-		Arc::new(loom_server_scm::SqliteRepoTeamAccessStore::new(scm_repo.clone()));
+	let scm_maintenance_store = Arc::new(loom_server_scm::SqliteMaintenanceJobStore::new(
+		scm_repo.clone(),
+	));
+	let scm_team_access_store = Arc::new(loom_server_scm::SqliteRepoTeamAccessStore::new(
+		scm_repo.clone(),
+	));
 	let push_mirror_store = Arc::new(loom_server_scm_mirror::SqlitePushMirrorStore::new(
 		pool.clone(),
 	));
@@ -997,6 +998,27 @@ pub fn create_router(state: AppState) -> Router {
 		.route(
 			"/api/orgs/{org_id}/flags/{flag_id}/configs/{env_id}",
 			patch(routes::flags::update_flag_config),
+		)
+		// Strategy routes
+		.route(
+			"/api/orgs/{org_id}/flags/strategies",
+			get(routes::flags::list_strategies),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/strategies",
+			post(routes::flags::create_strategy),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/strategies/{strategy_id}",
+			get(routes::flags::get_strategy),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/strategies/{strategy_id}",
+			patch(routes::flags::update_strategy),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/strategies/{strategy_id}",
+			delete(routes::flags::delete_strategy),
 		)
 		// Invitation routes (authenticated)
 		.route(

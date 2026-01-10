@@ -398,7 +398,7 @@ Implementation checklist for the Feature Flags system. See
 
 ---
 
-## Phase 4: Strategy System
+## ✅ Phase 4: Strategy System (COMPLETED)
 
 **Goal:** Rollout strategies with targeting conditions.
 
@@ -411,24 +411,31 @@ Implementation checklist for the Feature Flags system. See
 - Strategy endpoints: `specs/feature-flags-system.md:380-386`
 
 **Tasks:**
-- [ ] Implement Strategy CRUD handlers
-  - [ ] `GET /api/flags/strategies`
-  - [ ] `POST /api/flags/strategies`
-  - [ ] `GET /api/flags/strategies/{id}`
-  - [ ] `PATCH /api/flags/strategies/{id}`
-  - [ ] `DELETE /api/flags/strategies/{id}`
-- [ ] Condition evaluation engine
-  - [ ] Attribute conditions (equals, contains, in, etc.)
-  - [ ] Geographic conditions (country, region, city)
-  - [ ] Environment conditions
-- [ ] Percentage hashing with murmur3
-  - [ ] Consistent hashing for sticky assignment
-  - [ ] Configurable key (user_id, org_id, session_id)
-- [ ] Schedule evaluation
-  - [ ] Time-based percentage ramps
-- [ ] GeoIP integration
+- [x] Implement Strategy CRUD handlers
+  - [x] `GET /api/orgs/{org_id}/flags/strategies`
+  - [x] `POST /api/orgs/{org_id}/flags/strategies`
+  - [x] `GET /api/orgs/{org_id}/flags/strategies/{strategy_id}`
+  - [x] `PATCH /api/orgs/{org_id}/flags/strategies/{strategy_id}`
+  - [x] `DELETE /api/orgs/{org_id}/flags/strategies/{strategy_id}`
+- [x] Condition evaluation engine
+  - [x] Attribute conditions (equals, contains, in, etc.)
+  - [x] Geographic conditions (country, region, city)
+  - [x] Environment conditions
+- [x] Percentage hashing with murmur3
+  - [x] Consistent hashing for sticky assignment
+  - [x] Configurable key (user_id, org_id, session_id)
+- [x] Schedule evaluation
+  - [x] Time-based percentage ramps
+- [ ] GeoIP integration (deferred to Phase 6 - requires evaluation endpoints)
   - [ ] Integrate with existing `loom-geoip`
   - [ ] Proxy header support (CF-Connecting-IP, X-Forwarded-For, X-Real-IP)
+- [x] Strategy API types in `loom-server-api`
+- [x] i18n translations (EN, ES, AR)
+- [x] 90+ tests including property-based tests for:
+  - Attribute operator evaluation
+  - Percentage hashing determinism and monotonicity
+  - Schedule evaluation
+  - Geographic operator case-insensitivity
 
 ---
 
