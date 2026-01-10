@@ -338,12 +338,7 @@ pub async fn run_authz_cases(app: &TestApp, cases: &[AuthzCase]) {
 			let body_str = String::from_utf8_lossy(&body_bytes);
 			panic!(
 				"Case '{}': {} {} - expected {}, got {}\nResponse body: {}",
-				case.name,
-				case.method,
-				case.path,
-				case.expected_status,
-				parts.status,
-				body_str
+				case.name, case.method, case.path, case.expected_status, parts.status, body_str
 			);
 		}
 	}

@@ -1787,7 +1787,8 @@ impl TryFrom<ExposureLogRow> for ExposureLog {
 
 		Ok(ExposureLog {
 			id: ExposureLogId(
-				row.id
+				row
+					.id
 					.parse()
 					.map_err(|_| FlagsServerError::Internal("Invalid exposure log ID".to_string()))?,
 			),

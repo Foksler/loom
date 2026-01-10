@@ -23,8 +23,7 @@ use axum::{
 };
 use chrono::Utc;
 use loom_flags_core::{
-	Flag, FlagId, FlagPrerequisite, KillSwitch, KillSwitchId, Strategy, UserId, Variant,
-	VariantValue,
+	Flag, FlagId, FlagPrerequisite, KillSwitch, KillSwitchId, Strategy, UserId, Variant, VariantValue,
 };
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_flags::FlagsRepository;
@@ -32,10 +31,9 @@ use serde_json::json;
 
 pub use loom_server_api::flags::{
 	ActivateKillSwitchRequest, CreateFlagRequest, CreateKillSwitchRequest, CreateStrategyRequest,
-	FlagPrerequisiteApi, FlagResponse, FlagsErrorResponse, FlagsSuccessResponse,
-	KillSwitchResponse, ListFlagsResponse, ListKillSwitchesResponse, ListStrategiesResponse,
-	StrategyResponse, UpdateFlagRequest, UpdateKillSwitchRequest, UpdateStrategyRequest,
-	VariantApi, VariantValueApi,
+	FlagPrerequisiteApi, FlagResponse, FlagsErrorResponse, FlagsSuccessResponse, KillSwitchResponse,
+	ListFlagsResponse, ListKillSwitchesResponse, ListStrategiesResponse, StrategyResponse,
+	UpdateFlagRequest, UpdateKillSwitchRequest, UpdateStrategyRequest, VariantApi, VariantValueApi,
 };
 use serde::Deserialize;
 
@@ -196,7 +194,13 @@ pub async fn list_platform_flags(
 
 	let flags_response: Vec<FlagResponse> = flags.iter().map(flag_to_response).collect();
 
-	(StatusCode::OK, Json(ListFlagsResponse { flags: flags_response })).into_response()
+	(
+		StatusCode::OK,
+		Json(ListFlagsResponse {
+			flags: flags_response,
+		}),
+	)
+		.into_response()
 }
 
 /// Create a new platform-level flag.
@@ -265,7 +269,11 @@ pub async fn create_platform_flag(
 	}
 
 	// Validate default variant exists
-	if !payload.variants.iter().any(|v| v.name == payload.default_variant) {
+	if !payload
+		.variants
+		.iter()
+		.any(|v| v.name == payload.default_variant)
+	{
 		return bad_request::<FlagsErrorResponse>(
 			"invalid_default",
 			t(locale, "server.api.flags.default_variant_missing"),
@@ -719,10 +727,8 @@ pub async fn list_platform_kill_switches(
 		"Listed platform kill switches"
 	);
 
-	let ks_response: Vec<KillSwitchResponse> = kill_switches
-		.iter()
-		.map(kill_switch_to_response)
-		.collect();
+	let ks_response: Vec<KillSwitchResponse> =
+		kill_switches.iter().map(kill_switch_to_response).collect();
 
 	(
 		StatusCode::OK,
@@ -781,7 +787,11 @@ pub async fn create_platform_kill_switch(
 	}
 
 	// Check for duplicate key
-	if let Ok(Some(_)) = state.flags_repo.get_kill_switch_by_key(None, &payload.key).await {
+	if let Ok(Some(_)) = state
+		.flags_repo
+		.get_kill_switch_by_key(None, &payload.key)
+		.await
+	{
 		return conflict::<FlagsErrorResponse>(
 			"duplicate_key",
 			t(locale, "server.api.flags.duplicate_kill_switch_key"),
@@ -831,7 +841,11 @@ pub async fn create_platform_kill_switch(
 		"Created platform kill switch"
 	);
 
-	(StatusCode::CREATED, Json(kill_switch_to_response(&kill_switch))).into_response()
+	(
+		StatusCode::CREATED,
+		Json(kill_switch_to_response(&kill_switch)),
+	)
+		.into_response()
 }
 
 /// Get a platform-level kill switch by key.

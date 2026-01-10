@@ -99,7 +99,10 @@ pub struct ChannelKey {
 
 impl ChannelKey {
 	pub fn new(org_id: OrgId, environment_id: EnvironmentId) -> Self {
-		Self { org_id, environment_id }
+		Self {
+			org_id,
+			environment_id,
+		}
 	}
 }
 
@@ -337,7 +340,11 @@ impl FlagsBroadcaster {
 	}
 
 	/// Get statistics for a specific channel.
-	pub async fn channel_stats(&self, org_id: OrgId, environment_id: EnvironmentId) -> Option<ChannelStats> {
+	pub async fn channel_stats(
+		&self,
+		org_id: OrgId,
+		environment_id: EnvironmentId,
+	) -> Option<ChannelStats> {
 		let key = ChannelKey::new(org_id, environment_id);
 		let channels = self.channels.read().await;
 
@@ -394,7 +401,10 @@ impl FlagsBroadcaster {
 
 		let removed = initial_count - channels.len();
 		if removed > 0 {
-			info!(removed_channels = removed, "Cleaned up empty broadcast channels");
+			info!(
+				removed_channels = removed,
+				"Cleaned up empty broadcast channels"
+			);
 		}
 		removed
 	}

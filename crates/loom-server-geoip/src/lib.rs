@@ -50,6 +50,8 @@ pub type Result<T> = std::result::Result<T, GeoIpError>;
 #[derive(Debug, Clone, Default, Serialize, PartialEq)]
 pub struct GeoLocation {
 	pub city: Option<String>,
+	pub region: Option<String>,
+	pub region_code: Option<String>,
 	pub country: Option<String>,
 	pub country_code: Option<String>,
 	pub continent: Option<String>,
@@ -132,12 +134,30 @@ impl GeoIpService {
 	pub fn lookup(&self, ip: IpAddr) -> Result<GeoLocation> {
 		let city: geoip2::City = self.reader.lookup(ip).map_err(GeoIpError::Lookup)?;
 
+		// Extract region from subdivisions (first subdivision is typically the state/province)
+		let (region, region_code) = city
+			.subdivisions
+			.as_ref()
+			.and_then(|subs| subs.first())
+			.map(|sub| {
+				let name = sub
+					.names
+					.as_ref()
+					.and_then(|n| n.get("en").copied())
+					.map(String::from);
+				let code = sub.iso_code.map(String::from);
+				(name, code)
+			})
+			.unwrap_or((None, None));
+
 		let location = GeoLocation {
 			city: city
 				.city
 				.and_then(|c| c.names)
 				.and_then(|n| n.get("en").copied())
 				.map(String::from),
+			region,
+			region_code,
 			country: city
 				.country
 				.as_ref()
@@ -265,14 +285,59 @@ mod proptests {
 		#[test]
 		fn test_geo_location_display_does_not_panic(
 			city in proptest::option::of("[a-zA-Z ]{1,50}"),
+			region in proptest::option::of("[a-zA-Z ]{1,50}"),
 			country in proptest::option::of("[a-zA-Z ]{1,50}")
 		) {
 			let loc = GeoLocation {
 				city,
+				region,
 				country,
 				..Default::default()
 			};
 			let _ = loc.display_string();
+		}
+
+		/// Property: GeoLocation with region and country displays properly
+		#[test]
+		fn test_geo_location_with_all_fields(
+			city in "[a-zA-Z ]{1,30}",
+			region in "[a-zA-Z ]{1,30}",
+			region_code in "[A-Z]{2}",
+			country in "[a-zA-Z ]{1,30}",
+			country_code in "[A-Z]{2}",
+			lat in -90.0f64..90.0,
+			lon in -180.0f64..180.0,
+		) {
+			let loc = GeoLocation {
+				city: Some(city.clone()),
+				region: Some(region),
+				region_code: Some(region_code),
+				country: Some(country.clone()),
+				country_code: Some(country_code),
+				continent: Some("Test Continent".to_string()),
+				latitude: Some(lat),
+				longitude: Some(lon),
+				timezone: Some("UTC".to_string()),
+			};
+
+			// Should display as "City, Country"
+			let display = loc.display_string();
+			prop_assert!(display.is_some());
+			let display_str = display.unwrap();
+			prop_assert!(display_str.contains(&city));
+			prop_assert!(display_str.contains(&country));
+		}
+
+		/// Property: Default GeoLocation has no display string
+		#[test]
+		fn test_default_geo_location_no_display(_dummy in 0..1) {
+			let loc = GeoLocation::default();
+			prop_assert!(loc.display_string().is_none());
+			prop_assert!(loc.city.is_none());
+			prop_assert!(loc.region.is_none());
+			prop_assert!(loc.region_code.is_none());
+			prop_assert!(loc.country.is_none());
+			prop_assert!(loc.country_code.is_none());
 		}
 	}
 }

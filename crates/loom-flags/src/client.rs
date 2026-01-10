@@ -487,11 +487,13 @@ impl FlagsClient {
 			return Err(FlagsError::OfflineNoCache);
 		}
 
-		let flag = self.cache.get_flag(flag_key).await.ok_or_else(|| {
-			FlagsError::FlagNotFound {
+		let flag = self
+			.cache
+			.get_flag(flag_key)
+			.await
+			.ok_or_else(|| FlagsError::FlagNotFound {
 				flag_key: flag_key.to_string(),
-			}
-		})?;
+			})?;
 
 		if flag.archived || !flag.enabled {
 			Ok(EvaluationResult::new(
@@ -511,10 +513,7 @@ impl FlagsClient {
 	}
 
 	/// Evaluates all flags using the server API.
-	async fn evaluate_all_server(
-		&self,
-		context: &EvaluationContext,
-	) -> Result<BulkEvaluationResult> {
+	async fn evaluate_all_server(&self, context: &EvaluationContext) -> Result<BulkEvaluationResult> {
 		let url = format!("{}/api/flags/evaluate", self.base_url);
 
 		let response = self
@@ -544,7 +543,10 @@ impl FlagsClient {
 	}
 
 	/// Evaluates all flags using cached data.
-	async fn evaluate_all_cached(&self, _context: &EvaluationContext) -> Result<BulkEvaluationResult> {
+	async fn evaluate_all_cached(
+		&self,
+		_context: &EvaluationContext,
+	) -> Result<BulkEvaluationResult> {
 		if !self.cache.is_initialized().await {
 			return Err(FlagsError::OfflineNoCache);
 		}

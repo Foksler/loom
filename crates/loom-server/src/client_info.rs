@@ -17,6 +17,7 @@ pub struct ClientInfo {
 	pub ip_address: Option<String>,
 	pub user_agent: Option<String>,
 	pub geo_city: Option<String>,
+	pub geo_region: Option<String>,
 	pub geo_country: Option<String>,
 }
 
@@ -41,14 +42,15 @@ impl ClientInfo {
 			.and_then(|v| v.to_str().ok())
 			.map(|s| s.to_string());
 
-		let (geo_city, geo_country) = match (&ip_address, geoip) {
+		let (geo_city, geo_region, geo_country) = match (&ip_address, geoip) {
 			(Some(ip_str), Some(svc)) => lookup_geo(ip_str, svc),
-			_ => (None, None),
+			_ => (None, None, None),
 		};
 
 		tracing::debug!(
 			ip = ?ip_address,
 			geo_city = ?geo_city,
+			geo_region = ?geo_region,
 			geo_country = ?geo_country,
 			"Client info extracted"
 		);
@@ -57,6 +59,7 @@ impl ClientInfo {
 			ip_address,
 			user_agent,
 			geo_city,
+			geo_region,
 			geo_country,
 		}
 	}
@@ -102,18 +105,21 @@ fn extract_client_ip(headers: &HeaderMap) -> Option<String> {
 }
 
 /// Perform GeoIP lookup for an IP address string.
-fn lookup_geo(ip_str: &str, geoip: &GeoIpService) -> (Option<String>, Option<String>) {
+fn lookup_geo(
+	ip_str: &str,
+	geoip: &GeoIpService,
+) -> (Option<String>, Option<String>, Option<String>) {
 	match ip_str.parse::<IpAddr>() {
 		Ok(ip) => match geoip.lookup(ip) {
-			Ok(location) => (location.city, location.country),
+			Ok(location) => (location.city, location.region, location.country),
 			Err(e) => {
 				tracing::debug!(ip = %ip_str, error = %e, "GeoIP lookup failed");
-				(None, None)
+				(None, None, None)
 			}
 		},
 		Err(_) => {
 			tracing::debug!(ip = %ip_str, "Invalid IP address for GeoIP lookup");
-			(None, None)
+			(None, None, None)
 		}
 	}
 }
@@ -177,6 +183,7 @@ mod tests {
 		assert_eq!(info.ip_address, Some("8.8.8.8".to_string()));
 		assert_eq!(info.user_agent, Some("Mozilla/5.0".to_string()));
 		assert_eq!(info.geo_city, None);
+		assert_eq!(info.geo_region, None);
 		assert_eq!(info.geo_country, None);
 	}
 }

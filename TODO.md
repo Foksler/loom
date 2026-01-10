@@ -273,9 +273,9 @@ crates/loom-server/migrations/
 ## Next Steps
 
 1. ~~**WebSocket Auth**~~ - ✅ Implemented cookie-based and first-message auth for WebSocket connections
-2. **OAuth Integration** - Add actual GitHub/Google OAuth client implementations
-3. **Database Repositories** - Connect route handlers to database operations
-4. **GeoIP Integration** - Add MaxMind database for session location tracking
+2. ~~**OAuth Integration**~~ - ✅ GitHub, Google, and Okta OAuth clients implemented
+3. ~~**Database Repositories**~~ - ✅ All route handlers connected to database operations
+4. ~~**GeoIP Integration**~~ - ✅ MaxMind database for session location tracking and feature flag evaluation
 5. **Rate Limiting** - Add per-IP/per-user rate limits (deferred from v1)
 
 ---
@@ -426,9 +426,12 @@ Implementation checklist for the Feature Flags system. See
   - [x] Configurable key (user_id, org_id, session_id)
 - [x] Schedule evaluation
   - [x] Time-based percentage ramps
-- [ ] GeoIP integration (deferred to Phase 6 - requires evaluation endpoints)
-  - [ ] Integrate with existing `loom-geoip`
-  - [ ] Proxy header support (CF-Connecting-IP, X-Forwarded-For, X-Real-IP)
+- [x] GeoIP integration (completed)
+  - [x] Integrate with existing `loom-server-geoip`
+  - [x] Proxy header support (CF-Connecting-IP, X-Forwarded-For, X-Real-IP)
+  - [x] Region/subdivision support from MaxMind database
+  - [x] Server-resolved GeoIP takes precedence over client-provided geo context
+  - [x] Property-based tests for GeoIP context handling
 - [x] Strategy API types in `loom-server-api`
 - [x] i18n translations (EN, ES, AR)
 - [x] 90+ tests including property-based tests for:

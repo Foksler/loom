@@ -302,11 +302,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_kill_switch_affects_flag() {
 		let cache = FlagCache::new();
-		let ks = create_test_kill_switch(
-			"emergency",
-			vec!["feature.dangerous".to_string()],
-			true,
-		);
+		let ks = create_test_kill_switch("emergency", vec!["feature.dangerous".to_string()], true);
 		cache.initialize(vec![], vec![ks]).await;
 
 		// Flag is killed by active kill switch
@@ -321,11 +317,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_deactivate_kill_switch() {
 		let cache = FlagCache::new();
-		let ks = create_test_kill_switch(
-			"emergency",
-			vec!["feature.test".to_string()],
-			true,
-		);
+		let ks = create_test_kill_switch("emergency", vec!["feature.test".to_string()], true);
 		cache.initialize(vec![], vec![ks]).await;
 
 		assert!(cache.is_flag_killed("feature.test").await.is_some());

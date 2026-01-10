@@ -173,8 +173,7 @@ async fn run_sse_loop(
 
 		info!(url = %stream_url, "Connecting to SSE stream");
 
-		match connect_and_process(&stream_url, &sdk_key, &cache, &connected, &events_received).await
-		{
+		match connect_and_process(&stream_url, &sdk_key, &cache, &connected, &events_received).await {
 			Ok(()) => {
 				// Normal disconnect (e.g., server closed connection)
 				debug!("SSE stream ended normally");
@@ -189,8 +188,7 @@ async fn run_sse_loop(
 		connected.store(false, Ordering::SeqCst);
 
 		// Check max reconnect attempts
-		if config.max_reconnect_attempts > 0 && consecutive_failures >= config.max_reconnect_attempts
-		{
+		if config.max_reconnect_attempts > 0 && consecutive_failures >= config.max_reconnect_attempts {
 			error!(
 				attempts = consecutive_failures,
 				"Max reconnection attempts reached, stopping SSE"
@@ -243,10 +241,7 @@ async fn connect_and_process(
 		.header("Accept", "text/event-stream")
 		.header("Cache-Control", "no-cache");
 
-	let response = request
-		.send()
-		.await
-		.map_err(FlagsError::ConnectionFailed)?;
+	let response = request.send().await.map_err(FlagsError::ConnectionFailed)?;
 
 	if !response.status().is_success() {
 		return Err(FlagsError::ServerError {
@@ -305,7 +300,9 @@ async fn process_event(event: Event, cache: &FlagCache) -> Result<()> {
 		}
 		FlagStreamEvent::FlagUpdated(data) => {
 			// Update the flag's enabled status in cache
-			cache.update_flag_enabled(&data.flag_key, data.enabled).await;
+			cache
+				.update_flag_enabled(&data.flag_key, data.enabled)
+				.await;
 			debug!(flag_key = %data.flag_key, enabled = data.enabled, "Flag updated");
 		}
 		FlagStreamEvent::FlagArchived(data) => {

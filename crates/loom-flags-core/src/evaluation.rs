@@ -285,6 +285,7 @@ pub struct ExposureLog {
 
 impl ExposureLog {
 	/// Creates a new exposure log entry.
+	#[allow(clippy::too_many_arguments)]
 	pub fn new(
 		flag_id: crate::FlagId,
 		flag_key: impl Into<String>,
@@ -407,8 +408,7 @@ mod tests {
 
 	#[test]
 	fn test_context_hash_different_for_different_flags() {
-		let ctx = EvaluationContext::new("prod")
-			.with_user_id("user123");
+		let ctx = EvaluationContext::new("prod").with_user_id("user123");
 
 		let hash1 = ctx.compute_hash("feature.flag_a");
 		let hash2 = ctx.compute_hash("feature.flag_b");
@@ -418,10 +418,8 @@ mod tests {
 
 	#[test]
 	fn test_context_hash_different_for_different_users() {
-		let ctx1 = EvaluationContext::new("prod")
-			.with_user_id("user123");
-		let ctx2 = EvaluationContext::new("prod")
-			.with_user_id("user456");
+		let ctx1 = EvaluationContext::new("prod").with_user_id("user123");
+		let ctx2 = EvaluationContext::new("prod").with_user_id("user456");
 
 		let hash1 = ctx1.compute_hash("feature.test");
 		let hash2 = ctx2.compute_hash("feature.test");
@@ -442,10 +440,9 @@ mod tests {
 
 	#[test]
 	fn test_context_hash_includes_attributes() {
-		let ctx1 = EvaluationContext::new("prod")
-			.with_attribute("plan", serde_json::json!("free"));
-		let ctx2 = EvaluationContext::new("prod")
-			.with_attribute("plan", serde_json::json!("enterprise"));
+		let ctx1 = EvaluationContext::new("prod").with_attribute("plan", serde_json::json!("free"));
+		let ctx2 =
+			EvaluationContext::new("prod").with_attribute("plan", serde_json::json!("enterprise"));
 
 		let hash1 = ctx1.compute_hash("feature.test");
 		let hash2 = ctx2.compute_hash("feature.test");
@@ -455,10 +452,8 @@ mod tests {
 
 	#[test]
 	fn test_context_hash_includes_geo() {
-		let ctx1 = EvaluationContext::new("prod")
-			.with_geo(GeoContext::new().with_country("US"));
-		let ctx2 = EvaluationContext::new("prod")
-			.with_geo(GeoContext::new().with_country("GB"));
+		let ctx1 = EvaluationContext::new("prod").with_geo(GeoContext::new().with_country("US"));
+		let ctx2 = EvaluationContext::new("prod").with_geo(GeoContext::new().with_country("GB"));
 
 		let hash1 = ctx1.compute_hash("feature.test");
 		let hash2 = ctx2.compute_hash("feature.test");
@@ -530,7 +525,10 @@ mod tests {
 		let deserialized: FlagStats = serde_json::from_str(&json).unwrap();
 
 		assert_eq!(deserialized.flag_key, stats.flag_key);
-		assert_eq!(deserialized.evaluation_count_24h, stats.evaluation_count_24h);
+		assert_eq!(
+			deserialized.evaluation_count_24h,
+			stats.evaluation_count_24h
+		);
 	}
 }
 

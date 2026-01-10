@@ -39,7 +39,9 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::{EnvironmentId, Flag, FlagConfig, FlagId, KillSwitch, KillSwitchId, OrgId, VariantValue};
+use crate::{
+	EnvironmentId, Flag, FlagConfig, FlagId, KillSwitch, KillSwitchId, OrgId, VariantValue,
+};
 
 /// SSE event types for flag streaming.
 ///
@@ -354,10 +356,7 @@ mod tests {
 
 	#[test]
 	fn test_event_type() {
-		assert_eq!(
-			FlagStreamEvent::init(vec![], vec![]).event_type(),
-			"init"
-		);
+		assert_eq!(FlagStreamEvent::init(vec![], vec![]).event_type(), "init");
 		assert_eq!(
 			FlagStreamEvent::flag_updated(
 				"test".to_string(),

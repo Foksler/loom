@@ -16,10 +16,8 @@ use axum::{
 	},
 	Json,
 };
-use futures::stream::Stream;
-use tokio_stream::wrappers::BroadcastStream;
-use tokio_stream::StreamExt;
 use chrono::Utc;
+use futures::stream::Stream;
 use loom_flags_core::{
 	AttributeOperator, Condition, Environment, EnvironmentId, Flag, FlagConfig, FlagConfigId, FlagId,
 	FlagPrerequisite, FlagState, FlagStreamEvent, GeoField, GeoOperator, KillSwitch, KillSwitchId,
@@ -31,8 +29,8 @@ pub use loom_server_api::flags::{
 	CreateFlagRequest, CreateKillSwitchRequest, CreateSdkKeyRequest, CreateSdkKeyResponse,
 	CreateStrategyRequest, EnvironmentResponse, EvaluateAllFlagsRequest, EvaluateAllFlagsResponse,
 	EvaluateFlagRequest, EvaluationContextApi, EvaluationReasonApi, EvaluationResultApi,
-	FlagConfigResponse, FlagPrerequisiteApi, FlagResponse, FlagsErrorResponse, FlagsSuccessResponse,
-	FlagStatsResponse, GeoContextApi, GeoFieldApi, GeoOperatorApi, KillSwitchResponse,
+	FlagConfigResponse, FlagPrerequisiteApi, FlagResponse, FlagStatsResponse, FlagsErrorResponse,
+	FlagsSuccessResponse, GeoContextApi, GeoFieldApi, GeoOperatorApi, KillSwitchResponse,
 	ListEnvironmentsResponse, ListFlagConfigsResponse, ListFlagsQuery, ListFlagsResponse,
 	ListKillSwitchesResponse, ListSdkKeysResponse, ListStaleFlagsResponse, ListStrategiesResponse,
 	PercentageKeyApi, ScheduleApi, ScheduleStepApi, SdkKeyResponse, SdkKeyTypeApi, StaleFlagResponse,
@@ -40,12 +38,17 @@ pub use loom_server_api::flags::{
 	UpdateKillSwitchRequest, UpdateStrategyRequest, VariantApi, VariantValueApi,
 };
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
-use loom_server_flags::{evaluate_flag, hash_sdk_key, EvaluationContext, EvaluationReason, FlagsRepository, GeoContext};
+use loom_server_flags::{
+	evaluate_flag, hash_sdk_key, EvaluationContext, EvaluationReason, FlagsRepository, GeoContext,
+};
+use tokio_stream::wrappers::BroadcastStream;
+use tokio_stream::StreamExt;
 
 use crate::{
 	api::AppState,
 	api_response::{bad_request, conflict, internal_error, not_found},
 	auth_middleware::RequireAuth,
+	client_info::ClientInfo,
 	i18n::{resolve_user_locale, t},
 	impl_api_error_response, parse_id,
 	validation::parse_org_id as shared_parse_org_id,
@@ -1741,7 +1744,10 @@ pub async fn archive_flag(
 
 			// Broadcast flag archived event to all environments
 			let event = FlagStreamEvent::flag_archived(flag.key.clone());
-			state.flags_broadcaster.broadcast_to_org(flags_org_id, event).await;
+			state
+				.flags_broadcaster
+				.broadcast_to_org(flags_org_id, event)
+				.await;
 
 			(
 				StatusCode::OK,
@@ -1864,7 +1870,11 @@ pub async fn restore_flag(
 
 			// Broadcast flag restored event to all environments
 			// We broadcast to all environments since the flag is now available again
-			let environments = state.flags_repo.list_environments(flags_org_id).await.unwrap_or_default();
+			let environments = state
+				.flags_repo
+				.list_environments(flags_org_id)
+				.await
+				.unwrap_or_default();
 			for env in environments {
 				let config = state
 					.flags_repo
@@ -1874,7 +1884,10 @@ pub async fn restore_flag(
 					.flatten();
 				let enabled = config.map(|c| c.enabled).unwrap_or(false);
 				let event = FlagStreamEvent::flag_restored(flag.key.clone(), env.name, enabled);
-				state.flags_broadcaster.broadcast(flags_org_id, env.id, event).await;
+				state
+					.flags_broadcaster
+					.broadcast(flags_org_id, env.id, event)
+					.await;
 			}
 
 			(
@@ -2380,7 +2393,10 @@ pub async fn update_flag_config(
 		flag.default_variant.clone(),
 		default_value,
 	);
-	state.flags_broadcaster.broadcast(flags_org_id, env_id, event).await;
+	state
+		.flags_broadcaster
+		.broadcast(flags_org_id, env_id, event)
+		.await;
 
 	(
 		StatusCode::OK,
@@ -3222,7 +3238,10 @@ pub async fn list_kill_switches(
 	{
 		Ok(kill_switches) => {
 			let response = ListKillSwitchesResponse {
-				kill_switches: kill_switches.into_iter().map(kill_switch_to_response).collect(),
+				kill_switches: kill_switches
+					.into_iter()
+					.map(kill_switch_to_response)
+					.collect(),
 			};
 			(StatusCode::OK, Json(response)).into_response()
 		}
@@ -3339,7 +3358,11 @@ pub async fn create_kill_switch(
 
 	tracing::info!(kill_switch_id = %kill_switch.id, key = %kill_switch.key, "Kill switch created");
 
-	(StatusCode::CREATED, Json(kill_switch_to_response(kill_switch))).into_response()
+	(
+		StatusCode::CREATED,
+		Json(kill_switch_to_response(kill_switch)),
+	)
+		.into_response()
 }
 
 #[utoipa::path(
@@ -3672,7 +3695,10 @@ pub async fn activate_kill_switch(
 		kill_switch.linked_flag_keys.clone(),
 		kill_switch.activation_reason.clone().unwrap_or_default(),
 	);
-	state.flags_broadcaster.broadcast_to_org(flags_org_id, event).await;
+	state
+		.flags_broadcaster
+		.broadcast_to_org(flags_org_id, event)
+		.await;
 
 	(
 		StatusCode::OK,
@@ -3795,7 +3821,10 @@ pub async fn deactivate_kill_switch(
 		kill_switch.key.clone(),
 		kill_switch.linked_flag_keys.clone(),
 	);
-	state.flags_broadcaster.broadcast_to_org(flags_org_id, event).await;
+	state
+		.flags_broadcaster
+		.broadcast_to_org(flags_org_id, event)
+		.await;
 
 	(
 		StatusCode::OK,
@@ -3923,8 +3952,14 @@ pub async fn delete_kill_switch(
 // Evaluation Routes
 // ============================================================================
 
-/// Helper to convert API context to core context.
-fn to_core_context(api_ctx: &EvaluationContextApi) -> EvaluationContext {
+/// Helper to convert API context to core context with optional server-resolved GeoIP.
+///
+/// Server-resolved GeoIP data takes precedence over client-provided geo context,
+/// ensuring geographic targeting cannot be spoofed by clients.
+fn to_core_context_with_geo(
+	api_ctx: &EvaluationContextApi,
+	server_geo: Option<&ClientInfo>,
+) -> EvaluationContext {
 	let mut ctx = EvaluationContext::new(&api_ctx.environment);
 
 	if let Some(ref user_id) = api_ctx.user_id {
@@ -3941,6 +3976,29 @@ fn to_core_context(api_ctx: &EvaluationContextApi) -> EvaluationContext {
 		ctx = ctx.with_attribute(key, value.clone());
 	}
 
+	// Server-resolved GeoIP takes precedence over client-provided geo context
+	// to prevent clients from spoofing their geographic location
+	if let Some(client_info) = server_geo {
+		if client_info.geo_country.is_some()
+			|| client_info.geo_region.is_some()
+			|| client_info.geo_city.is_some()
+		{
+			let mut geo_ctx = GeoContext::new();
+			if let Some(ref country) = client_info.geo_country {
+				geo_ctx = geo_ctx.with_country(country);
+			}
+			if let Some(ref region) = client_info.geo_region {
+				geo_ctx = geo_ctx.with_region(region);
+			}
+			if let Some(ref city) = client_info.geo_city {
+				geo_ctx = geo_ctx.with_city(city);
+			}
+			ctx = ctx.with_geo(geo_ctx);
+			return ctx;
+		}
+	}
+
+	// Fall back to client-provided geo context if server resolution failed
 	if let Some(ref geo) = api_ctx.geo {
 		let mut geo_ctx = GeoContext::new();
 		if let Some(ref country) = geo.country {
@@ -3956,6 +4014,12 @@ fn to_core_context(api_ctx: &EvaluationContextApi) -> EvaluationContext {
 	}
 
 	ctx
+}
+
+/// Helper to convert API context to core context (without server GeoIP).
+#[allow(dead_code)] // Used in tests
+fn to_core_context(api_ctx: &EvaluationContextApi) -> EvaluationContext {
+	to_core_context_with_geo(api_ctx, None)
 }
 
 /// Helper to convert core evaluation reason to API reason.
@@ -4011,10 +4075,12 @@ fn to_api_variant_value(value: &VariantValue) -> VariantValueApi {
 /// - Kill switches (platform and org level)
 /// - Prerequisites
 /// - Strategy conditions, percentage targeting, and schedules
-#[tracing::instrument(skip(state, payload), fields(%org_id, environment = %payload.context.environment))]
+/// - GeoIP (resolved from client IP via proxy headers)
+#[tracing::instrument(skip(state, headers, payload), fields(%org_id, environment = %payload.context.environment))]
 pub async fn evaluate_all_flags(
 	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
+	headers: HeaderMap,
 	Path(org_id): Path<String>,
 	Json(payload): Json<EvaluateAllFlagsRequest>,
 ) -> impl IntoResponse {
@@ -4023,6 +4089,9 @@ pub async fn evaluate_all_flags(
 		FlagsErrorResponse,
 		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
 	);
+
+	// Extract client info including GeoIP from request headers
+	let client_info = ClientInfo::from_headers(&headers, state.geoip_service.as_ref());
 
 	// Check org membership
 	match state
@@ -4043,7 +4112,8 @@ pub async fn evaluate_all_flags(
 	}
 
 	let flags_org_id = loom_flags_core::OrgId(org_id.into_inner());
-	let context = to_core_context(&payload.context);
+	// Use server-resolved GeoIP for evaluation context
+	let context = to_core_context_with_geo(&payload.context, Some(&client_info));
 
 	// Get the environment for this context
 	let environment = match state
@@ -4132,7 +4202,7 @@ pub async fn evaluate_all_flags(
 	// Evaluate each flag
 	let mut results = Vec::with_capacity(flag_map.len());
 
-	for (_, flag) in &flag_map {
+	for flag in flag_map.values() {
 		// Get config for this environment
 		let config = match state
 			.flags_repo
@@ -4217,7 +4287,10 @@ pub async fn evaluate_all_flags(
 		let flag_key_for_stats = flag.key.clone();
 		let repo = state.flags_repo.clone();
 		tokio::spawn(async move {
-			if let Err(e) = repo.record_flag_evaluation(flag_id, &flag_key_for_stats).await {
+			if let Err(e) = repo
+				.record_flag_evaluation(flag_id, &flag_key_for_stats)
+				.await
+			{
 				tracing::warn!(error = %e, %flag_id, "Failed to record flag evaluation stats");
 			}
 		});
@@ -4267,10 +4340,12 @@ pub async fn evaluate_all_flags(
 ///
 /// This endpoint evaluates a specific flag and returns the evaluation result.
 /// Platform flags take precedence over org flags with the same key.
-#[tracing::instrument(skip(state, payload), fields(%org_id, %flag_key, environment = %payload.context.environment))]
+/// GeoIP is resolved server-side from the client IP address.
+#[tracing::instrument(skip(state, headers, payload), fields(%org_id, %flag_key, environment = %payload.context.environment))]
 pub async fn evaluate_flag_endpoint(
 	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
+	headers: HeaderMap,
 	Path((org_id, flag_key)): Path<(String, String)>,
 	Json(payload): Json<EvaluateFlagRequest>,
 ) -> impl IntoResponse {
@@ -4279,6 +4354,9 @@ pub async fn evaluate_flag_endpoint(
 		FlagsErrorResponse,
 		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
 	);
+
+	// Extract client info including GeoIP from request headers
+	let client_info = ClientInfo::from_headers(&headers, state.geoip_service.as_ref());
 
 	// Check org membership
 	match state
@@ -4299,7 +4377,8 @@ pub async fn evaluate_flag_endpoint(
 	}
 
 	let flags_org_id = loom_flags_core::OrgId(org_id.into_inner());
-	let context = to_core_context(&payload.context);
+	// Use server-resolved GeoIP for evaluation context
+	let context = to_core_context_with_geo(&payload.context, Some(&client_info));
 
 	// Get the environment for this context
 	let environment = match state
@@ -4412,7 +4491,11 @@ pub async fn evaluate_flag_endpoint(
 	let mut prereq_results: Vec<(String, String)> = Vec::new();
 	for prereq in &flag.prerequisites {
 		// Try platform flag first, then org flag
-		let prereq_flag = match state.flags_repo.get_flag_by_key(None, &prereq.flag_key).await {
+		let prereq_flag = match state
+			.flags_repo
+			.get_flag_by_key(None, &prereq.flag_key)
+			.await
+		{
 			Ok(Some(f)) => Some(f),
 			Ok(None) => state
 				.flags_repo
@@ -4461,7 +4544,10 @@ pub async fn evaluate_flag_endpoint(
 	let flag_key_for_stats = flag.key.clone();
 	let repo = state.flags_repo.clone();
 	tokio::spawn(async move {
-		if let Err(e) = repo.record_flag_evaluation(flag_id, &flag_key_for_stats).await {
+		if let Err(e) = repo
+			.record_flag_evaluation(flag_id, &flag_key_for_stats)
+			.await
+		{
 			tracing::warn!(error = %e, %flag_id, "Failed to record flag evaluation stats");
 		}
 	});
@@ -4666,7 +4752,9 @@ pub async fn stream_flags(
 		Ok(event) => {
 			let event_type = event.event_type();
 			match serde_json::to_string(&event) {
-				Ok(json) => Some(Ok::<_, Infallible>(Event::default().event(event_type).data(json))),
+				Ok(json) => Some(Ok::<_, Infallible>(
+					Event::default().event(event_type).data(json),
+				)),
 				Err(e) => {
 					tracing::warn!(error = %e, "Failed to serialize SSE event");
 					None
@@ -4681,11 +4769,13 @@ pub async fn stream_flags(
 
 	let combined_stream = init_stream.chain(updates_stream);
 
-	Ok(Sse::new(combined_stream).keep_alive(
-		axum::response::sse::KeepAlive::new()
-			.interval(std::time::Duration::from_secs(30))
-			.text("heartbeat"),
-	))
+	Ok(
+		Sse::new(combined_stream).keep_alive(
+			axum::response::sse::KeepAlive::new()
+				.interval(std::time::Duration::from_secs(30))
+				.text("heartbeat"),
+		),
+	)
 }
 
 /// Get broadcaster statistics.
@@ -4796,9 +4886,7 @@ pub async fn list_stale_flags(
 	let stale_flag_responses: Vec<StaleFlagResponse> = stale_flags
 		.into_iter()
 		.map(|(flag, last_evaluated_at)| {
-			let days_since = last_evaluated_at.map(|dt| {
-				(now - dt).num_days()
-			});
+			let days_since = last_evaluated_at.map(|dt| (now - dt).num_days());
 			StaleFlagResponse {
 				flag_id: flag.id.to_string(),
 				flag_key: flag.key,
@@ -4917,4 +5005,265 @@ pub async fn get_flag_stats(
 		}),
 	)
 		.into_response()
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_to_core_context_without_geo() {
+		let api_ctx = EvaluationContextApi {
+			environment: "prod".to_string(),
+			user_id: Some("user123".to_string()),
+			org_id: Some("org456".to_string()),
+			session_id: None,
+			attributes: std::collections::HashMap::new(),
+			geo: None,
+		};
+
+		let ctx = to_core_context(&api_ctx);
+
+		assert_eq!(ctx.environment, "prod");
+		assert_eq!(ctx.user_id, Some("user123".to_string()));
+		assert_eq!(ctx.org_id, Some("org456".to_string()));
+		assert!(ctx.geo.is_none());
+	}
+
+	#[test]
+	fn test_to_core_context_with_client_geo() {
+		let api_ctx = EvaluationContextApi {
+			environment: "prod".to_string(),
+			user_id: None,
+			org_id: None,
+			session_id: None,
+			attributes: std::collections::HashMap::new(),
+			geo: Some(GeoContextApi {
+				country: Some("United States".to_string()),
+				region: Some("California".to_string()),
+				city: Some("San Francisco".to_string()),
+			}),
+		};
+
+		let ctx = to_core_context(&api_ctx);
+
+		assert!(ctx.geo.is_some());
+		let geo = ctx.geo.unwrap();
+		assert_eq!(geo.country, Some("United States".to_string()));
+		assert_eq!(geo.region, Some("California".to_string()));
+		assert_eq!(geo.city, Some("San Francisco".to_string()));
+	}
+
+	#[test]
+	fn test_to_core_context_with_geo_server_overrides_client() {
+		let api_ctx = EvaluationContextApi {
+			environment: "prod".to_string(),
+			user_id: None,
+			org_id: None,
+			session_id: None,
+			attributes: std::collections::HashMap::new(),
+			geo: Some(GeoContextApi {
+				country: Some("Fake Country".to_string()),
+				region: Some("Fake Region".to_string()),
+				city: Some("Fake City".to_string()),
+			}),
+		};
+
+		let server_geo = ClientInfo {
+			ip_address: Some("8.8.8.8".to_string()),
+			user_agent: Some("Mozilla/5.0".to_string()),
+			geo_city: Some("Mountain View".to_string()),
+			geo_region: Some("California".to_string()),
+			geo_country: Some("United States".to_string()),
+		};
+
+		// Server-resolved GeoIP should take precedence
+		let ctx = to_core_context_with_geo(&api_ctx, Some(&server_geo));
+
+		assert!(ctx.geo.is_some());
+		let geo = ctx.geo.unwrap();
+		assert_eq!(geo.country, Some("United States".to_string()));
+		assert_eq!(geo.region, Some("California".to_string()));
+		assert_eq!(geo.city, Some("Mountain View".to_string()));
+	}
+
+	#[test]
+	fn test_to_core_context_with_geo_fallback_to_client() {
+		let api_ctx = EvaluationContextApi {
+			environment: "prod".to_string(),
+			user_id: None,
+			org_id: None,
+			session_id: None,
+			attributes: std::collections::HashMap::new(),
+			geo: Some(GeoContextApi {
+				country: Some("Japan".to_string()),
+				region: Some("Tokyo".to_string()),
+				city: Some("Shibuya".to_string()),
+			}),
+		};
+
+		// Server GeoIP lookup failed (no geo data)
+		let server_geo = ClientInfo {
+			ip_address: Some("192.168.1.1".to_string()), // Private IP - no geo data
+			user_agent: Some("Mozilla/5.0".to_string()),
+			geo_city: None,
+			geo_region: None,
+			geo_country: None,
+		};
+
+		// Should fall back to client-provided geo
+		let ctx = to_core_context_with_geo(&api_ctx, Some(&server_geo));
+
+		assert!(ctx.geo.is_some());
+		let geo = ctx.geo.unwrap();
+		assert_eq!(geo.country, Some("Japan".to_string()));
+		assert_eq!(geo.region, Some("Tokyo".to_string()));
+		assert_eq!(geo.city, Some("Shibuya".to_string()));
+	}
+
+	#[test]
+	fn test_to_core_context_with_geo_partial_server_data() {
+		let api_ctx = EvaluationContextApi {
+			environment: "prod".to_string(),
+			user_id: None,
+			org_id: None,
+			session_id: None,
+			attributes: std::collections::HashMap::new(),
+			geo: Some(GeoContextApi {
+				country: Some("Client Country".to_string()),
+				region: Some("Client Region".to_string()),
+				city: Some("Client City".to_string()),
+			}),
+		};
+
+		// Server has country only
+		let server_geo = ClientInfo {
+			ip_address: Some("8.8.8.8".to_string()),
+			user_agent: None,
+			geo_city: None,
+			geo_region: None,
+			geo_country: Some("Germany".to_string()),
+		};
+
+		// Server data takes precedence (even if partial)
+		let ctx = to_core_context_with_geo(&api_ctx, Some(&server_geo));
+
+		assert!(ctx.geo.is_some());
+		let geo = ctx.geo.unwrap();
+		assert_eq!(geo.country, Some("Germany".to_string()));
+		assert_eq!(geo.region, None); // Server didn't provide region
+		assert_eq!(geo.city, None); // Server didn't provide city
+	}
+}
+
+#[cfg(test)]
+mod proptests {
+	use super::*;
+	use proptest::prelude::*;
+
+	proptest! {
+		/// Property: Server-resolved geo should always override client geo when present
+		#[test]
+		fn server_geo_overrides_client_geo(
+			client_country in prop::option::of("[A-Z]{2}"),
+			client_region in prop::option::of("[A-Za-z ]{1,20}"),
+			client_city in prop::option::of("[A-Za-z ]{1,20}"),
+			server_country in "[A-Z]{2}",
+			server_region in "[A-Za-z ]{1,20}",
+			server_city in "[A-Za-z ]{1,20}",
+		) {
+			let api_ctx = EvaluationContextApi {
+				environment: "prod".to_string(),
+				user_id: None,
+				org_id: None,
+				session_id: None,
+				attributes: std::collections::HashMap::new(),
+				geo: Some(GeoContextApi {
+					country: client_country,
+					region: client_region,
+					city: client_city,
+				}),
+			};
+
+			let server_geo = ClientInfo {
+				ip_address: Some("8.8.8.8".to_string()),
+				user_agent: None,
+				geo_city: Some(server_city.clone()),
+				geo_region: Some(server_region.clone()),
+				geo_country: Some(server_country.clone()),
+			};
+
+			let ctx = to_core_context_with_geo(&api_ctx, Some(&server_geo));
+
+			// Server geo should always be used when available
+			prop_assert!(ctx.geo.is_some());
+			let geo = ctx.geo.unwrap();
+			prop_assert_eq!(geo.country, Some(server_country));
+			prop_assert_eq!(geo.region, Some(server_region));
+			prop_assert_eq!(geo.city, Some(server_city));
+		}
+
+		/// Property: Empty server geo falls back to client geo
+		#[test]
+		fn empty_server_geo_uses_client_geo(
+			client_country in "[A-Z]{2}",
+			client_region in "[A-Za-z ]{1,20}",
+			client_city in "[A-Za-z ]{1,20}",
+		) {
+			let api_ctx = EvaluationContextApi {
+				environment: "prod".to_string(),
+				user_id: None,
+				org_id: None,
+				session_id: None,
+				attributes: std::collections::HashMap::new(),
+				geo: Some(GeoContextApi {
+					country: Some(client_country.clone()),
+					region: Some(client_region.clone()),
+					city: Some(client_city.clone()),
+				}),
+			};
+
+			let server_geo = ClientInfo {
+				ip_address: Some("192.168.1.1".to_string()),
+				user_agent: None,
+				geo_city: None,
+				geo_region: None,
+				geo_country: None,
+			};
+
+			let ctx = to_core_context_with_geo(&api_ctx, Some(&server_geo));
+
+			// Should fall back to client geo
+			prop_assert!(ctx.geo.is_some());
+			let geo = ctx.geo.unwrap();
+			prop_assert_eq!(geo.country, Some(client_country));
+			prop_assert_eq!(geo.region, Some(client_region));
+			prop_assert_eq!(geo.city, Some(client_city));
+		}
+
+		/// Property: Evaluation context preserves all provided fields
+		#[test]
+		fn context_preserves_all_fields(
+			environment in "[a-z]+",
+			user_id in prop::option::of("[a-z0-9]+"),
+			org_id in prop::option::of("[a-z0-9]+"),
+			session_id in prop::option::of("[a-z0-9]+"),
+		) {
+			let api_ctx = EvaluationContextApi {
+				environment: environment.clone(),
+				user_id: user_id.clone(),
+				org_id: org_id.clone(),
+				session_id: session_id.clone(),
+				attributes: std::collections::HashMap::new(),
+				geo: None,
+			};
+
+			let ctx = to_core_context(&api_ctx);
+
+			prop_assert_eq!(ctx.environment, environment);
+			prop_assert_eq!(ctx.user_id, user_id);
+			prop_assert_eq!(ctx.org_id, org_id);
+			prop_assert_eq!(ctx.session_id, session_id);
+		}
+	}
 }

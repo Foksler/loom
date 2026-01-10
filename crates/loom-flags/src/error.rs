@@ -106,8 +106,10 @@ impl FlagsError {
 			self,
 			FlagsError::ConnectionFailed(_)
 				| FlagsError::RequestFailed(_)
-				| FlagsError::ServerError { status: 500..=599, .. }
-				| FlagsError::RateLimited { .. }
+				| FlagsError::ServerError {
+					status: 500..=599,
+					..
+				} | FlagsError::RateLimited { .. }
 		)
 	}
 }
@@ -120,12 +122,10 @@ mod tests {
 	fn test_retryable_errors() {
 		assert!(FlagsError::SseConnectionFailed("test".to_string()).is_retryable());
 		assert!(FlagsError::SseStreamError("test".to_string()).is_retryable());
-		assert!(
-			FlagsError::RateLimited {
-				retry_after_secs: Some(60)
-			}
-			.is_retryable()
-		);
+		assert!(FlagsError::RateLimited {
+			retry_after_secs: Some(60)
+		}
+		.is_retryable());
 		assert!(!FlagsError::InvalidSdkKey.is_retryable());
 		assert!(!FlagsError::FlagNotFound {
 			flag_key: "test".to_string()
@@ -140,12 +140,10 @@ mod tests {
 			message: "unavailable".to_string()
 		}
 		.should_use_cache());
-		assert!(
-			FlagsError::RateLimited {
-				retry_after_secs: None
-			}
-			.should_use_cache()
-		);
+		assert!(FlagsError::RateLimited {
+			retry_after_secs: None
+		}
+		.should_use_cache());
 		assert!(!FlagsError::InvalidSdkKey.should_use_cache());
 		assert!(!FlagsError::AuthenticationFailed.should_use_cache());
 	}
