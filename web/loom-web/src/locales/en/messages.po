@@ -2614,3 +2614,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "Exposure Tracking"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "Track when users are exposed to flag variants for experiment analysis"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "Exposure Tracking"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "Enabled"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "Disabled"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "Enable Exposure Tracking"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "Disable Exposure Tracking"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "When enabled, flag evaluations will be logged for experiment analysis"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "Exposure Logs"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "Export Logs"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "Download exposure logs as CSV"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "No exposure logs found"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "Flag Key"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "Variant"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "User ID"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "Timestamp"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "Reason"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "Environment"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "Filter by flag"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "Filter by environment"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "Start Date"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "End Date"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count} exposures"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "Exposures are deduplicated within a 1-hour window per user/context"

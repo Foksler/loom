@@ -7,8 +7,9 @@ use sqlx::SqlitePool;
 use tracing::instrument;
 
 use loom_flags_core::{
-	Environment, EnvironmentId, Flag, FlagConfig, FlagId, FlagPrerequisite, KillSwitch, KillSwitchId,
-	OrgId, SdkKey, SdkKeyId, SdkKeyType, Strategy, StrategyId, Variant,
+	Environment, EnvironmentId, ExposureLog, ExposureLogId, Flag, FlagConfig, FlagId,
+	FlagPrerequisite, KillSwitch, KillSwitchId, OrgId, SdkKey, SdkKeyId, SdkKeyType, Strategy,
+	StrategyId, Variant,
 };
 
 use crate::error::{FlagsServerError, Result};
@@ -84,6 +85,41 @@ pub trait FlagsRepository: Send + Sync {
 		raw_key: &str,
 		env_name: &str,
 	) -> Result<Option<(SdkKey, Environment)>>;
+
+	// Exposure log operations
+
+	/// Creates a new exposure log entry.
+	async fn create_exposure_log(&self, log: &ExposureLog) -> Result<()>;
+
+	/// Checks if an exposure already exists for the given context hash within the deduplication window.
+	///
+	/// Returns true if an exposure with the same context hash exists within the last hour.
+	async fn exposure_exists_within_window(
+		&self,
+		flag_key: &str,
+		context_hash: &str,
+		window_hours: u32,
+	) -> Result<bool>;
+
+	/// Lists exposure logs with optional filtering.
+	async fn list_exposure_logs(
+		&self,
+		flag_key: Option<&str>,
+		environment_id: Option<EnvironmentId>,
+		start_time: Option<chrono::DateTime<Utc>>,
+		end_time: Option<chrono::DateTime<Utc>>,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ExposureLog>>;
+
+	/// Gets the count of exposure logs matching the filter criteria.
+	async fn count_exposure_logs(
+		&self,
+		flag_key: Option<&str>,
+		environment_id: Option<EnvironmentId>,
+		start_time: Option<chrono::DateTime<Utc>>,
+		end_time: Option<chrono::DateTime<Utc>>,
+	) -> Result<u64>;
 }
 
 /// SQLite implementation of the flags repository.
@@ -217,8 +253,9 @@ impl FlagsRepository for SqliteFlagsRepository {
 		sqlx::query(
 			r#"
 			INSERT INTO flags (id, org_id, key, name, description, tags, maintainer_user_id,
-							   variants, default_variant, created_at, updated_at, archived_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+							   variants, default_variant, exposure_tracking_enabled,
+							   created_at, updated_at, archived_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			"#,
 		)
 		.bind(flag.id.0.to_string())
@@ -230,6 +267,7 @@ impl FlagsRepository for SqliteFlagsRepository {
 		.bind(flag.maintainer_user_id.map(|id| id.0.to_string()))
 		.bind(variants_json)
 		.bind(&flag.default_variant)
+		.bind(flag.exposure_tracking_enabled)
 		.bind(flag.created_at.to_rfc3339())
 		.bind(flag.updated_at.to_rfc3339())
 		.bind(flag.archived_at.map(|dt| dt.to_rfc3339()))
@@ -261,7 +299,8 @@ impl FlagsRepository for SqliteFlagsRepository {
 		let row = sqlx::query_as::<_, FlagRow>(
 			r#"
 			SELECT id, org_id, key, name, description, tags, maintainer_user_id,
-				   variants, default_variant, created_at, updated_at, archived_at
+				   variants, default_variant, exposure_tracking_enabled,
+				   created_at, updated_at, archived_at
 			FROM flags
 			WHERE id = ?
 			"#,
@@ -286,7 +325,8 @@ impl FlagsRepository for SqliteFlagsRepository {
 				sqlx::query_as::<_, FlagRow>(
 					r#"
 					SELECT id, org_id, key, name, description, tags, maintainer_user_id,
-						   variants, default_variant, created_at, updated_at, archived_at
+						   variants, default_variant, exposure_tracking_enabled,
+						   created_at, updated_at, archived_at
 					FROM flags
 					WHERE org_id = ? AND key = ?
 					"#,
@@ -300,7 +340,8 @@ impl FlagsRepository for SqliteFlagsRepository {
 				sqlx::query_as::<_, FlagRow>(
 					r#"
 					SELECT id, org_id, key, name, description, tags, maintainer_user_id,
-						   variants, default_variant, created_at, updated_at, archived_at
+						   variants, default_variant, exposure_tracking_enabled,
+						   created_at, updated_at, archived_at
 					FROM flags
 					WHERE org_id IS NULL AND key = ?
 					"#,
@@ -332,7 +373,8 @@ impl FlagsRepository for SqliteFlagsRepository {
 					sqlx::query_as::<_, FlagRow>(
 						r#"
 						SELECT id, org_id, key, name, description, tags, maintainer_user_id,
-							   variants, default_variant, created_at, updated_at, archived_at
+							   variants, default_variant, exposure_tracking_enabled,
+							   created_at, updated_at, archived_at
 						FROM flags
 						WHERE org_id = ?
 						ORDER BY key ASC
@@ -345,7 +387,8 @@ impl FlagsRepository for SqliteFlagsRepository {
 					sqlx::query_as::<_, FlagRow>(
 						r#"
 						SELECT id, org_id, key, name, description, tags, maintainer_user_id,
-							   variants, default_variant, created_at, updated_at, archived_at
+							   variants, default_variant, exposure_tracking_enabled,
+							   created_at, updated_at, archived_at
 						FROM flags
 						WHERE org_id = ? AND archived_at IS NULL
 						ORDER BY key ASC
@@ -361,7 +404,8 @@ impl FlagsRepository for SqliteFlagsRepository {
 					sqlx::query_as::<_, FlagRow>(
 						r#"
 						SELECT id, org_id, key, name, description, tags, maintainer_user_id,
-							   variants, default_variant, created_at, updated_at, archived_at
+							   variants, default_variant, exposure_tracking_enabled,
+							   created_at, updated_at, archived_at
 						FROM flags
 						WHERE org_id IS NULL
 						ORDER BY key ASC
@@ -373,7 +417,8 @@ impl FlagsRepository for SqliteFlagsRepository {
 					sqlx::query_as::<_, FlagRow>(
 						r#"
 						SELECT id, org_id, key, name, description, tags, maintainer_user_id,
-							   variants, default_variant, created_at, updated_at, archived_at
+							   variants, default_variant, exposure_tracking_enabled,
+							   created_at, updated_at, archived_at
 						FROM flags
 						WHERE org_id IS NULL AND archived_at IS NULL
 						ORDER BY key ASC
@@ -407,7 +452,8 @@ impl FlagsRepository for SqliteFlagsRepository {
 			r#"
 			UPDATE flags
 			SET name = ?, description = ?, tags = ?, maintainer_user_id = ?,
-				variants = ?, default_variant = ?, updated_at = ?
+				variants = ?, default_variant = ?, exposure_tracking_enabled = ?,
+				updated_at = ?
 			WHERE id = ?
 			"#,
 		)
@@ -417,6 +463,7 @@ impl FlagsRepository for SqliteFlagsRepository {
 		.bind(flag.maintainer_user_id.map(|id| id.0.to_string()))
 		.bind(variants_json)
 		.bind(&flag.default_variant)
+		.bind(flag.exposure_tracking_enabled)
 		.bind(Utc::now().to_rfc3339())
 		.bind(flag.id.0.to_string())
 		.execute(&self.pool)
@@ -1059,6 +1106,163 @@ impl FlagsRepository for SqliteFlagsRepository {
 		// No matching key found
 		Ok(None)
 	}
+
+	// Exposure log operations
+
+	#[instrument(skip(self, log), fields(exposure_id = %log.id, flag_key = %log.flag_key))]
+	async fn create_exposure_log(&self, log: &ExposureLog) -> Result<()> {
+		let reason_json = serde_json::to_string(&log.reason)?;
+
+		sqlx::query(
+			r#"
+			INSERT INTO exposure_logs (id, flag_id, flag_key, environment_id, user_id, org_id,
+									   variant, reason, context_hash, timestamp)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			"#,
+		)
+		.bind(log.id.0.to_string())
+		.bind(log.flag_id.0.to_string())
+		.bind(&log.flag_key)
+		.bind(log.environment_id.0.to_string())
+		.bind(&log.user_id)
+		.bind(&log.org_id)
+		.bind(&log.variant)
+		.bind(reason_json)
+		.bind(&log.context_hash)
+		.bind(log.timestamp.to_rfc3339())
+		.execute(&self.pool)
+		.await?;
+
+		Ok(())
+	}
+
+	#[instrument(skip(self), fields(flag_key = %flag_key, window_hours = window_hours))]
+	async fn exposure_exists_within_window(
+		&self,
+		flag_key: &str,
+		context_hash: &str,
+		window_hours: u32,
+	) -> Result<bool> {
+		let row: (i64,) = sqlx::query_as(
+			r#"
+			SELECT COUNT(*) as count
+			FROM exposure_logs
+			WHERE flag_key = ? AND context_hash = ?
+			  AND timestamp > datetime('now', ? || ' hours')
+			"#,
+		)
+		.bind(flag_key)
+		.bind(context_hash)
+		.bind(-(window_hours as i64))
+		.fetch_one(&self.pool)
+		.await?;
+
+		Ok(row.0 > 0)
+	}
+
+	#[instrument(skip(self), fields(flag_key = ?flag_key, env_id = ?environment_id))]
+	async fn list_exposure_logs(
+		&self,
+		flag_key: Option<&str>,
+		environment_id: Option<EnvironmentId>,
+		start_time: Option<chrono::DateTime<Utc>>,
+		end_time: Option<chrono::DateTime<Utc>>,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ExposureLog>> {
+		let mut query = String::from(
+			r#"
+			SELECT id, flag_id, flag_key, environment_id, user_id, org_id,
+				   variant, reason, context_hash, timestamp
+			FROM exposure_logs
+			WHERE 1=1
+			"#,
+		);
+
+		if flag_key.is_some() {
+			query.push_str(" AND flag_key = ?");
+		}
+		if environment_id.is_some() {
+			query.push_str(" AND environment_id = ?");
+		}
+		if start_time.is_some() {
+			query.push_str(" AND timestamp >= ?");
+		}
+		if end_time.is_some() {
+			query.push_str(" AND timestamp <= ?");
+		}
+
+		query.push_str(" ORDER BY timestamp DESC LIMIT ? OFFSET ?");
+
+		let mut q = sqlx::query_as::<_, ExposureLogRow>(&query);
+
+		if let Some(key) = flag_key {
+			q = q.bind(key);
+		}
+		if let Some(env_id) = environment_id {
+			q = q.bind(env_id.0.to_string());
+		}
+		if let Some(start) = start_time {
+			q = q.bind(start.to_rfc3339());
+		}
+		if let Some(end) = end_time {
+			q = q.bind(end.to_rfc3339());
+		}
+
+		q = q.bind(limit as i64);
+		q = q.bind(offset as i64);
+
+		let rows = q.fetch_all(&self.pool).await?;
+		rows.into_iter().map(TryInto::try_into).collect()
+	}
+
+	#[instrument(skip(self), fields(flag_key = ?flag_key, env_id = ?environment_id))]
+	async fn count_exposure_logs(
+		&self,
+		flag_key: Option<&str>,
+		environment_id: Option<EnvironmentId>,
+		start_time: Option<chrono::DateTime<Utc>>,
+		end_time: Option<chrono::DateTime<Utc>>,
+	) -> Result<u64> {
+		let mut query = String::from(
+			r#"
+			SELECT COUNT(*) as count
+			FROM exposure_logs
+			WHERE 1=1
+			"#,
+		);
+
+		if flag_key.is_some() {
+			query.push_str(" AND flag_key = ?");
+		}
+		if environment_id.is_some() {
+			query.push_str(" AND environment_id = ?");
+		}
+		if start_time.is_some() {
+			query.push_str(" AND timestamp >= ?");
+		}
+		if end_time.is_some() {
+			query.push_str(" AND timestamp <= ?");
+		}
+
+		let mut q = sqlx::query_as::<_, (i64,)>(&query);
+
+		if let Some(key) = flag_key {
+			q = q.bind(key);
+		}
+		if let Some(env_id) = environment_id {
+			q = q.bind(env_id.0.to_string());
+		}
+		if let Some(start) = start_time {
+			q = q.bind(start.to_rfc3339());
+		}
+		if let Some(end) = end_time {
+			q = q.bind(end.to_rfc3339());
+		}
+
+		let (count,) = q.fetch_one(&self.pool).await?;
+		Ok(count as u64)
+	}
 }
 
 impl SqliteFlagsRepository {
@@ -1130,6 +1334,7 @@ struct FlagRow {
 	maintainer_user_id: Option<String>,
 	variants: String,
 	default_variant: String,
+	exposure_tracking_enabled: bool,
 	created_at: String,
 	updated_at: String,
 	archived_at: Option<String>,
@@ -1166,6 +1371,7 @@ impl FlagRow {
 			variants,
 			default_variant: self.default_variant,
 			prerequisites,
+			exposure_tracking_enabled: self.exposure_tracking_enabled,
 			created_at: chrono::DateTime::parse_from_rfc3339(&self.created_at)
 				.map_err(|_| FlagsServerError::Internal("Invalid created_at".to_string()))?
 				.with_timezone(&chrono::Utc),
@@ -1410,6 +1616,56 @@ impl TryFrom<SdkKeyRow> for SdkKey {
 						.map(|dt| dt.with_timezone(&chrono::Utc))
 				})
 				.transpose()?,
+		})
+	}
+}
+
+#[derive(sqlx::FromRow)]
+struct ExposureLogRow {
+	id: String,
+	flag_id: String,
+	flag_key: String,
+	environment_id: String,
+	user_id: Option<String>,
+	org_id: Option<String>,
+	variant: String,
+	reason: String,
+	context_hash: String,
+	timestamp: String,
+}
+
+impl TryFrom<ExposureLogRow> for ExposureLog {
+	type Error = FlagsServerError;
+
+	fn try_from(row: ExposureLogRow) -> Result<Self> {
+		use loom_flags_core::EvaluationReason;
+
+		let reason: EvaluationReason = serde_json::from_str(&row.reason)
+			.map_err(|_| FlagsServerError::Internal("Invalid reason JSON".to_string()))?;
+
+		Ok(ExposureLog {
+			id: ExposureLogId(
+				row.id
+					.parse()
+					.map_err(|_| FlagsServerError::Internal("Invalid exposure log ID".to_string()))?,
+			),
+			flag_id: row
+				.flag_id
+				.parse()
+				.map_err(|_| FlagsServerError::Internal("Invalid flag ID".to_string()))?,
+			flag_key: row.flag_key,
+			environment_id: row
+				.environment_id
+				.parse()
+				.map_err(|_| FlagsServerError::Internal("Invalid environment ID".to_string()))?,
+			user_id: row.user_id,
+			org_id: row.org_id,
+			variant: row.variant,
+			reason,
+			context_hash: row.context_hash,
+			timestamp: chrono::DateTime::parse_from_rfc3339(&row.timestamp)
+				.map_err(|_| FlagsServerError::Internal("Invalid timestamp".to_string()))?
+				.with_timezone(&chrono::Utc),
 		})
 	}
 }

@@ -1552,3 +1552,31 @@ msgstr "SDK কী সফলভাবে প্রত্যাহার কর�
 #: API: Flags - Invalid SDK key format
 msgid "server.api.flags.invalid_sdk_key_format"
 msgstr "অবৈধ SDK কী বিন্যাস"
+
+#: API: Flags - Export started
+msgid "server.api.flags.export_started"
+msgstr "এক্সপোজার রপ্তানি শুরু হয়েছে"
+
+#: API: Flags - Exposure already logged
+msgid "server.api.flags.exposure_already_logged"
+msgstr "এক্সপোজার ইতিমধ্যে লগ করা হয়েছে"
+
+#: API: Flags - Exposure created
+msgid "server.api.flags.exposure_created"
+msgstr "এক্সপোজার তৈরি হয়েছে"
+
+#: API: Flags - Exposure tracking disabled
+msgid "server.api.flags.exposure_tracking_disabled"
+msgstr "এক্সপোজার ট্র্যাকিং নিষ্ক্রিয়"
+
+#: API: Flags - Exposure tracking enabled
+msgid "server.api.flags.exposure_tracking_enabled"
+msgstr "এক্সপোজার ট্র্যাকিং সক্রিয়"
+
+#: API: Flags - Invalid time range
+msgid "server.api.flags.invalid_time_range"
+msgstr "অবৈধ সময় সীমা"
+
+#: API: Flags - No exposures found
+msgid "server.api.flags.no_exposures_found"
+msgstr "কোনো এক্সপোজার পাওয়া যায়নি"

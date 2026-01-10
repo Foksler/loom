@@ -144,6 +144,9 @@ pub struct Flag {
 	/// Variant name for fallback
 	pub default_variant: String,
 	pub prerequisites: Vec<FlagPrerequisite>,
+	/// Whether to log exposures for this flag (for experiment tracking)
+	#[serde(default)]
+	pub exposure_tracking_enabled: bool,
 	pub created_at: DateTime<Utc>,
 	pub updated_at: DateTime<Utc>,
 	pub archived_at: Option<DateTime<Utc>>,
@@ -380,7 +383,11 @@ mod tests {
 			1..10,
 		)
 		.prop_filter_map("must start with letter", |chars| {
-			if chars.first().map(|c| c.is_ascii_lowercase()).unwrap_or(false) {
+			if chars
+				.first()
+				.map(|c| c.is_ascii_lowercase())
+				.unwrap_or(false)
+			{
 				Some(chars.into_iter().collect())
 			} else {
 				None

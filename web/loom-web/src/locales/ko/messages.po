@@ -2658,3 +2658,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "노출 추적"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "실험 분석을 위해 사용자가 플래그 변형에 노출된 시점 추적"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "노출 추적"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "활성화됨"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "비활성화됨"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "노출 추적 활성화"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "노출 추적 비활성화"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "활성화되면 플래그 평가가 실험 분석을 위해 기록됩니다"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "노출 로그"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "로그 내보내기"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "노출 로그를 CSV로 다운로드"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "노출 로그를 찾을 수 없습니다"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "플래그 키"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "변형"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "사용자 ID"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "타임스탬프"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "이유"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "환경"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "플래그로 필터"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "환경으로 필터"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "시작 날짜"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "종료 날짜"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count}개의 노출"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "노출은 사용자/컨텍스트당 1시간 창 내에서 중복 제거됩니다"

@@ -2658,3 +2658,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "Отслеживание Экспозиции"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "Отслеживание экспозиции пользователей к вариантам флагов для анализа экспериментов"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "Отслеживание Экспозиции"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "Включено"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "Отключено"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "Включить Отслеживание Экспозиции"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "Отключить Отслеживание Экспозиции"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "При включении оценки флагов будут записываться для анализа экспериментов"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "Журналы Экспозиции"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "Экспорт Журналов"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "Скачать журналы экспозиции в формате CSV"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "Журналы экспозиции не найдены"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "Ключ Флага"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "Вариант"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "ID Пользователя"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "Метка Времени"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "Причина"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "Окружение"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "Фильтр по флагу"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "Фильтр по окружению"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "Дата Начала"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "Дата Окончания"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count} экспозиций"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "Экспозиции дедуплицируются в окне 1 час на пользователя/контекст"

@@ -2622,3 +2622,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "تتبع التعرض"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "تتبع تعرض المستخدمين لمتغيرات العلامات لتحليل التجارب"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "تتبع التعرض"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "مفعّل"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "معطّل"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "تفعيل تتبع التعرض"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "تعطيل تتبع التعرض"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "عند التفعيل، سيتم تسجيل تقييمات العلامات لتحليل التجارب"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "سجلات التعرض"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "تصدير السجلات"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "تنزيل سجلات التعرض كملف CSV"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "لم يتم العثور على سجلات تعرض"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "مفتاح العلامة"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "المتغير"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "معرّف المستخدم"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "الطابع الزمني"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "السبب"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "البيئة"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "تصفية حسب العلامة"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "تصفية حسب البيئة"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "تاريخ البدء"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "تاريخ الانتهاء"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count} تعرض"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "يتم إزالة التكرار من التعرضات ضمن نافذة ساعة واحدة لكل مستخدم/سياق"

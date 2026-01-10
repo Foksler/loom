@@ -2658,3 +2658,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "Παρακολούθηση Έκθεσης"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "Παρακολούθηση πότε οι χρήστες εκτίθενται σε παραλλαγές σημαιών για ανάλυση πειραμάτων"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "Παρακολούθηση Έκθεσης"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "Ενεργοποιημένο"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "Απενεργοποιημένο"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "Ενεργοποίηση Παρακολούθησης Έκθεσης"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "Απενεργοποίηση Παρακολούθησης Έκθεσης"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "Όταν είναι ενεργοποιημένο, οι αξιολογήσεις σημαιών θα καταγράφονται για ανάλυση πειραμάτων"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "Αρχεία Καταγραφής Έκθεσης"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "Εξαγωγή Αρχείων"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "Λήψη αρχείων καταγραφής έκθεσης ως CSV"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "Δεν βρέθηκαν αρχεία καταγραφής έκθεσης"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "Κλειδί Σημαίας"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "Παραλλαγή"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "ID Χρήστη"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "Χρονοσφραγίδα"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "Λόγος"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "Περιβάλλον"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "Φίλτρο ανά σημαία"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "Φίλτρο ανά περιβάλλον"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "Ημερομηνία Έναρξης"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "Ημερομηνία Λήξης"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count} εκθέσεις"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "Οι εκθέσεις αποδιπλασιάζονται σε παράθυρο 1 ώρας ανά χρήστη/πλαίσιο"

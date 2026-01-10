@@ -1552,3 +1552,31 @@ msgstr "Το κλειδί SDK ανακλήθηκε επιτυχώς"
 #: API: Flags - Invalid SDK key format
 msgid "server.api.flags.invalid_sdk_key_format"
 msgstr "Μη έγκυρη μορφή κλειδιού SDK"
+
+#: API: Flags - Export started
+msgid "server.api.flags.export_started"
+msgstr "Η εξαγωγή εκθέσεων ξεκίνησε"
+
+#: API: Flags - Exposure already logged
+msgid "server.api.flags.exposure_already_logged"
+msgstr "Η έκθεση έχει ήδη καταγραφεί"
+
+#: API: Flags - Exposure created
+msgid "server.api.flags.exposure_created"
+msgstr "Η έκθεση δημιουργήθηκε"
+
+#: API: Flags - Exposure tracking disabled
+msgid "server.api.flags.exposure_tracking_disabled"
+msgstr "Η παρακολούθηση εκθέσεων απενεργοποιήθηκε"
+
+#: API: Flags - Exposure tracking enabled
+msgid "server.api.flags.exposure_tracking_enabled"
+msgstr "Η παρακολούθηση εκθέσεων ενεργοποιήθηκε"
+
+#: API: Flags - Invalid time range
+msgid "server.api.flags.invalid_time_range"
+msgstr "Μη έγκυρο χρονικό διάστημα"
+
+#: API: Flags - No exposures found
+msgid "server.api.flags.no_exposures_found"
+msgstr "Δεν βρέθηκαν εκθέσεις"

@@ -2658,3 +2658,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "एक्सपोज़र ट्रैकिंग"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "प्रयोग विश्लेषण के लिए ट्रैक करें कि उपयोगकर्ता फ्लैग वेरिएंट के संपर्क में कब आते हैं"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "एक्सपोज़र ट्रैकिंग"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "सक्षम"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "अक्षम"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "एक्सपोज़र ट्रैकिंग सक्षम करें"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "एक्सपोज़र ट्रैकिंग अक्षम करें"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "सक्षम होने पर, फ्लैग मूल्यांकन प्रयोग विश्लेषण के लिए लॉग किए जाएंगे"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "एक्सपोज़र लॉग"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "लॉग निर्यात करें"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "एक्सपोज़र लॉग CSV के रूप में डाउनलोड करें"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "कोई एक्सपोज़र लॉग नहीं मिले"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "फ्लैग की"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "वेरिएंट"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "उपयोगकर्ता ID"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "टाइमस्टैम्प"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "कारण"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "परिवेश"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "फ्लैग द्वारा फ़िल्टर करें"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "परिवेश द्वारा फ़िल्टर करें"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "प्रारंभ तिथि"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "समाप्ति तिथि"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count} एक्सपोज़र"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "एक्सपोज़र प्रति उपयोगकर्ता/संदर्भ 1 घंटे की विंडो में डुप्लिकेट हटाए जाते हैं"

@@ -2658,3 +2658,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "曝光追踪"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "追踪用户何时暴露于标志变体以进行实验分析"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "曝光追踪"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "已启用"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "已禁用"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "启用曝光追踪"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "禁用曝光追踪"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "启用后，标志评估将被记录以用于实验分析"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "曝光日志"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "导出日志"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "将曝光日志下载为CSV"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "未找到曝光日志"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "标志键"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "变体"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "用户ID"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "时间戳"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "原因"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "环境"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "按标志筛选"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "按环境筛选"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "开始日期"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "结束日期"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count} 次曝光"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "曝光在每个用户/上下文的1小时窗口内去重"

@@ -1552,3 +1552,31 @@ msgstr "SDK võti on edukalt tühistatud"
 #: API: Flags - Invalid SDK key format
 msgid "server.api.flags.invalid_sdk_key_format"
 msgstr "Vigane SDK võtme formaat"
+
+#: API: Flags - Export started
+msgid "server.api.flags.export_started"
+msgstr "Ekspositsiooni eksport alustatud"
+
+#: API: Flags - Exposure already logged
+msgid "server.api.flags.exposure_already_logged"
+msgstr "Ekspositsioon on juba logitud"
+
+#: API: Flags - Exposure created
+msgid "server.api.flags.exposure_created"
+msgstr "Ekspositsioon loodud"
+
+#: API: Flags - Exposure tracking disabled
+msgid "server.api.flags.exposure_tracking_disabled"
+msgstr "Ekspositsiooni jälgimine keelatud"
+
+#: API: Flags - Exposure tracking enabled
+msgid "server.api.flags.exposure_tracking_enabled"
+msgstr "Ekspositsiooni jälgimine lubatud"
+
+#: API: Flags - Invalid time range
+msgid "server.api.flags.invalid_time_range"
+msgstr "Kehtetu ajavahemik"
+
+#: API: Flags - No exposures found
+msgid "server.api.flags.no_exposures_found"
+msgstr "Ekspositsioone ei leitud"

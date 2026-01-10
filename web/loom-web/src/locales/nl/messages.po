@@ -2658,3 +2658,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "Blootstelling Tracking"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "Volg wanneer gebruikers worden blootgesteld aan vlagvarianten voor experimentanalyse"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "Blootstelling Tracking"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "Ingeschakeld"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "Uitgeschakeld"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "Blootstelling Tracking Inschakelen"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "Blootstelling Tracking Uitschakelen"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "Indien ingeschakeld worden vlagevaluaties gelogd voor experimentanalyse"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "Blootstellingslogs"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "Logs Exporteren"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "Download blootstellingslogs als CSV"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "Geen blootstellingslogs gevonden"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "Vlagsleutel"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "Variant"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "Gebruikers-ID"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "Tijdstempel"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "Reden"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "Omgeving"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "Filteren op vlag"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "Filteren op omgeving"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "Startdatum"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "Einddatum"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count} blootstellingen"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "Blootstellingen worden gededupliceerd binnen een venster van 1 uur per gebruiker/context"

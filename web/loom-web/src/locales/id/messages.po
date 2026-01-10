@@ -2658,3 +2658,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "Pelacakan Eksposur"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "Lacak kapan pengguna terpapar varian flag untuk analisis eksperimen"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "Pelacakan Eksposur"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "Diaktifkan"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "Dinonaktifkan"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "Aktifkan Pelacakan Eksposur"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "Nonaktifkan Pelacakan Eksposur"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "Jika diaktifkan, evaluasi flag akan dicatat untuk analisis eksperimen"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "Log Eksposur"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "Ekspor Log"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "Unduh log eksposur sebagai CSV"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "Tidak ada log eksposur ditemukan"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "Kunci Flag"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "Varian"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "ID Pengguna"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "Timestamp"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "Alasan"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "Lingkungan"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "Filter berdasarkan flag"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "Filter berdasarkan lingkungan"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "Tanggal Mulai"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "Tanggal Selesai"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count} eksposur"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "Eksposur deduplikasi dalam jendela 1 jam per pengguna/konteks"

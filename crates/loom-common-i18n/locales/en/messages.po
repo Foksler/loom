@@ -1543,3 +1543,35 @@ msgstr "Invalid environment color. Must be a hex color code (e.g., #10b981)."
 #: API: Flags - Invalid kill switch key
 msgid "server.api.flags.invalid_kill_switch_key"
 msgstr "Invalid kill switch key format. Must be lowercase alphanumeric with underscores, 3-100 characters."
+
+# ============================================================================
+# Exposure Tracking API responses
+# ============================================================================
+
+#: API: Flags - Exposure log created
+msgid "server.api.flags.exposure_created"
+msgstr "Exposure logged successfully"
+
+#: API: Flags - Exposure tracking enabled
+msgid "server.api.flags.exposure_tracking_enabled"
+msgstr "Exposure tracking enabled for flag"
+
+#: API: Flags - Exposure tracking disabled
+msgid "server.api.flags.exposure_tracking_disabled"
+msgstr "Exposure tracking disabled for flag"
+
+#: API: Flags - Invalid time range
+msgid "server.api.flags.invalid_time_range"
+msgstr "Invalid time range: start time must be before end time"
+
+#: API: Flags - Export started
+msgid "server.api.flags.export_started"
+msgstr "Exposure log export started"
+
+#: API: Flags - No exposures found
+msgid "server.api.flags.no_exposures_found"
+msgstr "No exposures found for the specified criteria"
+
+#: API: Flags - Exposure already logged
+msgid "server.api.flags.exposure_already_logged"
+msgstr "Exposure already logged within deduplication window"

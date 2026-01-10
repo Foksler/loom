@@ -1552,3 +1552,31 @@ msgstr "SDK-sleutel succesvol ingetrokken"
 #: API: Flags - Invalid SDK key format
 msgid "server.api.flags.invalid_sdk_key_format"
 msgstr "Ongeldig SDK-sleutelformaat"
+
+#: API: Flags - Export started
+msgid "server.api.flags.export_started"
+msgstr "Export van blootstellingen gestart"
+
+#: API: Flags - Exposure already logged
+msgid "server.api.flags.exposure_already_logged"
+msgstr "Blootstelling al geregistreerd"
+
+#: API: Flags - Exposure created
+msgid "server.api.flags.exposure_created"
+msgstr "Blootstelling aangemaakt"
+
+#: API: Flags - Exposure tracking disabled
+msgid "server.api.flags.exposure_tracking_disabled"
+msgstr "Blootstellingstracering uitgeschakeld"
+
+#: API: Flags - Exposure tracking enabled
+msgid "server.api.flags.exposure_tracking_enabled"
+msgstr "Blootstellingstracering ingeschakeld"
+
+#: API: Flags - Invalid time range
+msgid "server.api.flags.invalid_time_range"
+msgstr "Ongeldig tijdsbereik"
+
+#: API: Flags - No exposures found
+msgid "server.api.flags.no_exposures_found"
+msgstr "Geen blootstellingen gevonden"

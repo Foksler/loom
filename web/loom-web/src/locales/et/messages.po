@@ -2658,3 +2658,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "Kokkupuute Jälgimine"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "Jälgi millal kasutajad puutuvad kokku lipu variantidega katse analüüsiks"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "Kokkupuute Jälgimine"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "Lubatud"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "Keelatud"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "Luba Kokkupuute Jälgimine"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "Keela Kokkupuute Jälgimine"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "Kui lubatud, salvestatakse lipu hinnangud katse analüüsiks"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "Kokkupuute Logid"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "Ekspordi Logid"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "Laadi alla kokkupuute logid CSV formaadis"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "Kokkupuute logisid ei leitud"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "Lipu Võti"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "Variant"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "Kasutaja ID"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "Ajatempel"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "Põhjus"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "Keskkond"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "Filtreeri lipu järgi"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "Filtreeri keskkonna järgi"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "Alguskuupäev"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "Lõppkuupäev"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count} kokkupuudet"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "Kokkupuuted dubleeritakse 1-tunnise akna jooksul kasutaja/konteksti kohta"

@@ -302,6 +302,7 @@ mod tests {
 			],
 			default_variant: "off".to_string(),
 			prerequisites: vec![],
+			exposure_tracking_enabled: false,
 			created_at: Utc::now(),
 			updated_at: Utc::now(),
 			archived_at: None,

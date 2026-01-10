@@ -1548,3 +1548,31 @@ msgstr "SDK 키가 성공적으로 취소되었습니다"
 #: API: Flags - Invalid SDK key format
 msgid "server.api.flags.invalid_sdk_key_format"
 msgstr "잘못된 SDK 키 형식"
+
+#: API: Flags - Export started
+msgid "server.api.flags.export_started"
+msgstr "노출 내보내기가 시작되었습니다"
+
+#: API: Flags - Exposure already logged
+msgid "server.api.flags.exposure_already_logged"
+msgstr "노출이 이미 기록되었습니다"
+
+#: API: Flags - Exposure created
+msgid "server.api.flags.exposure_created"
+msgstr "노출이 생성되었습니다"
+
+#: API: Flags - Exposure tracking disabled
+msgid "server.api.flags.exposure_tracking_disabled"
+msgstr "노출 추적이 비활성화되었습니다"
+
+#: API: Flags - Exposure tracking enabled
+msgid "server.api.flags.exposure_tracking_enabled"
+msgstr "노출 추적이 활성화되었습니다"
+
+#: API: Flags - Invalid time range
+msgid "server.api.flags.invalid_time_range"
+msgstr "잘못된 시간 범위"
+
+#: API: Flags - No exposures found
+msgid "server.api.flags.no_exposures_found"
+msgstr "노출을 찾을 수 없습니다"

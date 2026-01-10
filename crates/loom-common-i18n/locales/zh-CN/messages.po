@@ -1548,3 +1548,31 @@ msgstr "SDK密钥已成功撤销"
 #: API: Flags - Invalid SDK key format
 msgid "server.api.flags.invalid_sdk_key_format"
 msgstr "无效的SDK密钥格式"
+
+#: API: Flags - Export started
+msgid "server.api.flags.export_started"
+msgstr "曝光导出已开始"
+
+#: API: Flags - Exposure already logged
+msgid "server.api.flags.exposure_already_logged"
+msgstr "曝光已记录"
+
+#: API: Flags - Exposure created
+msgid "server.api.flags.exposure_created"
+msgstr "曝光已创建"
+
+#: API: Flags - Exposure tracking disabled
+msgid "server.api.flags.exposure_tracking_disabled"
+msgstr "曝光追踪已禁用"
+
+#: API: Flags - Exposure tracking enabled
+msgid "server.api.flags.exposure_tracking_enabled"
+msgstr "曝光追踪已启用"
+
+#: API: Flags - Invalid time range
+msgid "server.api.flags.invalid_time_range"
+msgstr "无效的时间范围"
+
+#: API: Flags - No exposures found
+msgid "server.api.flags.no_exposures_found"
+msgstr "未找到曝光记录"

@@ -2622,3 +2622,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "Rastreamento de Exposição"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "Rastrear quando os usuários são expostos às variantes de flags para análise de experimentos"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "Rastreamento de Exposição"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "Ativado"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "Desativado"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "Ativar Rastreamento de Exposição"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "Desativar Rastreamento de Exposição"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "Quando ativado, as avaliações de flags serão registradas para análise de experimentos"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "Logs de Exposição"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "Exportar Logs"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "Baixar logs de exposição como CSV"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "Nenhum log de exposição encontrado"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "Chave da Flag"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "Variante"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "ID do Usuário"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "Timestamp"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "Motivo"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "Ambiente"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "Filtrar por flag"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "Filtrar por ambiente"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "Data de Início"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "Data de Fim"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count} exposições"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "As exposições são deduplicadas em uma janela de 1 hora por usuário/contexto"

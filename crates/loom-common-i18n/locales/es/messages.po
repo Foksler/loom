@@ -1548,3 +1548,35 @@ msgstr "Clave SDK revocada exitosamente"
 #: API: Flags - Invalid SDK key format
 msgid "server.api.flags.invalid_sdk_key_format"
 msgstr "Formato de clave SDK inválido"
+
+# ============================================================================
+# Exposure Tracking API responses
+# ============================================================================
+
+#: API: Flags - Exposure log created
+msgid "server.api.flags.exposure_created"
+msgstr "Exposición registrada exitosamente"
+
+#: API: Flags - Exposure tracking enabled
+msgid "server.api.flags.exposure_tracking_enabled"
+msgstr "Seguimiento de exposición habilitado para la bandera"
+
+#: API: Flags - Exposure tracking disabled
+msgid "server.api.flags.exposure_tracking_disabled"
+msgstr "Seguimiento de exposición deshabilitado para la bandera"
+
+#: API: Flags - Invalid time range
+msgid "server.api.flags.invalid_time_range"
+msgstr "Rango de tiempo inválido: la hora de inicio debe ser anterior a la hora de fin"
+
+#: API: Flags - Export started
+msgid "server.api.flags.export_started"
+msgstr "Exportación de registro de exposición iniciada"
+
+#: API: Flags - No exposures found
+msgid "server.api.flags.no_exposures_found"
+msgstr "No se encontraron exposiciones para los criterios especificados"
+
+#: API: Flags - Exposure already logged
+msgid "server.api.flags.exposure_already_logged"
+msgstr "Exposición ya registrada dentro de la ventana de deduplicación"

@@ -1548,3 +1548,31 @@ msgstr "SDK-nyckel har återkallats"
 #: API: Flags - Invalid SDK key format
 msgid "server.api.flags.invalid_sdk_key_format"
 msgstr "Ogiltigt SDK-nyckelformat"
+
+#: API: Flags - Export started
+msgid "server.api.flags.export_started"
+msgstr "Export av exponeringar har startats"
+
+#: API: Flags - Exposure already logged
+msgid "server.api.flags.exposure_already_logged"
+msgstr "Exponering redan loggad"
+
+#: API: Flags - Exposure created
+msgid "server.api.flags.exposure_created"
+msgstr "Exponering skapad"
+
+#: API: Flags - Exposure tracking disabled
+msgid "server.api.flags.exposure_tracking_disabled"
+msgstr "Exponeringsspårning inaktiverad"
+
+#: API: Flags - Exposure tracking enabled
+msgid "server.api.flags.exposure_tracking_enabled"
+msgstr "Exponeringsspårning aktiverad"
+
+#: API: Flags - Invalid time range
+msgid "server.api.flags.invalid_time_range"
+msgstr "Ogiltigt tidsintervall"
+
+#: API: Flags - No exposures found
+msgid "server.api.flags.no_exposures_found"
+msgstr "Inga exponeringar hittades"

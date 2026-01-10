@@ -2658,3 +2658,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "露出トラッキング"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "実験分析のためにユーザーがフラグバリアントに露出したタイミングを追跡"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "露出トラッキング"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "有効"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "無効"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "露出トラッキングを有効化"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "露出トラッキングを無効化"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "有効にすると、フラグ評価が実験分析のために記録されます"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "露出ログ"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "ログをエクスポート"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "露出ログをCSVとしてダウンロード"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "露出ログが見つかりません"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "フラグキー"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "バリアント"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "ユーザーID"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "タイムスタンプ"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "理由"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "環境"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "フラグでフィルター"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "環境でフィルター"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "開始日"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "終了日"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count} 件の露出"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "露出はユーザー/コンテキストごとに1時間のウィンドウ内で重複排除されます"

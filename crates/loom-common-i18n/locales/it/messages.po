@@ -1552,3 +1552,31 @@ msgstr "Chiave SDK revocata con successo"
 #: API: Flags - Invalid SDK key format
 msgid "server.api.flags.invalid_sdk_key_format"
 msgstr "Formato chiave SDK non valido"
+
+#: API: Flags - Export started
+msgid "server.api.flags.export_started"
+msgstr "Esportazione delle esposizioni avviata"
+
+#: API: Flags - Exposure already logged
+msgid "server.api.flags.exposure_already_logged"
+msgstr "Esposizione già registrata"
+
+#: API: Flags - Exposure created
+msgid "server.api.flags.exposure_created"
+msgstr "Esposizione creata"
+
+#: API: Flags - Exposure tracking disabled
+msgid "server.api.flags.exposure_tracking_disabled"
+msgstr "Tracciamento delle esposizioni disabilitato"
+
+#: API: Flags - Exposure tracking enabled
+msgid "server.api.flags.exposure_tracking_enabled"
+msgstr "Tracciamento delle esposizioni abilitato"
+
+#: API: Flags - Invalid time range
+msgid "server.api.flags.invalid_time_range"
+msgstr "Intervallo di tempo non valido"
+
+#: API: Flags - No exposures found
+msgid "server.api.flags.no_exposures_found"
+msgstr "Nessuna esposizione trovata"

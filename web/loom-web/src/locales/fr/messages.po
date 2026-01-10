@@ -2622,3 +2622,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "Suivi des Expositions"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "Suivre l'exposition des utilisateurs aux variantes des drapeaux pour l'analyse des expériences"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "Suivi des Expositions"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "Activé"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "Désactivé"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "Activer le Suivi des Expositions"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "Désactiver le Suivi des Expositions"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "Lorsqu'il est activé, les évaluations des drapeaux seront enregistrées pour l'analyse des expériences"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "Journaux d'Exposition"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "Exporter les Journaux"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "Télécharger les journaux d'exposition au format CSV"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "Aucun journal d'exposition trouvé"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "Clé du Drapeau"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "Variante"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "ID Utilisateur"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "Horodatage"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "Raison"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "Environnement"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "Filtrer par drapeau"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "Filtrer par environnement"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "Date de Début"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "Date de Fin"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count} expositions"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "Les expositions sont dédupliquées dans une fenêtre d'une heure par utilisateur/contexte"

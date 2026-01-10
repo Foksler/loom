@@ -1552,3 +1552,31 @@ msgstr "SDK कुंजी सफलतापूर्वक निरस्त
 #: API: Flags - Invalid SDK key format
 msgid "server.api.flags.invalid_sdk_key_format"
 msgstr "अमान्य SDK कुंजी प्रारूप"
+
+#: API: Flags - Export started
+msgid "server.api.flags.export_started"
+msgstr "एक्सपोज़र निर्यात शुरू हुआ"
+
+#: API: Flags - Exposure already logged
+msgid "server.api.flags.exposure_already_logged"
+msgstr "एक्सपोज़र पहले से लॉग किया गया है"
+
+#: API: Flags - Exposure created
+msgid "server.api.flags.exposure_created"
+msgstr "एक्सपोज़र बनाया गया"
+
+#: API: Flags - Exposure tracking disabled
+msgid "server.api.flags.exposure_tracking_disabled"
+msgstr "एक्सपोज़र ट्रैकिंग अक्षम"
+
+#: API: Flags - Exposure tracking enabled
+msgid "server.api.flags.exposure_tracking_enabled"
+msgstr "एक्सपोज़र ट्रैकिंग सक्षम"
+
+#: API: Flags - Invalid time range
+msgid "server.api.flags.invalid_time_range"
+msgstr "अमान्य समय सीमा"
+
+#: API: Flags - No exposures found
+msgid "server.api.flags.no_exposures_found"
+msgstr "कोई एक्सपोज़र नहीं मिला"

@@ -506,6 +506,7 @@ mod tests {
 				],
 				default_variant: "on".to_string(),
 				prerequisites: vec![],
+				exposure_tracking_enabled: false,
 				created_at: chrono::Utc::now(),
 				updated_at: chrono::Utc::now(),
 				archived_at: None,
@@ -546,6 +547,7 @@ mod tests {
 				],
 				default_variant: "on".to_string(),
 				prerequisites: vec![],
+				exposure_tracking_enabled: false,
 				created_at: chrono::Utc::now(),
 				updated_at: chrono::Utc::now(),
 				archived_at: None,
@@ -554,6 +556,165 @@ mod tests {
 			let state = FlagState::from_flag_and_config(&flag, None);
 			assert_eq!(state.key, flag_key);
 			assert!(!state.enabled); // Should be disabled when no config
+		}
+	}
+
+	// Property-based tests for context hash determinism
+	proptest! {
+		#[test]
+		fn context_hash_is_deterministic(
+			user_id in "[a-zA-Z0-9]{1,20}",
+			org_id in "[a-zA-Z0-9]{1,20}",
+			session_id in "[a-zA-Z0-9]{1,20}",
+			flag_key in "[a-z][a-z0-9_.]{2,30}",
+		) {
+			let ctx = EvaluationContext::new("prod")
+				.with_user_id(&user_id)
+				.with_org_id(&org_id)
+				.with_session_id(&session_id);
+
+			let hash1 = ctx.compute_hash(&flag_key);
+			let hash2 = ctx.compute_hash(&flag_key);
+
+			prop_assert_eq!(hash1, hash2);
+		}
+
+		#[test]
+		fn context_hash_is_64_hex_chars(
+			user_id in "[a-zA-Z0-9]{0,20}",
+			flag_key in "[a-z][a-z0-9_.]{2,30}",
+		) {
+			let ctx = EvaluationContext::new("prod")
+				.with_user_id(&user_id);
+
+			let hash = ctx.compute_hash(&flag_key);
+
+			// SHA-256 hex = 64 chars
+			prop_assert_eq!(hash.len(), 64);
+			prop_assert!(hash.chars().all(|c| c.is_ascii_hexdigit()));
+		}
+
+		#[test]
+		fn different_flag_keys_yield_different_hashes(
+			flag_key1 in "[a-z][a-z0-9_.]{2,30}",
+			flag_key2 in "[a-z][a-z0-9_.]{2,30}",
+		) {
+			// Only test if keys are different
+			if flag_key1 != flag_key2 {
+				let ctx = EvaluationContext::new("prod")
+					.with_user_id("testuser");
+
+				let hash1 = ctx.compute_hash(&flag_key1);
+				let hash2 = ctx.compute_hash(&flag_key2);
+
+				prop_assert_ne!(hash1, hash2);
+			}
+		}
+
+		#[test]
+		fn different_user_ids_yield_different_hashes(
+			user1 in "[a-zA-Z0-9]{1,20}",
+			user2 in "[a-zA-Z0-9]{1,20}",
+		) {
+			// Only test if users are different
+			if user1 != user2 {
+				let ctx1 = EvaluationContext::new("prod")
+					.with_user_id(&user1);
+				let ctx2 = EvaluationContext::new("prod")
+					.with_user_id(&user2);
+
+				let hash1 = ctx1.compute_hash("test.flag");
+				let hash2 = ctx2.compute_hash("test.flag");
+
+				prop_assert_ne!(hash1, hash2);
+			}
+		}
+
+		#[test]
+		fn different_environments_yield_different_hashes(
+			env1 in "[a-z][a-z0-9_]{2,20}",
+			env2 in "[a-z][a-z0-9_]{2,20}",
+		) {
+			// Only test if environments are different
+			if env1 != env2 {
+				let ctx1 = EvaluationContext::new(&env1)
+					.with_user_id("testuser");
+				let ctx2 = EvaluationContext::new(&env2)
+					.with_user_id("testuser");
+
+				let hash1 = ctx1.compute_hash("test.flag");
+				let hash2 = ctx2.compute_hash("test.flag");
+
+				prop_assert_ne!(hash1, hash2);
+			}
+		}
+	}
+
+	// Property-based tests for ExposureLog
+	proptest! {
+		#[test]
+		fn exposure_log_creates_unique_ids(
+			flag_key in "[a-z][a-z0-9_.]{2,30}",
+			variant in "[a-z][a-z0-9_]{1,20}",
+		) {
+			let flag_id = FlagId::new();
+			let env_id = EnvironmentId::new();
+
+			let log1 = ExposureLog::new(
+				flag_id,
+				&flag_key,
+				env_id,
+				Some("user1".to_string()),
+				None,
+				&variant,
+				EvaluationReason::Default,
+				"hash123",
+			);
+
+			let log2 = ExposureLog::new(
+				flag_id,
+				&flag_key,
+				env_id,
+				Some("user1".to_string()),
+				None,
+				&variant,
+				EvaluationReason::Default,
+				"hash123",
+			);
+
+			// Each log should have a unique ID
+			prop_assert_ne!(log1.id.0, log2.id.0);
+		}
+
+		#[test]
+		fn exposure_log_preserves_fields(
+			flag_key in "[a-z][a-z0-9_.]{2,30}",
+			variant in "[a-z][a-z0-9_]{1,20}",
+			user_id in "[a-zA-Z0-9]{1,20}",
+			org_id in "[a-zA-Z0-9]{1,20}",
+			context_hash in "[a-f0-9]{64}",
+		) {
+			let flag_id = FlagId::new();
+			let env_id = EnvironmentId::new();
+
+			let log = ExposureLog::new(
+				flag_id,
+				&flag_key,
+				env_id,
+				Some(user_id.clone()),
+				Some(org_id.clone()),
+				&variant,
+				EvaluationReason::Default,
+				&context_hash,
+			);
+
+			prop_assert_eq!(log.flag_id, flag_id);
+			prop_assert_eq!(log.flag_key, flag_key);
+			prop_assert_eq!(log.environment_id, env_id);
+			prop_assert_eq!(log.user_id, Some(user_id));
+			prop_assert_eq!(log.org_id, Some(org_id));
+			prop_assert_eq!(log.variant, variant);
+			prop_assert_eq!(log.context_hash, context_hash);
 		}
 	}
 }

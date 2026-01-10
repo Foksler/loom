@@ -2622,3 +2622,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "Seguimiento de Exposición"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "Seguimiento de exposición de usuarios a variantes de banderas para análisis de experimentos"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "Seguimiento de Exposición"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "Habilitado"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "Deshabilitado"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "Habilitar Seguimiento de Exposición"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "Deshabilitar Seguimiento de Exposición"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "Cuando está habilitado, las evaluaciones de banderas se registrarán para análisis de experimentos"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "Registros de Exposición"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "Exportar Registros"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "Descargar registros de exposición como CSV"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "No se encontraron registros de exposición"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "Clave de Bandera"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "Variante"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "ID de Usuario"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "Marca de Tiempo"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "Motivo"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "Entorno"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "Filtrar por bandera"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "Filtrar por entorno"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "Fecha de Inicio"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "Fecha de Fin"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count} exposiciones"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "Las exposiciones se deduplicarán dentro de una ventana de 1 hora por usuario/contexto"

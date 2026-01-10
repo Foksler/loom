@@ -2658,3 +2658,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "এক্সপোজার ট্র্যাকিং"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "পরীক্ষা বিশ্লেষণের জন্য ব্যবহারকারীরা কখন ফ্ল্যাগ ভ্যারিয়েন্টের সংস্পর্শে আসে তা ট্র্যাক করুন"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "এক্সপোজার ট্র্যাকিং"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "সক্রিয়"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "নিষ্ক্রিয়"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "এক্সপোজার ট্র্যাকিং সক্রিয় করুন"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "এক্সপোজার ট্র্যাকিং নিষ্ক্রিয় করুন"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "সক্রিয় করা হলে, ফ্ল্যাগ মূল্যায়ন পরীক্ষা বিশ্লেষণের জন্য লগ করা হবে"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "এক্সপোজার লগ"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "লগ রপ্তানি করুন"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "এক্সপোজার লগ CSV হিসাবে ডাউনলোড করুন"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "কোনো এক্সপোজার লগ পাওয়া যায়নি"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "ফ্ল্যাগ কী"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "ভ্যারিয়েন্ট"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "ব্যবহারকারী ID"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "টাইমস্ট্যাম্প"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "কারণ"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "পরিবেশ"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "ফ্ল্যাগ দ্বারা ফিল্টার"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "পরিবেশ দ্বারা ফিল্টার"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "শুরুর তারিখ"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "শেষের তারিখ"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count} এক্সপোজার"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "প্রতি ব্যবহারকারী/প্রসঙ্গে ১ ঘন্টার উইন্ডোতে এক্সপোজার ডিডুপ্লিকেট করা হয়"

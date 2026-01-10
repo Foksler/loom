@@ -1552,3 +1552,31 @@ msgstr "מפתח SDK בוטל בהצלחה"
 #: API: Flags - Invalid SDK key format
 msgid "server.api.flags.invalid_sdk_key_format"
 msgstr "פורמט מפתח SDK לא חוקי"
+
+#: API: Flags - Export started
+msgid "server.api.flags.export_started"
+msgstr "ייצוא החשיפות החל"
+
+#: API: Flags - Exposure already logged
+msgid "server.api.flags.exposure_already_logged"
+msgstr "החשיפה כבר נרשמה"
+
+#: API: Flags - Exposure created
+msgid "server.api.flags.exposure_created"
+msgstr "החשיפה נוצרה"
+
+#: API: Flags - Exposure tracking disabled
+msgid "server.api.flags.exposure_tracking_disabled"
+msgstr "מעקב חשיפות הושבת"
+
+#: API: Flags - Exposure tracking enabled
+msgid "server.api.flags.exposure_tracking_enabled"
+msgstr "מעקב חשיפות הופעל"
+
+#: API: Flags - Invalid time range
+msgid "server.api.flags.invalid_time_range"
+msgstr "טווח זמן לא תקין"
+
+#: API: Flags - No exposures found
+msgid "server.api.flags.no_exposures_found"
+msgstr "לא נמצאו חשיפות"

@@ -1547,3 +1547,35 @@ msgstr "تم إلغاء مفتاح SDK بنجاح"
 #: API: Flags - Invalid SDK key format
 msgid "server.api.flags.invalid_sdk_key_format"
 msgstr "تنسيق مفتاح SDK غير صالح"
+
+# ============================================================================
+# Exposure Tracking API responses
+# ============================================================================
+
+#: API: Flags - Exposure log created
+msgid "server.api.flags.exposure_created"
+msgstr "تم تسجيل التعرض بنجاح"
+
+#: API: Flags - Exposure tracking enabled
+msgid "server.api.flags.exposure_tracking_enabled"
+msgstr "تم تمكين تتبع التعرض للعلم"
+
+#: API: Flags - Exposure tracking disabled
+msgid "server.api.flags.exposure_tracking_disabled"
+msgstr "تم تعطيل تتبع التعرض للعلم"
+
+#: API: Flags - Invalid time range
+msgid "server.api.flags.invalid_time_range"
+msgstr "نطاق زمني غير صالح: يجب أن يكون وقت البدء قبل وقت الانتهاء"
+
+#: API: Flags - Export started
+msgid "server.api.flags.export_started"
+msgstr "بدأ تصدير سجل التعرض"
+
+#: API: Flags - No exposures found
+msgid "server.api.flags.no_exposures_found"
+msgstr "لم يتم العثور على تعرضات للمعايير المحددة"
+
+#: API: Flags - Exposure already logged
+msgid "server.api.flags.exposure_already_logged"
+msgstr "تم تسجيل التعرض بالفعل ضمن نافذة إزالة التكرار"

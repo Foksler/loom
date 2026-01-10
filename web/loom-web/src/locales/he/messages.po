@@ -2622,3 +2622,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "מעקב חשיפה"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "מעקב אחר חשיפת משתמשים לווריאנטים של דגלים לניתוח ניסויים"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "מעקב חשיפה"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "מופעל"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "מושבת"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "הפעל מעקב חשיפה"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "השבת מעקב חשיפה"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "כשמופעל, הערכות דגלים יירשמו לניתוח ניסויים"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "יומני חשיפה"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "ייצוא יומנים"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "הורד יומני חשיפה כ-CSV"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "לא נמצאו יומני חשיפה"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "מפתח דגל"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "וריאנט"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "מזהה משתמש"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "חותמת זמן"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "סיבה"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "סביבה"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "סנן לפי דגל"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "סנן לפי סביבה"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "תאריך התחלה"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "תאריך סיום"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count} חשיפות"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "חשיפות מסוננות לכפילויות בחלון של שעה אחת לכל משתמש/הקשר"

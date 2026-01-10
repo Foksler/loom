@@ -1548,3 +1548,31 @@ msgstr "Ключ SDK успешно отозван"
 #: API: Flags - Invalid SDK key format
 msgid "server.api.flags.invalid_sdk_key_format"
 msgstr "Недопустимый формат ключа SDK"
+
+#: API: Flags - Export started
+msgid "server.api.flags.export_started"
+msgstr "Экспорт экспозиций начат"
+
+#: API: Flags - Exposure already logged
+msgid "server.api.flags.exposure_already_logged"
+msgstr "Экспозиция уже зарегистрирована"
+
+#: API: Flags - Exposure created
+msgid "server.api.flags.exposure_created"
+msgstr "Экспозиция создана"
+
+#: API: Flags - Exposure tracking disabled
+msgid "server.api.flags.exposure_tracking_disabled"
+msgstr "Отслеживание экспозиций отключено"
+
+#: API: Flags - Exposure tracking enabled
+msgid "server.api.flags.exposure_tracking_enabled"
+msgstr "Отслеживание экспозиций включено"
+
+#: API: Flags - Invalid time range
+msgid "server.api.flags.invalid_time_range"
+msgstr "Недопустимый временной диапазон"
+
+#: API: Flags - No exposures found
+msgid "server.api.flags.no_exposures_found"
+msgstr "Экспозиции не найдены"

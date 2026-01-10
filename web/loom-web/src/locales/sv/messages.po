@@ -2658,3 +2658,103 @@ msgstr "No kill switches configured"
 #: killSwitch.noLinkedFlags
 msgid "killSwitch.noLinkedFlags"
 msgstr "No linked flags"
+
+# ============================================================================
+# Exposure Tracking
+# ============================================================================
+
+#: exposure.title
+msgid "exposure.title"
+msgstr "Exponeringsspårning"
+
+#: exposure.description
+msgid "exposure.description"
+msgstr "Spåra när användare exponeras för flaggvarianter för experimentanalys"
+
+#: exposure.tracking
+msgid "exposure.tracking"
+msgstr "Exponeringsspårning"
+
+#: exposure.enabled
+msgid "exposure.enabled"
+msgstr "Aktiverad"
+
+#: exposure.disabled
+msgid "exposure.disabled"
+msgstr "Inaktiverad"
+
+#: exposure.enableTracking
+msgid "exposure.enableTracking"
+msgstr "Aktivera Exponeringsspårning"
+
+#: exposure.disableTracking
+msgid "exposure.disableTracking"
+msgstr "Inaktivera Exponeringsspårning"
+
+#: exposure.enableHint
+msgid "exposure.enableHint"
+msgstr "När aktiverad loggas flaggutvärderingar för experimentanalys"
+
+#: exposure.logs
+msgid "exposure.logs"
+msgstr "Exponeringsloggar"
+
+#: exposure.export
+msgid "exposure.export"
+msgstr "Exportera Loggar"
+
+#: exposure.exportHint
+msgid "exposure.exportHint"
+msgstr "Ladda ner exponeringsloggar som CSV"
+
+#: exposure.noLogs
+msgid "exposure.noLogs"
+msgstr "Inga exponeringsloggar hittades"
+
+#: exposure.flagKey
+msgid "exposure.flagKey"
+msgstr "Flaggnyckel"
+
+#: exposure.variant
+msgid "exposure.variant"
+msgstr "Variant"
+
+#: exposure.userId
+msgid "exposure.userId"
+msgstr "Användar-ID"
+
+#: exposure.timestamp
+msgid "exposure.timestamp"
+msgstr "Tidsstämpel"
+
+#: exposure.reason
+msgid "exposure.reason"
+msgstr "Orsak"
+
+#: exposure.environment
+msgid "exposure.environment"
+msgstr "Miljö"
+
+#: exposure.filterByFlag
+msgid "exposure.filterByFlag"
+msgstr "Filtrera efter flagga"
+
+#: exposure.filterByEnvironment
+msgid "exposure.filterByEnvironment"
+msgstr "Filtrera efter miljö"
+
+#: exposure.startDate
+msgid "exposure.startDate"
+msgstr "Startdatum"
+
+#: exposure.endDate
+msgid "exposure.endDate"
+msgstr "Slutdatum"
+
+#: exposure.totalCount
+msgid "exposure.totalCount"
+msgstr "{count} exponeringar"
+
+#: exposure.deduplicationWindow
+msgid "exposure.deduplicationWindow"
+msgstr "Exponeringar dedupliceras inom ett 1-timmars fönster per användare/kontext"
