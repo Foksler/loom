@@ -44,6 +44,7 @@ pub mod evaluation;
 pub mod flag;
 pub mod kill_switch;
 pub mod sdk_key;
+pub mod sse;
 pub mod strategy;
 
 pub use environment::Environment;
@@ -58,6 +59,10 @@ pub use flag::{
 };
 pub use kill_switch::{KillSwitch, KillSwitchId};
 pub use sdk_key::{SdkKey, SdkKeyId, SdkKeyType};
+pub use sse::{
+	ConnectionInfo, FlagArchivedData, FlagRestoredData, FlagState, FlagStreamEvent, FlagUpdatedData,
+	HeartbeatData, InitData, KillSwitchActivatedData, KillSwitchDeactivatedData, KillSwitchState,
+};
 pub use strategy::{
 	AttributeOperator, Condition, GeoField, GeoOperator, PercentageKey, Schedule, ScheduleStep,
 	Strategy, StrategyId,
@@ -375,6 +380,180 @@ mod tests {
 			assert!(kill_switch.activated_by.is_none());
 			assert!(kill_switch.activation_reason.is_none());
 			assert!(kill_switch.updated_at >= old_updated);
+		}
+	}
+
+	// Property-based tests for SSE event serialization roundtrips
+	proptest! {
+		#[test]
+		fn flag_updated_event_roundtrip(
+			flag_key in "[a-z][a-z0-9_.]{2,30}",
+			environment in "[a-z][a-z0-9_]{2,20}",
+			enabled in proptest::bool::ANY,
+			default_variant in "[a-z][a-z0-9_]{1,20}",
+		) {
+			let event = FlagStreamEvent::flag_updated(
+				flag_key.clone(),
+				environment.clone(),
+				enabled,
+				default_variant.clone(),
+				VariantValue::Boolean(enabled),
+			);
+
+			let json = serde_json::to_string(&event).unwrap();
+			let parsed: FlagStreamEvent = serde_json::from_str(&json).unwrap();
+
+			if let FlagStreamEvent::FlagUpdated(data) = parsed {
+				assert_eq!(data.flag_key, flag_key);
+				assert_eq!(data.environment, environment);
+				assert_eq!(data.enabled, enabled);
+				assert_eq!(data.default_variant, default_variant);
+			} else {
+				panic!("Expected FlagUpdated event");
+			}
+		}
+
+		#[test]
+		fn flag_archived_event_roundtrip(flag_key in "[a-z][a-z0-9_.]{2,30}") {
+			let event = FlagStreamEvent::flag_archived(flag_key.clone());
+			let json = serde_json::to_string(&event).unwrap();
+			let parsed: FlagStreamEvent = serde_json::from_str(&json).unwrap();
+
+			if let FlagStreamEvent::FlagArchived(data) = parsed {
+				assert_eq!(data.flag_key, flag_key);
+			} else {
+				panic!("Expected FlagArchived event");
+			}
+		}
+
+		#[test]
+		fn kill_switch_activated_event_roundtrip(
+			kill_switch_key in "[a-z][a-z0-9_]{2,30}",
+			linked_flag_keys in prop::collection::vec("[a-z][a-z0-9_.]{2,20}", 0..5),
+			reason in "[a-zA-Z0-9 ]{1,100}",
+		) {
+			let event = FlagStreamEvent::kill_switch_activated(
+				kill_switch_key.clone(),
+				linked_flag_keys.clone(),
+				reason.clone(),
+			);
+
+			let json = serde_json::to_string(&event).unwrap();
+			let parsed: FlagStreamEvent = serde_json::from_str(&json).unwrap();
+
+			if let FlagStreamEvent::KillSwitchActivated(data) = parsed {
+				assert_eq!(data.kill_switch_key, kill_switch_key);
+				assert_eq!(data.linked_flag_keys, linked_flag_keys);
+				assert_eq!(data.reason, reason);
+			} else {
+				panic!("Expected KillSwitchActivated event");
+			}
+		}
+
+		#[test]
+		fn event_type_matches_serialized_tag(enabled in proptest::bool::ANY) {
+			// Test that event_type() matches the "event" field in serialized JSON
+			let events = vec![
+				FlagStreamEvent::init(vec![], vec![]),
+				FlagStreamEvent::flag_updated(
+					"test".to_string(),
+					"prod".to_string(),
+					enabled,
+					"default".to_string(),
+					VariantValue::Boolean(enabled),
+				),
+				FlagStreamEvent::flag_archived("test".to_string()),
+				FlagStreamEvent::flag_restored("test".to_string(), "prod".to_string(), enabled),
+				FlagStreamEvent::kill_switch_activated("ks".to_string(), vec![], "reason".to_string()),
+				FlagStreamEvent::kill_switch_deactivated("ks".to_string(), vec![]),
+				FlagStreamEvent::heartbeat(),
+			];
+
+			for event in events {
+				let event_type = event.event_type();
+				let json = serde_json::to_string(&event).unwrap();
+				assert!(json.contains(&format!(r#""event":"{}""#, event_type)));
+			}
+		}
+	}
+
+	// Property-based tests for FlagState construction
+	proptest! {
+		#[test]
+		fn flag_state_from_flag_enabled_matches_config(
+			flag_key in "[a-z][a-z0-9_.]{2,30}",
+			enabled in proptest::bool::ANY,
+		) {
+			let flag = Flag {
+				id: FlagId::new(),
+				org_id: Some(OrgId::new()),
+				key: flag_key.clone(),
+				name: "Test Flag".to_string(),
+				description: None,
+				tags: vec![],
+				maintainer_user_id: None,
+				variants: vec![
+					Variant {
+						name: "on".to_string(),
+						value: VariantValue::Boolean(true),
+						weight: 50,
+					},
+					Variant {
+						name: "off".to_string(),
+						value: VariantValue::Boolean(false),
+						weight: 50,
+					},
+				],
+				default_variant: "on".to_string(),
+				prerequisites: vec![],
+				created_at: chrono::Utc::now(),
+				updated_at: chrono::Utc::now(),
+				archived_at: None,
+			};
+
+			let config = FlagConfig {
+				id: flag::FlagConfigId::new(),
+				flag_id: flag.id,
+				environment_id: EnvironmentId::new(),
+				enabled,
+				strategy_id: None,
+				created_at: chrono::Utc::now(),
+				updated_at: chrono::Utc::now(),
+			};
+
+			let state = FlagState::from_flag_and_config(&flag, Some(&config));
+			assert_eq!(state.key, flag_key);
+			assert_eq!(state.enabled, enabled);
+			assert!(!state.archived);
+		}
+
+		#[test]
+		fn flag_state_disabled_when_no_config(flag_key in "[a-z][a-z0-9_.]{2,30}") {
+			let flag = Flag {
+				id: FlagId::new(),
+				org_id: Some(OrgId::new()),
+				key: flag_key.clone(),
+				name: "Test Flag".to_string(),
+				description: None,
+				tags: vec![],
+				maintainer_user_id: None,
+				variants: vec![
+					Variant {
+						name: "on".to_string(),
+						value: VariantValue::Boolean(true),
+						weight: 100,
+					},
+				],
+				default_variant: "on".to_string(),
+				prerequisites: vec![],
+				created_at: chrono::Utc::now(),
+				updated_at: chrono::Utc::now(),
+				archived_at: None,
+			};
+
+			let state = FlagState::from_flag_and_config(&flag, None);
+			assert_eq!(state.key, flag_key);
+			assert!(!state.enabled); // Should be disabled when no config
 		}
 	}
 }

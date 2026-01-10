@@ -34,11 +34,13 @@ pub mod error;
 pub mod evaluation;
 pub mod repository;
 pub mod sdk_auth;
+pub mod sse;
 
 pub use error::{FlagsServerError, Result};
 pub use evaluation::evaluate_flag;
 pub use repository::{FlagsRepository, SqliteFlagsRepository};
 pub use sdk_auth::{hash_sdk_key, verify_sdk_key};
+pub use sse::{BroadcasterConfig, BroadcasterStats, ChannelKey, ChannelStats, FlagsBroadcaster};
 
 // Re-export core types for convenience
 pub use loom_flags_core::*;

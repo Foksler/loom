@@ -15,7 +15,9 @@ loom-common-i18n = { path = "../loom-common-i18n" }
 
 # Async runtime
 async-trait = "0.1"
-tokio = { version = "1", features = ["sync"] }
+tokio = { version = "1", features = ["sync", "time"] }
+tokio-stream = "0.1"
+futures = "0.3"
 
 # Serialization
 serde = { version = "1", features = ["derive"] }
@@ -45,5 +47,6 @@ rand = "0.8"
 
 [dev-dependencies]
 proptest = "1"
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
 tokio-test = "0.4"
 tempfile = "3"

@@ -7,8 +7,8 @@ use sqlx::SqlitePool;
 use tracing::instrument;
 
 use loom_flags_core::{
-	Environment, EnvironmentId, Flag, FlagConfig, FlagId, FlagPrerequisite, KillSwitch,
-	KillSwitchId, OrgId, SdkKey, SdkKeyId, SdkKeyType, Strategy, StrategyId, Variant,
+	Environment, EnvironmentId, Flag, FlagConfig, FlagId, FlagPrerequisite, KillSwitch, KillSwitchId,
+	OrgId, SdkKey, SdkKeyId, SdkKeyType, Strategy, StrategyId, Variant,
 };
 
 use crate::error::{FlagsServerError, Result};
@@ -71,6 +71,19 @@ pub trait FlagsRepository: Send + Sync {
 	async fn list_sdk_keys(&self, environment_id: EnvironmentId) -> Result<Vec<SdkKey>>;
 	async fn revoke_sdk_key(&self, id: SdkKeyId) -> Result<bool>;
 	async fn update_sdk_key_last_used(&self, id: SdkKeyId) -> Result<()>;
+
+	/// Find an SDK key by verifying the raw key against stored hashes.
+	///
+	/// This method iterates through all SDK keys with the given environment name
+	/// and verifies the raw key against each stored hash using Argon2.
+	/// This is O(n) but acceptable for connection establishment.
+	///
+	/// Returns the matching SDK key and its environment if found.
+	async fn find_sdk_key_by_verification(
+		&self,
+		raw_key: &str,
+		env_name: &str,
+	) -> Result<Option<(SdkKey, Environment)>>;
 }
 
 /// SQLite implementation of the flags repository.
@@ -300,9 +313,10 @@ impl FlagsRepository for SqliteFlagsRepository {
 
 		match row {
 			Some(row) => {
-				let flag_id: FlagId = row.id.parse().map_err(|_| {
-					FlagsServerError::Internal("Invalid flag ID in database".to_string())
-				})?;
+				let flag_id: FlagId = row
+					.id
+					.parse()
+					.map_err(|_| FlagsServerError::Internal("Invalid flag ID in database".to_string()))?;
 				let prerequisites = self.get_flag_prerequisites(flag_id).await?;
 				Ok(Some(row.into_flag(prerequisites)?))
 			}
@@ -373,9 +387,10 @@ impl FlagsRepository for SqliteFlagsRepository {
 
 		let mut flags = Vec::with_capacity(rows.len());
 		for row in rows {
-			let flag_id: FlagId = row.id.parse().map_err(|_| {
-				FlagsServerError::Internal("Invalid flag ID in database".to_string())
-			})?;
+			let flag_id: FlagId = row
+				.id
+				.parse()
+				.map_err(|_| FlagsServerError::Internal("Invalid flag ID in database".to_string()))?;
 			let prerequisites = self.get_flag_prerequisites(flag_id).await?;
 			flags.push(row.into_flag(prerequisites)?);
 		}
@@ -981,6 +996,69 @@ impl FlagsRepository for SqliteFlagsRepository {
 
 		Ok(())
 	}
+
+	#[instrument(skip(self, raw_key), fields(env_name = %env_name))]
+	async fn find_sdk_key_by_verification(
+		&self,
+		raw_key: &str,
+		env_name: &str,
+	) -> Result<Option<(SdkKey, Environment)>> {
+		// Find all environments with the given name (across all orgs)
+		let envs = sqlx::query_as::<_, EnvironmentRow>(
+			r#"
+			SELECT id, org_id, name, color, created_at
+			FROM flag_environments
+			WHERE name = ?
+			"#,
+		)
+		.bind(env_name)
+		.fetch_all(&self.pool)
+		.await?;
+
+		// For each environment, check its SDK keys
+		for env_row in envs {
+			let env: Environment = env_row.try_into()?;
+
+			// Get all SDK keys for this environment
+			let sdk_keys = self.list_sdk_keys(env.id).await?;
+
+			// Try to verify the raw key against each stored hash
+			for sdk_key in sdk_keys {
+				// Skip revoked keys
+				if sdk_key.revoked_at.is_some() {
+					continue;
+				}
+
+				// Verify the raw key against the stored hash
+				match crate::sdk_auth::verify_sdk_key(raw_key, &sdk_key.key_hash) {
+					Ok(true) => {
+						tracing::debug!(
+							sdk_key_id = %sdk_key.id,
+							env_id = %env.id,
+							"SDK key verified successfully"
+						);
+						return Ok(Some((sdk_key, env)));
+					}
+					Ok(false) => {
+						// Key didn't match, try next one
+						continue;
+					}
+					Err(e) => {
+						// Log error but continue trying other keys
+						tracing::warn!(
+							sdk_key_id = %sdk_key.id,
+							error = %e,
+							"Failed to verify SDK key hash"
+						);
+						continue;
+					}
+				}
+			}
+		}
+
+		// No matching key found
+		Ok(None)
+	}
 }
 
 impl SqliteFlagsRepository {
@@ -996,13 +1074,15 @@ impl SqliteFlagsRepository {
 		.fetch_all(&self.pool)
 		.await?;
 
-		Ok(rows
-			.into_iter()
-			.map(|r| FlagPrerequisite {
-				flag_key: r.prerequisite_flag_key,
-				required_variant: r.required_variant,
-			})
-			.collect())
+		Ok(
+			rows
+				.into_iter()
+				.map(|r| FlagPrerequisite {
+					flag_key: r.prerequisite_flag_key,
+					required_variant: r.required_variant,
+				})
+				.collect(),
+		)
 	}
 }
 
@@ -1096,9 +1176,7 @@ impl FlagRow {
 				.archived_at
 				.map(|s| {
 					chrono::DateTime::parse_from_rfc3339(&s)
-						.map_err(|_| {
-							FlagsServerError::Internal("Invalid archived_at".to_string())
-						})
+						.map_err(|_| FlagsServerError::Internal("Invalid archived_at".to_string()))
 						.map(|dt| dt.with_timezone(&chrono::Utc))
 				})
 				.transpose()?,
@@ -1136,9 +1214,10 @@ impl TryFrom<FlagConfigRow> for FlagConfig {
 				.flag_id
 				.parse()
 				.map_err(|_| FlagsServerError::Internal("Invalid flag ID".to_string()))?,
-			environment_id: row.environment_id.parse().map_err(|_| {
-				FlagsServerError::Internal("Invalid environment ID".to_string())
-			})?,
+			environment_id: row
+				.environment_id
+				.parse()
+				.map_err(|_| FlagsServerError::Internal("Invalid environment ID".to_string()))?,
 			enabled: row.enabled,
 			strategy_id: row
 				.strategy_id
@@ -1179,10 +1258,7 @@ impl TryFrom<StrategyRow> for Strategy {
 
 		let conditions: Vec<Condition> = serde_json::from_str(&row.conditions)?;
 		let percentage_key: PercentageKey = serde_json::from_str(&row.percentage_key)?;
-		let schedule: Option<Schedule> = row
-			.schedule
-			.map(|s| serde_json::from_str(&s))
-			.transpose()?;
+		let schedule: Option<Schedule> = row.schedule.map(|s| serde_json::from_str(&s)).transpose()?;
 
 		Ok(Strategy {
 			id: row
@@ -1235,9 +1311,10 @@ impl TryFrom<KillSwitchRow> for KillSwitch {
 		let linked_flag_keys: Vec<String> = serde_json::from_str(&row.linked_flag_keys)?;
 
 		Ok(KillSwitch {
-			id: row.id.parse().map_err(|_| {
-				FlagsServerError::Internal("Invalid kill switch ID".to_string())
-			})?,
+			id: row
+				.id
+				.parse()
+				.map_err(|_| FlagsServerError::Internal("Invalid kill switch ID".to_string()))?,
 			org_id: row
 				.org_id
 				.map(|s| {
@@ -1254,9 +1331,7 @@ impl TryFrom<KillSwitchRow> for KillSwitch {
 				.activated_at
 				.map(|s| {
 					chrono::DateTime::parse_from_rfc3339(&s)
-						.map_err(|_| {
-							FlagsServerError::Internal("Invalid activated_at".to_string())
-						})
+						.map_err(|_| FlagsServerError::Internal("Invalid activated_at".to_string()))
 						.map(|dt| dt.with_timezone(&chrono::Utc))
 				})
 				.transpose()?,
@@ -1305,9 +1380,10 @@ impl TryFrom<SdkKeyRow> for SdkKey {
 				.id
 				.parse()
 				.map_err(|_| FlagsServerError::Internal("Invalid SDK key ID".to_string()))?,
-			environment_id: row.environment_id.parse().map_err(|_| {
-				FlagsServerError::Internal("Invalid environment ID".to_string())
-			})?,
+			environment_id: row
+				.environment_id
+				.parse()
+				.map_err(|_| FlagsServerError::Internal("Invalid environment ID".to_string()))?,
 			key_type,
 			name: row.name,
 			key_hash: row.key_hash,
@@ -1322,9 +1398,7 @@ impl TryFrom<SdkKeyRow> for SdkKey {
 				.last_used_at
 				.map(|s| {
 					chrono::DateTime::parse_from_rfc3339(&s)
-						.map_err(|_| {
-							FlagsServerError::Internal("Invalid last_used_at".to_string())
-						})
+						.map_err(|_| FlagsServerError::Internal("Invalid last_used_at".to_string()))
 						.map(|dt| dt.with_timezone(&chrono::Utc))
 				})
 				.transpose()?,

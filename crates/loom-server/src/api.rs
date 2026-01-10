@@ -105,6 +105,7 @@ pub struct AppState {
 	pub pool: SqlitePool,
 	pub session_service: Arc<SessionService>,
 	pub flags_repo: Arc<loom_server_flags::SqliteFlagsRepository>,
+	pub flags_broadcaster: Arc<loom_server_flags::FlagsBroadcaster>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -285,6 +286,7 @@ pub async fn create_app_state(
 	));
 
 	let flags_repo = Arc::new(loom_server_flags::SqliteFlagsRepository::new(pool.clone()));
+	let flags_broadcaster = Arc::new(loom_server_flags::FlagsBroadcaster::with_defaults());
 
 	AppState {
 		repo,
@@ -335,6 +337,7 @@ pub async fn create_app_state(
 		pool,
 		session_service,
 		flags_repo,
+		flags_broadcaster,
 	}
 }
 
@@ -804,6 +807,8 @@ pub fn create_router(state: AppState) -> Router {
 		)
 		// Documentation search
 		.route("/docs/search", get(routes::docs::search_handler))
+		// Feature flags SSE streaming (SDK key auth handled in handler)
+		.route("/api/flags/stream", get(routes::flags::stream_flags))
 		.build();
 
 	// Authenticated routes - require valid session/token
@@ -1057,6 +1062,11 @@ pub fn create_router(state: AppState) -> Router {
 		.route(
 			"/api/orgs/{org_id}/flags/{flag_key}/evaluate",
 			post(routes::flags::evaluate_flag_endpoint),
+		)
+		// Flag stream stats (admin only)
+		.route(
+			"/api/flags/stream/stats",
+			get(routes::flags::stream_stats),
 		)
 		// Invitation routes (authenticated)
 		.route(

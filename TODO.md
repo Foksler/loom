@@ -502,7 +502,7 @@ Implementation checklist for the Feature Flags system. See
 
 ---
 
-## Phase 7: SSE Streaming
+## ✅ Phase 7: SSE Streaming (COMPLETED)
 
 **Goal:** Real-time flag updates via Server-Sent Events.
 
@@ -512,22 +512,34 @@ Implementation checklist for the Feature Flags system. See
 - Reconnection: `specs/feature-flags-system.md:447-450`
 
 **Tasks:**
-- [ ] Implement SSE endpoint
-  - [ ] `GET /api/flags/stream`
-  - [ ] SDK key authentication
-- [ ] Event types
-  - [ ] `init` - full state on connect
-  - [ ] `flag.updated` - flag or config changed
-  - [ ] `flag.archived` - flag archived
-  - [ ] `killswitch.activated` - kill switch activated
-  - [ ] `killswitch.deactivated` - kill switch deactivated
-  - [ ] `heartbeat` - every 30s
-- [ ] Broadcast mechanism
-  - [ ] Per-environment channels
-  - [ ] Notify on flag/kill switch changes
-- [ ] Client connection management
-  - [ ] Track connected clients
-  - [ ] Clean up disconnected clients
+- [x] Implement SSE endpoint
+  - [x] `GET /api/flags/stream`
+  - [x] SDK key authentication with Argon2 verification
+- [x] Event types in `loom-flags-core/src/sse.rs`
+  - [x] `init` - full state on connect
+  - [x] `flag.updated` - flag or config changed
+  - [x] `flag.archived` - flag archived
+  - [x] `flag.restored` - flag restored from archive
+  - [x] `killswitch.activated` - kill switch activated
+  - [x] `killswitch.deactivated` - kill switch deactivated
+  - [x] `heartbeat` - every 30s (via axum SSE KeepAlive)
+- [x] Broadcast mechanism in `loom-server-flags/src/sse.rs`
+  - [x] Per-environment channels (org_id, environment_id)
+  - [x] Notify on flag/kill switch changes
+  - [x] Broadcast to entire org for org-wide changes
+- [x] Client connection management
+  - [x] FlagsBroadcaster with channel statistics
+  - [x] Clean up empty channels
+  - [x] Connection tracking metrics
+- [x] Event emission on changes
+  - [x] update_flag_config broadcasts flag.updated
+  - [x] archive_flag broadcasts flag.archived
+  - [x] restore_flag broadcasts flag.restored
+  - [x] activate_kill_switch broadcasts killswitch.activated
+  - [x] deactivate_kill_switch broadcasts killswitch.deactivated
+- [x] Stats endpoint `GET /api/flags/stream/stats` (admin only)
+- [x] i18n translations (EN, ES, AR)
+- [x] 120 tests (91 in loom-flags-core, 29 in loom-server-flags)
 
 ---
 
