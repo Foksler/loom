@@ -630,30 +630,8 @@ pub async fn update_repo(
 		}
 	};
 
-	let is_admin = match repo.owner_type {
-		OwnerType::User => repo.owner_id == current_user.user.id.into_inner(),
-		OwnerType::Org => {
-			let org_id = OrgId::new(repo.owner_id);
-			match state
-				.org_repo
-				.get_membership(&org_id, &current_user.user.id)
-				.await
-			{
-				Ok(Some(m)) => m.role == OrgRole::Owner || m.role == OrgRole::Admin,
-				_ => false,
-			}
-		}
-	};
-
-	if !is_admin {
-		return (
-			StatusCode::FORBIDDEN,
-			Json(RepoErrorResponse {
-				error: "forbidden".to_string(),
-				message: t(locale, "server.api.scm.admin_required").to_string(),
-			}),
-		)
-			.into_response();
+	if let Err(resp) = check_repo_admin_access(&current_user, &repo, &state, locale).await {
+		return resp.into_response();
 	}
 
 	if let Some(name) = payload.name {
@@ -820,30 +798,8 @@ pub async fn delete_repo(
 		}
 	};
 
-	let is_admin = match repo.owner_type {
-		OwnerType::User => repo.owner_id == current_user.user.id.into_inner(),
-		OwnerType::Org => {
-			let org_id = OrgId::new(repo.owner_id);
-			match state
-				.org_repo
-				.get_membership(&org_id, &current_user.user.id)
-				.await
-			{
-				Ok(Some(m)) => m.role == OrgRole::Owner || m.role == OrgRole::Admin,
-				_ => false,
-			}
-		}
-	};
-
-	if !is_admin {
-		return (
-			StatusCode::FORBIDDEN,
-			Json(RepoErrorResponse {
-				error: "forbidden".to_string(),
-				message: t(locale, "server.api.scm.admin_required").to_string(),
-			}),
-		)
-			.into_response();
+	if let Err(resp) = check_repo_admin_access(&current_user, &repo, &state, locale).await {
+		return resp.into_response();
 	}
 
 	if let Err(e) = scm_store.soft_delete(id).await {
