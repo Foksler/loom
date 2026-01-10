@@ -1624,3 +1624,92 @@ msgstr "Evaluations in last 30 days: {count}"
 #: API: Flags - Stale threshold
 msgid "server.api.flags.stale_threshold"
 msgstr "Flags are considered stale after {days} days without evaluation"
+
+# ============================================================================
+# CLI: Feature Flags SDK
+# ============================================================================
+
+#: Flags SDK: Invalid SDK key
+msgid "client.flags.error.invalid_sdk_key"
+msgstr "Invalid or missing SDK key"
+
+#: Flags SDK: Invalid base URL
+msgid "client.flags.error.invalid_base_url"
+msgstr "Invalid or missing base URL"
+
+#: Flags SDK: Connection failed
+msgid "client.flags.error.connection_failed"
+msgstr "Failed to connect to server"
+
+#: Flags SDK: Request failed
+msgid "client.flags.error.request_failed"
+msgstr "HTTP request failed"
+
+#: Flags SDK: Parse failed
+msgid "client.flags.error.parse_failed"
+msgstr "Failed to parse server response"
+
+#: Flags SDK: Server error
+msgid "client.flags.error.server_error"
+msgstr "Server returned an error"
+
+#: Flags SDK: Flag not found
+msgid "client.flags.error.flag_not_found"
+msgstr "Flag not found"
+
+#: Flags SDK: SSE connection failed
+msgid "client.flags.error.sse_connection_failed"
+msgstr "SSE connection failed"
+
+#: Flags SDK: SSE stream error
+msgid "client.flags.error.sse_stream_error"
+msgstr "SSE stream error"
+
+#: Flags SDK: Offline no cache
+msgid "client.flags.error.offline_no_cache"
+msgstr "Client is offline and no cached data is available"
+
+#: Flags SDK: Authentication failed
+msgid "client.flags.error.authentication_failed"
+msgstr "SDK key authentication failed"
+
+#: Flags SDK: Rate limited
+msgid "client.flags.error.rate_limited"
+msgstr "Rate limited. Retry after seconds"
+
+#: Flags SDK: Initialization timeout
+msgid "client.flags.error.initialization_timeout"
+msgstr "Client initialization timed out"
+
+#: Flags SDK: Client closed
+msgid "client.flags.error.client_closed"
+msgstr "Client has been closed"
+
+#: Flags SDK: Invalid value type
+msgid "client.flags.error.invalid_value_type"
+msgstr "Invalid flag value type"
+
+#: Flags SDK: Initializing
+msgid "client.flags.status.initializing"
+msgstr "Initializing flags client..."
+
+#: Flags SDK: Connected
+msgid "client.flags.status.connected"
+msgstr "Flags client connected"
+
+#: Flags SDK: Disconnected
+msgid "client.flags.status.disconnected"
+msgstr "Flags client disconnected"
+
+#: Flags SDK: Reconnecting
+msgid "client.flags.status.reconnecting"
+msgstr "Reconnecting to flags server..."
+
+#: Flags SDK: Using cached values
+msgid "client.flags.status.using_cache"
+msgstr "Using cached flag values"
+
+#: Flags SDK: Cache initialized
+msgid "client.flags.status.cache_initialized"
+msgstr "Flag cache initialized with {count} flags"
+

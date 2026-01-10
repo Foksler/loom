@@ -1624,3 +1624,91 @@ msgstr "Evaluaciones en los últimos 30 días: {count}"
 #: API: Flags - Stale threshold
 msgid "server.api.flags.stale_threshold"
 msgstr "Las banderas se consideran obsoletas después de {days} días sin evaluación"
+
+# ============================================================================
+# CLI: Feature Flags SDK
+# ============================================================================
+
+#: Flags SDK: Invalid SDK key
+msgid "client.flags.error.invalid_sdk_key"
+msgstr "Clave SDK inválida o faltante"
+
+#: Flags SDK: Invalid base URL
+msgid "client.flags.error.invalid_base_url"
+msgstr "URL base inválida o faltante"
+
+#: Flags SDK: Connection failed
+msgid "client.flags.error.connection_failed"
+msgstr "Error al conectar con el servidor"
+
+#: Flags SDK: Request failed
+msgid "client.flags.error.request_failed"
+msgstr "Error en la solicitud HTTP"
+
+#: Flags SDK: Parse failed
+msgid "client.flags.error.parse_failed"
+msgstr "Error al analizar la respuesta del servidor"
+
+#: Flags SDK: Server error
+msgid "client.flags.error.server_error"
+msgstr "El servidor devolvió un error"
+
+#: Flags SDK: Flag not found
+msgid "client.flags.error.flag_not_found"
+msgstr "Bandera no encontrada"
+
+#: Flags SDK: SSE connection failed
+msgid "client.flags.error.sse_connection_failed"
+msgstr "Error en la conexión SSE"
+
+#: Flags SDK: SSE stream error
+msgid "client.flags.error.sse_stream_error"
+msgstr "Error en el flujo SSE"
+
+#: Flags SDK: Offline no cache
+msgid "client.flags.error.offline_no_cache"
+msgstr "El cliente está sin conexión y no hay datos en caché disponibles"
+
+#: Flags SDK: Authentication failed
+msgid "client.flags.error.authentication_failed"
+msgstr "Error de autenticación de clave SDK"
+
+#: Flags SDK: Rate limited
+msgid "client.flags.error.rate_limited"
+msgstr "Límite de solicitudes alcanzado. Reintentar después de segundos"
+
+#: Flags SDK: Initialization timeout
+msgid "client.flags.error.initialization_timeout"
+msgstr "Tiempo de espera de inicialización del cliente agotado"
+
+#: Flags SDK: Client closed
+msgid "client.flags.error.client_closed"
+msgstr "El cliente ha sido cerrado"
+
+#: Flags SDK: Invalid value type
+msgid "client.flags.error.invalid_value_type"
+msgstr "Tipo de valor de bandera inválido"
+
+#: Flags SDK: Initializing
+msgid "client.flags.status.initializing"
+msgstr "Inicializando cliente de banderas..."
+
+#: Flags SDK: Connected
+msgid "client.flags.status.connected"
+msgstr "Cliente de banderas conectado"
+
+#: Flags SDK: Disconnected
+msgid "client.flags.status.disconnected"
+msgstr "Cliente de banderas desconectado"
+
+#: Flags SDK: Reconnecting
+msgid "client.flags.status.reconnecting"
+msgstr "Reconectando al servidor de banderas..."
+
+#: Flags SDK: Using cached values
+msgid "client.flags.status.using_cache"
+msgstr "Usando valores de bandera en caché"
+
+#: Flags SDK: Cache initialized
+msgid "client.flags.status.cache_initialized"
+msgstr "Caché de banderas inicializado con {count} banderas"

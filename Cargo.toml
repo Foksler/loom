@@ -59,6 +59,7 @@ members = [
 	"crates/loom-weaver-wgtunnel",
 	"crates/loom-flags-core",
 	"crates/loom-server-flags",
+	"crates/loom-flags",
 	]
 
 [workspace.package]

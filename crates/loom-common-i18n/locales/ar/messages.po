@@ -1623,3 +1623,91 @@ msgstr "التقييمات في آخر 30 يوم: {count}"
 #: API: Flags - Stale threshold
 msgid "server.api.flags.stale_threshold"
 msgstr "تعتبر الأعلام قديمة بعد {days} يوم بدون تقييم"
+
+# ============================================================================
+# CLI: Feature Flags SDK
+# ============================================================================
+
+#: Flags SDK: Invalid SDK key
+msgid "client.flags.error.invalid_sdk_key"
+msgstr "مفتاح SDK غير صالح أو مفقود"
+
+#: Flags SDK: Invalid base URL
+msgid "client.flags.error.invalid_base_url"
+msgstr "عنوان URL الأساسي غير صالح أو مفقود"
+
+#: Flags SDK: Connection failed
+msgid "client.flags.error.connection_failed"
+msgstr "فشل الاتصال بالخادم"
+
+#: Flags SDK: Request failed
+msgid "client.flags.error.request_failed"
+msgstr "فشل طلب HTTP"
+
+#: Flags SDK: Parse failed
+msgid "client.flags.error.parse_failed"
+msgstr "فشل في تحليل استجابة الخادم"
+
+#: Flags SDK: Server error
+msgid "client.flags.error.server_error"
+msgstr "أرجع الخادم خطأ"
+
+#: Flags SDK: Flag not found
+msgid "client.flags.error.flag_not_found"
+msgstr "لم يتم العثور على العلم"
+
+#: Flags SDK: SSE connection failed
+msgid "client.flags.error.sse_connection_failed"
+msgstr "فشل اتصال SSE"
+
+#: Flags SDK: SSE stream error
+msgid "client.flags.error.sse_stream_error"
+msgstr "خطأ في تدفق SSE"
+
+#: Flags SDK: Offline no cache
+msgid "client.flags.error.offline_no_cache"
+msgstr "العميل غير متصل ولا تتوفر بيانات مخزنة مؤقتاً"
+
+#: Flags SDK: Authentication failed
+msgid "client.flags.error.authentication_failed"
+msgstr "فشلت مصادقة مفتاح SDK"
+
+#: Flags SDK: Rate limited
+msgid "client.flags.error.rate_limited"
+msgstr "تم تجاوز حد الطلبات. أعد المحاولة بعد ثوانٍ"
+
+#: Flags SDK: Initialization timeout
+msgid "client.flags.error.initialization_timeout"
+msgstr "انتهت مهلة تهيئة العميل"
+
+#: Flags SDK: Client closed
+msgid "client.flags.error.client_closed"
+msgstr "تم إغلاق العميل"
+
+#: Flags SDK: Invalid value type
+msgid "client.flags.error.invalid_value_type"
+msgstr "نوع قيمة العلم غير صالح"
+
+#: Flags SDK: Initializing
+msgid "client.flags.status.initializing"
+msgstr "جارٍ تهيئة عميل الأعلام..."
+
+#: Flags SDK: Connected
+msgid "client.flags.status.connected"
+msgstr "تم توصيل عميل الأعلام"
+
+#: Flags SDK: Disconnected
+msgid "client.flags.status.disconnected"
+msgstr "تم قطع اتصال عميل الأعلام"
+
+#: Flags SDK: Reconnecting
+msgid "client.flags.status.reconnecting"
+msgstr "جارٍ إعادة الاتصال بخادم الأعلام..."
+
+#: Flags SDK: Using cached values
+msgid "client.flags.status.using_cache"
+msgstr "استخدام قيم الأعلام المخزنة مؤقتاً"
+
+#: Flags SDK: Cache initialized
+msgid "client.flags.status.cache_initialized"
+msgstr "تم تهيئة ذاكرة التخزين المؤقت للأعلام مع {count} أعلام"

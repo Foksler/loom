@@ -609,7 +609,7 @@ Implementation checklist for the Feature Flags system. See
 
 ---
 
-## Phase 10: Rust SDK
+## ✅ Phase 10: Rust SDK (COMPLETED)
 
 **Goal:** `loom-flags` crate for Rust clients.
 
@@ -619,27 +619,29 @@ Implementation checklist for the Feature Flags system. See
 - Crate structure: `specs/feature-flags-system.md:16-37`
 
 **Tasks:**
-- [ ] Create `crates/loom-flags/` crate
-- [ ] Implement FlagsClient
-  - [ ] Builder pattern for configuration
-  - [ ] SDK key authentication
-  - [ ] Base URL configuration
-- [ ] Initialization
-  - [ ] Fetch all flags on init
-  - [ ] Start SSE connection
-- [ ] Local caching
-  - [ ] In-memory flag cache
-  - [ ] Update from SSE events
-- [ ] Evaluation methods
-  - [ ] `get_bool(key, context, default)`
-  - [ ] `get_string(key, context, default)`
-  - [ ] `get_json(key, context, default)`
-  - [ ] `get_all(context)`
-- [ ] Offline mode
-  - [ ] Use last cached values when disconnected
-- [ ] Use `loom-http` for requests
-  - [ ] Retry logic
-  - [ ] User-Agent header
+- [x] Create `crates/loom-flags/` crate
+- [x] Implement FlagsClient
+  - [x] Builder pattern for configuration
+  - [x] SDK key authentication
+  - [x] Base URL configuration
+- [x] Initialization
+  - [x] Fetch all flags on init
+  - [x] Start SSE connection
+- [x] Local caching
+  - [x] In-memory flag cache
+  - [x] Update from SSE events
+- [x] Evaluation methods
+  - [x] `get_bool(key, context, default)`
+  - [x] `get_string(key, context, default)`
+  - [x] `get_json(key, context, default)`
+  - [x] `get_all(context)`
+- [x] Offline mode
+  - [x] Use last cached values when disconnected
+- [x] Use `loom-http` for requests
+  - [x] Retry logic
+  - [x] User-Agent header
+- [x] i18n translations (EN, ES, AR) for SDK error messages
+- [x] 26 tests (unit tests + property-based tests for caching and evaluation)
 
 ---
 
