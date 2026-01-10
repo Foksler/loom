@@ -3,20 +3,26 @@
 
 //! Feature flags HTTP handlers.
 //!
-//! Implements environment and SDK key management endpoints.
+//! Implements environment, SDK key, and flag management endpoints.
 
 use axum::{
-	extract::{Path, State},
+	extract::{Path, Query, State},
 	http::StatusCode,
 	response::IntoResponse,
 	Json,
 };
 use chrono::Utc;
-use loom_flags_core::{Environment, EnvironmentId, SdkKey, SdkKeyId, SdkKeyType};
+use loom_flags_core::{
+	Environment, EnvironmentId, Flag, FlagConfig, FlagConfigId, FlagId, FlagPrerequisite, SdkKey,
+	SdkKeyId, SdkKeyType, Variant, VariantValue,
+};
 pub use loom_server_api::flags::{
-	CreateEnvironmentRequest, CreateSdkKeyRequest, CreateSdkKeyResponse, EnvironmentResponse,
-	FlagsErrorResponse, FlagsSuccessResponse, ListEnvironmentsResponse, ListSdkKeysResponse,
-	SdkKeyResponse, SdkKeyTypeApi, UpdateEnvironmentRequest,
+	CreateEnvironmentRequest, CreateFlagRequest, CreateSdkKeyRequest, CreateSdkKeyResponse,
+	EnvironmentResponse, FlagConfigResponse, FlagPrerequisiteApi, FlagResponse,
+	FlagsErrorResponse, FlagsSuccessResponse, ListEnvironmentsResponse, ListFlagConfigsResponse,
+	ListFlagsQuery, ListFlagsResponse, ListSdkKeysResponse, SdkKeyResponse, SdkKeyTypeApi,
+	UpdateEnvironmentRequest, UpdateFlagConfigRequest, UpdateFlagRequest, VariantApi,
+	VariantValueApi,
 };
 use loom_server_flags::{hash_sdk_key, FlagsRepository};
 
@@ -916,6 +922,1213 @@ pub async fn revoke_sdk_key(
 		StatusCode::OK,
 		Json(FlagsSuccessResponse {
 			message: t(locale, "server.api.flags.sdk_key_revoked_success").to_string(),
+		}),
+	)
+		.into_response()
+}
+
+// ============================================================================
+// Flag Routes
+// ============================================================================
+
+fn variant_to_api(v: &Variant) -> VariantApi {
+	VariantApi {
+		name: v.name.clone(),
+		value: variant_value_to_api(&v.value),
+		weight: v.weight,
+	}
+}
+
+fn variant_value_to_api(v: &VariantValue) -> VariantValueApi {
+	match v {
+		VariantValue::Boolean(b) => VariantValueApi::Boolean(*b),
+		VariantValue::String(s) => VariantValueApi::String(s.clone()),
+		VariantValue::Json(j) => VariantValueApi::Json(j.clone()),
+	}
+}
+
+fn variant_from_api(v: &VariantApi) -> Variant {
+	Variant {
+		name: v.name.clone(),
+		value: variant_value_from_api(&v.value),
+		weight: v.weight,
+	}
+}
+
+fn variant_value_from_api(v: &VariantValueApi) -> VariantValue {
+	match v {
+		VariantValueApi::Boolean(b) => VariantValue::Boolean(*b),
+		VariantValueApi::String(s) => VariantValue::String(s.clone()),
+		VariantValueApi::Json(j) => VariantValue::Json(j.clone()),
+	}
+}
+
+fn prerequisite_to_api(p: &FlagPrerequisite) -> FlagPrerequisiteApi {
+	FlagPrerequisiteApi {
+		flag_key: p.flag_key.clone(),
+		required_variant: p.required_variant.clone(),
+	}
+}
+
+fn prerequisite_from_api(p: &FlagPrerequisiteApi) -> FlagPrerequisite {
+	FlagPrerequisite {
+		flag_key: p.flag_key.clone(),
+		required_variant: p.required_variant.clone(),
+	}
+}
+
+fn flag_to_response(flag: &Flag) -> FlagResponse {
+	FlagResponse {
+		id: flag.id.to_string(),
+		org_id: flag.org_id.map(|id| id.to_string()),
+		key: flag.key.clone(),
+		name: flag.name.clone(),
+		description: flag.description.clone(),
+		tags: flag.tags.clone(),
+		maintainer_user_id: flag.maintainer_user_id.map(|id| id.to_string()),
+		variants: flag.variants.iter().map(variant_to_api).collect(),
+		default_variant: flag.default_variant.clone(),
+		prerequisites: flag.prerequisites.iter().map(prerequisite_to_api).collect(),
+		is_archived: flag.is_archived(),
+		created_at: flag.created_at,
+		updated_at: flag.updated_at,
+		archived_at: flag.archived_at,
+	}
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/orgs/{org_id}/flags",
+    params(
+        ("org_id" = String, Path, description = "Organization ID"),
+        ("include_archived" = Option<bool>, Query, description = "Include archived flags")
+    ),
+    responses(
+        (status = 200, description = "List of flags", body = ListFlagsResponse),
+        (status = 401, description = "Not authenticated", body = FlagsErrorResponse),
+        (status = 404, description = "Organization not found", body = FlagsErrorResponse)
+    ),
+    tag = "flags"
+)]
+/// List flags for an organization.
+#[tracing::instrument(skip(state), fields(%org_id))]
+pub async fn list_flags(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(org_id): Path<String>,
+	Query(query): Query<ListFlagsQuery>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		FlagsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	// Check org membership
+	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	let flags_org_id = loom_flags_core::OrgId(org_id.into_inner());
+	let flags = match state
+		.flags_repo
+		.list_flags(Some(flags_org_id), query.include_archived)
+		.await
+	{
+		Ok(flags) => flags,
+		Err(e) => {
+			tracing::error!(error = %e, ?org_id, "Failed to list flags");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	let flag_responses: Vec<FlagResponse> = flags.iter().map(flag_to_response).collect();
+
+	(StatusCode::OK, Json(ListFlagsResponse { flags: flag_responses })).into_response()
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/orgs/{org_id}/flags",
+    params(
+        ("org_id" = String, Path, description = "Organization ID")
+    ),
+    request_body = CreateFlagRequest,
+    responses(
+        (status = 201, description = "Flag created", body = FlagResponse),
+        (status = 400, description = "Invalid request", body = FlagsErrorResponse),
+        (status = 401, description = "Not authenticated", body = FlagsErrorResponse),
+        (status = 409, description = "Flag key already exists", body = FlagsErrorResponse)
+    ),
+    tag = "flags"
+)]
+/// Create a new flag.
+#[tracing::instrument(skip(state, payload), fields(%org_id, key = %payload.key))]
+pub async fn create_flag(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(org_id): Path<String>,
+	Json(payload): Json<CreateFlagRequest>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		FlagsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	// Check org membership
+	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	// Validate flag key
+	if !Flag::validate_key(&payload.key) {
+		return bad_request::<FlagsErrorResponse>(
+			"invalid_key",
+			t(locale, "server.api.flags.invalid_flag_key"),
+		)
+		.into_response();
+	}
+
+	// Validate variants
+	if payload.variants.is_empty() {
+		return bad_request::<FlagsErrorResponse>(
+			"no_variants",
+			"At least one variant is required",
+		)
+		.into_response();
+	}
+
+	// Check for duplicate variant names
+	let mut variant_names: Vec<&str> = payload.variants.iter().map(|v| v.name.as_str()).collect();
+	variant_names.sort();
+	for i in 1..variant_names.len() {
+		if variant_names[i] == variant_names[i - 1] {
+			return bad_request::<FlagsErrorResponse>(
+				"duplicate_variant",
+				format!("Duplicate variant name: {}", variant_names[i]),
+			)
+			.into_response();
+		}
+	}
+
+	// Validate default variant exists
+	if !payload.variants.iter().any(|v| v.name == payload.default_variant) {
+		return bad_request::<FlagsErrorResponse>(
+			"default_variant_missing",
+			t(locale, "server.api.flags.default_variant_missing"),
+		)
+		.into_response();
+	}
+
+	let flags_org_id = loom_flags_core::OrgId(org_id.into_inner());
+
+	// Check for duplicate key
+	if let Ok(Some(_)) = state
+		.flags_repo
+		.get_flag_by_key(Some(flags_org_id), &payload.key)
+		.await
+	{
+		return conflict::<FlagsErrorResponse>(
+			"duplicate_key",
+			t(locale, "server.api.flags.duplicate_flag_key"),
+		)
+		.into_response();
+	}
+
+	// Parse maintainer user ID if provided
+	let maintainer_user_id = match &payload.maintainer_user_id {
+		Some(id) => match id.parse::<uuid::Uuid>() {
+			Ok(uuid) => Some(loom_flags_core::UserId(uuid)),
+			Err(_) => {
+				return bad_request::<FlagsErrorResponse>(
+					"invalid_maintainer_id",
+					"Invalid maintainer user ID format",
+				)
+				.into_response();
+			}
+		},
+		None => None,
+	};
+
+	let now = Utc::now();
+	let flag = Flag {
+		id: FlagId::new(),
+		org_id: Some(flags_org_id),
+		key: payload.key,
+		name: payload.name,
+		description: payload.description,
+		tags: payload.tags,
+		maintainer_user_id,
+		variants: payload.variants.iter().map(variant_from_api).collect(),
+		default_variant: payload.default_variant,
+		prerequisites: payload.prerequisites.iter().map(prerequisite_from_api).collect(),
+		created_at: now,
+		updated_at: now,
+		archived_at: None,
+	};
+
+	if let Err(e) = state.flags_repo.create_flag(&flag).await {
+		tracing::error!(error = %e, flag_key = %flag.key, "Failed to create flag");
+		return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+			.into_response();
+	}
+
+	// Auto-create FlagConfig for each environment
+	let environments = match state.flags_repo.list_environments(flags_org_id).await {
+		Ok(envs) => envs,
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to list environments for flag config creation");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	for env in environments {
+		let config = FlagConfig {
+			id: FlagConfigId::new(),
+			flag_id: flag.id,
+			environment_id: env.id,
+			enabled: false,
+			strategy_id: None,
+			created_at: now,
+			updated_at: now,
+		};
+
+		if let Err(e) = state.flags_repo.create_flag_config(&config).await {
+			tracing::error!(error = %e, flag_id = %flag.id, env_id = %env.id, "Failed to create flag config");
+		}
+	}
+
+	tracing::info!(flag_id = %flag.id, flag_key = %flag.key, "Flag created");
+
+	(StatusCode::CREATED, Json(flag_to_response(&flag))).into_response()
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/orgs/{org_id}/flags/{flag_id}",
+    params(
+        ("org_id" = String, Path, description = "Organization ID"),
+        ("flag_id" = String, Path, description = "Flag ID")
+    ),
+    responses(
+        (status = 200, description = "Flag details", body = FlagResponse),
+        (status = 401, description = "Not authenticated", body = FlagsErrorResponse),
+        (status = 404, description = "Flag not found", body = FlagsErrorResponse)
+    ),
+    tag = "flags"
+)]
+/// Get flag details.
+#[tracing::instrument(skip(state), fields(%org_id, %flag_id))]
+pub async fn get_flag(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path((org_id, flag_id)): Path<(String, String)>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		FlagsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	let flag_id: FlagId = match flag_id.parse() {
+		Ok(id) => id,
+		Err(_) => {
+			return bad_request::<FlagsErrorResponse>(
+				"invalid_id",
+				t(locale, "server.api.flags.flag_not_found"),
+			)
+			.into_response();
+		}
+	};
+
+	// Check org membership
+	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	let flag = match state.flags_repo.get_flag_by_id(flag_id).await {
+		Ok(Some(flag)) => flag,
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %flag_id, "Failed to get flag");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	// Verify flag belongs to the org
+	match flag.org_id {
+		Some(flag_org_id) if flag_org_id.0 == org_id.into_inner() => {}
+		_ => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+				.into_response();
+		}
+	}
+
+	(StatusCode::OK, Json(flag_to_response(&flag))).into_response()
+}
+
+#[utoipa::path(
+    patch,
+    path = "/api/orgs/{org_id}/flags/{flag_id}",
+    params(
+        ("org_id" = String, Path, description = "Organization ID"),
+        ("flag_id" = String, Path, description = "Flag ID")
+    ),
+    request_body = UpdateFlagRequest,
+    responses(
+        (status = 200, description = "Flag updated", body = FlagResponse),
+        (status = 400, description = "Invalid request", body = FlagsErrorResponse),
+        (status = 401, description = "Not authenticated", body = FlagsErrorResponse),
+        (status = 404, description = "Flag not found", body = FlagsErrorResponse)
+    ),
+    tag = "flags"
+)]
+/// Update a flag.
+#[tracing::instrument(skip(state, payload), fields(%org_id, %flag_id))]
+pub async fn update_flag(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path((org_id, flag_id)): Path<(String, String)>,
+	Json(payload): Json<UpdateFlagRequest>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		FlagsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	let flag_id: FlagId = match flag_id.parse() {
+		Ok(id) => id,
+		Err(_) => {
+			return bad_request::<FlagsErrorResponse>(
+				"invalid_id",
+				t(locale, "server.api.flags.flag_not_found"),
+			)
+			.into_response();
+		}
+	};
+
+	// Check org membership
+	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	let mut flag = match state.flags_repo.get_flag_by_id(flag_id).await {
+		Ok(Some(flag)) => flag,
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %flag_id, "Failed to get flag");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	// Verify flag belongs to the org
+	match flag.org_id {
+		Some(flag_org_id) if flag_org_id.0 == org_id.into_inner() => {}
+		_ => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+				.into_response();
+		}
+	}
+
+	// Check if flag is archived
+	if flag.is_archived() {
+		return bad_request::<FlagsErrorResponse>(
+			"flag_archived",
+			"Cannot update an archived flag. Restore it first.",
+		)
+		.into_response();
+	}
+
+	// Update name if provided
+	if let Some(ref name) = payload.name {
+		flag.name = name.clone();
+	}
+
+	// Update description if provided
+	if let Some(ref description) = payload.description {
+		flag.description = Some(description.clone());
+	}
+
+	// Update tags if provided
+	if let Some(ref tags) = payload.tags {
+		flag.tags = tags.clone();
+	}
+
+	// Update maintainer if provided
+	if let Some(ref maintainer_id) = payload.maintainer_user_id {
+		match maintainer_id.parse::<uuid::Uuid>() {
+			Ok(uuid) => flag.maintainer_user_id = Some(loom_flags_core::UserId(uuid)),
+			Err(_) => {
+				return bad_request::<FlagsErrorResponse>(
+					"invalid_maintainer_id",
+					"Invalid maintainer user ID format",
+				)
+				.into_response();
+			}
+		}
+	}
+
+	// Update variants if provided
+	if let Some(ref variants) = payload.variants {
+		if variants.is_empty() {
+			return bad_request::<FlagsErrorResponse>(
+				"no_variants",
+				"At least one variant is required",
+			)
+			.into_response();
+		}
+
+		// Check for duplicate variant names
+		let mut variant_names: Vec<&str> = variants.iter().map(|v| v.name.as_str()).collect();
+		variant_names.sort();
+		for i in 1..variant_names.len() {
+			if variant_names[i] == variant_names[i - 1] {
+				return bad_request::<FlagsErrorResponse>(
+					"duplicate_variant",
+					format!("Duplicate variant name: {}", variant_names[i]),
+				)
+				.into_response();
+			}
+		}
+
+		flag.variants = variants.iter().map(variant_from_api).collect();
+	}
+
+	// Update default_variant if provided
+	if let Some(ref default_variant) = payload.default_variant {
+		flag.default_variant = default_variant.clone();
+	}
+
+	// Validate default variant exists in variants
+	if !flag.variants.iter().any(|v| v.name == flag.default_variant) {
+		return bad_request::<FlagsErrorResponse>(
+			"default_variant_missing",
+			t(locale, "server.api.flags.default_variant_missing"),
+		)
+		.into_response();
+	}
+
+	// Update prerequisites if provided
+	if let Some(ref prerequisites) = payload.prerequisites {
+		flag.prerequisites = prerequisites.iter().map(prerequisite_from_api).collect();
+	}
+
+	flag.updated_at = Utc::now();
+
+	if let Err(e) = state.flags_repo.update_flag(&flag).await {
+		tracing::error!(error = %e, %flag_id, "Failed to update flag");
+		return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+			.into_response();
+	}
+
+	tracing::info!(%flag_id, "Flag updated");
+
+	(StatusCode::OK, Json(flag_to_response(&flag))).into_response()
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/orgs/{org_id}/flags/{flag_id}/archive",
+    params(
+        ("org_id" = String, Path, description = "Organization ID"),
+        ("flag_id" = String, Path, description = "Flag ID")
+    ),
+    responses(
+        (status = 200, description = "Flag archived", body = FlagsSuccessResponse),
+        (status = 401, description = "Not authenticated", body = FlagsErrorResponse),
+        (status = 404, description = "Flag not found", body = FlagsErrorResponse)
+    ),
+    tag = "flags"
+)]
+/// Archive a flag.
+#[tracing::instrument(skip(state), fields(%org_id, %flag_id))]
+pub async fn archive_flag(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path((org_id, flag_id)): Path<(String, String)>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		FlagsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	let flag_id: FlagId = match flag_id.parse() {
+		Ok(id) => id,
+		Err(_) => {
+			return bad_request::<FlagsErrorResponse>(
+				"invalid_id",
+				t(locale, "server.api.flags.flag_not_found"),
+			)
+			.into_response();
+		}
+	};
+
+	// Check org membership
+	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	// Verify flag exists and belongs to org
+	let flag = match state.flags_repo.get_flag_by_id(flag_id).await {
+		Ok(Some(flag)) => flag,
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %flag_id, "Failed to get flag");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	match flag.org_id {
+		Some(flag_org_id) if flag_org_id.0 == org_id.into_inner() => {}
+		_ => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+				.into_response();
+		}
+	}
+
+	if flag.is_archived() {
+		return bad_request::<FlagsErrorResponse>(
+			"already_archived",
+			"Flag is already archived",
+		)
+		.into_response();
+	}
+
+	match state.flags_repo.archive_flag(flag_id).await {
+		Ok(true) => {
+			tracing::info!(%flag_id, "Flag archived");
+			(
+				StatusCode::OK,
+				Json(FlagsSuccessResponse {
+					message: t(locale, "server.api.flags.flag_archived").to_string(),
+				}),
+			)
+				.into_response()
+		}
+		Ok(false) => {
+			not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+				.into_response()
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %flag_id, "Failed to archive flag");
+			internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response()
+		}
+	}
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/orgs/{org_id}/flags/{flag_id}/restore",
+    params(
+        ("org_id" = String, Path, description = "Organization ID"),
+        ("flag_id" = String, Path, description = "Flag ID")
+    ),
+    responses(
+        (status = 200, description = "Flag restored", body = FlagsSuccessResponse),
+        (status = 401, description = "Not authenticated", body = FlagsErrorResponse),
+        (status = 404, description = "Flag not found", body = FlagsErrorResponse)
+    ),
+    tag = "flags"
+)]
+/// Restore an archived flag.
+#[tracing::instrument(skip(state), fields(%org_id, %flag_id))]
+pub async fn restore_flag(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path((org_id, flag_id)): Path<(String, String)>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		FlagsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	let flag_id: FlagId = match flag_id.parse() {
+		Ok(id) => id,
+		Err(_) => {
+			return bad_request::<FlagsErrorResponse>(
+				"invalid_id",
+				t(locale, "server.api.flags.flag_not_found"),
+			)
+			.into_response();
+		}
+	};
+
+	// Check org membership
+	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	// Verify flag exists and belongs to org
+	let flag = match state.flags_repo.get_flag_by_id(flag_id).await {
+		Ok(Some(flag)) => flag,
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %flag_id, "Failed to get flag");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	match flag.org_id {
+		Some(flag_org_id) if flag_org_id.0 == org_id.into_inner() => {}
+		_ => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+				.into_response();
+		}
+	}
+
+	if !flag.is_archived() {
+		return bad_request::<FlagsErrorResponse>("not_archived", "Flag is not archived")
+			.into_response();
+	}
+
+	match state.flags_repo.restore_flag(flag_id).await {
+		Ok(true) => {
+			tracing::info!(%flag_id, "Flag restored");
+			(
+				StatusCode::OK,
+				Json(FlagsSuccessResponse {
+					message: t(locale, "server.api.flags.flag_restored").to_string(),
+				}),
+			)
+				.into_response()
+		}
+		Ok(false) => {
+			not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+				.into_response()
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %flag_id, "Failed to restore flag");
+			internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response()
+		}
+	}
+}
+
+// ============================================================================
+// Flag Config Routes
+// ============================================================================
+
+#[utoipa::path(
+    get,
+    path = "/api/orgs/{org_id}/flags/{flag_id}/configs",
+    params(
+        ("org_id" = String, Path, description = "Organization ID"),
+        ("flag_id" = String, Path, description = "Flag ID")
+    ),
+    responses(
+        (status = 200, description = "List of flag configs", body = ListFlagConfigsResponse),
+        (status = 401, description = "Not authenticated", body = FlagsErrorResponse),
+        (status = 404, description = "Flag not found", body = FlagsErrorResponse)
+    ),
+    tag = "flags"
+)]
+/// List flag configs for all environments.
+#[tracing::instrument(skip(state), fields(%org_id, %flag_id))]
+pub async fn list_flag_configs(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path((org_id, flag_id)): Path<(String, String)>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		FlagsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	let flag_id: FlagId = match flag_id.parse() {
+		Ok(id) => id,
+		Err(_) => {
+			return bad_request::<FlagsErrorResponse>(
+				"invalid_id",
+				t(locale, "server.api.flags.flag_not_found"),
+			)
+			.into_response();
+		}
+	};
+
+	// Check org membership
+	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	// Verify flag exists and belongs to org
+	let flag = match state.flags_repo.get_flag_by_id(flag_id).await {
+		Ok(Some(flag)) => flag,
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %flag_id, "Failed to get flag");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	let flags_org_id = loom_flags_core::OrgId(org_id.into_inner());
+	match flag.org_id {
+		Some(flag_org_id) if flag_org_id == flags_org_id => {}
+		_ => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+				.into_response();
+		}
+	}
+
+	// Get configs
+	let configs = match state.flags_repo.list_flag_configs(flag_id).await {
+		Ok(configs) => configs,
+		Err(e) => {
+			tracing::error!(error = %e, %flag_id, "Failed to list flag configs");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	// Get environments for names
+	let environments = match state.flags_repo.list_environments(flags_org_id).await {
+		Ok(envs) => envs,
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to list environments");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	let env_names: std::collections::HashMap<_, _> =
+		environments.iter().map(|e| (e.id, e.name.clone())).collect();
+
+	let config_responses: Vec<FlagConfigResponse> = configs
+		.iter()
+		.map(|c| FlagConfigResponse {
+			id: c.id.to_string(),
+			flag_id: c.flag_id.to_string(),
+			environment_id: c.environment_id.to_string(),
+			environment_name: env_names
+				.get(&c.environment_id)
+				.cloned()
+				.unwrap_or_default(),
+			enabled: c.enabled,
+			strategy_id: c.strategy_id.map(|s| s.to_string()),
+			created_at: c.created_at,
+			updated_at: c.updated_at,
+		})
+		.collect();
+
+	(StatusCode::OK, Json(ListFlagConfigsResponse { configs: config_responses })).into_response()
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/orgs/{org_id}/flags/{flag_id}/configs/{env_id}",
+    params(
+        ("org_id" = String, Path, description = "Organization ID"),
+        ("flag_id" = String, Path, description = "Flag ID"),
+        ("env_id" = String, Path, description = "Environment ID")
+    ),
+    responses(
+        (status = 200, description = "Flag config details", body = FlagConfigResponse),
+        (status = 401, description = "Not authenticated", body = FlagsErrorResponse),
+        (status = 404, description = "Flag config not found", body = FlagsErrorResponse)
+    ),
+    tag = "flags"
+)]
+/// Get flag config for a specific environment.
+#[tracing::instrument(skip(state), fields(%org_id, %flag_id, %env_id))]
+pub async fn get_flag_config(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path((org_id, flag_id, env_id)): Path<(String, String, String)>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		FlagsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	let flag_id: FlagId = match flag_id.parse() {
+		Ok(id) => id,
+		Err(_) => {
+			return bad_request::<FlagsErrorResponse>(
+				"invalid_id",
+				t(locale, "server.api.flags.flag_not_found"),
+			)
+			.into_response();
+		}
+	};
+
+	let env_id: EnvironmentId = match env_id.parse() {
+		Ok(id) => id,
+		Err(_) => {
+			return bad_request::<FlagsErrorResponse>(
+				"invalid_id",
+				t(locale, "server.api.flags.environment_not_found"),
+			)
+			.into_response();
+		}
+	};
+
+	// Check org membership
+	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	let flags_org_id = loom_flags_core::OrgId(org_id.into_inner());
+
+	// Verify flag exists and belongs to org
+	let flag = match state.flags_repo.get_flag_by_id(flag_id).await {
+		Ok(Some(flag)) => flag,
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %flag_id, "Failed to get flag");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	match flag.org_id {
+		Some(flag_org_id) if flag_org_id == flags_org_id => {}
+		_ => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+				.into_response();
+		}
+	}
+
+	// Verify environment exists and belongs to org
+	let env = match state.flags_repo.get_environment_by_id(env_id).await {
+		Ok(Some(env)) => env,
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.environment_not_found"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %env_id, "Failed to get environment");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	if env.org_id != flags_org_id {
+		return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.environment_not_found"))
+			.into_response();
+	}
+
+	// Get config
+	let config = match state.flags_repo.get_flag_config(flag_id, env_id).await {
+		Ok(Some(config)) => config,
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>("Flag config not found for this environment")
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %flag_id, %env_id, "Failed to get flag config");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	(
+		StatusCode::OK,
+		Json(FlagConfigResponse {
+			id: config.id.to_string(),
+			flag_id: config.flag_id.to_string(),
+			environment_id: config.environment_id.to_string(),
+			environment_name: env.name,
+			enabled: config.enabled,
+			strategy_id: config.strategy_id.map(|s| s.to_string()),
+			created_at: config.created_at,
+			updated_at: config.updated_at,
+		}),
+	)
+		.into_response()
+}
+
+#[utoipa::path(
+    patch,
+    path = "/api/orgs/{org_id}/flags/{flag_id}/configs/{env_id}",
+    params(
+        ("org_id" = String, Path, description = "Organization ID"),
+        ("flag_id" = String, Path, description = "Flag ID"),
+        ("env_id" = String, Path, description = "Environment ID")
+    ),
+    request_body = UpdateFlagConfigRequest,
+    responses(
+        (status = 200, description = "Flag config updated", body = FlagConfigResponse),
+        (status = 400, description = "Invalid request", body = FlagsErrorResponse),
+        (status = 401, description = "Not authenticated", body = FlagsErrorResponse),
+        (status = 404, description = "Flag config not found", body = FlagsErrorResponse)
+    ),
+    tag = "flags"
+)]
+/// Update flag config for a specific environment.
+#[tracing::instrument(skip(state, payload), fields(%org_id, %flag_id, %env_id))]
+pub async fn update_flag_config(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path((org_id, flag_id, env_id)): Path<(String, String, String)>,
+	Json(payload): Json<UpdateFlagConfigRequest>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		FlagsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	let flag_id: FlagId = match flag_id.parse() {
+		Ok(id) => id,
+		Err(_) => {
+			return bad_request::<FlagsErrorResponse>(
+				"invalid_id",
+				t(locale, "server.api.flags.flag_not_found"),
+			)
+			.into_response();
+		}
+	};
+
+	let env_id: EnvironmentId = match env_id.parse() {
+		Ok(id) => id,
+		Err(_) => {
+			return bad_request::<FlagsErrorResponse>(
+				"invalid_id",
+				t(locale, "server.api.flags.environment_not_found"),
+			)
+			.into_response();
+		}
+	};
+
+	// Check org membership
+	match state.org_repo.get_membership(&org_id, &current_user.user.id).await {
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	let flags_org_id = loom_flags_core::OrgId(org_id.into_inner());
+
+	// Verify flag exists and belongs to org
+	let flag = match state.flags_repo.get_flag_by_id(flag_id).await {
+		Ok(Some(flag)) => flag,
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %flag_id, "Failed to get flag");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	match flag.org_id {
+		Some(flag_org_id) if flag_org_id == flags_org_id => {}
+		_ => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.flag_not_found"))
+				.into_response();
+		}
+	}
+
+	// Verify environment exists and belongs to org
+	let env = match state.flags_repo.get_environment_by_id(env_id).await {
+		Ok(Some(env)) => env,
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.environment_not_found"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %env_id, "Failed to get environment");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	if env.org_id != flags_org_id {
+		return not_found::<FlagsErrorResponse>(t(locale, "server.api.flags.environment_not_found"))
+			.into_response();
+	}
+
+	// Get config
+	let mut config = match state.flags_repo.get_flag_config(flag_id, env_id).await {
+		Ok(Some(config)) => config,
+		Ok(None) => {
+			return not_found::<FlagsErrorResponse>("Flag config not found for this environment")
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %flag_id, %env_id, "Failed to get flag config");
+			return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	};
+
+	// Update enabled if provided
+	if let Some(enabled) = payload.enabled {
+		config.enabled = enabled;
+	}
+
+	// Update strategy_id if provided
+	if let Some(strategy_id_opt) = payload.strategy_id {
+		match strategy_id_opt {
+			Some(strategy_id_str) => {
+				let strategy_id: loom_flags_core::StrategyId = match strategy_id_str.parse() {
+					Ok(id) => id,
+					Err(_) => {
+						return bad_request::<FlagsErrorResponse>(
+							"invalid_strategy_id",
+							t(locale, "server.api.flags.strategy_not_found"),
+						)
+						.into_response();
+					}
+				};
+
+				// Verify strategy exists
+				match state.flags_repo.get_strategy_by_id(strategy_id).await {
+					Ok(Some(_)) => config.strategy_id = Some(strategy_id),
+					Ok(None) => {
+						return not_found::<FlagsErrorResponse>(t(
+							locale,
+							"server.api.flags.strategy_not_found",
+						))
+						.into_response();
+					}
+					Err(e) => {
+						tracing::error!(error = %e, %strategy_id, "Failed to get strategy");
+						return internal_error::<FlagsErrorResponse>(t(
+							locale,
+							"server.api.error.internal",
+						))
+						.into_response();
+					}
+				}
+			}
+			None => config.strategy_id = None,
+		}
+	}
+
+	config.updated_at = Utc::now();
+
+	if let Err(e) = state.flags_repo.update_flag_config(&config).await {
+		tracing::error!(error = %e, config_id = %config.id, "Failed to update flag config");
+		return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
+			.into_response();
+	}
+
+	tracing::info!(config_id = %config.id, "Flag config updated");
+
+	(
+		StatusCode::OK,
+		Json(FlagConfigResponse {
+			id: config.id.to_string(),
+			flag_id: config.flag_id.to_string(),
+			environment_id: config.environment_id.to_string(),
+			environment_name: env.name,
+			enabled: config.enabled,
+			strategy_id: config.strategy_id.map(|s| s.to_string()),
+			created_at: config.created_at,
+			updated_at: config.updated_at,
 		}),
 	)
 		.into_response()

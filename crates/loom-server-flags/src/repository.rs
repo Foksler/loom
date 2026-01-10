@@ -554,7 +554,7 @@ impl FlagsRepository for SqliteFlagsRepository {
 		let schedule_json = strategy
 			.schedule
 			.as_ref()
-			.map(|s| serde_json::to_string(s))
+			.map(serde_json::to_string)
 			.transpose()?;
 		let percentage_key_json = serde_json::to_string(&strategy.percentage_key)?;
 
@@ -639,7 +639,7 @@ impl FlagsRepository for SqliteFlagsRepository {
 		let schedule_json = strategy
 			.schedule
 			.as_ref()
-			.map(|s| serde_json::to_string(s))
+			.map(serde_json::to_string)
 			.transpose()?;
 		let percentage_key_json = serde_json::to_string(&strategy.percentage_key)?;
 

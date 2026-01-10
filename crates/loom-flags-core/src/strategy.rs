@@ -199,19 +199,14 @@ impl GeoOperator {
 }
 
 /// The key used for percentage-based distribution.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PercentageKey {
+	#[default]
 	UserId,
 	OrgId,
 	SessionId,
 	Custom(String),
-}
-
-impl Default for PercentageKey {
-	fn default() -> Self {
-		PercentageKey::UserId
-	}
 }
 
 impl PercentageKey {

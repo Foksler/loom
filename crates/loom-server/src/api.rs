@@ -960,6 +960,44 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/orgs/{org_id}/flags/sdk-keys/{key_id}",
 			delete(routes::flags::revoke_sdk_key),
 		)
+		// Flag management routes
+		.route(
+			"/api/orgs/{org_id}/flags",
+			get(routes::flags::list_flags),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags",
+			post(routes::flags::create_flag),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/{flag_id}",
+			get(routes::flags::get_flag),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/{flag_id}",
+			patch(routes::flags::update_flag),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/{flag_id}/archive",
+			post(routes::flags::archive_flag),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/{flag_id}/restore",
+			post(routes::flags::restore_flag),
+		)
+		// Flag config routes
+		.route(
+			"/api/orgs/{org_id}/flags/{flag_id}/configs",
+			get(routes::flags::list_flag_configs),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/{flag_id}/configs/{env_id}",
+			get(routes::flags::get_flag_config),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/{flag_id}/configs/{env_id}",
+			patch(routes::flags::update_flag_config),
+		)
 		// Invitation routes (authenticated)
 		.route(
 			"/api/orgs/{org_id}/invitations",

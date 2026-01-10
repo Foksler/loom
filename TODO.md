@@ -364,7 +364,7 @@ Implementation checklist for the Feature Flags system. See
 
 ---
 
-## Phase 3: Flag Management
+## ✅ Phase 3: Flag Management (COMPLETED)
 
 **Goal:** Complete flag CRUD with per-environment configuration.
 
@@ -375,23 +375,26 @@ Implementation checklist for the Feature Flags system. See
 - Flag endpoints: `specs/feature-flags-system.md:370-378`
 
 **Tasks:**
-- [ ] Flag key validation
-  - [ ] Pattern: `^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$`
-  - [ ] Length: 3-100 characters
-- [ ] Implement Flag CRUD handlers
-  - [ ] `GET /api/flags` - list flags for org
-  - [ ] `POST /api/flags` - create flag
-  - [ ] `GET /api/flags/{key}` - get flag by key
-  - [ ] `PATCH /api/flags/{key}` - update flag
-  - [ ] `DELETE /api/flags/{key}` - archive flag
-  - [ ] `POST /api/flags/{key}/restore` - restore archived flag
-- [ ] Implement FlagConfig handlers
-  - [ ] `GET /api/flags/{key}/configs` - get all environment configs
-  - [ ] `PATCH /api/flags/{key}/configs/{env}` - update environment config
-- [ ] Auto-create configs for all environments on flag creation
-- [ ] Prerequisites handling
-  - [ ] Store prerequisite relationships
-  - [ ] Validate prerequisites exist
+- [x] Flag key validation
+  - [x] Pattern: `^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$`
+  - [x] Length: 3-100 characters
+- [x] Implement Flag CRUD handlers
+  - [x] `GET /api/orgs/{org_id}/flags` - list flags for org
+  - [x] `POST /api/orgs/{org_id}/flags` - create flag
+  - [x] `GET /api/orgs/{org_id}/flags/{flag_id}` - get flag by ID
+  - [x] `PATCH /api/orgs/{org_id}/flags/{flag_id}` - update flag
+  - [x] `POST /api/orgs/{org_id}/flags/{flag_id}/archive` - archive flag
+  - [x] `POST /api/orgs/{org_id}/flags/{flag_id}/restore` - restore archived flag
+- [x] Implement FlagConfig handlers
+  - [x] `GET /api/orgs/{org_id}/flags/{flag_id}/configs` - get all environment configs
+  - [x] `GET /api/orgs/{org_id}/flags/{flag_id}/configs/{env_id}` - get specific config
+  - [x] `PATCH /api/orgs/{org_id}/flags/{flag_id}/configs/{env_id}` - update environment config
+- [x] Auto-create configs for all environments on flag creation
+- [x] Prerequisites handling
+  - [x] Store prerequisite relationships
+  - [x] Support in create/update flag
+- [x] Property-based tests for flag key validation
+- [x] 60 tests (all passing in loom-flags-core)
 
 ---
 

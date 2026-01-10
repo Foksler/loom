@@ -131,6 +131,192 @@ pub struct ListSdkKeysResponse {
 }
 
 // ============================================================================
+// Flag Types
+// ============================================================================
+
+/// Variant value type in API requests/responses.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+#[serde(tag = "type", content = "value")]
+pub enum VariantValueApi {
+	/// Boolean value (true/false).
+	Boolean(bool),
+	/// String value.
+	String(String),
+	/// JSON value.
+	Json(serde_json::Value),
+}
+
+/// A variant of a feature flag in API requests/responses.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct VariantApi {
+	/// Variant name (e.g., "control", "treatment_a").
+	pub name: String,
+	/// The value of this variant.
+	pub value: VariantValueApi,
+	/// Weight for percentage-based distribution.
+	pub weight: u32,
+}
+
+/// A prerequisite for a feature flag.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct FlagPrerequisiteApi {
+	/// Key of the prerequisite flag.
+	pub flag_key: String,
+	/// Required variant of the prerequisite flag.
+	pub required_variant: String,
+}
+
+/// A feature flag in API responses.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct FlagResponse {
+	/// Unique identifier for the flag.
+	pub id: String,
+	/// Organization ID (None for platform flags).
+	pub org_id: Option<String>,
+	/// Structured key (e.g., "checkout.new_flow").
+	pub key: String,
+	/// Human-readable name.
+	pub name: String,
+	/// Optional description.
+	pub description: Option<String>,
+	/// Tags for categorization.
+	pub tags: Vec<String>,
+	/// User ID of the maintainer.
+	pub maintainer_user_id: Option<String>,
+	/// Available variants.
+	pub variants: Vec<VariantApi>,
+	/// Default variant name.
+	pub default_variant: String,
+	/// Prerequisites for this flag.
+	pub prerequisites: Vec<FlagPrerequisiteApi>,
+	/// Whether the flag is archived.
+	pub is_archived: bool,
+	/// When the flag was created.
+	pub created_at: DateTime<Utc>,
+	/// When the flag was last updated.
+	pub updated_at: DateTime<Utc>,
+	/// When the flag was archived (if archived).
+	pub archived_at: Option<DateTime<Utc>>,
+}
+
+/// Request to create a new flag.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct CreateFlagRequest {
+	/// Structured key (e.g., "checkout.new_flow"). Must be lowercase alphanumeric
+	/// with dots and underscores, 3-100 characters.
+	pub key: String,
+	/// Human-readable name.
+	pub name: String,
+	/// Optional description.
+	pub description: Option<String>,
+	/// Tags for categorization.
+	#[serde(default)]
+	pub tags: Vec<String>,
+	/// User ID of the maintainer.
+	pub maintainer_user_id: Option<String>,
+	/// Available variants.
+	pub variants: Vec<VariantApi>,
+	/// Default variant name (must exist in variants).
+	pub default_variant: String,
+	/// Prerequisites for this flag.
+	#[serde(default)]
+	pub prerequisites: Vec<FlagPrerequisiteApi>,
+}
+
+/// Request to update a flag.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct UpdateFlagRequest {
+	/// Human-readable name.
+	pub name: Option<String>,
+	/// Description.
+	pub description: Option<String>,
+	/// Tags for categorization.
+	pub tags: Option<Vec<String>>,
+	/// User ID of the maintainer.
+	pub maintainer_user_id: Option<String>,
+	/// Available variants.
+	pub variants: Option<Vec<VariantApi>>,
+	/// Default variant name (must exist in variants).
+	pub default_variant: Option<String>,
+	/// Prerequisites for this flag.
+	pub prerequisites: Option<Vec<FlagPrerequisiteApi>>,
+}
+
+/// Response for listing flags.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct ListFlagsResponse {
+	pub flags: Vec<FlagResponse>,
+}
+
+/// Query parameters for listing flags.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct ListFlagsQuery {
+	/// Include archived flags (default: false).
+	#[serde(default)]
+	pub include_archived: bool,
+}
+
+// ============================================================================
+// Flag Config Types
+// ============================================================================
+
+/// Per-environment configuration for a flag.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct FlagConfigResponse {
+	/// Unique identifier for the config.
+	pub id: String,
+	/// Flag ID this config belongs to.
+	pub flag_id: String,
+	/// Environment ID.
+	pub environment_id: String,
+	/// Environment name for display.
+	pub environment_name: String,
+	/// Whether the flag is enabled in this environment.
+	pub enabled: bool,
+	/// Strategy ID (optional).
+	pub strategy_id: Option<String>,
+	/// When the config was created.
+	pub created_at: DateTime<Utc>,
+	/// When the config was last updated.
+	pub updated_at: DateTime<Utc>,
+}
+
+/// Request to update a flag config.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct UpdateFlagConfigRequest {
+	/// Whether the flag is enabled in this environment.
+	pub enabled: Option<bool>,
+	/// Strategy ID (set to null to clear).
+	#[serde(default, deserialize_with = "deserialize_optional_nullable")]
+	pub strategy_id: Option<Option<String>>,
+}
+
+/// Response for listing flag configs.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct ListFlagConfigsResponse {
+	pub configs: Vec<FlagConfigResponse>,
+}
+
+fn deserialize_optional_nullable<'de, D>(deserializer: D) -> Result<Option<Option<String>>, D::Error>
+where
+	D: serde::Deserializer<'de>,
+{
+	let opt = Option::<Option<String>>::deserialize(deserializer)?;
+	Ok(opt)
+}
+
+// ============================================================================
 // Common Response Types
 // ============================================================================
 

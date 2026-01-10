@@ -305,6 +305,7 @@ impl std::str::FromStr for EnvironmentId {
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use proptest::prelude::*;
 
 	#[test]
 	fn test_validate_flag_key_valid() {
@@ -365,5 +366,108 @@ mod tests {
 		assert_eq!(json_val.as_bool(), None);
 		assert_eq!(json_val.as_str(), None);
 		assert!(json_val.as_json().is_some());
+	}
+
+	// Property-based test strategies
+
+	fn valid_segment() -> impl Strategy<Value = String> {
+		prop::collection::vec(
+			prop_oneof![
+				prop::char::range('a', 'z'),
+				prop::char::range('0', '9'),
+				Just('_')
+			],
+			1..10,
+		)
+		.prop_filter_map("must start with letter", |chars| {
+			if chars.first().map(|c| c.is_ascii_lowercase()).unwrap_or(false) {
+				Some(chars.into_iter().collect())
+			} else {
+				None
+			}
+		})
+	}
+
+	fn valid_flag_key() -> impl Strategy<Value = String> {
+		prop::collection::vec(valid_segment(), 1..5).prop_filter_map(
+			"must be 3-100 chars",
+			|segments| {
+				let key = segments.join(".");
+				if key.len() >= 3 && key.len() <= 100 {
+					Some(key)
+				} else {
+					None
+				}
+			},
+		)
+	}
+
+	proptest! {
+		#[test]
+		fn prop_valid_keys_pass_validation(key in valid_flag_key()) {
+			prop_assert!(Flag::validate_key(&key), "Key '{}' should be valid", key);
+		}
+
+		#[test]
+		fn prop_keys_with_uppercase_fail(
+			base in valid_flag_key(),
+			idx in 0usize..100
+		) {
+			if !base.is_empty() {
+				let idx = idx % base.len();
+				let mut chars: Vec<char> = base.chars().collect();
+				if chars[idx].is_ascii_lowercase() {
+					chars[idx] = chars[idx].to_ascii_uppercase();
+					let invalid_key: String = chars.into_iter().collect();
+					prop_assert!(!Flag::validate_key(&invalid_key),
+						"Key '{}' with uppercase should be invalid", invalid_key);
+				}
+			}
+		}
+
+		#[test]
+		fn prop_short_keys_fail(key in "[a-z][a-z0-9_]{0,1}") {
+			// Keys with 1-2 chars should fail
+			if key.len() < 3 {
+				prop_assert!(!Flag::validate_key(&key),
+					"Short key '{}' should be invalid", key);
+			}
+		}
+
+		#[test]
+		fn prop_keys_starting_with_dot_fail(key in "\\.[a-z][a-z0-9_.]{0,50}") {
+			prop_assert!(!Flag::validate_key(&key),
+				"Key '{}' starting with dot should be invalid", key);
+		}
+
+		#[test]
+		fn prop_keys_ending_with_dot_fail(key in "[a-z][a-z0-9_.]{0,50}\\.") {
+			prop_assert!(!Flag::validate_key(&key),
+				"Key '{}' ending with dot should be invalid", key);
+		}
+
+		#[test]
+		fn prop_keys_with_consecutive_dots_fail(key in "[a-z][a-z0-9_]{0,20}\\.\\.[a-z0-9_]{0,20}") {
+			prop_assert!(!Flag::validate_key(&key),
+				"Key '{}' with consecutive dots should be invalid", key);
+		}
+
+		#[test]
+		fn prop_keys_starting_with_number_fail(key in "[0-9][a-z0-9_.]{2,50}") {
+			prop_assert!(!Flag::validate_key(&key),
+				"Key '{}' starting with number should be invalid", key);
+		}
+
+		#[test]
+		fn prop_keys_starting_with_underscore_fail(key in "_[a-z0-9_.]{2,50}") {
+			prop_assert!(!Flag::validate_key(&key),
+				"Key '{}' starting with underscore should be invalid", key);
+		}
+
+		#[test]
+		fn prop_keys_with_invalid_chars_fail(key in "[a-z][a-z0-9_]*[-!@#$%^&*()][a-z0-9_]*") {
+			prop_assert!(!Flag::validate_key(&key),
+				"Key '{}' with invalid chars should be invalid", key);
+		}
 	}
 }
