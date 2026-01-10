@@ -127,6 +127,26 @@ pub enum AuditEventType {
 	ScimGroupMemberRemoved,
 	ScimBulkOperation,
 	ScimAuthFailure,
+
+	// Feature flag events
+	FlagCreated,
+	FlagUpdated,
+	FlagArchived,
+	FlagRestored,
+	FlagConfigUpdated,
+	StrategyCreated,
+	StrategyUpdated,
+	StrategyDeleted,
+	KillSwitchCreated,
+	KillSwitchUpdated,
+	KillSwitchActivated,
+	KillSwitchDeactivated,
+	KillSwitchDeleted,
+	SdkKeyCreated,
+	SdkKeyRevoked,
+	EnvironmentCreated,
+	EnvironmentUpdated,
+	EnvironmentDeleted,
 }
 
 impl fmt::Display for AuditEventType {
@@ -238,6 +258,26 @@ impl fmt::Display for AuditEventType {
 			AuditEventType::ScimGroupMemberRemoved => "scim_group_member_removed",
 			AuditEventType::ScimBulkOperation => "scim_bulk_operation",
 			AuditEventType::ScimAuthFailure => "scim_auth_failure",
+
+			// Feature flag events
+			AuditEventType::FlagCreated => "flag_created",
+			AuditEventType::FlagUpdated => "flag_updated",
+			AuditEventType::FlagArchived => "flag_archived",
+			AuditEventType::FlagRestored => "flag_restored",
+			AuditEventType::FlagConfigUpdated => "flag_config_updated",
+			AuditEventType::StrategyCreated => "strategy_created",
+			AuditEventType::StrategyUpdated => "strategy_updated",
+			AuditEventType::StrategyDeleted => "strategy_deleted",
+			AuditEventType::KillSwitchCreated => "kill_switch_created",
+			AuditEventType::KillSwitchUpdated => "kill_switch_updated",
+			AuditEventType::KillSwitchActivated => "kill_switch_activated",
+			AuditEventType::KillSwitchDeactivated => "kill_switch_deactivated",
+			AuditEventType::KillSwitchDeleted => "kill_switch_deleted",
+			AuditEventType::SdkKeyCreated => "sdk_key_created",
+			AuditEventType::SdkKeyRevoked => "sdk_key_revoked",
+			AuditEventType::EnvironmentCreated => "environment_created",
+			AuditEventType::EnvironmentUpdated => "environment_updated",
+			AuditEventType::EnvironmentDeleted => "environment_deleted",
 		};
 		write!(f, "{s}")
 	}
@@ -297,7 +337,18 @@ impl AuditEventType {
 			| AuditEventType::ScimGroupCreated
 			| AuditEventType::ScimGroupUpdated
 			| AuditEventType::ScimGroupMemberAdded
-			| AuditEventType::ScimBulkOperation => AuditSeverity::Info,
+			| AuditEventType::ScimBulkOperation
+			// Feature flag events - normal operations
+			| AuditEventType::FlagCreated
+			| AuditEventType::FlagUpdated
+			| AuditEventType::FlagConfigUpdated
+			| AuditEventType::StrategyCreated
+			| AuditEventType::StrategyUpdated
+			| AuditEventType::KillSwitchCreated
+			| AuditEventType::KillSwitchUpdated
+			| AuditEventType::SdkKeyCreated
+			| AuditEventType::EnvironmentCreated
+			| AuditEventType::EnvironmentUpdated => AuditSeverity::Info,
 
 			// Warning: Security-relevant failures
 			AuditEventType::LoginFailed
@@ -335,7 +386,16 @@ impl AuditEventType {
 			| AuditEventType::ScimUserDeleted
 			| AuditEventType::ScimUserDeprovisioned
 			| AuditEventType::ScimGroupDeleted
-			| AuditEventType::ScimGroupMemberRemoved => AuditSeverity::Notice,
+			| AuditEventType::ScimGroupMemberRemoved
+			// Feature flag events - administrative/destructive actions
+			| AuditEventType::FlagArchived
+			| AuditEventType::FlagRestored
+			| AuditEventType::StrategyDeleted
+			| AuditEventType::KillSwitchActivated
+			| AuditEventType::KillSwitchDeactivated
+			| AuditEventType::KillSwitchDeleted
+			| AuditEventType::SdkKeyRevoked
+			| AuditEventType::EnvironmentDeleted => AuditSeverity::Notice,
 
 			// Error: Operation failures
 			AuditEventType::LlmRequestFailed => AuditSeverity::Error,
@@ -683,7 +743,7 @@ mod tests {
 			assert_eq!(event, AuditEventType::AccessDenied);
 		}
 
-		const ALL_EVENT_TYPES: [AuditEventType; 49] = [
+		const ALL_EVENT_TYPES: [AuditEventType; 67] = [
 			AuditEventType::Login,
 			AuditEventType::Logout,
 			AuditEventType::LoginFailed,
@@ -733,6 +793,25 @@ mod tests {
 			AuditEventType::MirrorCreated,
 			AuditEventType::MirrorSynced,
 			AuditEventType::WebhookReceived,
+			// Feature flag events
+			AuditEventType::FlagCreated,
+			AuditEventType::FlagUpdated,
+			AuditEventType::FlagArchived,
+			AuditEventType::FlagRestored,
+			AuditEventType::FlagConfigUpdated,
+			AuditEventType::StrategyCreated,
+			AuditEventType::StrategyUpdated,
+			AuditEventType::StrategyDeleted,
+			AuditEventType::KillSwitchCreated,
+			AuditEventType::KillSwitchUpdated,
+			AuditEventType::KillSwitchActivated,
+			AuditEventType::KillSwitchDeactivated,
+			AuditEventType::KillSwitchDeleted,
+			AuditEventType::SdkKeyCreated,
+			AuditEventType::SdkKeyRevoked,
+			AuditEventType::EnvironmentCreated,
+			AuditEventType::EnvironmentUpdated,
+			AuditEventType::EnvironmentDeleted,
 		];
 
 		#[test]
@@ -806,6 +885,173 @@ mod tests {
 				AuditEventType::LlmRequestFailed.default_severity(),
 				AuditSeverity::Error
 			);
+		}
+
+		#[test]
+		fn feature_flag_event_severities() {
+			// Info: normal flag operations
+			assert_eq!(
+				AuditEventType::FlagCreated.default_severity(),
+				AuditSeverity::Info
+			);
+			assert_eq!(
+				AuditEventType::FlagUpdated.default_severity(),
+				AuditSeverity::Info
+			);
+			assert_eq!(
+				AuditEventType::FlagConfigUpdated.default_severity(),
+				AuditSeverity::Info
+			);
+			assert_eq!(
+				AuditEventType::StrategyCreated.default_severity(),
+				AuditSeverity::Info
+			);
+			assert_eq!(
+				AuditEventType::StrategyUpdated.default_severity(),
+				AuditSeverity::Info
+			);
+			assert_eq!(
+				AuditEventType::KillSwitchCreated.default_severity(),
+				AuditSeverity::Info
+			);
+			assert_eq!(
+				AuditEventType::KillSwitchUpdated.default_severity(),
+				AuditSeverity::Info
+			);
+			assert_eq!(
+				AuditEventType::SdkKeyCreated.default_severity(),
+				AuditSeverity::Info
+			);
+			assert_eq!(
+				AuditEventType::EnvironmentCreated.default_severity(),
+				AuditSeverity::Info
+			);
+			assert_eq!(
+				AuditEventType::EnvironmentUpdated.default_severity(),
+				AuditSeverity::Info
+			);
+
+			// Notice: administrative/destructive operations
+			assert_eq!(
+				AuditEventType::FlagArchived.default_severity(),
+				AuditSeverity::Notice
+			);
+			assert_eq!(
+				AuditEventType::FlagRestored.default_severity(),
+				AuditSeverity::Notice
+			);
+			assert_eq!(
+				AuditEventType::StrategyDeleted.default_severity(),
+				AuditSeverity::Notice
+			);
+			assert_eq!(
+				AuditEventType::KillSwitchActivated.default_severity(),
+				AuditSeverity::Notice
+			);
+			assert_eq!(
+				AuditEventType::KillSwitchDeactivated.default_severity(),
+				AuditSeverity::Notice
+			);
+			assert_eq!(
+				AuditEventType::KillSwitchDeleted.default_severity(),
+				AuditSeverity::Notice
+			);
+			assert_eq!(
+				AuditEventType::SdkKeyRevoked.default_severity(),
+				AuditSeverity::Notice
+			);
+			assert_eq!(
+				AuditEventType::EnvironmentDeleted.default_severity(),
+				AuditSeverity::Notice
+			);
+		}
+
+		#[test]
+		fn feature_flag_event_display() {
+			assert_eq!(AuditEventType::FlagCreated.to_string(), "flag_created");
+			assert_eq!(AuditEventType::FlagUpdated.to_string(), "flag_updated");
+			assert_eq!(AuditEventType::FlagArchived.to_string(), "flag_archived");
+			assert_eq!(AuditEventType::FlagRestored.to_string(), "flag_restored");
+			assert_eq!(
+				AuditEventType::FlagConfigUpdated.to_string(),
+				"flag_config_updated"
+			);
+			assert_eq!(
+				AuditEventType::StrategyCreated.to_string(),
+				"strategy_created"
+			);
+			assert_eq!(
+				AuditEventType::StrategyUpdated.to_string(),
+				"strategy_updated"
+			);
+			assert_eq!(
+				AuditEventType::StrategyDeleted.to_string(),
+				"strategy_deleted"
+			);
+			assert_eq!(
+				AuditEventType::KillSwitchCreated.to_string(),
+				"kill_switch_created"
+			);
+			assert_eq!(
+				AuditEventType::KillSwitchUpdated.to_string(),
+				"kill_switch_updated"
+			);
+			assert_eq!(
+				AuditEventType::KillSwitchActivated.to_string(),
+				"kill_switch_activated"
+			);
+			assert_eq!(
+				AuditEventType::KillSwitchDeactivated.to_string(),
+				"kill_switch_deactivated"
+			);
+			assert_eq!(
+				AuditEventType::KillSwitchDeleted.to_string(),
+				"kill_switch_deleted"
+			);
+			assert_eq!(AuditEventType::SdkKeyCreated.to_string(), "sdk_key_created");
+			assert_eq!(AuditEventType::SdkKeyRevoked.to_string(), "sdk_key_revoked");
+			assert_eq!(
+				AuditEventType::EnvironmentCreated.to_string(),
+				"environment_created"
+			);
+			assert_eq!(
+				AuditEventType::EnvironmentUpdated.to_string(),
+				"environment_updated"
+			);
+			assert_eq!(
+				AuditEventType::EnvironmentDeleted.to_string(),
+				"environment_deleted"
+			);
+		}
+
+		#[test]
+		fn feature_flag_events_serialize_deserialize() {
+			let events = [
+				AuditEventType::FlagCreated,
+				AuditEventType::FlagUpdated,
+				AuditEventType::FlagArchived,
+				AuditEventType::FlagRestored,
+				AuditEventType::FlagConfigUpdated,
+				AuditEventType::StrategyCreated,
+				AuditEventType::StrategyUpdated,
+				AuditEventType::StrategyDeleted,
+				AuditEventType::KillSwitchCreated,
+				AuditEventType::KillSwitchUpdated,
+				AuditEventType::KillSwitchActivated,
+				AuditEventType::KillSwitchDeactivated,
+				AuditEventType::KillSwitchDeleted,
+				AuditEventType::SdkKeyCreated,
+				AuditEventType::SdkKeyRevoked,
+				AuditEventType::EnvironmentCreated,
+				AuditEventType::EnvironmentUpdated,
+				AuditEventType::EnvironmentDeleted,
+			];
+
+			for event in events {
+				let serialized = serde_json::to_string(&event).unwrap();
+				let deserialized: AuditEventType = serde_json::from_str(&serialized).unwrap();
+				assert_eq!(event, deserialized);
+			}
 		}
 	}
 

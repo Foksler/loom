@@ -39,6 +39,7 @@ pub use loom_server_api::flags::{
 	StrategyResponse, UpdateEnvironmentRequest, UpdateFlagConfigRequest, UpdateFlagRequest,
 	UpdateKillSwitchRequest, UpdateStrategyRequest, VariantApi, VariantValueApi,
 };
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_flags::{evaluate_flag, hash_sdk_key, EvaluationContext, EvaluationReason, FlagsRepository, GeoContext};
 
 use crate::{
@@ -225,6 +226,18 @@ pub async fn create_environment(
 		return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
 			.into_response();
 	}
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::EnvironmentCreated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("environment", env.id.to_string())
+			.details(serde_json::json!({
+				"org_id": env.org_id.to_string(),
+				"name": env.name,
+				"color": env.color,
+			}))
+			.build(),
+	);
 
 	tracing::info!(env_id = %env.id, name = %env.name, "Environment created");
 
@@ -454,6 +467,18 @@ pub async fn update_environment(
 			.into_response();
 	}
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::EnvironmentUpdated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("environment", env.id.to_string())
+			.details(serde_json::json!({
+				"org_id": env.org_id.to_string(),
+				"name": env.name,
+				"color": env.color,
+			}))
+			.build(),
+	);
+
 	tracing::info!(%env_id, "Environment updated");
 
 	(
@@ -566,6 +591,17 @@ pub async fn delete_environment(
 
 	match state.flags_repo.delete_environment(env_id).await {
 		Ok(true) => {
+			state.audit_service.log(
+				AuditLogBuilder::new(AuditEventType::EnvironmentDeleted)
+					.actor(AuditUserId::new(current_user.user.id.into_inner()))
+					.resource("environment", env_id.to_string())
+					.details(serde_json::json!({
+						"org_id": env.org_id.to_string(),
+						"name": env.name,
+					}))
+					.build(),
+			);
+
 			tracing::info!(%env_id, "Environment deleted");
 			(
 				StatusCode::OK,
@@ -834,6 +870,19 @@ pub async fn create_sdk_key(
 			.into_response();
 	}
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::SdkKeyCreated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("sdk_key", sdk_key.id.to_string())
+			.details(serde_json::json!({
+				"environment_id": env_id.to_string(),
+				"environment_name": env.name,
+				"key_type": format!("{:?}", sdk_key.key_type),
+				"name": sdk_key.name,
+			}))
+			.build(),
+	);
+
 	tracing::info!(sdk_key_id = %sdk_key.id, "SDK key created");
 
 	(
@@ -965,6 +1014,18 @@ pub async fn revoke_sdk_key(
 				.into_response();
 		}
 	}
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::SdkKeyRevoked)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("sdk_key", key_id.to_string())
+			.details(serde_json::json!({
+				"environment_id": sdk_key.environment_id.to_string(),
+				"environment_name": env.name,
+				"name": sdk_key.name,
+			}))
+			.build(),
+	);
 
 	tracing::info!(%key_id, "SDK key revoked");
 
@@ -1289,6 +1350,20 @@ pub async fn create_flag(
 		}
 	}
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::FlagCreated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("flag", flag.id.to_string())
+			.details(serde_json::json!({
+				"org_id": flags_org_id.to_string(),
+				"key": flag.key,
+				"name": flag.name,
+				"description": flag.description,
+				"tags": flag.tags,
+			}))
+			.build(),
+	);
+
 	tracing::info!(flag_id = %flag.id, flag_key = %flag.key, "Flag created");
 
 	(StatusCode::CREATED, Json(flag_to_response(&flag))).into_response()
@@ -1544,6 +1619,20 @@ pub async fn update_flag(
 			.into_response();
 	}
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::FlagUpdated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("flag", flag.id.to_string())
+			.details(serde_json::json!({
+				"org_id": flag.org_id.map(|o| o.to_string()),
+				"key": flag.key,
+				"name": flag.name,
+				"description": flag.description,
+				"tags": flag.tags,
+			}))
+			.build(),
+	);
+
 	tracing::info!(%flag_id, "Flag updated");
 
 	(StatusCode::OK, Json(flag_to_response(&flag))).into_response()
@@ -1636,6 +1725,18 @@ pub async fn archive_flag(
 
 	match state.flags_repo.archive_flag(flag_id).await {
 		Ok(true) => {
+			state.audit_service.log(
+				AuditLogBuilder::new(AuditEventType::FlagArchived)
+					.actor(AuditUserId::new(current_user.user.id.into_inner()))
+					.resource("flag", flag_id.to_string())
+					.details(serde_json::json!({
+						"org_id": flags_org_id.to_string(),
+						"key": flag.key,
+						"name": flag.name,
+					}))
+					.build(),
+			);
+
 			tracing::info!(%flag_id, "Flag archived");
 
 			// Broadcast flag archived event to all environments
@@ -1747,6 +1848,18 @@ pub async fn restore_flag(
 
 	match state.flags_repo.restore_flag(flag_id).await {
 		Ok(true) => {
+			state.audit_service.log(
+				AuditLogBuilder::new(AuditEventType::FlagRestored)
+					.actor(AuditUserId::new(current_user.user.id.into_inner()))
+					.resource("flag", flag_id.to_string())
+					.details(serde_json::json!({
+						"org_id": flags_org_id.to_string(),
+						"key": flag.key,
+						"name": flag.name,
+					}))
+					.build(),
+			);
+
 			tracing::info!(%flag_id, "Flag restored");
 
 			// Broadcast flag restored event to all environments
@@ -2234,6 +2347,22 @@ pub async fn update_flag_config(
 			.into_response();
 	}
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::FlagConfigUpdated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("flag_config", config.id.to_string())
+			.details(serde_json::json!({
+				"org_id": flags_org_id.to_string(),
+				"flag_id": flag.id.to_string(),
+				"flag_key": flag.key,
+				"environment_id": env_id.to_string(),
+				"environment_name": env.name,
+				"enabled": config.enabled,
+				"strategy_id": config.strategy_id.map(|s| s.to_string()),
+			}))
+			.build(),
+	);
+
 	tracing::info!(config_id = %config.id, "Flag config updated");
 
 	// Broadcast flag update event
@@ -2613,6 +2742,19 @@ pub async fn create_strategy(
 			.into_response();
 	}
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::StrategyCreated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("strategy", strategy.id.to_string())
+			.details(serde_json::json!({
+				"org_id": flags_org_id.to_string(),
+				"name": strategy.name,
+				"description": strategy.description,
+				"percentage": strategy.percentage,
+			}))
+			.build(),
+	);
+
 	tracing::info!(strategy_id = %strategy.id, strategy_name = %strategy.name, "Strategy created");
 
 	(StatusCode::CREATED, Json(strategy_to_response(&strategy))).into_response()
@@ -2848,6 +2990,19 @@ pub async fn update_strategy(
 			.into_response();
 	}
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::StrategyUpdated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("strategy", strategy.id.to_string())
+			.details(serde_json::json!({
+				"org_id": strategy.org_id.map(|o| o.to_string()),
+				"name": strategy.name,
+				"description": strategy.description,
+				"percentage": strategy.percentage,
+			}))
+			.build(),
+	);
+
 	tracing::info!(%strategy_id, "Strategy updated");
 
 	(StatusCode::OK, Json(strategy_to_response(&strategy))).into_response()
@@ -2966,6 +3121,17 @@ pub async fn delete_strategy(
 
 	match state.flags_repo.delete_strategy(strategy_id).await {
 		Ok(true) => {
+			state.audit_service.log(
+				AuditLogBuilder::new(AuditEventType::StrategyDeleted)
+					.actor(AuditUserId::new(current_user.user.id.into_inner()))
+					.resource("strategy", strategy_id.to_string())
+					.details(serde_json::json!({
+						"org_id": flags_org_id.to_string(),
+						"name": strategy.name,
+					}))
+					.build(),
+			);
+
 			tracing::info!(%strategy_id, "Strategy deleted");
 			(
 				StatusCode::OK,
@@ -3158,6 +3324,19 @@ pub async fn create_kill_switch(
 			.into_response();
 	}
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::KillSwitchCreated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("kill_switch", kill_switch.id.to_string())
+			.details(serde_json::json!({
+				"org_id": flags_org_id.to_string(),
+				"key": kill_switch.key,
+				"name": kill_switch.name,
+				"linked_flag_keys": kill_switch.linked_flag_keys,
+			}))
+			.build(),
+	);
+
 	tracing::info!(kill_switch_id = %kill_switch.id, key = %kill_switch.key, "Kill switch created");
 
 	(StatusCode::CREATED, Json(kill_switch_to_response(kill_switch))).into_response()
@@ -3346,6 +3525,19 @@ pub async fn update_kill_switch(
 			.into_response();
 	}
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::KillSwitchUpdated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("kill_switch", kill_switch.id.to_string())
+			.details(serde_json::json!({
+				"org_id": kill_switch.org_id.map(|o| o.to_string()),
+				"key": kill_switch.key,
+				"name": kill_switch.name,
+				"linked_flag_keys": kill_switch.linked_flag_keys,
+			}))
+			.build(),
+	);
+
 	tracing::info!(%kill_switch_id, "Kill switch updated");
 
 	(StatusCode::OK, Json(kill_switch_to_response(kill_switch))).into_response()
@@ -3450,6 +3642,20 @@ pub async fn activate_kill_switch(
 		return internal_error::<FlagsErrorResponse>(t(locale, "server.api.error.internal"))
 			.into_response();
 	}
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::KillSwitchActivated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("kill_switch", kill_switch.id.to_string())
+			.details(serde_json::json!({
+				"org_id": flags_org_id.to_string(),
+				"key": kill_switch.key,
+				"name": kill_switch.name,
+				"linked_flag_keys": kill_switch.linked_flag_keys,
+				"reason": kill_switch.activation_reason,
+			}))
+			.build(),
+	);
 
 	tracing::warn!(
 		%kill_switch_id,
@@ -3564,6 +3770,19 @@ pub async fn deactivate_kill_switch(
 			.into_response();
 	}
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::KillSwitchDeactivated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("kill_switch", kill_switch.id.to_string())
+			.details(serde_json::json!({
+				"org_id": flags_org_id.to_string(),
+				"key": kill_switch.key,
+				"name": kill_switch.name,
+				"linked_flag_keys": kill_switch.linked_flag_keys,
+			}))
+			.build(),
+	);
+
 	tracing::info!(
 		%kill_switch_id,
 		key = %kill_switch.key,
@@ -3668,6 +3887,18 @@ pub async fn delete_kill_switch(
 
 	match state.flags_repo.delete_kill_switch(kill_switch_id).await {
 		Ok(true) => {
+			state.audit_service.log(
+				AuditLogBuilder::new(AuditEventType::KillSwitchDeleted)
+					.actor(AuditUserId::new(current_user.user.id.into_inner()))
+					.resource("kill_switch", kill_switch_id.to_string())
+					.details(serde_json::json!({
+						"org_id": flags_org_id.to_string(),
+						"key": kill_switch.key,
+						"name": kill_switch.name,
+					}))
+					.build(),
+			);
+
 			tracing::info!(%kill_switch_id, "Kill switch deleted");
 			(
 				StatusCode::OK,
