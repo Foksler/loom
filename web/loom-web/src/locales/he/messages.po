@@ -2514,3 +2514,111 @@ msgstr "מפתחות API"
 #: org.tabs.settings
 msgid "org.tabs.settings"
 msgstr "הגדרות"
+
+# ============================================================================
+# Kill Switches
+# ============================================================================
+
+#: killSwitch.title
+msgid "killSwitch.title"
+msgstr "Kill Switches"
+
+#: killSwitch.description
+msgid "killSwitch.description"
+msgstr "Emergency shutoff controls for feature flags"
+
+#: killSwitch.create
+msgid "killSwitch.create"
+msgstr "Create Kill Switch"
+
+#: killSwitch.createTitle
+msgid "killSwitch.createTitle"
+msgstr "Create New Kill Switch"
+
+#: killSwitch.key
+msgid "killSwitch.key"
+msgstr "Key"
+
+#: killSwitch.keyHint
+msgid "killSwitch.keyHint"
+msgstr "Lowercase alphanumeric with underscores, 3-100 characters"
+
+#: killSwitch.name
+msgid "killSwitch.name"
+msgstr "Name"
+
+#: killSwitch.linkedFlags
+msgid "killSwitch.linkedFlags"
+msgstr "Linked Flags"
+
+#: killSwitch.linkedFlagsHint
+msgid "killSwitch.linkedFlagsHint"
+msgstr "Flag keys that will be disabled when this kill switch is active"
+
+#: killSwitch.status
+msgid "killSwitch.status"
+msgstr "Status"
+
+#: killSwitch.active
+msgid "killSwitch.active"
+msgstr "Active"
+
+#: killSwitch.inactive
+msgid "killSwitch.inactive"
+msgstr "Inactive"
+
+#: killSwitch.activate
+msgid "killSwitch.activate"
+msgstr "Activate"
+
+#: killSwitch.deactivate
+msgid "killSwitch.deactivate"
+msgstr "Deactivate"
+
+#: killSwitch.activateTitle
+msgid "killSwitch.activateTitle"
+msgstr "Activate Kill Switch"
+
+#: killSwitch.activateWarning
+msgid "killSwitch.activateWarning"
+msgstr "Activating this kill switch will immediately disable all linked feature flags."
+
+#: killSwitch.reason
+msgid "killSwitch.reason"
+msgstr "Reason"
+
+#: killSwitch.reasonPlaceholder
+msgid "killSwitch.reasonPlaceholder"
+msgstr "Enter the reason for activation (required)"
+
+#: killSwitch.reasonRequired
+msgid "killSwitch.reasonRequired"
+msgstr "A reason is required for activation"
+
+#: killSwitch.activatedAt
+msgid "killSwitch.activatedAt"
+msgstr "Activated at"
+
+#: killSwitch.activatedBy
+msgid "killSwitch.activatedBy"
+msgstr "Activated by"
+
+#: killSwitch.activationReason
+msgid "killSwitch.activationReason"
+msgstr "Activation reason"
+
+#: killSwitch.delete
+msgid "killSwitch.delete"
+msgstr "Delete"
+
+#: killSwitch.deleteConfirm
+msgid "killSwitch.deleteConfirm"
+msgstr "Are you sure you want to delete this kill switch?"
+
+#: killSwitch.empty
+msgid "killSwitch.empty"
+msgstr "No kill switches configured"
+
+#: killSwitch.noLinkedFlags
+msgid "killSwitch.noLinkedFlags"
+msgstr "No linked flags"

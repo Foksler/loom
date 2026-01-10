@@ -53,8 +53,8 @@ pub use evaluation::{
 	ExposureLogId, FlagStats, GeoContext,
 };
 pub use flag::{
-	EnvironmentId, Flag, FlagConfig, FlagConfigId, FlagId, FlagPrerequisite, OrgId, UserId,
-	Variant, VariantValue,
+	EnvironmentId, Flag, FlagConfig, FlagConfigId, FlagId, FlagPrerequisite, OrgId, UserId, Variant,
+	VariantValue,
 };
 pub use kill_switch::{KillSwitch, KillSwitchId};
 pub use sdk_key::{SdkKey, SdkKeyId, SdkKeyType};
@@ -226,6 +226,155 @@ mod tests {
 			let (parsed_type, parsed_env, _) = parsed.unwrap();
 			assert_eq!(parsed_type, key_type);
 			assert_eq!(parsed_env, env_name);
+		}
+	}
+
+	// Property-based tests for kill switch behavior
+	proptest! {
+		#[test]
+		fn kill_switch_affects_linked_flag_when_active(
+			linked_keys in prop::collection::vec("[a-z][a-z0-9_.]{2,20}", 1..5),
+			idx in 0usize..5,
+		) {
+			use chrono::Utc;
+
+			if !linked_keys.is_empty() {
+				let idx = idx % linked_keys.len();
+				let kill_switch = KillSwitch {
+					id: KillSwitchId::new(),
+					org_id: None,
+					key: "test_kill_switch".to_string(),
+					name: "Test Kill Switch".to_string(),
+					description: None,
+					linked_flag_keys: linked_keys.clone(),
+					is_active: true,
+					activated_at: Some(Utc::now()),
+					activated_by: Some(UserId::new()),
+					activation_reason: Some("Testing".to_string()),
+					created_at: Utc::now(),
+					updated_at: Utc::now(),
+				};
+
+				// Active kill switch should affect linked flags
+				assert!(kill_switch.affects_flag(&linked_keys[idx]));
+			}
+		}
+
+		#[test]
+		fn inactive_kill_switch_does_not_affect_flags(
+			linked_keys in prop::collection::vec("[a-z][a-z0-9_.]{2,20}", 1..5),
+			idx in 0usize..5,
+		) {
+			use chrono::Utc;
+
+			if !linked_keys.is_empty() {
+				let idx = idx % linked_keys.len();
+				let kill_switch = KillSwitch {
+					id: KillSwitchId::new(),
+					org_id: None,
+					key: "test_kill_switch".to_string(),
+					name: "Test Kill Switch".to_string(),
+					description: None,
+					linked_flag_keys: linked_keys.clone(),
+					is_active: false,
+					activated_at: None,
+					activated_by: None,
+					activation_reason: None,
+					created_at: Utc::now(),
+					updated_at: Utc::now(),
+				};
+
+				// Inactive kill switch should not affect any flags
+				assert!(!kill_switch.affects_flag(&linked_keys[idx]));
+			}
+		}
+
+		#[test]
+		fn kill_switch_does_not_affect_unlinked_flags(
+			linked_keys in prop::collection::vec("[a-z][a-z0-9_.]{2,20}", 1..5),
+			unlinked_key in "[a-z][a-z0-9_.]{2,20}",
+		) {
+			use chrono::Utc;
+
+			// Only test if unlinked key is not in linked keys
+			if !linked_keys.contains(&unlinked_key) {
+				let kill_switch = KillSwitch {
+					id: KillSwitchId::new(),
+					org_id: None,
+					key: "test_kill_switch".to_string(),
+					name: "Test Kill Switch".to_string(),
+					description: None,
+					linked_flag_keys: linked_keys,
+					is_active: true,
+					activated_at: Some(Utc::now()),
+					activated_by: Some(UserId::new()),
+					activation_reason: Some("Testing".to_string()),
+					created_at: Utc::now(),
+					updated_at: Utc::now(),
+				};
+
+				// Active kill switch should not affect unlinked flags
+				assert!(!kill_switch.affects_flag(&unlinked_key));
+			}
+		}
+
+		#[test]
+		fn activate_sets_correct_state(reason in "[a-zA-Z0-9 ]{1,100}") {
+			use chrono::Utc;
+
+			let mut kill_switch = KillSwitch {
+				id: KillSwitchId::new(),
+				org_id: None,
+				key: "test_kill_switch".to_string(),
+				name: "Test Kill Switch".to_string(),
+				description: None,
+				linked_flag_keys: vec!["test.flag".to_string()],
+				is_active: false,
+				activated_at: None,
+				activated_by: None,
+				activation_reason: None,
+				created_at: Utc::now(),
+				updated_at: Utc::now(),
+			};
+
+			let user_id = UserId::new();
+			let old_updated = kill_switch.updated_at;
+			kill_switch.activate(user_id, reason.clone());
+
+			assert!(kill_switch.is_active);
+			assert!(kill_switch.activated_at.is_some());
+			assert_eq!(kill_switch.activated_by, Some(user_id));
+			assert_eq!(kill_switch.activation_reason, Some(reason));
+			assert!(kill_switch.updated_at >= old_updated);
+		}
+
+		#[test]
+		fn deactivate_clears_activation_state(_seed: u64) {
+			use chrono::Utc;
+
+			let mut kill_switch = KillSwitch {
+				id: KillSwitchId::new(),
+				org_id: None,
+				key: "test_kill_switch".to_string(),
+				name: "Test Kill Switch".to_string(),
+				description: None,
+				linked_flag_keys: vec!["test.flag".to_string()],
+				is_active: true,
+				activated_at: Some(Utc::now()),
+				activated_by: Some(UserId::new()),
+				activation_reason: Some("Initial activation".to_string()),
+				created_at: Utc::now(),
+				updated_at: Utc::now(),
+			};
+
+			let old_updated = kill_switch.updated_at;
+			kill_switch.deactivate();
+
+			assert!(!kill_switch.is_active);
+			assert!(kill_switch.activated_at.is_none());
+			assert!(kill_switch.activated_by.is_none());
+			assert!(kill_switch.activation_reason.is_none());
+			assert!(kill_switch.updated_at >= old_updated);
 		}
 	}
 }

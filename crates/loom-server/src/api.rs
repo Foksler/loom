@@ -1020,6 +1020,35 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/orgs/{org_id}/flags/strategies/{strategy_id}",
 			delete(routes::flags::delete_strategy),
 		)
+		// Kill switch routes
+		.route(
+			"/api/orgs/{org_id}/flags/kill-switches",
+			get(routes::flags::list_kill_switches),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/kill-switches",
+			post(routes::flags::create_kill_switch),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/kill-switches/{kill_switch_id}",
+			get(routes::flags::get_kill_switch),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/kill-switches/{kill_switch_id}",
+			patch(routes::flags::update_kill_switch),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/kill-switches/{kill_switch_id}",
+			delete(routes::flags::delete_kill_switch),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/kill-switches/{kill_switch_id}/activate",
+			post(routes::flags::activate_kill_switch),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/kill-switches/{kill_switch_id}/deactivate",
+			post(routes::flags::deactivate_kill_switch),
+		)
 		// Invitation routes (authenticated)
 		.route(
 			"/api/orgs/{org_id}/invitations",

@@ -491,6 +491,83 @@ pub struct ListStrategiesResponse {
 }
 
 // ============================================================================
+// Kill Switch Types
+// ============================================================================
+
+/// A kill switch in API responses.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct KillSwitchResponse {
+	/// Unique identifier for the kill switch.
+	pub id: String,
+	/// Organization ID (None for platform kill switches).
+	pub org_id: Option<String>,
+	/// Structured key (e.g., "disable_checkout").
+	pub key: String,
+	/// Human-readable name.
+	pub name: String,
+	/// Optional description.
+	pub description: Option<String>,
+	/// Flag keys affected by this kill switch.
+	pub linked_flag_keys: Vec<String>,
+	/// Whether the kill switch is currently active.
+	pub is_active: bool,
+	/// When the kill switch was activated.
+	pub activated_at: Option<DateTime<Utc>>,
+	/// User ID who activated the kill switch.
+	pub activated_by: Option<String>,
+	/// Reason for activation.
+	pub activation_reason: Option<String>,
+	/// When the kill switch was created.
+	pub created_at: DateTime<Utc>,
+	/// When the kill switch was last updated.
+	pub updated_at: DateTime<Utc>,
+}
+
+/// Request to create a new kill switch.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct CreateKillSwitchRequest {
+	/// Structured key (e.g., "disable_checkout"). Must be lowercase alphanumeric
+	/// with underscores, 3-100 characters.
+	pub key: String,
+	/// Human-readable name.
+	pub name: String,
+	/// Optional description.
+	pub description: Option<String>,
+	/// Flag keys affected by this kill switch.
+	#[serde(default)]
+	pub linked_flag_keys: Vec<String>,
+}
+
+/// Request to update a kill switch.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct UpdateKillSwitchRequest {
+	/// Human-readable name.
+	pub name: Option<String>,
+	/// Description.
+	pub description: Option<String>,
+	/// Flag keys affected by this kill switch.
+	pub linked_flag_keys: Option<Vec<String>>,
+}
+
+/// Request to activate a kill switch.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct ActivateKillSwitchRequest {
+	/// Required reason for activation. This is mandatory for audit purposes.
+	pub reason: String,
+}
+
+/// Response for listing kill switches.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct ListKillSwitchesResponse {
+	pub kill_switches: Vec<KillSwitchResponse>,
+}
+
+// ============================================================================
 // Common Response Types
 // ============================================================================
 

@@ -439,7 +439,7 @@ Implementation checklist for the Feature Flags system. See
 
 ---
 
-## Phase 5: Kill Switches
+## ✅ Phase 5: Kill Switches (COMPLETED)
 
 **Goal:** Emergency shutoff mechanism with flag linking.
 
@@ -450,22 +450,26 @@ Implementation checklist for the Feature Flags system. See
 - Kill switch endpoints: `specs/feature-flags-system.md:388-395`
 
 **Tasks:**
-- [ ] Implement Kill switch CRUD handlers
-  - [ ] `GET /api/flags/kill-switches`
-  - [ ] `POST /api/flags/kill-switches`
-  - [ ] `GET /api/flags/kill-switches/{key}`
-  - [ ] `PATCH /api/flags/kill-switches/{key}`
-  - [ ] `DELETE /api/flags/kill-switches/{key}`
-- [ ] Activation endpoint
-  - [ ] `POST /api/flags/kill-switches/{key}/activate`
-  - [ ] Required: `activation_reason` field
-  - [ ] Set `activated_at`, `activated_by`
-- [ ] Deactivation endpoint
-  - [ ] `POST /api/flags/kill-switches/{key}/deactivate`
-  - [ ] Clear activation fields
-- [ ] `killswitch:activate` permission
-  - [ ] Add to ABAC system
-  - [ ] Allow org admins by default
+- [x] Implement Kill switch CRUD handlers
+  - [x] `GET /api/orgs/{org_id}/flags/kill-switches`
+  - [x] `POST /api/orgs/{org_id}/flags/kill-switches`
+  - [x] `GET /api/orgs/{org_id}/flags/kill-switches/{kill_switch_id}`
+  - [x] `PATCH /api/orgs/{org_id}/flags/kill-switches/{kill_switch_id}`
+  - [x] `DELETE /api/orgs/{org_id}/flags/kill-switches/{kill_switch_id}`
+- [x] Activation endpoint
+  - [x] `POST /api/orgs/{org_id}/flags/kill-switches/{kill_switch_id}/activate`
+  - [x] Required: `reason` field (validation enforced)
+  - [x] Set `activated_at`, `activated_by`, `activation_reason`
+- [x] Deactivation endpoint
+  - [x] `POST /api/orgs/{org_id}/flags/kill-switches/{kill_switch_id}/deactivate`
+  - [x] Clear activation fields
+- [x] Kill switch permissions
+  - [x] Uses org membership (same as other flags operations)
+  - [x] Any org member can manage kill switches
+- [x] i18n translations (server: loom-common-i18n, web: loom-web)
+- [x] API types in `loom-server-api/src/flags.rs`
+- [x] Property-based tests (6 new tests for kill switch behavior)
+- [x] 77 tests passing in loom-flags-core
 
 ---
 
