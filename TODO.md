@@ -645,7 +645,7 @@ Implementation checklist for the Feature Flags system. See
 
 ---
 
-## Phase 11: TypeScript Packages
+## ✅ Phase 11: TypeScript Packages (COMPLETED)
 
 **Goal:** `@loom/http` and `@loom/flags` packages.
 
@@ -654,20 +654,27 @@ Implementation checklist for the Feature Flags system. See
 - Package structure: `specs/feature-flags-system.md:39-53`
 
 **Tasks:**
-- [ ] Create `web/packages/http/` package (`@loom/http`)
-  - [ ] HTTP client with fetch
-  - [ ] Retry with exponential backoff
-  - [ ] Standard headers (User-Agent, Content-Type)
-  - [ ] Error handling
-- [ ] Create `web/packages/flags/` package (`@loom/flags`)
-  - [ ] FlagsClient class
-  - [ ] SDK key authentication
-  - [ ] Initialization with flag fetch
-  - [ ] SSE connection handling
-  - [ ] Local caching
-  - [ ] Evaluation methods (getBool, getString, getJson)
-  - [ ] Event emitter for updates
-  - [ ] Offline mode with cached values
+- [x] Create `web/packages/http/` package (`@loom/http`)
+  - [x] HTTP client with fetch
+  - [x] Retry with exponential backoff
+  - [x] Standard headers (User-Agent, Content-Type)
+  - [x] Error handling (HttpError, TimeoutError, NetworkError, RateLimitError)
+- [x] Create `web/packages/flags/` package (`@loom/flags`)
+  - [x] FlagsClient class
+  - [x] SDK key authentication
+  - [x] Initialization with flag fetch
+  - [x] SSE connection handling with reconnection
+  - [x] Local caching (FlagCache)
+  - [x] Evaluation methods (getBool, getString, getJson, getAll)
+  - [x] Event emitter for updates
+  - [x] Offline mode with cached values
+- [x] i18n translations for SDK error messages
+  - [x] Server translations in loom-common-i18n
+  - [x] Web translations in loom-web
+- [x] 51 tests passing (20 in @loom/http, 31 in @loom/flags)
+  - [x] Property-based tests for retry delay calculation
+  - [x] Property-based tests for flag cache operations
+- [x] Workspace configuration for web packages (`web/pnpm-workspace.yaml`)
 
 ---
 

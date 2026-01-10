@@ -2818,3 +2818,119 @@ msgstr "Never evaluated"
 #: flagStats.viewStats
 msgid "flagStats.viewStats"
 msgstr "View Stats"
+
+# ============================================================================
+# Flags SDK (client-side)
+# ============================================================================
+
+#: client.flags.error.invalid_sdk_key
+msgid "client.flags.error.invalid_sdk_key"
+msgstr "Invalid or missing SDK key"
+
+#: client.flags.error.invalid_base_url
+msgid "client.flags.error.invalid_base_url"
+msgstr "Invalid or missing base URL"
+
+#: client.flags.error.connection_failed
+msgid "client.flags.error.connection_failed"
+msgstr "Failed to connect to server"
+
+#: client.flags.error.request_failed
+msgid "client.flags.error.request_failed"
+msgstr "HTTP request failed"
+
+#: client.flags.error.parse_failed
+msgid "client.flags.error.parse_failed"
+msgstr "Failed to parse server response"
+
+#: client.flags.error.server_error
+msgid "client.flags.error.server_error"
+msgstr "Server returned an error"
+
+#: client.flags.error.flag_not_found
+msgid "client.flags.error.flag_not_found"
+msgstr "Flag not found"
+
+#: client.flags.error.sse_connection_failed
+msgid "client.flags.error.sse_connection_failed"
+msgstr "SSE connection failed"
+
+#: client.flags.error.sse_stream_error
+msgid "client.flags.error.sse_stream_error"
+msgstr "SSE stream error"
+
+#: client.flags.error.offline_no_cache
+msgid "client.flags.error.offline_no_cache"
+msgstr "Client is offline and no cached data is available"
+
+#: client.flags.error.authentication_failed
+msgid "client.flags.error.authentication_failed"
+msgstr "SDK key authentication failed"
+
+#: client.flags.error.rate_limited
+msgid "client.flags.error.rate_limited"
+msgstr "Rate limited. Retry after seconds"
+
+#: client.flags.error.initialization_timeout
+msgid "client.flags.error.initialization_timeout"
+msgstr "Client initialization timed out"
+
+#: client.flags.error.client_closed
+msgid "client.flags.error.client_closed"
+msgstr "Client has been closed"
+
+#: client.flags.error.invalid_value_type
+msgid "client.flags.error.invalid_value_type"
+msgstr "Invalid flag value type"
+
+#: client.flags.status.initializing
+msgid "client.flags.status.initializing"
+msgstr "Initializing flags client..."
+
+#: client.flags.status.connected
+msgid "client.flags.status.connected"
+msgstr "Flags client connected"
+
+#: client.flags.status.disconnected
+msgid "client.flags.status.disconnected"
+msgstr "Flags client disconnected"
+
+#: client.flags.status.reconnecting
+msgid "client.flags.status.reconnecting"
+msgstr "Reconnecting to flags server..."
+
+#: client.flags.status.using_cache
+msgid "client.flags.status.using_cache"
+msgstr "Using cached flag values"
+
+#: client.flags.status.cache_initialized
+msgid "client.flags.status.cache_initialized"
+msgstr "Flag cache initialized with {count} flags"
+
+# ============================================================================
+# HTTP Client (client-side)
+# ============================================================================
+
+#: client.http.error.timeout
+msgid "client.http.error.timeout"
+msgstr "Request timed out"
+
+#: client.http.error.network
+msgid "client.http.error.network"
+msgstr "Network request failed"
+
+#: client.http.error.rate_limited
+msgid "client.http.error.rate_limited"
+msgstr "Rate limited"
+
+#: client.http.error.server
+msgid "client.http.error.server"
+msgstr "Server returned an error"
+
+#: client.http.retry.attempt
+msgid "client.http.retry.attempt"
+msgstr "Retry attempt {count}"
+
+#: client.http.retry.max_attempts
+msgid "client.http.retry.max_attempts"
+msgstr "Max retry attempts reached"
