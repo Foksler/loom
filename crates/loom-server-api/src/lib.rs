@@ -5,6 +5,7 @@ pub mod admin;
 pub mod api_keys;
 pub mod auth;
 pub mod cse;
+pub mod flags;
 pub mod github;
 pub mod invitations;
 pub mod jobs;
@@ -41,6 +42,11 @@ pub use auth::{
 	WsTokenResponse,
 };
 pub use cse::{CseProxyRequest, CseProxyResponse, CseProxyResultItem};
+pub use flags::{
+	CreateEnvironmentRequest, CreateSdkKeyRequest, CreateSdkKeyResponse, EnvironmentResponse,
+	FlagsErrorResponse, FlagsSuccessResponse, ListEnvironmentsResponse, ListSdkKeysResponse,
+	SdkKeyResponse, SdkKeyTypeApi, UpdateEnvironmentRequest,
+};
 pub use github::{
 	GithubFileContentsRequest, GithubFileContentsResponse, GithubInstallationByRepoQuery,
 	GithubRepoInfoRequest, GithubRepoInfoResponse, GithubSearchCodeRequest,

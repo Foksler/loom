@@ -40,6 +40,8 @@ loom-server-auth-magiclink = { path = "../loom-server-auth-magiclink" }
 loom-server-auth-okta = { path = "../loom-server-auth-okta" }
 loom-server-smtp = { path = "../loom-server-smtp" }
 loom-server-email = { path = "../loom-server-email" }
+loom-server-flags = { path = "../loom-server-flags" }
+loom-flags-core = { path = "../loom-flags-core" }
 loom-common-i18n = { path = "../loom-common-i18n" }
 loom-server-geoip = { path = "../loom-server-geoip" }
 loom-server-github-app = { path = "../loom-server-github-app", features = ["openapi"] }

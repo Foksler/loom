@@ -22,12 +22,14 @@ pub use loom_server_api::orgs::{
 	OrgSuccessResponse, OrgVisibilityApi, UpdateOrgMemberRoleRequest, UpdateOrgRequest,
 };
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
+use loom_flags_core::{Environment, EnvironmentId};
 use loom_server_auth::{
 	is_username_reserved,
 	org::{OrgVisibility, Organization},
 	types::{OrgId, OrgRole},
 	Action, Visibility,
 };
+use loom_server_flags::FlagsRepository;
 
 use crate::{
 	abac_middleware::{build_subject_attrs, org_resource},
@@ -234,6 +236,24 @@ pub async fn create_org(
 	}
 
 	tracing::info!(%user_id, %org_id, "Organization created");
+
+	// Auto-create dev and prod environments for the new organization
+	let flags_org_id = loom_flags_core::OrgId(org_id.into_inner());
+	for (name, color) in Environment::default_environments() {
+		let env = Environment {
+			id: EnvironmentId::new(),
+			org_id: flags_org_id,
+			name: name.to_string(),
+			color: Some(color.to_string()),
+			created_at: Utc::now(),
+		};
+		if let Err(e) = state.flags_repo.create_environment(&env).await {
+			tracing::warn!(error = %e, env_name = %name, %org_id, "Failed to create default environment");
+			// Non-fatal: org creation still succeeds even if env creation fails
+		} else {
+			tracing::info!(env_id = %env.id, env_name = %name, %org_id, "Default environment created");
+		}
+	}
 
 	state.audit_service.log(
 		AuditLogBuilder::new(AuditEventType::OrgCreated)

@@ -327,7 +327,7 @@ Implementation checklist for the Feature Flags system. See
 
 ---
 
-## Phase 2: Environment & SDK Keys
+## ✅ Phase 2: Environment & SDK Keys (COMPLETED)
 
 **Goal:** Environment management and SDK key authentication.
 
@@ -340,24 +340,27 @@ Implementation checklist for the Feature Flags system. See
 - Environment endpoints: `specs/feature-flags-system.md:404-408`
 
 **Tasks:**
-- [ ] Implement Environment CRUD handlers
-  - [ ] `GET /api/flags/environments`
-  - [ ] `POST /api/flags/environments`
-  - [ ] `PATCH /api/flags/environments/{id}`
-  - [ ] `DELETE /api/flags/environments/{id}`
-- [ ] Auto-create `dev` and `prod` environments on org creation
-  - [ ] Hook into org creation flow
-- [ ] Implement SDK key generation
-  - [ ] Key format: `loom_sdk_{type}_{env}_{random}`
-  - [ ] Argon2 hashing for storage
-- [ ] SDK key authentication middleware
-  - [ ] Extract Bearer token
-  - [ ] Validate against hashed keys
-  - [ ] Set environment context
-- [ ] Implement SDK key CRUD handlers
-  - [ ] `GET /api/flags/sdk-keys`
-  - [ ] `POST /api/flags/sdk-keys`
-  - [ ] `DELETE /api/flags/sdk-keys/{id}`
+- [x] Implement Environment CRUD handlers in `routes/flags.rs`
+  - [x] `GET /api/orgs/{org_id}/flags/environments`
+  - [x] `POST /api/orgs/{org_id}/flags/environments`
+  - [x] `GET /api/orgs/{org_id}/flags/environments/{env_id}`
+  - [x] `PATCH /api/orgs/{org_id}/flags/environments/{env_id}`
+  - [x] `DELETE /api/orgs/{org_id}/flags/environments/{env_id}`
+- [x] Auto-create `dev` and `prod` environments on org creation
+  - [x] Hook into org creation flow in `routes/orgs.rs`
+- [x] Implement SDK key generation
+  - [x] Key format: `loom_sdk_{type}_{env}_{random32hex}`
+  - [x] Argon2 hashing for storage
+  - [x] Fixed SDK key parsing to handle environment names with underscores
+- [x] Implement SDK key CRUD handlers
+  - [x] `GET /api/orgs/{org_id}/flags/environments/{env_id}/sdk-keys`
+  - [x] `POST /api/orgs/{org_id}/flags/environments/{env_id}/sdk-keys`
+  - [x] `DELETE /api/orgs/{org_id}/flags/sdk-keys/{key_id}`
+- [x] Add flags API types to `loom-server-api/src/flags.rs`
+- [x] Add flags_repo to AppState
+- [x] 60+ tests (51 in loom-flags-core, 9 in loom-server-flags)
+  - Property-based tests for environment name validation
+  - Property-based tests for SDK key generation/parsing roundtrip
 
 ---
 

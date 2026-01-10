@@ -104,6 +104,7 @@ pub struct AppState {
 	pub scim_config: ScimConfig,
 	pub pool: SqlitePool,
 	pub session_service: Arc<SessionService>,
+	pub flags_repo: Arc<loom_server_flags::SqliteFlagsRepository>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -282,6 +283,8 @@ pub async fn create_app_state(
 		loom_server_auth::middleware::SESSION_COOKIE_NAME,
 	));
 
+	let flags_repo = Arc::new(loom_server_flags::SqliteFlagsRepository::new(pool.clone()));
+
 	AppState {
 		repo,
 		user_repo,
@@ -330,6 +333,7 @@ pub async fn create_app_state(
 		scim_config: config.scim.clone(),
 		pool,
 		session_service,
+		flags_repo,
 	}
 }
 
@@ -922,6 +926,39 @@ pub fn create_router(state: AppState) -> Router {
 		.route(
 			"/api/orgs/{org_id}/api-keys/{id}/usage",
 			get(routes::api_keys::get_api_key_usage),
+		)
+		// Feature flags routes
+		.route(
+			"/api/orgs/{org_id}/flags/environments",
+			get(routes::flags::list_environments),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/environments",
+			post(routes::flags::create_environment),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/environments/{env_id}",
+			get(routes::flags::get_environment),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/environments/{env_id}",
+			patch(routes::flags::update_environment),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/environments/{env_id}",
+			delete(routes::flags::delete_environment),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/environments/{env_id}/sdk-keys",
+			get(routes::flags::list_sdk_keys),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/environments/{env_id}/sdk-keys",
+			post(routes::flags::create_sdk_key),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/sdk-keys/{key_id}",
+			delete(routes::flags::revoke_sdk_key),
 		)
 		// Invitation routes (authenticated)
 		.route(
