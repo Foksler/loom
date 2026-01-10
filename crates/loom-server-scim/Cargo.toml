@@ -11,6 +11,7 @@ description = "SCIM 2.0 HTTP handlers for Loom server"
 
 [dependencies]
 loom-scim = { path = "../loom-scim" }
+loom-server-audit = { path = "../loom-server-audit" }
 loom-server-auth = { path = "../loom-server-auth" }
 loom-server-db = { path = "../loom-server-db" }
 loom-server-provisioning = { path = "../loom-server-provisioning" }

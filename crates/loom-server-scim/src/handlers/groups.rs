@@ -8,10 +8,12 @@ use axum::{
 };
 use loom_scim::patch::PatchRequest;
 use loom_scim::types::{GroupMember, Meta, SCHEMA_CORE_GROUP};
-use loom_scim::{ListResponse, ScimGroup};
+use loom_scim::{evaluate_filter, FilterParser, ListResponse, ScimGroup};
+use loom_server_audit::{AuditEventType, AuditLogEntry};
 use loom_server_auth::{TeamId, UserId};
 use loom_server_db::ScimTeam;
 use serde::Deserialize;
+use serde_json::json;
 use tracing::info;
 use uuid::Uuid;
 
@@ -84,27 +86,56 @@ async fn get_group_members(
 	)
 }
 
+fn get_group_attr(group: &ScimGroup, attr: &str) -> Option<String> {
+	match attr.to_lowercase().as_str() {
+		"displayname" => Some(group.display_name.clone()),
+		"id" => group.id.clone(),
+		"externalid" => group.external_id.clone(),
+		_ => None,
+	}
+}
+
 pub async fn list_groups(
 	State(state): State<ScimState>,
 	Query(query): Query<ListGroupsQuery>,
 ) -> Result<Json<ListResponse<ScimGroup>>, ScimApiError> {
-	let count = query.count.min(1000);
-	let offset = (query.start_index - 1).max(0);
+	let parsed_filter = if let Some(ref filter_str) = query.filter {
+		Some(FilterParser::parse(filter_str)?)
+	} else {
+		None
+	};
 
 	let teams = state
 		.team_repo
-		.list_scim_teams(&state.org_id, count, offset)
+		.list_scim_teams(&state.org_id, 10000, 0)
 		.await?;
-	let total = state.team_repo.count_teams_in_org(&state.org_id).await?;
 
-	let mut groups = Vec::with_capacity(teams.len());
+	let mut all_groups = Vec::with_capacity(teams.len());
 	for team in &teams {
 		let members = get_group_members(&state, &team.id).await?;
-		groups.push(scim_team_to_group(team, members));
+		all_groups.push(scim_team_to_group(team, members));
 	}
 
+	let filtered_groups: Vec<ScimGroup> = if let Some(ref filter) = parsed_filter {
+		all_groups
+			.into_iter()
+			.filter(|group| evaluate_filter(filter, &|attr| get_group_attr(group, attr)))
+			.collect()
+	} else {
+		all_groups
+	};
+
+	let total = filtered_groups.len() as i64;
+	let count = query.count.min(1000);
+	let offset = (query.start_index - 1).max(0) as usize;
+	let paginated: Vec<ScimGroup> = filtered_groups
+		.into_iter()
+		.skip(offset)
+		.take(count as usize)
+		.collect();
+
 	Ok(Json(ListResponse::new(
-		groups,
+		paginated,
 		total,
 		query.start_index,
 		count,
@@ -137,6 +168,19 @@ pub async fn create_group(
 		.await?;
 
 	info!(team_id = %team_id, name = %scim_group.display_name, "SCIM: created group");
+
+	state.audit_service.log(
+		AuditLogEntry::builder(AuditEventType::ScimGroupCreated)
+			.resource("team", team_id.to_string())
+			.action("SCIM group created")
+			.details(json!({
+				"display_name": scim_group.display_name,
+				"member_count": user_ids.len(),
+				"org_id": state.org_id.to_string(),
+			}))
+			.build(),
+	);
+
 	get_group(State(state), Path(team_id.to_string()))
 		.await
 		.map(|g| (StatusCode::CREATED, g))
@@ -187,6 +231,17 @@ pub async fn replace_group(
 		.set_team_members(&team_id, &user_ids)
 		.await?;
 
+	state.audit_service.log(
+		AuditLogEntry::builder(AuditEventType::ScimGroupUpdated)
+			.resource("team", team_id.to_string())
+			.action("SCIM group replaced")
+			.details(json!({
+				"display_name": scim_group.display_name,
+				"member_count": user_ids.len(),
+			}))
+			.build(),
+	);
+
 	get_group(State(state), Path(id)).await
 }
 
@@ -225,9 +280,29 @@ pub async fn patch_group(
 										.team_repo
 										.add_member(&team_id, &user_id, loom_server_auth::TeamRole::Member)
 										.await?;
+
+									state.audit_service.log(
+										AuditLogEntry::builder(AuditEventType::ScimGroupMemberAdded)
+											.resource("team", team_id.to_string())
+											.action("SCIM group member added")
+											.details(json!({
+												"user_id": user_id.to_string(),
+											}))
+											.build(),
+									);
 								}
 								loom_scim::PatchOp::Remove => {
 									state.team_repo.remove_member(&team_id, &user_id).await?;
+
+									state.audit_service.log(
+										AuditLogEntry::builder(AuditEventType::ScimGroupMemberRemoved)
+											.resource("team", team_id.to_string())
+											.action("SCIM group member removed")
+											.details(json!({
+												"user_id": user_id.to_string(),
+											}))
+											.build(),
+									);
 								}
 								_ => {}
 							}
@@ -238,6 +313,16 @@ pub async fn patch_group(
 			_ => {}
 		}
 	}
+
+	state.audit_service.log(
+		AuditLogEntry::builder(AuditEventType::ScimGroupUpdated)
+			.resource("team", team_id.to_string())
+			.action("SCIM group patched")
+			.details(json!({
+				"operations_count": patch.operations.len(),
+			}))
+			.build(),
+	);
 
 	get_group(State(state), Path(id)).await
 }
@@ -254,5 +339,16 @@ pub async fn delete_group(
 		.await?;
 
 	info!(team_id = %id, "SCIM: deleted group");
+
+	state.audit_service.log(
+		AuditLogEntry::builder(AuditEventType::ScimGroupDeleted)
+			.resource("team", team_id.to_string())
+			.action("SCIM group deleted")
+			.details(json!({
+				"org_id": state.org_id.to_string(),
+			}))
+			.build(),
+	);
+
 	Ok(StatusCode::NO_CONTENT)
 }

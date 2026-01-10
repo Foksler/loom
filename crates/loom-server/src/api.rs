@@ -720,6 +720,7 @@ pub fn create_router(state: AppState) -> Router {
 	let scim_provisioning = state.user_provisioning.clone();
 	let scim_user_repo = state.user_repo.clone();
 	let scim_team_repo = state.team_repo.clone();
+	let scim_audit_service = state.audit_service.clone();
 
 	// Public routes - no authentication required
 	let public = PublicRouter::new()
@@ -1269,6 +1270,7 @@ pub fn create_router(state: AppState) -> Router {
 						scim_provisioning,
 						scim_user_repo,
 						scim_team_repo,
+						scim_audit_service,
 					);
 					router = router.nest("/api/scim", scim_router);
 					tracing::info!("SCIM endpoints enabled at /api/scim");

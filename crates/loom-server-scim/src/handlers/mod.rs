@@ -3,6 +3,10 @@
 
 pub mod bulk;
 pub mod groups;
+pub mod resource_types;
 pub mod schemas;
 pub mod service_provider;
 pub mod users;
+
+#[cfg(test)]
+mod tests;

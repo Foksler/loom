@@ -9,13 +9,14 @@ use axum::{
 	Router,
 };
 use loom_common_secret::SecretString;
+use loom_server_audit::AuditService;
 use loom_server_auth::OrgId;
 use loom_server_db::{TeamRepository, UserRepository};
 use loom_server_provisioning::UserProvisioningService;
 
 use crate::auth::scim_auth_middleware;
 use crate::handlers::users::ScimState;
-use crate::handlers::{bulk, groups, schemas, service_provider, users};
+use crate::handlers::{bulk, groups, resource_types, schemas, service_provider, users};
 
 pub fn scim_routes(
 	token: Option<SecretString>,
@@ -23,12 +24,14 @@ pub fn scim_routes(
 	provisioning: Arc<UserProvisioningService>,
 	user_repo: Arc<UserRepository>,
 	team_repo: Arc<TeamRepository>,
+	audit_service: Arc<AuditService>,
 ) -> Router {
 	let state = ScimState {
 		org_id,
 		provisioning,
 		user_repo,
 		team_repo,
+		audit_service,
 	};
 
 	Router::new()
@@ -38,6 +41,8 @@ pub fn scim_routes(
 		)
 		.route("/Schemas", get(schemas::list_schemas))
 		.route("/Schemas/{id}", get(schemas::get_schema))
+		.route("/ResourceTypes", get(resource_types::list_resource_types))
+		.route("/ResourceTypes/{id}", get(resource_types::get_resource_type))
 		.route("/Users", get(users::list_users).post(users::create_user))
 		.route(
 			"/Users/{id}",

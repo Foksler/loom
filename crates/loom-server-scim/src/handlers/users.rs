@@ -8,11 +8,13 @@ use axum::{
 };
 use chrono::Utc;
 use loom_scim::patch::PatchRequest;
-use loom_scim::{ListResponse, ScimUser};
+use loom_scim::{evaluate_filter, FilterParser, ListResponse, ScimUser};
+use loom_server_audit::{AuditEventType, AuditLogEntry, AuditService};
 use loom_server_auth::{OrgId, UserId};
 use loom_server_db::{ScimUserRow, TeamRepository, UserRepository};
 use loom_server_provisioning::UserProvisioningService;
 use serde::Deserialize;
+use serde_json::json;
 use std::sync::Arc;
 use tracing::info;
 use uuid::Uuid;
@@ -49,25 +51,59 @@ pub struct ScimState {
 	pub provisioning: Arc<UserProvisioningService>,
 	pub user_repo: Arc<UserRepository>,
 	pub team_repo: Arc<TeamRepository>,
+	pub audit_service: Arc<AuditService>,
+}
+
+fn get_user_attr(user: &ScimUser, attr: &str) -> Option<String> {
+	match attr.to_lowercase().as_str() {
+		"username" => Some(user.user_name.clone()),
+		"displayname" => user.display_name.clone(),
+		"active" => Some(user.active.to_string()),
+		"id" => user.id.clone(),
+		"externalid" => user.external_id.clone(),
+		"locale" => user.locale.clone(),
+		"emails" | "emails.value" => user.emails.first().map(|e| e.value.clone()),
+		_ => None,
+	}
 }
 
 pub async fn list_users(
 	State(state): State<ScimState>,
 	Query(query): Query<ListUsersQuery>,
 ) -> Result<Json<ListResponse<ScimUser>>, ScimApiError> {
-	let count = query.count.min(1000);
-	let offset = (query.start_index - 1).max(0);
+	let parsed_filter = if let Some(ref filter_str) = query.filter {
+		Some(FilterParser::parse(filter_str)?)
+	} else {
+		None
+	};
 
 	let rows = state
 		.user_repo
-		.list_users_in_org(&state.org_id, count, offset)
+		.list_users_in_org(&state.org_id, 10000, 0)
 		.await?;
-	let total = state.user_repo.count_users_in_org(&state.org_id).await?;
 
-	let users: Vec<ScimUser> = rows.into_iter().map(scim_user_row_to_scim_user).collect();
+	let all_users: Vec<ScimUser> = rows.into_iter().map(scim_user_row_to_scim_user).collect();
+
+	let filtered_users: Vec<ScimUser> = if let Some(ref filter) = parsed_filter {
+		all_users
+			.into_iter()
+			.filter(|user| evaluate_filter(filter, &|attr| get_user_attr(user, attr)))
+			.collect()
+	} else {
+		all_users
+	};
+
+	let total = filtered_users.len() as i64;
+	let count = query.count.min(1000);
+	let offset = (query.start_index - 1).max(0) as usize;
+	let paginated: Vec<ScimUser> = filtered_users
+		.into_iter()
+		.skip(offset)
+		.take(count as usize)
+		.collect();
 
 	Ok(Json(ListResponse::new(
-		users,
+		paginated,
 		total,
 		query.start_index,
 		count,
@@ -97,6 +133,18 @@ pub async fn create_user(
 		.map_err(|e| ScimApiError::Internal(format!("Provisioning failed: {}", e)))?;
 
 	info!(user_id = %user.id, email = %email, "SCIM: provisioned user");
+
+	state.audit_service.log(
+		AuditLogEntry::builder(AuditEventType::ScimUserCreated)
+			.resource("user", user.id.to_string())
+			.action("SCIM user created via provisioning")
+			.details(json!({
+				"email": email,
+				"display_name": display_name,
+				"org_id": state.org_id.to_string(),
+			}))
+			.build(),
+	);
 
 	let row = state
 		.user_repo
@@ -154,6 +202,18 @@ pub async fn replace_user(
 		)
 		.await?;
 
+	state.audit_service.log(
+		AuditLogEntry::builder(AuditEventType::ScimUserUpdated)
+			.resource("user", user_id.to_string())
+			.action("SCIM user replaced")
+			.details(json!({
+				"display_name": display_name,
+				"external_id": external_id,
+				"active": active,
+			}))
+			.build(),
+	);
+
 	get_user(State(state), Path(id)).await
 }
 
@@ -189,6 +249,16 @@ pub async fn patch_user(
 		}
 	}
 
+	state.audit_service.log(
+		AuditLogEntry::builder(AuditEventType::ScimUserUpdated)
+			.resource("user", user_id.to_string())
+			.action("SCIM user patched")
+			.details(json!({
+				"operations_count": patch.operations.len(),
+			}))
+			.build(),
+	);
+
 	get_user(State(state), Path(id)).await
 }
 
@@ -207,6 +277,17 @@ pub async fn delete_user(
 		.map_err(|e| ScimApiError::Internal(e.to_string()))?;
 
 	info!(user_id = %id, "SCIM: deprovisioned user");
+
+	state.audit_service.log(
+		AuditLogEntry::builder(AuditEventType::ScimUserDeprovisioned)
+			.resource("user", user_id.to_string())
+			.action("SCIM user deprovisioned")
+			.details(json!({
+				"org_id": state.org_id.to_string(),
+			}))
+			.build(),
+	);
+
 	Ok(StatusCode::NO_CONTENT)
 }
 

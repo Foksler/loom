@@ -5443,6 +5443,7 @@ dependencies = [
  "chrono",
  "loom-common-secret",
  "loom-scim",
+ "loom-server-audit",
  "loom-server-auth",
  "loom-server-db",
  "loom-server-provisioning",
