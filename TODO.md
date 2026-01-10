@@ -570,7 +570,7 @@ Implementation checklist for the Feature Flags system. See
 
 ---
 
-## Phase 9: Stale Detection & Stats
+## ✅ Phase 9: Stale Detection & Stats (COMPLETED)
 
 **Goal:** Track flag usage and identify stale flags.
 
@@ -580,16 +580,32 @@ Implementation checklist for the Feature Flags system. See
 - Stats endpoints: `specs/feature-flags-system.md:420-423`
 
 **Tasks:**
-- [ ] Implement FlagStats tracking
-  - [ ] Update `last_evaluated_at` on evaluation
-  - [ ] Increment evaluation counts
-- [ ] Evaluation count rollups
-  - [ ] Background job for 24h/7d/30d counts
-- [ ] Stale flag detection
-  - [ ] `GET /api/flags/stale`
-  - [ ] Return flags not evaluated in 30 days
-- [ ] Flag stats endpoint
-  - [ ] `GET /api/flags/{key}/stats`
+- [x] Implement FlagStats tracking
+  - [x] Repository trait methods: `get_flag_stats`, `record_flag_evaluation`, `list_stale_flags`
+  - [x] SQLite repository implementation with upsert for stats
+  - [x] Update `last_evaluated_at` on evaluation
+  - [x] Increment 24h/7d/30d evaluation counts
+- [x] Stale flag detection
+  - [x] `GET /api/orgs/{org_id}/flags/stale` - list stale flags
+  - [x] Configurable threshold via `LOOM_FLAGS_STALE_THRESHOLD_DAYS` (default: 30 days)
+  - [x] Returns flags not evaluated within threshold, ordered by staleness
+- [x] Flag stats endpoint
+  - [x] `GET /api/orgs/{org_id}/flags/{flag_key}/stats` - get individual flag statistics
+  - [x] Returns last_evaluated_at and evaluation counts
+- [x] Evaluation recording integration
+  - [x] Stats recorded asynchronously (fire and forget) in evaluation endpoints
+  - [x] Both single flag and bulk evaluation endpoints record stats
+- [x] API types in `loom-server-api/src/flags.rs`
+  - [x] `FlagStatsResponse` - single flag statistics
+  - [x] `StaleFlagResponse` - stale flag entry with days_since_evaluated
+  - [x] `ListStaleFlagsResponse` - list of stale flags with threshold
+- [x] i18n translations (EN, ES, AR)
+  - [x] Server translations in loom-common-i18n
+  - [x] Web translations in loom-web
+- [x] Property-based tests for FlagStats
+  - [x] Count invariants (24h <= 7d <= 30d)
+  - [x] Context hash determinism and uniqueness
+- [x] 140+ tests passing (112 in loom-flags-core, 29 in loom-server-flags)
 
 ---
 

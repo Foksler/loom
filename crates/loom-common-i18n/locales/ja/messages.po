@@ -1576,3 +1576,47 @@ msgstr "無効な時間範囲"
 #: API: Flags - No exposures found
 msgid "server.api.flags.no_exposures_found"
 msgstr "エクスポージャーが見つかりません"
+
+# ============================================================================
+# Flag Stats API responses
+# ============================================================================
+
+#: API: Flags - Stats retrieved
+msgid "server.api.flags.stats_retrieved"
+msgstr "Flag statistics retrieved successfully"
+
+#: API: Flags - Stale flags retrieved
+msgid "server.api.flags.stale_flags_retrieved"
+msgstr "Stale flags retrieved successfully"
+
+#: API: Flags - Flag is stale
+msgid "server.api.flags.flag_is_stale"
+msgstr "This flag has not been evaluated in {days} days"
+
+#: API: Flags - No stale flags
+msgid "server.api.flags.no_stale_flags"
+msgstr "No stale flags found"
+
+#: API: Flags - Never evaluated
+msgid "server.api.flags.never_evaluated"
+msgstr "This flag has never been evaluated"
+
+#: API: Flags - Last evaluated
+msgid "server.api.flags.last_evaluated"
+msgstr "Last evaluated: {date}"
+
+#: API: Flags - Evaluations 24h
+msgid "server.api.flags.evaluations_24h"
+msgstr "Evaluations in last 24 hours: {count}"
+
+#: API: Flags - Evaluations 7d
+msgid "server.api.flags.evaluations_7d"
+msgstr "Evaluations in last 7 days: {count}"
+
+#: API: Flags - Evaluations 30d
+msgid "server.api.flags.evaluations_30d"
+msgstr "Evaluations in last 30 days: {count}"
+
+#: API: Flags - Stale threshold
+msgid "server.api.flags.stale_threshold"
+msgstr "Flags are considered stale after {days} days without evaluation"

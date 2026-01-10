@@ -1063,6 +1063,15 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/orgs/{org_id}/flags/{flag_key}/evaluate",
 			post(routes::flags::evaluate_flag_endpoint),
 		)
+		// Flag stats routes
+		.route(
+			"/api/orgs/{org_id}/flags/stale",
+			get(routes::flags::list_stale_flags),
+		)
+		.route(
+			"/api/orgs/{org_id}/flags/{flag_key}/stats",
+			get(routes::flags::get_flag_stats),
+		)
 		// Flag stream stats (admin only)
 		.route(
 			"/api/flags/stream/stats",

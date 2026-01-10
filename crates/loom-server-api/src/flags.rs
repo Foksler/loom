@@ -691,3 +691,49 @@ pub struct EvaluateAllFlagsResponse {
 	/// When the evaluation was performed.
 	pub evaluated_at: DateTime<Utc>,
 }
+
+// ============================================================================
+// Flag Stats Types
+// ============================================================================
+
+/// Statistics for a feature flag.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct FlagStatsResponse {
+	/// The flag key these stats are for.
+	pub flag_key: String,
+	/// When the flag was last evaluated (None if never evaluated).
+	pub last_evaluated_at: Option<DateTime<Utc>>,
+	/// Number of evaluations in the last 24 hours.
+	pub evaluation_count_24h: u64,
+	/// Number of evaluations in the last 7 days.
+	pub evaluation_count_7d: u64,
+	/// Number of evaluations in the last 30 days.
+	pub evaluation_count_30d: u64,
+}
+
+/// A stale flag entry in the response.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct StaleFlagResponse {
+	/// The flag ID.
+	pub flag_id: String,
+	/// The flag key.
+	pub flag_key: String,
+	/// Human-readable flag name.
+	pub name: String,
+	/// When the flag was last evaluated (None if never evaluated).
+	pub last_evaluated_at: Option<DateTime<Utc>>,
+	/// Number of days since the flag was last evaluated.
+	pub days_since_evaluated: Option<i64>,
+}
+
+/// Response for listing stale flags.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct ListStaleFlagsResponse {
+	/// List of stale flags.
+	pub stale_flags: Vec<StaleFlagResponse>,
+	/// The threshold used to determine staleness (in days).
+	pub stale_threshold_days: u32,
+}

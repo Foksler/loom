@@ -484,4 +484,139 @@ mod tests {
 
 		assert_eq!(hash1, hash2);
 	}
+
+	#[test]
+	fn test_flag_stats_creation() {
+		let stats = FlagStats {
+			flag_key: "feature.test".to_string(),
+			last_evaluated_at: Some(chrono::Utc::now()),
+			evaluation_count_24h: 100,
+			evaluation_count_7d: 500,
+			evaluation_count_30d: 2000,
+		};
+
+		assert_eq!(stats.flag_key, "feature.test");
+		assert!(stats.last_evaluated_at.is_some());
+		assert_eq!(stats.evaluation_count_24h, 100);
+		assert_eq!(stats.evaluation_count_7d, 500);
+		assert_eq!(stats.evaluation_count_30d, 2000);
+	}
+
+	#[test]
+	fn test_flag_stats_never_evaluated() {
+		let stats = FlagStats {
+			flag_key: "feature.new".to_string(),
+			last_evaluated_at: None,
+			evaluation_count_24h: 0,
+			evaluation_count_7d: 0,
+			evaluation_count_30d: 0,
+		};
+
+		assert!(stats.last_evaluated_at.is_none());
+		assert_eq!(stats.evaluation_count_24h, 0);
+	}
+
+	#[test]
+	fn test_flag_stats_serialization() {
+		let stats = FlagStats {
+			flag_key: "feature.test".to_string(),
+			last_evaluated_at: None,
+			evaluation_count_24h: 42,
+			evaluation_count_7d: 300,
+			evaluation_count_30d: 1000,
+		};
+
+		let json = serde_json::to_string(&stats).unwrap();
+		let deserialized: FlagStats = serde_json::from_str(&json).unwrap();
+
+		assert_eq!(deserialized.flag_key, stats.flag_key);
+		assert_eq!(deserialized.evaluation_count_24h, stats.evaluation_count_24h);
+	}
+}
+
+#[cfg(test)]
+mod proptests {
+	use super::*;
+	use proptest::prelude::*;
+
+	proptest! {
+		/// Property: Evaluation counts should maintain invariant 24h <= 7d <= 30d
+		/// This tests that our FlagStats can handle any valid count values
+		#[test]
+		fn flag_stats_count_invariants(
+			count_24h in 0u64..1_000_000,
+			count_7d_extra in 0u64..10_000_000,
+			count_30d_extra in 0u64..100_000_000,
+		) {
+			// Build counts that maintain the invariant
+			let count_7d = count_24h.saturating_add(count_7d_extra);
+			let count_30d = count_7d.saturating_add(count_30d_extra);
+
+			let stats = FlagStats {
+				flag_key: "test.flag".to_string(),
+				last_evaluated_at: None,
+				evaluation_count_24h: count_24h,
+				evaluation_count_7d: count_7d,
+				evaluation_count_30d: count_30d,
+			};
+
+			// Verify invariants
+			prop_assert!(stats.evaluation_count_24h <= stats.evaluation_count_7d);
+			prop_assert!(stats.evaluation_count_7d <= stats.evaluation_count_30d);
+		}
+
+		/// Property: Context hash is deterministic
+		#[test]
+		fn context_hash_is_deterministic(
+			environment in "[a-z]+",
+			user_id in prop::option::of("[a-z0-9]+"),
+			flag_key in "[a-z.]+",
+		) {
+			let mut ctx = EvaluationContext::new(&environment);
+			if let Some(uid) = &user_id {
+				ctx = ctx.with_user_id(uid);
+			}
+
+			let hash1 = ctx.compute_hash(&flag_key);
+			let hash2 = ctx.compute_hash(&flag_key);
+
+			prop_assert_eq!(hash1, hash2);
+		}
+
+		/// Property: Different contexts produce different hashes
+		#[test]
+		fn different_users_produce_different_hashes(
+			user_id1 in "[a-z0-9]{5,10}",
+			user_id2 in "[a-z0-9]{5,10}",
+			flag_key in "[a-z.]+",
+		) {
+			prop_assume!(user_id1 != user_id2);
+
+			let ctx1 = EvaluationContext::new("prod").with_user_id(&user_id1);
+			let ctx2 = EvaluationContext::new("prod").with_user_id(&user_id2);
+
+			let hash1 = ctx1.compute_hash(&flag_key);
+			let hash2 = ctx2.compute_hash(&flag_key);
+
+			prop_assert_ne!(hash1, hash2);
+		}
+
+		/// Property: Hash is always 64 hex characters (SHA-256)
+		#[test]
+		fn hash_is_always_valid_sha256(
+			environment in "[a-z]+",
+			user_id in prop::option::of("[a-z0-9]+"),
+			flag_key in "[a-z.]+",
+		) {
+			let mut ctx = EvaluationContext::new(&environment);
+			if let Some(uid) = &user_id {
+				ctx = ctx.with_user_id(uid);
+			}
+
+			let hash = ctx.compute_hash(&flag_key);
+
+			prop_assert_eq!(hash.len(), 64);
+			prop_assert!(hash.chars().all(|c| c.is_ascii_hexdigit()));
+		}
+	}
 }

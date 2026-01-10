@@ -1579,3 +1579,47 @@ msgstr "لم يتم العثور على تعرضات للمعايير المحد
 #: API: Flags - Exposure already logged
 msgid "server.api.flags.exposure_already_logged"
 msgstr "تم تسجيل التعرض بالفعل ضمن نافذة إزالة التكرار"
+
+# ============================================================================
+# Flag Stats API responses
+# ============================================================================
+
+#: API: Flags - Stats retrieved
+msgid "server.api.flags.stats_retrieved"
+msgstr "تم استرداد إحصائيات العلم بنجاح"
+
+#: API: Flags - Stale flags retrieved
+msgid "server.api.flags.stale_flags_retrieved"
+msgstr "تم استرداد الأعلام القديمة بنجاح"
+
+#: API: Flags - Flag is stale
+msgid "server.api.flags.flag_is_stale"
+msgstr "لم يتم تقييم هذا العلم منذ {days} يوم"
+
+#: API: Flags - No stale flags
+msgid "server.api.flags.no_stale_flags"
+msgstr "لم يتم العثور على أعلام قديمة"
+
+#: API: Flags - Never evaluated
+msgid "server.api.flags.never_evaluated"
+msgstr "لم يتم تقييم هذا العلم مطلقاً"
+
+#: API: Flags - Last evaluated
+msgid "server.api.flags.last_evaluated"
+msgstr "آخر تقييم: {date}"
+
+#: API: Flags - Evaluations 24h
+msgid "server.api.flags.evaluations_24h"
+msgstr "التقييمات في آخر 24 ساعة: {count}"
+
+#: API: Flags - Evaluations 7d
+msgid "server.api.flags.evaluations_7d"
+msgstr "التقييمات في آخر 7 أيام: {count}"
+
+#: API: Flags - Evaluations 30d
+msgid "server.api.flags.evaluations_30d"
+msgstr "التقييمات في آخر 30 يوم: {count}"
+
+#: API: Flags - Stale threshold
+msgid "server.api.flags.stale_threshold"
+msgstr "تعتبر الأعلام قديمة بعد {days} يوم بدون تقييم"

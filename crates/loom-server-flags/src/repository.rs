@@ -120,6 +120,29 @@ pub trait FlagsRepository: Send + Sync {
 		start_time: Option<chrono::DateTime<Utc>>,
 		end_time: Option<chrono::DateTime<Utc>>,
 	) -> Result<u64>;
+
+	// Flag stats operations
+
+	/// Gets statistics for a specific flag.
+	async fn get_flag_stats(&self, flag_id: FlagId) -> Result<Option<loom_flags_core::FlagStats>>;
+
+	/// Records an evaluation for a flag, updating its statistics.
+	///
+	/// This method updates:
+	/// - `last_evaluated_at` to the current timestamp
+	/// - Increments evaluation counters based on time windows
+	async fn record_flag_evaluation(&self, flag_id: FlagId, flag_key: &str) -> Result<()>;
+
+	/// Lists flags that are considered stale (not evaluated within the threshold).
+	///
+	/// A flag is stale if:
+	/// - It has never been evaluated, OR
+	/// - It was last evaluated more than `stale_threshold_days` ago
+	async fn list_stale_flags(
+		&self,
+		org_id: Option<OrgId>,
+		stale_threshold_days: u32,
+	) -> Result<Vec<(Flag, Option<chrono::DateTime<Utc>>)>>;
 }
 
 /// SQLite implementation of the flags repository.
@@ -1263,6 +1286,125 @@ impl FlagsRepository for SqliteFlagsRepository {
 		let (count,) = q.fetch_one(&self.pool).await?;
 		Ok(count as u64)
 	}
+
+	// Flag stats operations
+
+	#[instrument(skip(self), fields(flag_id = %flag_id))]
+	async fn get_flag_stats(&self, flag_id: FlagId) -> Result<Option<loom_flags_core::FlagStats>> {
+		let row = sqlx::query_as::<_, FlagStatsRow>(
+			r#"
+			SELECT fs.flag_id, f.key as flag_key, fs.last_evaluated_at,
+				   fs.evaluation_count_24h, fs.evaluation_count_7d, fs.evaluation_count_30d
+			FROM flag_stats fs
+			JOIN flags f ON f.id = fs.flag_id
+			WHERE fs.flag_id = ?
+			"#,
+		)
+		.bind(flag_id.0.to_string())
+		.fetch_optional(&self.pool)
+		.await?;
+
+		row.map(TryInto::try_into).transpose()
+	}
+
+	#[instrument(skip(self), fields(flag_id = %flag_id, flag_key = %flag_key))]
+	async fn record_flag_evaluation(&self, flag_id: FlagId, flag_key: &str) -> Result<()> {
+		let now = Utc::now();
+
+		// Use upsert to insert or update stats
+		sqlx::query(
+			r#"
+			INSERT INTO flag_stats (flag_id, last_evaluated_at, evaluation_count_24h, evaluation_count_7d, evaluation_count_30d, updated_at)
+			VALUES (?, ?, 1, 1, 1, ?)
+			ON CONFLICT(flag_id) DO UPDATE SET
+				last_evaluated_at = excluded.last_evaluated_at,
+				evaluation_count_24h = flag_stats.evaluation_count_24h + 1,
+				evaluation_count_7d = flag_stats.evaluation_count_7d + 1,
+				evaluation_count_30d = flag_stats.evaluation_count_30d + 1,
+				updated_at = excluded.updated_at
+			"#,
+		)
+		.bind(flag_id.0.to_string())
+		.bind(now.to_rfc3339())
+		.bind(now.to_rfc3339())
+		.execute(&self.pool)
+		.await?;
+
+		tracing::debug!(%flag_id, %flag_key, "Recorded flag evaluation");
+		Ok(())
+	}
+
+	#[instrument(skip(self), fields(org_id = ?org_id, stale_threshold_days = stale_threshold_days))]
+	async fn list_stale_flags(
+		&self,
+		org_id: Option<OrgId>,
+		stale_threshold_days: u32,
+	) -> Result<Vec<(Flag, Option<chrono::DateTime<Utc>>)>> {
+		// Calculate the threshold timestamp
+		let threshold = Utc::now() - chrono::Duration::days(stale_threshold_days as i64);
+		let threshold_str = threshold.to_rfc3339();
+
+		let rows = match org_id {
+			Some(org) => {
+				sqlx::query_as::<_, FlagWithStatsRow>(
+					r#"
+					SELECT f.id, f.org_id, f.key, f.name, f.description, f.tags, f.maintainer_user_id,
+						   f.variants, f.default_variant, f.exposure_tracking_enabled,
+						   f.created_at, f.updated_at, f.archived_at,
+						   fs.last_evaluated_at
+					FROM flags f
+					LEFT JOIN flag_stats fs ON f.id = fs.flag_id
+					WHERE f.org_id = ?
+					  AND f.archived_at IS NULL
+					  AND (fs.last_evaluated_at IS NULL OR fs.last_evaluated_at < ?)
+					ORDER BY fs.last_evaluated_at ASC NULLS FIRST, f.key ASC
+					"#,
+				)
+				.bind(org.0.to_string())
+				.bind(&threshold_str)
+				.fetch_all(&self.pool)
+				.await?
+			}
+			None => {
+				sqlx::query_as::<_, FlagWithStatsRow>(
+					r#"
+					SELECT f.id, f.org_id, f.key, f.name, f.description, f.tags, f.maintainer_user_id,
+						   f.variants, f.default_variant, f.exposure_tracking_enabled,
+						   f.created_at, f.updated_at, f.archived_at,
+						   fs.last_evaluated_at
+					FROM flags f
+					LEFT JOIN flag_stats fs ON f.id = fs.flag_id
+					WHERE f.org_id IS NULL
+					  AND f.archived_at IS NULL
+					  AND (fs.last_evaluated_at IS NULL OR fs.last_evaluated_at < ?)
+					ORDER BY fs.last_evaluated_at ASC NULLS FIRST, f.key ASC
+					"#,
+				)
+				.bind(&threshold_str)
+				.fetch_all(&self.pool)
+				.await?
+			}
+		};
+
+		let mut results = Vec::with_capacity(rows.len());
+		for row in rows {
+			let flag_id: FlagId = row
+				.id
+				.parse()
+				.map_err(|_| FlagsServerError::Internal("Invalid flag ID in database".to_string()))?;
+			let prerequisites = self.get_flag_prerequisites(flag_id).await?;
+			// Extract last_evaluated_at before consuming row
+			let last_evaluated_at = row.last_evaluated_at.as_ref().and_then(|s| {
+				chrono::DateTime::parse_from_rfc3339(s)
+					.map(|dt| dt.with_timezone(&chrono::Utc))
+					.ok()
+			});
+			let flag = row.into_flag(prerequisites)?;
+			results.push((flag, last_evaluated_at));
+		}
+
+		Ok(results)
+	}
 }
 
 impl SqliteFlagsRepository {
@@ -1666,6 +1808,106 @@ impl TryFrom<ExposureLogRow> for ExposureLog {
 			timestamp: chrono::DateTime::parse_from_rfc3339(&row.timestamp)
 				.map_err(|_| FlagsServerError::Internal("Invalid timestamp".to_string()))?
 				.with_timezone(&chrono::Utc),
+		})
+	}
+}
+
+#[derive(sqlx::FromRow)]
+struct FlagStatsRow {
+	#[allow(dead_code)]
+	flag_id: String,
+	flag_key: String,
+	last_evaluated_at: Option<String>,
+	evaluation_count_24h: i64,
+	evaluation_count_7d: i64,
+	evaluation_count_30d: i64,
+}
+
+impl TryFrom<FlagStatsRow> for loom_flags_core::FlagStats {
+	type Error = FlagsServerError;
+
+	fn try_from(row: FlagStatsRow) -> Result<Self> {
+		Ok(loom_flags_core::FlagStats {
+			flag_key: row.flag_key,
+			last_evaluated_at: row
+				.last_evaluated_at
+				.map(|s| {
+					chrono::DateTime::parse_from_rfc3339(&s)
+						.map_err(|_| FlagsServerError::Internal("Invalid last_evaluated_at".to_string()))
+						.map(|dt| dt.with_timezone(&chrono::Utc))
+				})
+				.transpose()?,
+			evaluation_count_24h: row.evaluation_count_24h as u64,
+			evaluation_count_7d: row.evaluation_count_7d as u64,
+			evaluation_count_30d: row.evaluation_count_30d as u64,
+		})
+	}
+}
+
+#[derive(sqlx::FromRow)]
+struct FlagWithStatsRow {
+	id: String,
+	org_id: Option<String>,
+	key: String,
+	name: String,
+	description: Option<String>,
+	tags: String,
+	maintainer_user_id: Option<String>,
+	variants: String,
+	default_variant: String,
+	exposure_tracking_enabled: bool,
+	created_at: String,
+	updated_at: String,
+	archived_at: Option<String>,
+	last_evaluated_at: Option<String>,
+}
+
+impl FlagWithStatsRow {
+	fn into_flag(self, prerequisites: Vec<FlagPrerequisite>) -> Result<Flag> {
+		let tags: Vec<String> = serde_json::from_str(&self.tags)?;
+		let variants: Vec<Variant> = serde_json::from_str(&self.variants)?;
+
+		Ok(Flag {
+			id: self
+				.id
+				.parse()
+				.map_err(|_| FlagsServerError::Internal("Invalid flag ID".to_string()))?,
+			org_id: self
+				.org_id
+				.map(|s| {
+					s.parse()
+						.map_err(|_| FlagsServerError::Internal("Invalid org ID".to_string()))
+				})
+				.transpose()?,
+			key: self.key,
+			name: self.name,
+			description: self.description,
+			tags,
+			maintainer_user_id: self
+				.maintainer_user_id
+				.map(|s| {
+					s.parse()
+						.map_err(|_| FlagsServerError::Internal("Invalid user ID".to_string()))
+				})
+				.transpose()?,
+			variants,
+			default_variant: self.default_variant,
+			prerequisites,
+			exposure_tracking_enabled: self.exposure_tracking_enabled,
+			created_at: chrono::DateTime::parse_from_rfc3339(&self.created_at)
+				.map_err(|_| FlagsServerError::Internal("Invalid created_at".to_string()))?
+				.with_timezone(&chrono::Utc),
+			updated_at: chrono::DateTime::parse_from_rfc3339(&self.updated_at)
+				.map_err(|_| FlagsServerError::Internal("Invalid updated_at".to_string()))?
+				.with_timezone(&chrono::Utc),
+			archived_at: self
+				.archived_at
+				.map(|s| {
+					chrono::DateTime::parse_from_rfc3339(&s)
+						.map_err(|_| FlagsServerError::Internal("Invalid archived_at".to_string()))
+						.map(|dt| dt.with_timezone(&chrono::Utc))
+				})
+				.transpose()?,
 		})
 	}
 }

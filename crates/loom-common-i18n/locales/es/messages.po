@@ -1580,3 +1580,47 @@ msgstr "No se encontraron exposiciones para los criterios especificados"
 #: API: Flags - Exposure already logged
 msgid "server.api.flags.exposure_already_logged"
 msgstr "Exposición ya registrada dentro de la ventana de deduplicación"
+
+# ============================================================================
+# Flag Stats API responses
+# ============================================================================
+
+#: API: Flags - Stats retrieved
+msgid "server.api.flags.stats_retrieved"
+msgstr "Estadísticas de bandera recuperadas exitosamente"
+
+#: API: Flags - Stale flags retrieved
+msgid "server.api.flags.stale_flags_retrieved"
+msgstr "Banderas obsoletas recuperadas exitosamente"
+
+#: API: Flags - Flag is stale
+msgid "server.api.flags.flag_is_stale"
+msgstr "Esta bandera no se ha evaluado en {days} días"
+
+#: API: Flags - No stale flags
+msgid "server.api.flags.no_stale_flags"
+msgstr "No se encontraron banderas obsoletas"
+
+#: API: Flags - Never evaluated
+msgid "server.api.flags.never_evaluated"
+msgstr "Esta bandera nunca ha sido evaluada"
+
+#: API: Flags - Last evaluated
+msgid "server.api.flags.last_evaluated"
+msgstr "Última evaluación: {date}"
+
+#: API: Flags - Evaluations 24h
+msgid "server.api.flags.evaluations_24h"
+msgstr "Evaluaciones en las últimas 24 horas: {count}"
+
+#: API: Flags - Evaluations 7d
+msgid "server.api.flags.evaluations_7d"
+msgstr "Evaluaciones en los últimos 7 días: {count}"
+
+#: API: Flags - Evaluations 30d
+msgid "server.api.flags.evaluations_30d"
+msgstr "Evaluaciones en los últimos 30 días: {count}"
+
+#: API: Flags - Stale threshold
+msgid "server.api.flags.stale_threshold"
+msgstr "Las banderas se consideran obsoletas después de {days} días sin evaluación"

@@ -2758,3 +2758,63 @@ msgstr "{count} 件の露出"
 #: exposure.deduplicationWindow
 msgid "exposure.deduplicationWindow"
 msgstr "露出はユーザー/コンテキストごとに1時間のウィンドウ内で重複排除されます"
+
+# ============================================================================
+# Flag Stats
+# ============================================================================
+
+#: flagStats.title
+msgid "flagStats.title"
+msgstr "Flag Statistics"
+
+#: flagStats.description
+msgid "flagStats.description"
+msgstr "Evaluation statistics for this flag"
+
+#: flagStats.lastEvaluated
+msgid "flagStats.lastEvaluated"
+msgstr "Last Evaluated"
+
+#: flagStats.never
+msgid "flagStats.never"
+msgstr "Never"
+
+#: flagStats.evaluations24h
+msgid "flagStats.evaluations24h"
+msgstr "Evaluations (24h)"
+
+#: flagStats.evaluations7d
+msgid "flagStats.evaluations7d"
+msgstr "Evaluations (7d)"
+
+#: flagStats.evaluations30d
+msgid "flagStats.evaluations30d"
+msgstr "Evaluations (30d)"
+
+#: flagStats.staleFlags
+msgid "flagStats.staleFlags"
+msgstr "Stale Flags"
+
+#: flagStats.staleFlagsDescription
+msgid "flagStats.staleFlagsDescription"
+msgstr "Flags that haven't been evaluated recently"
+
+#: flagStats.noStaleFlags
+msgid "flagStats.noStaleFlags"
+msgstr "No stale flags found"
+
+#: flagStats.staleFlagsHint
+msgid "flagStats.staleFlagsHint"
+msgstr "Flags are considered stale after {days} days without evaluation"
+
+#: flagStats.daysSinceEvaluated
+msgid "flagStats.daysSinceEvaluated"
+msgstr "{days} days ago"
+
+#: flagStats.neverEvaluated
+msgid "flagStats.neverEvaluated"
+msgstr "Never evaluated"
+
+#: flagStats.viewStats
+msgid "flagStats.viewStats"
+msgstr "View Stats"
