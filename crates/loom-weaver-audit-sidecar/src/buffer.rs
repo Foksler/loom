@@ -36,7 +36,11 @@ impl EventBuffer {
 			0
 		};
 
-		Ok(EventBuffer { path, max_bytes, current_bytes })
+		Ok(EventBuffer {
+			path,
+			max_bytes,
+			current_bytes,
+		})
 	}
 
 	pub fn append(&mut self, event: &WeaverAuditEvent) -> Result<()> {

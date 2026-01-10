@@ -27,11 +27,7 @@ pub async fn run(args: EditArgs) -> anyhow::Result<()> {
 
 	repo.edit(&stitch_id)?;
 
-	println!(
-		"{} Now editing stitch {}",
-		"✓".green(),
-		stitch_hex.yellow()
-	);
+	println!("{} Now editing stitch {}", "✓".green(), stitch_hex.yellow());
 
 	Ok(())
 }

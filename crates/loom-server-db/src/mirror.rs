@@ -918,7 +918,10 @@ mod tests {
 		assert_eq!(mirrors_2.len(), 1);
 		assert_eq!(mirrors_2[0].repo_id, repo_id_2);
 
-		let mirrors_empty = repo.list_push_mirrors_by_repo(Uuid::new_v4()).await.unwrap();
+		let mirrors_empty = repo
+			.list_push_mirrors_by_repo(Uuid::new_v4())
+			.await
+			.unwrap();
 		assert!(mirrors_empty.is_empty());
 	}
 }

@@ -61,10 +61,9 @@ pager = "less"
 "#
 		);
 
-		if let Ok(layer) = jj_lib::config::ConfigLayer::parse(
-			jj_lib::config::ConfigSource::User,
-			&spool_config,
-		) {
+		if let Ok(layer) =
+			jj_lib::config::ConfigLayer::parse(jj_lib::config::ConfigSource::User, &spool_config)
+		{
 			config.add_layer(layer);
 		}
 
@@ -109,10 +108,9 @@ pager = "less"
 			let config_path = config_dir.join("spool.toml");
 			if config_path.exists() {
 				if let Ok(contents) = std::fs::read_to_string(&config_path) {
-					if let Ok(layer) = jj_lib::config::ConfigLayer::parse(
-						jj_lib::config::ConfigSource::User,
-						&contents,
-					) {
+					if let Ok(layer) =
+						jj_lib::config::ConfigLayer::parse(jj_lib::config::ConfigSource::User, &contents)
+					{
 						config.add_layer(layer);
 					}
 				}

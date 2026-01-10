@@ -31,19 +31,10 @@ pub async fn run(args: UnpickArgs) -> anyhow::Result<()> {
 	let status_after = repo.tension()?;
 	let stitch_after = hex::encode(&status_after.current_stitch.0[..8]);
 
-	println!(
-		"{} Undid last operation",
-		"✓".green()
-	);
+	println!("{} Undid last operation", "✓".green());
 	println!();
-	println!(
-		"Before: stitch {}",
-		stitch_before.dimmed()
-	);
-	println!(
-		"After:  stitch {}",
-		stitch_after.cyan()
-	);
+	println!("Before: stitch {}", stitch_before.dimmed());
+	println!("After:  stitch {}", stitch_after.cyan());
 
 	Ok(())
 }

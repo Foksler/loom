@@ -407,9 +407,7 @@ async fn test_repo_delete_removes_repo() {
 	let repo_id = created_repo["id"].as_str().unwrap();
 
 	// Verify repo exists
-	let get_response = app
-		.get(&format!("/api/repos/{repo_id}"), Some(owner))
-		.await;
+	let get_response = app.get(&format!("/api/repos/{repo_id}"), Some(owner)).await;
 	assert_eq!(get_response.status(), StatusCode::OK);
 
 	// Delete the repo
@@ -419,9 +417,7 @@ async fn test_repo_delete_removes_repo() {
 	assert_eq!(delete_response.status(), StatusCode::NO_CONTENT);
 
 	// Verify repo no longer exists (soft deleted)
-	let get_response_after = app
-		.get(&format!("/api/repos/{repo_id}"), Some(owner))
-		.await;
+	let get_response_after = app.get(&format!("/api/repos/{repo_id}"), Some(owner)).await;
 	assert_eq!(
 		get_response_after.status(),
 		StatusCode::NOT_FOUND,

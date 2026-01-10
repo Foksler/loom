@@ -81,7 +81,10 @@ impl ConnectionTracker {
 
 		self.fd_table.insert(
 			fd_key,
-			FdState { socket_id: Some(socket_id), created_at_ns: timestamp_ns },
+			FdState {
+				socket_id: Some(socket_id),
+				created_at_ns: timestamp_ns,
+			},
 		);
 
 		self.socket_table.insert(
@@ -137,7 +140,10 @@ impl ConnectionTracker {
 		if let Some(old_state) = self.fd_table.get(&FdKey { pid, fd: old_fd }).cloned() {
 			self.fd_table.insert(
 				FdKey { pid, fd: new_fd },
-				FdState { socket_id: old_state.socket_id, created_at_ns: timestamp_ns },
+				FdState {
+					socket_id: old_state.socket_id,
+					created_at_ns: timestamp_ns,
+				},
 			);
 		}
 	}
@@ -153,14 +159,21 @@ impl ConnectionTracker {
 		for (fd, state) in parent_fds {
 			self.fd_table.insert(
 				FdKey { pid: child_pid, fd },
-				FdState { socket_id: state.socket_id, created_at_ns: timestamp_ns },
+				FdState {
+					socket_id: state.socket_id,
+					created_at_ns: timestamp_ns,
+				},
 			);
 		}
 	}
 
 	pub fn on_exit(&mut self, pid: u32) {
-		let fds_to_remove: Vec<_> =
-			self.fd_table.keys().filter(|k| k.pid == pid).cloned().collect();
+		let fds_to_remove: Vec<_> = self
+			.fd_table
+			.keys()
+			.filter(|k| k.pid == pid)
+			.cloned()
+			.collect();
 
 		for key in fds_to_remove {
 			self.on_close(key.pid, key.fd);
@@ -168,7 +181,8 @@ impl ConnectionTracker {
 	}
 
 	pub fn get_socket(&self, pid: u32, fd: i32) -> Option<&SocketState> {
-		self.fd_table
+		self
+			.fd_table
 			.get(&FdKey { pid, fd })
 			.and_then(|fd_state| fd_state.socket_id)
 			.and_then(|socket_id| self.socket_table.get(&socket_id))
@@ -195,9 +209,18 @@ mod tests {
 		let socket_id = tracker.on_socket(100, 5, 2, 1, 6, 1000);
 		assert!(tracker.get_socket(100, 5).is_some());
 
-		tracker.on_connect(100, 5, IpAddr::V4(Ipv4Addr::new(8, 8, 8, 8)), 443, Some("dns.google".to_string()));
+		tracker.on_connect(
+			100,
+			5,
+			IpAddr::V4(Ipv4Addr::new(8, 8, 8, 8)),
+			443,
+			Some("dns.google".to_string()),
+		);
 		let socket = tracker.get_socket(100, 5).unwrap();
-		assert_eq!(socket.remote_addr, Some((IpAddr::V4(Ipv4Addr::new(8, 8, 8, 8)), 443)));
+		assert_eq!(
+			socket.remote_addr,
+			Some((IpAddr::V4(Ipv4Addr::new(8, 8, 8, 8)), 443))
+		);
 		assert_eq!(socket.hostname, Some("dns.google".to_string()));
 
 		tracker.on_close(100, 5);

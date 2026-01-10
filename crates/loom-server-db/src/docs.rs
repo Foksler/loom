@@ -223,8 +223,7 @@ mod tests {
 				path: "/docs/getting-started".to_string(),
 				title: "Getting Started Guide".to_string(),
 				summary: "Learn how to get started with Loom".to_string(),
-				body: "This guide will help you install and configure Loom for your project."
-					.to_string(),
+				body: "This guide will help you install and configure Loom for your project.".to_string(),
 				diataxis: "tutorial".to_string(),
 				tags: "beginner setup installation".to_string(),
 				updated_at: "2025-01-01T00:00:00Z".to_string(),

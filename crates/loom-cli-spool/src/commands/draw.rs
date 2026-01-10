@@ -23,20 +23,12 @@ pub async fn run(args: DrawArgs) -> anyhow::Result<()> {
 
 	let remote = if args.all { "(all)" } else { &args.remote };
 
-	println!(
-		"{} Drawing from remote '{}'",
-		"Fetch".bold(),
-		remote.cyan()
-	);
+	println!("{} Drawing from remote '{}'", "Fetch".bold(), remote.cyan());
 	println!();
 
 	match repo.draw(&args.remote) {
 		Ok(()) => {
-			println!(
-				"{} Successfully fetched from {}",
-				"✓".green(),
-				args.remote
-			);
+			println!("{} Successfully fetched from {}", "✓".green(), args.remote);
 		}
 		Err(e) => {
 			println!("{} {}", "Error:".red().bold(), e);

@@ -4,7 +4,7 @@
 use std::path::Path;
 
 use jj_lib::commit::Commit;
-use jj_lib::git::{GitBranchPushTargets, GitFetch, RemoteCallbacks, push_branches};
+use jj_lib::git::{push_branches, GitBranchPushTargets, GitFetch, RemoteCallbacks};
 use jj_lib::refs::BookmarkPushUpdate;
 use jj_lib::repo::Repo;
 use jj_lib::settings::GitSettings;
@@ -61,10 +61,7 @@ impl SpoolRepo {
 		// Create a new empty commit on top of it
 		let new_commit = tx
 			.repo_mut()
-			.new_commit(
-				vec![wc_commit.id().clone()],
-				wc_commit.tree_id().clone(),
-			)
+			.new_commit(vec![wc_commit.id().clone()], wc_commit.tree_id().clone())
 			.write()
 			.map_err(SpoolError::backend)?;
 
@@ -159,10 +156,7 @@ impl SpoolRepo {
 				stitches.push(self.commit_to_stitch(&commit));
 
 				// Get parent (first parent for simplicity)
-				current = commit
-					.parents()
-					.next()
-					.and_then(|p| p.ok());
+				current = commit.parents().next().and_then(|p| p.ok());
 
 				// Limit to prevent infinite loops
 				if stitches.len() >= 1000 {
@@ -189,12 +183,9 @@ impl SpoolRepo {
 		let mut tx = self.workspace.start_transaction();
 
 		// Rebase the source onto dest using jj's rebase functionality
-		let _rebased = jj_lib::rewrite::rebase_commit(
-			tx.repo_mut(),
-			source_commit,
-			vec![dest_commit.id().clone()],
-		)
-		.map_err(SpoolError::rewrite)?;
+		let _rebased =
+			jj_lib::rewrite::rebase_commit(tx.repo_mut(), source_commit, vec![dest_commit.id().clone()])
+				.map_err(SpoolError::rewrite)?;
 
 		tx.commit("rethread").map_err(SpoolError::transaction)?;
 		self.workspace.reload()?;
@@ -285,10 +276,7 @@ impl SpoolRepo {
 		// Create a new commit with the same tree and parents but new change ID
 		let new_commit = tx
 			.repo_mut()
-			.new_commit(
-				commit.parent_ids().to_vec(),
-				commit.tree_id().clone(),
-			)
+			.new_commit(commit.parent_ids().to_vec(), commit.tree_id().clone())
 			.set_description(commit.description())
 			.set_author(commit.author().clone())
 			.write()
@@ -382,17 +370,15 @@ impl SpoolRepo {
 				// "Theirs" is the second parent (if exists)
 				parents
 					.get(1)
-					.ok_or_else(|| {
-						SpoolError::InvalidArgument("no second parent for 'theirs'".to_string())
-					})?
+					.ok_or_else(|| SpoolError::InvalidArgument("no second parent for 'theirs'".to_string()))?
 					.tree()
 					.map_err(SpoolError::backend)?
 			}
 			TangleSide::Base => {
 				// Base is the common ancestor - for now use first parent's parent
-				let first_parent = parents.first().ok_or_else(|| {
-					SpoolError::InvalidArgument("no parent for 'base'".to_string())
-				})?;
+				let first_parent = parents
+					.first()
+					.ok_or_else(|| SpoolError::InvalidArgument("no parent for 'base'".to_string()))?;
 				first_parent
 					.parents()
 					.next()
@@ -405,10 +391,9 @@ impl SpoolRepo {
 
 		// Restore the path from source tree
 		let wc_tree = wc_commit.tree().map_err(SpoolError::backend)?;
-		let repo_path = jj_lib::repo_path::RepoPath::from_internal_string(
-			&path.to_string_lossy().replace('\\', "/"),
-		)
-		.to_owned();
+		let repo_path =
+			jj_lib::repo_path::RepoPath::from_internal_string(&path.to_string_lossy().replace('\\', "/"))
+				.to_owned();
 
 		let matcher = jj_lib::matchers::FilesMatcher::new(vec![repo_path]);
 		let restored_tree_id = jj_lib::rewrite::restore_tree(&source_tree, &wc_tree, &matcher)
@@ -456,10 +441,9 @@ impl SpoolRepo {
 
 		let restored_tree_id = if let Some(p) = path {
 			// Restore specific path
-			let repo_path = jj_lib::repo_path::RepoPath::from_internal_string(
-				&p.to_string_lossy().replace('\\', "/"),
-			)
-			.to_owned();
+			let repo_path =
+				jj_lib::repo_path::RepoPath::from_internal_string(&p.to_string_lossy().replace('\\', "/"))
+					.to_owned();
 
 			let matcher = jj_lib::matchers::FilesMatcher::new(vec![repo_path]);
 			jj_lib::rewrite::restore_tree(&source_tree, &wc_tree, &matcher)
@@ -496,7 +480,10 @@ impl SpoolRepo {
 		for (name, target) in view.local_bookmarks() {
 			// Get the first commit ID from the target
 			if let Some(commit_id) = target.added_ids().next() {
-				let commit = repo.store().get_commit(commit_id).map_err(SpoolError::backend)?;
+				let commit = repo
+					.store()
+					.get_commit(commit_id)
+					.map_err(SpoolError::backend)?;
 				pins.push(Pin {
 					name: name.as_str().to_string(),
 					target: change_id_to_stitch_id(commit.change_id()),
@@ -586,10 +573,7 @@ impl SpoolRepo {
 		let op = repo.operation();
 
 		// Get the parent operations (unwrap Results)
-		let parent_ops: Vec<_> = op
-			.parents()
-			.filter_map(|r| r.ok())
-			.collect();
+		let parent_ops: Vec<_> = op.parents().filter_map(|r| r.ok()).collect();
 
 		if parent_ops.is_empty() {
 			return Err(SpoolError::NothingToUnpick);
@@ -612,7 +596,8 @@ impl SpoolRepo {
 
 		// Create a transaction that restores the parent view
 		let mut tx = self.workspace.start_transaction();
-		tx.repo_mut().set_view(parent_repo.view().store_view().clone());
+		tx.repo_mut()
+			.set_view(parent_repo.view().store_view().clone());
 
 		tx.commit("unpick").map_err(SpoolError::transaction)?;
 		self.workspace.reload()?;
@@ -681,8 +666,14 @@ impl SpoolRepo {
 		let targets = GitBranchPushTargets { branch_updates };
 		let callbacks = RemoteCallbacks::default();
 
-		push_branches(tx.repo_mut(), &git_settings, remote_name, &targets, callbacks)
-			.map_err(|e| SpoolError::Git(format!("push failed: {e}")))?;
+		push_branches(
+			tx.repo_mut(),
+			&git_settings,
+			remote_name,
+			&targets,
+			callbacks,
+		)
+		.map_err(|e| SpoolError::Git(format!("push failed: {e}")))?;
 
 		tx.commit(&format!("shuttle to {}", remote))
 			.map_err(SpoolError::transaction)?;
@@ -769,13 +760,15 @@ impl SpoolRepo {
 				.store()
 				.get_commit(&ids[0])
 				.map_err(SpoolError::backend),
-			Some(ids) if ids.is_empty() => {
-				Err(SpoolError::StitchNotFound(change_id_to_stitch_id(change_id)))
-			}
+			Some(ids) if ids.is_empty() => Err(SpoolError::StitchNotFound(change_id_to_stitch_id(
+				change_id,
+			))),
 			Some(_) => Err(SpoolError::InvalidArgument(
 				"ambiguous change ID".to_string(),
 			)),
-			None => Err(SpoolError::StitchNotFound(change_id_to_stitch_id(change_id))),
+			None => Err(SpoolError::StitchNotFound(change_id_to_stitch_id(
+				change_id,
+			))),
 		}
 	}
 
@@ -791,12 +784,7 @@ impl SpoolRepo {
 				.iter()
 				.map(|id| {
 					// Get the change ID from the parent commit
-					let parent = self
-						.workspace
-						.repo()
-						.store()
-						.get_commit(id)
-						.ok();
+					let parent = self.workspace.repo().store().get_commit(id).ok();
 					match parent {
 						Some(p) => change_id_to_stitch_id(p.change_id()),
 						None => StitchId([0; 16]),
@@ -808,20 +796,16 @@ impl SpoolRepo {
 			author: Signature {
 				name: author.name.clone(),
 				email: author.email.clone(),
-				timestamp: chrono::DateTime::from_timestamp_millis(
-					author.timestamp.timestamp.0 as i64,
-				)
-				.unwrap_or_default()
-				.into(),
+				timestamp: chrono::DateTime::from_timestamp_millis(author.timestamp.timestamp.0 as i64)
+					.unwrap_or_default()
+					.into(),
 			},
 			committer: Signature {
 				name: committer.name.clone(),
 				email: committer.email.clone(),
-				timestamp: chrono::DateTime::from_timestamp_millis(
-					committer.timestamp.timestamp.0 as i64,
-				)
-				.unwrap_or_default()
-				.into(),
+				timestamp: chrono::DateTime::from_timestamp_millis(committer.timestamp.timestamp.0 as i64)
+					.unwrap_or_default()
+					.into(),
 			},
 			is_knotted: !commit.description().is_empty(),
 		}

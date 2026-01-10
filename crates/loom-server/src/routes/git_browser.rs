@@ -419,16 +419,14 @@ pub async fn get_raw(
 		.map_err(|e| {
 			tracing::error!(error = %e, "Failed to get object");
 			ServerError::Internal(
-				loom_common_i18n::t(locale, "server.api.scm.browser.failed_to_get_object")
-					.to_string(),
+				loom_common_i18n::t(locale, "server.api.scm.browser.failed_to_get_object").to_string(),
 			)
 		})?
 		.peel_to_commit()
 		.map_err(|e| {
 			tracing::error!(error = %e, "Failed to get commit");
 			ServerError::Internal(
-				loom_common_i18n::t(locale, "server.api.scm.browser.failed_to_get_commit")
-					.to_string(),
+				loom_common_i18n::t(locale, "server.api.scm.browser.failed_to_get_commit").to_string(),
 			)
 		})?;
 
@@ -444,8 +442,7 @@ pub async fn get_raw(
 		.map_err(|e| {
 			tracing::error!(error = %e, "Failed to lookup path");
 			ServerError::Internal(
-				loom_common_i18n::t(locale, "server.api.scm.browser.failed_to_lookup_path")
-					.to_string(),
+				loom_common_i18n::t(locale, "server.api.scm.browser.failed_to_lookup_path").to_string(),
 			)
 		})?
 		.ok_or_else(|| {

@@ -32,12 +32,18 @@ impl Default for DnsCache {
 
 impl DnsCache {
 	pub fn new() -> Self {
-		DnsCache { entries: HashMap::new(), max_entries: MAX_ENTRIES }
+		DnsCache {
+			entries: HashMap::new(),
+			max_entries: MAX_ENTRIES,
+		}
 	}
 
 	#[allow(dead_code)] // Used in tests; available for custom cache sizing
 	pub fn with_max_entries(max_entries: usize) -> Self {
-		DnsCache { entries: HashMap::new(), max_entries }
+		DnsCache {
+			entries: HashMap::new(),
+			max_entries,
+		}
 	}
 
 	pub fn insert(&mut self, ip: IpAddr, hostname: String, ttl_secs: u32) {
@@ -48,7 +54,14 @@ impl DnsCache {
 			self.evict_lru();
 		}
 
-		self.entries.insert(ip, DnsEntry { hostname, expires_at: now + ttl, last_used: now });
+		self.entries.insert(
+			ip,
+			DnsEntry {
+				hostname,
+				expires_at: now + ttl,
+				last_used: now,
+			},
+		);
 	}
 
 	pub fn lookup(&mut self, ip: &IpAddr) -> Option<String> {
@@ -83,8 +96,11 @@ impl DnsCache {
 	}
 
 	fn evict_lru(&mut self) {
-		if let Some((oldest_ip, _)) =
-			self.entries.iter().min_by_key(|(_, entry)| entry.last_used).map(|(k, v)| (*k, v.clone()))
+		if let Some((oldest_ip, _)) = self
+			.entries
+			.iter()
+			.min_by_key(|(_, entry)| entry.last_used)
+			.map(|(k, v)| (*k, v.clone()))
 		{
 			self.entries.remove(&oldest_ip);
 		}
@@ -138,10 +154,18 @@ mod tests {
 
 		cache.insert(IpAddr::V4(Ipv4Addr::new(1, 0, 0, 4)), "d".to_string(), 60);
 
-		assert!(cache.lookup(&IpAddr::V4(Ipv4Addr::new(1, 0, 0, 1))).is_none());
-		assert!(cache.lookup(&IpAddr::V4(Ipv4Addr::new(1, 0, 0, 2))).is_some());
-		assert!(cache.lookup(&IpAddr::V4(Ipv4Addr::new(1, 0, 0, 3))).is_some());
-		assert!(cache.lookup(&IpAddr::V4(Ipv4Addr::new(1, 0, 0, 4))).is_some());
+		assert!(cache
+			.lookup(&IpAddr::V4(Ipv4Addr::new(1, 0, 0, 1)))
+			.is_none());
+		assert!(cache
+			.lookup(&IpAddr::V4(Ipv4Addr::new(1, 0, 0, 2)))
+			.is_some());
+		assert!(cache
+			.lookup(&IpAddr::V4(Ipv4Addr::new(1, 0, 0, 3)))
+			.is_some());
+		assert!(cache
+			.lookup(&IpAddr::V4(Ipv4Addr::new(1, 0, 0, 4)))
+			.is_some());
 	}
 
 	#[test]
@@ -149,7 +173,11 @@ mod tests {
 		let mut cache = DnsCache::with_max_entries(100);
 
 		for i in 0..200u8 {
-			cache.insert(IpAddr::V4(Ipv4Addr::new(10, 0, 0, i)), format!("host{}", i), 60);
+			cache.insert(
+				IpAddr::V4(Ipv4Addr::new(10, 0, 0, i)),
+				format!("host{}", i),
+				60,
+			);
 		}
 
 		assert!(cache.len() <= 100);

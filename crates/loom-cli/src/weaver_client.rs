@@ -179,7 +179,8 @@ impl WeaverClient {
 
 	pub async fn get_personal_org(&self) -> Result<OrgResponse> {
 		let orgs = self.list_orgs().await?;
-		orgs.orgs
+		orgs
+			.orgs
 			.into_iter()
 			.find(|o| o.is_personal)
 			.ok_or_else(|| anyhow::anyhow!("No personal organization found"))
@@ -191,7 +192,8 @@ impl WeaverClient {
 		}
 
 		let orgs = self.list_orgs().await?;
-		orgs.orgs
+		orgs
+			.orgs
 			.into_iter()
 			.find(|o| o.slug == org_ref || o.name == org_ref)
 			.map(|o| o.id)

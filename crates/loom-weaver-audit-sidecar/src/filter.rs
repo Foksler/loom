@@ -44,7 +44,10 @@ impl PathFilter {
 		PathFilter {
 			always_capture_prefixes: Vec::new(),
 			ignore_prefixes: IGNORE_PATH_PREFIXES.iter().map(|s| s.to_string()).collect(),
-			sensitive_prefixes: SENSITIVE_PATH_PREFIXES.iter().map(|s| s.to_string()).collect(),
+			sensitive_prefixes: SENSITIVE_PATH_PREFIXES
+				.iter()
+				.map(|s| s.to_string())
+				.collect(),
 		}
 	}
 

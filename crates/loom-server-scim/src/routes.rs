@@ -42,7 +42,10 @@ pub fn scim_routes(
 		.route("/Schemas", get(schemas::list_schemas))
 		.route("/Schemas/{id}", get(schemas::get_schema))
 		.route("/ResourceTypes", get(resource_types::list_resource_types))
-		.route("/ResourceTypes/{id}", get(resource_types::get_resource_type))
+		.route(
+			"/ResourceTypes/{id}",
+			get(resource_types::get_resource_type),
+		)
 		.route("/Users", get(users::list_users).post(users::create_user))
 		.route(
 			"/Users/{id}",

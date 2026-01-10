@@ -308,7 +308,9 @@ impl GitRepository {
 			filename: filename.into(),
 			oid: blob_id.detach(),
 		};
-		let tree = gix::objs::Tree { entries: vec![tree_entry] };
+		let tree = gix::objs::Tree {
+			entries: vec![tree_entry],
+		};
 		let tree_id = repo
 			.write_object(&tree)
 			.map_err(|e| ScmError::GitError(format!("Failed to write tree: {}", e)))?;

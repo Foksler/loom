@@ -30,8 +30,7 @@ use crate::{
 	auth_middleware::RequireAuth,
 	authorize,
 	i18n::{resolve_user_locale, t},
-	impl_api_error_response, parse_id,
-	validate_slug_or_error,
+	impl_api_error_response, parse_id, validate_slug_or_error,
 	validation::{
 		parse_org_id as shared_parse_org_id, parse_team_id as shared_parse_team_id,
 		parse_user_id as shared_parse_user_id, validate_slug_with_error,
@@ -244,8 +243,11 @@ pub async fn create_team(
 	);
 
 	if payload.name.is_empty() || payload.name.len() > 100 {
-		return bad_request::<TeamErrorResponse>("invalid_name", t(locale, "server.api.team.invalid_name_length"))
-			.into_response();
+		return bad_request::<TeamErrorResponse>(
+			"invalid_name",
+			t(locale, "server.api.team.invalid_name_length"),
+		)
+		.into_response();
 	}
 
 	let org = match state.org_repo.get_org_by_id(&org_id).await {
@@ -584,8 +586,11 @@ pub async fn update_team(
 
 		if slug != &team.slug {
 			if let Ok(Some(_)) = state.team_repo.get_team_by_slug(&org_id, slug).await {
-				return conflict::<TeamErrorResponse>("slug_exists", t(locale, "server.api.team.slug_exists"))
-					.into_response();
+				return conflict::<TeamErrorResponse>(
+					"slug_exists",
+					t(locale, "server.api.team.slug_exists"),
+				)
+				.into_response();
 			}
 		}
 		team.slug = slug.clone();

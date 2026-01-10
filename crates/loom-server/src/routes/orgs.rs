@@ -16,13 +16,13 @@ use axum::{
 	Json,
 };
 use chrono::Utc;
+use loom_flags_core::{Environment, EnvironmentId};
 pub use loom_server_api::orgs::{
 	AddOrgMemberRequest, CreateOrgRequest, JoinRequestResponse, ListJoinRequestsResponse,
 	ListOrgMembersResponse, ListOrgsResponse, OrgErrorResponse, OrgMemberResponse, OrgResponse,
 	OrgSuccessResponse, OrgVisibilityApi, UpdateOrgMemberRoleRequest, UpdateOrgRequest,
 };
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
-use loom_flags_core::{Environment, EnvironmentId};
 use loom_server_auth::{
 	is_username_reserved,
 	org::{OrgVisibility, Organization},
@@ -38,12 +38,11 @@ use crate::{
 	auth_middleware::RequireAuth,
 	authorize,
 	i18n::{resolve_user_locale, t},
-	impl_api_error_response, parse_id, parse_role,
+	impl_api_error_response, parse_id, parse_role, validate_slug_or_error,
 	validation::{
 		parse_org_id as shared_parse_org_id, parse_org_role, parse_user_id as shared_parse_user_id,
 		validate_slug_with_error,
 	},
-	validate_slug_or_error,
 };
 
 impl_api_error_response!(OrgErrorResponse);
@@ -173,8 +172,11 @@ pub async fn create_org(
 	);
 
 	if is_username_reserved(&payload.slug) {
-		return bad_request::<OrgErrorResponse>("slug_reserved", t(locale, "server.api.org.slug_reserved"))
-			.into_response();
+		return bad_request::<OrgErrorResponse>(
+			"slug_reserved",
+			t(locale, "server.api.org.slug_reserved"),
+		)
+		.into_response();
 	}
 
 	match state.org_repo.get_org_by_slug(&payload.slug).await {
@@ -456,8 +458,11 @@ pub async fn update_org(
 			);
 
 			if is_username_reserved(new_slug) {
-				return bad_request::<OrgErrorResponse>("slug_reserved", t(locale, "server.api.org.slug_reserved"))
-					.into_response();
+				return bad_request::<OrgErrorResponse>(
+					"slug_reserved",
+					t(locale, "server.api.org.slug_reserved"),
+				)
+				.into_response();
 			}
 
 			match state.org_repo.get_org_by_slug(new_slug).await {

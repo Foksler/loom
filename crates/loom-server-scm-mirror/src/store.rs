@@ -72,7 +72,8 @@ impl SqliteExternalMirrorStore {
 	}
 
 	pub async fn create(&self, mirror: &CreateExternalMirror) -> Result<ExternalMirror> {
-		self.repo
+		self
+			.repo
 			.create_external_mirror(mirror)
 			.await
 			.map_err(|e| MirrorError::Database(sqlx::Error::Protocol(e.to_string())))
@@ -84,7 +85,8 @@ impl SqliteExternalMirrorStore {
 		owner: &str,
 		repo: &str,
 	) -> Result<Option<ExternalMirror>> {
-		self.repo
+		self
+			.repo
 			.get_external_mirror_by_external(platform, owner, repo)
 			.await
 			.map_err(|e| MirrorError::Database(sqlx::Error::Protocol(e.to_string())))
@@ -113,7 +115,8 @@ impl ExternalMirrorStore for SqliteExternalMirrorStore {
 		sync_threshold: DateTime<Utc>,
 		limit: usize,
 	) -> loom_server_db::Result<Vec<ExternalMirror>> {
-		self.repo
+		self
+			.repo
 			.list_external_mirrors_needing_sync(sync_threshold, limit)
 			.await
 	}
@@ -130,10 +133,7 @@ impl ExternalMirrorStore for SqliteExternalMirrorStore {
 		self.repo.update_external_mirror_last_synced(id, at).await
 	}
 
-	async fn create(
-		&self,
-		mirror: &CreateExternalMirror,
-	) -> loom_server_db::Result<ExternalMirror> {
+	async fn create(&self, mirror: &CreateExternalMirror) -> loom_server_db::Result<ExternalMirror> {
 		self.repo.create_external_mirror(mirror).await
 	}
 
@@ -143,7 +143,8 @@ impl ExternalMirrorStore for SqliteExternalMirrorStore {
 		owner: &str,
 		name: &str,
 	) -> loom_server_db::Result<Option<ExternalMirror>> {
-		self.repo
+		self
+			.repo
 			.get_external_mirror_by_external(platform, owner, name)
 			.await
 	}

@@ -171,7 +171,10 @@ impl AuditClient {
 
 		if !status.is_success() {
 			let body = response.text().await.unwrap_or_default();
-			return Err(ClientError::ServerError { status: status.as_u16(), body });
+			return Err(ClientError::ServerError {
+				status: status.as_u16(),
+				body,
+			});
 		}
 
 		Ok(())
@@ -179,7 +182,13 @@ impl AuditClient {
 
 	pub async fn is_server_reachable(&self) -> bool {
 		let url = format!("{}/health", self.server_url);
-		match self.client.get(&url).timeout(Duration::from_secs(5)).send().await {
+		match self
+			.client
+			.get(&url)
+			.timeout(Duration::from_secs(5))
+			.send()
+			.await
+		{
 			Ok(resp) => resp.status().is_success(),
 			Err(_) => false,
 		}
@@ -202,7 +211,10 @@ impl AuditClient {
 			}
 		}
 
-		let sa_token = self.read_sa_token().await.map_err(ClientError::AuthRequired)?;
+		let sa_token = self
+			.read_sa_token()
+			.await
+			.map_err(ClientError::AuthRequired)?;
 
 		match self.exchange_sa_token_for_svid(&sa_token).await {
 			Ok(svid_response) => {
@@ -277,7 +289,14 @@ impl BatchSender {
 		metrics: std::sync::Arc<Metrics>,
 	) -> Self {
 		let (tx, rx) = mpsc::channel(10000);
-		tokio::spawn(batch_loop(client, rx, batch_interval, buffer_tx, health_state, metrics));
+		tokio::spawn(batch_loop(
+			client,
+			rx,
+			batch_interval,
+			buffer_tx,
+			health_state,
+			metrics,
+		));
 		BatchSender { tx }
 	}
 
@@ -286,7 +305,10 @@ impl BatchSender {
 	}
 
 	#[allow(dead_code)] // Public API for manual event sending
-	pub async fn send(&self, event: WeaverAuditEvent) -> std::result::Result<(), mpsc::error::SendError<WeaverAuditEvent>> {
+	pub async fn send(
+		&self,
+		event: WeaverAuditEvent,
+	) -> std::result::Result<(), mpsc::error::SendError<WeaverAuditEvent>> {
 		self.tx.send(event).await
 	}
 }

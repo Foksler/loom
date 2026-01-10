@@ -40,10 +40,7 @@ pub async fn run(args: TensionLogArgs) -> anyhow::Result<()> {
 	}
 
 	println!();
-	println!(
-		"Use '{}' to undo the last operation",
-		"spool unpick".cyan()
-	);
+	println!("Use '{}' to undo the last operation", "spool unpick".cyan());
 
 	Ok(())
 }

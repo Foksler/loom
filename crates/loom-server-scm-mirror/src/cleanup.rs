@@ -203,9 +203,9 @@ pub async fn run_cleanup_job(
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use crate::types::Platform;
 	use async_trait::async_trait;
 	use chrono::DateTime;
-	use crate::types::Platform;
 	use std::sync::{Arc, Mutex};
 
 	struct FakeExternalMirrorStore {
@@ -259,7 +259,10 @@ mod tests {
 			)
 		}
 
-		async fn get_by_repo_id(&self, repo_id: Uuid) -> loom_server_db::Result<Option<ExternalMirror>> {
+		async fn get_by_repo_id(
+			&self,
+			repo_id: Uuid,
+		) -> loom_server_db::Result<Option<ExternalMirror>> {
 			Ok(
 				self
 					.mirrors
@@ -280,7 +283,10 @@ mod tests {
 			unimplemented!()
 		}
 
-		async fn find_stale(&self, stale_threshold: DateTime<Utc>) -> loom_server_db::Result<Vec<ExternalMirror>> {
+		async fn find_stale(
+			&self,
+			stale_threshold: DateTime<Utc>,
+		) -> loom_server_db::Result<Vec<ExternalMirror>> {
 			Ok(
 				self
 					.mirrors
@@ -308,11 +314,7 @@ mod tests {
 					.lock()
 					.unwrap()
 					.iter()
-					.filter(|m| {
-						m.last_synced_at
-							.map(|t| t < sync_threshold)
-							.unwrap_or(true)
-					})
+					.filter(|m| m.last_synced_at.map(|t| t < sync_threshold).unwrap_or(true))
 					.take(limit)
 					.cloned()
 					.collect(),
@@ -325,7 +327,11 @@ mod tests {
 			Ok(())
 		}
 
-		async fn update_last_accessed(&self, id: Uuid, at: DateTime<Utc>) -> loom_server_db::Result<()> {
+		async fn update_last_accessed(
+			&self,
+			id: Uuid,
+			at: DateTime<Utc>,
+		) -> loom_server_db::Result<()> {
 			self.accessed_updates.lock().unwrap().push((id, at));
 			Ok(())
 		}

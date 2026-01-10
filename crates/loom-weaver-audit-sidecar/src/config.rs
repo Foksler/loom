@@ -49,8 +49,10 @@ impl Config {
 			optional_env_parse("LOOM_AUDIT_BUFFER_MAX_BYTES", 256 * 1024 * 1024)?;
 		let metrics_port: u16 = optional_env_parse("LOOM_AUDIT_METRICS_PORT", 9090)?;
 		let health_port: u16 = optional_env_parse("LOOM_AUDIT_HEALTH_PORT", 9091)?;
-		let buffer_path_raw =
-			optional_env("LOOM_AUDIT_BUFFER_PATH", "/tmp/audit-buffer.jsonl".to_string());
+		let buffer_path_raw = optional_env(
+			"LOOM_AUDIT_BUFFER_PATH",
+			"/tmp/audit-buffer.jsonl".to_string(),
+		);
 		let buffer_path = validate_buffer_path(&buffer_path_raw)?;
 		let sa_token_path = optional_env(
 			"LOOM_SA_TOKEN_PATH",
@@ -68,7 +70,8 @@ impl Config {
 		if !allow_insecure_http && !server_url.starts_with("https://") {
 			return Err(ConfigError::InvalidValue {
 				name: "LOOM_SERVER_URL".into(),
-				message: "must start with https:// (set LOOM_AUDIT_ALLOW_INSECURE_HTTP=true to allow HTTP)".into(),
+				message: "must start with https:// (set LOOM_AUDIT_ALLOW_INSECURE_HTTP=true to allow HTTP)"
+					.into(),
 			});
 		}
 
@@ -141,14 +144,19 @@ fn validate_buffer_path(path: &str) -> Result<PathBuf> {
 		Path::new("/tmp"), // Allow /tmp for backward compatibility
 	];
 
-	let is_safe = allowed_prefixes.iter().any(|prefix| check_path.starts_with(prefix));
+	let is_safe = allowed_prefixes
+		.iter()
+		.any(|prefix| check_path.starts_with(prefix));
 
 	if !is_safe {
 		return Err(ConfigError::InvalidValue {
 			name: "LOOM_AUDIT_BUFFER_PATH".into(),
 			message: format!(
 				"must be under one of: {:?}",
-				allowed_prefixes.iter().map(|p| p.display()).collect::<Vec<_>>()
+				allowed_prefixes
+					.iter()
+					.map(|p| p.display())
+					.collect::<Vec<_>>()
 			),
 		});
 	}

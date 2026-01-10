@@ -19,13 +19,15 @@ pub async fn run(args: ShowArgs) -> anyhow::Result<()> {
 	let stitch = if let Some(stitch_str) = args.stitch {
 		// Parse the provided stitch ID
 		let id = parse_stitch_id(&stitch_str)?;
-		repo.trace("@")?
+		repo
+			.trace("@")?
 			.into_iter()
 			.find(|s| s.id == id)
 			.ok_or_else(|| anyhow::anyhow!("stitch not found"))?
 	} else {
 		// Get the current stitch (@)
-		repo.trace("@")?
+		repo
+			.trace("@")?
 			.into_iter()
 			.next()
 			.ok_or_else(|| anyhow::anyhow!("no current stitch"))?

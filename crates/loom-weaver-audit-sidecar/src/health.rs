@@ -164,5 +164,7 @@ async fn health_handler(State(state): State<HealthState>) -> impl IntoResponse {
 }
 
 pub fn health_router(state: HealthState) -> Router {
-	Router::new().route("/health", get(health_handler)).with_state(state)
+	Router::new()
+		.route("/health", get(health_handler))
+		.with_state(state)
 }

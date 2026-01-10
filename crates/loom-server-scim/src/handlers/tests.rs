@@ -90,7 +90,9 @@ mod filter_evaluation_tests {
 		assert!(evaluate_filter(&filter, &|attr| get_user_attr(&user, attr)));
 
 		let user2 = test_user("jane", None, true);
-		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(&user2, attr)));
+		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(
+			&user2, attr
+		)));
 	}
 
 	#[test]
@@ -107,7 +109,9 @@ mod filter_evaluation_tests {
 		assert!(evaluate_filter(&filter, &|attr| get_user_attr(&user, attr)));
 
 		let user2 = test_user("john", None, true);
-		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(&user2, attr)));
+		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(
+			&user2, attr
+		)));
 	}
 
 	#[test]
@@ -117,7 +121,9 @@ mod filter_evaluation_tests {
 		assert!(evaluate_filter(&filter, &|attr| get_user_attr(&user, attr)));
 
 		let user2 = test_user("jane", None, true);
-		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(&user2, attr)));
+		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(
+			&user2, attr
+		)));
 	}
 
 	#[test]
@@ -127,7 +133,9 @@ mod filter_evaluation_tests {
 		assert!(evaluate_filter(&filter, &|attr| get_user_attr(&user, attr)));
 
 		let user2 = test_user("jane", None, true);
-		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(&user2, attr)));
+		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(
+			&user2, attr
+		)));
 	}
 
 	#[test]
@@ -137,7 +145,9 @@ mod filter_evaluation_tests {
 		assert!(evaluate_filter(&filter, &|attr| get_user_attr(&user, attr)));
 
 		let user2 = test_user("jane", None, true);
-		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(&user2, attr)));
+		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(
+			&user2, attr
+		)));
 	}
 
 	#[test]
@@ -147,7 +157,9 @@ mod filter_evaluation_tests {
 		assert!(evaluate_filter(&filter, &|attr| get_user_attr(&user, attr)));
 
 		let user2 = test_user("jane", None, true);
-		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(&user2, attr)));
+		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(
+			&user2, attr
+		)));
 	}
 
 	#[test]
@@ -157,7 +169,9 @@ mod filter_evaluation_tests {
 		assert!(evaluate_filter(&filter, &|attr| get_user_attr(&user, attr)));
 
 		let user2 = test_user("john", None, false);
-		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(&user2, attr)));
+		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(
+			&user2, attr
+		)));
 	}
 
 	#[test]
@@ -167,10 +181,14 @@ mod filter_evaluation_tests {
 		assert!(evaluate_filter(&filter, &|attr| get_user_attr(&user, attr)));
 
 		let user2 = test_user("jane", None, true);
-		assert!(evaluate_filter(&filter, &|attr| get_user_attr(&user2, attr)));
+		assert!(evaluate_filter(&filter, &|attr| get_user_attr(
+			&user2, attr
+		)));
 
 		let user3 = test_user("bob", None, true);
-		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(&user3, attr)));
+		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(
+			&user3, attr
+		)));
 	}
 
 	#[test]
@@ -180,7 +198,9 @@ mod filter_evaluation_tests {
 		assert!(evaluate_filter(&filter, &|attr| get_user_attr(&user, attr)));
 
 		let user2 = test_user("john", None, true);
-		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(&user2, attr)));
+		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(
+			&user2, attr
+		)));
 	}
 
 	#[test]
@@ -192,7 +212,9 @@ mod filter_evaluation_tests {
 		assert!(evaluate_filter(&filter, &|attr| get_user_attr(&user, attr)));
 
 		let user2 = test_user("john", None, false);
-		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(&user2, attr)));
+		assert!(!evaluate_filter(&filter, &|attr| get_user_attr(
+			&user2, attr
+		)));
 	}
 }
 
@@ -255,10 +277,7 @@ mod bulk_tests {
 			]
 		});
 		resolve_bulk_id_refs(&mut value, &bulk_id_map);
-		assert_eq!(
-			value["members"][0]["value"].as_str().unwrap(),
-			"uuid-12345"
-		);
+		assert_eq!(value["members"][0]["value"].as_str().unwrap(), "uuid-12345");
 	}
 
 	#[test]

@@ -240,7 +240,8 @@ mod tests {
 		let max_results = 10;
 		let response_json = r#"{"results": [{"title": "Rust Lang"}]}"#;
 
-		repo.cache_results(query, max_results, response_json)
+		repo
+			.cache_results(query, max_results, response_json)
 			.await
 			.unwrap();
 
@@ -288,7 +289,8 @@ mod tests {
 		.await
 		.unwrap();
 
-		repo.cache_results("new query", 10, r#"{"results": []}"#)
+		repo
+			.cache_results("new query", 10, r#"{"results": []}"#)
 			.await
 			.unwrap();
 

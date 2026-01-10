@@ -70,8 +70,8 @@ impl WeaverWgDaemon {
 			.map_err(crate::error::RegistrationError::IpParse)?;
 		info!(%assigned_ip, "registered with server, got assigned IP");
 
-		let derp_map: DerpMap = serde_json::from_value(registration_response.derp_map)
-			.unwrap_or_else(|e| {
+		let derp_map: DerpMap =
+			serde_json::from_value(registration_response.derp_map).unwrap_or_else(|e| {
 				warn!(error = %e, "failed to parse DERP map, using default");
 				DerpMap::default()
 			});
@@ -95,12 +95,9 @@ impl WeaverWgDaemon {
 
 		info!("WireGuard engine started");
 
-		self.peer_handler
-			.connect(
-				&self.config.server_url,
-				&self.config.weaver_id,
-				&svid,
-			)
+		self
+			.peer_handler
+			.connect(&self.config.server_url, &self.config.weaver_id, &svid)
 			.await?;
 
 		info!("connected to peer stream");
@@ -232,7 +229,8 @@ impl WeaverWgDaemon {
 	}
 
 	pub fn is_running(&self) -> bool {
-		self.engine
+		self
+			.engine
 			.as_ref()
 			.map(|e| e.is_running())
 			.unwrap_or(false)

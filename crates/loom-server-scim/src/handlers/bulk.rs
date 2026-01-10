@@ -82,7 +82,10 @@ pub(crate) fn parse_path(path: &str) -> Option<ResourcePath> {
 	None
 }
 
-pub(crate) fn resolve_bulk_id_refs(value: &mut serde_json::Value, bulk_id_map: &HashMap<String, String>) {
+pub(crate) fn resolve_bulk_id_refs(
+	value: &mut serde_json::Value,
+	bulk_id_map: &HashMap<String, String>,
+) {
 	match value {
 		serde_json::Value::String(s) => {
 			if let Some(bulk_id) = s.strip_prefix("bulkId:") {
@@ -167,7 +170,10 @@ pub async fn bulk_operations(
 		}
 	}
 
-	let success_count = responses.iter().filter(|r| r.status.starts_with("2")).count();
+	let success_count = responses
+		.iter()
+		.filter(|r| r.status.starts_with("2"))
+		.count();
 
 	state.audit_service.log(
 		AuditLogEntry::builder(AuditEventType::ScimBulkOperation)
@@ -193,7 +199,8 @@ async fn process_operation(
 	path: &str,
 	data: Option<serde_json::Value>,
 ) -> Result<(String, Option<String>, Option<serde_json::Value>), (String, String)> {
-	let resource_path = parse_path(path).ok_or_else(|| ("400".to_string(), "Invalid path".to_string()))?;
+	let resource_path =
+		parse_path(path).ok_or_else(|| ("400".to_string(), "Invalid path".to_string()))?;
 
 	match (method.to_uppercase().as_str(), resource_path) {
 		("POST", ResourcePath::Users) => create_user(state, data).await,
@@ -204,7 +211,10 @@ async fn process_operation(
 		("PUT", ResourcePath::GroupsId(id)) => replace_group(state, &id, data).await,
 		("PATCH", ResourcePath::GroupsId(id)) => patch_group(state, &id, data).await,
 		("DELETE", ResourcePath::GroupsId(id)) => delete_group(state, &id).await,
-		_ => Err(("400".to_string(), format!("Unsupported operation: {} {}", method, path))),
+		_ => Err((
+			"400".to_string(),
+			format!("Unsupported operation: {} {}", method, path),
+		)),
 	}
 }
 
@@ -213,8 +223,8 @@ async fn create_user(
 	data: Option<serde_json::Value>,
 ) -> Result<(String, Option<String>, Option<serde_json::Value>), (String, String)> {
 	let data = data.ok_or_else(|| ("400".to_string(), "Missing data".to_string()))?;
-	let scim_user: ScimUser =
-		serde_json::from_value(data).map_err(|e| ("400".to_string(), format!("Invalid user data: {}", e)))?;
+	let scim_user: ScimUser = serde_json::from_value(data)
+		.map_err(|e| ("400".to_string(), format!("Invalid user data: {}", e)))?;
 
 	let email = scim_user_to_email(&scim_user)
 		.ok_or_else(|| ("400".to_string(), "userName or email required".to_string()))?;
@@ -248,8 +258,8 @@ async fn replace_user(
 	data: Option<serde_json::Value>,
 ) -> Result<(String, Option<String>, Option<serde_json::Value>), (String, String)> {
 	let data = data.ok_or_else(|| ("400".to_string(), "Missing data".to_string()))?;
-	let scim_user: ScimUser =
-		serde_json::from_value(data).map_err(|e| ("400".to_string(), format!("Invalid user data: {}", e)))?;
+	let scim_user: ScimUser = serde_json::from_value(data)
+		.map_err(|e| ("400".to_string(), format!("Invalid user data: {}", e)))?;
 
 	let user_id = parse_uuid(id)?;
 	let user_id = UserId::new(user_id);
@@ -265,7 +275,13 @@ async fn replace_user(
 
 	state
 		.user_repo
-		.update_user_for_scim(&user_id, display_name.as_deref(), external_id, locale, deleted_at.as_deref())
+		.update_user_for_scim(
+			&user_id,
+			display_name.as_deref(),
+			external_id,
+			locale,
+			deleted_at.as_deref(),
+		)
 		.await
 		.map_err(|e| ("500".to_string(), format!("Update failed: {}", e)))?;
 
@@ -279,10 +295,12 @@ async fn patch_user(
 	data: Option<serde_json::Value>,
 ) -> Result<(String, Option<String>, Option<serde_json::Value>), (String, String)> {
 	let data = data.ok_or_else(|| ("400".to_string(), "Missing data".to_string()))?;
-	let patch: PatchRequest =
-		serde_json::from_value(data).map_err(|e| ("400".to_string(), format!("Invalid patch data: {}", e)))?;
+	let patch: PatchRequest = serde_json::from_value(data)
+		.map_err(|e| ("400".to_string(), format!("Invalid patch data: {}", e)))?;
 
-	patch.validate().map_err(|e| ("400".to_string(), e.to_string()))?;
+	patch
+		.validate()
+		.map_err(|e| ("400".to_string(), e.to_string()))?;
 
 	let user_id = parse_uuid(id)?;
 	let user_id = UserId::new(user_id);
@@ -297,9 +315,17 @@ async fn patch_user(
 					.and_then(|v| v.as_bool())
 					.unwrap_or(true);
 				if active {
-					state.user_repo.restore_user(&user_id).await.map_err(|e| ("500".to_string(), e.to_string()))?;
+					state
+						.user_repo
+						.restore_user(&user_id)
+						.await
+						.map_err(|e| ("500".to_string(), e.to_string()))?;
 				} else {
-					state.user_repo.soft_delete_user(&user_id).await.map_err(|e| ("500".to_string(), e.to_string()))?;
+					state
+						.user_repo
+						.soft_delete_user(&user_id)
+						.await
+						.map_err(|e| ("500".to_string(), e.to_string()))?;
 				}
 			}
 			Some("displayName") => {
@@ -326,7 +352,11 @@ async fn delete_user(
 	let user_id = parse_uuid(id)?;
 	let user_id = UserId::new(user_id);
 
-	state.user_repo.soft_delete_user(&user_id).await.map_err(|e| ("500".to_string(), e.to_string()))?;
+	state
+		.user_repo
+		.soft_delete_user(&user_id)
+		.await
+		.map_err(|e| ("500".to_string(), e.to_string()))?;
 
 	state
 		.provisioning
@@ -342,12 +372,16 @@ async fn create_group(
 	data: Option<serde_json::Value>,
 ) -> Result<(String, Option<String>, Option<serde_json::Value>), (String, String)> {
 	let data = data.ok_or_else(|| ("400".to_string(), "Missing data".to_string()))?;
-	let scim_group: ScimGroup =
-		serde_json::from_value(data).map_err(|e| ("400".to_string(), format!("Invalid group data: {}", e)))?;
+	let scim_group: ScimGroup = serde_json::from_value(data)
+		.map_err(|e| ("400".to_string(), format!("Invalid group data: {}", e)))?;
 
 	let team_id = state
 		.team_repo
-		.create_scim_team(&state.org_id, &scim_group.display_name, scim_group.external_id.as_deref())
+		.create_scim_team(
+			&state.org_id,
+			&scim_group.display_name,
+			scim_group.external_id.as_deref(),
+		)
 		.await
 		.map_err(|e| ("500".to_string(), format!("Create failed: {}", e)))?;
 
@@ -378,15 +412,19 @@ async fn replace_group(
 	data: Option<serde_json::Value>,
 ) -> Result<(String, Option<String>, Option<serde_json::Value>), (String, String)> {
 	let data = data.ok_or_else(|| ("400".to_string(), "Missing data".to_string()))?;
-	let scim_group: ScimGroup =
-		serde_json::from_value(data).map_err(|e| ("400".to_string(), format!("Invalid group data: {}", e)))?;
+	let scim_group: ScimGroup = serde_json::from_value(data)
+		.map_err(|e| ("400".to_string(), format!("Invalid group data: {}", e)))?;
 
 	let team_id = parse_uuid(id)?;
 	let team_id = TeamId::new(team_id);
 
 	state
 		.team_repo
-		.update_scim_team(&team_id, &scim_group.display_name, scim_group.external_id.as_deref())
+		.update_scim_team(
+			&team_id,
+			&scim_group.display_name,
+			scim_group.external_id.as_deref(),
+		)
 		.await
 		.map_err(|e| ("500".to_string(), e.to_string()))?;
 
@@ -413,10 +451,12 @@ async fn patch_group(
 	data: Option<serde_json::Value>,
 ) -> Result<(String, Option<String>, Option<serde_json::Value>), (String, String)> {
 	let data = data.ok_or_else(|| ("400".to_string(), "Missing data".to_string()))?;
-	let patch: PatchRequest =
-		serde_json::from_value(data).map_err(|e| ("400".to_string(), format!("Invalid patch data: {}", e)))?;
+	let patch: PatchRequest = serde_json::from_value(data)
+		.map_err(|e| ("400".to_string(), format!("Invalid patch data: {}", e)))?;
 
-	patch.validate().map_err(|e| ("400".to_string(), e.to_string()))?;
+	patch
+		.validate()
+		.map_err(|e| ("400".to_string(), e.to_string()))?;
 
 	let team_id = parse_uuid(id)?;
 	let team_id = TeamId::new(team_id);

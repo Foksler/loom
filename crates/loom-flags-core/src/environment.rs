@@ -136,8 +136,16 @@ mod tests {
 
 		// Verify all default environments have valid names and colors
 		for (name, color) in defaults {
-			assert!(Environment::validate_name(name), "Default env '{}' has invalid name", name);
-			assert!(Environment::validate_color(color), "Default env '{}' has invalid color", color);
+			assert!(
+				Environment::validate_name(name),
+				"Default env '{}' has invalid name",
+				name
+			);
+			assert!(
+				Environment::validate_color(color),
+				"Default env '{}' has invalid color",
+				color
+			);
 		}
 	}
 

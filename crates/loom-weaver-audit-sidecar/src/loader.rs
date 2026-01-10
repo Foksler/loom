@@ -61,7 +61,10 @@ fn verify_ebpf_integrity(bytecode_path: &Path) -> Result<()> {
 	let actual_hash = format!("{:x}", hasher.finalize());
 
 	if actual_hash != expected_hash {
-		return Err(LoaderError::IntegrityCheckFailed { expected: expected_hash, actual: actual_hash });
+		return Err(LoaderError::IntegrityCheckFailed {
+			expected: expected_hash,
+			actual: actual_hash,
+		});
 	}
 
 	info!("eBPF bytecode integrity verified");
@@ -75,20 +78,76 @@ struct TracepointConfig {
 }
 
 const TRACEPOINTS: &[TracepointConfig] = &[
-	TracepointConfig { program_name: "sys_enter_execve", category: "syscalls", name: "sys_enter_execve" },
-	TracepointConfig { program_name: "sys_exit_execve", category: "syscalls", name: "sys_exit_execve" },
-	TracepointConfig { program_name: "sys_enter_openat", category: "syscalls", name: "sys_enter_openat" },
-	TracepointConfig { program_name: "sys_enter_connect", category: "syscalls", name: "sys_enter_connect" },
-	TracepointConfig { program_name: "sys_enter_clone", category: "syscalls", name: "sys_enter_clone" },
-	TracepointConfig { program_name: "sys_exit_exit_group", category: "syscalls", name: "sys_exit_exit_group" },
-	TracepointConfig { program_name: "sys_enter_setuid", category: "syscalls", name: "sys_enter_setuid" },
-	TracepointConfig { program_name: "sys_enter_setgid", category: "syscalls", name: "sys_enter_setgid" },
-	TracepointConfig { program_name: "sys_enter_ptrace", category: "syscalls", name: "sys_enter_ptrace" },
-	TracepointConfig { program_name: "sys_enter_mmap", category: "syscalls", name: "sys_enter_mmap" },
-	TracepointConfig { program_name: "sys_enter_mprotect", category: "syscalls", name: "sys_enter_mprotect" },
-	TracepointConfig { program_name: "sys_enter_unshare", category: "syscalls", name: "sys_enter_unshare" },
-	TracepointConfig { program_name: "sys_enter_setns", category: "syscalls", name: "sys_enter_setns" },
-	TracepointConfig { program_name: "sys_enter_mount", category: "syscalls", name: "sys_enter_mount" },
+	TracepointConfig {
+		program_name: "sys_enter_execve",
+		category: "syscalls",
+		name: "sys_enter_execve",
+	},
+	TracepointConfig {
+		program_name: "sys_exit_execve",
+		category: "syscalls",
+		name: "sys_exit_execve",
+	},
+	TracepointConfig {
+		program_name: "sys_enter_openat",
+		category: "syscalls",
+		name: "sys_enter_openat",
+	},
+	TracepointConfig {
+		program_name: "sys_enter_connect",
+		category: "syscalls",
+		name: "sys_enter_connect",
+	},
+	TracepointConfig {
+		program_name: "sys_enter_clone",
+		category: "syscalls",
+		name: "sys_enter_clone",
+	},
+	TracepointConfig {
+		program_name: "sys_exit_exit_group",
+		category: "syscalls",
+		name: "sys_exit_exit_group",
+	},
+	TracepointConfig {
+		program_name: "sys_enter_setuid",
+		category: "syscalls",
+		name: "sys_enter_setuid",
+	},
+	TracepointConfig {
+		program_name: "sys_enter_setgid",
+		category: "syscalls",
+		name: "sys_enter_setgid",
+	},
+	TracepointConfig {
+		program_name: "sys_enter_ptrace",
+		category: "syscalls",
+		name: "sys_enter_ptrace",
+	},
+	TracepointConfig {
+		program_name: "sys_enter_mmap",
+		category: "syscalls",
+		name: "sys_enter_mmap",
+	},
+	TracepointConfig {
+		program_name: "sys_enter_mprotect",
+		category: "syscalls",
+		name: "sys_enter_mprotect",
+	},
+	TracepointConfig {
+		program_name: "sys_enter_unshare",
+		category: "syscalls",
+		name: "sys_enter_unshare",
+	},
+	TracepointConfig {
+		program_name: "sys_enter_setns",
+		category: "syscalls",
+		name: "sys_enter_setns",
+	},
+	TracepointConfig {
+		program_name: "sys_enter_mount",
+		category: "syscalls",
+		name: "sys_enter_mount",
+	},
 ];
 
 pub struct EbpfAuditLoader {
@@ -138,9 +197,16 @@ impl EbpfAuditLoader {
 			}
 		}
 
-		info!(attached_count, total = TRACEPOINTS.len(), "eBPF programs loaded");
+		info!(
+			attached_count,
+			total = TRACEPOINTS.len(),
+			"eBPF programs loaded"
+		);
 
-		Ok(Self { bpf, attached_count })
+		Ok(Self {
+			bpf,
+			attached_count,
+		})
 	}
 
 	fn attach_tracepoint(bpf: &mut Ebpf, config: &TracepointConfig) -> Result<()> {
@@ -160,17 +226,22 @@ impl EbpfAuditLoader {
 			source: e,
 		})?;
 
-		program.attach(config.category, config.name).map_err(|e| LoaderError::Attach {
-			program: config.program_name.to_string(),
-			tracepoint: format!("{}:{}", config.category, config.name),
-			source: e,
-		})?;
+		program
+			.attach(config.category, config.name)
+			.map_err(|e| LoaderError::Attach {
+				program: config.program_name.to_string(),
+				tracepoint: format!("{}:{}", config.category, config.name),
+				source: e,
+			})?;
 
 		Ok(())
 	}
 
 	pub fn ring_buffer(&mut self) -> Result<RingBuf<&mut aya::maps::MapData>> {
-		let map = self.bpf.map_mut(RING_BUFFER_MAP_NAME).ok_or(LoaderError::RingBufferNotFound)?;
+		let map = self
+			.bpf
+			.map_mut(RING_BUFFER_MAP_NAME)
+			.ok_or(LoaderError::RingBufferNotFound)?;
 		RingBuf::try_from(map).map_err(LoaderError::Map)
 	}
 

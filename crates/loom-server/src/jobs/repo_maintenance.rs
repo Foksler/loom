@@ -139,10 +139,14 @@ impl Job for GlobalMaintenanceJob {
 			return Err(JobError::Cancelled);
 		}
 
-		let repo_ids = self.scm_repo.list_all_repo_ids().await.map_err(|e| JobError::Failed {
-			message: e.to_string(),
-			retryable: true,
-		})?;
+		let repo_ids = self
+			.scm_repo
+			.list_all_repo_ids()
+			.await
+			.map_err(|e| JobError::Failed {
+				message: e.to_string(),
+				retryable: true,
+			})?;
 
 		let repo_paths: Vec<(Uuid, PathBuf)> = repo_ids
 			.into_iter()

@@ -72,8 +72,7 @@ impl<S: ExternalMirrorStore + 'static, R: RepoStore + 'static> Job for MirrorSyn
 			return Err(JobError::Cancelled);
 		}
 
-		let sync_threshold =
-			Utc::now() - chrono::Duration::hours(self.sync_interval_hours as i64);
+		let sync_threshold = Utc::now() - chrono::Duration::hours(self.sync_interval_hours as i64);
 
 		// Get mirrors that need syncing (not synced within the interval)
 		let mirrors_needing_sync = self
@@ -292,7 +291,15 @@ mod tests {
 		}
 
 		async fn get_by_id(&self, id: uuid::Uuid) -> loom_server_db::Result<Option<ExternalMirror>> {
-			Ok(self.mirrors.lock().unwrap().iter().find(|m| m.id == id).cloned())
+			Ok(
+				self
+					.mirrors
+					.lock()
+					.unwrap()
+					.iter()
+					.find(|m| m.id == id)
+					.cloned(),
+			)
 		}
 
 		async fn get_by_repo_id(
@@ -332,12 +339,14 @@ mod tests {
 			limit: usize,
 		) -> loom_server_db::Result<Vec<ExternalMirror>> {
 			let mirrors = self.mirrors.lock().unwrap();
-			Ok(mirrors
-				.iter()
-				.filter(|m| m.last_synced_at.map(|t| t < sync_threshold).unwrap_or(true))
-				.take(limit)
-				.cloned()
-				.collect())
+			Ok(
+				mirrors
+					.iter()
+					.filter(|m| m.last_synced_at.map(|t| t < sync_threshold).unwrap_or(true))
+					.take(limit)
+					.cloned()
+					.collect(),
+			)
 		}
 
 		async fn delete(&self, _id: uuid::Uuid) -> loom_server_db::Result<()> {
@@ -386,7 +395,15 @@ mod tests {
 		}
 
 		async fn get_by_id(&self, id: uuid::Uuid) -> loom_server_scm::Result<Option<Repository>> {
-			Ok(self.repos.lock().unwrap().iter().find(|r| r.id == id).cloned())
+			Ok(
+				self
+					.repos
+					.lock()
+					.unwrap()
+					.iter()
+					.find(|r| r.id == id)
+					.cloned(),
+			)
 		}
 
 		async fn get_by_owner_and_name(

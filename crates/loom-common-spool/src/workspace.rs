@@ -42,9 +42,8 @@ impl SpoolWorkspace {
 			})?
 		} else {
 			// Initialize with native jj backend (still uses git internally)
-			Workspace::init_internal_git(settings.inner(), path).map_err(|e| {
-				SpoolError::workspace(format!("failed to init internal git workspace: {e}"))
-			})?
+			Workspace::init_internal_git(settings.inner(), path)
+				.map_err(|e| SpoolError::workspace(format!("failed to init internal git workspace: {e}")))?
 		};
 
 		Ok(Self {
@@ -159,7 +158,8 @@ impl SpoolWorkspace {
 			.get_wc_commit_id(self.workspace.workspace_name())
 			.ok_or_else(|| SpoolError::Workspace("no working copy commit".to_string()))?;
 
-		self.repo
+		self
+			.repo
 			.store()
 			.get_commit(wc_commit_id)
 			.map_err(SpoolError::backend)

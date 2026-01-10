@@ -65,7 +65,8 @@ async fn main() -> Result<()> {
 		metrics.clone(),
 	);
 
-	let mut event_buffer = EventBuffer::new(PathBuf::from(&config.buffer_path), config.buffer_max_bytes)?;
+	let mut event_buffer =
+		EventBuffer::new(PathBuf::from(&config.buffer_path), config.buffer_max_bytes)?;
 
 	let buffer_health_state = health_state.clone();
 	tokio::spawn(async move {
@@ -74,10 +75,7 @@ async fn main() -> Result<()> {
 				warn!("Failed to buffer event: {}", e);
 			}
 			let _ = buffer_health_state
-				.set_buffer_status(
-					1,
-					event_buffer.len(),
-				)
+				.set_buffer_status(1, event_buffer.len())
 				.await;
 		}
 	});
@@ -176,7 +174,11 @@ async fn main() -> Result<()> {
 	});
 
 	let processor_config = EventProcessorConfig::from(&config);
-	let event_processor = Arc::new(EventProcessor::new(processor_config, batch_sender.sender().clone(), metrics.clone()));
+	let event_processor = Arc::new(EventProcessor::new(
+		processor_config,
+		batch_sender.sender().clone(),
+		metrics.clone(),
+	));
 
 	// Bounded channel for raw eBPF events to prevent OOM from unbounded task spawning
 	let (raw_event_tx, mut raw_event_rx) = mpsc::channel::<Vec<u8>>(1000);
@@ -195,7 +197,9 @@ async fn main() -> Result<()> {
 			let attached = loader.attached_count();
 			let total = loader.total_programs();
 			info!(attached, total, "eBPF programs loaded successfully");
-			health_state.set_ebpf_status(attached as u32, total as u32).await;
+			health_state
+				.set_ebpf_status(attached as u32, total as u32)
+				.await;
 
 			let raw_tx = raw_event_tx.clone();
 			tokio::task::spawn_blocking(move || {

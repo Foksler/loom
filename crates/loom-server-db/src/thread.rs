@@ -1340,7 +1340,10 @@ mod tests {
 		let fetched = fetched.unwrap();
 		assert_eq!(fetched.id, thread.id);
 		assert_eq!(fetched.metadata.title, Some("Test Thread".to_string()));
-		assert_eq!(fetched.workspace_root, Some("/home/user/project".to_string()));
+		assert_eq!(
+			fetched.workspace_root,
+			Some("/home/user/project".to_string())
+		);
 	}
 
 	#[tokio::test]
@@ -1377,10 +1380,7 @@ mod tests {
 		let all_threads = repo.list(None, 100, 0).await.unwrap();
 		assert_eq!(all_threads.len(), 3);
 
-		let workspace_threads = repo
-			.list(Some("/home/user/project"), 100, 0)
-			.await
-			.unwrap();
+		let workspace_threads = repo.list(Some("/home/user/project"), 100, 0).await.unwrap();
 		assert_eq!(workspace_threads.len(), 2);
 	}
 

@@ -22,7 +22,11 @@ pub async fn run(args: SnipArgs) -> anyhow::Result<()> {
 	repo.snip(&stitch_id)?;
 
 	let stitch_hex = hex::encode(&stitch_id.0[..8]);
-	println!("{} Snipped (abandoned) stitch {}", "✓".green(), stitch_hex.red());
+	println!(
+		"{} Snipped (abandoned) stitch {}",
+		"✓".green(),
+		stitch_hex.red()
+	);
 
 	Ok(())
 }

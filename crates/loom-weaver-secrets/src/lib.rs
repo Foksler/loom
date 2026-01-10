@@ -39,21 +39,21 @@ pub use loom_common_secret::SecretString;
 /// Secret scope for fetching secrets.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SecretScope {
-    /// Organization-wide secret
-    Org,
-    /// Repository-specific secret
-    Repo,
-    /// Weaver-instance secret (ephemeral)
-    Weaver,
+	/// Organization-wide secret
+	Org,
+	/// Repository-specific secret
+	Repo,
+	/// Weaver-instance secret (ephemeral)
+	Weaver,
 }
 
 impl SecretScope {
-    /// Get the path segment for this scope.
-    pub fn path_segment(&self) -> &'static str {
-        match self {
-            SecretScope::Org => "org",
-            SecretScope::Repo => "repo",
-            SecretScope::Weaver => "weaver",
-        }
-    }
+	/// Get the path segment for this scope.
+	pub fn path_segment(&self) -> &'static str {
+		match self {
+			SecretScope::Org => "org",
+			SecretScope::Repo => "repo",
+			SecretScope::Weaver => "weaver",
+		}
+	}
 }

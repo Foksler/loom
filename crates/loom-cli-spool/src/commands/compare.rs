@@ -40,10 +40,7 @@ pub async fn run(args: CompareArgs) -> anyhow::Result<()> {
 	if status.is_empty {
 		println!("{}", "No changes between stitches".dimmed());
 	} else {
-		println!(
-			"{}: Working copy has modifications",
-			"Status".bold()
-		);
+		println!("{}: Working copy has modifications", "Status".bold());
 
 		if !status.added.is_empty() {
 			println!("\n{}:", "Added".green().bold());

@@ -133,16 +133,12 @@ impl From<loom_weaver_ebpf_common::EventType> for WeaverAuditEventType {
 			loom_weaver_ebpf_common::EventType::FileMetadata => WeaverAuditEventType::FileMetadata,
 			loom_weaver_ebpf_common::EventType::FileOpen => WeaverAuditEventType::FileOpen,
 			loom_weaver_ebpf_common::EventType::NetworkSocket => WeaverAuditEventType::NetworkSocket,
-			loom_weaver_ebpf_common::EventType::NetworkConnect => {
-				WeaverAuditEventType::NetworkConnect
-			}
+			loom_weaver_ebpf_common::EventType::NetworkConnect => WeaverAuditEventType::NetworkConnect,
 			loom_weaver_ebpf_common::EventType::NetworkListen => WeaverAuditEventType::NetworkListen,
 			loom_weaver_ebpf_common::EventType::NetworkAccept => WeaverAuditEventType::NetworkAccept,
 			loom_weaver_ebpf_common::EventType::DnsQuery => WeaverAuditEventType::DnsQuery,
 			loom_weaver_ebpf_common::EventType::DnsResponse => WeaverAuditEventType::DnsResponse,
-			loom_weaver_ebpf_common::EventType::PrivilegeChange => {
-				WeaverAuditEventType::PrivilegeChange
-			}
+			loom_weaver_ebpf_common::EventType::PrivilegeChange => WeaverAuditEventType::PrivilegeChange,
 			loom_weaver_ebpf_common::EventType::MemoryExec => WeaverAuditEventType::MemoryExec,
 			loom_weaver_ebpf_common::EventType::SandboxEscape => WeaverAuditEventType::SandboxEscape,
 		}

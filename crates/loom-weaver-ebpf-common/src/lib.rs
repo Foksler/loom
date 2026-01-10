@@ -93,7 +93,12 @@ pub struct ProcessExecEvent {
 
 impl Default for ProcessExecEvent {
 	fn default() -> Self {
-		Self { header: EventHeader::default(), filename: [0u8; MAX_PATH_LEN], filename_len: 0, ret: 0 }
+		Self {
+			header: EventHeader::default(),
+			filename: [0u8; MAX_PATH_LEN],
+			filename_len: 0,
+			ret: 0,
+		}
 	}
 }
 
@@ -125,7 +130,12 @@ pub struct ProcessExitEvent {
 
 impl Default for ProcessExitEvent {
 	fn default() -> Self {
-		Self { header: EventHeader::default(), exit_code: 0, signal: 0, comm: [0u8; MAX_COMM_LEN] }
+		Self {
+			header: EventHeader::default(),
+			exit_code: 0,
+			signal: 0,
+			comm: [0u8; MAX_COMM_LEN],
+		}
 	}
 }
 

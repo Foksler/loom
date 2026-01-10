@@ -119,9 +119,7 @@ pub fn role_parse_error<T: ApiErrorResponse>(e: RoleParseError) -> (StatusCode, 
 }
 
 /// Create a 400 Bad Request response from a SlugValidationError.
-pub fn slug_validation_error<T: ApiErrorResponse>(
-	e: SlugValidationError,
-) -> (StatusCode, Json<T>) {
+pub fn slug_validation_error<T: ApiErrorResponse>(e: SlugValidationError) -> (StatusCode, Json<T>) {
 	(StatusCode::BAD_REQUEST, Json(T::new(e.error, e.message)))
 }
 

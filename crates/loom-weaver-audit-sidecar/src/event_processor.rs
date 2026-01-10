@@ -12,21 +12,21 @@ use crate::metrics::Metrics;
 
 use loom_weaver_ebpf_common::{
 	DnsQueryEvent, DnsResponseEvent, EventHeader, EventType, FileEvent, FileOpenEvent,
-	MemoryExecEvent, NetworkAcceptEvent, NetworkConnectEvent, NetworkListenEvent,
-	NetworkSocketEvent, PrivilegeChangeEvent, ProcessExecEvent, ProcessExitEvent, ProcessForkEvent,
-	SandboxEscapeEvent, MAX_COMM_LEN,
+	MemoryExecEvent, NetworkAcceptEvent, NetworkConnectEvent, NetworkListenEvent, NetworkSocketEvent,
+	PrivilegeChangeEvent, ProcessExecEvent, ProcessExitEvent, ProcessForkEvent, SandboxEscapeEvent,
+	MAX_COMM_LEN,
 };
 
 use crate::config::Config;
 use crate::connection_tracker::ConnectionTracker;
 use crate::dns_cache::DnsCache;
-use crate::filter::PathFilter;
 use crate::events::{
 	bytes_to_string, DnsQueryDetails, DnsResponseDetails, FileEventDetails, MemoryExecDetails,
 	NetworkConnectDetails, NetworkSocketDetails, PrivilegeChangeDetails, ProcessExecDetails,
 	ProcessExitDetails, ProcessForkDetails, SandboxEscapeDetails, WeaverAuditEvent,
 	WeaverAuditEventType,
 };
+use crate::filter::PathFilter;
 
 fn read_event<T: Copy>(data: &[u8]) -> Option<T> {
 	if data.len() < std::mem::size_of::<T>() {
@@ -62,7 +62,11 @@ pub struct EventProcessor {
 }
 
 impl EventProcessor {
-	pub fn new(config: EventProcessorConfig, tx: mpsc::Sender<WeaverAuditEvent>, metrics: Arc<Metrics>) -> Self {
+	pub fn new(
+		config: EventProcessorConfig,
+		tx: mpsc::Sender<WeaverAuditEvent>,
+		metrics: Arc<Metrics>,
+	) -> Self {
 		Self {
 			config,
 			tx,
@@ -158,7 +162,11 @@ impl EventProcessor {
 			details,
 		};
 
-		self.tx.send(event).await.map_err(|e| anyhow::anyhow!("channel send failed: {}", e))
+		self
+			.tx
+			.send(event)
+			.await
+			.map_err(|e| anyhow::anyhow!("channel send failed: {}", e))
 	}
 
 	async fn process_exec(&self, data: &[u8]) -> anyhow::Result<()> {
@@ -176,13 +184,14 @@ impl EventProcessor {
 		};
 
 		let comm = [0u8; MAX_COMM_LEN];
-		self.send_event(
-			&event.header,
-			&comm,
-			WeaverAuditEventType::ProcessExec,
-			serde_json::to_value(details)?,
-		)
-		.await
+		self
+			.send_event(
+				&event.header,
+				&comm,
+				WeaverAuditEventType::ProcessExec,
+				serde_json::to_value(details)?,
+			)
+			.await
 	}
 
 	async fn process_fork(&self, data: &[u8]) -> anyhow::Result<()> {
@@ -195,13 +204,14 @@ impl EventProcessor {
 		};
 
 		let comm = [0u8; MAX_COMM_LEN];
-		self.send_event(
-			&event.header,
-			&comm,
-			WeaverAuditEventType::ProcessFork,
-			serde_json::to_value(details)?,
-		)
-		.await
+		self
+			.send_event(
+				&event.header,
+				&comm,
+				WeaverAuditEventType::ProcessFork,
+				serde_json::to_value(details)?,
+			)
+			.await
 	}
 
 	async fn process_exit(&self, data: &[u8]) -> anyhow::Result<()> {
@@ -212,22 +222,25 @@ impl EventProcessor {
 			tracker.on_exit(event.header.pid);
 		}
 
-		let details = ProcessExitDetails { exit_code: event.exit_code };
+		let details = ProcessExitDetails {
+			exit_code: event.exit_code,
+		};
 
-		self.send_event(
-			&event.header,
-			&event.comm,
-			WeaverAuditEventType::ProcessExit,
-			serde_json::to_value(details)?,
-		)
-		.await
+		self
+			.send_event(
+				&event.header,
+				&event.comm,
+				WeaverAuditEventType::ProcessExit,
+				serde_json::to_value(details)?,
+			)
+			.await
 	}
 
 	async fn process_file(&self, data: &[u8], event_type: EventType) -> anyhow::Result<()> {
 		// FileOpen uses FileOpenEvent (304 bytes), other file events use FileEvent (320 bytes)
 		let (header, path, flags, mode) = if event_type == EventType::FileOpen {
-			let event: FileOpenEvent = read_event(data)
-				.ok_or_else(|| anyhow::anyhow!("data too small for FileOpenEvent"))?;
+			let event: FileOpenEvent =
+				read_event(data).ok_or_else(|| anyhow::anyhow!("data too small for FileOpenEvent"))?;
 			(
 				event.header,
 				bytes_to_string(&event.filename),
@@ -237,7 +250,12 @@ impl EventProcessor {
 		} else {
 			let event: FileEvent =
 				read_event(data).ok_or_else(|| anyhow::anyhow!("data too small for FileEvent"))?;
-			(event.header, bytes_to_string(&event.path), event.flags, event.mode)
+			(
+				event.header,
+				bytes_to_string(&event.path),
+				event.flags,
+				event.mode,
+			)
 		};
 
 		let is_write = matches!(event_type, EventType::FileWrite | EventType::FileMetadata);
@@ -256,7 +274,9 @@ impl EventProcessor {
 		};
 
 		let comm = [0u8; MAX_COMM_LEN];
-		self.send_event(&header, &comm, audit_type, serde_json::to_value(details)?).await
+		self
+			.send_event(&header, &comm, audit_type, serde_json::to_value(details)?)
+			.await
 	}
 
 	async fn process_socket(&self, data: &[u8]) -> anyhow::Result<()> {
@@ -282,21 +302,21 @@ impl EventProcessor {
 		};
 
 		let comm = [0u8; MAX_COMM_LEN];
-		self.send_event(
-			&event.header,
-			&comm,
-			WeaverAuditEventType::NetworkSocket,
-			serde_json::to_value(details)?,
-		)
-		.await
+		self
+			.send_event(
+				&event.header,
+				&comm,
+				WeaverAuditEventType::NetworkSocket,
+				serde_json::to_value(details)?,
+			)
+			.await
 	}
 
 	async fn process_connect(&self, data: &[u8]) -> anyhow::Result<()> {
-		let event: NetworkConnectEvent = read_event(data)
-			.ok_or_else(|| anyhow::anyhow!("data too small for NetworkConnectEvent"))?;
+		let event: NetworkConnectEvent =
+			read_event(data).ok_or_else(|| anyhow::anyhow!("data too small for NetworkConnectEvent"))?;
 		let (remote_ip_str, remote_ip) = format_ip_address(event.family, &event.addr, event.addr_len);
-		let hostname = remote_ip
-			.and_then(|ip| self.dns_cache.lock().ok()?.lookup(&ip));
+		let hostname = remote_ip.and_then(|ip| self.dns_cache.lock().ok()?.lookup(&ip));
 
 		if let Some(ip) = remote_ip {
 			if let Ok(mut tracker) = self.connection_tracker.lock() {
@@ -312,18 +332,19 @@ impl EventProcessor {
 		};
 
 		let comm = [0u8; MAX_COMM_LEN];
-		self.send_event(
-			&event.header,
-			&comm,
-			WeaverAuditEventType::NetworkConnect,
-			serde_json::to_value(details)?,
-		)
-		.await
+		self
+			.send_event(
+				&event.header,
+				&comm,
+				WeaverAuditEventType::NetworkConnect,
+				serde_json::to_value(details)?,
+			)
+			.await
 	}
 
 	async fn process_listen(&self, data: &[u8]) -> anyhow::Result<()> {
-		let event: NetworkListenEvent = read_event(data)
-			.ok_or_else(|| anyhow::anyhow!("data too small for NetworkListenEvent"))?;
+		let event: NetworkListenEvent =
+			read_event(data).ok_or_else(|| anyhow::anyhow!("data too small for NetworkListenEvent"))?;
 		let details = serde_json::json!({
 			"fd": event.fd,
 			"backlog": event.backlog,
@@ -331,12 +352,19 @@ impl EventProcessor {
 		});
 
 		let comm = [0u8; MAX_COMM_LEN];
-		self.send_event(&event.header, &comm, WeaverAuditEventType::NetworkListen, details).await
+		self
+			.send_event(
+				&event.header,
+				&comm,
+				WeaverAuditEventType::NetworkListen,
+				details,
+			)
+			.await
 	}
 
 	async fn process_accept(&self, data: &[u8]) -> anyhow::Result<()> {
-		let event: NetworkAcceptEvent = read_event(data)
-			.ok_or_else(|| anyhow::anyhow!("data too small for NetworkAcceptEvent"))?;
+		let event: NetworkAcceptEvent =
+			read_event(data).ok_or_else(|| anyhow::anyhow!("data too small for NetworkAcceptEvent"))?;
 		let (remote_ip, _) = format_ip_address(event.family, &event.addr, event.addr_len);
 
 		let details = serde_json::json!({
@@ -347,22 +375,32 @@ impl EventProcessor {
 		});
 
 		let comm = [0u8; MAX_COMM_LEN];
-		self.send_event(&event.header, &comm, WeaverAuditEventType::NetworkAccept, details).await
+		self
+			.send_event(
+				&event.header,
+				&comm,
+				WeaverAuditEventType::NetworkAccept,
+				details,
+			)
+			.await
 	}
 
 	async fn process_dns_query(&self, data: &[u8]) -> anyhow::Result<()> {
 		let event: DnsQueryEvent =
 			read_event(data).ok_or_else(|| anyhow::anyhow!("data too small for DnsQueryEvent"))?;
-		let details = DnsQueryDetails { query: bytes_to_string(&event.hostname) };
+		let details = DnsQueryDetails {
+			query: bytes_to_string(&event.hostname),
+		};
 
 		let comm = [0u8; MAX_COMM_LEN];
-		self.send_event(
-			&event.header,
-			&comm,
-			WeaverAuditEventType::DnsQuery,
-			serde_json::to_value(details)?,
-		)
-		.await
+		self
+			.send_event(
+				&event.header,
+				&comm,
+				WeaverAuditEventType::DnsQuery,
+				serde_json::to_value(details)?,
+			)
+			.await
 	}
 
 	async fn process_dns_response(&self, data: &[u8]) -> anyhow::Result<()> {
@@ -377,21 +415,26 @@ impl EventProcessor {
 			}
 		}
 
-		let details = DnsResponseDetails { query, addresses: vec![addr_str], ttl: event.ttl };
+		let details = DnsResponseDetails {
+			query,
+			addresses: vec![addr_str],
+			ttl: event.ttl,
+		};
 
 		let comm = [0u8; MAX_COMM_LEN];
-		self.send_event(
-			&event.header,
-			&comm,
-			WeaverAuditEventType::DnsResponse,
-			serde_json::to_value(details)?,
-		)
-		.await
+		self
+			.send_event(
+				&event.header,
+				&comm,
+				WeaverAuditEventType::DnsResponse,
+				serde_json::to_value(details)?,
+			)
+			.await
 	}
 
 	async fn process_privilege_change(&self, data: &[u8]) -> anyhow::Result<()> {
-		let event: PrivilegeChangeEvent = read_event(data)
-			.ok_or_else(|| anyhow::anyhow!("data too small for PrivilegeChangeEvent"))?;
+		let event: PrivilegeChangeEvent =
+			read_event(data).ok_or_else(|| anyhow::anyhow!("data too small for PrivilegeChangeEvent"))?;
 		let syscall = match event.change_type {
 			1 => "setuid",
 			2 => "setgid",
@@ -411,46 +454,56 @@ impl EventProcessor {
 		};
 
 		let comm = [0u8; MAX_COMM_LEN];
-		self.send_event(
-			&event.header,
-			&comm,
-			WeaverAuditEventType::PrivilegeChange,
-			serde_json::to_value(details)?,
-		)
-		.await
+		self
+			.send_event(
+				&event.header,
+				&comm,
+				WeaverAuditEventType::PrivilegeChange,
+				serde_json::to_value(details)?,
+			)
+			.await
 	}
 
 	async fn process_memory_exec(&self, data: &[u8]) -> anyhow::Result<()> {
 		let event: MemoryExecEvent =
 			read_event(data).ok_or_else(|| anyhow::anyhow!("data too small for MemoryExecEvent"))?;
-		let details = MemoryExecDetails { addr: event.addr, len: event.len, prot: event.prot };
+		let details = MemoryExecDetails {
+			addr: event.addr,
+			len: event.len,
+			prot: event.prot,
+		};
 
 		let comm = [0u8; MAX_COMM_LEN];
-		self.send_event(
-			&event.header,
-			&comm,
-			WeaverAuditEventType::MemoryExec,
-			serde_json::to_value(details)?,
-		)
-		.await
+		self
+			.send_event(
+				&event.header,
+				&comm,
+				WeaverAuditEventType::MemoryExec,
+				serde_json::to_value(details)?,
+			)
+			.await
 	}
 
 	async fn process_sandbox_escape(&self, data: &[u8]) -> anyhow::Result<()> {
-		let event: SandboxEscapeEvent = read_event(data)
-			.ok_or_else(|| anyhow::anyhow!("data too small for SandboxEscapeEvent"))?;
+		let event: SandboxEscapeEvent =
+			read_event(data).ok_or_else(|| anyhow::anyhow!("data too small for SandboxEscapeEvent"))?;
 		let syscall = format!("syscall_{}", event.syscall_nr);
 
-		let details =
-			SandboxEscapeDetails { syscall, arg0: event.arg0, arg1: event.arg1 };
+		let details = SandboxEscapeDetails {
+			syscall,
+			arg0: event.arg0,
+			arg1: event.arg1,
+		};
 
 		let comm = [0u8; MAX_COMM_LEN];
-		self.send_event(
-			&event.header,
-			&comm,
-			WeaverAuditEventType::SandboxEscape,
-			serde_json::to_value(details)?,
-		)
-		.await
+		self
+			.send_event(
+				&event.header,
+				&comm,
+				WeaverAuditEventType::SandboxEscape,
+				serde_json::to_value(details)?,
+			)
+			.await
 	}
 }
 

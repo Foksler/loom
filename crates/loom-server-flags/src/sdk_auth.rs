@@ -24,9 +24,11 @@ pub fn verify_sdk_key(key: &str, hash: &str) -> Result<bool> {
 	let parsed_hash = PasswordHash::new(hash)
 		.map_err(|_| FlagsServerError::Internal("Invalid SDK key hash format".to_string()))?;
 
-	Ok(Argon2::default()
-		.verify_password(key.as_bytes(), &parsed_hash)
-		.is_ok())
+	Ok(
+		Argon2::default()
+			.verify_password(key.as_bytes(), &parsed_hash)
+			.is_ok(),
+	)
 }
 
 #[cfg(test)]

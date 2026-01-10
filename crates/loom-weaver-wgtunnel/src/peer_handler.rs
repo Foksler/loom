@@ -130,7 +130,8 @@ mod tests {
 
 	#[test]
 	fn test_peer_event_deserialize_added() {
-		let json = r#"{"type":"peer_added","public_key":"abc123","allowed_ip":"fd7a::1","session_id":"sess-1"}"#;
+		let json =
+			r#"{"type":"peer_added","public_key":"abc123","allowed_ip":"fd7a::1","session_id":"sess-1"}"#;
 		let event: PeerEvent = serde_json::from_str(json).unwrap();
 		match event {
 			PeerEvent::PeerAdded {

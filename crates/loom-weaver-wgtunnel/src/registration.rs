@@ -95,7 +95,8 @@ impl Registration {
 
 		debug!(%url, "unregistering weaver from server");
 
-		self.http_client
+		self
+			.http_client
 			.delete(url)
 			.header("Authorization", format!("Bearer {}", svid.expose()))
 			.send()
@@ -111,11 +112,13 @@ impl Registration {
 	pub async fn heartbeat(&self) -> Result<(), RegistrationError> {
 		let svid = self.svid.as_ref().ok_or(RegistrationError::NoSvid)?;
 
-		let url = self
-			.server_url
-			.join(&format!("/internal/wg/weavers/{}/heartbeat", self.weaver_id))?;
+		let url = self.server_url.join(&format!(
+			"/internal/wg/weavers/{}/heartbeat",
+			self.weaver_id
+		))?;
 
-		self.http_client
+		self
+			.http_client
 			.post(url)
 			.header("Authorization", format!("Bearer {}", svid.expose()))
 			.send()

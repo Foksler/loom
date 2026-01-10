@@ -766,7 +766,10 @@ mod tests {
 		let (allocated_ip,) = allocation.unwrap();
 		assert_eq!(allocated_ip, ip);
 
-		let all_ips = repo.get_allocated_ips_by_type(allocation_type).await.unwrap();
+		let all_ips = repo
+			.get_allocated_ips_by_type(allocation_type)
+			.await
+			.unwrap();
 		assert_eq!(all_ips.len(), 1);
 		assert_eq!(all_ips[0].0, ip);
 	}
