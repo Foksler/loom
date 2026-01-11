@@ -9,49 +9,54 @@ Implementation checklist for `specs/analytics-system.md`. Each item cites the re
 
 ---
 
-## Phase 1: Core Types (`loom-analytics-core`)
+## Phase 1: Core Types (`loom-analytics-core`) ✅ COMPLETED
 
 **Reference:** [analytics-system.md §3](./analytics-system.md#3-core-entities)
 
-- [ ] Create `crates/loom-analytics-core/Cargo.toml`
-  - Dependencies: `chrono`, `serde`, `serde_json`, `thiserror`, `uuid` (v7), `loom-secret`
+**Completed in commit:** d1dd21f (2026-01-11)
+
+- [x] Create `crates/loom-analytics-core/Cargo.toml`
+  - Dependencies: `chrono`, `serde`, `serde_json`, `thiserror`, `uuid` (v4/v7), `loom-common-secret`
   - See [analytics-system.md §15](./analytics-system.md#15-rust-dependencies)
 
-- [ ] Create `crates/loom-analytics-core/src/lib.rs`
+- [x] Create `crates/loom-analytics-core/src/lib.rs`
   - Re-export all types
 
-- [ ] Create `crates/loom-analytics-core/src/person.rs`
+- [x] Create `crates/loom-analytics-core/src/person.rs`
   - `Person` struct with `id`, `org_id`, `properties`, timestamps
   - `PersonWithIdentities` wrapper
   - See [analytics-system.md §3.1](./analytics-system.md#31-person)
 
-- [ ] Create `crates/loom-analytics-core/src/identity.rs`
+- [x] Create `crates/loom-analytics-core/src/identity.rs`
   - `PersonIdentity` struct with `distinct_id`, `identity_type`
   - `IdentityType` enum: `Anonymous`, `Identified`
   - See [analytics-system.md §3.2](./analytics-system.md#32-personidentity)
 
-- [ ] Create `crates/loom-analytics-core/src/event.rs`
-  - `Event` struct with `ip_address: Option<Secret<String>>`
-  - Use `loom-secret` for IP addresses per [analytics-system.md §14.1](./analytics-system.md#141-ip-address-handling)
+- [x] Create `crates/loom-analytics-core/src/event.rs`
+  - `Event` struct with `ip_address: Option<SecretString>`
+  - Use `loom-common-secret` for IP addresses per [analytics-system.md §14.1](./analytics-system.md#141-ip-address-handling)
   - See [analytics-system.md §3.3](./analytics-system.md#33-event)
 
-- [ ] Create `crates/loom-analytics-core/src/identify.rs`
-  - `IdentifyPayload`, `AliasPayload` structs
+- [x] Create `crates/loom-analytics-core/src/identify.rs`
+  - `IdentifyPayload`, `AliasPayload`, `SetPayload`, `SetOncePayload`, `UnsetPayload` structs
+  - `PersonMerge` and `MergeReason` for merge audit trail
   - See [analytics-system.md §4.2](./analytics-system.md#42-identify-operation)
 
-- [ ] Create `crates/loom-analytics-core/src/api_key.rs`
+- [x] Create `crates/loom-analytics-core/src/api_key.rs`
   - `AnalyticsApiKey` struct
   - `AnalyticsKeyType` enum: `Write`, `ReadWrite`
   - Key format: `loom_analytics_write_` / `loom_analytics_rw_`
   - See [analytics-system.md §3.4](./analytics-system.md#34-analytics-api-key), [§10](./analytics-system.md#10-api-key-management)
 
-- [ ] Create `crates/loom-analytics-core/src/error.rs`
+- [x] Create `crates/loom-analytics-core/src/error.rs`
   - Error types using `thiserror`
   - Pattern: follow `crates/loom-flags-core/src/error.rs`
 
-- [ ] Add to workspace `Cargo.toml`
+- [x] Add to workspace `Cargo.toml`
 
-- [ ] Run `cargo2nix-update` to regenerate `Cargo.nix`
+- [x] Run `cargo2nix-update` to regenerate `Cargo.nix`
+
+**Tests:** 75 property-based and unit tests passing
 
 ---
 
