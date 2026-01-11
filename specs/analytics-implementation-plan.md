@@ -261,33 +261,49 @@ Implementation checklist for `specs/analytics-system.md`. Each item cites the re
 
 ---
 
-## Phase 8: Rust SDK (`loom-analytics`)
+## Phase 8: Rust SDK (`loom-analytics`) ✅ COMPLETED
 
 **Reference:** [analytics-system.md §8.1](./analytics-system.md#81-rust-sdk-loom-analytics)
 
-- [ ] Create `crates/loom-analytics/Cargo.toml`
-  - Dependencies: `loom-analytics-core`, `loom-http`, `tokio`, `reqwest`, `tracing`
+**Completed in commit:** (2026-01-11)
 
-- [ ] Create `crates/loom-analytics/src/lib.rs`
-  - Re-export `AnalyticsClient`, `Properties`
+- [x] Create `crates/loom-analytics/Cargo.toml`
+  - Dependencies: `loom-analytics-core`, `loom-common-http`, `tokio`, `reqwest`, `tracing`
 
-- [ ] Create `crates/loom-analytics/src/client.rs`
+- [x] Create `crates/loom-analytics/src/lib.rs`
+  - Re-export `AnalyticsClient`, `Properties`, error types
+
+- [x] Create `crates/loom-analytics/src/client.rs`
   - `AnalyticsClient` with builder pattern
   - `capture(event, distinct_id, properties)`
   - `identify(distinct_id, user_id, properties)`
   - `alias(distinct_id, alias)`
   - `set(distinct_id, properties)`
-  - `shutdown()` - flush pending events
+  - `flush()` - force immediate flush
+  - `shutdown()` - flush pending events and stop background task
 
-- [ ] Create `crates/loom-analytics/src/batch.rs`
-  - Event queue with background flush
-  - Flush on interval (default 10s) or batch size (default 10)
-  - Use `loom-http` for requests with retry
+- [x] Create `crates/loom-analytics/src/batch.rs`
+  - `BatchProcessor` with background flush loop
+  - `BatchConfig` with configurable interval (default 10s), batch size (default 10), queue size (default 1000)
+  - Queue overflow handling (drops oldest events)
+  - `BatchSender` trait for testability
+  - Uses `loom-common-http` retry for HTTP requests
   - See [analytics-system.md §8.3](./analytics-system.md#83-sdk-behavior)
 
-- [ ] Create `crates/loom-analytics/src/error.rs`
+- [x] Create `crates/loom-analytics/src/properties.rs`
+  - `Properties` builder for event and person properties
+  - Supports strings, numbers, booleans, JSON values
+  - `insert()`, `merge()`, `into_value()` methods
 
-- [ ] Add to workspace `Cargo.toml`
+- [x] Create `crates/loom-analytics/src/error.rs`
+  - `AnalyticsError` enum with retryable errors
+  - Implements `RetryableError` trait for retry logic
+
+- [x] Add to workspace `Cargo.toml`
+
+- [x] Run `cargo2nix-update` to regenerate `Cargo.nix`
+
+**Tests:** 43 property-based and unit tests passing
 
 ---
 

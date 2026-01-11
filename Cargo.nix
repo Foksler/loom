@@ -43,7 +43,9 @@ args@{
     "loom-server-llm-service/default"
     "loom-server-llm-vertex/default"
     "loom-server/default"
+    "loom-analytics-core/default"
     "loom-flags-core/default"
+    "loom-server-analytics/default"
     "loom-server-api/default"
     "loom-server-db/default"
     "loom-server-audit/default"
@@ -69,8 +71,7 @@ args@{
     "loom-weaver-secrets/default"
     "loom-weaver-wgtunnel/default"
     "loom-flags/default"
-    "loom-analytics-core/default"
-    "loom-server-analytics/default"
+    "loom-analytics/default"
   ],
   rustPackages,
   buildRustPackages,
@@ -91,7 +92,7 @@ args@{
   cargoConfig ? {},
 }:
 let
-  nixifiedLockHash = "e6a3c36a50a9fa7441f563b2e6fa8d22b07be971dd70964834a3ae2879d06346";
+  nixifiedLockHash = "31ac30d805d13d527f15f222c6675c4dc2eef865b8c720c717779b3a5a4cbceb";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -161,7 +162,9 @@ in
     loom-server-llm-service = rustPackages.unknown.loom-server-llm-service."0.1.0";
     loom-server-llm-vertex = rustPackages.unknown.loom-server-llm-vertex."0.1.0";
     loom-server = rustPackages.unknown.loom-server."0.1.0";
+    loom-analytics-core = rustPackages.unknown.loom-analytics-core."0.1.0";
     loom-flags-core = rustPackages.unknown.loom-flags-core."0.1.0";
+    loom-server-analytics = rustPackages.unknown.loom-server-analytics."0.1.0";
     loom-server-api = rustPackages.unknown.loom-server-api."0.1.0";
     loom-server-db = rustPackages.unknown.loom-server-db."0.1.0";
     loom-server-audit = rustPackages.unknown.loom-server-audit."0.1.0";
@@ -187,8 +190,7 @@ in
     loom-weaver-secrets = rustPackages.unknown.loom-weaver-secrets."0.1.0";
     loom-weaver-wgtunnel = rustPackages.unknown.loom-weaver-wgtunnel."0.1.0";
     loom-flags = rustPackages.unknown.loom-flags."0.1.0";
-    loom-analytics-core = rustPackages.unknown.loom-analytics-core."0.1.0";
-    loom-server-analytics = rustPackages.unknown.loom-server-analytics."0.1.0";
+    loom-analytics = rustPackages.unknown.loom-analytics."0.1.0";
   };
   "registry+https://github.com/rust-lang/crates.io-index".adler2."2.0.1" = overridableMkRustCrate (profileName: rec {
     name = "adler2";
@@ -6302,6 +6304,32 @@ in
     };
   });
   
+  "unknown".loom-analytics."0.1.0" = overridableMkRustCrate (profileName: rec {
+    name = "loom-analytics";
+    version = "0.1.0";
+    registry = "unknown";
+    src = fetchCrateLocal workspaceSrc;
+    dependencies = {
+      async_trait = (buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".async-trait."0.1.89" { profileName = "__noProfile"; }).out;
+      chrono = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".chrono."0.4.42" { inherit profileName; }).out;
+      loom_analytics_core = (rustPackages."unknown".loom-analytics-core."0.1.0" { inherit profileName; }).out;
+      loom_common_http = (rustPackages."unknown".loom-common-http."0.1.0" { inherit profileName; }).out;
+      reqwest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".reqwest."0.12.28" { inherit profileName; }).out;
+      serde = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.228" { inherit profileName; }).out;
+      serde_json = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.149" { inherit profileName; }).out;
+      thiserror = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."1.0.69" { inherit profileName; }).out;
+      tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.49.0" { inherit profileName; }).out;
+      tracing = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tracing."0.1.44" { inherit profileName; }).out;
+      uuid = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".uuid."1.19.0" { inherit profileName; }).out;
+      uuid7 = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".uuid7."1.4.0" { inherit profileName; }).out;
+    };
+    devDependencies = {
+      proptest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proptest."1.9.0" { inherit profileName; }).out;
+      tokio_test = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio-test."0.4.5" { inherit profileName; }).out;
+      wiremock = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".wiremock."0.6.5" { inherit profileName; }).out;
+    };
+  });
+  
   "unknown".loom-analytics-core."0.1.0" = overridableMkRustCrate (profileName: rec {
     name = "loom-analytics-core";
     version = "0.1.0";
@@ -6852,12 +6880,14 @@ in
       hex = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".hex."0.4.3" { inherit profileName; }).out;
       hmac = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".hmac."0.12.1" { inherit profileName; }).out;
       humantime = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".humantime."2.3.0" { inherit profileName; }).out;
+      loom_analytics_core = (rustPackages."unknown".loom-analytics-core."0.1.0" { inherit profileName; }).out;
       loom_common_core = (rustPackages."unknown".loom-common-core."0.1.0" { inherit profileName; }).out;
       loom_common_i18n = (rustPackages."unknown".loom-common-i18n."0.1.0" { inherit profileName; }).out;
       loom_common_secret = (rustPackages."unknown".loom-common-secret."0.1.0" { inherit profileName; }).out;
       loom_common_thread = (rustPackages."unknown".loom-common-thread."0.1.0" { inherit profileName; }).out;
       loom_common_version = (rustPackages."unknown".loom-common-version."0.1.0" { inherit profileName; }).out;
       loom_flags_core = (rustPackages."unknown".loom-flags-core."0.1.0" { inherit profileName; }).out;
+      loom_server_analytics = (rustPackages."unknown".loom-server-analytics."0.1.0" { inherit profileName; }).out;
       loom_server_api = (rustPackages."unknown".loom-server-api."0.1.0" { inherit profileName; }).out;
       loom_server_audit = (rustPackages."unknown".loom-server-audit."0.1.0" { inherit profileName; }).out;
       loom_server_auth = (rustPackages."unknown".loom-server-auth."0.1.0" { inherit profileName; }).out;

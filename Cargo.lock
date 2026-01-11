@@ -4640,6 +4640,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-analytics"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "loom-analytics-core",
+ "loom-common-http",
+ "proptest",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "uuid",
+ "uuid7",
+ "wiremock",
+]
+
+[[package]]
 name = "loom-analytics-core"
 version = "0.1.0"
 dependencies = [
