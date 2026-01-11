@@ -118,21 +118,25 @@ Implementation checklist for `specs/analytics-system.md`. Each item cites the re
 
 ---
 
-## Phase 4: Identity Resolution
+## Phase 4: Identity Resolution ✅ COMPLETED
 
 **Reference:** [analytics-system.md §4](./analytics-system.md#4-identity-resolution)
 
-- [ ] Create `crates/loom-server-analytics/src/identity_resolution.rs`
+**Completed in commit:** (2026-01-11)
+
+- [x] Create `crates/loom-server-analytics/src/identity_resolution.rs`
   - `resolve_person_for_distinct_id(org_id, distinct_id)` → creates Person if needed
   - `identify(org_id, IdentifyPayload)` → links anonymous to identified
   - `alias(org_id, AliasPayload)` → links two distinct_ids
   - Person merge logic per [analytics-system.md §4.3](./analytics-system.md#43-person-merge)
-    - Winner selection rules
-    - Event reassignment
-    - Identity transfer
-    - Property merge (winner precedence)
+    - Winner selection rules (identified > anonymous, older > newer)
+    - Event reassignment via `reassign_events()`
+    - Identity transfer via `transfer_identities()`
+    - Property merge (winner precedence, loser fills gaps)
 
-- [ ] Add `analytics_person_merges` audit trail insert
+- [x] Add `analytics_person_merges` audit trail insert
+
+**Tests:** 14 unit tests passing covering all identity resolution scenarios
 
 ---
 

@@ -35,10 +35,12 @@
 
 pub mod api_key;
 pub mod error;
+pub mod identity_resolution;
 pub mod repository;
 
 pub use api_key::{hash_api_key, verify_api_key};
 pub use error::{AnalyticsServerError, Result};
+pub use identity_resolution::IdentityResolutionService;
 pub use repository::{AnalyticsRepository, SqliteAnalyticsRepository};
 
 // Re-export core types for convenience
