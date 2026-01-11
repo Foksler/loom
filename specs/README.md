@@ -18,6 +18,13 @@ Design documentation for Loom, an AI-powered coding agent in Rust.
 | [streaming.md](./streaming.md) | [loom-llm-service](../crates/loom-llm-service/) | SSE streaming for real-time LLM responses |
 | [error-handling.md](./error-handling.md) | [loom-core](../crates/loom-core/) | Error types using `thiserror` |
 
+## Analytics & Experimentation
+
+| Spec | Code | Purpose |
+|------|------|---------|
+| [analytics-system.md](./analytics-system.md) | [loom-analytics-core](../crates/loom-analytics-core/), [loom-analytics](../crates/loom-analytics/), [loom-server-analytics](../crates/loom-server-analytics/) | Product analytics with PostHog-style identity resolution |
+| [analytics-implementation-plan.md](./analytics-implementation-plan.md) | — | Implementation checklist with citations |
+
 ## LLM Integration
 
 | Spec | Code | Purpose |
