@@ -53,7 +53,10 @@ pub use handlers::identify::{alias_impl, identify_impl, set_properties_impl};
 pub use handlers::persons::{
 	get_person_by_distinct_id_impl, get_person_impl, list_persons_impl, person_to_response,
 };
-pub use identity_resolution::IdentityResolutionService;
+pub use identity_resolution::{
+	IdentityResolutionService, MergeAuditHook, NoOpMergeAuditHook, PersonMergeDetails,
+	SharedMergeAuditHook,
+};
 pub use middleware::{
 	extract_bearer_token, parse_key_type, AnalyticsApiKeyContext, AnalyticsApiKeyError,
 	READ_WRITE_KEY_PREFIX, WRITE_KEY_PREFIX,

@@ -78,13 +78,10 @@ async fn request_with_api_key(
 	api_key: &str,
 	body: Option<serde_json::Value>,
 ) -> axum::response::Response<Body> {
-	let mut builder = Request::builder()
-		.method(method)
-		.uri(path)
-		.header(
-			HeaderName::from_static("authorization"),
-			HeaderValue::from_str(&format!("Bearer {}", api_key)).unwrap(),
-		);
+	let mut builder = Request::builder().method(method).uri(path).header(
+		HeaderName::from_static("authorization"),
+		HeaderValue::from_str(&format!("Bearer {}", api_key)).unwrap(),
+	);
 
 	let request_body = match body {
 		Some(b) => {
@@ -427,8 +424,8 @@ async fn write_key_cannot_list_persons() {
 	let org_id = app.fixtures.org_a.org.id.to_string();
 	let api_key = create_write_api_key(&app, &org_id).await;
 
-	let response = request_with_api_key(&app, Method::GET, "/api/analytics/persons", &api_key, None)
-		.await;
+	let response =
+		request_with_api_key(&app, Method::GET, "/api/analytics/persons", &api_key, None).await;
 
 	assert_eq!(
 		response.status(),
@@ -487,8 +484,8 @@ async fn write_key_cannot_list_events() {
 	let org_id = app.fixtures.org_a.org.id.to_string();
 	let api_key = create_write_api_key(&app, &org_id).await;
 
-	let response = request_with_api_key(&app, Method::GET, "/api/analytics/events", &api_key, None)
-		.await;
+	let response =
+		request_with_api_key(&app, Method::GET, "/api/analytics/events", &api_key, None).await;
 
 	assert_eq!(
 		response.status(),
@@ -579,8 +576,8 @@ async fn read_write_key_can_list_persons() {
 	let org_id = app.fixtures.org_a.org.id.to_string();
 	let api_key = create_read_write_api_key(&app, &org_id).await;
 
-	let response = request_with_api_key(&app, Method::GET, "/api/analytics/persons", &api_key, None)
-		.await;
+	let response =
+		request_with_api_key(&app, Method::GET, "/api/analytics/persons", &api_key, None).await;
 
 	assert_eq!(
 		response.status(),
@@ -595,8 +592,8 @@ async fn read_write_key_can_list_events() {
 	let org_id = app.fixtures.org_a.org.id.to_string();
 	let api_key = create_read_write_api_key(&app, &org_id).await;
 
-	let response = request_with_api_key(&app, Method::GET, "/api/analytics/events", &api_key, None)
-		.await;
+	let response =
+		request_with_api_key(&app, Method::GET, "/api/analytics/events", &api_key, None).await;
 
 	assert_eq!(
 		response.status(),

@@ -65,4 +65,5 @@ pub use loom_server_api::weaver::*;
 pub use loom_server_api::webhooks::*;
 
 // Re-export route-specific items not in loom-server-api
+pub use analytics::AnalyticsMergeAuditHook;
 pub use weaver::weaver_routes;

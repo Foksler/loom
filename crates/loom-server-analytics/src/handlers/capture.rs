@@ -282,8 +282,19 @@ pub struct AnalyticsState<R: AnalyticsRepository> {
 }
 
 impl<R: AnalyticsRepository + Clone> AnalyticsState<R> {
+	/// Creates a new analytics state without an audit hook.
 	pub fn new(repository: R) -> Self {
 		let identity_service = crate::IdentityResolutionService::new(repository.clone());
+		Self {
+			repository,
+			identity_service,
+		}
+	}
+
+	/// Creates a new analytics state with an audit hook for person merges.
+	pub fn with_audit_hook(repository: R, hook: crate::SharedMergeAuditHook) -> Self {
+		let identity_service =
+			crate::IdentityResolutionService::with_audit_hook(repository.clone(), hook);
 		Self {
 			repository,
 			identity_service,

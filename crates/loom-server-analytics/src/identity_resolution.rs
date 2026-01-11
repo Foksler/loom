@@ -1,23 +1,81 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+use std::sync::Arc;
 use tracing::instrument;
 
 use loom_analytics_core::{
-	AliasPayload, IdentifyPayload, MergeReason, OrgId, Person, PersonIdentity, PersonMerge,
+	AliasPayload, IdentifyPayload, MergeReason, OrgId, Person, PersonId, PersonIdentity, PersonMerge,
 	PersonWithIdentities,
 };
 
 use crate::error::{AnalyticsServerError, Result};
 use crate::repository::AnalyticsRepository;
 
+/// Details about a person merge event for audit logging.
+#[derive(Debug, Clone)]
+pub struct PersonMergeDetails {
+	/// The organization where the merge occurred.
+	pub org_id: OrgId,
+	/// The winning person ID (the one that survives).
+	pub winner_id: PersonId,
+	/// The losing person ID (the one being merged into the winner).
+	pub loser_id: PersonId,
+	/// The reason for the merge.
+	pub reason: MergeReason,
+	/// Number of events that were reassigned.
+	pub events_reassigned: u64,
+	/// Number of identities that were transferred.
+	pub identities_transferred: u64,
+}
+
+/// Hook trait for receiving notifications about person merges.
+///
+/// Implement this trait to receive callbacks when person merges occur,
+/// allowing audit logging or other side effects.
+pub trait MergeAuditHook: Send + Sync {
+	/// Called when a person merge has been completed.
+	fn on_merge(&self, details: PersonMergeDetails);
+}
+
+/// A no-op implementation of MergeAuditHook that does nothing.
+#[derive(Debug, Clone, Default)]
+pub struct NoOpMergeAuditHook;
+
+impl MergeAuditHook for NoOpMergeAuditHook {
+	fn on_merge(&self, _details: PersonMergeDetails) {
+		// No-op
+	}
+}
+
+/// Shared reference to a merge audit hook.
+pub type SharedMergeAuditHook = Arc<dyn MergeAuditHook>;
+
 pub struct IdentityResolutionService<R: AnalyticsRepository> {
 	repository: R,
+	audit_hook: Option<SharedMergeAuditHook>,
 }
 
 impl<R: AnalyticsRepository> IdentityResolutionService<R> {
+	/// Creates a new identity resolution service without an audit hook.
 	pub fn new(repository: R) -> Self {
-		Self { repository }
+		Self {
+			repository,
+			audit_hook: None,
+		}
+	}
+
+	/// Creates a new identity resolution service with an audit hook.
+	pub fn with_audit_hook(repository: R, hook: SharedMergeAuditHook) -> Self {
+		Self {
+			repository,
+			audit_hook: Some(hook),
+		}
+	}
+
+	/// Sets the audit hook for this service.
+	pub fn set_audit_hook(&mut self, hook: SharedMergeAuditHook) {
+		self.audit_hook = Some(hook);
 	}
 
 	#[instrument(skip(self), fields(org_id = %org_id, distinct_id = %distinct_id))]
@@ -324,8 +382,8 @@ impl<R: AnalyticsRepository> IdentityResolutionService<R> {
 	#[instrument(skip(self, additional_properties), fields(winner_id = %winner_id, loser_id = %loser_id))]
 	async fn merge_persons(
 		&self,
-		winner_id: loom_analytics_core::PersonId,
-		loser_id: loom_analytics_core::PersonId,
+		winner_id: PersonId,
+		loser_id: PersonId,
 		reason: MergeReason,
 		additional_properties: Option<serde_json::Value>,
 	) -> Result<PersonWithIdentities> {
@@ -334,6 +392,8 @@ impl<R: AnalyticsRepository> IdentityResolutionService<R> {
 			.get_person_by_id(winner_id)
 			.await?
 			.ok_or_else(|| AnalyticsServerError::Internal("Winner person not found".to_string()))?;
+
+		let org_id = winner.org_id;
 
 		let loser = self
 			.repository
@@ -355,9 +415,9 @@ impl<R: AnalyticsRepository> IdentityResolutionService<R> {
 
 		self.repository.update_person(&winner).await?;
 
-		self.repository.reassign_events(loser_id, winner_id).await?;
+		let events_reassigned = self.repository.reassign_events(loser_id, winner_id).await?;
 
-		self
+		let identities_transferred = self
 			.repository
 			.transfer_identities(loser_id, winner_id)
 			.await?;
@@ -366,8 +426,20 @@ impl<R: AnalyticsRepository> IdentityResolutionService<R> {
 		loser.merge_into(winner_id);
 		self.repository.update_person(&loser).await?;
 
-		let merge = PersonMerge::new(winner_id, loser_id, reason);
+		let merge = PersonMerge::new(winner_id, loser_id, reason.clone());
 		self.repository.create_merge(&merge).await?;
+
+		// Call audit hook if configured
+		if let Some(ref hook) = self.audit_hook {
+			hook.on_merge(PersonMergeDetails {
+				org_id,
+				winner_id,
+				loser_id,
+				reason,
+				events_reassigned,
+				identities_transferred,
+			});
+		}
 
 		let identities = self
 			.repository
@@ -949,5 +1021,200 @@ mod tests {
 
 		let merges = repo.merges.lock().unwrap();
 		assert_eq!(merges.len(), 0);
+	}
+
+	// =========================================================================
+	// Audit Hook Tests
+	// =========================================================================
+
+	/// Mock audit hook for testing that records merge events.
+	#[derive(Default)]
+	struct MockAuditHook {
+		merges: Arc<Mutex<Vec<PersonMergeDetails>>>,
+	}
+
+	impl MockAuditHook {
+		fn new() -> Self {
+			Self::default()
+		}
+
+		fn merge_count(&self) -> usize {
+			self.merges.lock().unwrap().len()
+		}
+
+		fn last_merge(&self) -> Option<PersonMergeDetails> {
+			self.merges.lock().unwrap().last().cloned()
+		}
+	}
+
+	impl MergeAuditHook for MockAuditHook {
+		fn on_merge(&self, details: PersonMergeDetails) {
+			self.merges.lock().unwrap().push(details);
+		}
+	}
+
+	#[tokio::test]
+	async fn audit_hook_called_on_identify_merge() {
+		let repo = MockRepository::new();
+		let audit_hook = Arc::new(MockAuditHook::new());
+		let service = IdentityResolutionService::with_audit_hook(repo.clone(), audit_hook.clone());
+		let org_id = OrgId::new();
+
+		// Create two persons
+		let _person_a = service
+			.resolve_person_for_distinct_id(org_id, "anon_a")
+			.await
+			.unwrap();
+		let _person_b = service
+			.resolve_person_for_distinct_id(org_id, "anon_b")
+			.await
+			.unwrap();
+
+		// Identify first person
+		let identify_a = IdentifyPayload::new("anon_a".to_string(), "user@example.com".to_string());
+		let identified_a = service.identify(org_id, identify_a).await.unwrap();
+
+		// Now identify second person with same user_id, triggering merge
+		let payload = IdentifyPayload::new("anon_b".to_string(), "user@example.com".to_string());
+		let _result = service.identify(org_id, payload).await.unwrap();
+
+		// Verify audit hook was called
+		assert_eq!(audit_hook.merge_count(), 1);
+		let merge_details = audit_hook.last_merge().unwrap();
+		assert_eq!(merge_details.org_id, org_id);
+		assert_eq!(merge_details.winner_id, identified_a.person.id);
+	}
+
+	#[tokio::test]
+	async fn audit_hook_called_on_alias_merge() {
+		let repo = MockRepository::new();
+		let audit_hook = Arc::new(MockAuditHook::new());
+		let service = IdentityResolutionService::with_audit_hook(repo.clone(), audit_hook.clone());
+		let org_id = OrgId::new();
+
+		// Create two separate persons
+		let person_a = service
+			.resolve_person_for_distinct_id(org_id, "id_a")
+			.await
+			.unwrap();
+		let _person_b = service
+			.resolve_person_for_distinct_id(org_id, "id_b")
+			.await
+			.unwrap();
+
+		// Alias them together, triggering a merge
+		let payload = AliasPayload::new("id_a".to_string(), "id_b".to_string());
+		let _result = service.alias(org_id, payload).await.unwrap();
+
+		// Verify audit hook was called
+		assert_eq!(audit_hook.merge_count(), 1);
+		let merge_details = audit_hook.last_merge().unwrap();
+		assert_eq!(merge_details.org_id, org_id);
+		assert_eq!(merge_details.winner_id, person_a.person.id);
+	}
+
+	#[tokio::test]
+	async fn audit_hook_not_called_when_no_merge() {
+		let repo = MockRepository::new();
+		let audit_hook = Arc::new(MockAuditHook::new());
+		let service = IdentityResolutionService::with_audit_hook(repo.clone(), audit_hook.clone());
+		let org_id = OrgId::new();
+
+		// Resolve a new person - no merge
+		let _person = service
+			.resolve_person_for_distinct_id(org_id, "anon_123")
+			.await
+			.unwrap();
+
+		// Identify - creates new identity, no merge
+		let payload = IdentifyPayload::new("new_anon".to_string(), "new_user@example.com".to_string());
+		let _result = service.identify(org_id, payload).await.unwrap();
+
+		// No merges should have happened
+		assert_eq!(audit_hook.merge_count(), 0);
+	}
+
+	#[tokio::test]
+	async fn audit_hook_not_called_when_same_person() {
+		let repo = MockRepository::new();
+		let audit_hook = Arc::new(MockAuditHook::new());
+		let service = IdentityResolutionService::with_audit_hook(repo.clone(), audit_hook.clone());
+		let org_id = OrgId::new();
+
+		// Create and identify a person
+		let payload = IdentifyPayload::new("anon_123".to_string(), "user@example.com".to_string());
+		let _result = service.identify(org_id, payload).await.unwrap();
+
+		// Re-identify same person (same distinct_id and user_id)
+		let payload = IdentifyPayload::new("anon_123".to_string(), "user@example.com".to_string());
+		let _result = service.identify(org_id, payload).await.unwrap();
+
+		// No merge should happen
+		assert_eq!(audit_hook.merge_count(), 0);
+	}
+
+	#[tokio::test]
+	async fn audit_hook_records_events_reassigned() {
+		let repo = MockRepository::new();
+		let audit_hook = Arc::new(MockAuditHook::new());
+		let org_id = OrgId::new();
+
+		// Create the service first
+		let service = IdentityResolutionService::with_audit_hook(repo.clone(), audit_hook.clone());
+
+		// Create two persons
+		let _person_a = service
+			.resolve_person_for_distinct_id(org_id, "id_a")
+			.await
+			.unwrap();
+		let person_b = service
+			.resolve_person_for_distinct_id(org_id, "id_b")
+			.await
+			.unwrap();
+
+		// Add events to person_b
+		let mut event1 = Event::new(org_id, "id_b".to_string(), "event1".to_string());
+		event1.person_id = Some(person_b.person.id);
+		repo.insert_event(&event1).await.unwrap();
+
+		let mut event2 = Event::new(org_id, "id_b".to_string(), "event2".to_string());
+		event2.person_id = Some(person_b.person.id);
+		repo.insert_event(&event2).await.unwrap();
+
+		// Merge via alias
+		let payload = AliasPayload::new("id_a".to_string(), "id_b".to_string());
+		let _result = service.alias(org_id, payload).await.unwrap();
+
+		// Verify events_reassigned count
+		let merge_details = audit_hook.last_merge().unwrap();
+		assert_eq!(merge_details.events_reassigned, 2);
+		assert_eq!(merge_details.identities_transferred, 1);
+	}
+
+	#[tokio::test]
+	async fn service_without_hook_works_normally() {
+		// Test that service without audit hook still functions
+		let repo = MockRepository::new();
+		let service = IdentityResolutionService::new(repo.clone());
+		let org_id = OrgId::new();
+
+		// Create two persons
+		let _person_a = service
+			.resolve_person_for_distinct_id(org_id, "id_a")
+			.await
+			.unwrap();
+		let _person_b = service
+			.resolve_person_for_distinct_id(org_id, "id_b")
+			.await
+			.unwrap();
+
+		// Alias should work without audit hook
+		let payload = AliasPayload::new("id_a".to_string(), "id_b".to_string());
+		let result = service.alias(org_id, payload).await;
+		assert!(result.is_ok());
+
+		// Verify merge happened in repository
+		let merges = repo.merges.lock().unwrap();
+		assert_eq!(merges.len(), 1);
 	}
 }

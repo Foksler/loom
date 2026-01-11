@@ -35,9 +35,45 @@ use crate::{
 	impl_api_error_response, parse_id,
 	validation::parse_org_id as shared_parse_org_id,
 };
-use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
+use loom_server_analytics::{MergeAuditHook, PersonMergeDetails};
+use loom_server_audit::{AuditEventType, AuditLogBuilder, AuditService, UserId as AuditUserId};
+use std::sync::Arc;
 
 impl_api_error_response!(AnalyticsErrorResponse);
+
+// ============================================================================
+// Audit Hook Implementation
+// ============================================================================
+
+/// Audit hook that logs person merge events to the audit service.
+pub struct AnalyticsMergeAuditHook {
+	audit_service: Arc<AuditService>,
+}
+
+impl AnalyticsMergeAuditHook {
+	/// Creates a new audit hook that logs to the given audit service.
+	pub fn new(audit_service: Arc<AuditService>) -> Self {
+		Self { audit_service }
+	}
+}
+
+impl MergeAuditHook for AnalyticsMergeAuditHook {
+	fn on_merge(&self, details: PersonMergeDetails) {
+		self.audit_service.log(
+			AuditLogBuilder::new(AuditEventType::AnalyticsPersonMerged)
+				.resource("analytics_person", details.winner_id.to_string())
+				.details(serde_json::json!({
+					"org_id": details.org_id.0.to_string(),
+					"winner_id": details.winner_id.to_string(),
+					"loser_id": details.loser_id.to_string(),
+					"reason": format!("{:?}", details.reason),
+					"events_reassigned": details.events_reassigned,
+					"identities_transferred": details.identities_transferred,
+				}))
+				.build(),
+		);
+	}
+}
 
 // ============================================================================
 // SDK Routes (API Key Auth)
@@ -484,7 +520,7 @@ pub async fn export_events(
 		}
 	};
 
-	let org_id = api_key_ctx.org_id.clone();
+	let org_id = api_key_ctx.org_id;
 	let api_key_id = api_key_ctx.api_key_id;
 	let export_limit = payload.limit;
 
@@ -627,11 +663,11 @@ pub async fn create_api_key(
 	};
 
 	let key_name = payload.name.clone();
-	let key_type = payload.key_type.clone();
+	let key_type = payload.key_type;
 	let analytics_org_id = AnalyticsOrgId(org_id.into_inner());
 	let user_ctx = UserAuthContext {
 		user_id: AnalyticsUserId(current_user.user.id.into_inner()),
-		org_id: analytics_org_id.clone(),
+		org_id: analytics_org_id,
 	};
 
 	let result = create_api_key_impl(analytics_state, user_ctx, payload).await;
@@ -771,19 +807,21 @@ async fn extract_api_key_context(
 	};
 
 	// Extract Bearer token
-	let token = if auth_header.starts_with("Bearer ") {
-		&auth_header[7..]
-	} else {
-		return Err(
-			(
-				StatusCode::UNAUTHORIZED,
-				Json(AnalyticsErrorResponse {
-					error: "unauthorized".to_string(),
-					message: "Invalid Authorization header format, expected Bearer token".to_string(),
-				}),
-			)
-				.into_response(),
-		);
+	let token = match auth_header.strip_prefix("Bearer ") {
+		Some(t) => t,
+		None => {
+			return Err(
+				(
+					StatusCode::UNAUTHORIZED,
+					Json(AnalyticsErrorResponse {
+						error: "unauthorized".to_string(),
+						message: "Invalid Authorization header format, expected Bearer token"
+							.to_string(),
+					}),
+				)
+					.into_response(),
+			);
+		}
 	};
 
 	// Parse key type from prefix

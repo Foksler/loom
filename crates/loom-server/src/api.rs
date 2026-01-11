@@ -292,10 +292,15 @@ pub async fn create_app_state(
 	let flags_repo = Arc::new(loom_server_flags::SqliteFlagsRepository::new(pool.clone()));
 	let flags_broadcaster = Arc::new(loom_server_flags::FlagsBroadcaster::with_defaults());
 
-	// Initialize analytics repository and state
+	// Initialize analytics repository and state with audit hook
 	let analytics_repo = loom_server_analytics::SqliteAnalyticsRepository::new(pool.clone());
-	let analytics_state = loom_server_analytics::AnalyticsState::new(analytics_repo.clone());
-	tracing::info!("Analytics system initialized");
+	let analytics_audit_hook: loom_server_analytics::SharedMergeAuditHook =
+		Arc::new(routes::AnalyticsMergeAuditHook::new(audit_service.clone()));
+	let analytics_state = loom_server_analytics::AnalyticsState::with_audit_hook(
+		analytics_repo.clone(),
+		analytics_audit_hook,
+	);
+	tracing::info!("Analytics system initialized with audit logging");
 
 	AppState {
 		repo,

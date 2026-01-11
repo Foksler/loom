@@ -369,7 +369,7 @@ Implementation checklist for `specs/analytics-system.md`. Each item cites the re
 
 ---
 
-## Phase 10: Audit Integration ⚠️ PARTIAL
+## Phase 10: Audit Integration ✅ COMPLETED
 
 **Reference:** [analytics-system.md §12](./analytics-system.md#12-audit-events)
 
@@ -389,12 +389,15 @@ Implementation checklist for `specs/analytics-system.md`. Each item cites the re
   - `revoke_api_key` → logs `AnalyticsApiKeyRevoked`
   - `export_events` → logs `AnalyticsEventsExported`
 
-- [ ] TODO: Add audit logging for person merges
-  - Merges happen in `IdentityResolutionService::merge_persons`
-  - Requires passing audit service to identity resolution layer
-  - Consider adding audit callback or making service audit-aware
+- [x] Add audit logging for person merges
+  - Added `MergeAuditHook` trait to `loom-server-analytics/src/identity_resolution.rs`
+  - Added `PersonMergeDetails` struct with merge context (org_id, winner_id, loser_id, reason, events_reassigned, identities_transferred)
+  - `IdentityResolutionService::with_audit_hook()` constructor to inject hook
+  - `AnalyticsMergeAuditHook` implementation in `loom-server/src/routes/analytics.rs` logs `AnalyticsPersonMerged`
+  - Integrated with `AnalyticsState::with_audit_hook()` in `api.rs`
+  - Tests: 6 new audit hook tests verifying merge callbacks
 
-**Tests:** All 66 loom-server-audit tests pass
+**Tests:** All 66 loom-server-audit tests pass, 48 loom-server-analytics tests pass
 
 ---
 
