@@ -147,6 +147,12 @@ pub enum AuditEventType {
 	EnvironmentCreated,
 	EnvironmentUpdated,
 	EnvironmentDeleted,
+
+	// Analytics events
+	AnalyticsApiKeyCreated,
+	AnalyticsApiKeyRevoked,
+	AnalyticsPersonMerged,
+	AnalyticsEventsExported,
 }
 
 impl fmt::Display for AuditEventType {
@@ -278,6 +284,12 @@ impl fmt::Display for AuditEventType {
 			AuditEventType::EnvironmentCreated => "environment_created",
 			AuditEventType::EnvironmentUpdated => "environment_updated",
 			AuditEventType::EnvironmentDeleted => "environment_deleted",
+
+			// Analytics events
+			AuditEventType::AnalyticsApiKeyCreated => "analytics_api_key_created",
+			AuditEventType::AnalyticsApiKeyRevoked => "analytics_api_key_revoked",
+			AuditEventType::AnalyticsPersonMerged => "analytics_person_merged",
+			AuditEventType::AnalyticsEventsExported => "analytics_events_exported",
 		};
 		write!(f, "{s}")
 	}
@@ -348,7 +360,10 @@ impl AuditEventType {
 			| AuditEventType::KillSwitchUpdated
 			| AuditEventType::SdkKeyCreated
 			| AuditEventType::EnvironmentCreated
-			| AuditEventType::EnvironmentUpdated => AuditSeverity::Info,
+			| AuditEventType::EnvironmentUpdated
+			// Analytics events - normal operations
+			| AuditEventType::AnalyticsApiKeyCreated
+			| AuditEventType::AnalyticsEventsExported => AuditSeverity::Info,
 
 			// Warning: Security-relevant failures
 			AuditEventType::LoginFailed
@@ -395,7 +410,10 @@ impl AuditEventType {
 			| AuditEventType::KillSwitchDeactivated
 			| AuditEventType::KillSwitchDeleted
 			| AuditEventType::SdkKeyRevoked
-			| AuditEventType::EnvironmentDeleted => AuditSeverity::Notice,
+			| AuditEventType::EnvironmentDeleted
+			// Analytics events - administrative/destructive actions
+			| AuditEventType::AnalyticsApiKeyRevoked
+			| AuditEventType::AnalyticsPersonMerged => AuditSeverity::Notice,
 
 			// Error: Operation failures
 			AuditEventType::LlmRequestFailed => AuditSeverity::Error,
@@ -743,7 +761,7 @@ mod tests {
 			assert_eq!(event, AuditEventType::AccessDenied);
 		}
 
-		const ALL_EVENT_TYPES: [AuditEventType; 67] = [
+		const ALL_EVENT_TYPES: [AuditEventType; 71] = [
 			AuditEventType::Login,
 			AuditEventType::Logout,
 			AuditEventType::LoginFailed,
@@ -812,6 +830,11 @@ mod tests {
 			AuditEventType::EnvironmentCreated,
 			AuditEventType::EnvironmentUpdated,
 			AuditEventType::EnvironmentDeleted,
+			// Analytics events
+			AuditEventType::AnalyticsApiKeyCreated,
+			AuditEventType::AnalyticsApiKeyRevoked,
+			AuditEventType::AnalyticsPersonMerged,
+			AuditEventType::AnalyticsEventsExported,
 		];
 
 		#[test]
@@ -1045,6 +1068,65 @@ mod tests {
 				AuditEventType::EnvironmentCreated,
 				AuditEventType::EnvironmentUpdated,
 				AuditEventType::EnvironmentDeleted,
+			];
+
+			for event in events {
+				let serialized = serde_json::to_string(&event).unwrap();
+				let deserialized: AuditEventType = serde_json::from_str(&serialized).unwrap();
+				assert_eq!(event, deserialized);
+			}
+		}
+
+		#[test]
+		fn analytics_event_severities() {
+			// Info: normal analytics operations
+			assert_eq!(
+				AuditEventType::AnalyticsApiKeyCreated.default_severity(),
+				AuditSeverity::Info
+			);
+			assert_eq!(
+				AuditEventType::AnalyticsEventsExported.default_severity(),
+				AuditSeverity::Info
+			);
+
+			// Notice: administrative/destructive operations
+			assert_eq!(
+				AuditEventType::AnalyticsApiKeyRevoked.default_severity(),
+				AuditSeverity::Notice
+			);
+			assert_eq!(
+				AuditEventType::AnalyticsPersonMerged.default_severity(),
+				AuditSeverity::Notice
+			);
+		}
+
+		#[test]
+		fn analytics_event_display() {
+			assert_eq!(
+				AuditEventType::AnalyticsApiKeyCreated.to_string(),
+				"analytics_api_key_created"
+			);
+			assert_eq!(
+				AuditEventType::AnalyticsApiKeyRevoked.to_string(),
+				"analytics_api_key_revoked"
+			);
+			assert_eq!(
+				AuditEventType::AnalyticsPersonMerged.to_string(),
+				"analytics_person_merged"
+			);
+			assert_eq!(
+				AuditEventType::AnalyticsEventsExported.to_string(),
+				"analytics_events_exported"
+			);
+		}
+
+		#[test]
+		fn analytics_events_serialize_deserialize() {
+			let events = [
+				AuditEventType::AnalyticsApiKeyCreated,
+				AuditEventType::AnalyticsApiKeyRevoked,
+				AuditEventType::AnalyticsPersonMerged,
+				AuditEventType::AnalyticsEventsExported,
 			];
 
 			for event in events {

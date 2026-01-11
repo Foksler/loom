@@ -35,6 +35,7 @@ use crate::{
 	impl_api_error_response, parse_id,
 	validation::parse_org_id as shared_parse_org_id,
 };
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 
 impl_api_error_response!(AnalyticsErrorResponse);
 
@@ -483,9 +484,25 @@ pub async fn export_events(
 		}
 	};
 
-	export_events_impl(analytics_state, api_key_ctx, payload)
-		.await
-		.into_response()
+	let org_id = api_key_ctx.org_id.clone();
+	let api_key_id = api_key_ctx.api_key_id;
+	let export_limit = payload.limit;
+
+	let result = export_events_impl(analytics_state, api_key_ctx, payload).await;
+
+	// Log audit event for exports (these are significant data access operations)
+	// Note: For API key auth, we log the API key ID as the resource since there's no user actor
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::AnalyticsEventsExported)
+			.resource("analytics_api_key", api_key_id.to_string())
+			.details(serde_json::json!({
+				"org_id": org_id.0.to_string(),
+				"export_limit": export_limit,
+			}))
+			.build(),
+	);
+
+	result.into_response()
 }
 
 // ============================================================================
@@ -578,6 +595,7 @@ pub async fn create_api_key(
 	Json(payload): Json<CreateAnalyticsApiKeyRequest>,
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id_str = org_id.clone();
 	let org_id = parse_id!(
 		AnalyticsErrorResponse,
 		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
@@ -608,15 +626,32 @@ pub async fn create_api_key(
 		}
 	};
 
+	let key_name = payload.name.clone();
+	let key_type = payload.key_type.clone();
 	let analytics_org_id = AnalyticsOrgId(org_id.into_inner());
 	let user_ctx = UserAuthContext {
 		user_id: AnalyticsUserId(current_user.user.id.into_inner()),
-		org_id: analytics_org_id,
+		org_id: analytics_org_id.clone(),
 	};
 
-	create_api_key_impl(analytics_state, user_ctx, payload)
-		.await
-		.into_response()
+	let result = create_api_key_impl(analytics_state, user_ctx, payload).await;
+
+	// Log audit event for API key creation attempt
+	// Note: We log after the operation; the audit trail captures the action was attempted
+	// by an authenticated user. Failures are logged in the implementation function.
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::AnalyticsApiKeyCreated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("analytics_api_key", "pending")
+			.details(serde_json::json!({
+				"org_id": org_id_str,
+				"name": key_name,
+				"key_type": format!("{:?}", key_type),
+			}))
+			.build(),
+	);
+
+	result.into_response()
 }
 
 /// Revoke an analytics API key.
@@ -641,6 +676,8 @@ pub async fn revoke_api_key(
 	Path((org_id, key_id)): Path<(String, String)>,
 ) -> impl IntoResponse {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id_str = org_id.clone();
+	let key_id_clone = key_id.clone();
 	let org_id = parse_id!(
 		AnalyticsErrorResponse,
 		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
@@ -677,9 +714,20 @@ pub async fn revoke_api_key(
 		org_id: analytics_org_id,
 	};
 
-	revoke_api_key_impl(analytics_state, user_ctx, key_id)
-		.await
-		.into_response()
+	let result = revoke_api_key_impl(analytics_state, user_ctx, key_id).await;
+
+	// Log audit event for API key revocation attempt
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::AnalyticsApiKeyRevoked)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("analytics_api_key", key_id_clone)
+			.details(serde_json::json!({
+				"org_id": org_id_str,
+			}))
+			.build(),
+	);
+
+	result.into_response()
 }
 
 // ============================================================================

@@ -369,21 +369,32 @@ Implementation checklist for `specs/analytics-system.md`. Each item cites the re
 
 ---
 
-## Phase 10: Audit Integration
+## Phase 10: Audit Integration ⚠️ PARTIAL
 
 **Reference:** [analytics-system.md §12](./analytics-system.md#12-audit-events)
 
-- [ ] Add audit event types to `crates/loom-server-audit/`
-  - `AnalyticsApiKeyCreated`
-  - `AnalyticsApiKeyRevoked`
-  - `AnalyticsPersonMerged`
-  - `AnalyticsEventsExported`
-  - Pattern: follow existing audit events in `crates/loom-server-audit/src/events.rs`
+**Completed in commit:** (2026-01-11)
 
-- [ ] Call audit logging from handlers
-  - API key create/revoke
-  - Person merge
-  - Bulk export
+- [x] Add audit event types to `crates/loom-server-audit/src/event.rs`
+  - `AnalyticsApiKeyCreated` - severity: Info
+  - `AnalyticsApiKeyRevoked` - severity: Notice
+  - `AnalyticsPersonMerged` - severity: Notice
+  - `AnalyticsEventsExported` - severity: Info
+  - Display implementations (snake_case format)
+  - Default severity mappings
+  - Tests: 3 new tests (severities, display, serialize/deserialize)
+
+- [x] Call audit logging from handlers
+  - `create_api_key` → logs `AnalyticsApiKeyCreated`
+  - `revoke_api_key` → logs `AnalyticsApiKeyRevoked`
+  - `export_events` → logs `AnalyticsEventsExported`
+
+- [ ] TODO: Add audit logging for person merges
+  - Merges happen in `IdentityResolutionService::merge_persons`
+  - Requires passing audit service to identity resolution layer
+  - Consider adding audit callback or making service audit-aware
+
+**Tests:** All 66 loom-server-audit tests pass
 
 ---
 
