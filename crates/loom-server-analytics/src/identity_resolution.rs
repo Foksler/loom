@@ -650,6 +650,10 @@ mod tests {
 		) -> Result<Option<AnalyticsApiKey>> {
 			Ok(None)
 		}
+
+		async fn find_api_key_by_raw(&self, _raw_key: &str) -> Result<Option<AnalyticsApiKey>> {
+			Ok(None)
+		}
 	}
 
 	#[tokio::test]

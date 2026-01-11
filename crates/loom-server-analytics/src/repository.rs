@@ -79,6 +79,10 @@ pub trait AnalyticsRepository: Send + Sync {
 		raw_key: &str,
 		org_id: OrgId,
 	) -> Result<Option<AnalyticsApiKey>>;
+
+	/// Finds an API key by verifying the raw key against all stored hashes.
+	/// This is used when the org_id is not known (e.g., during initial authentication).
+	async fn find_api_key_by_raw(&self, raw_key: &str) -> Result<Option<AnalyticsApiKey>>;
 }
 
 #[derive(Clone)]
@@ -641,6 +645,46 @@ impl AnalyticsRepository for SqliteAnalyticsRepository {
 			match crate::api_key::verify_api_key(raw_key, &key.key_hash) {
 				Ok(true) => {
 					tracing::debug!(api_key_id = %key.id, "API key verified successfully");
+					return Ok(Some(key));
+				}
+				Ok(false) => continue,
+				Err(e) => {
+					tracing::warn!(api_key_id = %key.id, error = %e, "Failed to verify API key hash");
+					continue;
+				}
+			}
+		}
+
+		Ok(None)
+	}
+
+	#[instrument(skip(self, raw_key))]
+	async fn find_api_key_by_raw(&self, raw_key: &str) -> Result<Option<AnalyticsApiKey>> {
+		// Fetch all non-revoked API keys
+		let rows = sqlx::query_as::<_, ApiKeyRow>(
+			r#"
+			SELECT id, org_id, name, key_type, key_hash, created_by,
+				created_at, last_used_at, revoked_at
+			FROM analytics_api_keys
+			WHERE revoked_at IS NULL
+			"#,
+		)
+		.fetch_all(&self.pool)
+		.await?;
+
+		// Try to verify the raw key against each stored hash
+		for row in rows {
+			let key: AnalyticsApiKey = match row.try_into() {
+				Ok(k) => k,
+				Err(e) => {
+					tracing::warn!(error = %e, "Failed to parse API key row");
+					continue;
+				}
+			};
+
+			match crate::api_key::verify_api_key(raw_key, &key.key_hash) {
+				Ok(true) => {
+					tracing::debug!(api_key_id = %key.id, org_id = %key.org_id, "API key verified successfully");
 					return Ok(Some(key));
 				}
 				Ok(false) => continue,

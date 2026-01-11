@@ -21,7 +21,7 @@ pub use loom_server_db::{
 	ThreadSearchHit, UserRepository,
 };
 
-/// Run all database migrations (001-027).
+/// Run all database migrations (001-032).
 ///
 /// # Arguments
 /// * `pool` - SQLite connection pool
@@ -340,6 +340,26 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ServerError> {
 
 	let m30 = include_str!("../../migrations/030_feature_flags.sql");
 	for stmt in m30.split(';').filter(|s| !s.trim().is_empty()) {
+		if let Err(e) = sqlx::query(stmt).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists") && !msg.contains("duplicate column") {
+				return Err(e.into());
+			}
+		}
+	}
+
+	let m31 = include_str!("../../migrations/031_exposure_tracking.sql");
+	for stmt in m31.split(';').filter(|s| !s.trim().is_empty()) {
+		if let Err(e) = sqlx::query(stmt).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists") && !msg.contains("duplicate column") {
+				return Err(e.into());
+			}
+		}
+	}
+
+	let m32 = include_str!("../../migrations/032_analytics.sql");
+	for stmt in m32.split(';').filter(|s| !s.trim().is_empty()) {
 		if let Err(e) = sqlx::query(stmt).execute(pool).await {
 			let msg = e.to_string();
 			if !msg.contains("already exists") && !msg.contains("duplicate column") {

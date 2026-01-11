@@ -398,15 +398,27 @@ Implementation checklist for `specs/analytics-system.md`. Each item cites the re
 
 ---
 
-## Phase 11: Authorization Tests
+## Phase 11: Authorization Tests ✅ COMPLETED
 
 **Reference:** [CLAUDE.md routes section](../CLAUDE.md)
 
-- [ ] Create `crates/loom-server/tests/authz_analytics_tests.rs`
-  - Test Write key can only capture, not query
+**Completed in commit:** (2026-01-11)
+
+- [x] Create `crates/loom-server/tests/authz/analytics.rs`
+  - 29 comprehensive authorization tests
+  - Test Write key can only capture, not query (403 Forbidden for query endpoints)
   - Test ReadWrite key can capture and query
   - Test User auth required for API key management
-  - Pattern: follow `crates/loom-server/tests/authz_*_tests.rs`
+  - Test org membership validation
+  - Test cross-org access prevention
+  - Test revoked API key rejection
+  - Pattern: follows `crates/loom-server/tests/authz/*.rs`
+
+- [x] Fixed API key authentication bug
+  - Changed from `get_api_key_by_hash` (broken with Argon2 random salts) to `find_api_key_by_raw` (proper verification)
+  - Added `find_api_key_by_raw` method to `AnalyticsRepository` trait and SQLite implementation
+
+- [x] Added missing migrations 031 and 032 to `run_migrations` in `db/mod.rs`
 
 ---
 

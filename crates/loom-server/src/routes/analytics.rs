@@ -14,7 +14,7 @@ use axum::{
 use loom_analytics_core::{OrgId as AnalyticsOrgId, UserId as AnalyticsUserId};
 use loom_server_analytics::{
 	alias_impl, batch_capture_impl, capture_event_impl, count_events_impl, create_api_key_impl,
-	export_events_impl, get_person_by_distinct_id_impl, get_person_impl, hash_api_key, identify_impl,
+	export_events_impl, get_person_by_distinct_id_impl, get_person_impl, identify_impl,
 	list_api_keys_impl, list_events_impl, list_persons_impl, parse_key_type, revoke_api_key_impl,
 	set_properties_impl, AnalyticsApiKeyContext, AnalyticsRepository, UserAuthContext,
 };
@@ -812,18 +812,8 @@ async fn extract_api_key_context(
 		}
 	};
 
-	// Hash the token and look up the key
-	let key_hash = match hash_api_key(token) {
-		Ok(h) => h,
-		Err(e) => {
-			tracing::error!(error = %e, "Failed to hash API key");
-			return Err(
-				internal_error::<AnalyticsErrorResponse>("Failed to validate API key").into_response(),
-			);
-		}
-	};
-
-	let api_key = match analytics_repo.get_api_key_by_hash(&key_hash).await {
+	// Find and verify the API key
+	let api_key = match analytics_repo.find_api_key_by_raw(token).await {
 		Ok(Some(key)) => key,
 		Ok(None) => {
 			return Err(
@@ -838,7 +828,7 @@ async fn extract_api_key_context(
 			);
 		}
 		Err(e) => {
-			tracing::error!(error = %e, "Failed to look up API key");
+			tracing::error!(error = %e, "Failed to verify API key");
 			return Err(
 				internal_error::<AnalyticsErrorResponse>("Failed to validate API key").into_response(),
 			);
