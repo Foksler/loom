@@ -190,22 +190,41 @@ Implementation checklist for `specs/analytics-system.md`. Each item cites the re
 
 ---
 
-## Phase 6: Integration with loom-server
+## Phase 6: Integration with loom-server ✅ COMPLETED
 
 **Reference:** [analytics-system.md §2](./analytics-system.md#2-architecture)
 
-- [ ] Update `crates/loom-server/Cargo.toml`
-  - Add `loom-server-analytics` dependency
+**Completed in commit:** (2026-01-11)
 
-- [ ] Update `crates/loom-server/src/routes/mod.rs`
-  - Mount analytics routes at `/api/analytics/*`
-  - Pattern: follow how flags routes are mounted
+- [x] Update `crates/loom-server/Cargo.toml`
+  - Added `loom-server-analytics` and `loom-analytics-core` dependencies
 
-- [ ] Add configuration for analytics
+- [x] Create `crates/loom-server/src/routes/analytics.rs`
+  - SDK routes: capture, batch, identify, alias, set_properties
+  - Query routes: list_persons, get_person, get_person_by_distinct_id, list_events, count_events, export_events
+  - API key management routes: list_api_keys, create_api_key, revoke_api_key
+  - API key authentication via Bearer token
+
+- [x] Update `crates/loom-server/src/routes/mod.rs`
+  - Added `pub mod analytics;`
+  - Added analytics type re-exports
+
+- [x] Update `crates/loom-server/src/api.rs`
+  - Added `analytics_repo` and `analytics_state` fields to AppState
+  - Initialized analytics repository and state
+  - Mounted SDK routes on public router at `/api/analytics/*`
+  - Mounted API key management routes on authed router at `/api/orgs/{org_id}/analytics/*`
+
+- [x] Update `crates/loom-server-api/src/analytics.rs`
+  - Added `IntoParams` derive to query types for OpenAPI support
+
+- [ ] Add configuration for analytics (TODO: Phase 6.1)
   - `LOOM_ANALYTICS_ENABLED`
   - `LOOM_ANALYTICS_BATCH_SIZE`
   - `LOOM_ANALYTICS_EVENT_RETENTION_DAYS`
   - See [analytics-system.md §11](./analytics-system.md#11-configuration)
+
+**Tests:** All 42 loom-server-analytics tests pass, 74 loom-analytics-core tests pass
 
 ---
 

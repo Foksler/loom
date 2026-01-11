@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "openapi")]
-use utoipa::ToSchema;
+use utoipa::{IntoParams, ToSchema};
 
 // ============================================================================
 // Error Response
@@ -115,7 +115,7 @@ pub struct PersonIdentityResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "openapi", derive(ToSchema))]
+#[cfg_attr(feature = "openapi", derive(ToSchema, IntoParams))]
 pub struct ListPersonsQuery {
 	#[serde(default = "default_limit")]
 	pub limit: u32,
@@ -157,7 +157,7 @@ pub struct EventResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "openapi", derive(ToSchema))]
+#[cfg_attr(feature = "openapi", derive(ToSchema, IntoParams))]
 pub struct ListEventsQuery {
 	pub distinct_id: Option<String>,
 	pub event_name: Option<String>,
@@ -179,7 +179,7 @@ pub struct ListEventsResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "openapi", derive(ToSchema))]
+#[cfg_attr(feature = "openapi", derive(ToSchema, IntoParams))]
 pub struct CountEventsQuery {
 	pub distinct_id: Option<String>,
 	pub event_name: Option<String>,

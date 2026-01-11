@@ -42,6 +42,8 @@ loom-server-smtp = { path = "../loom-server-smtp" }
 loom-server-email = { path = "../loom-server-email" }
 loom-server-flags = { path = "../loom-server-flags" }
 loom-flags-core = { path = "../loom-flags-core" }
+loom-server-analytics = { path = "../loom-server-analytics" }
+loom-analytics-core = { path = "../loom-analytics-core" }
 loom-common-i18n = { path = "../loom-common-i18n" }
 loom-server-geoip = { path = "../loom-server-geoip" }
 loom-server-github-app = { path = "../loom-server-github-app", features = ["openapi"] }

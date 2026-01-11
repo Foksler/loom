@@ -106,6 +106,8 @@ pub struct AppState {
 	pub session_service: Arc<SessionService>,
 	pub flags_repo: Arc<loom_server_flags::SqliteFlagsRepository>,
 	pub flags_broadcaster: Arc<loom_server_flags::FlagsBroadcaster>,
+	pub analytics_repo: Option<Arc<loom_server_analytics::SqliteAnalyticsRepository>>,
+	pub analytics_state: Option<Arc<loom_server_analytics::AnalyticsState<loom_server_analytics::SqliteAnalyticsRepository>>>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -288,6 +290,11 @@ pub async fn create_app_state(
 	let flags_repo = Arc::new(loom_server_flags::SqliteFlagsRepository::new(pool.clone()));
 	let flags_broadcaster = Arc::new(loom_server_flags::FlagsBroadcaster::with_defaults());
 
+	// Initialize analytics repository and state
+	let analytics_repo = loom_server_analytics::SqliteAnalyticsRepository::new(pool.clone());
+	let analytics_state = loom_server_analytics::AnalyticsState::new(analytics_repo.clone());
+	tracing::info!("Analytics system initialized");
+
 	AppState {
 		repo,
 		user_repo,
@@ -338,6 +345,8 @@ pub async fn create_app_state(
 		session_service,
 		flags_repo,
 		flags_broadcaster,
+		analytics_repo: Some(Arc::new(analytics_repo)),
+		analytics_state: Some(Arc::new(analytics_state)),
 	}
 }
 
@@ -860,6 +869,43 @@ pub fn create_router(state: AppState) -> Router {
 		.route("/docs/search", get(routes::docs::search_handler))
 		// Feature flags SSE streaming (SDK key auth handled in handler)
 		.route("/api/flags/stream", get(routes::flags::stream_flags))
+		// Analytics SDK routes (API key auth handled in handler)
+		.route(
+			"/api/analytics/capture",
+			post(routes::analytics::capture_event),
+		)
+		.route(
+			"/api/analytics/batch",
+			post(routes::analytics::batch_capture),
+		)
+		.route(
+			"/api/analytics/identify",
+			post(routes::analytics::identify),
+		)
+		.route("/api/analytics/alias", post(routes::analytics::alias))
+		.route("/api/analytics/set", post(routes::analytics::set_properties))
+		// Analytics query routes (ReadWrite API key auth handled in handler)
+		.route(
+			"/api/analytics/persons",
+			get(routes::analytics::list_persons),
+		)
+		.route(
+			"/api/analytics/persons/by-distinct-id/{distinct_id}",
+			get(routes::analytics::get_person_by_distinct_id),
+		)
+		.route(
+			"/api/analytics/persons/{person_id}",
+			get(routes::analytics::get_person),
+		)
+		.route("/api/analytics/events", get(routes::analytics::list_events))
+		.route(
+			"/api/analytics/events/count",
+			get(routes::analytics::count_events),
+		)
+		.route(
+			"/api/analytics/events/export",
+			post(routes::analytics::export_events),
+		)
 		.build();
 
 	// Authenticated routes - require valid session/token
@@ -1127,6 +1173,19 @@ pub fn create_router(state: AppState) -> Router {
 		.route(
 			"/api/flags/stream/stats",
 			get(routes::flags::stream_stats),
+		)
+		// Analytics API key management routes (authenticated)
+		.route(
+			"/api/orgs/{org_id}/analytics/api-keys",
+			get(routes::analytics::list_api_keys),
+		)
+		.route(
+			"/api/orgs/{org_id}/analytics/api-keys",
+			post(routes::analytics::create_api_key),
+		)
+		.route(
+			"/api/orgs/{org_id}/analytics/api-keys/{key_id}",
+			delete(routes::analytics::revoke_api_key),
 		)
 		// Invitation routes (authenticated)
 		.route(

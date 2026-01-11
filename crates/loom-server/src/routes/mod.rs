@@ -8,6 +8,7 @@ pub mod admin_anthropic;
 pub mod admin_flags;
 pub mod admin_jobs;
 pub mod admin_logs;
+pub mod analytics;
 pub mod api_keys;
 pub mod auth;
 pub mod bin;
@@ -41,6 +42,7 @@ pub mod wgtunnel;
 
 // Re-export all API types from loom-server-api for backward compatibility
 pub use loom_server_api::admin::*;
+pub use loom_server_api::analytics::*;
 pub use loom_server_api::api_keys::*;
 pub use loom_server_api::auth::*;
 pub use loom_server_api::cse::*;
