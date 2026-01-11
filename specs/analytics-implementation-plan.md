@@ -228,18 +228,36 @@ Implementation checklist for `specs/analytics-system.md`. Each item cites the re
 
 ---
 
-## Phase 7: Experiment Integration
+## Phase 7: Experiment Integration ✅ COMPLETED
 
 **Reference:** [analytics-system.md §6](./analytics-system.md#6-experiment-integration)
 
-- [ ] Update `crates/loom-flags/src/client.rs`
-  - When flag evaluated, optionally call analytics capture
-  - Event: `$feature_flag_called` with `$feature_flag` and `$feature_flag_response` properties
+**Completed in commit:** (2026-01-11)
+
+- [x] Create `crates/loom-flags/src/analytics.rs`
+  - `AnalyticsHook` trait for receiving flag evaluation events
+  - `FlagExposure` struct with flag_key, variant, user_id, distinct_id, evaluation_reason
+  - `to_event_properties()` method returns `$feature_flag`, `$feature_flag_response`, `$feature_flag_reason`
+  - `NoOpAnalyticsHook` default implementation
+  - `SharedAnalyticsHook` type alias for `Arc<dyn AnalyticsHook>`
+
+- [x] Update `crates/loom-flags/src/client.rs`
+  - Added `analytics_hook` field to `FlagsClientBuilder`
+  - Added `analytics_hook()` builder method to set custom hook
+  - Added `analytics_hook` field to `FlagsClient`
+  - Added `track_flag_exposure()` method called after every flag evaluation
+  - Hook receives `FlagExposure` with all event data needed for `$feature_flag_called`
   - See [analytics-system.md §6.1](./analytics-system.md#61-feature-flag-exposure-tracking)
 
-- [ ] Document query pattern for experiment analysis
-  - Join `exposure_logs` with `analytics_events`
+- [x] Update `crates/loom-flags/src/lib.rs`
+  - Export `AnalyticsHook`, `FlagExposure`, `NoOpAnalyticsHook`, `SharedAnalyticsHook`
+
+- [x] Document query pattern for experiment analysis
+  - SQL example in module-level documentation
+  - Join `exposure_logs` with `analytics_events` via `distinct_id`
   - See [analytics-system.md §6.3](./analytics-system.md#63-experiment-metrics)
+
+**Tests:** 37 tests passing (9 new analytics-related tests, 28 existing)
 
 ---
 

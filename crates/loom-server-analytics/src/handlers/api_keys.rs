@@ -1,11 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
-use axum::{
-	http::StatusCode,
-	response::IntoResponse,
-	Json,
-};
+use axum::{http::StatusCode, response::IntoResponse, Json};
 use chrono::Utc;
 use tracing::instrument;
 
@@ -20,7 +16,11 @@ use crate::repository::AnalyticsRepository;
 
 use super::capture::AnalyticsState;
 
-fn error_response(status: StatusCode, error: &str, message: &str) -> (StatusCode, Json<AnalyticsErrorResponse>) {
+fn error_response(
+	status: StatusCode,
+	error: &str,
+	message: &str,
+) -> (StatusCode, Json<AnalyticsErrorResponse>) {
 	(
 		status,
 		Json(AnalyticsErrorResponse {
@@ -106,8 +106,12 @@ pub async fn create_api_key_impl<R: AnalyticsRepository>(
 	payload: CreateAnalyticsApiKeyRequest,
 ) -> impl IntoResponse {
 	if payload.name.is_empty() {
-		return error_response(StatusCode::BAD_REQUEST, "invalid_name", "Name cannot be empty")
-			.into_response();
+		return error_response(
+			StatusCode::BAD_REQUEST,
+			"invalid_name",
+			"Name cannot be empty",
+		)
+		.into_response();
 	}
 
 	if payload.name.len() > 100 {
@@ -169,8 +173,12 @@ pub async fn revoke_api_key_impl<R: AnalyticsRepository>(
 	let key_id: AnalyticsApiKeyId = match key_id.parse() {
 		Ok(id) => id,
 		Err(_) => {
-			return error_response(StatusCode::BAD_REQUEST, "invalid_id", "Invalid API key ID format")
-				.into_response();
+			return error_response(
+				StatusCode::BAD_REQUEST,
+				"invalid_id",
+				"Invalid API key ID format",
+			)
+			.into_response();
 		}
 	};
 
@@ -191,8 +199,12 @@ pub async fn revoke_api_key_impl<R: AnalyticsRepository>(
 	}
 
 	if key.revoked_at.is_some() {
-		return error_response(StatusCode::BAD_REQUEST, "already_revoked", "API key is already revoked")
-			.into_response();
+		return error_response(
+			StatusCode::BAD_REQUEST,
+			"already_revoked",
+			"API key is already revoked",
+		)
+		.into_response();
 	}
 
 	match state.repository.revoke_api_key(key_id).await {

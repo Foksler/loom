@@ -107,7 +107,9 @@ pub struct AppState {
 	pub flags_repo: Arc<loom_server_flags::SqliteFlagsRepository>,
 	pub flags_broadcaster: Arc<loom_server_flags::FlagsBroadcaster>,
 	pub analytics_repo: Option<Arc<loom_server_analytics::SqliteAnalyticsRepository>>,
-	pub analytics_state: Option<Arc<loom_server_analytics::AnalyticsState<loom_server_analytics::SqliteAnalyticsRepository>>>,
+	pub analytics_state: Option<
+		Arc<loom_server_analytics::AnalyticsState<loom_server_analytics::SqliteAnalyticsRepository>>,
+	>,
 }
 
 /// Creates the application state, initializing optional components.

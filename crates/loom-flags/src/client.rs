@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
+use crate::analytics::{AnalyticsHook, FlagExposure, NoOpAnalyticsHook, SharedAnalyticsHook};
 use crate::cache::FlagCache;
 use crate::error::{FlagsError, Result};
 use crate::sse::{SseConfig, SseConnection};
@@ -49,11 +50,11 @@ impl Default for ClientConfig {
 }
 
 /// Builder for constructing a FlagsClient.
-#[derive(Debug)]
 pub struct FlagsClientBuilder {
 	sdk_key: Option<String>,
 	base_url: Option<String>,
 	config: ClientConfig,
+	analytics_hook: Option<SharedAnalyticsHook>,
 }
 
 impl FlagsClientBuilder {
@@ -63,6 +64,7 @@ impl FlagsClientBuilder {
 			sdk_key: None,
 			base_url: None,
 			config: ClientConfig::default(),
+			analytics_hook: None,
 		}
 	}
 
@@ -120,6 +122,38 @@ impl FlagsClientBuilder {
 		self
 	}
 
+	/// Sets an analytics hook for capturing `$feature_flag_called` events.
+	///
+	/// When set, the hook will be called after each flag evaluation with
+	/// exposure data that can be used to track experiment participation.
+	///
+	/// # Example
+	///
+	/// ```ignore
+	/// use loom_flags::{FlagsClient, AnalyticsHook, FlagExposure};
+	/// use async_trait::async_trait;
+	///
+	/// struct MyHook;
+	///
+	/// #[async_trait]
+	/// impl AnalyticsHook for MyHook {
+	///     async fn on_flag_evaluated(&self, exposure: FlagExposure) {
+	///         // Send to analytics service
+	///     }
+	/// }
+	///
+	/// let client = FlagsClient::builder()
+	///     .sdk_key("loom_sdk_server_prod_xxx")
+	///     .base_url("https://loom.example.com")
+	///     .analytics_hook(MyHook)
+	///     .build()
+	///     .await?;
+	/// ```
+	pub fn analytics_hook<H: AnalyticsHook>(mut self, hook: H) -> Self {
+		self.analytics_hook = Some(Arc::new(hook));
+		self
+	}
+
 	/// Builds and initializes the FlagsClient.
 	///
 	/// This will fetch the initial set of flags and optionally start SSE streaming.
@@ -142,6 +176,9 @@ impl FlagsClientBuilder {
 
 		let cache = FlagCache::new();
 		let sse_connection = Arc::new(RwLock::new(SseConnection::new()));
+		let analytics_hook: SharedAnalyticsHook = self
+			.analytics_hook
+			.unwrap_or_else(|| Arc::new(NoOpAnalyticsHook));
 
 		let client = FlagsClient {
 			sdk_key,
@@ -151,6 +188,7 @@ impl FlagsClientBuilder {
 			sse_connection,
 			config: self.config.clone(),
 			closed: Arc::new(AtomicBool::new(false)),
+			analytics_hook,
 		};
 
 		// Initialize by fetching current flag states
@@ -175,7 +213,6 @@ impl Default for FlagsClientBuilder {
 ///
 /// The client maintains a local cache of flag states and can optionally
 /// receive real-time updates via SSE streaming.
-#[derive(Debug)]
 pub struct FlagsClient {
 	sdk_key: String,
 	base_url: String,
@@ -184,6 +221,7 @@ pub struct FlagsClient {
 	sse_connection: Arc<RwLock<SseConnection>>,
 	config: ClientConfig,
 	closed: Arc<AtomicBool>,
+	analytics_hook: SharedAnalyticsHook,
 }
 
 impl FlagsClient {
@@ -406,30 +444,74 @@ impl FlagsClient {
 
 			// Get default value from cache
 			if let Some(flag) = self.cache.get_flag(flag_key).await {
-				return Ok(EvaluationResult::new(
+				let result = EvaluationResult::new(
 					flag_key,
 					&flag.default_variant,
 					flag.default_value.clone(),
 					loom_flags_core::EvaluationReason::KillSwitch {
 						kill_switch_id: loom_flags_core::KillSwitchId::new(),
 					},
-				));
+				);
+
+				// Track analytics for kill switch evaluation
+				self.track_flag_exposure(&result, context).await;
+
+				return Ok(result);
 			}
 		}
 
 		// Try server-side evaluation
-		match self.evaluate_flag_server(flag_key, context).await {
-			Ok(result) => Ok(result),
+		let result = match self.evaluate_flag_server(flag_key, context).await {
+			Ok(result) => result,
 			Err(e) if e.should_use_cache() && self.config.offline_mode => {
 				warn!(
 					flag_key = flag_key,
 					error = %e,
 					"Server evaluation failed, using cached value"
 				);
-				self.evaluate_flag_cached(flag_key).await
+				self.evaluate_flag_cached(flag_key).await?
 			}
-			Err(e) => Err(e),
-		}
+			Err(e) => return Err(e),
+		};
+
+		// Track analytics for successful evaluation
+		self.track_flag_exposure(&result, context).await;
+
+		Ok(result)
+	}
+
+	/// Tracks a flag exposure event via the analytics hook.
+	async fn track_flag_exposure(&self, result: &EvaluationResult, context: &EvaluationContext) {
+		// Determine the variant string representation
+		let variant = match &result.value {
+			VariantValue::Boolean(b) => b.to_string(),
+			VariantValue::String(s) => s.clone(),
+			VariantValue::Json(j) => j.to_string(),
+		};
+
+		// Determine the distinct_id: prefer user_id, then environment, fallback to "anonymous"
+		let user_id = context.user_id.clone();
+		let distinct_id = user_id
+			.clone()
+			.or_else(|| {
+				if context.environment.is_empty() {
+					None
+				} else {
+					Some(context.environment.clone())
+				}
+			})
+			.unwrap_or_else(|| "anonymous".to_string());
+
+		let exposure = FlagExposure::new(
+			&result.flag_key,
+			variant,
+			user_id,
+			distinct_id,
+			format!("{:?}", result.reason),
+		);
+
+		// Call the analytics hook (fire-and-forget, don't block on result)
+		self.analytics_hook.on_flag_evaluated(exposure).await;
 	}
 
 	/// Evaluates a flag using the server API.
@@ -660,6 +742,91 @@ mod tests {
 		assert_eq!(config.request_timeout, Duration::from_secs(5));
 		assert!(config.enable_streaming);
 		assert!(config.offline_mode);
+	}
+}
+
+#[cfg(test)]
+mod analytics_tests {
+	use super::*;
+	use crate::analytics::FlagExposure;
+	use std::sync::atomic::{AtomicUsize, Ordering};
+	use tokio::sync::Mutex;
+
+	struct RecordingHook {
+		exposures: Mutex<Vec<FlagExposure>>,
+		call_count: AtomicUsize,
+	}
+
+	impl RecordingHook {
+		fn new() -> Self {
+			Self {
+				exposures: Mutex::new(Vec::new()),
+				call_count: AtomicUsize::new(0),
+			}
+		}
+
+		async fn get_exposures(&self) -> Vec<FlagExposure> {
+			self.exposures.lock().await.clone()
+		}
+
+		fn get_call_count(&self) -> usize {
+			self.call_count.load(Ordering::SeqCst)
+		}
+	}
+
+	#[async_trait::async_trait]
+	impl AnalyticsHook for RecordingHook {
+		async fn on_flag_evaluated(&self, exposure: FlagExposure) {
+			self.call_count.fetch_add(1, Ordering::SeqCst);
+			self.exposures.lock().await.push(exposure);
+		}
+	}
+
+	#[test]
+	fn test_flag_exposure_properties() {
+		let exposure = FlagExposure::new(
+			"checkout.new_flow",
+			"treatment_a",
+			Some("user123".to_string()),
+			"user123",
+			"TargetingRuleMatch",
+		);
+
+		let props = exposure.to_event_properties();
+		assert_eq!(props["$feature_flag"], "checkout.new_flow");
+		assert_eq!(props["$feature_flag_response"], "treatment_a");
+		assert_eq!(props["$feature_flag_reason"], "TargetingRuleMatch");
+	}
+
+	#[test]
+	fn test_flag_exposure_with_user_id() {
+		let exposure = FlagExposure::new(
+			"feature.beta",
+			"true",
+			Some("user456".to_string()),
+			"user456",
+			"Default",
+		);
+
+		assert_eq!(exposure.flag_key, "feature.beta");
+		assert_eq!(exposure.variant, "true");
+		assert_eq!(exposure.user_id, Some("user456".to_string()));
+		assert_eq!(exposure.distinct_id, "user456");
+	}
+
+	#[test]
+	fn test_flag_exposure_without_user_id() {
+		let exposure = FlagExposure::new("feature.anonymous", "false", None, "anonymous", "Default");
+
+		assert!(exposure.user_id.is_none());
+		assert_eq!(exposure.distinct_id, "anonymous");
+	}
+
+	#[test]
+	fn test_noop_hook_exists() {
+		let hook = NoOpAnalyticsHook;
+		// Just verify it compiles and can be used
+		let _ = Arc::new(hook) as SharedAnalyticsHook;
 	}
 }
 

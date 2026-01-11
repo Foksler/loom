@@ -44,11 +44,13 @@
 //! }
 //! ```
 
+mod analytics;
 mod cache;
 mod client;
 mod error;
 mod sse;
 
+pub use analytics::{AnalyticsHook, FlagExposure, NoOpAnalyticsHook, SharedAnalyticsHook};
 pub use cache::FlagCache;
 pub use client::{FlagsClient, FlagsClientBuilder};
 pub use error::{FlagsError, Result};

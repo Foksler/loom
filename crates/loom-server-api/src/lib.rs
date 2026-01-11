@@ -37,8 +37,8 @@ pub use analytics::{
 	CountEventsQuery, CountEventsResponse, CreateAnalyticsApiKeyRequest,
 	CreateAnalyticsApiKeyResponse, EventResponse, ExportEventsRequest, ExportEventsResponse,
 	IdentifyRequest, IdentifyResponse, ListAnalyticsApiKeysResponse, ListEventsQuery,
-	ListEventsResponse, ListPersonsQuery, ListPersonsResponse, PersonIdentityResponse, PersonResponse,
-	SetPropertiesRequest,
+	ListEventsResponse, ListPersonsQuery, ListPersonsResponse, PersonIdentityResponse,
+	PersonResponse, SetPropertiesRequest,
 };
 pub use api_keys::{
 	ApiKeyErrorResponse, ApiKeyResponse, ApiKeyScopeApi, ApiKeySuccessResponse,

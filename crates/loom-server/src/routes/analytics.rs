@@ -14,10 +14,9 @@ use axum::{
 use loom_analytics_core::{OrgId as AnalyticsOrgId, UserId as AnalyticsUserId};
 use loom_server_analytics::{
 	alias_impl, batch_capture_impl, capture_event_impl, count_events_impl, create_api_key_impl,
-	export_events_impl, get_person_by_distinct_id_impl, get_person_impl, hash_api_key,
-	identify_impl, list_api_keys_impl, list_events_impl, list_persons_impl, parse_key_type,
-	revoke_api_key_impl, set_properties_impl, AnalyticsApiKeyContext, AnalyticsRepository,
-	UserAuthContext,
+	export_events_impl, get_person_by_distinct_id_impl, get_person_impl, hash_api_key, identify_impl,
+	list_api_keys_impl, list_events_impl, list_persons_impl, parse_key_type, revoke_api_key_impl,
+	set_properties_impl, AnalyticsApiKeyContext, AnalyticsRepository, UserAuthContext,
 };
 pub use loom_server_api::analytics::{
 	AliasRequest, AnalyticsApiKeyResponse, AnalyticsErrorResponse, AnalyticsKeyTypeApi,
@@ -25,8 +24,7 @@ pub use loom_server_api::analytics::{
 	CountEventsQuery, CountEventsResponse, CreateAnalyticsApiKeyRequest,
 	CreateAnalyticsApiKeyResponse, EventResponse, ExportEventsRequest, ExportEventsResponse,
 	IdentifyRequest, IdentifyResponse, ListAnalyticsApiKeysResponse, ListEventsQuery,
-	ListEventsResponse, ListPersonsQuery, ListPersonsResponse, PersonResponse,
-	SetPropertiesRequest,
+	ListEventsResponse, ListPersonsQuery, ListPersonsResponse, PersonResponse, SetPropertiesRequest,
 };
 
 use crate::{
@@ -74,8 +72,7 @@ pub async fn capture_event(
 	let analytics_state = match &state.analytics_state {
 		Some(s) => s.clone(),
 		None => {
-			return internal_error::<AnalyticsErrorResponse>("Analytics not configured")
-				.into_response()
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
 		}
 	};
 
@@ -114,8 +111,7 @@ pub async fn batch_capture(
 	let analytics_state = match &state.analytics_state {
 		Some(s) => s.clone(),
 		None => {
-			return internal_error::<AnalyticsErrorResponse>("Analytics not configured")
-				.into_response()
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
 		}
 	};
 
@@ -154,8 +150,7 @@ pub async fn identify(
 	let analytics_state = match &state.analytics_state {
 		Some(s) => s.clone(),
 		None => {
-			return internal_error::<AnalyticsErrorResponse>("Analytics not configured")
-				.into_response()
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
 		}
 	};
 
@@ -194,8 +189,7 @@ pub async fn alias(
 	let analytics_state = match &state.analytics_state {
 		Some(s) => s.clone(),
 		None => {
-			return internal_error::<AnalyticsErrorResponse>("Analytics not configured")
-				.into_response()
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
 		}
 	};
 
@@ -234,8 +228,7 @@ pub async fn set_properties(
 	let analytics_state = match &state.analytics_state {
 		Some(s) => s.clone(),
 		None => {
-			return internal_error::<AnalyticsErrorResponse>("Analytics not configured")
-				.into_response()
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
 		}
 	};
 
@@ -281,8 +274,7 @@ pub async fn list_persons(
 	let analytics_state = match &state.analytics_state {
 		Some(s) => s.clone(),
 		None => {
-			return internal_error::<AnalyticsErrorResponse>("Analytics not configured")
-				.into_response()
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
 		}
 	};
 
@@ -324,8 +316,7 @@ pub async fn get_person(
 	let analytics_state = match &state.analytics_state {
 		Some(s) => s.clone(),
 		None => {
-			return internal_error::<AnalyticsErrorResponse>("Analytics not configured")
-				.into_response()
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
 		}
 	};
 
@@ -367,8 +358,7 @@ pub async fn get_person_by_distinct_id(
 	let analytics_state = match &state.analytics_state {
 		Some(s) => s.clone(),
 		None => {
-			return internal_error::<AnalyticsErrorResponse>("Analytics not configured")
-				.into_response()
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
 		}
 	};
 
@@ -409,8 +399,7 @@ pub async fn list_events(
 	let analytics_state = match &state.analytics_state {
 		Some(s) => s.clone(),
 		None => {
-			return internal_error::<AnalyticsErrorResponse>("Analytics not configured")
-				.into_response()
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
 		}
 	};
 
@@ -451,8 +440,7 @@ pub async fn count_events(
 	let analytics_state = match &state.analytics_state {
 		Some(s) => s.clone(),
 		None => {
-			return internal_error::<AnalyticsErrorResponse>("Analytics not configured")
-				.into_response()
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
 		}
 	};
 
@@ -491,8 +479,7 @@ pub async fn export_events(
 	let analytics_state = match &state.analytics_state {
 		Some(s) => s.clone(),
 		None => {
-			return internal_error::<AnalyticsErrorResponse>("Analytics not configured")
-				.into_response()
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
 		}
 	};
 
@@ -552,8 +539,7 @@ pub async fn list_api_keys(
 	let analytics_state = match &state.analytics_state {
 		Some(s) => s.clone(),
 		None => {
-			return internal_error::<AnalyticsErrorResponse>("Analytics not configured")
-				.into_response()
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
 		}
 	};
 
@@ -563,7 +549,9 @@ pub async fn list_api_keys(
 		org_id: analytics_org_id,
 	};
 
-	list_api_keys_impl(analytics_state, user_ctx).await.into_response()
+	list_api_keys_impl(analytics_state, user_ctx)
+		.await
+		.into_response()
 }
 
 /// Create a new analytics API key.
@@ -616,8 +604,7 @@ pub async fn create_api_key(
 	let analytics_state = match &state.analytics_state {
 		Some(s) => s.clone(),
 		None => {
-			return internal_error::<AnalyticsErrorResponse>("Analytics not configured")
-				.into_response()
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
 		}
 	};
 
@@ -680,8 +667,7 @@ pub async fn revoke_api_key(
 	let analytics_state = match &state.analytics_state {
 		Some(s) => s.clone(),
 		None => {
-			return internal_error::<AnalyticsErrorResponse>("Analytics not configured")
-				.into_response()
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
 		}
 	};
 
@@ -710,25 +696,29 @@ async fn extract_api_key_context(
 		Some(h) => match h.to_str() {
 			Ok(s) => s,
 			Err(_) => {
-				return Err((
-					StatusCode::UNAUTHORIZED,
-					Json(AnalyticsErrorResponse {
-						error: "unauthorized".to_string(),
-						message: "Invalid Authorization header encoding".to_string(),
-					}),
-				)
-					.into_response());
+				return Err(
+					(
+						StatusCode::UNAUTHORIZED,
+						Json(AnalyticsErrorResponse {
+							error: "unauthorized".to_string(),
+							message: "Invalid Authorization header encoding".to_string(),
+						}),
+					)
+						.into_response(),
+				);
 			}
 		},
 		None => {
-			return Err((
-				StatusCode::UNAUTHORIZED,
-				Json(AnalyticsErrorResponse {
-					error: "unauthorized".to_string(),
-					message: "Missing Authorization header".to_string(),
-				}),
-			)
-				.into_response());
+			return Err(
+				(
+					StatusCode::UNAUTHORIZED,
+					Json(AnalyticsErrorResponse {
+						error: "unauthorized".to_string(),
+						message: "Missing Authorization header".to_string(),
+					}),
+				)
+					.into_response(),
+			);
 		}
 	};
 
@@ -736,28 +726,32 @@ async fn extract_api_key_context(
 	let token = if auth_header.starts_with("Bearer ") {
 		&auth_header[7..]
 	} else {
-		return Err((
-			StatusCode::UNAUTHORIZED,
-			Json(AnalyticsErrorResponse {
-				error: "unauthorized".to_string(),
-				message: "Invalid Authorization header format, expected Bearer token".to_string(),
-			}),
-		)
-			.into_response());
+		return Err(
+			(
+				StatusCode::UNAUTHORIZED,
+				Json(AnalyticsErrorResponse {
+					error: "unauthorized".to_string(),
+					message: "Invalid Authorization header format, expected Bearer token".to_string(),
+				}),
+			)
+				.into_response(),
+		);
 	};
 
 	// Parse key type from prefix
 	let key_type = match parse_key_type(token) {
 		Some(kt) => kt,
 		None => {
-			return Err((
-				StatusCode::UNAUTHORIZED,
-				Json(AnalyticsErrorResponse {
-					error: "unauthorized".to_string(),
-					message: "Invalid API key format".to_string(),
-				}),
-			)
-				.into_response());
+			return Err(
+				(
+					StatusCode::UNAUTHORIZED,
+					Json(AnalyticsErrorResponse {
+						error: "unauthorized".to_string(),
+						message: "Invalid API key format".to_string(),
+					}),
+				)
+					.into_response(),
+			);
 		}
 	};
 
@@ -776,8 +770,7 @@ async fn extract_api_key_context(
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to hash API key");
 			return Err(
-				internal_error::<AnalyticsErrorResponse>("Failed to validate API key")
-					.into_response(),
+				internal_error::<AnalyticsErrorResponse>("Failed to validate API key").into_response(),
 			);
 		}
 	};
@@ -785,34 +778,37 @@ async fn extract_api_key_context(
 	let api_key = match analytics_repo.get_api_key_by_hash(&key_hash).await {
 		Ok(Some(key)) => key,
 		Ok(None) => {
-			return Err((
-				StatusCode::UNAUTHORIZED,
-				Json(AnalyticsErrorResponse {
-					error: "unauthorized".to_string(),
-					message: "Invalid API key".to_string(),
-				}),
-			)
-				.into_response());
+			return Err(
+				(
+					StatusCode::UNAUTHORIZED,
+					Json(AnalyticsErrorResponse {
+						error: "unauthorized".to_string(),
+						message: "Invalid API key".to_string(),
+					}),
+				)
+					.into_response(),
+			);
 		}
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to look up API key");
 			return Err(
-				internal_error::<AnalyticsErrorResponse>("Failed to validate API key")
-					.into_response(),
+				internal_error::<AnalyticsErrorResponse>("Failed to validate API key").into_response(),
 			);
 		}
 	};
 
 	// Check if key is revoked
 	if api_key.revoked_at.is_some() {
-		return Err((
-			StatusCode::UNAUTHORIZED,
-			Json(AnalyticsErrorResponse {
-				error: "unauthorized".to_string(),
-				message: "API key has been revoked".to_string(),
-			}),
-		)
-			.into_response());
+		return Err(
+			(
+				StatusCode::UNAUTHORIZED,
+				Json(AnalyticsErrorResponse {
+					error: "unauthorized".to_string(),
+					message: "API key has been revoked".to_string(),
+				}),
+			)
+				.into_response(),
+		);
 	}
 
 	Ok(AnalyticsApiKeyContext {

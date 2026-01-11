@@ -1,11 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
-use axum::{
-	http::StatusCode,
-	response::IntoResponse,
-	Json,
-};
+use axum::{http::StatusCode, response::IntoResponse, Json};
 use std::sync::Arc;
 use tracing::instrument;
 
@@ -109,7 +105,11 @@ pub async fn list_events_impl<R: AnalyticsRepository>(
 	let event_responses: Vec<EventResponse> = events.iter().map(event_to_response).collect();
 
 	// Update last_used_at for the API key
-	if let Err(e) = state.repository.update_api_key_last_used(api_key_ctx.api_key_id).await {
+	if let Err(e) = state
+		.repository
+		.update_api_key_last_used(api_key_ctx.api_key_id)
+		.await
+	{
 		tracing::warn!(error = %e, "Failed to update API key last_used_at");
 	}
 
@@ -155,7 +155,11 @@ pub async fn count_events_impl<R: AnalyticsRepository>(
 	};
 
 	// Update last_used_at for the API key
-	if let Err(e) = state.repository.update_api_key_last_used(api_key_ctx.api_key_id).await {
+	if let Err(e) = state
+		.repository
+		.update_api_key_last_used(api_key_ctx.api_key_id)
+		.await
+	{
 		tracing::warn!(error = %e, "Failed to update API key last_used_at");
 	}
 
@@ -199,7 +203,11 @@ pub async fn export_events_impl<R: AnalyticsRepository>(
 	let total_exported = event_responses.len() as u64;
 
 	// Update last_used_at for the API key
-	if let Err(e) = state.repository.update_api_key_last_used(api_key_ctx.api_key_id).await {
+	if let Err(e) = state
+		.repository
+		.update_api_key_last_used(api_key_ctx.api_key_id)
+		.await
+	{
 		tracing::warn!(error = %e, "Failed to update API key last_used_at");
 	}
 

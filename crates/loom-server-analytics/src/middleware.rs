@@ -46,11 +46,7 @@ impl IntoResponse for AnalyticsApiKeyError {
 				"invalid_format",
 				"Invalid authorization header format",
 			),
-			Self::InvalidKey => (
-				StatusCode::UNAUTHORIZED,
-				"invalid_key",
-				"Invalid API key",
-			),
+			Self::InvalidKey => (StatusCode::UNAUTHORIZED, "invalid_key", "Invalid API key"),
 			Self::RevokedKey => (
 				StatusCode::UNAUTHORIZED,
 				"revoked_key",

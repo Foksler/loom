@@ -1,11 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
-use axum::{
-	http::StatusCode,
-	response::IntoResponse,
-	Json,
-};
+use axum::{http::StatusCode, response::IntoResponse, Json};
 use std::sync::Arc;
 use tracing::instrument;
 
@@ -89,10 +85,14 @@ pub async fn identify_impl<R: AnalyticsRepository>(
 		return error_response("invalid_properties", msg).into_response();
 	}
 
-	let identify_payload = IdentifyPayload::new(payload.distinct_id, payload.user_id)
-		.with_properties(payload.properties);
+	let identify_payload =
+		IdentifyPayload::new(payload.distinct_id, payload.user_id).with_properties(payload.properties);
 
-	let result = match state.identity_service.identify(api_key_ctx.org_id, identify_payload).await {
+	let result = match state
+		.identity_service
+		.identify(api_key_ctx.org_id, identify_payload)
+		.await
+	{
 		Ok(person) => person,
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to identify user");
@@ -101,7 +101,11 @@ pub async fn identify_impl<R: AnalyticsRepository>(
 	};
 
 	// Update last_used_at for the API key
-	if let Err(e) = state.repository.update_api_key_last_used(api_key_ctx.api_key_id).await {
+	if let Err(e) = state
+		.repository
+		.update_api_key_last_used(api_key_ctx.api_key_id)
+		.await
+	{
 		tracing::warn!(error = %e, "Failed to update API key last_used_at");
 	}
 
@@ -131,7 +135,11 @@ pub async fn alias_impl<R: AnalyticsRepository>(
 
 	let alias_payload = AliasPayload::new(payload.distinct_id, payload.alias);
 
-	let result = match state.identity_service.alias(api_key_ctx.org_id, alias_payload).await {
+	let result = match state
+		.identity_service
+		.alias(api_key_ctx.org_id, alias_payload)
+		.await
+	{
 		Ok(person) => person,
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to create alias");
@@ -140,7 +148,11 @@ pub async fn alias_impl<R: AnalyticsRepository>(
 	};
 
 	// Update last_used_at for the API key
-	if let Err(e) = state.repository.update_api_key_last_used(api_key_ctx.api_key_id).await {
+	if let Err(e) = state
+		.repository
+		.update_api_key_last_used(api_key_ctx.api_key_id)
+		.await
+	{
 		tracing::warn!(error = %e, "Failed to update API key last_used_at");
 	}
 
@@ -203,7 +215,11 @@ pub async fn set_properties_impl<R: AnalyticsRepository>(
 	}
 
 	// Update last_used_at for the API key
-	if let Err(e) = state.repository.update_api_key_last_used(api_key_ctx.api_key_id).await {
+	if let Err(e) = state
+		.repository
+		.update_api_key_last_used(api_key_ctx.api_key_id)
+		.await
+	{
 		tracing::warn!(error = %e, "Failed to update API key last_used_at");
 	}
 

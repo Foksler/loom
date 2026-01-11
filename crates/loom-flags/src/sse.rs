@@ -152,6 +152,7 @@ impl Drop for SseConnection {
 }
 
 /// Runs the SSE connection loop with reconnection logic.
+#[allow(clippy::too_many_arguments)]
 async fn run_sse_loop(
 	stream_url: String,
 	sdk_key: String,

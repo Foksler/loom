@@ -1,11 +1,7 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
-use axum::{
-	http::StatusCode,
-	response::IntoResponse,
-	Json,
-};
+use axum::{http::StatusCode, response::IntoResponse, Json};
 use std::sync::Arc;
 use tracing::instrument;
 
@@ -76,7 +72,11 @@ pub async fn list_persons_impl<R: AnalyticsRepository>(
 	let limit = query.limit.min(100);
 	let offset = query.offset;
 
-	let persons = match state.repository.list_persons(api_key_ctx.org_id, limit, offset).await {
+	let persons = match state
+		.repository
+		.list_persons(api_key_ctx.org_id, limit, offset)
+		.await
+	{
 		Ok(p) => p,
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to list persons");
@@ -108,7 +108,11 @@ pub async fn list_persons_impl<R: AnalyticsRepository>(
 	}
 
 	// Update last_used_at for the API key
-	if let Err(e) = state.repository.update_api_key_last_used(api_key_ctx.api_key_id).await {
+	if let Err(e) = state
+		.repository
+		.update_api_key_last_used(api_key_ctx.api_key_id)
+		.await
+	{
 		tracing::warn!(error = %e, "Failed to update API key last_used_at");
 	}
 
@@ -138,8 +142,12 @@ pub async fn get_person_impl<R: AnalyticsRepository>(
 	let person_id: PersonId = match person_id.parse() {
 		Ok(id) => id,
 		Err(_) => {
-			return error_response(StatusCode::BAD_REQUEST, "invalid_id", "Invalid person ID format")
-				.into_response();
+			return error_response(
+				StatusCode::BAD_REQUEST,
+				"invalid_id",
+				"Invalid person ID format",
+			)
+			.into_response();
 		}
 	};
 
@@ -160,11 +168,19 @@ pub async fn get_person_impl<R: AnalyticsRepository>(
 	}
 
 	// Update last_used_at for the API key
-	if let Err(e) = state.repository.update_api_key_last_used(api_key_ctx.api_key_id).await {
+	if let Err(e) = state
+		.repository
+		.update_api_key_last_used(api_key_ctx.api_key_id)
+		.await
+	{
 		tracing::warn!(error = %e, "Failed to update API key last_used_at");
 	}
 
-	(StatusCode::OK, Json(person_to_response(&person_with_identities))).into_response()
+	(
+		StatusCode::OK,
+		Json(person_to_response(&person_with_identities)),
+	)
+		.into_response()
 }
 
 #[instrument(skip(state))]
@@ -194,7 +210,11 @@ pub async fn get_person_by_distinct_id_impl<R: AnalyticsRepository>(
 		}
 	};
 
-	let person_with_identities = match state.repository.get_person_with_identities(identity.person_id).await {
+	let person_with_identities = match state
+		.repository
+		.get_person_with_identities(identity.person_id)
+		.await
+	{
 		Ok(Some(p)) => p,
 		Ok(None) => {
 			return not_found("Person not found").into_response();
@@ -206,17 +226,25 @@ pub async fn get_person_by_distinct_id_impl<R: AnalyticsRepository>(
 	};
 
 	// Update last_used_at for the API key
-	if let Err(e) = state.repository.update_api_key_last_used(api_key_ctx.api_key_id).await {
+	if let Err(e) = state
+		.repository
+		.update_api_key_last_used(api_key_ctx.api_key_id)
+		.await
+	{
 		tracing::warn!(error = %e, "Failed to update API key last_used_at");
 	}
 
-	(StatusCode::OK, Json(person_to_response(&person_with_identities))).into_response()
+	(
+		StatusCode::OK,
+		Json(person_to_response(&person_with_identities)),
+	)
+		.into_response()
 }
 
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use loom_analytics_core::{Person, PersonIdentity, OrgId, PersonWithIdentities};
+	use loom_analytics_core::{OrgId, Person, PersonIdentity, PersonWithIdentities};
 
 	#[test]
 	fn person_to_response_converts_correctly() {

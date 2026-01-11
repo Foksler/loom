@@ -50,7 +50,9 @@ fn validate_event_name(name: &str) -> Result<(), &'static str> {
 	if name.len() > MAX_EVENT_NAME_LENGTH {
 		return Err("Event name exceeds maximum length");
 	}
-	let valid = name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '$' || c == '.');
+	let valid = name
+		.chars()
+		.all(|c| c.is_alphanumeric() || c == '_' || c == '$' || c == '.');
 	if !valid {
 		return Err("Event name contains invalid characters");
 	}
@@ -75,7 +77,14 @@ fn validate_properties(properties: &serde_json::Value) -> Result<(), &'static st
 	Ok(())
 }
 
-fn extract_client_info(headers: &HeaderMap) -> (Option<SecretString>, Option<String>, Option<String>, Option<String>) {
+fn extract_client_info(
+	headers: &HeaderMap,
+) -> (
+	Option<SecretString>,
+	Option<String>,
+	Option<String>,
+	Option<String>,
+) {
 	let ip_address = headers
 		.get("x-forwarded-for")
 		.and_then(|v| v.to_str().ok())
@@ -127,11 +136,7 @@ pub async fn capture_event_impl<R: AnalyticsRepository>(
 
 	let (ip_address, user_agent, lib, lib_version) = extract_client_info(&headers);
 
-	let mut event = Event::new(
-		api_key_ctx.org_id,
-		payload.distinct_id,
-		payload.event,
-	);
+	let mut event = Event::new(api_key_ctx.org_id, payload.distinct_id, payload.event);
 	event.properties = payload.properties;
 	event.timestamp = payload.timestamp.unwrap_or_else(Utc::now);
 	event.ip_address = ip_address;
@@ -140,7 +145,11 @@ pub async fn capture_event_impl<R: AnalyticsRepository>(
 	event.lib_version = lib_version;
 
 	// Resolve person for this distinct_id and set person_id
-	match state.identity_service.resolve_person_for_distinct_id(api_key_ctx.org_id, &event.distinct_id).await {
+	match state
+		.identity_service
+		.resolve_person_for_distinct_id(api_key_ctx.org_id, &event.distinct_id)
+		.await
+	{
 		Ok(person_with_identities) => {
 			event.person_id = Some(person_with_identities.person.id);
 		}
@@ -156,7 +165,11 @@ pub async fn capture_event_impl<R: AnalyticsRepository>(
 	}
 
 	// Update last_used_at for the API key
-	if let Err(e) = state.repository.update_api_key_last_used(api_key_ctx.api_key_id).await {
+	if let Err(e) = state
+		.repository
+		.update_api_key_last_used(api_key_ctx.api_key_id)
+		.await
+	{
 		tracing::warn!(error = %e, "Failed to update API key last_used_at");
 	}
 
@@ -189,13 +202,16 @@ pub async fn batch_capture_impl<R: AnalyticsRepository>(
 	// Validate all events first
 	for (i, event_req) in payload.batch.iter().enumerate() {
 		if let Err(msg) = validate_event_name(&event_req.event) {
-			return error_response("invalid_event_name", &format!("Event {}: {}", i, msg)).into_response();
+			return error_response("invalid_event_name", &format!("Event {}: {}", i, msg))
+				.into_response();
 		}
 		if let Err(msg) = validate_distinct_id(&event_req.distinct_id) {
-			return error_response("invalid_distinct_id", &format!("Event {}: {}", i, msg)).into_response();
+			return error_response("invalid_distinct_id", &format!("Event {}: {}", i, msg))
+				.into_response();
 		}
 		if let Err(msg) = validate_properties(&event_req.properties) {
-			return error_response("invalid_properties", &format!("Event {}: {}", i, msg)).into_response();
+			return error_response("invalid_properties", &format!("Event {}: {}", i, msg))
+				.into_response();
 		}
 	}
 
@@ -216,7 +232,11 @@ pub async fn batch_capture_impl<R: AnalyticsRepository>(
 		event.lib_version = lib_version.clone();
 
 		// Resolve person for this distinct_id
-		match state.identity_service.resolve_person_for_distinct_id(api_key_ctx.org_id, &event.distinct_id).await {
+		match state
+			.identity_service
+			.resolve_person_for_distinct_id(api_key_ctx.org_id, &event.distinct_id)
+			.await
+		{
 			Ok(person_with_identities) => {
 				event.person_id = Some(person_with_identities.person.id);
 			}
@@ -237,7 +257,11 @@ pub async fn batch_capture_impl<R: AnalyticsRepository>(
 	};
 
 	// Update last_used_at for the API key
-	if let Err(e) = state.repository.update_api_key_last_used(api_key_ctx.api_key_id).await {
+	if let Err(e) = state
+		.repository
+		.update_api_key_last_used(api_key_ctx.api_key_id)
+		.await
+	{
 		tracing::warn!(error = %e, "Failed to update API key last_used_at");
 	}
 
