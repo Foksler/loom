@@ -61,6 +61,7 @@ members = [
 	"crates/loom-server-flags",
 	"crates/loom-flags",
 	"crates/loom-analytics-core",
+	"crates/loom-server-analytics",
 	]
 
 [workspace.package]
@@ -159,6 +160,7 @@ loom-server-jobs = { path = "crates/loom-server-jobs" }
 loom-common-webhook = { path = "crates/loom-common-webhook" }
 loom-flags-core = { path = "crates/loom-flags-core" }
 loom-analytics-core = { path = "crates/loom-analytics-core" }
+loom-server-analytics = { path = "crates/loom-server-analytics" }
 
 # Build profile optimizations for faster development builds
 [profile.dev]

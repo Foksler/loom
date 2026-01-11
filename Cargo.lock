@@ -5088,6 +5088,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-server-analytics"
+version = "0.1.0"
+dependencies = [
+ "argon2",
+ "async-trait",
+ "chrono",
+ "loom-analytics-core",
+ "loom-common-secret",
+ "proptest",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tempfile",
+ "thiserror 2.0.17",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "loom-server-api"
 version = "0.1.0"
 dependencies = [

@@ -80,28 +80,41 @@ Implementation checklist for `specs/analytics-system.md`. Each item cites the re
 
 ---
 
-## Phase 3: Server Repository Layer (`loom-server-analytics`)
+## Phase 3: Server Repository Layer (`loom-server-analytics`) ✅ COMPLETED
 
 **Reference:** [analytics-system.md §2](./analytics-system.md#2-architecture)
 
-- [ ] Create `crates/loom-server-analytics/Cargo.toml`
-  - Dependencies: `loom-analytics-core`, `loom-db`, `loom-server-audit`, `loom-secret`, `axum`, `sqlx`, `argon2`
+**Completed in commit:** (2026-01-11)
 
-- [ ] Create `crates/loom-server-analytics/src/lib.rs`
+- [x] Create `crates/loom-server-analytics/Cargo.toml`
+  - Dependencies: `loom-analytics-core`, `loom-common-secret`, `sqlx`, `argon2`, `async-trait`, `tracing`
 
-- [ ] Create `crates/loom-server-analytics/src/repository.rs`
-  - `AnalyticsRepository` struct
+- [x] Create `crates/loom-server-analytics/src/lib.rs`
+  - Re-exports all modules and core types
+
+- [x] Create `crates/loom-server-analytics/src/repository.rs`
+  - `AnalyticsRepository` trait with all CRUD operations
+  - `SqliteAnalyticsRepository` implementation
   - CRUD for `analytics_persons`
   - CRUD for `analytics_person_identities`
-  - Insert for `analytics_events`
-  - Query for `analytics_events` with filters
-  - Pattern: follow `crates/loom-server-flags/src/repository.rs`
+  - Insert/query for `analytics_events` with filters
+  - CRUD for `analytics_person_merges`
+  - CRUD for `analytics_api_keys`
+  - Pattern: follows `crates/loom-server-flags/src/repository.rs`
 
-- [ ] Create `crates/loom-server-analytics/src/api_key.rs`
-  - `AnalyticsApiKeyRepository`
-  - Key generation with prefix
-  - Argon2 hashing (pattern: `crates/loom-server-flags/src/handlers/sdk_keys.rs`)
-  - Validation middleware
+- [x] Create `crates/loom-server-analytics/src/api_key.rs`
+  - `hash_api_key()` - Argon2 hashing
+  - `verify_api_key()` - Key verification
+  - Pattern: follows `crates/loom-server-flags/src/sdk_auth.rs`
+
+- [x] Create `crates/loom-server-analytics/src/error.rs`
+  - `AnalyticsServerError` enum using `thiserror`
+
+- [x] Add to workspace `Cargo.toml`
+
+- [x] Run `cargo2nix-update` to regenerate `Cargo.nix`
+
+**Tests:** 9 property-based and unit tests passing
 
 ---
 
