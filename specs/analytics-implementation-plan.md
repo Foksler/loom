@@ -60,20 +60,23 @@ Implementation checklist for `specs/analytics-system.md`. Each item cites the re
 
 ---
 
-## Phase 2: Database Schema
+## Phase 2: Database Schema ✅ COMPLETED
 
 **Reference:** [analytics-system.md §9](./analytics-system.md#9-database-schema)
 
-- [ ] Create migration `crates/loom-server/migrations/032_analytics.sql`
+**Completed in commit:** (2026-01-11)
+
+- [x] Create migration `crates/loom-server/migrations/032_analytics.sql`
   - `analytics_persons` table
   - `analytics_person_identities` table
   - `analytics_events` table
   - `analytics_person_merges` table
   - `analytics_api_keys` table
   - All indexes as specified
+  - Composite index `idx_analytics_events_org_timestamp` for common query pattern
   - Pattern: follow `crates/loom-server/migrations/030_feature_flags.sql`
 
-- [ ] Run `cargo2nix-update` after adding migration (per CLAUDE.md)
+- [x] Run `cargo2nix-update` after adding migration (per CLAUDE.md)
 
 ---
 
