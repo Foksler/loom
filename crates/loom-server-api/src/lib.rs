@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Proprietary
 
 pub mod admin;
+pub mod analytics;
 pub mod api_keys;
 pub mod auth;
 pub mod cse;
@@ -29,6 +30,15 @@ pub use admin::{
 	ImpersonateRequest, ImpersonateResponse, InitiateOAuthRequest, InitiateOAuthResponse,
 	ListAuditLogsParams, ListAuditLogsResponse, ListUsersParams, ListUsersResponse,
 	RemoveAccountResponse, UpdateRolesRequest,
+};
+pub use analytics::{
+	AliasRequest, AnalyticsApiKeyResponse, AnalyticsErrorResponse, AnalyticsKeyTypeApi,
+	AnalyticsSuccessResponse, BatchCaptureRequest, CaptureEventRequest, CaptureResponse,
+	CountEventsQuery, CountEventsResponse, CreateAnalyticsApiKeyRequest,
+	CreateAnalyticsApiKeyResponse, EventResponse, ExportEventsRequest, ExportEventsResponse,
+	IdentifyRequest, IdentifyResponse, ListAnalyticsApiKeysResponse, ListEventsQuery,
+	ListEventsResponse, ListPersonsQuery, ListPersonsResponse, PersonIdentityResponse, PersonResponse,
+	SetPropertiesRequest,
 };
 pub use api_keys::{
 	ApiKeyErrorResponse, ApiKeyResponse, ApiKeyScopeApi, ApiKeySuccessResponse,

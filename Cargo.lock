@@ -476,6 +476,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "axum-extra"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9963ff19f40c6102c76756ef0a46004c0d58957d87259fc9208ff8441c12ab96"
+dependencies = [
+ "axum 0.8.8",
+ "axum-core 0.5.6",
+ "bytes",
+ "futures-util",
+ "headers",
+ "http",
+ "http-body",
+ "http-body-util",
+ "mime",
+ "pin-project-lite",
+ "rustversion",
+ "serde_core",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+]
+
+[[package]]
 name = "axum-macros"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5093,9 +5116,13 @@ version = "0.1.0"
 dependencies = [
  "argon2",
  "async-trait",
+ "axum 0.8.8",
+ "axum-extra",
  "chrono",
+ "http",
  "loom-analytics-core",
  "loom-common-secret",
+ "loom-server-api",
  "proptest",
  "rand 0.8.5",
  "serde",

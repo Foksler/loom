@@ -140,43 +140,53 @@ Implementation checklist for `specs/analytics-system.md`. Each item cites the re
 
 ---
 
-## Phase 5: API Handlers
+## Phase 5: API Handlers ✅ COMPLETED
 
 **Reference:** [analytics-system.md §7](./analytics-system.md#7-api-endpoints)
 
-- [ ] Create `crates/loom-server-analytics/src/handlers/mod.rs`
+**Completed in commit:** (2026-01-11)
 
-- [ ] Create `crates/loom-server-analytics/src/handlers/capture.rs`
-  - `POST /api/analytics/capture` - single event
-  - `POST /api/analytics/batch` - batch events
+- [x] Create `crates/loom-server-analytics/src/handlers/mod.rs`
+
+- [x] Create `crates/loom-server-analytics/src/handlers/capture.rs`
+  - `capture_event_impl` - single event capture
+  - `batch_capture_impl` - batch events
   - Add automatic properties (`$ip`, `$user_agent`, `$lib`, etc.) per [§5.2](./analytics-system.md#52-automatic-properties)
   - Validate event per [§14.3](./analytics-system.md#143-event-validation)
 
-- [ ] Create `crates/loom-server-analytics/src/handlers/identify.rs`
-  - `POST /api/analytics/identify`
-  - `POST /api/analytics/alias`
-  - `POST /api/analytics/set` (person properties)
+- [x] Create `crates/loom-server-analytics/src/handlers/identify.rs`
+  - `identify_impl` - identify user
+  - `alias_impl` - create alias
+  - `set_properties_impl` - set person properties
 
-- [ ] Create `crates/loom-server-analytics/src/handlers/persons.rs`
-  - `GET /api/analytics/persons` (requires ReadWrite key)
-  - `GET /api/analytics/persons/{id}`
-  - `GET /api/analytics/persons/by-distinct-id/{distinct_id}`
+- [x] Create `crates/loom-server-analytics/src/handlers/persons.rs`
+  - `list_persons_impl` (requires ReadWrite key)
+  - `get_person_impl`
+  - `get_person_by_distinct_id_impl`
 
-- [ ] Create `crates/loom-server-analytics/src/handlers/events.rs`
-  - `GET /api/analytics/events` (requires ReadWrite key)
-  - `GET /api/analytics/events/count`
-  - `POST /api/analytics/events/export`
+- [x] Create `crates/loom-server-analytics/src/handlers/events.rs`
+  - `list_events_impl` (requires ReadWrite key)
+  - `count_events_impl`
+  - `export_events_impl`
 
-- [ ] Create `crates/loom-server-analytics/src/handlers/api_keys.rs`
-  - `GET /api/analytics/api-keys` (requires User Auth)
-  - `POST /api/analytics/api-keys`
-  - `DELETE /api/analytics/api-keys/{id}`
+- [x] Create `crates/loom-server-analytics/src/handlers/api_keys.rs`
+  - `list_api_keys_impl` (requires User Auth)
+  - `create_api_key_impl`
+  - `revoke_api_key_impl`
 
-- [ ] Create `crates/loom-server-analytics/src/routes.rs`
-  - Mount all handlers
-  - Apply API key auth middleware for capture/query routes
-  - Apply user auth middleware for management routes
-  - Pattern: follow `crates/loom-server-flags/src/routes.rs`
+- [x] Create `crates/loom-server-analytics/src/routes.rs`
+  - Exports all handler implementations for use in loom-server
+  - Auth middleware applied in loom-server integration layer
+
+- [x] Create `crates/loom-server-analytics/src/middleware.rs`
+  - `AnalyticsApiKeyContext` for API key auth
+  - `parse_key_type` and `extract_bearer_token` utilities
+
+- [x] Add API types to `crates/loom-server-api/src/analytics.rs`
+  - Request/response types for all endpoints
+  - OpenAPI schema support via utoipa
+
+**Tests:** 42 unit tests passing (handlers, validation, middleware)
 
 ---
 
