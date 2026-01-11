@@ -307,43 +307,65 @@ Implementation checklist for `specs/analytics-system.md`. Each item cites the re
 
 ---
 
-## Phase 9: TypeScript SDK (`@loom/analytics`)
+## Phase 9: TypeScript SDK (`@loom/analytics`) ✅ COMPLETED
 
 **Reference:** [analytics-system.md §8.2](./analytics-system.md#82-typescript-sdk-loomanalytics)
 
-- [ ] Create `web/packages/analytics/package.json`
+**Completed in commit:** (2026-01-11)
+
+- [x] Create `web/packages/analytics/package.json`
   - Dependencies: `@loom/http`
 
-- [ ] Create `web/packages/analytics/src/index.ts`
-  - Export `AnalyticsClient`
+- [x] Create `web/packages/analytics/src/index.ts`
+  - Export `AnalyticsClient`, types, errors, storage utilities
 
-- [ ] Create `web/packages/analytics/src/client.ts`
-  - `AnalyticsClient` class
-  - `capture(event, properties)`
-  - `identify(userId, properties)`
-  - `alias(alias)`
-  - `reset()`
-  - `getDistinctId()`
+- [x] Create `web/packages/analytics/src/client.ts`
+  - `AnalyticsClient` class with builder-style options
+  - `capture(event, properties)` - Enqueue event for batch processing
+  - `identify(userId, properties)` - Link anonymous to identified user
+  - `alias(alias)` - Create alias for current distinct_id
+  - `set(properties)` - Set person properties
+  - `reset()` - Generate new anonymous distinct_id
+  - `getDistinctId()` - Get current distinct_id
+  - `flush()` - Manual flush of queued events
+  - `shutdown()` - Graceful shutdown with final flush
 
-- [ ] Create `web/packages/analytics/src/storage.ts`
-  - Generate UUIDv7 for distinct_id
-  - Store in localStorage + cookie (cross-subdomain)
+- [x] Create `web/packages/analytics/src/storage.ts`
+  - `generateDistinctId()` - UUIDv7 generation (time-ordered)
+  - `DistinctIdManager` - Manages distinct_id lifecycle
+  - `MemoryStorage`, `CookieStorage`, `LocalStorageStorage`, `CombinedStorage`
   - Cookie name: `loom_analytics_distinct_id`
-  - See PostHog persistence patterns
+  - Cross-subdomain support via configurable cookie domain
 
-- [ ] Create `web/packages/analytics/src/batch.ts`
-  - Event queue with background flush
-  - Flush on interval (10s) or batch size (10)
+- [x] Create `web/packages/analytics/src/batch.ts`
+  - `BatchProcessor` with background flush loop
+  - Flush on interval (10s default) or batch size (10 default)
+  - Queue overflow handling (drops oldest, max 1000 default)
   - Retry with exponential backoff via `@loom/http`
+  - Event listener hooks for flush, drop, and error events
 
-- [ ] Add autocapture option
-  - `$pageview` on page load
-  - `$pageleave` on page unload
-  - See [analytics-system.md §5.3](./analytics-system.md#53-special-events)
+- [x] Create `web/packages/analytics/src/types.ts`
+  - `AnalyticsClientOptions` - Configuration interface
+  - `CapturePayload`, `IdentifyPayload`, `AliasPayload`, `SetPayload`
+  - `BatchConfig`, `AutocaptureConfig`
+  - `PersistenceMode` - localStorage+cookie, localStorage, cookie, memory
 
-- [ ] Update `web/packages/http/` if needed
-  - Ensure shared HTTP client with retry exists
-  - Pattern: follow `web/packages/flags/` if it exists
+- [x] Create `web/packages/analytics/src/errors.ts`
+  - `AnalyticsError` base class with `isRetryable()` method
+  - `InvalidApiKeyError`, `InvalidBaseUrlError`, `ClientClosedError`
+  - `CaptureError`, `IdentifyError`, `StorageError`, `ValidationError`
+  - `NetworkError`, `ServerError`, `RateLimitedError`
+
+- [x] Add autocapture option
+  - `$pageview` on page load and SPA navigation (popstate)
+  - `$pageleave` on beforeunload and pagehide
+  - Configurable via `autocapture: true | false | { pageview: bool, pageleave: bool }`
+
+- [x] Update `web/packages/http/` if needed
+  - Existing `@loom/http` package provides HTTP client with retry
+  - No changes needed
+
+**Tests:** 79 property-based and unit tests passing (storage, batch, client, types, errors)
 
 ---
 
