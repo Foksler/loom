@@ -1,6 +1,11 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+//! Identity resolution service for linking distinct IDs to persons.
+//!
+//! This module implements PostHog-style identity resolution, which links
+//! anonymous sessions to authenticated users and handles person merges.
+
 use std::sync::Arc;
 use tracing::instrument;
 
@@ -51,6 +56,21 @@ impl MergeAuditHook for NoOpMergeAuditHook {
 /// Shared reference to a merge audit hook.
 pub type SharedMergeAuditHook = Arc<dyn MergeAuditHook>;
 
+/// Service for resolving distinct IDs to persons and handling identity merges.
+///
+/// This service implements PostHog-style identity resolution:
+/// - Anonymous distinct IDs are lazily created as new persons
+/// - `identify()` links an anonymous session to an authenticated user ID
+/// - `alias()` links two distinct IDs together
+/// - When linking causes two persons to collide, they are merged
+///
+/// # Merge Winner Selection
+///
+/// When two persons are merged:
+/// 1. Identified persons win over anonymous persons
+/// 2. Older persons win over newer persons (if both are same type)
+///
+/// The loser's events and identities are transferred to the winner.
 pub struct IdentityResolutionService<R: AnalyticsRepository> {
 	repository: R,
 	audit_hook: Option<SharedMergeAuditHook>,
@@ -78,6 +98,10 @@ impl<R: AnalyticsRepository> IdentityResolutionService<R> {
 		self.audit_hook = Some(hook);
 	}
 
+	/// Resolves a distinct ID to a person, creating one if necessary.
+	///
+	/// If the distinct ID is not known, creates a new anonymous person and identity.
+	/// If the person was merged into another, follows the merge chain to return the winner.
 	#[instrument(skip(self), fields(org_id = %org_id, distinct_id = %distinct_id))]
 	pub async fn resolve_person_for_distinct_id(
 		&self,
@@ -118,6 +142,13 @@ impl<R: AnalyticsRepository> IdentityResolutionService<R> {
 		Ok(PersonWithIdentities::new(person, vec![identity]))
 	}
 
+	/// Links an anonymous session (distinct_id) to an authenticated user ID.
+	///
+	/// This handles several cases:
+	/// - Both unknown: Creates new person with both identities
+	/// - Only distinct_id known: Adds user_id identity to existing person
+	/// - Only user_id known: Adds distinct_id identity to existing person
+	/// - Both known to different persons: Merges persons, preferring identified over anonymous
 	#[instrument(skip(self, payload), fields(org_id = %org_id, distinct_id = %payload.distinct_id, user_id = %payload.user_id))]
 	pub async fn identify(
 		&self,
@@ -249,6 +280,10 @@ impl<R: AnalyticsRepository> IdentityResolutionService<R> {
 		}
 	}
 
+	/// Links two distinct IDs together, merging their persons if necessary.
+	///
+	/// Use this when you have multiple identifiers for the same user that aren't
+	/// covered by the identify flow (e.g., linking two anonymous sessions).
 	#[instrument(skip(self, payload), fields(org_id = %org_id, distinct_id = %payload.distinct_id, alias = %payload.alias))]
 	pub async fn alias(&self, org_id: OrgId, payload: AliasPayload) -> Result<PersonWithIdentities> {
 		let primary_identity = self

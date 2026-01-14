@@ -431,11 +431,18 @@ Implementation checklist for `specs/analytics-system.md`. Each item cites the re
 
 ---
 
-## Phase 12: Documentation
+## Phase 12: Documentation ✅ COMPLETED
 
-- [ ] Add inline rustdoc to all public types
+**Completed in commit:** (2026-01-14)
 
-- [ ] Update main README if analytics is a significant feature
+- [x] Add inline rustdoc to all public types
+  - `loom-analytics-core`: All types documented (person, identity, event, api_key, identify, error)
+  - `loom-analytics`: Already well-documented (client, batch, properties, error)
+  - `loom-server-analytics`: All types documented (repository, middleware, identity_resolution, api_key, error)
+
+- [x] Documentation tests pass: `cargo test -p loom-analytics-core -p loom-analytics -p loom-server-analytics`
+
+- [ ] Update main README if analytics is a significant feature (defer - not user-facing yet)
 
 ---
 

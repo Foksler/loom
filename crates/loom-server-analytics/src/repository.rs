@@ -1,6 +1,11 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+//! Database repository for analytics data.
+//!
+//! This module provides the [`AnalyticsRepository`] trait and its SQLite implementation
+//! for persisting persons, events, identities, merges, and API keys.
+
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::SqlitePool;
@@ -14,6 +19,14 @@ use loom_analytics_core::{
 
 use crate::error::{AnalyticsServerError, Result};
 
+/// Repository trait for analytics data operations.
+///
+/// This trait defines all CRUD operations for the analytics system's data entities:
+/// - Persons and their properties
+/// - Person identities (distinct_id mappings)
+/// - Events
+/// - Person merges (audit trail)
+/// - API keys
 #[allow(clippy::too_many_arguments)]
 #[async_trait]
 pub trait AnalyticsRepository: Send + Sync {
@@ -85,12 +98,14 @@ pub trait AnalyticsRepository: Send + Sync {
 	async fn find_api_key_by_raw(&self, raw_key: &str) -> Result<Option<AnalyticsApiKey>>;
 }
 
+/// SQLite implementation of [`AnalyticsRepository`].
 #[derive(Clone)]
 pub struct SqliteAnalyticsRepository {
 	pool: SqlitePool,
 }
 
 impl SqliteAnalyticsRepository {
+	/// Creates a new repository using the given SQLite connection pool.
 	pub fn new(pool: SqlitePool) -> Self {
 		Self { pool }
 	}

@@ -1,6 +1,8 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+//! API key hashing and verification using Argon2.
+
 use argon2::{
 	password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
 	Argon2,
@@ -8,6 +10,10 @@ use argon2::{
 
 use crate::error::{AnalyticsServerError, Result};
 
+/// Hashes an API key using Argon2 with a random salt.
+///
+/// Each call produces a different hash due to random salts, but the hash
+/// can be verified against the original key using [`verify_api_key`].
 pub fn hash_api_key(key: &str) -> Result<String> {
 	let salt = SaltString::generate(&mut OsRng);
 	let argon2 = Argon2::default();
@@ -18,6 +24,9 @@ pub fn hash_api_key(key: &str) -> Result<String> {
 		.map_err(|_| AnalyticsServerError::Internal("Failed to hash API key".to_string()))
 }
 
+/// Verifies a raw API key against a stored Argon2 hash.
+///
+/// Returns `true` if the key matches, `false` otherwise.
 pub fn verify_api_key(key: &str, hash: &str) -> Result<bool> {
 	let parsed_hash = PasswordHash::new(hash)
 		.map_err(|_| AnalyticsServerError::Internal("Invalid API key hash format".to_string()))?;

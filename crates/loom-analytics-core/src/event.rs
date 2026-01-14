@@ -1,6 +1,11 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+//! Event types for tracking user actions.
+//!
+//! Events are the primary data type for analytics. Each event has a name,
+//! a `distinct_id` identifying the user/session, and optional properties.
+
 use chrono::{DateTime, Utc};
 use loom_common_secret::SecretString;
 use serde::{Deserialize, Serialize};
@@ -8,14 +13,22 @@ use uuid::Uuid;
 
 use crate::person::{OrgId, PersonId};
 
+/// Unique identifier for an event.
+///
+/// Uses UUIDv7 by default for time-ordered IDs, which improves database
+/// index locality and query performance.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct EventId(pub Uuid);
 
 impl EventId {
+	/// Creates a new event ID using UUIDv4 (random).
 	pub fn new() -> Self {
 		Self(Uuid::new_v4())
 	}
 
+	/// Creates a new event ID using UUIDv7 (time-ordered).
+	///
+	/// This is preferred for new events as it improves database performance.
 	pub fn new_v7() -> Self {
 		let uuid7_val = uuid7::uuid7();
 		Self(Uuid::from_bytes(*uuid7_val.as_bytes()))
@@ -42,6 +55,28 @@ impl std::str::FromStr for EventId {
 	}
 }
 
+/// An analytics event representing a user action.
+///
+/// Events are immutable once captured. They contain:
+/// - An `event_name` identifying the action (e.g., "button_clicked", "$pageview")
+/// - A `distinct_id` identifying the user/session
+/// - Optional `properties` with event-specific data
+/// - Automatic metadata like `ip_address`, `user_agent`, and SDK info
+///
+/// # Example
+///
+/// ```
+/// use loom_analytics_core::{Event, OrgId};
+///
+/// let event = Event::new(
+///     OrgId::new(),
+///     "user_abc123".to_string(),
+///     "checkout_completed".to_string(),
+/// ).with_properties(serde_json::json!({
+///     "total": 99.99,
+///     "items": 3,
+/// }));
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Event {
 	pub id: EventId,
@@ -60,6 +95,7 @@ pub struct Event {
 }
 
 impl Event {
+	/// Creates a new event with the given organization, distinct ID, and event name.
 	pub fn new(org_id: OrgId, distinct_id: String, event_name: String) -> Self {
 		let now = Utc::now();
 		Self {
@@ -78,37 +114,44 @@ impl Event {
 		}
 	}
 
+	/// Sets the event properties (builder pattern).
 	pub fn with_properties(mut self, properties: serde_json::Value) -> Self {
 		self.properties = properties;
 		self
 	}
 
+	/// Overrides the event timestamp (builder pattern).
 	pub fn with_timestamp(mut self, timestamp: DateTime<Utc>) -> Self {
 		self.timestamp = timestamp;
 		self
 	}
 
+	/// Associates this event with a resolved person ID (builder pattern).
 	pub fn with_person_id(mut self, person_id: PersonId) -> Self {
 		self.person_id = Some(person_id);
 		self
 	}
 
+	/// Sets the client IP address (stored as a secret, redacted in logs).
 	pub fn with_ip_address(mut self, ip: String) -> Self {
 		self.ip_address = Some(SecretString::new(ip));
 		self
 	}
 
+	/// Sets the client User-Agent string.
 	pub fn with_user_agent(mut self, user_agent: String) -> Self {
 		self.user_agent = Some(user_agent);
 		self
 	}
 
+	/// Sets the SDK library name and version.
 	pub fn with_lib(mut self, lib: String, version: String) -> Self {
 		self.lib = Some(lib);
 		self.lib_version = Some(version);
 		self
 	}
 
+	/// Sets a single property on this event.
 	pub fn set_property(&mut self, key: &str, value: serde_json::Value) {
 		if let serde_json::Value::Object(ref mut map) = self.properties {
 			map.insert(key.to_string(), value);
@@ -116,9 +159,18 @@ impl Event {
 	}
 }
 
+/// Maximum allowed length for event names.
 pub const MAX_EVENT_NAME_LENGTH: usize = 200;
+
+/// Maximum allowed size for event properties JSON (1 MB).
 pub const MAX_PROPERTIES_SIZE: usize = 1024 * 1024; // 1MB
 
+/// Validates an event name.
+///
+/// Valid names must:
+/// - Be non-empty and at most 200 characters
+/// - Start with a lowercase letter or `$` (for system events)
+/// - Contain only lowercase alphanumeric characters, `_`, `$`, or `.`
 pub fn validate_event_name(name: &str) -> bool {
 	if name.is_empty() || name.len() > MAX_EVENT_NAME_LENGTH {
 		return false;
@@ -133,16 +185,22 @@ pub fn validate_event_name(name: &str) -> bool {
 	chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$' || c == '.')
 }
 
+/// Validates that the properties JSON is within the size limit.
 pub fn validate_properties_size(properties: &serde_json::Value) -> bool {
 	serde_json::to_string(properties)
 		.map(|s| s.len() <= MAX_PROPERTIES_SIZE)
 		.unwrap_or(false)
 }
 
+/// Well-known system event names that start with `$`.
 pub mod special_events {
+	/// Tracks a page view.
 	pub const PAGEVIEW: &str = "$pageview";
+	/// Tracks when a user leaves a page.
 	pub const PAGELEAVE: &str = "$pageleave";
+	/// Tracks an identify call.
 	pub const IDENTIFY: &str = "$identify";
+	/// Tracks feature flag evaluations for experiment analysis.
 	pub const FEATURE_FLAG_CALLED: &str = "$feature_flag_called";
 }
 

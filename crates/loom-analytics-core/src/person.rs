@@ -1,12 +1,20 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+//! Person types for user profile management.
+//!
+//! A [`Person`] represents a user profile that can have multiple identities
+//! (anonymous sessions and authenticated IDs) linked to it via identity resolution.
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::identity::PersonIdentity;
 
+/// Unique identifier for a person profile.
+///
+/// Uses UUIDv4 for random generation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct PersonId(pub Uuid);
 
@@ -36,6 +44,10 @@ impl std::str::FromStr for PersonId {
 	}
 }
 
+/// Unique identifier for an organization.
+///
+/// Organizations own persons, events, and API keys. All analytics data
+/// is scoped to a single organization for multi-tenant isolation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct OrgId(pub Uuid);
 
@@ -65,6 +77,23 @@ impl std::str::FromStr for OrgId {
 	}
 }
 
+/// A person profile in the analytics system.
+///
+/// Persons are the central entity for identity resolution. Each person belongs
+/// to an organization and can have multiple identities (anonymous and identified)
+/// linked to them. Persons can be merged when identity resolution determines
+/// two persons represent the same user.
+///
+/// # Properties
+///
+/// The `properties` field stores arbitrary JSON data about the person,
+/// such as name, email, plan, or custom attributes set via [`set_property`](Self::set_property).
+///
+/// # Merging
+///
+/// When two persons are determined to be the same user (via identify or alias),
+/// one is merged into the other. The "loser" has `merged_into_id` set and
+/// their events/identities are transferred to the "winner".
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Person {
 	pub id: PersonId,
@@ -77,6 +106,7 @@ pub struct Person {
 }
 
 impl Person {
+	/// Creates a new person in the given organization with empty properties.
 	pub fn new(org_id: OrgId) -> Self {
 		let now = Utc::now();
 		Self {
@@ -90,15 +120,18 @@ impl Person {
 		}
 	}
 
+	/// Sets the initial properties for this person (builder pattern).
 	pub fn with_properties(mut self, properties: serde_json::Value) -> Self {
 		self.properties = properties;
 		self
 	}
 
+	/// Returns `true` if this person has been merged into another.
 	pub fn is_merged(&self) -> bool {
 		self.merged_into_id.is_some()
 	}
 
+	/// Sets a single property, overwriting any existing value.
 	pub fn set_property(&mut self, key: &str, value: serde_json::Value) {
 		if let serde_json::Value::Object(ref mut map) = self.properties {
 			map.insert(key.to_string(), value);
@@ -106,6 +139,7 @@ impl Person {
 		self.updated_at = Utc::now();
 	}
 
+	/// Merges multiple properties into this person, overwriting existing keys.
 	pub fn set_properties(&mut self, properties: serde_json::Value) {
 		if let (serde_json::Value::Object(ref mut existing), serde_json::Value::Object(new)) =
 			(&mut self.properties, properties)
@@ -117,6 +151,7 @@ impl Person {
 		self.updated_at = Utc::now();
 	}
 
+	/// Sets a property only if it doesn't already exist.
 	pub fn set_property_once(&mut self, key: &str, value: serde_json::Value) {
 		if let serde_json::Value::Object(ref mut map) = self.properties {
 			map.entry(key.to_string()).or_insert(value);
@@ -124,6 +159,7 @@ impl Person {
 		self.updated_at = Utc::now();
 	}
 
+	/// Removes a property from this person.
 	pub fn unset_property(&mut self, key: &str) {
 		if let serde_json::Value::Object(ref mut map) = self.properties {
 			map.remove(key);
@@ -131,6 +167,7 @@ impl Person {
 		self.updated_at = Utc::now();
 	}
 
+	/// Marks this person as merged into another (the "winner").
 	pub fn merge_into(&mut self, winner_id: PersonId) {
 		self.merged_into_id = Some(winner_id);
 		self.merged_at = Some(Utc::now());
@@ -138,17 +175,25 @@ impl Person {
 	}
 }
 
+/// A person bundled with their linked identities.
+///
+/// This is a convenience type for queries that need both the person
+/// profile and their associated distinct IDs.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PersonWithIdentities {
+	/// The person profile.
 	pub person: Person,
+	/// All identities (anonymous and identified) linked to this person.
 	pub identities: Vec<PersonIdentity>,
 }
 
 impl PersonWithIdentities {
+	/// Creates a new person-with-identities bundle.
 	pub fn new(person: Person, identities: Vec<PersonIdentity>) -> Self {
 		Self { person, identities }
 	}
 
+	/// Returns `true` if any identity is of type `Identified`.
 	pub fn has_identified_identity(&self) -> bool {
 		use crate::identity::IdentityType;
 		self

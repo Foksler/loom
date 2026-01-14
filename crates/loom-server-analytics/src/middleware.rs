@@ -16,9 +16,15 @@ use axum::{
 use loom_analytics_core::{AnalyticsApiKeyId, AnalyticsKeyType, OrgId};
 use loom_server_api::analytics::AnalyticsErrorResponse;
 
+/// Prefix for write-only API keys.
 pub const WRITE_KEY_PREFIX: &str = "loom_analytics_write_";
+
+/// Prefix for read-write API keys.
 pub const READ_WRITE_KEY_PREFIX: &str = "loom_analytics_rw_";
 
+/// Authenticated API key context extracted from a request.
+///
+/// This is passed to handlers that require API key authentication.
 #[derive(Debug, Clone)]
 pub struct AnalyticsApiKeyContext {
 	pub api_key_id: AnalyticsApiKeyId,
@@ -26,10 +32,15 @@ pub struct AnalyticsApiKeyContext {
 	pub key_type: AnalyticsKeyType,
 }
 
+/// Errors that can occur during API key authentication.
 pub enum AnalyticsApiKeyError {
+	/// No Authorization header was provided.
 	MissingAuthorization,
+	/// The Authorization header format is invalid.
 	InvalidFormat,
+	/// The API key is not valid.
 	InvalidKey,
+	/// The API key has been revoked.
 	RevokedKey,
 }
 
@@ -65,6 +76,7 @@ impl IntoResponse for AnalyticsApiKeyError {
 	}
 }
 
+/// Parses the key type from an API key string based on its prefix.
 pub fn parse_key_type(key: &str) -> Option<AnalyticsKeyType> {
 	if key.starts_with(WRITE_KEY_PREFIX) {
 		Some(AnalyticsKeyType::Write)
@@ -75,6 +87,7 @@ pub fn parse_key_type(key: &str) -> Option<AnalyticsKeyType> {
 	}
 }
 
+/// Extracts the token from a "Bearer <token>" Authorization header.
 pub fn extract_bearer_token(auth_header: &str) -> Option<&str> {
 	auth_header.strip_prefix("Bearer ")
 }

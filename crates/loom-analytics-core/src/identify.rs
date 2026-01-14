@@ -1,12 +1,21 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+//! Payload types for identity resolution operations.
+//!
+//! These types are used by the identify, alias, and property-setting APIs.
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::person::PersonId;
 
+/// Payload for the identify operation, linking an anonymous ID to a user ID.
+///
+/// When a user logs in, call identify to link their anonymous session
+/// (distinct_id) to their authenticated user_id. This enables tracking
+/// the user's journey before and after authentication.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IdentifyPayload {
 	pub distinct_id: String,
@@ -16,6 +25,7 @@ pub struct IdentifyPayload {
 }
 
 impl IdentifyPayload {
+	/// Creates a new identify payload.
 	pub fn new(distinct_id: String, user_id: String) -> Self {
 		Self {
 			distinct_id,
@@ -24,12 +34,18 @@ impl IdentifyPayload {
 		}
 	}
 
+	/// Sets properties to update on the person (builder pattern).
 	pub fn with_properties(mut self, properties: serde_json::Value) -> Self {
 		self.properties = properties;
 		self
 	}
 }
 
+/// Payload for the alias operation, linking two distinct IDs.
+///
+/// Alias creates a link between two distinct IDs, merging their persons
+/// if they were previously separate. Use this when you have multiple
+/// identifiers for the same user.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AliasPayload {
 	pub distinct_id: String,
@@ -37,11 +53,13 @@ pub struct AliasPayload {
 }
 
 impl AliasPayload {
+	/// Creates a new alias payload.
 	pub fn new(distinct_id: String, alias: String) -> Self {
 		Self { distinct_id, alias }
 	}
 }
 
+/// Payload for setting person properties (overwrites existing values).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SetPayload {
 	pub distinct_id: String,
@@ -50,6 +68,7 @@ pub struct SetPayload {
 }
 
 impl SetPayload {
+	/// Creates a new set payload.
 	pub fn new(distinct_id: String, properties: serde_json::Value) -> Self {
 		Self {
 			distinct_id,
@@ -58,6 +77,7 @@ impl SetPayload {
 	}
 }
 
+/// Payload for setting properties only if they don't already exist.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SetOncePayload {
 	pub distinct_id: String,
@@ -66,6 +86,7 @@ pub struct SetOncePayload {
 }
 
 impl SetOncePayload {
+	/// Creates a new set-once payload.
 	pub fn new(distinct_id: String, properties: serde_json::Value) -> Self {
 		Self {
 			distinct_id,
@@ -74,6 +95,7 @@ impl SetOncePayload {
 	}
 }
 
+/// Payload for removing properties from a person.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnsetPayload {
 	pub distinct_id: String,
@@ -81,6 +103,7 @@ pub struct UnsetPayload {
 }
 
 impl UnsetPayload {
+	/// Creates a new unset payload.
 	pub fn new(distinct_id: String, properties: Vec<String>) -> Self {
 		Self {
 			distinct_id,
@@ -89,6 +112,7 @@ impl UnsetPayload {
 	}
 }
 
+/// Unique identifier for a person merge record.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct PersonMergeId(pub Uuid);
 
@@ -118,6 +142,11 @@ impl std::str::FromStr for PersonMergeId {
 	}
 }
 
+/// An audit record of two persons being merged.
+///
+/// When identity resolution determines two persons represent the same user,
+/// the "loser" is merged into the "winner". This record provides an audit
+/// trail of the merge operation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PersonMerge {
 	pub id: PersonMergeId,
@@ -128,6 +157,7 @@ pub struct PersonMerge {
 }
 
 impl PersonMerge {
+	/// Creates a new merge record.
 	pub fn new(winner_id: PersonId, loser_id: PersonId, reason: MergeReason) -> Self {
 		Self {
 			id: PersonMergeId::new(),
@@ -139,23 +169,28 @@ impl PersonMerge {
 	}
 }
 
+/// The reason why two persons were merged.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum MergeReason {
+	/// Merge triggered by an identify call.
 	Identify {
 		distinct_id: String,
 		user_id: String,
 	},
+	/// Merge triggered by an alias call.
 	Alias {
 		distinct_id: String,
 		alias: String,
 	},
+	/// Merge triggered manually by an admin.
 	Manual {
 		by_user_id: String,
 	},
 }
 
 impl MergeReason {
+	/// Creates an identify merge reason.
 	pub fn identify(distinct_id: String, user_id: String) -> Self {
 		MergeReason::Identify {
 			distinct_id,
@@ -163,10 +198,12 @@ impl MergeReason {
 		}
 	}
 
+	/// Creates an alias merge reason.
 	pub fn alias(distinct_id: String, alias: String) -> Self {
 		MergeReason::Alias { distinct_id, alias }
 	}
 
+	/// Creates a manual merge reason.
 	pub fn manual(by_user_id: String) -> Self {
 		MergeReason::Manual { by_user_id }
 	}

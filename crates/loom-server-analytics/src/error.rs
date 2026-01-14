@@ -1,8 +1,11 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+//! Error types for the analytics server.
+
 use thiserror::Error;
 
+/// Errors that can occur in the analytics server.
 #[derive(Debug, Error)]
 pub enum AnalyticsServerError {
 	#[error(transparent)]
@@ -30,4 +33,5 @@ pub enum AnalyticsServerError {
 	Internal(String),
 }
 
+/// A specialized `Result` type for analytics server operations.
 pub type Result<T> = std::result::Result<T, AnalyticsServerError>;

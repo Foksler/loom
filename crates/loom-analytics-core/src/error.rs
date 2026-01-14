@@ -1,8 +1,14 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+//! Error types for the analytics system.
+
 use thiserror::Error;
 
+/// Errors that can occur in the analytics system.
+///
+/// These errors cover validation failures, lookup failures, permission issues,
+/// and infrastructure errors (database, serialization).
 #[derive(Debug, Error)]
 pub enum AnalyticsError {
 	#[error("person not found: {0}")]
@@ -48,4 +54,5 @@ impl From<serde_json::Error> for AnalyticsError {
 	}
 }
 
+/// A specialized `Result` type for analytics operations.
 pub type Result<T> = std::result::Result<T, AnalyticsError>;

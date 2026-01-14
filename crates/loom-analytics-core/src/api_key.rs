@@ -1,12 +1,21 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+//! API key types for SDK authentication.
+//!
+//! Analytics API keys authenticate SDK requests. There are two key types:
+//! - `Write`: Can capture events and identify users
+//! - `ReadWrite`: Can also query events and persons
+//!
+//! Keys use a prefix format: `loom_analytics_write_<random>` or `loom_analytics_rw_<random>`.
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::person::OrgId;
 
+/// Unique identifier for an analytics API key.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct AnalyticsApiKeyId(pub Uuid);
 
@@ -36,6 +45,7 @@ impl std::str::FromStr for AnalyticsApiKeyId {
 	}
 }
 
+/// Unique identifier for a user who created an API key.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct UserId(pub Uuid);
 
@@ -65,14 +75,21 @@ impl std::str::FromStr for UserId {
 	}
 }
 
+/// The permission level of an analytics API key.
+///
+/// - `Write`: Can capture events, identify users, and set properties
+/// - `ReadWrite`: All write permissions plus query access for events/persons
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AnalyticsKeyType {
+	/// Write-only key for capturing events and identifying users.
 	Write,
+	/// Read-write key with full access including queries.
 	ReadWrite,
 }
 
 impl AnalyticsKeyType {
+	/// Returns the string representation ("write" or "read_write").
 	pub fn as_str(&self) -> &'static str {
 		match self {
 			AnalyticsKeyType::Write => "write",
@@ -80,10 +97,16 @@ impl AnalyticsKeyType {
 		}
 	}
 
+	/// Returns `true` if this key type can capture events.
+	///
+	/// All key types can capture events.
 	pub fn can_capture(&self) -> bool {
 		true
 	}
 
+	/// Returns `true` if this key type can query events and persons.
+	///
+	/// Only `ReadWrite` keys can query.
 	pub fn can_query(&self) -> bool {
 		matches!(self, AnalyticsKeyType::ReadWrite)
 	}
@@ -107,6 +130,10 @@ impl std::str::FromStr for AnalyticsKeyType {
 	}
 }
 
+/// An analytics API key for SDK authentication.
+///
+/// Keys are stored with an Argon2 hash of the actual key value. The raw key
+/// is only shown once at creation time and cannot be recovered.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalyticsApiKey {
 	pub id: AnalyticsApiKeyId,
@@ -121,21 +148,29 @@ pub struct AnalyticsApiKey {
 }
 
 impl AnalyticsApiKey {
+	/// Prefix for write-only API keys.
 	pub const WRITE_PREFIX: &'static str = "loom_analytics_write_";
+	/// Prefix for read-write API keys.
 	pub const READ_WRITE_PREFIX: &'static str = "loom_analytics_rw_";
 
+	/// Returns `true` if this key has been revoked.
 	pub fn is_revoked(&self) -> bool {
 		self.revoked_at.is_some()
 	}
 
+	/// Marks this key as revoked.
 	pub fn revoke(&mut self) {
 		self.revoked_at = Some(Utc::now());
 	}
 
+	/// Updates the last-used timestamp to now.
 	pub fn touch(&mut self) {
 		self.last_used_at = Some(Utc::now());
 	}
 
+	/// Parses a raw API key string into its type and random portion.
+	///
+	/// Returns `None` if the key format is invalid.
 	pub fn parse_key(key: &str) -> Option<(AnalyticsKeyType, String)> {
 		let (key_type, rest) = if let Some(rest) = key.strip_prefix(Self::WRITE_PREFIX) {
 			(AnalyticsKeyType::Write, rest)
@@ -152,6 +187,10 @@ impl AnalyticsApiKey {
 		Some((key_type, rest.to_string()))
 	}
 
+	/// Generates a new random API key of the given type.
+	///
+	/// The returned key should be shown to the user once and then hashed
+	/// for storage using `hash_api_key`.
 	pub fn generate_key(key_type: AnalyticsKeyType) -> String {
 		let random = Uuid::new_v4().to_string().replace('-', "");
 		let prefix = match key_type {
