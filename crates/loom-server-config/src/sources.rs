@@ -12,9 +12,9 @@ use crate::error::ConfigError;
 use crate::layer::ServerConfigLayer;
 use crate::sections::{AnthropicAuthConfig, GitHubOAuthConfigLayer, GoogleOAuthConfigLayer};
 use crate::sections::{
-	AuditConfigLayer, AuthConfigLayer, DatabaseConfigLayer, GeoIpConfigLayer, GitHubAppConfigLayer,
-	GoogleCseConfigLayer, HttpConfigLayer, JobsConfigLayer, LlmConfigLayer, LlmProvider,
-	LoggingConfigLayer, OAuthConfigLayer, OktaOAuthConfigLayer, PathsConfigLayer,
+	AnalyticsConfigLayer, AuditConfigLayer, AuthConfigLayer, DatabaseConfigLayer, GeoIpConfigLayer,
+	GitHubAppConfigLayer, GoogleCseConfigLayer, HttpConfigLayer, JobsConfigLayer, LlmConfigLayer,
+	LlmProvider, LoggingConfigLayer, OAuthConfigLayer, OktaOAuthConfigLayer, PathsConfigLayer,
 	QueueOverflowPolicy, ScimConfigLayer, SearchConfigLayer, SerperConfigLayer, SmtpConfigLayer,
 	SyslogConfigLayer, SyslogProtocol, TlsMode, WeaverConfigLayer,
 };
@@ -131,6 +131,7 @@ impl ConfigSource for EnvSource {
 			logging: Some(load_logging_from_env()?),
 			audit: Some(load_audit_from_env()?),
 			scim: Some(load_scim_from_env()?),
+			analytics: Some(load_analytics_from_env()?),
 		})
 	}
 }
@@ -472,6 +473,15 @@ fn env_usize(name: &str) -> Result<Option<usize>, ConfigError> {
 		}),
 		None => Ok(None),
 	}
+}
+
+fn load_analytics_from_env() -> Result<AnalyticsConfigLayer, ConfigError> {
+	Ok(AnalyticsConfigLayer {
+		enabled: env_bool("LOOM_ANALYTICS_ENABLED"),
+		batch_size: env_usize("LOOM_ANALYTICS_BATCH_SIZE")?,
+		flush_interval_secs: env_u64("LOOM_ANALYTICS_FLUSH_INTERVAL_SECS")?,
+		event_retention_days: env_i64("LOOM_ANALYTICS_EVENT_RETENTION_DAYS")?,
+	})
 }
 
 #[cfg(test)]

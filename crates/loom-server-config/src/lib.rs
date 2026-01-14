@@ -47,6 +47,7 @@ pub struct ServerConfig {
 	pub logging: LoggingConfig,
 	pub audit: AuditConfig,
 	pub scim: ScimConfig,
+	pub analytics: AnalyticsConfig,
 }
 
 impl ServerConfig {
@@ -131,6 +132,7 @@ fn finalize(layer: ServerConfigLayer) -> Result<ServerConfig, ConfigError> {
 	let scim_token = loom_common_config::load_secret_env("LOOM_SERVER_SCIM_TOKEN")
 		.map_err(|e| ConfigError::Secret(e.to_string()))?;
 	let scim = layer.scim.unwrap_or_default().finalize(scim_token);
+	let analytics = layer.analytics.unwrap_or_default().finalize();
 
 	validate_config(&auth)?;
 
@@ -145,6 +147,7 @@ fn finalize(layer: ServerConfigLayer) -> Result<ServerConfig, ConfigError> {
 		geoip_configured = geoip.is_some(),
 		audit_enabled = audit.enabled,
 		scim_enabled = scim.enabled,
+		analytics_enabled = analytics.enabled,
 		"Server configuration loaded"
 	);
 
@@ -164,6 +167,7 @@ fn finalize(layer: ServerConfigLayer) -> Result<ServerConfig, ConfigError> {
 		logging,
 		audit,
 		scim,
+		analytics,
 	})
 }
 
@@ -230,6 +234,7 @@ mod tests {
 			logging: LoggingConfig::default(),
 			audit: AuditConfig::default(),
 			scim: ScimConfig::default(),
+			analytics: AnalyticsConfig::default(),
 		};
 		assert_eq!(config.socket_addr(), "127.0.0.1:9000");
 	}

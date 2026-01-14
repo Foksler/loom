@@ -3,6 +3,7 @@
 
 //! Configuration sections for loom-server.
 
+pub mod analytics;
 pub mod audit;
 pub mod auth;
 pub mod database;
@@ -19,6 +20,7 @@ pub mod search;
 pub mod smtp;
 pub mod weaver;
 
+pub use analytics::{AnalyticsConfig, AnalyticsConfigLayer};
 pub use audit::{
 	AuditConfig, AuditConfigLayer, FileFormat, FileSinkConfig, FileSinkConfigLayer, HttpSinkConfig,
 	HttpSinkConfigLayer, JsonStreamConfig, JsonStreamConfigLayer, QueueOverflowPolicy,

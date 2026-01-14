@@ -218,11 +218,17 @@ Implementation checklist for `specs/analytics-system.md`. Each item cites the re
 - [x] Update `crates/loom-server-api/src/analytics.rs`
   - Added `IntoParams` derive to query types for OpenAPI support
 
-- [ ] Add configuration for analytics (TODO: Phase 6.1)
+- [x] Add configuration for analytics (Phase 6.1)
   - `LOOM_ANALYTICS_ENABLED`
   - `LOOM_ANALYTICS_BATCH_SIZE`
+  - `LOOM_ANALYTICS_FLUSH_INTERVAL_SECS`
   - `LOOM_ANALYTICS_EVENT_RETENTION_DAYS`
   - See [analytics-system.md §11](./analytics-system.md#11-configuration)
+  - Added `crates/loom-server-config/src/sections/analytics.rs` with `AnalyticsConfig` and `AnalyticsConfigLayer`
+  - Added analytics to `ServerConfig` in `crates/loom-server-config/src/lib.rs`
+  - Added environment variable loading in `crates/loom-server-config/src/sources.rs`
+  - Added merge support in `crates/loom-server-config/src/layer.rs`
+  - 7 unit tests for analytics configuration
 
 **Tests:** All 42 loom-server-analytics tests pass, 74 loom-analytics-core tests pass
 

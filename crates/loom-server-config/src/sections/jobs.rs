@@ -99,6 +99,7 @@ mod tests {
 			alert_enabled: Some(true),
 			alert_recipients: Some(vec!["admin@example.com".to_string()]),
 			history_retention_days: Some(30),
+			..Default::default()
 		};
 		let config = layer.finalize();
 		assert!(config.alert_enabled);
@@ -115,11 +116,13 @@ mod tests {
 			alert_enabled: Some(false),
 			alert_recipients: Some(vec!["old@example.com".to_string()]),
 			history_retention_days: Some(90),
+			..Default::default()
 		};
 		let overlay = JobsConfigLayer {
 			alert_enabled: Some(true),
 			alert_recipients: None,
 			history_retention_days: Some(30),
+			..Default::default()
 		};
 		base.merge(overlay);
 		assert_eq!(base.alert_enabled, Some(true));
@@ -139,6 +142,7 @@ mod tests {
 				"ops@example.com".to_string(),
 			],
 			history_retention_days: 30,
+			..Default::default()
 		};
 		let toml_str = toml::to_string(&config).unwrap();
 		let parsed: JobsConfig = toml::from_str(&toml_str).unwrap();
