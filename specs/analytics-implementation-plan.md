@@ -517,10 +517,10 @@ web/
 
 After implementation:
 
-- [ ] `cargo build --workspace` succeeds
-- [ ] `cargo test --workspace` passes
-- [ ] `cargo clippy --workspace -- -D warnings` clean
-- [ ] `cargo fmt --all` applied
+- [x] `cargo build --workspace` succeeds (verified 2026-01-15)
+- [x] `cargo test --workspace` passes (verified 2026-01-15)
+- [x] `cargo clippy --workspace -- -D warnings` clean (verified 2026-01-15)
+- [x] `cargo fmt --all` applied (verified 2026-01-15)
 - [ ] `cargo2nix-update` run if Cargo.lock changed
 - [ ] Migration runs on fresh database
 - [ ] Capture endpoint accepts events

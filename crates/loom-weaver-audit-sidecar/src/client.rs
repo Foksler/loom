@@ -134,8 +134,8 @@ impl AuditClient {
 				tid: e.tid,
 				comm: e.comm.clone(),
 				// Serialize event_type using serde to get snake_case format
-				event_type: serde_json::to_value(&e.event_type)
-					.and_then(|v| serde_json::from_value(v))
+				event_type: serde_json::to_value(e.event_type)
+					.and_then(serde_json::from_value)
 					.unwrap_or_else(|_| format!("{:?}", e.event_type).to_lowercase()),
 				details: e.details.clone(),
 			})

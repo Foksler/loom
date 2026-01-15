@@ -1023,7 +1023,12 @@ mod tests {
 		assert_eq!(container.working_dir, Some("/app".to_string()));
 
 		let env_vars = container.env.as_ref().unwrap();
-		assert_eq!(env_vars.len(), 2);
+		// 2 user-provided (TASK_ID, API_URL) + 1 system-injected (LOOM_WEAVER_ID)
+		assert_eq!(env_vars.len(), 3);
+		assert!(
+			env_vars.iter().any(|e| e.name == "LOOM_WEAVER_ID"),
+			"LOOM_WEAVER_ID should be injected"
+		);
 
 		let resources = container.resources.as_ref().unwrap();
 		let limits = resources.limits.as_ref().unwrap();

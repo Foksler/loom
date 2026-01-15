@@ -56,8 +56,12 @@ impl AnalyticsConfigLayer {
 		AnalyticsConfig {
 			enabled: self.enabled.unwrap_or(true),
 			batch_size: self.batch_size.unwrap_or_else(default_batch_size),
-			flush_interval_secs: self.flush_interval_secs.unwrap_or_else(default_flush_interval_secs),
-			event_retention_days: self.event_retention_days.unwrap_or_else(default_event_retention_days),
+			flush_interval_secs: self
+				.flush_interval_secs
+				.unwrap_or_else(default_flush_interval_secs),
+			event_retention_days: self
+				.event_retention_days
+				.unwrap_or_else(default_event_retention_days),
 		}
 	}
 }

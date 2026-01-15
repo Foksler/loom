@@ -815,8 +815,7 @@ async fn extract_api_key_context(
 					StatusCode::UNAUTHORIZED,
 					Json(AnalyticsErrorResponse {
 						error: "unauthorized".to_string(),
-						message: "Invalid Authorization header format, expected Bearer token"
-							.to_string(),
+						message: "Invalid Authorization header format, expected Bearer token".to_string(),
 					}),
 				)
 					.into_response(),

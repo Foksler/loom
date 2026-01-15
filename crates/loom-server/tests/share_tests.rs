@@ -42,6 +42,7 @@ async fn setup_test_app() -> (
 	let db_path = dir.path().join("test_share.db");
 	let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 	let pool = loom_server::db::create_pool(&db_url).await.unwrap();
+	loom_server::db::run_migrations(&pool).await.unwrap();
 	let repo = Arc::new(ThreadRepository::new(pool.clone()));
 	let config = ServerConfig::default();
 	let state = create_app_state(pool.clone(), repo.clone(), &config, None).await;

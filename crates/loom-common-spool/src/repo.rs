@@ -548,11 +548,10 @@ impl SpoolRepo {
 
 			let metadata = op.metadata();
 			let timestamp = chrono::DateTime::from_timestamp(
-				metadata.start_time.timestamp.0 as i64 / 1000,
+				metadata.start_time.timestamp.0 / 1000,
 				((metadata.start_time.timestamp.0 % 1000) * 1_000_000) as u32,
 			)
-			.unwrap_or_default()
-			.into();
+			.unwrap_or_default();
 
 			entries.push(TensionEntry {
 				operation_id: operation_id_to_spool(op.id()),
@@ -675,7 +674,7 @@ impl SpoolRepo {
 		)
 		.map_err(|e| SpoolError::Git(format!("push failed: {e}")))?;
 
-		tx.commit(&format!("shuttle to {}", remote))
+		tx.commit(format!("shuttle to {}", remote))
 			.map_err(SpoolError::transaction)?;
 		self.workspace.reload()?;
 
@@ -714,7 +713,7 @@ impl SpoolRepo {
 			.import_refs()
 			.map_err(|e| SpoolError::Git(format!("import failed: {e}")))?;
 
-		tx.commit(&format!("draw from {}", remote))
+		tx.commit(format!("draw from {}", remote))
 			.map_err(SpoolError::transaction)?;
 		self.workspace.reload()?;
 
@@ -796,16 +795,14 @@ impl SpoolRepo {
 			author: Signature {
 				name: author.name.clone(),
 				email: author.email.clone(),
-				timestamp: chrono::DateTime::from_timestamp_millis(author.timestamp.timestamp.0 as i64)
-					.unwrap_or_default()
-					.into(),
+				timestamp: chrono::DateTime::from_timestamp_millis(author.timestamp.timestamp.0)
+					.unwrap_or_default(),
 			},
 			committer: Signature {
 				name: committer.name.clone(),
 				email: committer.email.clone(),
-				timestamp: chrono::DateTime::from_timestamp_millis(committer.timestamp.timestamp.0 as i64)
-					.unwrap_or_default()
-					.into(),
+				timestamp: chrono::DateTime::from_timestamp_millis(committer.timestamp.timestamp.0)
+					.unwrap_or_default(),
 			},
 			is_knotted: !commit.description().is_empty(),
 		}

@@ -1,6 +1,11 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+// The LoaderError enum is intentionally large due to the aya::programs::ProgramError
+// contained in the Attach variant. Boxing would add unnecessary complexity for
+// error types that are only used at startup/initialization time.
+#![allow(clippy::result_large_err)]
+
 use std::fs;
 use std::path::Path;
 

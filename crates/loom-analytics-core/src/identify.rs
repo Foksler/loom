@@ -179,14 +179,9 @@ pub enum MergeReason {
 		user_id: String,
 	},
 	/// Merge triggered by an alias call.
-	Alias {
-		distinct_id: String,
-		alias: String,
-	},
+	Alias { distinct_id: String, alias: String },
 	/// Merge triggered manually by an admin.
-	Manual {
-		by_user_id: String,
-	},
+	Manual { by_user_id: String },
 }
 
 impl MergeReason {

@@ -269,6 +269,8 @@ mod tests {
 	fn test_invalid_ip() {
 		std::env::set_var(GEOIP_DATABASE_PATH_ENV, "/tmp/test.mmdb");
 		let service = GeoIpService::try_from_env();
+		// Clean up env var to avoid interfering with other tests
+		std::env::remove_var(GEOIP_DATABASE_PATH_ENV);
 		if let Some(svc) = service {
 			let result = svc.lookup_str("not-an-ip");
 			assert!(matches!(result, Err(GeoIpError::InvalidIp(_))));

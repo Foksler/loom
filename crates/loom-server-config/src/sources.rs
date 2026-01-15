@@ -10,7 +10,6 @@ use tracing::{debug, trace};
 
 use crate::error::ConfigError;
 use crate::layer::ServerConfigLayer;
-use crate::sections::{AnthropicAuthConfig, GitHubOAuthConfigLayer, GoogleOAuthConfigLayer};
 use crate::sections::{
 	AnalyticsConfigLayer, AuditConfigLayer, AuthConfigLayer, DatabaseConfigLayer, GeoIpConfigLayer,
 	GitHubAppConfigLayer, GoogleCseConfigLayer, HttpConfigLayer, JobsConfigLayer, LlmConfigLayer,
@@ -18,6 +17,7 @@ use crate::sections::{
 	QueueOverflowPolicy, ScimConfigLayer, SearchConfigLayer, SerperConfigLayer, SmtpConfigLayer,
 	SyslogConfigLayer, SyslogProtocol, TlsMode, WeaverConfigLayer,
 };
+use crate::sections::{AnthropicAuthConfig, GitHubOAuthConfigLayer, GoogleOAuthConfigLayer};
 
 /// Source precedence levels (higher = overrides lower).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
