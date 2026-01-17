@@ -233,4 +233,187 @@ mod tests {
 			Err(ProtectionViolation::DirectPushBlocked { .. })
 		));
 	}
+
+	#[test]
+	fn test_matches_pattern_prefix_star_empty_suffix() {
+		// "feat*" should match "feat" itself
+		assert!(matches_pattern("feat*", "feat"));
+		assert!(matches_pattern("feat*", "feat-something"));
+		assert!(matches_pattern("feat*", "feature"));
+	}
+
+	#[test]
+	fn test_protection_violation_display() {
+		let direct = ProtectionViolation::DirectPushBlocked {
+			branch: "main".to_string(),
+			pattern: "main".to_string(),
+		};
+		assert!(direct.to_string().contains("Direct push"));
+		assert!(direct.to_string().contains("main"));
+
+		let force = ProtectionViolation::ForcePushBlocked {
+			branch: "cannon".to_string(),
+			pattern: "cannon".to_string(),
+		};
+		assert!(force.to_string().contains("Force push"));
+
+		let deletion = ProtectionViolation::DeletionBlocked {
+			branch: "release/v1".to_string(),
+			pattern: "release/*".to_string(),
+		};
+		assert!(deletion.to_string().contains("Deletion"));
+	}
+
+	mod proptest_patterns {
+		use super::*;
+		use proptest::prelude::*;
+
+		/// Property: Exact pattern always matches the exact branch name
+		#[test]
+		fn prop_exact_pattern_matches_self() {
+			proptest!(|(branch in "[a-zA-Z][a-zA-Z0-9_-]{0,20}")| {
+				prop_assert!(matches_pattern(&branch, &branch));
+			});
+		}
+
+		/// Property: Exact pattern does not match different branch names
+		#[test]
+		fn prop_exact_pattern_no_false_positives() {
+			proptest!(|(
+				pattern in "[a-zA-Z][a-zA-Z0-9]{0,10}",
+				suffix in "[a-zA-Z0-9]{1,5}"
+			)| {
+				// pattern should not match pattern + suffix (different strings)
+				let branch = format!("{}{}", pattern, suffix);
+				if pattern != branch {
+					prop_assert!(!matches_pattern(&pattern, &branch));
+				}
+			});
+		}
+
+		/// Property: Wildcard pattern "prefix/*" matches "prefix/anything"
+		#[test]
+		fn prop_slash_wildcard_matches_subdirs() {
+			proptest!(|(
+				prefix in "[a-zA-Z][a-zA-Z0-9]{0,10}",
+				subpath in "[a-zA-Z0-9][a-zA-Z0-9/_-]{0,15}"
+			)| {
+				let pattern = format!("{}/*", prefix);
+				let branch = format!("{}/{}", prefix, subpath);
+				prop_assert!(matches_pattern(&pattern, &branch),
+					"Pattern '{}' should match '{}'", pattern, branch);
+			});
+		}
+
+		/// Property: Wildcard pattern "prefix/*" does NOT match "prefix" alone
+		#[test]
+		fn prop_slash_wildcard_requires_slash() {
+			proptest!(|(prefix in "[a-zA-Z][a-zA-Z0-9]{0,10}")| {
+				let pattern = format!("{}/*", prefix);
+				prop_assert!(!matches_pattern(&pattern, &prefix),
+					"Pattern '{}' should NOT match '{}' (no slash)", pattern, prefix);
+			});
+		}
+
+		/// Property: Prefix wildcard "prefix*" matches anything starting with prefix
+		#[test]
+		fn prop_prefix_wildcard_matches_extensions() {
+			proptest!(|(
+				prefix in "[a-zA-Z]{1,5}",
+				suffix in "[a-zA-Z0-9_-]{0,10}"
+			)| {
+				let pattern = format!("{}*", prefix);
+				let branch = format!("{}{}", prefix, suffix);
+				prop_assert!(matches_pattern(&pattern, &branch),
+					"Pattern '{}' should match '{}'", pattern, branch);
+			});
+		}
+
+		/// Property: Admin always bypasses protection
+		#[test]
+		fn prop_admin_always_bypasses() {
+			proptest!(|(
+				pattern in "[a-zA-Z][a-zA-Z0-9]{0,10}",
+				is_force in any::<bool>(),
+				is_deletion in any::<bool>()
+			)| {
+				let rule = BranchProtectionRuleRecord {
+					id: Uuid::new_v4(),
+					repo_id: Uuid::new_v4(),
+					pattern: pattern.clone(),
+					block_direct_push: true,
+					block_force_push: true,
+					block_deletion: true,
+					created_at: Utc::now(),
+				};
+				let rules = vec![rule];
+				let check = PushCheck {
+					branch: pattern,
+					is_force_push: is_force,
+					is_deletion: is_deletion,
+					user_is_admin: true,
+				};
+				prop_assert!(check_push_allowed(&rules, &check).is_ok());
+			});
+		}
+
+		/// Property: Non-admin blocked on protected branch with block_direct_push
+		#[test]
+		fn prop_non_admin_blocked_on_direct_push() {
+			proptest!(|(pattern in "[a-zA-Z][a-zA-Z0-9]{0,10}")| {
+				let rule = BranchProtectionRuleRecord {
+					id: Uuid::new_v4(),
+					repo_id: Uuid::new_v4(),
+					pattern: pattern.clone(),
+					block_direct_push: true,
+					block_force_push: false,
+					block_deletion: false,
+					created_at: Utc::now(),
+				};
+				let rules = vec![rule];
+				let check = PushCheck {
+					branch: pattern,
+					is_force_push: false,
+					is_deletion: false,
+					user_is_admin: false,
+				};
+				let result = check_push_allowed(&rules, &check);
+				let is_blocked = matches!(result, Err(ProtectionViolation::DirectPushBlocked { branch: _, pattern: _ }));
+				prop_assert!(is_blocked, "Expected DirectPushBlocked violation");
+			});
+		}
+
+		/// Property: Unprotected branches always allowed
+		#[test]
+		fn prop_unprotected_branch_allowed() {
+			proptest!(|(
+				protected in "[a-zA-Z]{1,5}",
+				unprotected in "[a-zA-Z]{1,5}",
+				is_force in any::<bool>(),
+				is_deletion in any::<bool>()
+			)| {
+				// Only run when they're different
+				prop_assume!(protected != unprotected);
+				prop_assume!(!unprotected.starts_with(&protected));
+
+				let rule = BranchProtectionRuleRecord {
+					id: Uuid::new_v4(),
+					repo_id: Uuid::new_v4(),
+					pattern: protected,
+					block_direct_push: true,
+					block_force_push: true,
+					block_deletion: true,
+					created_at: Utc::now(),
+				};
+				let rules = vec![rule];
+				let check = PushCheck {
+					branch: unprotected,
+					is_force_push: is_force,
+					is_deletion: is_deletion,
+					user_is_admin: false,
+				};
+				prop_assert!(check_push_allowed(&rules, &check).is_ok());
+			});
+		}
+	}
 }

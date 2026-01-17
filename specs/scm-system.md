@@ -172,7 +172,7 @@ When a push targets a protected branch:
 - Creates empty bare repo with default branch `cannon`
 
 ```
-POST /api/v1/repos
+POST /api/repos
 {
   "owner_type": "org",
   "owner_id": "uuid",
@@ -186,7 +186,7 @@ POST /api/v1/repos
 Repos are soft-deleted (recoverable):
 
 ```
-DELETE /api/v1/repos/{id}
+DELETE /api/repos/{id}
 -> Sets deleted_at = NOW()
 ```
 
@@ -490,47 +490,47 @@ crates/
 ### Repositories
 
 ```
-POST   /api/v1/repos                     # Create repo
-GET    /api/v1/repos/{id}                # Get repo
-PATCH  /api/v1/repos/{id}                # Update repo
-DELETE /api/v1/repos/{id}                # Soft delete repo
-GET    /api/v1/users/{id}/repos          # List user's repos
-GET    /api/v1/orgs/{id}/repos           # List org's repos
+POST   /api/repos                     # Create repo
+GET    /api/repos/{id}                # Get repo
+PATCH  /api/repos/{id}                # Update repo
+DELETE /api/repos/{id}                # Soft delete repo
+GET    /api/users/{id}/repos          # List user's repos
+GET    /api/orgs/{id}/repos           # List org's repos
 ```
 
 ### Branch Protection
 
 ```
-GET    /api/v1/repos/{id}/protection     # List rules
-POST   /api/v1/repos/{id}/protection     # Create rule
-DELETE /api/v1/repos/{id}/protection/{rule_id}  # Delete rule
+GET    /api/repos/{id}/protection     # List rules
+POST   /api/repos/{id}/protection     # Create rule
+DELETE /api/repos/{id}/protection/{rule_id}  # Delete rule
 ```
 
 ### Mirrors
 
 ```
-GET    /api/v1/repos/{id}/mirrors        # List push mirrors
-POST   /api/v1/repos/{id}/mirrors        # Create push mirror
-DELETE /api/v1/repos/{id}/mirrors/{mid}  # Delete push mirror
-POST   /api/v1/repos/{id}/mirrors/{mid}/sync  # Trigger sync
+GET    /api/repos/{id}/mirrors        # List push mirrors
+POST   /api/repos/{id}/mirrors        # Create push mirror
+DELETE /api/repos/{id}/mirrors/{mid}  # Delete push mirror
+POST   /api/repos/{id}/mirrors/{mid}/sync  # Trigger sync
 ```
 
 ### Team Access
 
 ```
-GET    /api/v1/repos/{id}/teams                # List teams with access
-POST   /api/v1/repos/{id}/teams                # Grant team access
-DELETE /api/v1/repos/{id}/teams/{tid}          # Revoke team access
+GET    /api/repos/{id}/teams                # List teams with access
+POST   /api/repos/{id}/teams                # Grant team access
+DELETE /api/repos/{id}/teams/{tid}          # Revoke team access
 ```
 
 ### Webhooks
 
 ```
-GET    /api/v1/repos/{id}/webhooks       # List repo webhooks
-POST   /api/v1/repos/{id}/webhooks       # Create webhook
-DELETE /api/v1/repos/{id}/webhooks/{wid} # Delete webhook
-GET    /api/v1/orgs/{id}/webhooks        # List org webhooks
-POST   /api/v1/orgs/{id}/webhooks        # Create org webhook
+GET    /api/repos/{id}/webhooks       # List repo webhooks
+POST   /api/repos/{id}/webhooks       # Create webhook
+DELETE /api/repos/{id}/webhooks/{wid} # Delete webhook
+GET    /api/orgs/{id}/webhooks        # List org webhooks
+POST   /api/orgs/{id}/webhooks        # Create org webhook
 ```
 
 ### Git HTTP
