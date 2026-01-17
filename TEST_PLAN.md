@@ -988,9 +988,9 @@ On-demand mirroring has basic path routing tests:
 | 10.5 | Team Access | Revoke access | ✓ | | | PASS | Integration tests pass |
 | 10.6 | Team Access | Non-admin blocked | ✓ | | | PASS | Integration tests pass |
 | 10.7 | Team Access | Member access | ✓ | | | PASS | Integration tests pass |
-| 11.1 | On-Demand | GitHub mirror | | ✓ | | SKIP | Requires 'mirrors' org configuration |
-| 11.2 | On-Demand | GitLab mirror | | ✓ | | SKIP | Requires 'mirrors' org configuration |
-| 11.3 | On-Demand | Public anonymous | | ✓ | | SKIP | Requires 'mirrors' org configuration |
+| 11.1 | On-Demand | GitHub mirror | ✓ | ✓ | | PASS | 2026-01-17 - Auto-creates mirror on first access |
+| 11.2 | On-Demand | GitLab mirror | | ✓ | | SKIP | Needs GitLab test account |
+| 11.3 | On-Demand | Public anonymous | | ✓ | | SKIP | Needs public mirror testing |
 
 ---
 
@@ -1189,3 +1189,24 @@ Validation at 09:42 UTC focusing on Team Access and On-Demand Mirroring gaps in 
 - Health endpoint returns healthy status for all 13 components
 - LLM providers (anthropic, openai) healthy
 - Database latency 139ms
+
+### 2026-01-17 (Ninth validation pass - On-Demand Mirroring Fix)
+
+Fixed on-demand mirroring at 10:54 UTC.
+
+**Root Cause:**
+- On-demand mirroring requires a "mirrors" organization to exist
+- This was not created automatically, causing "Mirrors organization not configured" error
+
+**Fix Applied:**
+- Added `ensure_mirrors_org()` to OrgRepository that creates the mirrors org if it doesn't exist
+- Called during server startup in `create_app_state`
+- Mirrors org created automatically: ID `51af393b-9ea7-42d0-927c-0a5df33174d0`, slug "mirrors", visibility "public"
+
+**Validation:**
+- Deployed commit c61379c
+- Mirrors org verified in database after server restart
+- On-demand mirror clone of github.com/octocat/hello-world succeeded
+- HTTP 200 returned with git refs
+- Git clone via CLI successful
+- external_mirrors table populated with: platform=github, owner=octocat, repo=hello-world
