@@ -1210,3 +1210,73 @@ Fixed on-demand mirroring at 10:54 UTC.
 - HTTP 200 returned with git refs
 - Git clone via CLI successful
 - external_mirrors table populated with: platform=github, owner=octocat, repo=hello-world
+
+### 2026-01-18 (Tenth validation pass - Comprehensive SCM End-to-End Testing)
+
+Complete end-to-end validation of SCM functionality at 14:29 UTC.
+
+**Environment:**
+- Server: https://loom.ghuntley.com (healthy)
+- Organization: 034ee9b9-4421-4490-862d-07abca551eac
+- Auth method: API key via credentials.json
+
+**Repository CRUD (via curl):**
+- List repos (empty): 200 OK, `{"repos": []}`
+- Create repo: 200 OK, returns repo with `id`, `clone_url`, `default_branch: "cannon"`
+- Get repo: 200 OK, full repo details
+- Update repo (visibility private→public): 200 OK
+- List repos (after create): 200 OK, repo in list
+- Delete repo (soft): 204 No Content, repo removed from list
+
+**On-Demand Mirroring (via git CLI):**
+- Clone `mirrors/github/kelseyhightower/envconfig`: Success
+- Verified commits and files match upstream
+- Remote URL correctly set to loom.ghuntley.com
+
+**Branch Protection (via curl):**
+- List rules (empty): 200 OK, `{"rules": []}`
+- Create rule (pattern: "cannon"): 200 OK, all block options enabled
+- List rules (after create): 200 OK, rule in list
+- Delete rule: 204 No Content, rule removed
+
+**Webhooks (via curl):**
+- List webhooks (empty): 200 OK, `{"webhooks": []}`
+- Create webhook: 200 OK, `loom-v1` format
+  - Note: API expects `loom-v1` or `git-hub-compat`, not `github-compat` as spec says
+- List webhooks (after create): 200 OK, webhook in list
+- Delete webhook: 204 No Content, webhook removed
+
+**Credential Helper (via loom CLI):**
+- `loom credential-helper get`: Returns `username=oauth2`, `password=<token>`
+- Git push with credential helper: Success
+- Git clone private repo with credential helper: Success
+- Git config: `credential.https://loom.ghuntley.com.helper` correctly configured
+
+**Git Operations:**
+- `git clone` private repo: Success (with credential helper)
+- `git push -u origin cannon`: Success (after force push due to empty ref conflict)
+- `git fetch`: Success
+- Clone and verify content: README.md matches pushed content
+
+**API Notes:**
+1. Clone URL uses owner slug format: `personal-{user-id}` for user repos, `{org-slug}` for org repos
+2. New empty repos may have initial ref, requiring `--force` for first push
+
+**Bug Fixed:**
+- Webhook `payload_format` API was accepting `git-hub-compat` instead of `github-compat`
+- Fixed serde rename in `PayloadFormatApi` to explicitly use `github-compat` (matching spec and database)
+
+**Test Summary:**
+| Section | Tests | Status |
+|---------|-------|--------|
+| Repository CRUD | 6 | All PASS |
+| On-Demand Mirroring | 2 | All PASS |
+| Branch Protection | 4 | All PASS |
+| Webhooks | 4 | All PASS |
+| Credential Helper | 4 | All PASS |
+| **Total** | **20** | **All PASS** |
+
+**Server Health:**
+- All 13 health components healthy
+- Anthropic pool: 1 account available
+- No errors in journald logs during testing

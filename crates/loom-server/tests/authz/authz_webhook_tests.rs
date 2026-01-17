@@ -90,9 +90,9 @@ async fn test_webhook_create_success() {
 	);
 }
 
-/// **Test: Create webhook with git-hub-compat format**
+/// **Test: Create webhook with github-compat format**
 ///
-/// The API uses kebab-case serde renaming, so GitHubCompat -> "git-hub-compat"
+/// The API accepts "github-compat" as the payload format (matches spec and database).
 #[tokio::test]
 async fn test_webhook_create_github_compat_format() {
 	let app = TestApp::new().await;
@@ -106,7 +106,7 @@ async fn test_webhook_create_github_compat_format() {
 			json!({
 				"url": "https://example.com/github-webhook",
 				"secret": "secret",
-				"payload_format": "git-hub-compat",
+				"payload_format": "github-compat",
 				"events": ["push"]
 			}),
 		)
@@ -120,7 +120,7 @@ async fn test_webhook_create_github_compat_format() {
 	let webhook: serde_json::Value = serde_json::from_slice(&body).unwrap();
 	assert_eq!(
 		webhook["payload_format"].as_str().unwrap(),
-		"git-hub-compat"
+		"github-compat"
 	);
 }
 

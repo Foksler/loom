@@ -10,6 +10,8 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "kebab-case")]
 pub enum PayloadFormatApi {
+	/// GitHub-compatible webhook payload format
+	#[serde(rename = "github-compat")]
 	GitHubCompat,
 	#[default]
 	LoomV1,
