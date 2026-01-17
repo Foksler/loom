@@ -823,3 +823,198 @@ async fn invalid_org_id_returns_bad_request() {
 
 	run_authz_cases(&app, &cases).await;
 }
+
+// ============================================================================
+// Cross-Organization Data Isolation Tests
+// ============================================================================
+
+/// Helper to create a read_write API key for a specific org with a specific user
+async fn create_read_write_api_key_for_org(
+	app: &TestApp,
+	org_id: &str,
+	user: &super::support::TestUser,
+) -> String {
+	let response = app
+		.post(
+			&format!("/api/orgs/{}/analytics/api-keys", org_id),
+			Some(user),
+			json!({
+				"name": "test-rw-key",
+				"key_type": "read_write"
+			}),
+		)
+		.await;
+
+	assert_eq!(
+		response.status(),
+		StatusCode::CREATED,
+		"Failed to create read_write API key for org {}",
+		org_id
+	);
+
+	let (_, body) = response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let response: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+	response["key"].as_str().unwrap().to_string()
+}
+
+/// Tests that events captured by Org A are not visible to Org B's API key.
+/// This is a critical security test ensuring data isolation between organizations.
+#[tokio::test]
+async fn org_b_api_key_cannot_see_org_a_events() {
+	let app = TestApp::new().await;
+	let org_a_id = app.fixtures.org_a.org.id.to_string();
+	let org_b_id = app.fixtures.org_b.org.id.to_string();
+
+	// Create API keys for both orgs
+	let org_a_key =
+		create_read_write_api_key_for_org(&app, &org_a_id, &app.fixtures.org_a.member).await;
+	let org_b_key =
+		create_read_write_api_key_for_org(&app, &org_b_id, &app.fixtures.org_b.member).await;
+
+	// Capture an event with Org A's key using a unique event name
+	// Use simple uuid format without hyphens since event names only allow alphanumeric, _, $, .
+	let unique_event = format!(
+		"cross_org_isolation_test_{}",
+		uuid::Uuid::new_v4().simple()
+	);
+	let capture_response = request_with_api_key(
+		&app,
+		Method::POST,
+		"/api/analytics/capture",
+		&org_a_key,
+		Some(json!({
+			"distinct_id": "org_a_user",
+			"event": unique_event,
+			"properties": {"org": "a"}
+		})),
+	)
+	.await;
+	assert_eq!(
+		capture_response.status(),
+		StatusCode::OK,
+		"Should be able to capture event"
+	);
+
+	// Query events with Org A's key - should see the event
+	let org_a_response = request_with_api_key(
+		&app,
+		Method::GET,
+		&format!("/api/analytics/events?event_name={}", unique_event),
+		&org_a_key,
+		None,
+	)
+	.await;
+	assert_eq!(org_a_response.status(), StatusCode::OK);
+	let (_, body) = org_a_response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let response: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+	let org_a_events = response["events"].as_array().unwrap();
+	assert_eq!(org_a_events.len(), 1, "Org A should see its own event");
+
+	// Query events with Org B's key - should NOT see the event
+	let org_b_response = request_with_api_key(
+		&app,
+		Method::GET,
+		&format!("/api/analytics/events?event_name={}", unique_event),
+		&org_b_key,
+		None,
+	)
+	.await;
+	assert_eq!(org_b_response.status(), StatusCode::OK);
+	let (_, body) = org_b_response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let response: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+	let org_b_events = response["events"].as_array().unwrap();
+	assert_eq!(
+		org_b_events.len(),
+		0,
+		"SECURITY: Org B must NOT see Org A's events"
+	);
+}
+
+/// Tests that persons created by Org A are not accessible to Org B's API key.
+#[tokio::test]
+async fn org_b_api_key_cannot_see_org_a_persons() {
+	let app = TestApp::new().await;
+	let org_a_id = app.fixtures.org_a.org.id.to_string();
+	let org_b_id = app.fixtures.org_b.org.id.to_string();
+
+	// Create API keys for both orgs
+	let org_a_key =
+		create_read_write_api_key_for_org(&app, &org_a_id, &app.fixtures.org_a.member).await;
+	let org_b_key =
+		create_read_write_api_key_for_org(&app, &org_b_id, &app.fixtures.org_b.member).await;
+
+	// Create a person in Org A via identify
+	let unique_distinct_id = format!("org_a_user_{}", uuid::Uuid::new_v4());
+	let identify_response = request_with_api_key(
+		&app,
+		Method::POST,
+		"/api/analytics/identify",
+		&org_a_key,
+		Some(json!({
+			"distinct_id": unique_distinct_id,
+			"user_id": "test@example.com",
+			"properties": {"org": "a"}
+		})),
+	)
+	.await;
+	assert_eq!(
+		identify_response.status(),
+		StatusCode::OK,
+		"Should be able to identify"
+	);
+	let (_, body) = identify_response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let response: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+	let person_id = response["person_id"].as_str().unwrap();
+
+	// Get person by ID with Org A's key - should succeed
+	let org_a_response = request_with_api_key(
+		&app,
+		Method::GET,
+		&format!("/api/analytics/persons/{}", person_id),
+		&org_a_key,
+		None,
+	)
+	.await;
+	assert_eq!(
+		org_a_response.status(),
+		StatusCode::OK,
+		"Org A should access its own person"
+	);
+
+	// Get person by ID with Org B's key - should fail with 404
+	let org_b_response = request_with_api_key(
+		&app,
+		Method::GET,
+		&format!("/api/analytics/persons/{}", person_id),
+		&org_b_key,
+		None,
+	)
+	.await;
+	assert_eq!(
+		org_b_response.status(),
+		StatusCode::NOT_FOUND,
+		"SECURITY: Org B must NOT access Org A's person by ID"
+	);
+
+	// Get person by distinct_id with Org B's key - should fail with 404
+	let org_b_response = request_with_api_key(
+		&app,
+		Method::GET,
+		&format!(
+			"/api/analytics/persons/by-distinct-id/{}",
+			unique_distinct_id
+		),
+		&org_b_key,
+		None,
+	)
+	.await;
+	assert_eq!(
+		org_b_response.status(),
+		StatusCode::NOT_FOUND,
+		"SECURITY: Org B must NOT access Org A's person by distinct_id"
+	);
+}
