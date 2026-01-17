@@ -148,6 +148,10 @@ in
             proxyPass = cfg.serverUrl;
           };
 
+          "/metrics" = {
+            proxyPass = cfg.serverUrl;
+          };
+
           "/ws" = {
             proxyPass = cfg.serverUrl;
             proxyWebsockets = true;
