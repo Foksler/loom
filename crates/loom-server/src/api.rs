@@ -129,6 +129,11 @@ pub async fn create_app_state(
 	let team_repo = Arc::new(TeamRepository::new(pool.clone()));
 	let api_key_repo = Arc::new(ApiKeyRepository::new(pool.clone()));
 
+	// Ensure the system mirrors organization exists for on-demand mirroring
+	if let Err(e) = org_repo.ensure_mirrors_org().await {
+		tracing::error!(error = %e, "Failed to ensure mirrors organization exists");
+	}
+
 	// Create user provisioning service
 	let user_provisioning = Arc::new(loom_server_provisioning::UserProvisioningService::new(
 		user_repo.clone(),

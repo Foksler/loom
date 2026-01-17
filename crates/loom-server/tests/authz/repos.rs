@@ -605,3 +605,73 @@ async fn test_repo_response_contains_expected_fields() {
 		"Visibility should match"
 	);
 }
+
+/// **Test: Invalid repo names are rejected with 400 Bad Request**
+///
+/// Comprehensive test for repo name validation covering security-sensitive patterns:
+/// - Path traversal attempts
+/// - Shell metacharacters
+/// - Dot-only names
+/// - Names starting with dash
+#[tokio::test]
+async fn test_repo_invalid_names_comprehensive() {
+	let app = TestApp::new().await;
+	let owner = &app.fixtures.org_a.owner;
+	let user_id = owner.user.id.to_string();
+
+	// All these invalid names should return 400 Bad Request
+	let invalid_names = vec![
+		// Path traversal
+		("../etc/passwd", "Path traversal with leading .."),
+		("foo/../bar", "Path traversal in middle"),
+		("..passwd", "Name starting with .."),
+		// Shell metacharacters
+		("test;rm -rf", "Shell semicolon injection"),
+		("test&cmd", "Shell ampersand"),
+		("test|cat", "Shell pipe"),
+		("test`cmd`", "Shell backticks"),
+		("test$VAR", "Shell variable"),
+		("test$(cmd)", "Shell command substitution"),
+		("test{a,b}", "Shell brace expansion"),
+		("test<file", "Shell redirect in"),
+		("test>file", "Shell redirect out"),
+		("test!cmd", "Shell history"),
+		// Dot-only names
+		(".", "Single dot"),
+		("..", "Double dot"),
+		// Names starting with special chars
+		("-invalid", "Leading dash"),
+		(".hidden", "Leading dot"),
+		// Slashes
+		("repo/name", "Forward slash"),
+		("repo\\name", "Backslash"),
+		// Spaces and special
+		("my repo", "Space in name"),
+		("repo@name", "At symbol"),
+		("repo#1", "Hash symbol"),
+	];
+
+	for (name, description) in invalid_names {
+		let response = app
+			.post(
+				"/api/repos",
+				Some(owner),
+				json!({
+					"owner_type": "user",
+					"owner_id": user_id,
+					"name": name,
+					"visibility": "private"
+				}),
+			)
+			.await;
+
+		assert_eq!(
+			response.status(),
+			StatusCode::BAD_REQUEST,
+			"Invalid name '{}' ({}) should return 400 Bad Request, got {}",
+			name,
+			description,
+			response.status()
+		);
+	}
+}

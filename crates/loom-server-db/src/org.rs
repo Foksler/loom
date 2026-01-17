@@ -35,6 +35,7 @@ pub trait OrgStore: Send + Sync {
 	async fn restore_org(&self, id: &OrgId) -> Result<(), DbError>;
 	async fn list_orgs_for_user(&self, user_id: &UserId) -> Result<Vec<Organization>, DbError>;
 	async fn ensure_personal_org(&self, user_id: &UserId) -> Result<Organization, DbError>;
+	async fn ensure_mirrors_org(&self) -> Result<Organization, DbError>;
 	async fn list_public_orgs(&self, limit: i32, offset: i32) -> Result<Vec<Organization>, DbError>;
 	async fn add_member(
 		&self,
@@ -376,6 +377,43 @@ impl OrgRepository {
 		self.add_member(&org.id, user_id, OrgRole::Owner).await?;
 
 		tracing::info!(user_id = %user_id, org_id = %org.id, "created personal org for user");
+		Ok(org)
+	}
+
+	/// Ensure the system mirrors organization exists.
+	///
+	/// The mirrors org is a special system organization used for on-demand mirroring
+	/// of external repositories (GitHub, GitLab, etc.). It has no members and is
+	/// publicly visible so anyone can clone mirrored repos.
+	///
+	/// # Returns
+	/// The mirrors organization (existing or newly created).
+	#[tracing::instrument(skip(self))]
+	pub async fn ensure_mirrors_org(&self) -> Result<Organization, DbError> {
+		const MIRRORS_SLUG: &str = "mirrors";
+		const MIRRORS_NAME: &str = "Mirrors";
+
+		// Check if it already exists
+		if let Some(org) = self.get_org_by_slug(MIRRORS_SLUG).await? {
+			tracing::debug!(org_id = %org.id, "mirrors org already exists");
+			return Ok(org);
+		}
+
+		// Create the mirrors organization
+		let now = chrono::Utc::now();
+		let org = Organization {
+			id: loom_server_auth::types::OrgId::generate(),
+			name: MIRRORS_NAME.to_string(),
+			slug: MIRRORS_SLUG.to_string(),
+			visibility: OrgVisibility::Public,
+			is_personal: false,
+			created_at: now,
+			updated_at: now,
+			deleted_at: None,
+		};
+
+		self.create_org(&org).await?;
+		tracing::info!(org_id = %org.id, slug = MIRRORS_SLUG, "created system mirrors org");
 		Ok(org)
 	}
 
@@ -1302,6 +1340,10 @@ impl OrgStore for OrgRepository {
 		self.ensure_personal_org(user_id).await
 	}
 
+	async fn ensure_mirrors_org(&self) -> Result<Organization, DbError> {
+		self.ensure_mirrors_org().await
+	}
+
 	async fn list_public_orgs(&self, limit: i32, offset: i32) -> Result<Vec<Organization>, DbError> {
 		self.list_public_orgs(limit, offset).await
 	}
@@ -1668,5 +1710,21 @@ mod tests {
 		assert!(org_ids.contains(&org1.id));
 		assert!(org_ids.contains(&org2.id));
 		assert!(!org_ids.contains(&org3.id));
+	}
+
+	#[tokio::test]
+	async fn test_ensure_mirrors_org_creates_if_not_exists() {
+		let repo = make_org_repo().await;
+
+		// First call should create the mirrors org
+		let org = repo.ensure_mirrors_org().await.unwrap();
+		assert_eq!(org.slug, "mirrors");
+		assert_eq!(org.name, "Mirrors");
+		assert_eq!(org.visibility, OrgVisibility::Public);
+		assert!(!org.is_personal);
+
+		// Second call should return the same org
+		let org2 = repo.ensure_mirrors_org().await.unwrap();
+		assert_eq!(org.id, org2.id);
 	}
 }

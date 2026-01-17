@@ -120,10 +120,32 @@ impl AuditClient {
 		})
 	}
 
+	/// Send events to the server, automatically chunking large batches.
+	///
+	/// If the batch exceeds MAX_BATCH_SIZE, it will be split into multiple
+	/// requests. If any chunk fails, returns an error (partial success is
+	/// still possible - successfully sent events won't be retried).
 	pub async fn send_events(&self, events: &[WeaverAuditEvent]) -> Result<()> {
 		if events.is_empty() {
 			return Ok(());
 		}
+
+		// Chunk large batches to stay within server limits (Option 1)
+		for chunk in events.chunks(MAX_BATCH_SIZE) {
+			self.send_events_chunk(chunk).await?;
+		}
+
+		Ok(())
+	}
+
+	/// Send a single chunk of events (must be <= MAX_BATCH_SIZE).
+	async fn send_events_chunk(&self, events: &[WeaverAuditEvent]) -> Result<()> {
+		debug_assert!(
+			events.len() <= MAX_BATCH_SIZE,
+			"Chunk size {} exceeds MAX_BATCH_SIZE {}",
+			events.len(),
+			MAX_BATCH_SIZE
+		);
 
 		// Convert events to the payload format expected by the server
 		let event_payloads: Vec<WeaverAuditEventPayload> = events
@@ -313,6 +335,9 @@ impl BatchSender {
 	}
 }
 
+/// Maximum number of events per batch (must match server's MAX_EVENTS_PER_BATCH)
+const MAX_BATCH_SIZE: usize = 1000;
+
 async fn batch_loop(
 	client: AuditClient,
 	mut rx: mpsc::Receiver<WeaverAuditEvent>,
@@ -321,40 +346,60 @@ async fn batch_loop(
 	health_state: HealthState,
 	metrics: std::sync::Arc<Metrics>,
 ) {
-	let mut batch = Vec::with_capacity(1000);
+	let mut batch = Vec::with_capacity(MAX_BATCH_SIZE);
 	let mut interval = tokio::time::interval(batch_interval);
 
 	loop {
 		tokio::select! {
 			_ = interval.tick() => {
 				if !batch.is_empty() {
-					let events = std::mem::replace(&mut batch, Vec::with_capacity(1000));
-					let event_count = events.len();
-					match client.send_events(&events).await {
-						Ok(()) => {
-							tracing::debug!("Successfully sent {} events to server", event_count);
-							health_state.record_successful_send().await;
-							metrics.record_batch_sent(true, event_count, 0);
-							for event in &events {
-								metrics.record_event_sent(event.event_type);
-							}
-						}
-						Err(e) => {
-							tracing::warn!("Failed to send batch: {}, buffering {} events", e, event_count);
-							metrics.record_batch_sent(false, event_count, 0);
-							for event in events {
-								metrics.record_event_buffered(event.event_type);
-								let _ = buffer_tx.send(event).await;
-							}
-						}
-					}
+					let events = std::mem::replace(&mut batch, Vec::with_capacity(MAX_BATCH_SIZE));
+					send_batch(&client, events, &buffer_tx, &health_state, &metrics).await;
 				}
 			}
 			event = rx.recv() => {
 				match event {
-					Some(e) => batch.push(e),
+					Some(e) => {
+						batch.push(e);
+						// Flush immediately when batch reaches max size (Option 2)
+						if batch.len() >= MAX_BATCH_SIZE {
+							let events = std::mem::replace(&mut batch, Vec::with_capacity(MAX_BATCH_SIZE));
+							send_batch(&client, events, &buffer_tx, &health_state, &metrics).await;
+							// Reset interval to avoid double-flush
+							interval.reset();
+						}
+					}
 					None => break,
 				}
+			}
+		}
+	}
+}
+
+/// Send a batch of events to the server, buffering on failure.
+async fn send_batch(
+	client: &AuditClient,
+	events: Vec<WeaverAuditEvent>,
+	buffer_tx: &mpsc::Sender<WeaverAuditEvent>,
+	health_state: &HealthState,
+	metrics: &Metrics,
+) {
+	let event_count = events.len();
+	match client.send_events(&events).await {
+		Ok(()) => {
+			tracing::debug!("Successfully sent {} events to server", event_count);
+			health_state.record_successful_send().await;
+			metrics.record_batch_sent(true, event_count, 0);
+			for event in &events {
+				metrics.record_event_sent(event.event_type);
+			}
+		}
+		Err(e) => {
+			tracing::warn!("Failed to send batch: {}, buffering {} events", e, event_count);
+			metrics.record_batch_sent(false, event_count, 0);
+			for event in events {
+				metrics.record_event_buffered(event.event_type);
+				let _ = buffer_tx.send(event).await;
 			}
 		}
 	}
