@@ -152,14 +152,6 @@ in
             proxyPass = cfg.serverUrl;
           };
 
-          "/ws" = {
-            proxyPass = cfg.serverUrl;
-            proxyWebsockets = true;
-            extraConfig = ''
-              proxy_read_timeout 86400;
-            '';
-          };
-
           # CLI binary distribution - exact match takes priority
           "= /bin" = {
             return = "301 /bin/";
