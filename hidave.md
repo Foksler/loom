@@ -11,6 +11,14 @@
 
 ### Recent Progress
 
+**2026-01-19:** Added SDK check-in endpoints for programmatic cron monitoring
+- Added `POST /api/crons/monitors/{slug}/checkins` for SDK check-in creation
+- Added `PATCH /api/crons/checkins/{id}` for updating in-progress check-ins
+- Added `GET /api/crons/checkins/{id}` for retrieving check-in details
+- Full SDK monitoring flow verified via curl (in_progress → ok, error check-ins)
+- Monitor health state correctly updates on check-in completion
+- Commit: `87ecbb0` (SDK check-in endpoints)
+
 **2026-01-19:** Completed crons monitoring system MVP
 - Created `loom-crons-core` crate with core types (Monitor, CheckIn, Stats)
 - Created `loom-server-crons` crate with SQLite repository
@@ -383,7 +391,9 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
   - `GET /api/crons/monitors/{slug}` — Monitor detail ✅
   - `DELETE /api/crons/monitors/{slug}` — Delete monitor ✅
   - `GET /api/crons/monitors/{slug}/checkins` — List check-ins ✅
-  - [ ] `POST /api/crons/monitors/{slug}/checkins` — SDK check-in
+  - `POST /api/crons/monitors/{slug}/checkins` — SDK check-in ✅
+  - `PATCH /api/crons/checkins/{id}` — Update check-in ✅
+  - `GET /api/crons/checkins/{id}` — Get check-in ✅
   - [ ] `GET /api/crons/stream` — SSE stream
   - Reference: [specs/crons-system.md#8-api-endpoints](specs/crons-system.md)
   - Nginx proxy added in `infra/nixos-modules/loom-web.nix` for `/ping/` routes
