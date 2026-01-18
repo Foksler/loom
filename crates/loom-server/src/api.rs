@@ -1219,7 +1219,11 @@ pub fn create_router(state: AppState) -> Router {
 		)
 		.route(
 			"/api/crons/monitors/{slug}/checkins",
-			get(routes::crons::list_checkins),
+			get(routes::crons::list_checkins).post(routes::crons::create_checkin),
+		)
+		.route(
+			"/api/crons/checkins/{id}",
+			get(routes::crons::get_checkin).patch(routes::crons::update_checkin),
 		)
 		// Invitation routes (authenticated)
 		.route(
