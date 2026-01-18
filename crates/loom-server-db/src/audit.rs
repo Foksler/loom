@@ -254,6 +254,23 @@ fn parse_event_type(s: &str) -> Option<AuditEventType> {
 		"mirror_created" => Some(AuditEventType::MirrorCreated),
 		"mirror_synced" => Some(AuditEventType::MirrorSynced),
 		"webhook_received" => Some(AuditEventType::WebhookReceived),
+		// Feature flags events
+		"flag_created" => Some(AuditEventType::FlagCreated),
+		"flag_updated" => Some(AuditEventType::FlagUpdated),
+		"flag_archived" => Some(AuditEventType::FlagArchived),
+		"flag_restored" => Some(AuditEventType::FlagRestored),
+		"flag_config_updated" => Some(AuditEventType::FlagConfigUpdated),
+		"strategy_created" => Some(AuditEventType::StrategyCreated),
+		"strategy_updated" => Some(AuditEventType::StrategyUpdated),
+		"strategy_deleted" => Some(AuditEventType::StrategyDeleted),
+		"kill_switch_created" => Some(AuditEventType::KillSwitchCreated),
+		"kill_switch_updated" => Some(AuditEventType::KillSwitchUpdated),
+		"kill_switch_activated" => Some(AuditEventType::KillSwitchActivated),
+		"kill_switch_deactivated" => Some(AuditEventType::KillSwitchDeactivated),
+		"sdk_key_created" => Some(AuditEventType::SdkKeyCreated),
+		"sdk_key_revoked" => Some(AuditEventType::SdkKeyRevoked),
+		"environment_created" => Some(AuditEventType::EnvironmentCreated),
+		"environment_deleted" => Some(AuditEventType::EnvironmentDeleted),
 		_ => None,
 	}
 }
