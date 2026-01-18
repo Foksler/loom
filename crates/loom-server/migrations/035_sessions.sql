@@ -2,10 +2,11 @@
 -- SPDX-License-Identifier: Proprietary
 
 -- Sessions System Migration
--- Adds tables for session tracking: individual sessions and hourly aggregates
+-- Adds tables for app session tracking: individual sessions and hourly aggregates
+-- Note: Named app_sessions to avoid conflict with auth sessions table
 
--- Individual sessions (retained for 30 days)
-CREATE TABLE IF NOT EXISTS sessions (
+-- Individual app sessions (retained for 30 days)
+CREATE TABLE IF NOT EXISTS app_sessions (
     id TEXT PRIMARY KEY,
     org_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     project_id TEXT NOT NULL REFERENCES crash_projects(id) ON DELETE CASCADE,
@@ -37,14 +38,14 @@ CREATE TABLE IF NOT EXISTS sessions (
     updated_at TEXT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_sessions_project_id ON sessions(project_id);
-CREATE INDEX IF NOT EXISTS idx_sessions_release ON sessions(release);
-CREATE INDEX IF NOT EXISTS idx_sessions_started_at ON sessions(started_at);
-CREATE INDEX IF NOT EXISTS idx_sessions_person_id ON sessions(person_id);
-CREATE INDEX IF NOT EXISTS idx_sessions_status ON sessions(status);
+CREATE INDEX IF NOT EXISTS idx_app_sessions_project_id ON app_sessions(project_id);
+CREATE INDEX IF NOT EXISTS idx_app_sessions_release ON app_sessions(release);
+CREATE INDEX IF NOT EXISTS idx_app_sessions_started_at ON app_sessions(started_at);
+CREATE INDEX IF NOT EXISTS idx_app_sessions_person_id ON app_sessions(person_id);
+CREATE INDEX IF NOT EXISTS idx_app_sessions_status ON app_sessions(status);
 
 -- Hourly aggregates (retained forever)
-CREATE TABLE IF NOT EXISTS session_aggregates (
+CREATE TABLE IF NOT EXISTS app_session_aggregates (
     id TEXT PRIMARY KEY,
     org_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     project_id TEXT NOT NULL REFERENCES crash_projects(id) ON DELETE CASCADE,
@@ -74,8 +75,8 @@ CREATE TABLE IF NOT EXISTS session_aggregates (
     UNIQUE(project_id, release, environment, hour)
 );
 
-CREATE INDEX IF NOT EXISTS idx_session_aggregates_project_id ON session_aggregates(project_id);
-CREATE INDEX IF NOT EXISTS idx_session_aggregates_release ON session_aggregates(release);
-CREATE INDEX IF NOT EXISTS idx_session_aggregates_hour ON session_aggregates(hour);
-CREATE INDEX IF NOT EXISTS idx_session_aggregates_lookup
-ON session_aggregates(project_id, release, environment, hour);
+CREATE INDEX IF NOT EXISTS idx_app_session_aggregates_project_id ON app_session_aggregates(project_id);
+CREATE INDEX IF NOT EXISTS idx_app_session_aggregates_release ON app_session_aggregates(release);
+CREATE INDEX IF NOT EXISTS idx_app_session_aggregates_hour ON app_session_aggregates(hour);
+CREATE INDEX IF NOT EXISTS idx_app_session_aggregates_lookup
+ON app_session_aggregates(project_id, release, environment, hour);
