@@ -176,6 +176,13 @@
     mode = "0400";
   };
 
+  # SCIM (Okta) provisioning token
+  # Generate with: openssl rand -base64 32
+  sops.secrets.loom-scim-token = {
+    owner = "loom-server";
+    mode = "0400";
+  };
+
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
   system.stateVersion = "25.11";
@@ -313,6 +320,13 @@
 
     # Documentation search index from loom-web static files
     docsIndexPath = "${pkgs.loom-web}/share/loom-web/docs-index.json";
+
+    # SCIM provisioning for Okta
+    scim = {
+      enable = true;
+      tokenFile = config.sops.secrets.loom-scim-token.path;
+      orgId = "550e8400-e29b-41d4-a716-446655440000";
+    };
   };
 
   # Loom Web - Web frontend

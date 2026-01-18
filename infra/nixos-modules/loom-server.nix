@@ -635,6 +635,31 @@ in
       };
     };
 
+    # SCIM (System for Cross-domain Identity Management)
+    # Enables automatic user provisioning from IdPs like Okta, Azure AD, OneLogin
+    scim = {
+      enable = mkEnableOption "SCIM 2.0 provisioning for enterprise IdP integration";
+
+      tokenFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = ''
+          Path to file containing the SCIM bearer token.
+          This token is shared with your IdP (e.g., Okta) for authentication.
+          Generate with: openssl rand -base64 32
+        '';
+      };
+
+      orgId = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = ''
+          UUID of the Loom organization to provision users into.
+          All SCIM-provisioned users will be added to this organization.
+        '';
+      };
+    };
+
     extraEnvironment = mkOption {
       type = types.attrsOf types.str;
       default = { };
@@ -687,6 +712,10 @@ in
       {
         assertion = cfg.secrets.enable -> cfg.secrets.masterKeyFile != null;
         message = "services.loom-server.secrets.masterKeyFile must be set when secrets system is enabled.";
+      }
+      {
+        assertion = cfg.scim.enable -> (cfg.scim.tokenFile != null && cfg.scim.orgId != null);
+        message = "services.loom-server.scim.tokenFile and orgId must be set when SCIM is enabled.";
       }
     ];
 
@@ -818,6 +847,10 @@ in
         (mkIf (cfg.docsIndexPath != null) {
           LOOM_SERVER_DOCS_INDEX = toString cfg.docsIndexPath;
         })
+        (mkIf cfg.scim.enable {
+          LOOM_SERVER_SCIM_ENABLED = "true";
+          LOOM_SERVER_SCIM_ORG_ID = cfg.scim.orgId;
+        })
         cfg.extraEnvironment
       ];
 
@@ -857,6 +890,9 @@ in
 
         # SMTP Secrets
         ${loadSecret cfg.smtp.passwordFile "LOOM_SERVER_SMTP_PASSWORD"}
+
+        # SCIM Secrets
+        ${loadSecret cfg.scim.tokenFile "LOOM_SERVER_SCIM_TOKEN"}
 
         # Weaver Secrets System (pass file paths, not contents)
         ${optionalString (cfg.secrets.masterKeyFile != null) ''
