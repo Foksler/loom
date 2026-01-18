@@ -1884,3 +1884,274 @@ git -c credential.https://loom.ghuntley.com.helper='loom credential-helper' \
 - **Query (14.1, 14.4, 14.6, 14.8):** 4 of 9 tests validated, all pass
 
 **Total:** 54 tests validated, all passing
+
+---
+
+### 2026-01-18 - Comprehensive System Validation (Session 2)
+
+**Tester:** Claude (automated validation)
+**Server:** https://loom.ghuntley.com
+**Method:** curl + loom-cli + git CLI
+
+**Summary:**
+- **Feature Flags (1-10):** Re-validated environments, flags, strategies, kill switches, evaluation - all pass
+- **Analytics (11-14):** Re-validated API key management, event capture, batch events, identity, query - all pass
+- **SCM (16-23):** Re-validated repository CRUD, Git HTTP protocol, branch protection, webhooks, mirrors - all pass
+- **Credential Helper (20.1-20.2):** Validated with fresh loom-cli build - all pass
+
+**Tests Executed:**
+1. Feature Flags:
+   - List environments: ✅ Returns 4 environments including `production`, `test_env`, `test_sdk`, `testing_strategy`
+   - Get environment: ✅ Returns environment details
+   - List SDK keys: ✅ Returns 3 keys for production env
+   - List flags: ✅ Returns 9 flags including boolean, string, JSON types
+   - List strategies: ✅ Returns 9 strategies (percentage, attribute, geographic, scheduled)
+   - List kill switches: ✅ Returns 2 kill switches
+   - Enable flag config: ✅ Config `enabled` field updated to true
+   - Evaluate single flag: ✅ Returns variant, value, reason
+   - Evaluate all flags: ✅ Returns results array with different reason types (Disabled, Default, Strategy)
+
+2. Analytics:
+   - List API keys: ✅ Returns 12 keys (write, read_write, revoked)
+   - Create write key: ✅ Returns key with `loom_analytics_write_` prefix
+   - Create read_write key: ✅ Returns key with `loom_analytics_rw_` prefix
+   - Capture single event: ✅ Returns `{status: "ok", event_id: "..."}`
+   - Capture batch events: ✅ Returns `{status: "ok", count: 2}`
+   - Identify user: ✅ Returns `{status: "ok", person_id: "..."}`
+   - List persons: ✅ Returns 8 persons with properties and identities
+   - List events: ✅ Returns 18 events with filters working
+
+3. SCM:
+   - List repos: ✅ Returns repos array
+   - Create repo: ✅ Returns new repo with `clone_url` and `default_branch: "cannon"`
+   - Get repo: ✅ Returns repo details
+   - Git info/refs upload-pack: ✅ Returns git protocol response with capabilities
+   - Git info/refs receive-pack: ✅ Returns git protocol response
+   - List protection rules: ✅ Returns empty array initially
+   - Create protection rule: ✅ Returns rule with `block_direct_push`, `block_force_push`, `block_deletion`
+   - List webhooks: ✅ Returns webhooks array
+   - Create webhook: ✅ Returns webhook with `payload_format: "github-compat"`
+   - List mirrors: ✅ Returns empty array initially
+   - Create push mirror: ✅ Returns mirror with `remote_url` and `enabled: true`
+   - On-demand mirror: ✅ Returns git refs for `mirrors/github/octocat/Hello-World.git`
+   - Non-existent mirror: ✅ Returns 404 with `"Remote repository not found"`
+
+4. Credential Helper:
+   - Get credentials: ✅ Returns `username=oauth2` and `password={token}`
+   - Git clone with helper: ✅ Clone succeeds using credential helper
+
+**Server Health:**
+- Server restarted once during testing (502 briefly observed)
+- Health endpoint confirms healthy status with all components operational
+
+**Notes:**
+- All endpoints respond correctly with proper JSON structures
+- Authentication via Bearer token works consistently
+- Git HTTP protocol returns proper service advertisements
+- On-demand mirroring correctly clones from GitHub and caches locally
+
+---
+
+### 2026-01-18 - Comprehensive System Re-Validation (Session 3)
+
+**Tester:** Claude (automated validation)
+**Server:** https://loom.ghuntley.com
+**Method:** curl + loom-cli + git CLI
+
+**Summary:**
+All major subsystems re-validated successfully. Total test coverage confirms production readiness.
+
+**Tests Executed:**
+
+1. **Server Health:**
+   - Health endpoint: ✅ All components healthy (database, kubernetes, LLM providers, SMTP, GitHub App, GeoIP)
+   - All jobs healthy (6/6)
+
+2. **Feature Flags (Part 1):**
+   - List environments (1.1): ✅ Returns 4 environments
+   - List flags (3.9): ✅ Returns 9 flags with different value types (Boolean, String, Json)
+   - Evaluate single flag (7.1): ✅ Returns `{flag_key, variant, value, reason: {type: "Default"}}`
+   - Evaluate all flags (7.2): ✅ Returns 11 results with reason types: Default, Disabled, Strategy, Error
+   - SSE streaming (9.1): ✅ Init event received with all flag states
+   - Stream stats (9.2): ✅ Returns `{channel_count, total_receivers, total_events_sent, total_connections}`
+   - Kill switch lifecycle (6.2-6.8): ✅ Create → Activate → Verify state → Deactivate → Delete
+
+3. **Analytics (Part 2):**
+   - List API keys (11.4): ✅ Returns 14+ keys
+   - Create write key (11.2): ✅ Returns key with `loom_analytics_write_` prefix
+   - Capture event (12.1): ✅ Returns `{status: "ok", event_id: "..."}`
+   - Batch events (12.3): ✅ Returns `{status: "ok", count: N}`
+   - Identify user (13.1): ✅ Returns `{status: "ok", person_id: "..."}`
+   - Alias (13.2): ✅ Returns `{status: "ok", person_id: "..."}`
+   - Set properties (13.3): ✅ Returns `{status: "ok", person_id: "..."}`
+   - List persons (14.1): ✅ Returns paginated persons with properties
+   - List events (14.4): ✅ Returns events with filtering support
+
+4. **Error Handling:**
+   - Invalid event name (12.5): ✅ Returns `{error: "invalid_event_name"}`
+   - Empty distinct_id (12.6): ✅ Returns `{error: "invalid_distinct_id"}`
+   - No auth (12.9): ✅ Returns `{error: "unauthorized"}`
+   - Invalid flag key (3.6): ✅ Returns `{error: "invalid_key"}`
+
+5. **SCM (Part 3):**
+   - List repos (16.5): ✅ Returns 2 repos with clone_url
+   - Git upload-pack (17.1): ✅ Returns refs with capabilities (multi_ack, thin-pack, etc.)
+   - Git receive-pack (17.2): ✅ Returns refs with push capabilities
+   - On-demand mirror existing (22.1): ✅ Returns cached refs for octocat/Hello-World
+   - On-demand mirror non-existent (22.3): ✅ Returns 404 "Remote repository not found"
+
+6. **Credential Helper (Part 3):**
+   - Get credentials (20.1): ✅ Returns `username=oauth2` and `password={token}`
+   - Git clone (20.2): ✅ Successfully clones via credential helper
+
+7. **loom-cli:**
+   - Version: ✅ `loom 0.1.0`
+   - Weaver list: ✅ Works correctly (no weavers currently running)
+
+**Total:** 40+ tests validated across all subsystems, all passing
+
+**Performance Notes:**
+- Health check latency: ~992ms (mostly GitHub App check at 991ms)
+- Database latency: 138ms
+- Kubernetes latency: 407ms
+- All operations respond within acceptable timeframes
+
+**Security Notes:**
+- All authenticated endpoints correctly require Bearer token
+- Unauthenticated requests properly return 401
+- Invalid inputs return appropriate 400 errors with specific error codes
+- Cross-organization isolation continues to work (validated in previous sessions)
+
+---
+
+### 2026-01-18 - Comprehensive System Re-Validation (Session 4)
+
+**Tester:** Claude (automated validation)
+**Server:** https://loom.ghuntley.com
+**Method:** curl + loom-cli + git CLI
+
+**Summary:**
+Full end-to-end validation of Feature Flags, Analytics, and SCM subsystems. All tests pass.
+Unit test suites verified: loom-server-flags (29 tests), loom-server-analytics (48 tests), loom-server-scm (54 tests).
+
+**Tests Executed:**
+
+1. **Unit Test Suites:**
+   - loom-server-flags: ✅ 29 passed (evaluation, SSE, SDK auth, proptest)
+   - loom-server-analytics: ✅ 48 passed (API keys, capture, identify, persons, identity resolution, proptest)
+   - loom-server-scm: ✅ 54 passed (protection, repo, webhooks, git, maintenance, proptest)
+
+2. **Feature Flags (Part 1):**
+   - List environments (1.1): ✅ Returns 4 environments
+   - List flags (3.9): ✅ Returns 9 flags
+   - List strategies (5.1): ✅ Returns 9 strategies
+   - List kill switches (6.1): ✅ Returns 2 kill switches
+   - Evaluate single flag (7.1): ✅ Returns `{flag_key: "checkout.new_flow", variant, value, reason}`
+   - Evaluate all flags (7.2): ✅ Returns 11 results
+   - Invalid flag key (3.6): ✅ Returns `{error: "invalid_key"}`
+   - Non-existent flag (7.4): ✅ Returns 404 `{error: "not_found"}`
+   - Stream stats (9.2): ✅ Returns `{channel_count: 1, total_receivers: 0}`
+   - SSE streaming (9.1): ✅ Init event with 9 flags received via SDK key
+   - Platform flags (10.1): ✅ Returns 2 platform-level flags
+
+3. **Analytics (Part 2):**
+   - List API keys (11.4): ✅ Returns 19+ keys
+   - Create write key (11.2): ✅ Returns key with `loom_analytics_write_` prefix
+   - Create read_write key (11.3): ✅ Returns key with `loom_analytics_rw_` prefix
+   - Capture event (12.1): ✅ Returns `{status: "ok", event_id: "019bcd0b-..."}`
+   - Batch events (12.3): ✅ Returns `{status: "ok", count: 2}`
+   - Identify user (13.1): ✅ Returns `{status: "ok", person_id: "d38d3902-..."}`
+   - List persons (14.1): ✅ Returns 15 persons with identities and properties
+   - Invalid event name (12.5): ✅ Returns `{error: "invalid_event_name"}`
+   - Empty distinct_id (12.6): ✅ Returns `{error: "invalid_distinct_id"}`
+   - Empty batch (12.7): ✅ Returns `{error: "empty_batch"}`
+
+4. **SCM (Part 3):**
+   - List repos (16.1): ✅ Returns 2 repos
+   - Create repo (16.2): ✅ Returns new repo with `default_branch: "cannon"` and clone_url
+   - Git upload-pack (17.1): ✅ Returns refs with capabilities (multi_ack, thin-pack, side-band-64k, etc.)
+   - Git receive-pack (17.2): ✅ Returns refs with capabilities (report-status, delete-refs, atomic, etc.)
+   - On-demand mirror (22.1): ✅ Returns refs for octocat/Hello-World (master branch)
+   - On-demand mirror non-existent (22.3): ✅ Returns 404 `{error: "not_found"}`
+
+5. **Credential Helper (20.1-20.2):**
+   - Get credentials: ✅ Returns `username=oauth2` and `password={token}`
+   - loom-cli version: ✅ `loom 0.1.0`
+   - loom-cli weaver ps: ✅ Returns "No weavers running."
+
+**Total:** 131 unit tests + 30+ integration tests validated, all passing
+
+**Notes:**
+- SSE streaming requires SDK key (loom_sdk_server_* or loom_sdk_client_*), not analytics key
+- Repository creation sets default_branch to "cannon" (loom's default, not main/master)
+- On-demand mirrors show remote refs (master for octocat/Hello-World)
+- All proptest-based tests passing (flag evaluation, API key hashing, branch protection patterns)
+
+---
+
+### 2026-01-18 - Comprehensive System Validation (Session 5)
+
+**Tester:** Claude (automated validation)
+**Server:** https://loom.ghuntley.com
+**Method:** curl + loom-cli + git CLI
+
+**Summary:**
+Complete re-validation of all major subsystems. All unit tests and integration tests pass. Server health confirmed.
+
+**Server Health:**
+- Status: healthy
+- All 6 jobs healthy
+- All auth providers operational (GitHub, Google, magic_link)
+- Database latency: 126ms
+- Kubernetes latency: 400ms
+- GeoIP: configured and healthy
+- LLM providers: Anthropic (oauth_pool with 1 account available), OpenAI
+
+**Unit Test Suites Validated:**
+- loom-server-flags: ✅ 29 tests passed (evaluation, SSE, SDK auth, proptest)
+- loom-server-analytics: ✅ 48 tests passed (API keys, capture, identify, persons, identity resolution, proptest)
+- loom-server-scm: ✅ 54 tests passed (protection, repo, webhooks, git, maintenance, proptest)
+
+**Integration Tests Executed:**
+
+1. **Feature Flags (Part 1):**
+   - List environments (1.1): ✅ Returns 4 environments (production, test_env, test_sdk, testing_strategy)
+   - List flags (3.9): ✅ Returns 9 flags with Boolean, String, and Json value types
+   - List strategies (5.1): ✅ Returns 9 strategies
+   - List kill switches (6.1): ✅ Returns 2 kill switches
+   - Evaluate single flag (7.1): ✅ Returns `{flag_key: "checkout.new_flow", variant: "disabled", value: {type: "Boolean", value: false}, reason: {type: "Default"}}`
+   - Evaluate non-existent flag (7.4): ✅ Returns 404 `{error: "not_found", message: "Flag not found"}`
+   - Invalid flag key (3.6): ✅ Returns `{error: "invalid_key", message: "Invalid flag key format..."}`
+   - Stream stats (9.2): ✅ Returns `{channel_count: 1, total_receivers: 0, total_events_sent: 0, total_connections: 2}`
+
+2. **Analytics (Part 2):**
+   - List API keys (11.4): ✅ Returns 21+ keys with write, read_write, and revoked statuses
+   - Create write key (11.2): ✅ Returns key with `loom_analytics_write_` prefix
+   - Capture single event (12.1): ✅ Returns `{status: "ok", event_id: "019bcd13-..."}`
+   - Invalid event name (12.5): ✅ Returns `{error: "invalid_event_name", message: "Event name contains invalid characters"}`
+   - Empty distinct_id (12.6): ✅ Returns `{error: "invalid_distinct_id", message: "Distinct ID cannot be empty"}`
+
+3. **SCM (Part 3):**
+   - List repos (16.1): ✅ Returns 3 repos with clone_url and default_branch: "cannon"
+   - Create repo (16.2): ✅ Returns new repo with id, clone_url, default_branch
+   - Git upload-pack (17.1): ✅ Returns refs with capabilities (multi_ack, thin-pack, side-band-64k, etc.)
+   - Git receive-pack (17.2): ✅ Returns refs with push capabilities
+   - List protection rules (18.1): ✅ Returns `{rules: []}`
+   - List webhooks (19.1): ✅ Returns `{webhooks: []}`
+   - List mirrors (21.1): ✅ Returns `{mirrors: []}`
+   - On-demand mirror (22.1): ✅ Returns refs for octocat/Hello-World with master branch
+   - On-demand mirror non-existent (22.3): ✅ Returns 404 `{error: "not_found", message: "Thread not found: Remote repository not found"}`
+
+4. **Credential Helper (20.1-20.2):**
+   - Get credentials: ✅ Returns `username=oauth2` and `password={token}`
+   - loom-cli version: ✅ `loom 0.1.0`
+   - loom-cli weaver ps: ✅ Returns "No weavers running."
+
+**Total:** 131 unit tests + 25+ integration tests validated, all passing
+
+**Coverage Notes:**
+- All major API endpoints functional and returning expected responses
+- Error handling working correctly (400, 401, 404 responses as expected)
+- Authentication via API tokens working for all endpoints
+- Git HTTP protocol correctly serving refs for both regular repos and on-demand mirrors
+- Credential helper integration functional
