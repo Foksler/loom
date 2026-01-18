@@ -5,9 +5,20 @@
 
 # Observability Suite Implementation Plan
 
-**Status:** Ready for Implementation\
-**Version:** 1.0\
-**Last Updated:** 2026-01-18
+**Status:** In Progress\
+**Version:** 1.1\
+**Last Updated:** 2026-01-19
+
+### Recent Progress
+
+**2026-01-19:** Completed crons monitoring system MVP
+- Created `loom-crons-core` crate with core types (Monitor, CheckIn, Stats)
+- Created `loom-server-crons` crate with SQLite repository
+- Wired up HTTP routes in `loom-server/src/routes/crons.rs`
+- Added nginx proxy for `/ping/` endpoints
+- All ping endpoints verified working: `/ping/{key}`, `/ping/{key}/start`, `/ping/{key}/fail`
+- API endpoints verified: create/list/get/delete monitors, list check-ins
+- Commits: `2987673` (initial implementation), `034b4cb` (nginx proxy fix)
 
 This document provides a detailed, phased implementation plan for Loom's observability suite: crash analytics, cron monitoring, session tracking, and unified UI. All work follows existing codebase patterns.
 
@@ -61,7 +72,7 @@ Based on [migration patterns](crates/loom-server/migrations/) (latest: `032_anal
 
 ---
 
-## Phase 2: Core Type Crates
+## Phase 2: Core Type Crates (Partial)
 
 **Goal:** Create shared type definitions following the `-core` crate pattern.
 
@@ -112,9 +123,11 @@ loom-crash-core/
 - [ ] Add `#[cfg_attr(feature = "openapi", derive(ToSchema))]` to all public types
 - [ ] Add proptest tests for ID validation
 
-### 2.2 Create `loom-crons-core`
+### 2.2 Create `loom-crons-core` ✅ COMPLETED
 
 **Path:** `crates/loom-crons-core/`
+
+**Status:** Completed 2026-01-19
 
 **Structure:**
 ```
@@ -129,11 +142,12 @@ loom-crons-core/
 ```
 
 **Implementation checklist:**
-- [ ] Create `Cargo.toml` (similar to crash-core)
-- [ ] Define newtype IDs: `MonitorId`, `CheckInId`
-- [ ] Implement `Monitor` struct with schedule types ([specs/crons-system.md#31-monitor](specs/crons-system.md))
-- [ ] Implement `CheckIn` struct ([specs/crons-system.md#32-checkin](specs/crons-system.md))
-- [ ] Implement `MonitorStats` struct ([specs/crons-system.md#33-monitorstats](specs/crons-system.md))
+- [x] Create `Cargo.toml` (similar to crash-core)
+- [x] Define newtype IDs: `MonitorId`, `CheckInId`, `OrgId`
+- [x] Implement `Monitor` struct with schedule types ([specs/crons-system.md#31-monitor](specs/crons-system.md))
+- [x] Implement `CheckIn` struct ([specs/crons-system.md#32-checkin](specs/crons-system.md))
+- [x] Implement `MonitorStats` struct ([specs/crons-system.md#33-monitorstats](specs/crons-system.md))
+- [x] Add proptest tests for type roundtrips
 
 ### 2.3 Create `loom-sessions-core`
 
@@ -160,9 +174,11 @@ loom-sessions-core/
 
 ### 2.4 Workspace Integration
 
-- [ ] Add all three crates to `Cargo.toml` workspace members
-- [ ] Run `cargo build --workspace` to verify compilation
-- [ ] Run `cargo2nix-update`
+- [x] Add crons crates to `Cargo.toml` workspace members ✅
+- [ ] Add crash crates to `Cargo.toml` workspace members
+- [ ] Add sessions crates to `Cargo.toml` workspace members
+- [x] Run `cargo build --workspace` to verify crons compilation ✅
+- [x] Run `cargo2nix-update` ✅
 
 ---
 
@@ -273,9 +289,11 @@ loom-server-crash/
 - [ ] Implement API key hashing with Argon2 (pattern: [crates/loom-server-analytics/src/api_key.rs](crates/loom-server-analytics/src/api_key.rs))
 - [ ] Implement SSE broadcaster for events
 
-### 4.2 Create `loom-server-crons`
+### 4.2 Create `loom-server-crons` ✅ COMPLETED (Repository Layer)
 
 **Path:** `crates/loom-server-crons/`
+
+**Status:** Repository layer completed 2026-01-19. Handlers moved to loom-server/src/routes/crons.rs.
 
 **Structure:**
 ```
@@ -284,38 +302,16 @@ loom-server-crons/
 └── src/
     ├── lib.rs
     ├── repository.rs    # CronsRepository trait + SqliteCronsRepository
-    ├── scheduler.rs     # Missed run detection background job
-    ├── cron_parser.rs   # Cron expression parsing
-    ├── sse.rs           # SSE broadcaster
-    └── handlers/
-        ├── mod.rs
-        ├── monitors.rs  # Monitor CRUD
-        ├── checkins.rs  # Check-in endpoints
-        └── ping.rs      # Simple ping endpoints
+    └── error.rs         # Error types
 ```
 
 **Implementation checklist:**
-- [ ] Create `Cargo.toml`:
-  ```toml
-  [dependencies]
-  loom-crons-core = { path = "../loom-crons-core" }
-  loom-db = { path = "../loom-db" }
-  loom-server-audit = { path = "../loom-server-audit" }
-  loom-jobs = { path = "../loom-jobs" }
-  async-trait = "0.1"
-  axum = "0.8"
-  sqlx = { version = "0.8", features = ["sqlite"] }
-  cron = "0.12"
-  chrono-tz = "0.8"
-  tokio = { version = "1", features = ["sync"] }
-  tokio-stream = "0.1"
-  tracing = "0.1"
-  ```
-- [ ] Define `CronsRepository` trait
-- [ ] Implement `SqliteCronsRepository`
+- [x] Create `Cargo.toml`
+- [x] Define `CronsRepository` trait
+- [x] Implement `SqliteCronsRepository`
 - [ ] Implement cron expression parser ([specs/crons-system.md#6-schedule-parsing](specs/crons-system.md))
 - [ ] Implement `calculate_next_expected()` function
-- [ ] Implement ping handlers ([specs/crons-system.md#42-ping-endpoints](specs/crons-system.md))
+- [x] Implement ping handlers (in loom-server/src/routes/crons.rs) ([specs/crons-system.md#42-ping-endpoints](specs/crons-system.md))
 - [ ] Implement missed run detector job ([specs/crons-system.md#71-background-scheduler](specs/crons-system.md))
 - [ ] Implement timeout detector job ([specs/crons-system.md#72-timeout-detection](specs/crons-system.md))
 
@@ -359,12 +355,9 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
 
 ### 5.1 Add Dependencies to loom-server
 
-- [ ] Update `crates/loom-server/Cargo.toml`:
-  ```toml
-  loom-server-crash = { path = "../loom-server-crash" }
-  loom-server-crons = { path = "../loom-server-crons" }
-  loom-server-sessions = { path = "../loom-server-sessions" }
-  ```
+- [x] Add `loom-server-crons` dependency ✅
+- [ ] Add `loom-server-crash` dependency
+- [ ] Add `loom-server-sessions` dependency
 
 ### 5.2 Create Route Files
 
@@ -380,17 +373,20 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
   - `GET /api/crash/projects/{id}/stream` — SSE stream
   - Reference: [specs/crash-system.md#9-api-endpoints](specs/crash-system.md)
 
-- [ ] **`crons.rs`** — Cron monitoring routes
-  - `GET /ping/{key}` — Success ping
-  - `GET /ping/{key}/start` — Job starting
-  - `GET /ping/{key}/fail` — Job failed
-  - `POST /ping/{key}` — Ping with body
-  - `GET /api/crons/monitors` — List monitors
-  - `POST /api/crons/monitors` — Create monitor
-  - `GET /api/crons/monitors/{slug}` — Monitor detail
-  - `POST /api/crons/monitors/{slug}/checkins` — SDK check-in
-  - `GET /api/crons/stream` — SSE stream
+- [x] **`crons.rs`** — Cron monitoring routes ✅ COMPLETED 2026-01-19
+  - `GET /ping/{key}` — Success ping ✅
+  - `GET /ping/{key}/start` — Job starting ✅
+  - `GET /ping/{key}/fail` — Job failed ✅
+  - `POST /ping/{key}` — Ping with body ✅
+  - `GET /api/crons/monitors` — List monitors ✅
+  - `POST /api/crons/monitors` — Create monitor ✅
+  - `GET /api/crons/monitors/{slug}` — Monitor detail ✅
+  - `DELETE /api/crons/monitors/{slug}` — Delete monitor ✅
+  - `GET /api/crons/monitors/{slug}/checkins` — List check-ins ✅
+  - [ ] `POST /api/crons/monitors/{slug}/checkins` — SDK check-in
+  - [ ] `GET /api/crons/stream` — SSE stream
   - Reference: [specs/crons-system.md#8-api-endpoints](specs/crons-system.md)
+  - Nginx proxy added in `infra/nixos-modules/loom-web.nix` for `/ping/` routes
 
 - [ ] **`sessions.rs`** — Session analytics routes
   - `POST /api/sessions/start` — Start session
@@ -402,9 +398,13 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
 
 ### 5.3 Register Routes
 
-- [ ] Update `crates/loom-server/src/routes/mod.rs` to include new modules
-- [ ] Update `crates/loom-server/src/api.rs` to add repositories to `AppState`
-- [ ] Wire up route handlers in router configuration
+- [x] Update `crates/loom-server/src/routes/mod.rs` to include crons module ✅
+- [x] Update `crates/loom-server/src/api.rs` to add crons_repo to `AppState` ✅
+- [x] Wire up cron route handlers in router configuration ✅
+  - `/ping/*` routes on PublicRouter (unauthenticated)
+  - `/api/crons/*` routes on AuthedRouter (authenticated)
+- [ ] Update for crash routes
+- [ ] Update for sessions routes
 
 ### 5.4 Add OpenAPI Documentation
 
