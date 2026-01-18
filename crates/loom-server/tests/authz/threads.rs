@@ -4,13 +4,10 @@
 //! Authorization tests for thread routes.
 //!
 //! Tests verify access control for thread operations:
-//! - Users can list and access their own threads
+//! - Users can list, search, and access only their own threads
 //! - Authentication is required for all thread operations
-//! - Cross-org access is denied (users cannot access threads owned by others)
-//!
-//! Tests marked with `#[ignore]` represent expected security behavior that requires
-//! ownership-based authorization to be implemented. Once authorization is added,
-//! remove the `#[ignore]` attribute to enable these tests.
+//! - Cross-org data isolation is enforced (users cannot access threads owned by others)
+//! - Unauthorized access returns 404 (to prevent information leakage about resource existence)
 
 use axum::http::{Method, StatusCode};
 use loom_common_thread::{Thread, ThreadVisibility};
@@ -64,7 +61,6 @@ async fn unauthenticated_cannot_list_threads() {
 }
 
 #[tokio::test]
-#[ignore = "requires ownership-based authorization"]
 async fn list_threads_scoped_to_user() {
 	let app = TestApp::new().await;
 
@@ -108,17 +104,22 @@ async fn owner_can_get_own_thread() {
 	run_authz_cases(&app, &cases).await;
 }
 
+/// Test that only the owner can get their thread, not just org members.
+/// This implements strict owner-only access - org members cannot access
+/// threads owned by other org members.
 #[tokio::test]
-async fn member_can_get_org_thread() {
+async fn member_cannot_get_other_members_thread() {
 	let app = TestApp::new().await;
 	let thread_id = app.fixtures.org_a.thread.id.as_str();
+	// The thread is owned by org_a.owner, not org_a.member
+	// So org_a.member should NOT be able to access it
 	let cases = [AuthzCase {
-		name: "member_can_get_org_thread",
+		name: "member_cannot_get_other_members_thread",
 		method: Method::GET,
 		path: format!("/api/threads/{thread_id}"),
 		user: Some(app.fixtures.org_a.member.clone()),
 		body: None,
-		expected_status: StatusCode::OK,
+		expected_status: StatusCode::NOT_FOUND,
 	}];
 	run_authz_cases(&app, &cases).await;
 }
@@ -139,7 +140,6 @@ async fn unauthenticated_cannot_get_thread() {
 }
 
 #[tokio::test]
-#[ignore = "requires ownership-based authorization"]
 async fn other_org_cannot_get_thread() {
 	let app = TestApp::new().await;
 	let thread_id = app.fixtures.org_a.thread.id.as_str();
@@ -190,8 +190,10 @@ async fn unauthenticated_cannot_upsert_thread() {
 	assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 }
 
+/// Test that users from another organization cannot upsert threads
+/// owned by a user in a different organization.
+/// Returns 404 to prevent information leakage (doesn't reveal if thread exists).
 #[tokio::test]
-#[ignore = "requires ownership-based authorization"]
 async fn other_org_cannot_upsert_thread() {
 	let app = TestApp::new().await;
 	let mut thread = app.fixtures.org_a.thread.clone();
@@ -205,11 +207,8 @@ async fn other_org_cannot_upsert_thread() {
 		)
 		.await;
 
-	let status = response.status();
-	assert!(
-		status == StatusCode::UNAUTHORIZED || status == StatusCode::FORBIDDEN,
-		"Expected 401 or 403, got {status}"
-	);
+	// Returns 404 to prevent information leakage about resource existence
+	assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }
 
 // ============================================================================
@@ -257,7 +256,6 @@ async fn unauthenticated_cannot_delete_thread() {
 }
 
 #[tokio::test]
-#[ignore = "requires ownership-based authorization"]
 async fn other_org_cannot_delete_thread() {
 	let app = TestApp::new().await;
 	let thread_id = app.fixtures.org_a.thread.id.as_str();
@@ -316,7 +314,6 @@ async fn unauthenticated_cannot_update_visibility() {
 }
 
 #[tokio::test]
-#[ignore = "requires ownership-based authorization"]
 async fn other_org_cannot_update_visibility() {
 	let app = TestApp::new().await;
 	let thread_id = app.fixtures.org_a.thread.id.as_str();
@@ -374,7 +371,6 @@ async fn unauthenticated_cannot_search_threads() {
 }
 
 #[tokio::test]
-#[ignore = "requires ownership-based authorization"]
 async fn search_scoped_to_user() {
 	let app = TestApp::new().await;
 

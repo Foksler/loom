@@ -2,6 +2,10 @@
 // reserved. SPDX-License-Identifier: Proprietary
 
 //! Thread-related HTTP handlers.
+//!
+//! All thread operations are scoped to the authenticated user:
+//! - Users can only see, modify, and delete their own threads
+//! - Threads are automatically associated with the creating user
 
 use axum::{
 	extract::{Path, Query, State},
@@ -16,11 +20,13 @@ pub use loom_server_api::threads::{
 };
 use loom_server_audit::{AuditEventType, AuditLogBuilder};
 
-use crate::{api::AppState, error::ServerError};
+use crate::{api::AppState, auth_middleware::RequireAuth, error::ServerError};
 
 /// PUT /api/threads/{id} - Create or update a thread.
 ///
 /// Supports optimistic concurrency via If-Match header.
+/// For new threads, the current user is set as the owner.
+/// For existing threads, only the owner can update.
 #[utoipa::path(
     put,
     path = "/api/threads/{id}",
@@ -31,6 +37,7 @@ use crate::{api::AppState, error::ServerError};
     responses(
         (status = 200, description = "Thread created or updated", body = Thread),
         (status = 400, description = "Invalid request", body = crate::error::ErrorResponse),
+        (status = 403, description = "Forbidden - not the thread owner", body = crate::error::ErrorResponse),
         (status = 409, description = "Version conflict", body = crate::error::ErrorResponse),
         (status = 500, description = "Internal server error", body = crate::error::ErrorResponse)
     ),
@@ -38,17 +45,35 @@ use crate::{api::AppState, error::ServerError};
 )]
 #[axum::debug_handler]
 pub async fn upsert_thread(
+	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
 	Path(id): Path<String>,
 	headers: HeaderMap,
 	Json(mut thread): Json<Thread>,
 ) -> Result<impl IntoResponse, ServerError> {
+	let user_id = current_user.user.id.to_string();
+
 	// Validate ID matches path
 	if thread.id.as_str() != id {
 		return Err(ServerError::BadRequest(format!(
 			"Thread ID in body ({}) does not match path ({})",
 			thread.id, id
 		)));
+	}
+
+	// Check if thread exists and verify ownership
+	let existing_owner = state.repo.get_thread_owner_user_id(&id).await?;
+	if let Some(owner_id) = &existing_owner {
+		// Thread exists - verify ownership
+		if owner_id != &user_id && !current_user.user.is_system_admin {
+			tracing::info!(
+				thread_id = %id,
+				user_id = %user_id,
+				owner_id = %owner_id,
+				"unauthorized thread upsert attempt"
+			);
+			return Err(ServerError::NotFound(id));
+		}
 	}
 
 	// Parse If-Match header for optimistic concurrency
@@ -69,6 +94,11 @@ pub async fn upsert_thread(
 
 	let stored = state.repo.upsert(&thread, expected_version).await?;
 
+	// Set owner for new threads
+	if existing_owner.is_none() {
+		state.repo.set_owner_user_id(&id, &user_id).await?;
+	}
+
 	tracing::info!(
 			thread_id = %id,
 			version = stored.version,
@@ -81,6 +111,7 @@ pub async fn upsert_thread(
 			.details(serde_json::json!({
 				"version": stored.version,
 				"visibility": format!("{:?}", stored.visibility),
+				"user_id": user_id,
 			}))
 			.build(),
 	);
@@ -89,6 +120,8 @@ pub async fn upsert_thread(
 }
 
 /// GET /api/threads/{id} - Get a thread by ID.
+///
+/// Only the thread owner can access the thread.
 #[utoipa::path(
     get,
     path = "/api/threads/{id}",
@@ -104,12 +137,31 @@ pub async fn upsert_thread(
 )]
 #[axum::debug_handler]
 pub async fn get_thread(
+	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
 	Path(id): Path<String>,
 ) -> Result<impl IntoResponse, ServerError> {
+	let user_id = current_user.user.id.to_string();
 	let thread_id = ThreadId::from_string(id.clone());
 
 	tracing::debug!(thread_id = %id, "getting thread");
+
+	// Check ownership first
+	let owner_id = state.repo.get_thread_owner_user_id(&id).await?;
+	match owner_id {
+		Some(owner) if owner == user_id || current_user.user.is_system_admin => {
+			// User is owner or admin, allow access
+		}
+		Some(_) => {
+			// Thread exists but user is not the owner
+			tracing::debug!(thread_id = %id, user_id = %user_id, "thread access denied");
+			return Err(ServerError::NotFound(id));
+		}
+		None => {
+			// Thread doesn't exist
+			return Err(ServerError::NotFound(id));
+		}
+	}
 
 	let thread = state
 		.repo
@@ -121,6 +173,8 @@ pub async fn get_thread(
 }
 
 /// GET /api/threads - List threads.
+///
+/// Returns only threads owned by the current user.
 #[utoipa::path(
     get,
     path = "/api/threads",
@@ -133,22 +187,28 @@ pub async fn get_thread(
 )]
 #[axum::debug_handler]
 pub async fn list_threads(
+	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
 	Query(params): Query<ListParams>,
 ) -> Result<impl IntoResponse, ServerError> {
+	let user_id = current_user.user.id.to_string();
+
 	tracing::debug!(
 			workspace = ?params.workspace,
 			limit = params.limit,
 			offset = params.offset,
-			"listing threads"
+			"listing threads for user"
 	);
 
 	let threads = state
 		.repo
-		.list(params.workspace.as_deref(), params.limit, params.offset)
+		.list_for_owner(&user_id, params.workspace.as_deref(), params.limit, params.offset)
 		.await?;
 
-	let total = state.repo.count(params.workspace.as_deref()).await?;
+	let total = state
+		.repo
+		.count_for_owner(&user_id, params.workspace.as_deref())
+		.await?;
 
 	let response = ListResponse {
 		threads,
@@ -161,6 +221,8 @@ pub async fn list_threads(
 }
 
 /// DELETE /api/threads/{id} - Soft-delete a thread.
+///
+/// Only the thread owner can delete their thread.
 #[utoipa::path(
     delete,
     path = "/api/threads/{id}",
@@ -176,12 +238,31 @@ pub async fn list_threads(
 )]
 #[axum::debug_handler]
 pub async fn delete_thread(
+	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
 	Path(id): Path<String>,
 ) -> Result<impl IntoResponse, ServerError> {
+	let user_id = current_user.user.id.to_string();
 	let thread_id = ThreadId::from_string(id.clone());
 
 	tracing::debug!(thread_id = %id, "deleting thread");
+
+	// Check ownership first
+	let owner_id = state.repo.get_thread_owner_user_id(&id).await?;
+	match owner_id {
+		Some(owner) if owner == user_id || current_user.user.is_system_admin => {
+			// User is owner or admin, allow deletion
+		}
+		Some(_) => {
+			// Thread exists but user is not the owner
+			tracing::debug!(thread_id = %id, user_id = %user_id, "thread deletion denied");
+			return Err(ServerError::NotFound(id));
+		}
+		None => {
+			// Thread doesn't exist
+			return Err(ServerError::NotFound(id));
+		}
+	}
 
 	let deleted = state.repo.delete(&thread_id).await?;
 
@@ -191,6 +272,9 @@ pub async fn delete_thread(
 		state.audit_service.log(
 			AuditLogBuilder::new(AuditEventType::ThreadDeleted)
 				.resource("thread", id.clone())
+				.details(serde_json::json!({
+					"user_id": user_id,
+				}))
 				.build(),
 		);
 
@@ -204,6 +288,7 @@ pub async fn delete_thread(
 ///
 /// Allows changing the visibility of a thread without syncing the full thread
 /// content. Supports optimistic concurrency via If-Match header.
+/// Only the thread owner can update visibility.
 #[utoipa::path(
     post,
     path = "/api/threads/{id}/visibility",
@@ -221,12 +306,31 @@ pub async fn delete_thread(
 )]
 #[axum::debug_handler]
 pub async fn update_thread_visibility(
+	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
 	Path(id): Path<String>,
 	headers: HeaderMap,
 	Json(body): Json<UpdateVisibilityRequest>,
 ) -> Result<impl IntoResponse, ServerError> {
+	let user_id = current_user.user.id.to_string();
 	let thread_id = ThreadId::from_string(id.clone());
+
+	// Check ownership first
+	let owner_id = state.repo.get_thread_owner_user_id(&id).await?;
+	match owner_id {
+		Some(owner) if owner == user_id || current_user.user.is_system_admin => {
+			// User is owner or admin, allow update
+		}
+		Some(_) => {
+			// Thread exists but user is not the owner
+			tracing::debug!(thread_id = %id, user_id = %user_id, "thread visibility update denied");
+			return Err(ServerError::NotFound(id));
+		}
+		None => {
+			// Thread doesn't exist
+			return Err(ServerError::NotFound(id));
+		}
+	}
 
 	let expected_version = headers
 		.get("If-Match")
@@ -274,6 +378,7 @@ pub async fn update_thread_visibility(
 			.details(serde_json::json!({
 				"visibility": format!("{:?}", stored.visibility),
 				"version": stored.version,
+				"user_id": user_id,
 			}))
 			.build(),
 	);
@@ -282,6 +387,8 @@ pub async fn update_thread_visibility(
 }
 
 /// GET /api/threads/search - Search threads.
+///
+/// Searches only threads owned by the current user.
 #[utoipa::path(
     get,
     path = "/api/threads/search",
@@ -295,9 +402,11 @@ pub async fn update_thread_visibility(
 )]
 #[axum::debug_handler]
 pub async fn search_threads(
+	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
 	Query(params): Query<SearchParams>,
 ) -> Result<Json<SearchResponse>, ServerError> {
+	let user_id = current_user.user.id.to_string();
 	let query = params.q.trim();
 
 	if query.is_empty() {
@@ -309,12 +418,13 @@ pub async fn search_threads(
 			workspace = ?params.workspace,
 			limit = params.limit,
 			offset = params.offset,
-			"searching threads"
+			"searching threads for user"
 	);
 
 	let hits = state
 		.repo
-		.search(
+		.search_for_owner(
+			&user_id,
 			query,
 			params.workspace.as_deref(),
 			params.limit,

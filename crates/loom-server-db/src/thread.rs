@@ -55,6 +55,32 @@ pub trait ThreadStore: Send + Sync {
 		offset: u32,
 	) -> Result<Vec<ThreadSearchHit>, DbError>;
 
+	/// List threads for a specific owner with optional workspace filter.
+	async fn list_for_owner(
+		&self,
+		owner_user_id: &str,
+		workspace: Option<&str>,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ThreadSummary>, DbError>;
+
+	/// Count threads for a specific owner with optional workspace filter.
+	async fn count_for_owner(
+		&self,
+		owner_user_id: &str,
+		workspace: Option<&str>,
+	) -> Result<u64, DbError>;
+
+	/// Search threads for a specific owner.
+	async fn search_for_owner(
+		&self,
+		owner_user_id: &str,
+		query: &str,
+		workspace: Option<&str>,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ThreadSearchHit>, DbError>;
+
 	async fn upsert_github_installation(
 		&self,
 		installation: &crate::types::GithubInstallation,
@@ -591,6 +617,316 @@ impl ThreadRepository {
 		};
 
 		Ok(count.0 as u64)
+	}
+
+	/// List threads for a specific owner with optional workspace filter.
+	pub async fn list_for_owner(
+		&self,
+		owner_user_id: &str,
+		workspace: Option<&str>,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ThreadSummary>, DbError> {
+		let rows = match workspace {
+			Some(ws) => {
+				sqlx::query(
+					r#"
+                    SELECT id, title, workspace_root, last_activity_at,
+                           provider, model, tags, version, message_count,
+                           created_at, updated_at, is_pinned, visibility,
+                           git_branch, git_remote_url,
+                           git_initial_commit_sha, git_current_commit_sha
+                    FROM threads
+                    WHERE deleted_at IS NULL AND owner_user_id = ? AND workspace_root = ?
+                    ORDER BY last_activity_at DESC
+                    LIMIT ? OFFSET ?
+                    "#,
+				)
+				.bind(owner_user_id)
+				.bind(ws)
+				.bind(limit as i32)
+				.bind(offset as i32)
+				.fetch_all(&self.pool)
+				.await?
+			}
+			None => {
+				sqlx::query(
+					r#"
+                    SELECT id, title, workspace_root, last_activity_at,
+                           provider, model, tags, version, message_count,
+                           created_at, updated_at, is_pinned, visibility,
+                           git_branch, git_remote_url,
+                           git_initial_commit_sha, git_current_commit_sha
+                    FROM threads
+                    WHERE deleted_at IS NULL AND owner_user_id = ?
+                    ORDER BY last_activity_at DESC
+                    LIMIT ? OFFSET ?
+                    "#,
+				)
+				.bind(owner_user_id)
+				.bind(limit as i32)
+				.bind(offset as i32)
+				.fetch_all(&self.pool)
+				.await?
+			}
+		};
+
+		let summaries = rows
+			.into_iter()
+			.map(|row| {
+				let id: String = row.get("id");
+				let title: Option<String> = row.get("title");
+				let workspace_root: Option<String> = row.get("workspace_root");
+				let last_activity_at: String = row.get("last_activity_at");
+				let provider: Option<String> = row.get("provider");
+				let model: Option<String> = row.get("model");
+				let tags_json: String = row.get("tags");
+				let version: i64 = row.get("version");
+				let message_count: i32 = row.get("message_count");
+				let created_at: String = row.get("created_at");
+				let updated_at: String = row.get("updated_at");
+				let is_pinned: i32 = row.get("is_pinned");
+				let visibility_str: String = row.get("visibility");
+				let git_branch: Option<String> = row.get("git_branch");
+				let git_remote_url: Option<String> = row.get("git_remote_url");
+				let git_initial_commit_sha: Option<String> = row.get("git_initial_commit_sha");
+				let git_current_commit_sha: Option<String> = row.get("git_current_commit_sha");
+
+				let tags: Vec<String> = serde_json::from_str(&tags_json).unwrap_or_default();
+				let visibility = visibility_str.parse().unwrap_or(ThreadVisibility::Private);
+
+				ThreadSummary {
+					id: ThreadId::from_string(id),
+					version: version as u64,
+					created_at,
+					updated_at,
+					last_activity_at,
+					title,
+					workspace_root,
+					git_branch,
+					git_remote_url,
+					git_initial_commit_sha,
+					git_current_commit_sha,
+					provider,
+					model,
+					tags,
+					message_count: message_count as u32,
+					is_pinned: is_pinned != 0,
+					visibility,
+				}
+			})
+			.collect();
+
+		Ok(summaries)
+	}
+
+	/// Count threads for a specific owner with optional workspace filter.
+	pub async fn count_for_owner(
+		&self,
+		owner_user_id: &str,
+		workspace: Option<&str>,
+	) -> Result<u64, DbError> {
+		let count: (i64,) = match workspace {
+			Some(ws) => {
+				sqlx::query_as(
+					r#"
+                    SELECT COUNT(*) FROM threads
+                    WHERE deleted_at IS NULL AND owner_user_id = ? AND workspace_root = ?
+                    "#,
+				)
+				.bind(owner_user_id)
+				.bind(ws)
+				.fetch_one(&self.pool)
+				.await?
+			}
+			None => {
+				sqlx::query_as(
+					r#"
+                    SELECT COUNT(*) FROM threads
+                    WHERE deleted_at IS NULL AND owner_user_id = ?
+                    "#,
+				)
+				.bind(owner_user_id)
+				.fetch_one(&self.pool)
+				.await?
+			}
+		};
+
+		Ok(count.0 as u64)
+	}
+
+	/// Search threads for a specific owner.
+	pub async fn search_for_owner(
+		&self,
+		owner_user_id: &str,
+		query: &str,
+		workspace: Option<&str>,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ThreadSearchHit>, DbError> {
+		let query = query.trim();
+
+		let is_sha_like = query.len() >= 7
+			&& query.len() <= 40
+			&& query.chars().all(|c| c.is_ascii_hexdigit());
+
+		if is_sha_like {
+			self.search_by_commit_prefix_for_owner(owner_user_id, query, workspace, limit, offset)
+				.await
+		} else {
+			self.search_fts_for_owner(owner_user_id, query, workspace, limit, offset)
+				.await
+		}
+	}
+
+	async fn search_by_commit_prefix_for_owner(
+		&self,
+		owner_user_id: &str,
+		prefix: &str,
+		workspace: Option<&str>,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ThreadSearchHit>, DbError> {
+		let like_pattern = format!("{prefix}%");
+
+		let sql = if workspace.is_some() {
+			r#"
+            SELECT t.id, t.title, t.workspace_root, t.last_activity_at,
+                   t.provider, t.model, t.tags, t.version, t.message_count,
+                   t.created_at, t.updated_at, t.is_pinned, t.visibility,
+                   t.git_branch, t.git_remote_url,
+                   t.git_initial_commit_sha, t.git_current_commit_sha
+            FROM threads t
+            WHERE t.deleted_at IS NULL
+              AND t.owner_user_id = ?
+              AND t.workspace_root = ?
+              AND (t.git_current_commit_sha LIKE ? OR t.git_initial_commit_sha LIKE ?)
+            ORDER BY t.last_activity_at DESC
+            LIMIT ? OFFSET ?
+            "#
+		} else {
+			r#"
+            SELECT t.id, t.title, t.workspace_root, t.last_activity_at,
+                   t.provider, t.model, t.tags, t.version, t.message_count,
+                   t.created_at, t.updated_at, t.is_pinned, t.visibility,
+                   t.git_branch, t.git_remote_url,
+                   t.git_initial_commit_sha, t.git_current_commit_sha
+            FROM threads t
+            WHERE t.deleted_at IS NULL
+              AND t.owner_user_id = ?
+              AND (t.git_current_commit_sha LIKE ? OR t.git_initial_commit_sha LIKE ?)
+            ORDER BY t.last_activity_at DESC
+            LIMIT ? OFFSET ?
+            "#
+		};
+
+		let rows = if let Some(ws) = workspace {
+			sqlx::query(sql)
+				.bind(owner_user_id)
+				.bind(ws)
+				.bind(&like_pattern)
+				.bind(&like_pattern)
+				.bind(limit as i32)
+				.bind(offset as i32)
+				.fetch_all(&self.pool)
+				.await?
+		} else {
+			sqlx::query(sql)
+				.bind(owner_user_id)
+				.bind(&like_pattern)
+				.bind(&like_pattern)
+				.bind(limit as i32)
+				.bind(offset as i32)
+				.fetch_all(&self.pool)
+				.await?
+		};
+
+		let mut hits = Vec::new();
+		for row in rows {
+			let summary = self.row_to_summary(&row)?;
+			hits.push(ThreadSearchHit { summary, score: 1.0 });
+		}
+		Ok(hits)
+	}
+
+	async fn search_fts_for_owner(
+		&self,
+		owner_user_id: &str,
+		query: &str,
+		workspace: Option<&str>,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ThreadSearchHit>, DbError> {
+		let fts_query = format!("\"{}\"", query.replace('"', " "));
+
+		let sql = if workspace.is_some() {
+			r#"
+            SELECT t.id, t.title, t.workspace_root, t.last_activity_at,
+                   t.provider, t.model, t.tags, t.version, t.message_count,
+                   t.created_at, t.updated_at, t.is_pinned, t.visibility,
+                   t.git_branch, t.git_remote_url,
+                   t.git_initial_commit_sha, t.git_current_commit_sha,
+                   bm25(thread_fts) as score
+            FROM threads t
+            JOIN thread_fts ON thread_fts.rowid = (
+                SELECT rowid FROM threads WHERE id = t.id
+            )
+            WHERE thread_fts MATCH ?
+              AND t.deleted_at IS NULL
+              AND t.owner_user_id = ?
+              AND t.workspace_root = ?
+            ORDER BY score
+            LIMIT ? OFFSET ?
+            "#
+		} else {
+			r#"
+            SELECT t.id, t.title, t.workspace_root, t.last_activity_at,
+                   t.provider, t.model, t.tags, t.version, t.message_count,
+                   t.created_at, t.updated_at, t.is_pinned, t.visibility,
+                   t.git_branch, t.git_remote_url,
+                   t.git_initial_commit_sha, t.git_current_commit_sha,
+                   bm25(thread_fts) as score
+            FROM threads t
+            JOIN thread_fts ON thread_fts.rowid = (
+                SELECT rowid FROM threads WHERE id = t.id
+            )
+            WHERE thread_fts MATCH ?
+              AND t.deleted_at IS NULL
+              AND t.owner_user_id = ?
+            ORDER BY score
+            LIMIT ? OFFSET ?
+            "#
+		};
+
+		let rows = if let Some(ws) = workspace {
+			sqlx::query(sql)
+				.bind(&fts_query)
+				.bind(owner_user_id)
+				.bind(ws)
+				.bind(limit as i32)
+				.bind(offset as i32)
+				.fetch_all(&self.pool)
+				.await?
+		} else {
+			sqlx::query(sql)
+				.bind(&fts_query)
+				.bind(owner_user_id)
+				.bind(limit as i32)
+				.bind(offset as i32)
+				.fetch_all(&self.pool)
+				.await?
+		};
+
+		let mut hits = Vec::new();
+		for row in rows {
+			let summary = self.row_to_summary(&row)?;
+			let score: f64 = row.try_get("score").unwrap_or(0.0);
+			hits.push(ThreadSearchHit {
+				summary,
+				score: -score,
+			});
+		}
+		Ok(hits)
 	}
 
 	/// Search threads by query string.
@@ -1148,6 +1484,36 @@ impl ThreadStore for ThreadRepository {
 		offset: u32,
 	) -> Result<Vec<ThreadSearchHit>, DbError> {
 		ThreadRepository::search(self, query, workspace, limit, offset).await
+	}
+
+	async fn list_for_owner(
+		&self,
+		owner_user_id: &str,
+		workspace: Option<&str>,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ThreadSummary>, DbError> {
+		ThreadRepository::list_for_owner(self, owner_user_id, workspace, limit, offset).await
+	}
+
+	async fn count_for_owner(
+		&self,
+		owner_user_id: &str,
+		workspace: Option<&str>,
+	) -> Result<u64, DbError> {
+		ThreadRepository::count_for_owner(self, owner_user_id, workspace).await
+	}
+
+	async fn search_for_owner(
+		&self,
+		owner_user_id: &str,
+		query: &str,
+		workspace: Option<&str>,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ThreadSearchHit>, DbError> {
+		ThreadRepository::search_for_owner(self, owner_user_id, query, workspace, limit, offset)
+			.await
 	}
 
 	async fn upsert_github_installation(
