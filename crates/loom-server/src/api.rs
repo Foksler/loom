@@ -110,6 +110,7 @@ pub struct AppState {
 	pub analytics_state: Option<
 		Arc<loom_server_analytics::AnalyticsState<loom_server_analytics::SqliteAnalyticsRepository>>,
 	>,
+	pub crons_repo: Arc<loom_server_crons::SqliteCronsRepository>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -297,6 +298,9 @@ pub async fn create_app_state(
 	let flags_repo = Arc::new(loom_server_flags::SqliteFlagsRepository::new(pool.clone()));
 	let flags_broadcaster = Arc::new(loom_server_flags::FlagsBroadcaster::with_defaults());
 
+	// Initialize crons repository
+	let crons_repo = Arc::new(loom_server_crons::SqliteCronsRepository::new(pool.clone()));
+
 	// Initialize analytics repository and state with audit hook
 	let analytics_repo = loom_server_analytics::SqliteAnalyticsRepository::new(pool.clone());
 	let analytics_audit_hook: loom_server_analytics::SharedMergeAuditHook =
@@ -359,6 +363,7 @@ pub async fn create_app_state(
 		flags_broadcaster,
 		analytics_repo: Some(Arc::new(analytics_repo)),
 		analytics_state: Some(Arc::new(analytics_state)),
+		crons_repo,
 	}
 }
 
@@ -918,6 +923,10 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/analytics/events/export",
 			post(routes::analytics::export_events),
 		)
+		// Cron monitoring ping endpoints (public - uses ping key for auth)
+		.route("/ping/{key}", get(routes::crons::ping_success).post(routes::crons::ping_with_body))
+		.route("/ping/{key}/start", get(routes::crons::ping_start))
+		.route("/ping/{key}/fail", get(routes::crons::ping_fail))
 		.build();
 
 	// Authenticated routes - require valid session/token
@@ -1198,6 +1207,19 @@ pub fn create_router(state: AppState) -> Router {
 		.route(
 			"/api/orgs/{org_id}/analytics/api-keys/{key_id}",
 			delete(routes::analytics::revoke_api_key),
+		)
+		// Cron monitoring API routes (authenticated)
+		.route(
+			"/api/crons/monitors",
+			get(routes::crons::list_monitors).post(routes::crons::create_monitor),
+		)
+		.route(
+			"/api/crons/monitors/{slug}",
+			get(routes::crons::get_monitor).delete(routes::crons::delete_monitor),
+		)
+		.route(
+			"/api/crons/monitors/{slug}/checkins",
+			get(routes::crons::list_checkins),
 		)
 		// Invitation routes (authenticated)
 		.route(
