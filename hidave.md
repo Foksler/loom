@@ -11,6 +11,35 @@
 
 ### Recent Progress
 
+**2026-01-19:** Added session analytics endpoints ✅ DEPLOYED
+- Created `loom-sessions-core` crate with core types:
+  - `Session`, `SessionId`, `SessionStatus`, `Platform` (13 unit tests)
+  - `SessionAggregate`, `SessionAggregateId` with crash-free rate calculation
+  - `ReleaseHealth`, `AdoptionStage` with health metrics calculation
+  - `SessionsError` with thiserror
+- Created `loom-server-sessions` crate with:
+  - `SessionsRepository` trait with full CRUD operations
+  - `SqliteSessionsRepository` implementation for sessions and aggregates
+  - Session start/end, status transitions, aggregate upserts
+- Added session routes to `loom-server/src/routes/app_sessions.rs`:
+  - `POST /api/sessions/start` - Start session (returns session_id, sampled status)
+  - `POST /api/sessions/end` - End session (with status, error_count, duration_ms)
+  - `GET /api/app-sessions` - List sessions for project
+  - `GET /api/app-sessions/releases` - List release health metrics
+  - `GET /api/app-sessions/releases/{version}` - Get release health detail
+- Added `sessions_repo` to AppState in api.rs
+- Deterministic sampling based on session ID hash
+- All endpoints verify org membership via project lookup
+- Added 19 authorization tests in `tests/authz/sessions.rs`:
+  - Session start: auth required, membership required, success
+  - Session end: auth required, membership required, success
+  - List sessions: auth required, membership required, success
+  - Release health list: auth required, membership required, success
+  - Release health detail: auth required, membership required, 404
+  - Session status transitions: crashed, abnormal
+- All endpoints verified working in production via curl
+- Commit: (pending)
+
 **2026-01-19:** Added crash release tracking endpoints ✅ DEPLOYED
 - Added `GET /api/crash/projects/{id}/releases` - List releases for a project
 - Added `POST /api/crash/projects/{id}/releases` - Create a release
@@ -250,9 +279,11 @@ loom-crons-core/
 - [x] Implement `MonitorStats` struct ([specs/crons-system.md#33-monitorstats](specs/crons-system.md))
 - [x] Add proptest tests for type roundtrips
 
-### 2.3 Create `loom-sessions-core`
+### 2.3 Create `loom-sessions-core` ✅ COMPLETED
 
 **Path:** `crates/loom-sessions-core/`
+
+**Status:** Completed 2026-01-19
 
 **Structure:**
 ```
@@ -267,19 +298,21 @@ loom-sessions-core/
 ```
 
 **Implementation checklist:**
-- [ ] Create `Cargo.toml`
-- [ ] Define newtype ID: `SessionId`, `SessionAggregateId`
-- [ ] Implement `Session` struct ([specs/sessions-system.md#31-session](specs/sessions-system.md))
-- [ ] Implement `SessionAggregate` struct ([specs/sessions-system.md#32-sessionaggregate](specs/sessions-system.md))
-- [ ] Implement `ReleaseHealth` struct ([specs/sessions-system.md#33-releasehealth](specs/sessions-system.md))
+- [x] Create `Cargo.toml` ✅
+- [x] Define newtype ID: `SessionId`, `SessionAggregateId` ✅
+- [x] Implement `Session` struct ([specs/sessions-system.md#31-session](specs/sessions-system.md)) ✅
+- [x] Implement `SessionAggregate` struct ([specs/sessions-system.md#32-sessionaggregate](specs/sessions-system.md)) ✅
+- [x] Implement `ReleaseHealth` struct ([specs/sessions-system.md#33-releasehealth](specs/sessions-system.md)) ✅
+- [x] Add 13 unit tests for session types ✅
 
 ### 2.4 Workspace Integration
 
 - [x] Add crons crates to `Cargo.toml` workspace members ✅
 - [x] Add crash crates to `Cargo.toml` workspace members ✅
-- [ ] Add sessions crates to `Cargo.toml` workspace members
+- [x] Add sessions crates to `Cargo.toml` workspace members ✅
 - [x] Run `cargo build --workspace` to verify crons compilation ✅
 - [x] Run `cargo build --workspace` to verify crash compilation ✅
+- [x] Run `cargo build --workspace` to verify sessions compilation ✅
 - [x] Run `cargo2nix-update` ✅
 
 ---
@@ -413,9 +446,11 @@ loom-server-crons/
 - [x] Implement missed run detector job ([specs/crons-system.md#71-background-scheduler](specs/crons-system.md)) ✅
 - [x] Implement timeout detector job ([specs/crons-system.md#72-timeout-detection](specs/crons-system.md)) ✅
 
-### 4.3 Create `loom-server-sessions`
+### 4.3 Create `loom-server-sessions` ✅ PARTIALLY COMPLETED (Repository Layer)
 
 **Path:** `crates/loom-server-sessions/`
+
+**Status:** Repository layer completed 2026-01-19. Handlers implemented in loom-server/src/routes/app_sessions.rs.
 
 **Structure:**
 ```
@@ -423,25 +458,18 @@ loom-server-sessions/
 ├── Cargo.toml
 └── src/
     ├── lib.rs
-    ├── repository.rs    # SessionsRepository trait + SqliteSessionsRepository
-    ├── aggregator.rs    # Hourly aggregation job
-    ├── cleanup.rs       # Old session cleanup job
-    ├── release_health.rs # Health calculation
-    ├── sse.rs           # SSE broadcaster
-    └── handlers/
-        ├── mod.rs
-        ├── sessions.rs  # Session ingest
-        └── releases.rs  # Release health queries
+    ├── repository.rs    # SessionsRepository trait + SqliteSessionsRepository ✅
+    └── error.rs         # Error types ✅
 ```
 
 **Implementation checklist:**
-- [ ] Create `Cargo.toml`
-- [ ] Define `SessionsRepository` trait
-- [ ] Implement `SqliteSessionsRepository`
-- [ ] Implement sampling logic ([specs/sessions-system.md#6-sampling](specs/sessions-system.md))
+- [x] Create `Cargo.toml` ✅
+- [x] Define `SessionsRepository` trait ✅
+- [x] Implement `SqliteSessionsRepository` (basic operations) ✅
+- [x] Implement sampling logic ([specs/sessions-system.md#6-sampling](specs/sessions-system.md)) ✅ (deterministic hash-based)
 - [ ] Implement hourly aggregation job ([specs/sessions-system.md#71-hourly-aggregation-job](specs/sessions-system.md))
 - [ ] Implement cleanup job ([specs/sessions-system.md#72-cleanup-job](specs/sessions-system.md))
-- [ ] Implement release health calculation ([specs/sessions-system.md#81-query-for-release-health](specs/sessions-system.md))
+- [x] Implement release health calculation ([specs/sessions-system.md#81-query-for-release-health](specs/sessions-system.md)) ✅
 
 ---
 
@@ -455,7 +483,7 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
 
 - [x] Add `loom-server-crons` dependency ✅
 - [x] Add `loom-server-crash` dependency ✅
-- [ ] Add `loom-server-sessions` dependency
+- [x] Add `loom-server-sessions` dependency ✅
 
 ### 5.2 Create Route Files
 
@@ -494,12 +522,12 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
   - Reference: [specs/crons-system.md#8-api-endpoints](specs/crons-system.md)
   - Nginx proxy added in `infra/nixos-modules/loom-web.nix` for `/ping/` routes
 
-- [ ] **`sessions.rs`** — Session analytics routes
-  - `POST /api/sessions/start` — Start session
-  - `POST /api/sessions/end` — End session
-  - `GET /api/projects/{id}/releases` — Release health list
-  - `GET /api/projects/{id}/releases/{version}` — Release detail
-  - `GET /api/projects/{id}/sessions` — Session list
+- [x] **`app_sessions.rs`** — Session analytics routes ✅ COMPLETED 2026-01-19
+  - `POST /api/sessions/start` — Start session ✅
+  - `POST /api/sessions/end` — End session ✅
+  - `GET /api/app-sessions` — Session list ✅
+  - `GET /api/app-sessions/releases` — Release health list ✅
+  - `GET /api/app-sessions/releases/{version}` — Release detail ✅
   - Reference: [specs/sessions-system.md#9-api-endpoints](specs/sessions-system.md)
 
 ### 5.3 Register Routes
@@ -513,7 +541,11 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
 - [x] Update `crates/loom-server/src/api.rs` to add crash_repo and crash_broadcaster to `AppState` ✅
 - [x] Wire up crash route handlers in router configuration ✅
   - `/api/crash/*` routes on AuthedRouter (authenticated)
-- [ ] Update for sessions routes
+- [x] Update `crates/loom-server/src/routes/mod.rs` to include app_sessions module ✅
+- [x] Update `crates/loom-server/src/api.rs` to add sessions_repo to `AppState` ✅
+- [x] Wire up sessions route handlers in router configuration ✅
+  - `/api/sessions/*` routes on AuthedRouter (session start/end)
+  - `/api/app-sessions/*` routes on AuthedRouter (session list, release health)
 
 ### 5.4 Add OpenAPI Documentation
 
@@ -978,7 +1010,7 @@ Reference pattern: [crates/loom-server/tests/authz_*_tests.rs](crates/loom-serve
 
 - [x] `tests/authz/crash.rs` — Crash endpoint authorization ✅ (32 tests: project CRUD, capture, issues list, issue detail, issue events, releases CRUD)
 - [x] `tests/authz/crons.rs` — Cron endpoint authorization ✅ (29 tests including stream endpoint)
-- [ ] `tests/authz_sessions_tests.rs` — Session endpoint authorization
+- [x] `tests/authz/sessions.rs` — Session endpoint authorization ✅ (19 tests: session start/end, list, release health)
 
 ### 13.4 UI Tests
 

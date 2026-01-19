@@ -13,6 +13,7 @@ mod authz_scm_team_tests;
 mod authz_webhook_tests;
 mod crash;
 mod crons;
+mod sessions;
 mod flags;
 mod orgs;
 mod repos;

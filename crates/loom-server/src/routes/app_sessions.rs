@@ -244,6 +244,7 @@ pub async fn start_session(
 
 #[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct SessionEndRequest {
+	pub project_id: String,
 	pub session_id: String,
 	pub status: String,
 	#[serde(default)]
@@ -266,16 +267,65 @@ pub struct SessionEndResponse {
         (status = 200, description = "Session ended", body = SessionEndResponse),
         (status = 400, description = "Invalid request", body = SessionsErrorResponse),
         (status = 401, description = "Not authenticated", body = SessionsErrorResponse),
+        (status = 403, description = "Not a member of this organization", body = SessionsErrorResponse),
         (status = 404, description = "Session not found", body = SessionsErrorResponse)
     ),
     tag = "app-sessions"
 )]
-#[instrument(skip(state, _auth), fields(session_id = %body.session_id))]
+#[instrument(skip(state, auth), fields(session_id = %body.session_id))]
 pub async fn end_session(
 	State(state): State<AppState>,
-	RequireAuth(_auth): RequireAuth,
+	RequireAuth(auth): RequireAuth,
 	Json(body): Json<SessionEndRequest>,
 ) -> impl IntoResponse {
+	// Parse project_id and get the project to verify org membership
+	let project_id: ProjectId = match body.project_id.parse() {
+		Ok(id) => id,
+		Err(_) => {
+			return (
+				StatusCode::BAD_REQUEST,
+				Json(SessionsErrorResponse {
+					error: "invalid_project_id".to_string(),
+					message: "Invalid project ID format".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Get the project to check org membership
+	let project = match state.crash_repo.get_project_by_id(project_id).await {
+		Ok(Some(p)) => p,
+		Ok(None) => {
+			return (
+				StatusCode::NOT_FOUND,
+				Json(SessionsErrorResponse {
+					error: "project_not_found".to_string(),
+					message: "Project not found".to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get project");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(SessionsErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Internal error".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Verify org membership
+	if let Err(response) =
+		verify_org_membership(&state, &project.org_id.0, &auth.user.id).await
+	{
+		return response.into_response();
+	}
+
 	let session_id: SessionId = match body.session_id.parse() {
 		Ok(id) => id,
 		Err(_) => {
