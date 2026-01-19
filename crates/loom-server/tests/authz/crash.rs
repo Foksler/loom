@@ -347,3 +347,237 @@ async fn list_issues_succeeds_for_org_member() {
 		"Org member should be able to list issues"
 	);
 }
+
+// ============================================================================
+// Helper: Create a crash event and return the issue ID
+// ============================================================================
+
+async fn create_test_issue(app: &TestApp, project_id: &str) -> String {
+	let response = app
+		.post(
+			"/api/crash/capture",
+			Some(&app.fixtures.org_a.member),
+			json!({
+				"project_id": project_id,
+				"exception_type": "TypeError",
+				"exception_value": "Cannot read property 'x' of undefined",
+				"stacktrace": {
+					"frames": [{
+						"function": "handleClick",
+						"filename": "app.js",
+						"lineno": 42,
+						"in_app": true
+					}]
+				}
+			}),
+		)
+		.await;
+
+	assert_eq!(
+		response.status(),
+		StatusCode::OK,
+		"Failed to capture crash for test issue"
+	);
+
+	let (_, body) = response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let result: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+
+	result["issue_id"].as_str().unwrap().to_string()
+}
+
+// ============================================================================
+// Get Issue Detail Tests
+// ============================================================================
+
+#[tokio::test]
+async fn get_issue_requires_auth() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "get-issue-auth-test").await;
+	let issue_id = create_test_issue(&app, &project_id).await;
+
+	// No auth should return 401
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/issues/{}", project_id, issue_id),
+			None,
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::UNAUTHORIZED,
+		"Get issue without auth should return 401"
+	);
+}
+
+#[tokio::test]
+async fn get_issue_requires_org_membership() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "get-issue-membership-test").await;
+	let issue_id = create_test_issue(&app, &project_id).await;
+
+	// User from org_b trying to get issue in org_a's project should be forbidden
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/issues/{}", project_id, issue_id),
+			Some(&app.fixtures.org_b.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::FORBIDDEN,
+		"Non-member should not be able to get issue in another org's project"
+	);
+}
+
+#[tokio::test]
+async fn get_issue_succeeds_for_org_member() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "get-issue-success-test").await;
+	let issue_id = create_test_issue(&app, &project_id).await;
+
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/issues/{}", project_id, issue_id),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::OK,
+		"Org member should be able to get issue detail"
+	);
+}
+
+#[tokio::test]
+async fn get_issue_returns_404_for_nonexistent_issue() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "get-issue-404-test").await;
+
+	let response = app
+		.get(
+			&format!(
+				"/api/crash/projects/{}/issues/{}",
+				project_id,
+				uuid::Uuid::new_v4()
+			),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::NOT_FOUND,
+		"Getting nonexistent issue should return 404"
+	);
+}
+
+// ============================================================================
+// List Issue Events Tests
+// ============================================================================
+
+#[tokio::test]
+async fn list_issue_events_requires_auth() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "list-events-auth-test").await;
+	let issue_id = create_test_issue(&app, &project_id).await;
+
+	// No auth should return 401
+	let response = app
+		.get(
+			&format!(
+				"/api/crash/projects/{}/issues/{}/events",
+				project_id, issue_id
+			),
+			None,
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::UNAUTHORIZED,
+		"List issue events without auth should return 401"
+	);
+}
+
+#[tokio::test]
+async fn list_issue_events_requires_org_membership() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "list-events-membership-test").await;
+	let issue_id = create_test_issue(&app, &project_id).await;
+
+	// User from org_b trying to list events in org_a's project should be forbidden
+	let response = app
+		.get(
+			&format!(
+				"/api/crash/projects/{}/issues/{}/events",
+				project_id, issue_id
+			),
+			Some(&app.fixtures.org_b.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::FORBIDDEN,
+		"Non-member should not be able to list events in another org's project"
+	);
+}
+
+#[tokio::test]
+async fn list_issue_events_succeeds_for_org_member() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "list-events-success-test").await;
+	let issue_id = create_test_issue(&app, &project_id).await;
+
+	let response = app
+		.get(
+			&format!(
+				"/api/crash/projects/{}/issues/{}/events",
+				project_id, issue_id
+			),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::OK,
+		"Org member should be able to list issue events"
+	);
+
+	// Verify we got at least one event (from the test crash we created)
+	let (_, body) = response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let events: Vec<serde_json::Value> = serde_json::from_slice(&body_bytes).unwrap();
+	assert!(
+		!events.is_empty(),
+		"Should have at least one event for the issue"
+	);
+}
+
+#[tokio::test]
+async fn list_issue_events_returns_404_for_nonexistent_issue() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "list-events-404-test").await;
+
+	let response = app
+		.get(
+			&format!(
+				"/api/crash/projects/{}/issues/{}/events",
+				project_id,
+				uuid::Uuid::new_v4()
+			),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::NOT_FOUND,
+		"Listing events for nonexistent issue should return 404"
+	);
+}

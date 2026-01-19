@@ -876,3 +876,408 @@ pub async fn resolve_issue(
 
 	Ok(Json(IssueResponse::from(issue)))
 }
+
+// ============================================================================
+// Issue Detail Endpoint
+// ============================================================================
+
+/// Detailed response for a single issue including metadata.
+#[derive(Debug, Serialize)]
+#[derive(utoipa::ToSchema)]
+pub struct IssueDetailResponse {
+	pub id: String,
+	pub org_id: String,
+	pub project_id: String,
+	pub short_id: String,
+	pub fingerprint: String,
+	pub title: String,
+	pub culprit: Option<String>,
+	pub metadata: IssueMetadataResponse,
+	pub status: String,
+	pub level: String,
+	pub priority: String,
+	pub event_count: u64,
+	pub user_count: u64,
+	pub first_seen: String,
+	pub last_seen: String,
+	pub resolved_at: Option<String>,
+	pub resolved_by: Option<String>,
+	pub resolved_in_release: Option<String>,
+	pub times_regressed: u32,
+	pub last_regressed_at: Option<String>,
+	pub regressed_in_release: Option<String>,
+	pub assigned_to: Option<String>,
+	pub created_at: String,
+	pub updated_at: String,
+}
+
+/// Issue metadata response.
+#[derive(Debug, Serialize)]
+#[derive(utoipa::ToSchema)]
+pub struct IssueMetadataResponse {
+	pub exception_type: String,
+	pub exception_value: String,
+	pub filename: Option<String>,
+	pub function: Option<String>,
+}
+
+impl From<Issue> for IssueDetailResponse {
+	fn from(i: Issue) -> Self {
+		Self {
+			id: i.id.to_string(),
+			org_id: i.org_id.to_string(),
+			project_id: i.project_id.to_string(),
+			short_id: i.short_id,
+			fingerprint: i.fingerprint,
+			title: i.title,
+			culprit: i.culprit,
+			metadata: IssueMetadataResponse {
+				exception_type: i.metadata.exception_type,
+				exception_value: i.metadata.exception_value,
+				filename: i.metadata.filename,
+				function: i.metadata.function,
+			},
+			status: i.status.to_string(),
+			level: i.level.to_string(),
+			priority: i.priority.to_string(),
+			event_count: i.event_count,
+			user_count: i.user_count,
+			first_seen: i.first_seen.to_rfc3339(),
+			last_seen: i.last_seen.to_rfc3339(),
+			resolved_at: i.resolved_at.map(|dt| dt.to_rfc3339()),
+			resolved_by: i.resolved_by.map(|u| u.0.to_string()),
+			resolved_in_release: i.resolved_in_release,
+			times_regressed: i.times_regressed,
+			last_regressed_at: i.last_regressed_at.map(|dt| dt.to_rfc3339()),
+			regressed_in_release: i.regressed_in_release,
+			assigned_to: i.assigned_to.map(|u| u.0.to_string()),
+			created_at: i.created_at.to_rfc3339(),
+			updated_at: i.updated_at.to_rfc3339(),
+		}
+	}
+}
+
+/// GET /api/crash/projects/{project_id}/issues/{issue_id} - Get issue detail
+#[utoipa::path(
+	get,
+	path = "/api/crash/projects/{project_id}/issues/{issue_id}",
+	params(
+		("project_id" = String, Path, description = "Project ID"),
+		("issue_id" = String, Path, description = "Issue ID"),
+	),
+	responses(
+		(status = 200, description = "Issue detail", body = IssueDetailResponse),
+		(status = 403, description = "Forbidden", body = CrashErrorResponse),
+		(status = 404, description = "Issue not found", body = CrashErrorResponse),
+	),
+	security(("bearer" = [])),
+	tag = "crash"
+)]
+#[instrument(skip(state, current_user))]
+pub async fn get_issue(
+	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
+	Path((project_id_str, issue_id_str)): Path<(String, String)>,
+) -> Result<Json<IssueDetailResponse>, (StatusCode, Json<CrashErrorResponse>)> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	let project_id: ProjectId = project_id_str.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_project_id".to_string(),
+				message: "Invalid project ID".to_string(),
+			}),
+		)
+	})?;
+
+	let issue_id: IssueId = issue_id_str.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_issue_id".to_string(),
+				message: "Invalid issue ID".to_string(),
+			}),
+		)
+	})?;
+
+	let project = state
+		.crash_repo
+		.get_project_by_id(project_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get project");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "project_not_found".to_string(),
+					message: "Project not found".to_string(),
+				}),
+			)
+		})?;
+
+	verify_org_membership(&state, &project.org_id, &current_user.user.id, &locale).await?;
+
+	let issue = state
+		.crash_repo
+		.get_issue_by_id(issue_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get issue");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "issue_not_found".to_string(),
+					message: "Issue not found".to_string(),
+				}),
+			)
+		})?;
+
+	// Verify issue belongs to project
+	if issue.project_id != project_id {
+		return Err((
+			StatusCode::NOT_FOUND,
+			Json(CrashErrorResponse {
+				error: "issue_not_found".to_string(),
+				message: "Issue not found".to_string(),
+			}),
+		));
+	}
+
+	info!(issue_id = %issue.id, short_id = %issue.short_id, "Issue detail retrieved");
+
+	Ok(Json(IssueDetailResponse::from(issue)))
+}
+
+// ============================================================================
+// Issue Events Endpoint
+// ============================================================================
+
+/// Response for a crash event.
+#[derive(Debug, Serialize)]
+#[derive(utoipa::ToSchema)]
+pub struct CrashEventResponse {
+	pub id: String,
+	pub issue_id: Option<String>,
+	pub person_id: Option<String>,
+	pub distinct_id: String,
+	pub exception_type: String,
+	pub exception_value: String,
+	pub stacktrace: StacktraceResponse,
+	pub release: Option<String>,
+	pub dist: Option<String>,
+	pub environment: String,
+	pub platform: String,
+	pub server_name: Option<String>,
+	pub tags: std::collections::HashMap<String, String>,
+	pub active_flags: std::collections::HashMap<String, String>,
+	pub timestamp: String,
+	pub received_at: String,
+}
+
+/// Response for a stacktrace.
+#[derive(Debug, Serialize)]
+#[derive(utoipa::ToSchema)]
+pub struct StacktraceResponse {
+	pub frames: Vec<FrameResponse>,
+}
+
+/// Response for a stack frame.
+#[derive(Debug, Serialize)]
+#[derive(utoipa::ToSchema)]
+pub struct FrameResponse {
+	pub function: Option<String>,
+	pub module: Option<String>,
+	pub filename: Option<String>,
+	pub abs_path: Option<String>,
+	pub lineno: Option<u32>,
+	pub colno: Option<u32>,
+	pub in_app: bool,
+	pub context_line: Option<String>,
+	pub pre_context: Vec<String>,
+	pub post_context: Vec<String>,
+}
+
+impl From<loom_crash_core::CrashEvent> for CrashEventResponse {
+	fn from(e: loom_crash_core::CrashEvent) -> Self {
+		Self {
+			id: e.id.to_string(),
+			issue_id: e.issue_id.map(|i| i.to_string()),
+			person_id: e.person_id.map(|p| p.0.to_string()),
+			distinct_id: e.distinct_id,
+			exception_type: e.exception_type,
+			exception_value: e.exception_value,
+			stacktrace: StacktraceResponse {
+				frames: e
+					.stacktrace
+					.frames
+					.into_iter()
+					.map(|f| FrameResponse {
+						function: f.function,
+						module: f.module,
+						filename: f.filename,
+						abs_path: f.abs_path,
+						lineno: f.lineno,
+						colno: f.colno,
+						in_app: f.in_app,
+						context_line: f.context_line,
+						pre_context: f.pre_context,
+						post_context: f.post_context,
+					})
+					.collect(),
+			},
+			release: e.release,
+			dist: e.dist,
+			environment: e.environment,
+			platform: e.platform.to_string(),
+			server_name: e.server_name,
+			tags: e.tags,
+			active_flags: e.active_flags,
+			timestamp: e.timestamp.to_rfc3339(),
+			received_at: e.received_at.to_rfc3339(),
+		}
+	}
+}
+
+/// GET /api/crash/projects/{project_id}/issues/{issue_id}/events - List events for an issue
+#[utoipa::path(
+	get,
+	path = "/api/crash/projects/{project_id}/issues/{issue_id}/events",
+	params(
+		("project_id" = String, Path, description = "Project ID"),
+		("issue_id" = String, Path, description = "Issue ID"),
+	),
+	responses(
+		(status = 200, description = "List of crash events", body = Vec<CrashEventResponse>),
+		(status = 403, description = "Forbidden", body = CrashErrorResponse),
+		(status = 404, description = "Issue not found", body = CrashErrorResponse),
+	),
+	security(("bearer" = [])),
+	tag = "crash"
+)]
+#[instrument(skip(state, current_user))]
+pub async fn list_issue_events(
+	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
+	Path((project_id_str, issue_id_str)): Path<(String, String)>,
+) -> Result<Json<Vec<CrashEventResponse>>, (StatusCode, Json<CrashErrorResponse>)> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	let project_id: ProjectId = project_id_str.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_project_id".to_string(),
+				message: "Invalid project ID".to_string(),
+			}),
+		)
+	})?;
+
+	let issue_id: IssueId = issue_id_str.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_issue_id".to_string(),
+				message: "Invalid issue ID".to_string(),
+			}),
+		)
+	})?;
+
+	let project = state
+		.crash_repo
+		.get_project_by_id(project_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get project");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "project_not_found".to_string(),
+					message: "Project not found".to_string(),
+				}),
+			)
+		})?;
+
+	verify_org_membership(&state, &project.org_id, &current_user.user.id, &locale).await?;
+
+	// Verify issue exists and belongs to project
+	let issue = state
+		.crash_repo
+		.get_issue_by_id(issue_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get issue");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "issue_not_found".to_string(),
+					message: "Issue not found".to_string(),
+				}),
+			)
+		})?;
+
+	if issue.project_id != project_id {
+		return Err((
+			StatusCode::NOT_FOUND,
+			Json(CrashErrorResponse {
+				error: "issue_not_found".to_string(),
+				message: "Issue not found".to_string(),
+			}),
+		));
+	}
+
+	let events = state
+		.crash_repo
+		.list_events_for_issue(issue_id, 100)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to list events");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?;
+
+	info!(issue_id = %issue.id, event_count = %events.len(), "Issue events retrieved");
+
+	Ok(Json(events.into_iter().map(CrashEventResponse::from).collect()))
+}
