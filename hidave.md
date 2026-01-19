@@ -6,10 +6,21 @@
 # Observability Suite Implementation Plan
 
 **Status:** In Progress\
-**Version:** 1.1\
-**Last Updated:** 2026-01-19
+**Version:** 1.2\
+**Last Updated:** 2026-01-20
 
 ### Recent Progress
+
+**2026-01-20:** Added session aggregation background job ✅ DEPLOYED
+- Created `SessionAggregationJob` in `loom-server/src/jobs/session_aggregation.rs`
+- Runs hourly to aggregate app sessions into release health metrics
+- Groups sessions by project_id, release, environment, hour
+- Tracks: session counts by status, unique/crashed users, duration stats
+- Uses upsert to handle job reruns safely
+- Registered in main.rs with 1-hour interval
+- Verified working in production (job registered, sessions being stored)
+- Enables release health endpoints to return actual metrics
+- Commit: `bf068c4`
 
 **2026-01-19:** Added session analytics endpoints ✅ DEPLOYED
 - Created `loom-sessions-core` crate with core types:
@@ -38,7 +49,7 @@
   - Release health detail: auth required, membership required, 404
   - Session status transitions: crashed, abnormal
 - All endpoints verified working in production via curl
-- Commit: (pending)
+- Commit: `69ec3c71`
 
 **2026-01-19:** Added crash release tracking endpoints ✅ DEPLOYED
 - Added `GET /api/crash/projects/{id}/releases` - List releases for a project
@@ -467,7 +478,7 @@ loom-server-sessions/
 - [x] Define `SessionsRepository` trait ✅
 - [x] Implement `SqliteSessionsRepository` (basic operations) ✅
 - [x] Implement sampling logic ([specs/sessions-system.md#6-sampling](specs/sessions-system.md)) ✅ (deterministic hash-based)
-- [ ] Implement hourly aggregation job ([specs/sessions-system.md#71-hourly-aggregation-job](specs/sessions-system.md))
+- [x] Implement hourly aggregation job ([specs/sessions-system.md#71-hourly-aggregation-job](specs/sessions-system.md)) ✅ (2026-01-20)
 - [ ] Implement cleanup job ([specs/sessions-system.md#72-cleanup-job](specs/sessions-system.md))
 - [x] Implement release health calculation ([specs/sessions-system.md#81-query-for-release-health](specs/sessions-system.md)) ✅
 
@@ -963,8 +974,9 @@ Reference: [crates/loom-jobs/](crates/loom-jobs/)
   - Reference: [specs/crons-system.md#72-timeout-detection](specs/crons-system.md)
   - Implemented in `loom-server/src/jobs/cron_timeout.rs`
 
-- [ ] **Session aggregator** — Runs every hour
+- [x] **Session aggregator** — Runs every hour ✅
   - Reference: [specs/sessions-system.md#71-hourly-aggregation-job](specs/sessions-system.md)
+  - Implemented in `loom-server/src/jobs/session_aggregation.rs`
 
 - [ ] **Session cleanup** — Runs daily
   - Reference: [specs/sessions-system.md#72-cleanup-job](specs/sessions-system.md)
