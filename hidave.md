@@ -11,6 +11,15 @@
 
 ### Recent Progress
 
+**2026-01-20:** Added app session cleanup background job ✅ DEPLOYED
+- Created `AppSessionCleanupJob` in `loom-server/src/jobs/app_session_cleanup.rs`
+- Runs daily to delete individual app sessions older than 30 days
+- Keeps session aggregates forever for historical release health metrics
+- Logs deleted count and cutoff timestamp
+- Registered in main.rs with 24-hour interval
+- All 17 sessions authorization tests pass
+- This completes the session cleanup job from Phase 12.1 of the implementation plan
+
 **2026-01-20:** Added session aggregation background job ✅ DEPLOYED
 - Created `SessionAggregationJob` in `loom-server/src/jobs/session_aggregation.rs`
 - Runs hourly to aggregate app sessions into release health metrics
@@ -479,7 +488,7 @@ loom-server-sessions/
 - [x] Implement `SqliteSessionsRepository` (basic operations) ✅
 - [x] Implement sampling logic ([specs/sessions-system.md#6-sampling](specs/sessions-system.md)) ✅ (deterministic hash-based)
 - [x] Implement hourly aggregation job ([specs/sessions-system.md#71-hourly-aggregation-job](specs/sessions-system.md)) ✅ (2026-01-20)
-- [ ] Implement cleanup job ([specs/sessions-system.md#72-cleanup-job](specs/sessions-system.md))
+- [x] Implement cleanup job ([specs/sessions-system.md#72-cleanup-job](specs/sessions-system.md)) ✅ (2026-01-20)
 - [x] Implement release health calculation ([specs/sessions-system.md#81-query-for-release-health](specs/sessions-system.md)) ✅
 
 ---
@@ -978,8 +987,9 @@ Reference: [crates/loom-jobs/](crates/loom-jobs/)
   - Reference: [specs/sessions-system.md#71-hourly-aggregation-job](specs/sessions-system.md)
   - Implemented in `loom-server/src/jobs/session_aggregation.rs`
 
-- [ ] **Session cleanup** — Runs daily
+- [x] **Session cleanup** — Runs daily ✅
   - Reference: [specs/sessions-system.md#72-cleanup-job](specs/sessions-system.md)
+  - Implemented in `loom-server/src/jobs/app_session_cleanup.rs`
 
 - [ ] **Symbol artifact cleanup** — Runs daily
   - Reference: [specs/crash-system.md#13-retention-policy](specs/crash-system.md)

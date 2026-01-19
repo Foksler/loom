@@ -216,6 +216,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		tracing::info!("Registered session aggregation background job");
 	}
 
+	// Register app session cleanup job
+	{
+		use loom_server::jobs::AppSessionCleanupJob;
+
+		// Run daily to delete old app sessions (keep aggregates forever)
+		scheduler.register_periodic(
+			Arc::new(AppSessionCleanupJob::new(Arc::clone(&state.sessions_repo))),
+			Duration::from_secs(24 * 60 * 60), // 24 hours
+		);
+
+		tracing::info!("Registered app session cleanup background job");
+	}
+
 	let scheduler = Arc::new(scheduler);
 
 	// Update state with scheduler and repository
