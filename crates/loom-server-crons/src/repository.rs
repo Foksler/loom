@@ -9,8 +9,7 @@ use sqlx::SqlitePool;
 use tracing::instrument;
 
 use loom_crons_core::{
-	CheckIn, CheckInId, CheckInSource, CheckInStatus, Monitor, MonitorHealth, MonitorId,
-	MonitorSchedule, MonitorStatus, OrgId,
+	CheckIn, CheckInId, CheckInStatus, Monitor, MonitorHealth, MonitorId, MonitorSchedule, OrgId,
 };
 
 use crate::error::{CronsServerError, Result};
@@ -24,6 +23,7 @@ pub trait CronsRepository: Send + Sync {
 	async fn get_monitor_by_slug(&self, org_id: OrgId, slug: &str) -> Result<Option<Monitor>>;
 	async fn get_monitor_by_ping_key(&self, ping_key: &str) -> Result<Option<Monitor>>;
 	async fn list_monitors(&self, org_id: OrgId) -> Result<Vec<Monitor>>;
+	async fn list_all_active_monitors(&self) -> Result<Vec<Monitor>>;
 	async fn update_monitor(&self, monitor: &Monitor) -> Result<()>;
 	async fn delete_monitor(&self, id: MonitorId) -> Result<bool>;
 
@@ -46,6 +46,13 @@ pub trait CronsRepository: Send + Sync {
 		id: MonitorId,
 		is_failure: bool,
 	) -> Result<()>;
+
+	// Background job queries
+	/// Find monitors that are overdue (next_expected_at + margin < now) and haven't received a check-in since.
+	async fn list_overdue_monitors(&self, now: chrono::DateTime<Utc>) -> Result<Vec<Monitor>>;
+
+	/// Find in-progress check-ins that have exceeded the monitor's max_runtime_minutes.
+	async fn list_timed_out_checkins(&self, now: chrono::DateTime<Utc>) -> Result<Vec<(CheckIn, Monitor)>>;
 }
 
 /// SQLite implementation of the crons repository.
@@ -427,6 +434,105 @@ impl CronsRepository for SqliteCronsRepository {
 
 		Ok(())
 	}
+
+	#[instrument(skip(self))]
+	async fn list_all_active_monitors(&self) -> Result<Vec<Monitor>> {
+		let rows = sqlx::query_as::<_, MonitorRow>(
+			r#"
+			SELECT id, org_id, slug, name, description,
+				   status, health,
+				   schedule_type, schedule_value, timezone,
+				   checkin_margin_minutes, max_runtime_minutes,
+				   ping_key, environments,
+				   last_checkin_at, last_checkin_status, next_expected_at,
+				   consecutive_failures, total_checkins, total_failures,
+				   created_at, updated_at
+			FROM cron_monitors
+			WHERE status = 'active'
+			ORDER BY slug ASC
+			"#,
+		)
+		.fetch_all(&self.pool)
+		.await?;
+
+		rows.into_iter().map(TryInto::try_into).collect()
+	}
+
+	#[instrument(skip(self))]
+	async fn list_overdue_monitors(&self, now: chrono::DateTime<Utc>) -> Result<Vec<Monitor>> {
+		// Find monitors where:
+		// 1. status = 'active'
+		// 2. next_expected_at is not null
+		// 3. next_expected_at + margin_minutes < now (overdue)
+		// 4. Either no last_checkin_at, or last_checkin_at < next_expected_at (hasn't checked in since expectation)
+		//
+		// SQLite doesn't have native datetime arithmetic, so we use strftime to compare timestamps
+		let now_str = now.to_rfc3339();
+		let rows = sqlx::query_as::<_, MonitorRow>(
+			r#"
+			SELECT id, org_id, slug, name, description,
+				   status, health,
+				   schedule_type, schedule_value, timezone,
+				   checkin_margin_minutes, max_runtime_minutes,
+				   ping_key, environments,
+				   last_checkin_at, last_checkin_status, next_expected_at,
+				   consecutive_failures, total_checkins, total_failures,
+				   created_at, updated_at
+			FROM cron_monitors
+			WHERE status = 'active'
+			  AND next_expected_at IS NOT NULL
+			  AND datetime(next_expected_at, '+' || checkin_margin_minutes || ' minutes') < datetime(?)
+			  AND (last_checkin_at IS NULL OR last_checkin_at < next_expected_at)
+			  AND health != 'missed'
+			"#,
+		)
+		.bind(&now_str)
+		.fetch_all(&self.pool)
+		.await?;
+
+		rows.into_iter().map(TryInto::try_into).collect()
+	}
+
+	#[instrument(skip(self))]
+	async fn list_timed_out_checkins(&self, now: chrono::DateTime<Utc>) -> Result<Vec<(CheckIn, Monitor)>> {
+		// Find check-ins where:
+		// 1. status = 'in_progress'
+		// 2. monitor has max_runtime_minutes set
+		// 3. started_at + max_runtime_minutes < now
+		let now_str = now.to_rfc3339();
+
+		// We need to join checkins with monitors to get the max_runtime_minutes
+		let rows = sqlx::query_as::<_, CheckInWithMonitorRow>(
+			r#"
+			SELECT
+				c.id as checkin_id, c.monitor_id, c.status as checkin_status,
+				c.started_at, c.finished_at, c.duration_ms,
+				c.environment, c.release, c.exit_code, c.output, c.crash_event_id,
+				c.source, c.created_at as checkin_created_at,
+				m.id as monitor_row_id, m.org_id, m.slug, m.name, m.description,
+				m.status as monitor_status, m.health,
+				m.schedule_type, m.schedule_value, m.timezone,
+				m.checkin_margin_minutes, m.max_runtime_minutes,
+				m.ping_key, m.environments,
+				m.last_checkin_at, m.last_checkin_status, m.next_expected_at,
+				m.consecutive_failures, m.total_checkins, m.total_failures,
+				m.created_at as monitor_created_at, m.updated_at as monitor_updated_at
+			FROM cron_checkins c
+			JOIN cron_monitors m ON m.id = c.monitor_id
+			WHERE c.status = 'in_progress'
+			  AND m.max_runtime_minutes IS NOT NULL
+			  AND c.started_at IS NOT NULL
+			  AND datetime(c.started_at, '+' || m.max_runtime_minutes || ' minutes') < datetime(?)
+			"#,
+		)
+		.bind(&now_str)
+		.fetch_all(&self.pool)
+		.await?;
+
+		rows.into_iter()
+			.map(|row| row.try_into())
+			.collect()
+	}
 }
 
 // Database row types for sqlx
@@ -602,5 +708,175 @@ impl TryFrom<CheckInRow> for CheckIn {
 				.map_err(|_| CronsServerError::Internal("Invalid created_at".to_string()))?
 				.with_timezone(&chrono::Utc),
 		})
+	}
+}
+
+/// Joined row type for check-ins with their monitors (for timeout detection).
+#[derive(sqlx::FromRow)]
+struct CheckInWithMonitorRow {
+	// Check-in fields
+	checkin_id: String,
+	monitor_id: String,
+	checkin_status: String,
+	started_at: Option<String>,
+	finished_at: String,
+	duration_ms: Option<i64>,
+	environment: Option<String>,
+	release: Option<String>,
+	exit_code: Option<i32>,
+	output: Option<String>,
+	crash_event_id: Option<String>,
+	source: String,
+	checkin_created_at: String,
+	// Monitor fields
+	#[allow(dead_code)]
+	monitor_row_id: String,
+	org_id: String,
+	slug: String,
+	name: String,
+	description: Option<String>,
+	monitor_status: String,
+	health: String,
+	schedule_type: String,
+	schedule_value: String,
+	timezone: String,
+	checkin_margin_minutes: i32,
+	max_runtime_minutes: Option<i32>,
+	ping_key: String,
+	environments: String,
+	last_checkin_at: Option<String>,
+	last_checkin_status: Option<String>,
+	next_expected_at: Option<String>,
+	consecutive_failures: i32,
+	total_checkins: i64,
+	total_failures: i64,
+	monitor_created_at: String,
+	monitor_updated_at: String,
+}
+
+impl TryFrom<CheckInWithMonitorRow> for (CheckIn, Monitor) {
+	type Error = CronsServerError;
+
+	fn try_from(row: CheckInWithMonitorRow) -> Result<Self> {
+		let checkin = CheckIn {
+			id: row
+				.checkin_id
+				.parse()
+				.map_err(|_| CronsServerError::Internal("Invalid check-in ID".to_string()))?,
+			monitor_id: row
+				.monitor_id
+				.parse()
+				.map_err(|_| CronsServerError::Internal("Invalid monitor ID".to_string()))?,
+			status: row
+				.checkin_status
+				.parse()
+				.map_err(|_| CronsServerError::Internal("Invalid status".to_string()))?,
+			started_at: row
+				.started_at
+				.map(|s| {
+					chrono::DateTime::parse_from_rfc3339(&s)
+						.map_err(|_| CronsServerError::Internal("Invalid started_at".to_string()))
+						.map(|dt| dt.with_timezone(&chrono::Utc))
+				})
+				.transpose()?,
+			finished_at: chrono::DateTime::parse_from_rfc3339(&row.finished_at)
+				.map_err(|_| CronsServerError::Internal("Invalid finished_at".to_string()))?
+				.with_timezone(&chrono::Utc),
+			duration_ms: row.duration_ms.map(|d| d as u64),
+			environment: row.environment,
+			release: row.release,
+			exit_code: row.exit_code,
+			output: row.output,
+			crash_event_id: row.crash_event_id,
+			source: row
+				.source
+				.parse()
+				.map_err(|_| CronsServerError::Internal("Invalid source".to_string()))?,
+			created_at: chrono::DateTime::parse_from_rfc3339(&row.checkin_created_at)
+				.map_err(|_| CronsServerError::Internal("Invalid created_at".to_string()))?
+				.with_timezone(&chrono::Utc),
+		};
+
+		let environments: Vec<String> = serde_json::from_str(&row.environments)?;
+
+		let schedule = match row.schedule_type.as_str() {
+			"cron" => MonitorSchedule::Cron {
+				expression: row.schedule_value,
+			},
+			"interval" => MonitorSchedule::Interval {
+				minutes: row
+					.schedule_value
+					.parse()
+					.map_err(|_| CronsServerError::Internal("Invalid interval value".to_string()))?,
+			},
+			_ => {
+				return Err(CronsServerError::Internal(format!(
+					"Unknown schedule type: {}",
+					row.schedule_type
+				)))
+			}
+		};
+
+		let monitor = Monitor {
+			id: row
+				.monitor_id
+				.parse()
+				.map_err(|_| CronsServerError::Internal("Invalid monitor ID".to_string()))?,
+			org_id: row
+				.org_id
+				.parse()
+				.map_err(|_| CronsServerError::Internal("Invalid org ID".to_string()))?,
+			slug: row.slug,
+			name: row.name,
+			description: row.description,
+			status: row
+				.monitor_status
+				.parse()
+				.map_err(|_| CronsServerError::Internal("Invalid status".to_string()))?,
+			health: row
+				.health
+				.parse()
+				.map_err(|_| CronsServerError::Internal("Invalid health".to_string()))?,
+			schedule,
+			timezone: row.timezone,
+			checkin_margin_minutes: row.checkin_margin_minutes as u32,
+			max_runtime_minutes: row.max_runtime_minutes.map(|m| m as u32),
+			ping_key: row.ping_key,
+			environments,
+			last_checkin_at: row
+				.last_checkin_at
+				.map(|s| {
+					chrono::DateTime::parse_from_rfc3339(&s)
+						.map_err(|_| CronsServerError::Internal("Invalid last_checkin_at".to_string()))
+						.map(|dt| dt.with_timezone(&chrono::Utc))
+				})
+				.transpose()?,
+			last_checkin_status: row
+				.last_checkin_status
+				.map(|s| {
+					s.parse()
+						.map_err(|_| CronsServerError::Internal("Invalid last_checkin_status".to_string()))
+				})
+				.transpose()?,
+			next_expected_at: row
+				.next_expected_at
+				.map(|s| {
+					chrono::DateTime::parse_from_rfc3339(&s)
+						.map_err(|_| CronsServerError::Internal("Invalid next_expected_at".to_string()))
+						.map(|dt| dt.with_timezone(&chrono::Utc))
+				})
+				.transpose()?,
+			consecutive_failures: row.consecutive_failures as u32,
+			total_checkins: row.total_checkins as u64,
+			total_failures: row.total_failures as u64,
+			created_at: chrono::DateTime::parse_from_rfc3339(&row.monitor_created_at)
+				.map_err(|_| CronsServerError::Internal("Invalid created_at".to_string()))?
+				.with_timezone(&chrono::Utc),
+			updated_at: chrono::DateTime::parse_from_rfc3339(&row.monitor_updated_at)
+				.map_err(|_| CronsServerError::Internal("Invalid updated_at".to_string()))?
+				.with_timezone(&chrono::Utc),
+		};
+
+		Ok((checkin, monitor))
 	}
 }

@@ -186,6 +186,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		);
 	}
 
+	// Register cron monitoring background jobs
+	{
+		use loom_server::jobs::{CronMissedRunDetectorJob, CronTimeoutDetectorJob};
+
+		// Run every 60 seconds to check for missed runs and timeouts
+		scheduler.register_periodic(
+			Arc::new(CronMissedRunDetectorJob::new(Arc::clone(&state.crons_repo))),
+			Duration::from_secs(60),
+		);
+		scheduler.register_periodic(
+			Arc::new(CronTimeoutDetectorJob::new(Arc::clone(&state.crons_repo))),
+			Duration::from_secs(60),
+		);
+
+		tracing::info!("Registered cron monitoring background jobs");
+	}
+
 	let scheduler = Arc::new(scheduler);
 
 	// Update state with scheduler and repository

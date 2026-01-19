@@ -169,7 +169,7 @@ pub fn truncate_output(output: &str) -> String {
 		let valid_len = truncated
 			.char_indices()
 			.filter(|(i, _)| *i <= MAX_OUTPUT_BYTES)
-			.last()
+			.next_back()
 			.map(|(i, c)| i + c.len_utf8())
 			.unwrap_or(0);
 		format!("{}...[truncated]", &output[..valid_len])

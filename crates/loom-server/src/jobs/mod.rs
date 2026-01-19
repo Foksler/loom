@@ -1,6 +1,8 @@
 // Copyright (c) 2025 Geoffrey Huntley <ghuntley@ghuntley.com>. All rights reserved.
 // SPDX-License-Identifier: Proprietary
 
+mod cron_missed_run;
+mod cron_timeout;
 mod job_history_cleanup;
 mod mirror_cleanup;
 mod mirror_sync;
@@ -11,6 +13,8 @@ mod token_refresh;
 mod weaver_cleanup;
 mod webhook_retry;
 
+pub use cron_missed_run::CronMissedRunDetectorJob;
+pub use cron_timeout::CronTimeoutDetectorJob;
 pub use job_history_cleanup::JobHistoryCleanupJob;
 pub use mirror_cleanup::MirrorCleanupJob;
 pub use mirror_sync::MirrorSyncJob;
