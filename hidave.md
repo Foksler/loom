@@ -11,6 +11,15 @@
 
 ### Recent Progress
 
+**2026-01-19:** Added crash SSE stream endpoint for real-time events ✅ VERIFIED IN PRODUCTION
+- Added `GET /api/crash/projects/{project_id}/stream` SSE endpoint for real-time crash events
+- Added `event_type()` and `init()` methods to `CrashStreamEvent` for SSE serialization
+- Added `get_issue_count()` method to `CrashRepository` for init event
+- Events broadcast: `init`, `crash.new`, `issue.regressed`, `issue.resolved`, `issue.assigned`, `heartbeat`
+- Added 4 authorization tests for stream endpoint (auth required, membership required, success, 404)
+- Verified working in production: init event returns project_id and issue_count, crash capture triggers crash.new broadcast
+- Commit: `8c1c886`
+
 **2026-01-19:** Added crash issue detail and events endpoints ✅ VERIFIED IN PRODUCTION
 - Added `GET /api/crash/projects/{project_id}/issues/{issue_id}` - Issue detail endpoint
 - Added `GET /api/crash/projects/{project_id}/issues/{issue_id}/events` - List events for issue
@@ -445,7 +454,7 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
   - `GET /api/crash/projects/{id}/issues/{id}/events` — List events for issue ✅
   - `POST /api/crash/batch` — Batch ingest (TODO)
   - `POST /api/crash/projects/{id}/artifacts` — Upload symbols (multipart) (TODO)
-  - `GET /api/crash/projects/{id}/stream` — SSE stream (TODO)
+  - `GET /api/crash/projects/{id}/stream` — SSE stream ✅
   - Reference: [specs/crash-system.md#9-api-endpoints](specs/crash-system.md)
 
 - [x] **`crons.rs`** — Cron monitoring routes ✅ COMPLETED 2026-01-19
