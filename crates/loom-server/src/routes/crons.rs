@@ -20,9 +20,52 @@ use loom_crons_core::{
 	truncate_output, CheckIn, CheckInId, CheckInSource, CheckInStatus, Monitor, MonitorHealth,
 	MonitorId, MonitorSchedule, MonitorStatus, OrgId,
 };
+use loom_server_auth::types::OrgId as AuthOrgId;
 use loom_server_crons::{calculate_next_expected, CronsRepository};
 
 use crate::api::AppState;
+use crate::auth_middleware::RequireAuth;
+use crate::i18n::{resolve_user_locale, t};
+
+/// Error response for crons endpoints.
+#[derive(Debug, Serialize)]
+#[derive(utoipa::ToSchema)]
+pub struct CronsErrorResponse {
+	pub error: String,
+	pub message: String,
+}
+
+/// Verify that the current user is a member of the specified organization.
+async fn verify_org_membership(
+	state: &AppState,
+	org_id: &OrgId,
+	user_id: &loom_server_auth::types::UserId,
+	locale: &str,
+) -> Result<(), (StatusCode, Json<CronsErrorResponse>)> {
+	// Convert OrgId to AuthOrgId
+	let auth_org_id = AuthOrgId::from(org_id.0);
+
+	match state.org_repo.get_membership(&auth_org_id, user_id).await {
+		Ok(Some(_)) => Ok(()),
+		Ok(None) => Err((
+			StatusCode::FORBIDDEN,
+			Json(CronsErrorResponse {
+				error: "forbidden".to_string(),
+				message: t(locale, "server.api.org.not_a_member").to_string(),
+			}),
+		)),
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			Err((
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CronsErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			))
+		}
+	}
+}
 
 // ============================================================================
 // Ping Endpoints (Public - no auth required)
@@ -461,14 +504,24 @@ impl From<Monitor> for MonitorSummary {
 	),
 	responses(
 		(status = 200, description = "List of monitors", body = ListMonitorsResponse),
+		(status = 401, description = "Not authenticated"),
+		(status = 403, description = "Not a member of the organization"),
 	),
 	tag = "crons"
 )]
-#[instrument(skip(state))]
+#[instrument(skip(state, current_user))]
 pub async fn list_monitors(
+	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
 	Query(params): Query<ListMonitorsParams>,
 ) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	// Verify org membership
+	if let Err(resp) = verify_org_membership(&state, &params.org_id, &current_user.user.id, &locale).await {
+		return resp.into_response();
+	}
+
 	match state.crons_repo.list_monitors(params.org_id).await {
 		Ok(monitors) => {
 			let summaries: Vec<MonitorSummary> = monitors.into_iter().map(Into::into).collect();
@@ -489,15 +542,25 @@ pub async fn list_monitors(
 	responses(
 		(status = 201, description = "Monitor created", body = CreateMonitorResponse),
 		(status = 400, description = "Invalid request"),
+		(status = 401, description = "Not authenticated"),
+		(status = 403, description = "Not a member of the organization"),
 		(status = 409, description = "Duplicate slug"),
 	),
 	tag = "crons"
 )]
-#[instrument(skip(state, req), fields(org_id = %req.org_id, slug = %req.slug))]
+#[instrument(skip(state, current_user, req), fields(org_id = %req.org_id, slug = %req.slug))]
 pub async fn create_monitor(
+	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
 	Json(req): Json<CreateMonitorRequest>,
 ) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	// Verify org membership
+	if let Err(resp) = verify_org_membership(&state, &req.org_id, &current_user.user.id, &locale).await {
+		return resp.into_response();
+	}
+
 	if !Monitor::validate_slug(&req.slug) {
 		return (
 			StatusCode::BAD_REQUEST,
@@ -576,16 +639,26 @@ pub struct GetMonitorParams {
 	),
 	responses(
 		(status = 200, description = "Monitor details", body = Monitor),
+		(status = 401, description = "Not authenticated"),
+		(status = 403, description = "Not a member of the organization"),
 		(status = 404, description = "Monitor not found"),
 	),
 	tag = "crons"
 )]
-#[instrument(skip(state), fields(slug = %slug))]
+#[instrument(skip(state, current_user), fields(slug = %slug))]
 pub async fn get_monitor(
+	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
 	Path(slug): Path<String>,
 	Query(params): Query<GetMonitorParams>,
 ) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	// Verify org membership
+	if let Err(resp) = verify_org_membership(&state, &params.org_id, &current_user.user.id, &locale).await {
+		return resp.into_response();
+	}
+
 	match state.crons_repo.get_monitor_by_slug(params.org_id, &slug).await {
 		Ok(Some(monitor)) => Json(monitor).into_response(),
 		Ok(None) => StatusCode::NOT_FOUND.into_response(),
@@ -606,16 +679,26 @@ pub async fn get_monitor(
 	),
 	responses(
 		(status = 204, description = "Monitor deleted"),
+		(status = 401, description = "Not authenticated"),
+		(status = 403, description = "Not a member of the organization"),
 		(status = 404, description = "Monitor not found"),
 	),
 	tag = "crons"
 )]
-#[instrument(skip(state), fields(slug = %slug))]
+#[instrument(skip(state, current_user), fields(slug = %slug))]
 pub async fn delete_monitor(
+	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
 	Path(slug): Path<String>,
 	Query(params): Query<GetMonitorParams>,
 ) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	// Verify org membership
+	if let Err(resp) = verify_org_membership(&state, &params.org_id, &current_user.user.id, &locale).await {
+		return resp.into_response();
+	}
+
 	let monitor = match state.crons_repo.get_monitor_by_slug(params.org_id, &slug).await {
 		Ok(Some(m)) => m,
 		Ok(None) => return StatusCode::NOT_FOUND.into_response(),
@@ -658,16 +741,26 @@ pub struct ListCheckInsResponse {
 	),
 	responses(
 		(status = 200, description = "List of check-ins", body = ListCheckInsResponse),
+		(status = 401, description = "Not authenticated"),
+		(status = 403, description = "Not a member of the organization"),
 		(status = 404, description = "Monitor not found"),
 	),
 	tag = "crons"
 )]
-#[instrument(skip(state), fields(slug = %slug))]
+#[instrument(skip(state, current_user), fields(slug = %slug))]
 pub async fn list_checkins(
+	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
 	Path(slug): Path<String>,
 	Query(params): Query<ListCheckInsParams>,
 ) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	// Verify org membership
+	if let Err(resp) = verify_org_membership(&state, &params.org_id, &current_user.user.id, &locale).await {
+		return resp.into_response();
+	}
+
 	let monitor = match state.crons_repo.get_monitor_by_slug(params.org_id, &slug).await {
 		Ok(Some(m)) => m,
 		Ok(None) => return StatusCode::NOT_FOUND.into_response(),
@@ -734,16 +827,26 @@ pub struct CreateCheckInResponse {
 	responses(
 		(status = 201, description = "Check-in created", body = CreateCheckInResponse),
 		(status = 400, description = "Invalid request"),
+		(status = 401, description = "Not authenticated"),
+		(status = 403, description = "Not a member of the organization"),
 		(status = 404, description = "Monitor not found"),
 	),
 	tag = "crons"
 )]
-#[instrument(skip(state, req), fields(slug = %slug, status = %req.status))]
+#[instrument(skip(state, current_user, req), fields(slug = %slug, status = %req.status))]
 pub async fn create_checkin(
+	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
 	Path(slug): Path<String>,
 	Json(req): Json<CreateCheckInRequest>,
 ) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	// Verify org membership
+	if let Err(resp) = verify_org_membership(&state, &req.org_id, &current_user.user.id, &locale).await {
+		return resp.into_response();
+	}
+
 	let monitor = match state.crons_repo.get_monitor_by_slug(req.org_id, &slug).await {
 		Ok(Some(m)) => m,
 		Ok(None) => return StatusCode::NOT_FOUND.into_response(),
@@ -850,16 +953,21 @@ pub struct UpdateCheckInRequest {
 	request_body = UpdateCheckInRequest,
 	responses(
 		(status = 200, description = "Check-in updated", body = CheckIn),
+		(status = 401, description = "Not authenticated"),
+		(status = 403, description = "Not a member of the organization"),
 		(status = 404, description = "Check-in not found"),
 	),
 	tag = "crons"
 )]
-#[instrument(skip(state, req), fields(checkin_id = %id, status = %req.status))]
+#[instrument(skip(state, current_user, req), fields(checkin_id = %id, status = %req.status))]
 pub async fn update_checkin(
+	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
 	Path(id): Path<CheckInId>,
 	Json(req): Json<UpdateCheckInRequest>,
 ) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
 	let mut checkin = match state.crons_repo.get_checkin_by_id(id).await {
 		Ok(Some(c)) => c,
 		Ok(None) => return StatusCode::NOT_FOUND.into_response(),
@@ -868,6 +976,21 @@ pub async fn update_checkin(
 			return StatusCode::INTERNAL_SERVER_ERROR.into_response();
 		}
 	};
+
+	// Get the monitor to verify org membership
+	let monitor = match state.crons_repo.get_monitor_by_id(checkin.monitor_id).await {
+		Ok(Some(m)) => m,
+		Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get monitor for checkin");
+			return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+		}
+	};
+
+	// Verify org membership
+	if let Err(resp) = verify_org_membership(&state, &monitor.org_id, &current_user.user.id, &locale).await {
+		return resp.into_response();
+	}
 
 	let now = Utc::now();
 
@@ -935,21 +1058,43 @@ pub async fn update_checkin(
 	),
 	responses(
 		(status = 200, description = "Check-in details", body = CheckIn),
+		(status = 401, description = "Not authenticated"),
+		(status = 403, description = "Not a member of the organization"),
 		(status = 404, description = "Check-in not found"),
 	),
 	tag = "crons"
 )]
-#[instrument(skip(state), fields(checkin_id = %id))]
+#[instrument(skip(state, current_user), fields(checkin_id = %id))]
 pub async fn get_checkin(
+	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
 	Path(id): Path<CheckInId>,
 ) -> impl IntoResponse {
-	match state.crons_repo.get_checkin_by_id(id).await {
-		Ok(Some(checkin)) => Json(checkin).into_response(),
-		Ok(None) => StatusCode::NOT_FOUND.into_response(),
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	let checkin = match state.crons_repo.get_checkin_by_id(id).await {
+		Ok(Some(c)) => c,
+		Ok(None) => return StatusCode::NOT_FOUND.into_response(),
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to get checkin");
-			StatusCode::INTERNAL_SERVER_ERROR.into_response()
+			return StatusCode::INTERNAL_SERVER_ERROR.into_response();
 		}
+	};
+
+	// Get the monitor to verify org membership
+	let monitor = match state.crons_repo.get_monitor_by_id(checkin.monitor_id).await {
+		Ok(Some(m)) => m,
+		Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get monitor for checkin");
+			return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+		}
+	};
+
+	// Verify org membership
+	if let Err(resp) = verify_org_membership(&state, &monitor.org_id, &current_user.user.id, &locale).await {
+		return resp.into_response();
 	}
+
+	Json(checkin).into_response()
 }

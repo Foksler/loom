@@ -11,6 +11,7 @@ mod authz_mirror_tests;
 mod authz_protection_tests;
 mod authz_scm_team_tests;
 mod authz_webhook_tests;
+mod crons;
 mod flags;
 mod orgs;
 mod repos;
