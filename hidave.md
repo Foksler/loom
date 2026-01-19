@@ -11,6 +11,33 @@
 
 ### Recent Progress
 
+**2026-01-19:** Added crash analytics core infrastructure ✅ VERIFIED IN PRODUCTION
+- Created `loom-crash-core` crate with complete type definitions:
+  - Core types: `CrashEvent`, `Stacktrace`, `Frame`, `Platform` (22 unit tests)
+  - Issue types: `Issue`, `IssueStatus`, `IssueLevel`, `IssuePriority`
+  - Project types: `CrashProject`, `CrashApiKey`, `CrashKeyType`
+  - Context types: `UserContext`, `DeviceContext`, `BrowserContext`, `OsContext`, `RequestContext`
+  - Breadcrumb types: `Breadcrumb`, `BreadcrumbLevel`
+  - Symbol types: `SymbolArtifact`, `ArtifactType`
+  - Release types: `Release`, `ReleaseId`
+  - Fingerprinting: `compute_fingerprint()`, `find_culprit()`, `truncate()` functions
+- Created `loom-server-crash` crate with:
+  - `CrashRepository` trait and `SqliteCrashRepository` implementation
+  - `CrashBroadcaster` for SSE real-time updates
+- Added crash routes to `loom-server/src/routes/crash.rs`:
+  - `POST /api/crash/capture` - Ingest crash event
+  - `GET /api/crash/projects` - List projects
+  - `POST /api/crash/projects` - Create project
+  - `GET /api/crash/projects/{project_id}/issues` - List issues
+  - `POST /api/crash/projects/{project_id}/issues/{issue_id}/resolve` - Resolve issue
+- Added `crash_repo` and `crash_broadcaster` to AppState
+- Created 12 authorization tests in `tests/authz/crash.rs`:
+  - Project operations: list, create (auth, membership, success)
+  - Capture operations: auth, membership, success
+  - Issue operations: list auth, membership, success
+- All endpoints verified working in production (return 401 without auth)
+- Commit: `7e1c07e` (current trunk)
+
 **2026-01-19:** Added SSE stream endpoint for crons monitoring ✅ VERIFIED IN PRODUCTION
 - Added `GET /api/crons/stream?org_id={org_id}` SSE endpoint for real-time cron events
 - Created `CronStreamEvent` types in `loom-crons-core/src/sse.rs` for event serialization
@@ -124,9 +151,11 @@ Based on [migration patterns](crates/loom-server/migrations/) (latest: `032_anal
 
 Reference pattern: [crates/loom-flags-core/](crates/loom-flags-core/), [crates/loom-analytics-core/](crates/loom-analytics-core/)
 
-### 2.1 Create `loom-crash-core`
+### 2.1 Create `loom-crash-core` ✅ COMPLETED
 
 **Path:** `crates/loom-crash-core/`
+
+**Status:** Completed 2026-01-19
 
 **Structure:**
 ```
@@ -141,31 +170,17 @@ loom-crash-core/
     ├── project.rs       # CrashProject, CrashApiKey
     ├── context.rs       # UserContext, DeviceContext, BrowserContext, etc.
     ├── breadcrumb.rs    # Breadcrumb, BreadcrumbLevel
+    ├── fingerprint.rs   # Fingerprinting algorithm
     └── error.rs         # Error types with thiserror
 ```
 
 **Implementation checklist:**
-- [ ] Create `Cargo.toml` with dependencies:
-  ```toml
-  [dependencies]
-  chrono = { version = "0.4", features = ["serde"] }
-  serde = { version = "1", features = ["derive"] }
-  serde_json = "1"
-  thiserror = "2"
-  uuid = { version = "1", features = ["v7", "serde"] }
-  loom-secret = { path = "../loom-secret" }
-
-  [features]
-  openapi = ["utoipa"]
-
-  [dependencies.utoipa]
-  version = "5"
-  optional = true
-  ```
-- [ ] Define newtype IDs: `CrashEventId`, `IssueId`, `ProjectId`, `SymbolArtifactId`
-- [ ] Implement `CrashEvent` struct ([specs/crash-system.md#31-crashevent](specs/crash-system.md))
-- [ ] Implement `Issue` struct with `IssueStatus` enum ([specs/crash-system.md#32-issue](specs/crash-system.md))
-- [ ] Implement fingerprinting function ([specs/crash-system.md#4-fingerprinting](specs/crash-system.md))
+- [x] Create `Cargo.toml` with dependencies
+- [x] Define newtype IDs: `CrashEventId`, `IssueId`, `ProjectId`, `SymbolArtifactId`
+- [x] Implement `CrashEvent` struct ([specs/crash-system.md#31-crashevent](specs/crash-system.md))
+- [x] Implement `Issue` struct with `IssueStatus` enum ([specs/crash-system.md#32-issue](specs/crash-system.md))
+- [x] Implement fingerprinting function ([specs/crash-system.md#4-fingerprinting](specs/crash-system.md))
+- [x] Add 22 unit tests for event types
 - [ ] Add `#[cfg_attr(feature = "openapi", derive(ToSchema))]` to all public types
 - [ ] Add proptest tests for ID validation
 
@@ -221,9 +236,10 @@ loom-sessions-core/
 ### 2.4 Workspace Integration
 
 - [x] Add crons crates to `Cargo.toml` workspace members ✅
-- [ ] Add crash crates to `Cargo.toml` workspace members
+- [x] Add crash crates to `Cargo.toml` workspace members ✅
 - [ ] Add sessions crates to `Cargo.toml` workspace members
 - [x] Run `cargo build --workspace` to verify crons compilation ✅
+- [x] Run `cargo build --workspace` to verify crash compilation ✅
 - [x] Run `cargo2nix-update` ✅
 
 ---
@@ -283,9 +299,11 @@ loom-crash-symbolicate/
 
 Reference pattern: [crates/loom-server-flags/src/repository.rs](crates/loom-server-flags/src/repository.rs), [crates/loom-server-analytics/src/repository.rs](crates/loom-server-analytics/src/repository.rs)
 
-### 4.1 Create `loom-server-crash`
+### 4.1 Create `loom-server-crash` ✅ PARTIALLY COMPLETED (Repository Layer)
 
 **Path:** `crates/loom-server-crash/`
+
+**Status:** Repository layer completed 2026-01-19. Handlers implemented in loom-server/src/routes/crash.rs.
 
 **Structure:**
 ```
@@ -293,22 +311,16 @@ loom-server-crash/
 ├── Cargo.toml
 └── src/
     ├── lib.rs
-    ├── repository.rs    # CrashRepository trait + SqliteCrashRepository
-    ├── fingerprint.rs   # Server-side fingerprinting
-    ├── symbolicate.rs   # Symbolication pipeline integration
-    ├── sse.rs           # SSE broadcaster for crash events
-    ├── api_key.rs       # API key validation (Argon2)
-    └── handlers/
-        ├── mod.rs
-        ├── capture.rs   # POST /api/crash/capture
-        ├── symbols.rs   # Symbol artifact upload
-        ├── issues.rs    # Issue CRUD
-        ├── events.rs    # Event queries
-        └── releases.rs  # Release management
+    ├── repository.rs    # CrashRepository trait + SqliteCrashRepository ✅
+    ├── sse.rs           # CrashBroadcaster for real-time events ✅
+    ├── error.rs         # Error types ✅
+    ├── fingerprint.rs   # Server-side fingerprinting (TODO)
+    ├── symbolicate.rs   # Symbolication pipeline integration (TODO)
+    └── api_key.rs       # API key validation (Argon2) (TODO)
 ```
 
 **Implementation checklist:**
-- [ ] Create `Cargo.toml`:
+- [x] Create `Cargo.toml`:
   ```toml
   [dependencies]
   loom-crash-core = { path = "../loom-crash-core" }
@@ -323,17 +335,17 @@ loom-server-crash/
   tokio-stream = "0.1"
   tracing = "0.1"
   ```
-- [ ] Define `CrashRepository` trait with methods:
-  - `create_project()`, `get_project()`, `list_projects()`
-  - `create_issue()`, `get_issue()`, `update_issue()`, `list_issues()`
-  - `create_event()`, `get_event()`, `list_events_for_issue()`
-  - `create_artifact()`, `get_artifact()`, `list_artifacts()`
-  - `create_release()`, `get_release()`, `list_releases()`
-- [ ] Implement `SqliteCrashRepository`
-- [ ] Implement fingerprinting on ingest ([specs/crash-system.md#41-default-fingerprinting-algorithm](specs/crash-system.md))
+- [x] Define `CrashRepository` trait with methods:
+  - `create_project()`, `get_project()`, `list_projects()` ✅
+  - `create_issue()`, `get_issue()`, `update_issue()`, `list_issues()` ✅
+  - `create_event()`, `get_event()`, `list_events_for_issue()` ✅
+  - `create_artifact()`, `get_artifact()`, `list_artifacts()` (TODO)
+  - `create_release()`, `get_release()`, `list_releases()` (TODO)
+- [x] Implement `SqliteCrashRepository` (basic operations) ✅
+- [x] Implement fingerprinting on ingest ([specs/crash-system.md#41-default-fingerprinting-algorithm](specs/crash-system.md)) ✅
 - [ ] Implement regression detection ([specs/crash-system.md#52-regression-detection](specs/crash-system.md))
 - [ ] Implement API key hashing with Argon2 (pattern: [crates/loom-server-analytics/src/api_key.rs](crates/loom-server-analytics/src/api_key.rs))
-- [ ] Implement SSE broadcaster for events
+- [x] Implement SSE broadcaster for events ✅
 
 ### 4.2 Create `loom-server-crons` ✅ COMPLETED (Repository Layer)
 
@@ -402,21 +414,23 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
 ### 5.1 Add Dependencies to loom-server
 
 - [x] Add `loom-server-crons` dependency ✅
-- [ ] Add `loom-server-crash` dependency
+- [x] Add `loom-server-crash` dependency ✅
 - [ ] Add `loom-server-sessions` dependency
 
 ### 5.2 Create Route Files
 
 **Path:** `crates/loom-server/src/routes/`
 
-- [ ] **`crash.rs`** — Crash analytics routes
-  - `POST /api/crash/capture` — Ingest crash event
-  - `POST /api/crash/batch` — Batch ingest
-  - `POST /api/crash/projects/{id}/artifacts` — Upload symbols (multipart)
-  - `GET /api/crash/projects/{id}/issues` — List issues
-  - `GET /api/crash/projects/{id}/issues/{id}` — Issue detail
-  - `POST /api/crash/projects/{id}/issues/{id}/resolve` — Resolve issue
-  - `GET /api/crash/projects/{id}/stream` — SSE stream
+- [x] **`crash.rs`** — Crash analytics routes ✅ PARTIALLY COMPLETED 2026-01-19
+  - `POST /api/crash/capture` — Ingest crash event ✅
+  - `GET /api/crash/projects` — List projects ✅
+  - `POST /api/crash/projects` — Create project ✅
+  - `GET /api/crash/projects/{id}/issues` — List issues ✅
+  - `POST /api/crash/projects/{id}/issues/{id}/resolve` — Resolve issue ✅
+  - `POST /api/crash/batch` — Batch ingest (TODO)
+  - `POST /api/crash/projects/{id}/artifacts` — Upload symbols (multipart) (TODO)
+  - `GET /api/crash/projects/{id}/issues/{id}` — Issue detail (TODO)
+  - `GET /api/crash/projects/{id}/stream` — SSE stream (TODO)
   - Reference: [specs/crash-system.md#9-api-endpoints](specs/crash-system.md)
 
 - [x] **`crons.rs`** — Cron monitoring routes ✅ COMPLETED 2026-01-19
@@ -451,7 +465,10 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
 - [x] Wire up cron route handlers in router configuration ✅
   - `/ping/*` routes on PublicRouter (unauthenticated)
   - `/api/crons/*` routes on AuthedRouter (authenticated)
-- [ ] Update for crash routes
+- [x] Update `crates/loom-server/src/routes/mod.rs` to include crash module ✅
+- [x] Update `crates/loom-server/src/api.rs` to add crash_repo and crash_broadcaster to `AppState` ✅
+- [x] Wire up crash route handlers in router configuration ✅
+  - `/api/crash/*` routes on AuthedRouter (authenticated)
 - [ ] Update for sessions routes
 
 ### 5.4 Add OpenAPI Documentation
@@ -915,7 +932,7 @@ Reference: [crates/loom-jobs/](crates/loom-jobs/)
 
 Reference pattern: [crates/loom-server/tests/authz_*_tests.rs](crates/loom-server/tests/)
 
-- [ ] `tests/authz_crash_tests.rs` — Crash endpoint authorization
+- [x] `tests/authz/crash.rs` — Crash endpoint authorization ✅ (12 tests: project CRUD, capture, issues list)
 - [x] `tests/authz/crons.rs` — Cron endpoint authorization ✅ (29 tests including stream endpoint)
 - [ ] `tests/authz_sessions_tests.rs` — Session endpoint authorization
 
