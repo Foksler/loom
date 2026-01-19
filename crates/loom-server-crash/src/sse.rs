@@ -52,10 +52,7 @@ pub enum CrashStreamEvent {
 		regressed_in_release: Option<String>,
 	},
 	/// Issue was resolved
-	IssueResolved {
-		issue_id: IssueId,
-		short_id: String,
-	},
+	IssueResolved { issue_id: IssueId, short_id: String },
 	/// Issue was assigned
 	IssueAssigned {
 		issue_id: IssueId,
@@ -64,6 +61,28 @@ pub enum CrashStreamEvent {
 	},
 	/// Heartbeat to keep connection alive
 	Heartbeat { timestamp: String },
+}
+
+impl CrashStreamEvent {
+	/// Returns the SSE event type name.
+	pub fn event_type(&self) -> &'static str {
+		match self {
+			CrashStreamEvent::Init { .. } => "init",
+			CrashStreamEvent::CrashNew { .. } => "crash.new",
+			CrashStreamEvent::IssueRegressed { .. } => "issue.regressed",
+			CrashStreamEvent::IssueResolved { .. } => "issue.resolved",
+			CrashStreamEvent::IssueAssigned { .. } => "issue.assigned",
+			CrashStreamEvent::Heartbeat { .. } => "heartbeat",
+		}
+	}
+
+	/// Create an init event for SSE connection.
+	pub fn init(project_id: ProjectId, issue_count: u64) -> Self {
+		CrashStreamEvent::Init {
+			project_id,
+			issue_count,
+		}
+	}
 }
 
 /// Broadcaster for crash analytics events.
@@ -83,10 +102,7 @@ impl CrashBroadcaster {
 	}
 
 	/// Get or create a channel for a project.
-	pub async fn subscribe(
-		&self,
-		project_id: ProjectId,
-	) -> broadcast::Receiver<CrashStreamEvent> {
+	pub async fn subscribe(&self, project_id: ProjectId) -> broadcast::Receiver<CrashStreamEvent> {
 		let mut channels = self.channels.write().await;
 
 		if let Some(sender) = channels.get(&project_id) {
@@ -125,44 +141,47 @@ impl CrashBroadcaster {
 		issue: &Issue,
 		is_new_issue: bool,
 	) {
-		self.broadcast(
-			project_id,
-			CrashStreamEvent::CrashNew {
-				event_id,
-				issue_id: issue.id,
-				short_id: issue.short_id.clone(),
-				title: issue.title.clone(),
-				is_new_issue,
-			},
-		)
-		.await;
+		self
+			.broadcast(
+				project_id,
+				CrashStreamEvent::CrashNew {
+					event_id,
+					issue_id: issue.id,
+					short_id: issue.short_id.clone(),
+					title: issue.title.clone(),
+					is_new_issue,
+				},
+			)
+			.await;
 	}
 
 	/// Broadcast an issue regression.
 	pub async fn broadcast_regression(&self, project_id: ProjectId, issue: &Issue) {
-		self.broadcast(
-			project_id,
-			CrashStreamEvent::IssueRegressed {
-				issue_id: issue.id,
-				short_id: issue.short_id.clone(),
-				title: issue.title.clone(),
-				times_regressed: issue.times_regressed,
-				regressed_in_release: issue.regressed_in_release.clone(),
-			},
-		)
-		.await;
+		self
+			.broadcast(
+				project_id,
+				CrashStreamEvent::IssueRegressed {
+					issue_id: issue.id,
+					short_id: issue.short_id.clone(),
+					title: issue.title.clone(),
+					times_regressed: issue.times_regressed,
+					regressed_in_release: issue.regressed_in_release.clone(),
+				},
+			)
+			.await;
 	}
 
 	/// Broadcast an issue resolution.
 	pub async fn broadcast_resolved(&self, project_id: ProjectId, issue: &Issue) {
-		self.broadcast(
-			project_id,
-			CrashStreamEvent::IssueResolved {
-				issue_id: issue.id,
-				short_id: issue.short_id.clone(),
-			},
-		)
-		.await;
+		self
+			.broadcast(
+				project_id,
+				CrashStreamEvent::IssueResolved {
+					issue_id: issue.id,
+					short_id: issue.short_id.clone(),
+				},
+			)
+			.await;
 	}
 
 	/// Get statistics about active channels.

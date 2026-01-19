@@ -6,30 +6,35 @@
 //! Implements endpoints for crash event capture, issue management,
 //! and project configuration.
 
+use std::convert::Infallible;
+
 use axum::{
 	extract::{Path, Query, State},
 	http::StatusCode,
+	response::sse::{Event, Sse},
 	Json,
 };
 use chrono::Utc;
+use futures::stream::Stream;
 use serde::{Deserialize, Serialize};
+use tokio_stream::wrappers::BroadcastStream;
+use tokio_stream::StreamExt;
 use tracing::{info, instrument};
 
 use loom_crash_core::{
 	compute_fingerprint, fingerprint, Breadcrumb, CrashEvent, CrashEventId, CrashProject, Frame,
-	Issue, IssueId, IssueLevel, IssueMetadata, IssuePriority, IssueStatus, OrgId, PersonId,
-	Platform, ProjectId, Stacktrace,
+	Issue, IssueId, IssueLevel, IssueMetadata, IssuePriority, IssueStatus, OrgId, PersonId, Platform,
+	ProjectId, Stacktrace,
 };
 use loom_server_auth::types::OrgId as AuthOrgId;
-use loom_server_crash::CrashRepository;
+use loom_server_crash::{CrashRepository, CrashStreamEvent};
 
 use crate::api::AppState;
 use crate::auth_middleware::RequireAuth;
 use crate::i18n::{resolve_user_locale, t};
 
 /// Error response for crash endpoints.
-#[derive(Debug, Serialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct CrashErrorResponse {
 	pub error: String,
 	pub message: String,
@@ -71,8 +76,7 @@ async fn verify_org_membership(
 // ============================================================================
 
 /// Request body for crash capture endpoint.
-#[derive(Debug, Deserialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct CaptureRequest {
 	pub project_id: String,
 	pub exception_type: String,
@@ -98,15 +102,13 @@ pub struct CaptureRequest {
 }
 
 /// Stacktrace in capture request.
-#[derive(Debug, Deserialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct CaptureStacktrace {
 	pub frames: Vec<CaptureFrame>,
 }
 
 /// Frame in capture request.
-#[derive(Debug, Deserialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct CaptureFrame {
 	pub function: Option<String>,
 	pub module: Option<String>,
@@ -119,8 +121,7 @@ pub struct CaptureFrame {
 }
 
 /// Breadcrumb in capture request.
-#[derive(Debug, Deserialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct CaptureBreadcrumb {
 	pub timestamp: Option<String>,
 	pub category: Option<String>,
@@ -131,8 +132,7 @@ pub struct CaptureBreadcrumb {
 }
 
 /// Response for crash capture endpoint.
-#[derive(Debug, Serialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct CaptureResponse {
 	pub event_id: String,
 	pub issue_id: String,
@@ -252,10 +252,7 @@ pub async fn capture_crash(
 		.map(|dt| dt.with_timezone(&Utc))
 		.unwrap_or_else(Utc::now);
 
-	let person_id = body
-		.person_id
-		.and_then(|s| s.parse().ok())
-		.map(PersonId);
+	let person_id = body.person_id.and_then(|s| s.parse().ok()).map(PersonId);
 
 	let mut event = CrashEvent {
 		id: CrashEventId::new(),
@@ -263,7 +260,9 @@ pub async fn capture_crash(
 		project_id,
 		issue_id: None,
 		person_id,
-		distinct_id: body.distinct_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
+		distinct_id: body
+			.distinct_id
+			.unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
 		exception_type: body.exception_type,
 		exception_value: body.exception_value,
 		stacktrace,
@@ -319,20 +318,27 @@ pub async fn capture_crash(
 				existing_issue.regressed_in_release = event.release.clone();
 			}
 
-			state.crash_repo.update_issue(&existing_issue).await.map_err(|e| {
-				tracing::error!(error = %e, "Failed to update issue");
-				(
-					StatusCode::INTERNAL_SERVER_ERROR,
-					Json(CrashErrorResponse {
-						error: "internal_error".to_string(),
-						message: t(&locale, "server.api.error.internal").to_string(),
-					}),
-				)
-			})?;
+			state
+				.crash_repo
+				.update_issue(&existing_issue)
+				.await
+				.map_err(|e| {
+					tracing::error!(error = %e, "Failed to update issue");
+					(
+						StatusCode::INTERNAL_SERVER_ERROR,
+						Json(CrashErrorResponse {
+							error: "internal_error".to_string(),
+							message: t(&locale, "server.api.error.internal").to_string(),
+						}),
+					)
+				})?;
 
 			// Track person if present
 			if let Some(pid) = event.person_id {
-				let _ = state.crash_repo.add_issue_person(existing_issue.id, pid).await;
+				let _ = state
+					.crash_repo
+					.add_issue_person(existing_issue.id, pid)
+					.await;
 			}
 
 			// Broadcast regression if needed
@@ -347,19 +353,27 @@ pub async fn capture_crash(
 		}
 		None => {
 			// Create new issue
-			let short_id = state.crash_repo.get_next_short_id(project_id).await.map_err(|e| {
-				tracing::error!(error = %e, "Failed to get next short ID");
-				(
-					StatusCode::INTERNAL_SERVER_ERROR,
-					Json(CrashErrorResponse {
-						error: "internal_error".to_string(),
-						message: t(&locale, "server.api.error.internal").to_string(),
-					}),
-				)
-			})?;
+			let short_id = state
+				.crash_repo
+				.get_next_short_id(project_id)
+				.await
+				.map_err(|e| {
+					tracing::error!(error = %e, "Failed to get next short ID");
+					(
+						StatusCode::INTERNAL_SERVER_ERROR,
+						Json(CrashErrorResponse {
+							error: "internal_error".to_string(),
+							message: t(&locale, "server.api.error.internal").to_string(),
+						}),
+					)
+				})?;
 
 			let culprit = fingerprint::find_culprit(&event);
-			let title = format!("{}: {}", event.exception_type, fingerprint::truncate(&event.exception_value, 100));
+			let title = format!(
+				"{}: {}",
+				event.exception_type,
+				fingerprint::truncate(&event.exception_value, 100)
+			);
 
 			let issue = Issue {
 				id: IssueId::new(),
@@ -465,8 +479,7 @@ pub async fn capture_crash(
 // ============================================================================
 
 /// Request to create a crash project.
-#[derive(Debug, Deserialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct CreateProjectRequest {
 	pub org_id: String,
 	pub name: String,
@@ -480,8 +493,7 @@ fn default_platform() -> String {
 }
 
 /// Response for project operations.
-#[derive(Debug, Serialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct ProjectResponse {
 	pub id: String,
 	pub org_id: String,
@@ -551,7 +563,9 @@ pub async fn list_projects(
 		)
 	})?;
 
-	Ok(Json(projects.into_iter().map(ProjectResponse::from).collect()))
+	Ok(Json(
+		projects.into_iter().map(ProjectResponse::from).collect(),
+	))
 }
 
 #[derive(Debug, Deserialize)]
@@ -598,7 +612,8 @@ pub async fn create_project(
 			StatusCode::BAD_REQUEST,
 			Json(CrashErrorResponse {
 				error: "invalid_slug".to_string(),
-				message: "Slug must be 3-50 lowercase alphanumeric characters with hyphens/underscores".to_string(),
+				message: "Slug must be 3-50 lowercase alphanumeric characters with hyphens/underscores"
+					.to_string(),
 			}),
 		));
 	}
@@ -618,16 +633,20 @@ pub async fn create_project(
 		updated_at: now,
 	};
 
-	state.crash_repo.create_project(&project).await.map_err(|e| {
-		tracing::error!(error = %e, "Failed to create project");
-		(
-			StatusCode::INTERNAL_SERVER_ERROR,
-			Json(CrashErrorResponse {
-				error: "internal_error".to_string(),
-				message: t(&locale, "server.api.error.internal").to_string(),
-			}),
-		)
-	})?;
+	state
+		.crash_repo
+		.create_project(&project)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to create project");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?;
 
 	info!(project_id = %project.id, slug = %project.slug, "Crash project created");
 
@@ -639,8 +658,7 @@ pub async fn create_project(
 // ============================================================================
 
 /// Response for issue operations.
-#[derive(Debug, Serialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct IssueResponse {
 	pub id: String,
 	pub project_id: String,
@@ -736,16 +754,20 @@ pub async fn list_issues(
 
 	verify_org_membership(&state, &project.org_id, &current_user.user.id, &locale).await?;
 
-	let issues = state.crash_repo.list_issues(project_id, 100).await.map_err(|e| {
-		tracing::error!(error = %e, "Failed to list issues");
-		(
-			StatusCode::INTERNAL_SERVER_ERROR,
-			Json(CrashErrorResponse {
-				error: "internal_error".to_string(),
-				message: t(&locale, "server.api.error.internal").to_string(),
-			}),
-		)
-	})?;
+	let issues = state
+		.crash_repo
+		.list_issues(project_id, 100)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to list issues");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?;
 
 	Ok(Json(issues.into_iter().map(IssueResponse::from).collect()))
 }
@@ -870,7 +892,10 @@ pub async fn resolve_issue(
 		)
 	})?;
 
-	state.crash_broadcaster.broadcast_resolved(project_id, &issue).await;
+	state
+		.crash_broadcaster
+		.broadcast_resolved(project_id, &issue)
+		.await;
 
 	info!(issue_id = %issue.id, short_id = %issue.short_id, "Issue resolved");
 
@@ -882,8 +907,7 @@ pub async fn resolve_issue(
 // ============================================================================
 
 /// Detailed response for a single issue including metadata.
-#[derive(Debug, Serialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct IssueDetailResponse {
 	pub id: String,
 	pub org_id: String,
@@ -912,8 +936,7 @@ pub struct IssueDetailResponse {
 }
 
 /// Issue metadata response.
-#[derive(Debug, Serialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct IssueMetadataResponse {
 	pub exception_type: String,
 	pub exception_value: String,
@@ -1072,8 +1095,7 @@ pub async fn get_issue(
 // ============================================================================
 
 /// Response for a crash event.
-#[derive(Debug, Serialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct CrashEventResponse {
 	pub id: String,
 	pub issue_id: Option<String>,
@@ -1094,15 +1116,13 @@ pub struct CrashEventResponse {
 }
 
 /// Response for a stacktrace.
-#[derive(Debug, Serialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct StacktraceResponse {
 	pub frames: Vec<FrameResponse>,
 }
 
 /// Response for a stack frame.
-#[derive(Debug, Serialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct FrameResponse {
 	pub function: Option<String>,
 	pub module: Option<String>,
@@ -1279,5 +1299,162 @@ pub async fn list_issue_events(
 
 	info!(issue_id = %issue.id, event_count = %events.len(), "Issue events retrieved");
 
-	Ok(Json(events.into_iter().map(CrashEventResponse::from).collect()))
+	Ok(Json(
+		events.into_iter().map(CrashEventResponse::from).collect(),
+	))
+}
+
+// ============================================================================
+// SSE Stream Endpoint
+// ============================================================================
+
+/// Query parameters for the crash stream endpoint.
+#[derive(Debug, Deserialize)]
+pub struct StreamCrashParams {
+	pub project_id: String,
+}
+
+/// GET /api/crash/projects/{project_id}/stream - SSE stream for crash events
+///
+/// Streams real-time updates for crash events including:
+/// - `init`: Initial state with issue count on connect
+/// - `crash.new`: New crash event received
+/// - `issue.regressed`: Resolved issue regressed
+/// - `issue.resolved`: Issue was resolved
+/// - `issue.assigned`: Issue was assigned
+/// - `heartbeat`: Keep-alive (every 30s)
+#[utoipa::path(
+	get,
+	path = "/api/crash/projects/{project_id}/stream",
+	params(
+		("project_id" = String, Path, description = "Project ID"),
+	),
+	responses(
+		(status = 200, description = "SSE stream connection established"),
+		(status = 401, description = "Not authenticated"),
+		(status = 403, description = "Not a member of the organization"),
+		(status = 404, description = "Project not found"),
+	),
+	security(("bearer" = [])),
+	tag = "crash"
+)]
+#[instrument(skip(state, current_user))]
+pub async fn stream_crash(
+	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
+	Path(project_id_str): Path<String>,
+) -> Result<
+	Sse<impl Stream<Item = Result<Event, Infallible>>>,
+	(StatusCode, Json<CrashErrorResponse>),
+> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	let project_id: ProjectId = project_id_str.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_project_id".to_string(),
+				message: "Invalid project ID".to_string(),
+			}),
+		)
+	})?;
+
+	// Get project to verify it exists and get org_id
+	let project = state
+		.crash_repo
+		.get_project_by_id(project_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get project");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "project_not_found".to_string(),
+					message: "Project not found".to_string(),
+				}),
+			)
+		})?;
+
+	// Verify org membership
+	verify_org_membership(&state, &project.org_id, &current_user.user.id, &locale).await?;
+
+	info!(
+		project_id = %project_id,
+		user_id = %current_user.user.id,
+		"Client connected to crash stream"
+	);
+
+	// Get issue count for init event
+	let issues = state
+		.crash_repo
+		.list_issues(project_id, 1)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get issue count for init");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?;
+
+	// Get the actual count - we need a count method, but for now we'll use a rough estimate
+	let issue_count = state
+		.crash_repo
+		.get_issue_count(project_id)
+		.await
+		.unwrap_or(issues.len() as u64);
+
+	// Create init event
+	let init_event = CrashStreamEvent::init(project_id, issue_count);
+
+	// Subscribe to broadcast channel
+	let receiver = state.crash_broadcaster.subscribe(project_id).await;
+	let broadcast_stream = BroadcastStream::new(receiver);
+
+	// Create a stream that first yields the init event, then yields broadcast events
+	let init_stream = futures::stream::once(async move {
+		let json = serde_json::to_string(&init_event).unwrap_or_else(|_| "{}".to_string());
+		Ok::<_, Infallible>(Event::default().event("init").data(json))
+	});
+
+	let updates_stream = broadcast_stream.filter_map(|result| match result {
+		Ok(event) => {
+			let event_type = event.event_type();
+			match serde_json::to_string(&event) {
+				Ok(json) => Some(Ok::<_, Infallible>(
+					Event::default().event(event_type).data(json),
+				)),
+				Err(e) => {
+					tracing::warn!(error = %e, "Failed to serialize crash SSE event");
+					None
+				}
+			}
+		}
+		Err(e) => {
+			tracing::debug!(error = %e, "Broadcast stream error (client may have disconnected)");
+			None
+		}
+	});
+
+	let combined_stream = init_stream.chain(updates_stream);
+
+	Ok(
+		Sse::new(combined_stream).keep_alive(
+			axum::response::sse::KeepAlive::new()
+				.interval(std::time::Duration::from_secs(30))
+				.text("heartbeat"),
+		),
+	)
 }

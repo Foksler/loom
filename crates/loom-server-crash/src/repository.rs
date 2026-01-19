@@ -33,6 +33,7 @@ pub trait CrashRepository: Send + Sync {
 		fingerprint: &str,
 	) -> Result<Option<Issue>>;
 	async fn list_issues(&self, project_id: ProjectId, limit: u32) -> Result<Vec<Issue>>;
+	async fn get_issue_count(&self, project_id: ProjectId) -> Result<u64>;
 	async fn update_issue(&self, issue: &Issue) -> Result<()>;
 	async fn delete_issue(&self, id: IssueId) -> Result<bool>;
 
@@ -285,6 +286,20 @@ impl CrashRepository for SqliteCrashRepository {
 		rows.into_iter().map(TryInto::try_into).collect()
 	}
 
+	#[instrument(skip(self), fields(project_id = %project_id))]
+	async fn get_issue_count(&self, project_id: ProjectId) -> Result<u64> {
+		let count = sqlx::query_scalar::<_, i64>(
+			r#"
+			SELECT COUNT(*) FROM crash_issues WHERE project_id = ?
+			"#,
+		)
+		.bind(project_id.0.to_string())
+		.fetch_one(&self.pool)
+		.await?;
+
+		Ok(count as u64)
+	}
+
 	#[instrument(skip(self, issue), fields(issue_id = %issue.id))]
 	async fn update_issue(&self, issue: &Issue) -> Result<()> {
 		let metadata_json = serde_json::to_string(&issue.metadata)?;
@@ -449,11 +464,7 @@ impl CrashRepository for SqliteCrashRepository {
 	}
 
 	#[instrument(skip(self), fields(issue_id = %issue_id))]
-	async fn list_events_for_issue(
-		&self,
-		issue_id: IssueId,
-		limit: u32,
-	) -> Result<Vec<CrashEvent>> {
+	async fn list_events_for_issue(&self, issue_id: IssueId, limit: u32) -> Result<Vec<CrashEvent>> {
 		let rows = sqlx::query_as::<_, EventRow>(
 			r#"
 			SELECT id, org_id, project_id, issue_id,
@@ -662,9 +673,10 @@ impl TryFrom<IssueRow> for Issue {
 				.level
 				.parse()
 				.map_err(|_| CrashServerError::Parse(format!("invalid level: {}", row.level)))?,
-			priority: row.priority.parse().map_err(|_| {
-				CrashServerError::Parse(format!("invalid priority: {}", row.priority))
-			})?,
+			priority: row
+				.priority
+				.parse()
+				.map_err(|_| CrashServerError::Parse(format!("invalid priority: {}", row.priority)))?,
 			event_count: row.event_count as u64,
 			user_count: row.user_count as u64,
 			first_seen: parse_datetime(&row.first_seen)?,
@@ -676,7 +688,10 @@ impl TryFrom<IssueRow> for Issue {
 				.transpose()?,
 			resolved_in_release: row.resolved_in_release,
 			times_regressed: row.times_regressed as u32,
-			last_regressed_at: row.last_regressed_at.map(|s| parse_datetime(&s)).transpose()?,
+			last_regressed_at: row
+				.last_regressed_at
+				.map(|s| parse_datetime(&s))
+				.transpose()?,
 			regressed_in_release: row.regressed_in_release,
 			assigned_to: row
 				.assigned_to
@@ -739,21 +754,37 @@ impl TryFrom<EventRow> for CrashEvent {
 			exception_type: row.exception_type,
 			exception_value: row.exception_value,
 			stacktrace: serde_json::from_str(&row.stacktrace)?,
-			raw_stacktrace: row.raw_stacktrace.map(|s| serde_json::from_str(&s)).transpose()?,
+			raw_stacktrace: row
+				.raw_stacktrace
+				.map(|s| serde_json::from_str(&s))
+				.transpose()?,
 			release: row.release,
 			dist: row.dist,
 			environment: row.environment,
-			platform: row.platform.parse().map_err(|_| {
-				CrashServerError::Parse(format!("invalid platform: {}", row.platform))
-			})?,
+			platform: row
+				.platform
+				.parse()
+				.map_err(|_| CrashServerError::Parse(format!("invalid platform: {}", row.platform)))?,
 			runtime: row.runtime.map(|s| serde_json::from_str(&s)).transpose()?,
 			server_name: row.server_name,
 			tags: serde_json::from_str(&row.tags)?,
 			extra: serde_json::from_str(&row.extra)?,
-			user_context: row.user_context.map(|s| serde_json::from_str(&s)).transpose()?,
-			device_context: row.device_context.map(|s| serde_json::from_str(&s)).transpose()?,
-			browser_context: row.browser_context.map(|s| serde_json::from_str(&s)).transpose()?,
-			os_context: row.os_context.map(|s| serde_json::from_str(&s)).transpose()?,
+			user_context: row
+				.user_context
+				.map(|s| serde_json::from_str(&s))
+				.transpose()?,
+			device_context: row
+				.device_context
+				.map(|s| serde_json::from_str(&s))
+				.transpose()?,
+			browser_context: row
+				.browser_context
+				.map(|s| serde_json::from_str(&s))
+				.transpose()?,
+			os_context: row
+				.os_context
+				.map(|s| serde_json::from_str(&s))
+				.transpose()?,
 			active_flags: serde_json::from_str(&row.active_flags)?,
 			request: row.request.map(|s| serde_json::from_str(&s)).transpose()?,
 			breadcrumbs: serde_json::from_str(&row.breadcrumbs)?,

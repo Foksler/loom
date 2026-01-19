@@ -1264,6 +1264,10 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/crash/projects/{project_id}/issues/{issue_id}/events",
 			get(routes::crash::list_issue_events),
 		)
+		.route(
+			"/api/crash/projects/{project_id}/stream",
+			get(routes::crash::stream_crash),
+		)
 		// Invitation routes (authenticated)
 		.route(
 			"/api/orgs/{org_id}/invitations",

@@ -581,3 +581,80 @@ async fn list_issue_events_returns_404_for_nonexistent_issue() {
 		"Listing events for nonexistent issue should return 404"
 	);
 }
+
+// ============================================================================
+// SSE Stream Tests
+// ============================================================================
+
+#[tokio::test]
+async fn stream_crash_requires_auth() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "stream-auth-test").await;
+
+	// No auth should return 401
+	let response = app
+		.get(&format!("/api/crash/projects/{}/stream", project_id), None)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::UNAUTHORIZED,
+		"Stream crash without auth should return 401"
+	);
+}
+
+#[tokio::test]
+async fn stream_crash_requires_org_membership() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "stream-membership-test").await;
+
+	// User from org_b trying to stream crash in org_a's project should be forbidden
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/stream", project_id),
+			Some(&app.fixtures.org_b.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::FORBIDDEN,
+		"Non-member should not be able to stream crash in another org's project"
+	);
+}
+
+#[tokio::test]
+async fn stream_crash_succeeds_for_org_member() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "stream-success-test").await;
+
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/stream", project_id),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::OK,
+		"Org member should be able to stream crash events"
+	);
+}
+
+#[tokio::test]
+async fn stream_crash_returns_404_for_nonexistent_project() {
+	let app = TestApp::new().await;
+
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/stream", uuid::Uuid::new_v4()),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::NOT_FOUND,
+		"Streaming nonexistent project should return 404"
+	);
+}
