@@ -20,7 +20,7 @@ use loom_crons_core::{
 	truncate_output, CheckIn, CheckInId, CheckInSource, CheckInStatus, Monitor, MonitorHealth,
 	MonitorId, MonitorSchedule, MonitorStatus, OrgId,
 };
-use loom_server_crons::CronsRepository;
+use loom_server_crons::{calculate_next_expected, CronsRepository};
 
 use crate::api::AppState;
 
@@ -107,8 +107,14 @@ pub async fn ping_success(
 		MonitorHealth::Healthy
 	};
 
+	// Calculate next expected check-in time
+	let next_expected_at = calculate_next_expected(&monitor.schedule, &monitor.timezone, now).ok();
+
 	let _ = state.crons_repo.update_monitor_health(monitor.id, health).await;
-	let _ = state.crons_repo.update_monitor_last_checkin(monitor.id, status, None).await;
+	let _ = state
+		.crons_repo
+		.update_monitor_last_checkin(monitor.id, status, next_expected_at)
+		.await;
 	let _ = state.crons_repo.increment_monitor_stats(monitor.id, is_failure).await;
 
 	info!(
@@ -236,10 +242,13 @@ pub async fn ping_fail(
 		return StatusCode::INTERNAL_SERVER_ERROR.into_response();
 	}
 
+	// Calculate next expected check-in time
+	let next_expected_at = calculate_next_expected(&monitor.schedule, &monitor.timezone, now).ok();
+
 	let _ = state.crons_repo.update_monitor_health(monitor.id, MonitorHealth::Failing).await;
 	let _ = state
 		.crons_repo
-		.update_monitor_last_checkin(monitor.id, CheckInStatus::Error, None)
+		.update_monitor_last_checkin(monitor.id, CheckInStatus::Error, next_expected_at)
 		.await;
 	let _ = state.crons_repo.increment_monitor_stats(monitor.id, true).await;
 
@@ -327,8 +336,14 @@ pub async fn ping_with_body(
 		MonitorHealth::Healthy
 	};
 
+	// Calculate next expected check-in time
+	let next_expected_at = calculate_next_expected(&monitor.schedule, &monitor.timezone, now).ok();
+
 	let _ = state.crons_repo.update_monitor_health(monitor.id, health).await;
-	let _ = state.crons_repo.update_monitor_last_checkin(monitor.id, status, None).await;
+	let _ = state
+		.crons_repo
+		.update_monitor_last_checkin(monitor.id, status, next_expected_at)
+		.await;
 	let _ = state.crons_repo.increment_monitor_stats(monitor.id, is_failure).await;
 
 	info!(
@@ -501,6 +516,10 @@ pub async fn create_monitor(
 
 	let now = Utc::now();
 	let ping_key = Monitor::generate_ping_key();
+	let schedule: MonitorSchedule = req.schedule.into();
+
+	// Calculate initial next_expected_at based on schedule
+	let next_expected_at = calculate_next_expected(&schedule, &req.timezone, now).ok();
 
 	let monitor = Monitor {
 		id: MonitorId::new(),
@@ -510,7 +529,7 @@ pub async fn create_monitor(
 		description: req.description,
 		status: MonitorStatus::Active,
 		health: MonitorHealth::Unknown,
-		schedule: req.schedule.into(),
+		schedule,
 		timezone: req.timezone,
 		checkin_margin_minutes: req.checkin_margin_minutes,
 		max_runtime_minutes: req.max_runtime_minutes,
@@ -518,7 +537,7 @@ pub async fn create_monitor(
 		environments: req.environments,
 		last_checkin_at: None,
 		last_checkin_status: None,
-		next_expected_at: None,
+		next_expected_at,
 		consecutive_failures: 0,
 		total_checkins: 0,
 		total_failures: 0,
@@ -774,8 +793,15 @@ pub async fn create_checkin(
 			MonitorHealth::Healthy
 		};
 
+		// Calculate next expected check-in time
+		let next_expected_at =
+			calculate_next_expected(&monitor.schedule, &monitor.timezone, now).ok();
+
 		let _ = state.crons_repo.update_monitor_health(monitor.id, health).await;
-		let _ = state.crons_repo.update_monitor_last_checkin(monitor.id, req.status, None).await;
+		let _ = state
+			.crons_repo
+			.update_monitor_last_checkin(monitor.id, req.status, next_expected_at)
+			.await;
 		let _ = state.crons_repo.increment_monitor_stats(monitor.id, is_failure).await;
 	}
 
@@ -877,8 +903,17 @@ pub async fn update_checkin(
 		MonitorHealth::Healthy
 	};
 
+	// Get monitor to calculate next expected time
+	let next_expected_at = match state.crons_repo.get_monitor_by_id(checkin.monitor_id).await {
+		Ok(Some(monitor)) => calculate_next_expected(&monitor.schedule, &monitor.timezone, now).ok(),
+		_ => None,
+	};
+
 	let _ = state.crons_repo.update_monitor_health(checkin.monitor_id, health).await;
-	let _ = state.crons_repo.update_monitor_last_checkin(checkin.monitor_id, req.status, None).await;
+	let _ = state
+		.crons_repo
+		.update_monitor_last_checkin(checkin.monitor_id, req.status, next_expected_at)
+		.await;
 	let _ = state.crons_repo.increment_monitor_stats(checkin.monitor_id, is_failure).await;
 
 	info!(
