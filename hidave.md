@@ -11,6 +11,23 @@
 
 ### Recent Progress
 
+**2026-01-19:** Added crash release tracking endpoints ✅ DEPLOYED
+- Added `GET /api/crash/projects/{id}/releases` - List releases for a project
+- Added `POST /api/crash/projects/{id}/releases` - Create a release
+- Added `GET /api/crash/projects/{id}/releases/{version}` - Get release detail
+- Added release repository methods to `CrashRepository` trait:
+  - `create_release()`, `get_release_by_id()`, `get_release_by_version()`
+  - `list_releases()`, `update_release()`
+  - `get_or_create_release()`, `increment_release_crash_count()`
+- Auto-creates releases when crash events are captured with release version
+- Tracks per-release stats: crash_count, new_issue_count, regression_count
+- Added 12 authorization tests for release endpoints:
+  - List releases: auth required, membership required, success
+  - Create release: auth required, membership required, success, conflict on duplicate
+  - Get release: auth required, membership required, success, 404 for nonexistent
+  - Auto-creation: captures crash → auto-creates release → verifies counts
+- Commit: `1c22d4c`
+
 **2026-01-19:** Added crash SSE stream endpoint for real-time events ✅ VERIFIED IN PRODUCTION
 - Added `GET /api/crash/projects/{project_id}/stream` SSE endpoint for real-time crash events
 - Added `event_type()` and `init()` methods to `CrashStreamEvent` for SSE serialization
@@ -363,7 +380,7 @@ loom-server-crash/
   - `create_issue()`, `get_issue()`, `update_issue()`, `list_issues()` ✅
   - `create_event()`, `get_event()`, `list_events_for_issue()` ✅
   - `create_artifact()`, `get_artifact()`, `list_artifacts()` (TODO)
-  - `create_release()`, `get_release()`, `list_releases()` (TODO)
+  - `create_release()`, `get_release()`, `list_releases()` ✅
 - [x] Implement `SqliteCrashRepository` (basic operations) ✅
 - [x] Implement fingerprinting on ingest ([specs/crash-system.md#41-default-fingerprinting-algorithm](specs/crash-system.md)) ✅
 - [ ] Implement regression detection ([specs/crash-system.md#52-regression-detection](specs/crash-system.md))
@@ -452,6 +469,9 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
   - `POST /api/crash/projects/{id}/issues/{id}/resolve` — Resolve issue ✅
   - `GET /api/crash/projects/{id}/issues/{id}` — Issue detail ✅
   - `GET /api/crash/projects/{id}/issues/{id}/events` — List events for issue ✅
+  - `GET /api/crash/projects/{id}/releases` — List releases ✅
+  - `POST /api/crash/projects/{id}/releases` — Create release ✅
+  - `GET /api/crash/projects/{id}/releases/{version}` — Get release detail ✅
   - `POST /api/crash/batch` — Batch ingest (TODO)
   - `POST /api/crash/projects/{id}/artifacts` — Upload symbols (multipart) (TODO)
   - `GET /api/crash/projects/{id}/stream` — SSE stream ✅
@@ -956,7 +976,7 @@ Reference: [crates/loom-jobs/](crates/loom-jobs/)
 
 Reference pattern: [crates/loom-server/tests/authz_*_tests.rs](crates/loom-server/tests/)
 
-- [x] `tests/authz/crash.rs` — Crash endpoint authorization ✅ (20 tests: project CRUD, capture, issues list, issue detail, issue events)
+- [x] `tests/authz/crash.rs` — Crash endpoint authorization ✅ (32 tests: project CRUD, capture, issues list, issue detail, issue events, releases CRUD)
 - [x] `tests/authz/crons.rs` — Cron endpoint authorization ✅ (29 tests including stream endpoint)
 - [ ] `tests/authz_sessions_tests.rs` — Session endpoint authorization
 
