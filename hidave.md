@@ -11,6 +11,20 @@
 
 ### Recent Progress
 
+**2026-01-19:** Added crash issue detail and events endpoints ✅ VERIFIED IN PRODUCTION
+- Added `GET /api/crash/projects/{project_id}/issues/{issue_id}` - Issue detail endpoint
+- Added `GET /api/crash/projects/{project_id}/issues/{issue_id}/events` - List events for issue
+- Created comprehensive response types:
+  - `IssueDetailResponse` with full issue metadata, fingerprint, timestamps
+  - `IssueMetadataResponse` with exception type/value, filename, function
+  - `CrashEventResponse` with full event data including stacktrace
+  - `StacktraceResponse` and `FrameResponse` for detailed stack info
+- Added 8 authorization tests for new endpoints:
+  - Issue detail: auth required, membership required, success, 404 for nonexistent
+  - Issue events: auth required, membership required, success, 404 for nonexistent
+- Verified working in production via curl with full response data
+- Commit: `41fe989`
+
 **2026-01-19:** Added crash analytics core infrastructure ✅ VERIFIED IN PRODUCTION
 - Created `loom-crash-core` crate with complete type definitions:
   - Core types: `CrashEvent`, `Stacktrace`, `Frame`, `Platform` (22 unit tests)
@@ -421,15 +435,16 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
 
 **Path:** `crates/loom-server/src/routes/`
 
-- [x] **`crash.rs`** — Crash analytics routes ✅ PARTIALLY COMPLETED 2026-01-19
+- [x] **`crash.rs`** — Crash analytics routes ✅ MOSTLY COMPLETED 2026-01-19
   - `POST /api/crash/capture` — Ingest crash event ✅
   - `GET /api/crash/projects` — List projects ✅
   - `POST /api/crash/projects` — Create project ✅
   - `GET /api/crash/projects/{id}/issues` — List issues ✅
   - `POST /api/crash/projects/{id}/issues/{id}/resolve` — Resolve issue ✅
+  - `GET /api/crash/projects/{id}/issues/{id}` — Issue detail ✅
+  - `GET /api/crash/projects/{id}/issues/{id}/events` — List events for issue ✅
   - `POST /api/crash/batch` — Batch ingest (TODO)
   - `POST /api/crash/projects/{id}/artifacts` — Upload symbols (multipart) (TODO)
-  - `GET /api/crash/projects/{id}/issues/{id}` — Issue detail (TODO)
   - `GET /api/crash/projects/{id}/stream` — SSE stream (TODO)
   - Reference: [specs/crash-system.md#9-api-endpoints](specs/crash-system.md)
 
@@ -932,7 +947,7 @@ Reference: [crates/loom-jobs/](crates/loom-jobs/)
 
 Reference pattern: [crates/loom-server/tests/authz_*_tests.rs](crates/loom-server/tests/)
 
-- [x] `tests/authz/crash.rs` — Crash endpoint authorization ✅ (12 tests: project CRUD, capture, issues list)
+- [x] `tests/authz/crash.rs` — Crash endpoint authorization ✅ (20 tests: project CRUD, capture, issues list, issue detail, issue events)
 - [x] `tests/authz/crons.rs` — Cron endpoint authorization ✅ (29 tests including stream endpoint)
 - [ ] `tests/authz_sessions_tests.rs` — Session endpoint authorization
 
