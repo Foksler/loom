@@ -11,6 +11,15 @@
 
 ### Recent Progress
 
+**2026-01-19:** Added crons authorization tests and fixed cross-org security issue
+- Created `crates/loom-server/tests/authz/crons.rs` with 26 comprehensive authorization tests
+- Fixed security vulnerability: crons API endpoints weren't checking org membership
+- Added `verify_org_membership()` to all authenticated crons handlers
+- Tests cover: ping endpoints (public), monitor CRUD, check-in operations, cross-org isolation
+- All authenticated endpoints now properly return 403 Forbidden for non-members
+- Verified working in production via curl
+- Commit: `3c50bda`
+
 **2026-01-19:** Added missed run and timeout detector background jobs
 - Added `list_overdue_monitors()` and `list_timed_out_checkins()` to CronsRepository
 - Created `CronMissedRunDetectorJob` for detecting monitors that miss expected check-ins
@@ -895,7 +904,7 @@ Reference: [crates/loom-jobs/](crates/loom-jobs/)
 Reference pattern: [crates/loom-server/tests/authz_*_tests.rs](crates/loom-server/tests/)
 
 - [ ] `tests/authz_crash_tests.rs` — Crash endpoint authorization
-- [ ] `tests/authz_crons_tests.rs` — Cron endpoint authorization
+- [x] `tests/authz/crons.rs` — Cron endpoint authorization ✅ (26 tests)
 - [ ] `tests/authz_sessions_tests.rs` — Session endpoint authorization
 
 ### 13.4 UI Tests
