@@ -9,6 +9,7 @@ pub mod admin_flags;
 pub mod admin_jobs;
 pub mod admin_logs;
 pub mod analytics;
+pub mod crash;
 pub mod crons;
 pub mod api_keys;
 pub mod auth;

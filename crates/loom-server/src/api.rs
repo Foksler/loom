@@ -112,6 +112,8 @@ pub struct AppState {
 	>,
 	pub crons_repo: Arc<loom_server_crons::SqliteCronsRepository>,
 	pub crons_broadcaster: Arc<loom_server_crons::CronsBroadcaster>,
+	pub crash_repo: Arc<loom_server_crash::SqliteCrashRepository>,
+	pub crash_broadcaster: Arc<loom_server_crash::CrashBroadcaster>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -303,6 +305,12 @@ pub async fn create_app_state(
 	let crons_repo = Arc::new(loom_server_crons::SqliteCronsRepository::new(pool.clone()));
 	let crons_broadcaster = Arc::new(loom_server_crons::CronsBroadcaster::with_defaults());
 
+	// Initialize crash repository and broadcaster
+	let crash_repo = Arc::new(loom_server_crash::SqliteCrashRepository::new(pool.clone()));
+	let crash_broadcaster = Arc::new(loom_server_crash::CrashBroadcaster::new(
+		loom_server_crash::CrashBroadcasterConfig::default(),
+	));
+
 	// Initialize analytics repository and state with audit hook
 	let analytics_repo = loom_server_analytics::SqliteAnalyticsRepository::new(pool.clone());
 	let analytics_audit_hook: loom_server_analytics::SharedMergeAuditHook =
@@ -367,6 +375,8 @@ pub async fn create_app_state(
 		analytics_state: Some(Arc::new(analytics_state)),
 		crons_repo,
 		crons_broadcaster,
+		crash_repo,
+		crash_broadcaster,
 	}
 }
 
@@ -1229,6 +1239,23 @@ pub fn create_router(state: AppState) -> Router {
 			get(routes::crons::get_checkin).patch(routes::crons::update_checkin),
 		)
 		.route("/api/crons/stream", get(routes::crons::stream_crons))
+		// Crash analytics routes (authenticated)
+		.route(
+			"/api/crash/capture",
+			post(routes::crash::capture_crash),
+		)
+		.route(
+			"/api/crash/projects",
+			get(routes::crash::list_projects).post(routes::crash::create_project),
+		)
+		.route(
+			"/api/crash/projects/{project_id}/issues",
+			get(routes::crash::list_issues),
+		)
+		.route(
+			"/api/crash/projects/{project_id}/issues/{issue_id}/resolve",
+			post(routes::crash::resolve_issue),
+		)
 		// Invitation routes (authenticated)
 		.route(
 			"/api/orgs/{org_id}/invitations",

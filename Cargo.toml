@@ -65,6 +65,8 @@ members = [
 	"crates/loom-analytics",
 	"crates/loom-crons-core",
 	"crates/loom-server-crons",
+	"crates/loom-crash-core",
+	"crates/loom-server-crash",
 	]
 
 [workspace.package]
@@ -165,6 +167,8 @@ loom-flags-core = { path = "crates/loom-flags-core" }
 loom-analytics-core = { path = "crates/loom-analytics-core" }
 loom-crons-core = { path = "crates/loom-crons-core" }
 loom-server-crons = { path = "crates/loom-server-crons" }
+loom-crash-core = { path = "crates/loom-crash-core" }
+loom-server-crash = { path = "crates/loom-server-crash" }
 loom-analytics = { path = "crates/loom-analytics" }
 loom-server-analytics = { path = "crates/loom-server-analytics" }
 loom-common-http = { path = "crates/loom-common-http" }

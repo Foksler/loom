@@ -5001,6 +5001,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-crash-core"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "hex",
+ "proptest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.18",
+ "utoipa",
+ "uuid",
+]
+
+[[package]]
 name = "loom-crons-core"
 version = "0.1.0"
 dependencies = [
@@ -5099,6 +5114,7 @@ dependencies = [
  "loom-common-secret",
  "loom-common-thread",
  "loom-common-version",
+ "loom-crash-core",
  "loom-crons-core",
  "loom-flags-core",
  "loom-server-analytics",
@@ -5111,6 +5127,7 @@ dependencies = [
  "loom-server-auth-magiclink",
  "loom-server-auth-okta",
  "loom-server-config",
+ "loom-server-crash",
  "loom-server-crons",
  "loom-server-db",
  "loom-server-docs",
@@ -5366,6 +5383,25 @@ dependencies = [
  "thiserror 1.0.69",
  "toml 0.8.23",
  "tracing",
+]
+
+[[package]]
+name = "loom-server-crash"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "loom-crash-core",
+ "proptest",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tempfile",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "uuid",
 ]
 
 [[package]]
