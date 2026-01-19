@@ -9,7 +9,8 @@ use sqlx::SqlitePool;
 use tracing::instrument;
 
 use loom_crash_core::{
-	CrashEvent, CrashEventId, CrashProject, Issue, IssueId, OrgId, PersonId, ProjectId, UserId,
+	CrashEvent, CrashEventId, CrashProject, Issue, IssueId, OrgId, PersonId, ProjectId, Release,
+	ReleaseId, UserId,
 };
 
 use crate::error::{CrashServerError, Result};
@@ -49,6 +50,30 @@ pub trait CrashRepository: Send + Sync {
 
 	// Short ID generation
 	async fn get_next_short_id(&self, project_id: ProjectId) -> Result<String>;
+
+	// Release operations
+	async fn create_release(&self, release: &Release) -> Result<()>;
+	async fn get_release_by_id(&self, id: ReleaseId) -> Result<Option<Release>>;
+	async fn get_release_by_version(
+		&self,
+		project_id: ProjectId,
+		version: &str,
+	) -> Result<Option<Release>>;
+	async fn list_releases(&self, project_id: ProjectId, limit: u32) -> Result<Vec<Release>>;
+	async fn update_release(&self, release: &Release) -> Result<()>;
+	async fn get_or_create_release(
+		&self,
+		project_id: ProjectId,
+		org_id: OrgId,
+		version: &str,
+	) -> Result<Release>;
+	async fn increment_release_crash_count(
+		&self,
+		project_id: ProjectId,
+		version: &str,
+		is_new_issue: bool,
+		is_regression: bool,
+	) -> Result<()>;
 }
 
 /// SQLite implementation of the crash repository.
@@ -584,6 +609,202 @@ impl CrashRepository for SqliteCrashRepository {
 
 		Ok(format!("{}-{}", prefix, count + 1))
 	}
+
+	#[instrument(skip(self, release), fields(release_id = %release.id, version = %release.version))]
+	async fn create_release(&self, release: &Release) -> Result<()> {
+		sqlx::query(
+			r#"
+			INSERT INTO crash_releases (
+				id, org_id, project_id, version, short_version, url,
+				crash_count, new_issue_count, regression_count, user_count,
+				date_released, first_event, last_event, created_at
+			)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			"#,
+		)
+		.bind(release.id.0.to_string())
+		.bind(release.org_id.0.to_string())
+		.bind(release.project_id.0.to_string())
+		.bind(&release.version)
+		.bind(&release.short_version)
+		.bind(&release.url)
+		.bind(release.crash_count as i64)
+		.bind(release.new_issue_count as i64)
+		.bind(release.regression_count as i64)
+		.bind(release.user_count as i64)
+		.bind(release.date_released.map(|dt| dt.to_rfc3339()))
+		.bind(release.first_event.map(|dt| dt.to_rfc3339()))
+		.bind(release.last_event.map(|dt| dt.to_rfc3339()))
+		.bind(release.created_at.to_rfc3339())
+		.execute(&self.pool)
+		.await?;
+
+		Ok(())
+	}
+
+	#[instrument(skip(self), fields(release_id = %id))]
+	async fn get_release_by_id(&self, id: ReleaseId) -> Result<Option<Release>> {
+		let row = sqlx::query_as::<_, ReleaseRow>(
+			r#"
+			SELECT id, org_id, project_id, version, short_version, url,
+				   crash_count, new_issue_count, regression_count, user_count,
+				   date_released, first_event, last_event, created_at
+			FROM crash_releases
+			WHERE id = ?
+			"#,
+		)
+		.bind(id.0.to_string())
+		.fetch_optional(&self.pool)
+		.await?;
+
+		row.map(TryInto::try_into).transpose()
+	}
+
+	#[instrument(skip(self), fields(project_id = %project_id, version = %version))]
+	async fn get_release_by_version(
+		&self,
+		project_id: ProjectId,
+		version: &str,
+	) -> Result<Option<Release>> {
+		let row = sqlx::query_as::<_, ReleaseRow>(
+			r#"
+			SELECT id, org_id, project_id, version, short_version, url,
+				   crash_count, new_issue_count, regression_count, user_count,
+				   date_released, first_event, last_event, created_at
+			FROM crash_releases
+			WHERE project_id = ? AND version = ?
+			"#,
+		)
+		.bind(project_id.0.to_string())
+		.bind(version)
+		.fetch_optional(&self.pool)
+		.await?;
+
+		row.map(TryInto::try_into).transpose()
+	}
+
+	#[instrument(skip(self), fields(project_id = %project_id))]
+	async fn list_releases(&self, project_id: ProjectId, limit: u32) -> Result<Vec<Release>> {
+		let rows = sqlx::query_as::<_, ReleaseRow>(
+			r#"
+			SELECT id, org_id, project_id, version, short_version, url,
+				   crash_count, new_issue_count, regression_count, user_count,
+				   date_released, first_event, last_event, created_at
+			FROM crash_releases
+			WHERE project_id = ?
+			ORDER BY created_at DESC
+			LIMIT ?
+			"#,
+		)
+		.bind(project_id.0.to_string())
+		.bind(limit as i32)
+		.fetch_all(&self.pool)
+		.await?;
+
+		rows.into_iter().map(TryInto::try_into).collect()
+	}
+
+	#[instrument(skip(self, release), fields(release_id = %release.id))]
+	async fn update_release(&self, release: &Release) -> Result<()> {
+		sqlx::query(
+			r#"
+			UPDATE crash_releases SET
+				short_version = ?, url = ?,
+				crash_count = ?, new_issue_count = ?, regression_count = ?, user_count = ?,
+				date_released = ?, first_event = ?, last_event = ?
+			WHERE id = ?
+			"#,
+		)
+		.bind(&release.short_version)
+		.bind(&release.url)
+		.bind(release.crash_count as i64)
+		.bind(release.new_issue_count as i64)
+		.bind(release.regression_count as i64)
+		.bind(release.user_count as i64)
+		.bind(release.date_released.map(|dt| dt.to_rfc3339()))
+		.bind(release.first_event.map(|dt| dt.to_rfc3339()))
+		.bind(release.last_event.map(|dt| dt.to_rfc3339()))
+		.bind(release.id.0.to_string())
+		.execute(&self.pool)
+		.await?;
+
+		Ok(())
+	}
+
+	#[instrument(skip(self), fields(project_id = %project_id, org_id = %org_id, version = %version))]
+	async fn get_or_create_release(
+		&self,
+		project_id: ProjectId,
+		org_id: OrgId,
+		version: &str,
+	) -> Result<Release> {
+		// Try to get existing release
+		if let Some(release) = self.get_release_by_version(project_id, version).await? {
+			return Ok(release);
+		}
+
+		// Create new release
+		let release = Release {
+			id: ReleaseId::new(),
+			org_id,
+			project_id,
+			version: version.to_string(),
+			short_version: None,
+			url: None,
+			crash_count: 0,
+			new_issue_count: 0,
+			regression_count: 0,
+			user_count: 0,
+			date_released: None,
+			first_event: None,
+			last_event: None,
+			created_at: Utc::now(),
+		};
+
+		self.create_release(&release).await?;
+		Ok(release)
+	}
+
+	#[instrument(skip(self), fields(project_id = %project_id, version = %version))]
+	async fn increment_release_crash_count(
+		&self,
+		project_id: ProjectId,
+		version: &str,
+		is_new_issue: bool,
+		is_regression: bool,
+	) -> Result<()> {
+		let now = Utc::now().to_rfc3339();
+
+		// Update crash count and optionally new_issue_count/regression_count
+		let mut query = String::from(
+			r#"
+			UPDATE crash_releases SET
+				crash_count = crash_count + 1,
+				last_event = ?,
+				first_event = COALESCE(first_event, ?)
+			"#,
+		);
+
+		if is_new_issue {
+			query.push_str(", new_issue_count = new_issue_count + 1");
+		}
+
+		if is_regression {
+			query.push_str(", regression_count = regression_count + 1");
+		}
+
+		query.push_str(" WHERE project_id = ? AND version = ?");
+
+		sqlx::query(&query)
+			.bind(&now)
+			.bind(&now)
+			.bind(project_id.0.to_string())
+			.bind(version)
+			.execute(&self.pool)
+			.await?;
+
+		Ok(())
+	}
 }
 
 // ============================================================================
@@ -790,6 +1011,50 @@ impl TryFrom<EventRow> for CrashEvent {
 			breadcrumbs: serde_json::from_str(&row.breadcrumbs)?,
 			timestamp: parse_datetime(&row.timestamp)?,
 			received_at: parse_datetime(&row.received_at)?,
+		})
+	}
+}
+
+#[derive(Debug, sqlx::FromRow)]
+struct ReleaseRow {
+	id: String,
+	org_id: String,
+	project_id: String,
+	version: String,
+	short_version: Option<String>,
+	url: Option<String>,
+	crash_count: i64,
+	new_issue_count: i64,
+	regression_count: i64,
+	user_count: i64,
+	date_released: Option<String>,
+	first_event: Option<String>,
+	last_event: Option<String>,
+	created_at: String,
+}
+
+impl TryFrom<ReleaseRow> for Release {
+	type Error = CrashServerError;
+
+	fn try_from(row: ReleaseRow) -> Result<Self> {
+		Ok(Release {
+			id: ReleaseId(row.id.parse()?),
+			org_id: OrgId(row.org_id.parse()?),
+			project_id: ProjectId(row.project_id.parse()?),
+			version: row.version,
+			short_version: row.short_version,
+			url: row.url,
+			crash_count: row.crash_count as u64,
+			new_issue_count: row.new_issue_count as u64,
+			regression_count: row.regression_count as u64,
+			user_count: row.user_count as u64,
+			date_released: row
+				.date_released
+				.map(|s| parse_datetime(&s))
+				.transpose()?,
+			first_event: row.first_event.map(|s| parse_datetime(&s)).transpose()?,
+			last_event: row.last_event.map(|s| parse_datetime(&s)).transpose()?,
+			created_at: parse_datetime(&row.created_at)?,
 		})
 	}
 }

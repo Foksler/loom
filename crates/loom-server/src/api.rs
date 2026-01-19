@@ -1268,6 +1268,14 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/crash/projects/{project_id}/stream",
 			get(routes::crash::stream_crash),
 		)
+		.route(
+			"/api/crash/projects/{project_id}/releases",
+			get(routes::crash::list_releases).post(routes::crash::create_release),
+		)
+		.route(
+			"/api/crash/projects/{project_id}/releases/{version}",
+			get(routes::crash::get_release),
+		)
 		// Invitation routes (authenticated)
 		.route(
 			"/api/orgs/{org_id}/invitations",

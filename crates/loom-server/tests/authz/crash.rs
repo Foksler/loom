@@ -658,3 +658,350 @@ async fn stream_crash_returns_404_for_nonexistent_project() {
 		"Streaming nonexistent project should return 404"
 	);
 }
+
+// ============================================================================
+// Release List Tests
+// ============================================================================
+
+#[tokio::test]
+async fn list_releases_requires_auth() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "releases-auth-test").await;
+
+	// No auth should return 401
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/releases", project_id),
+			None,
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::UNAUTHORIZED,
+		"List releases without auth should return 401"
+	);
+}
+
+#[tokio::test]
+async fn list_releases_requires_org_membership() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "releases-membership-test").await;
+
+	// User from org_b trying to list releases in org_a's project should be forbidden
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/releases", project_id),
+			Some(&app.fixtures.org_b.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::FORBIDDEN,
+		"Non-member should not be able to list releases in another org's project"
+	);
+}
+
+#[tokio::test]
+async fn list_releases_succeeds_for_org_member() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "releases-success-test").await;
+
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/releases", project_id),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::OK,
+		"Org member should be able to list releases"
+	);
+}
+
+// ============================================================================
+// Create Release Tests
+// ============================================================================
+
+#[tokio::test]
+async fn create_release_requires_auth() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "create-release-auth-test").await;
+
+	// No auth should return 401
+	let response = app
+		.post(
+			&format!("/api/crash/projects/{}/releases", project_id),
+			None,
+			json!({
+				"version": "1.0.0"
+			}),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::UNAUTHORIZED,
+		"Create release without auth should return 401"
+	);
+}
+
+#[tokio::test]
+async fn create_release_requires_org_membership() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "create-release-membership-test").await;
+
+	// User from org_b trying to create release in org_a's project should be forbidden
+	let response = app
+		.post(
+			&format!("/api/crash/projects/{}/releases", project_id),
+			Some(&app.fixtures.org_b.member),
+			json!({
+				"version": "1.0.0"
+			}),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::FORBIDDEN,
+		"Non-member should not be able to create release in another org's project"
+	);
+}
+
+#[tokio::test]
+async fn create_release_succeeds_for_org_member() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "create-release-success-test").await;
+
+	let response = app
+		.post(
+			&format!("/api/crash/projects/{}/releases", project_id),
+			Some(&app.fixtures.org_a.member),
+			json!({
+				"version": "1.0.0",
+				"short_version": "v1.0",
+				"url": "https://example.com/releases/1.0.0"
+			}),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::CREATED,
+		"Org member should be able to create release"
+	);
+}
+
+#[tokio::test]
+async fn create_release_returns_conflict_for_duplicate_version() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "create-release-conflict-test").await;
+
+	// Create first release
+	let response = app
+		.post(
+			&format!("/api/crash/projects/{}/releases", project_id),
+			Some(&app.fixtures.org_a.member),
+			json!({
+				"version": "2.0.0"
+			}),
+		)
+		.await;
+	assert_eq!(response.status(), StatusCode::CREATED);
+
+	// Try to create release with same version
+	let response = app
+		.post(
+			&format!("/api/crash/projects/{}/releases", project_id),
+			Some(&app.fixtures.org_a.member),
+			json!({
+				"version": "2.0.0"
+			}),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::CONFLICT,
+		"Creating duplicate release should return 409 Conflict"
+	);
+}
+
+// ============================================================================
+// Get Release Detail Tests
+// ============================================================================
+
+#[tokio::test]
+async fn get_release_requires_auth() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "get-release-auth-test").await;
+
+	// Create a release first
+	let _ = app
+		.post(
+			&format!("/api/crash/projects/{}/releases", project_id),
+			Some(&app.fixtures.org_a.member),
+			json!({
+				"version": "1.0.0"
+			}),
+		)
+		.await;
+
+	// No auth should return 401
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/releases/1.0.0", project_id),
+			None,
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::UNAUTHORIZED,
+		"Get release without auth should return 401"
+	);
+}
+
+#[tokio::test]
+async fn get_release_requires_org_membership() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "get-release-membership-test").await;
+
+	// Create a release first
+	let _ = app
+		.post(
+			&format!("/api/crash/projects/{}/releases", project_id),
+			Some(&app.fixtures.org_a.member),
+			json!({
+				"version": "1.0.0"
+			}),
+		)
+		.await;
+
+	// User from org_b trying to get release in org_a's project should be forbidden
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/releases/1.0.0", project_id),
+			Some(&app.fixtures.org_b.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::FORBIDDEN,
+		"Non-member should not be able to get release in another org's project"
+	);
+}
+
+#[tokio::test]
+async fn get_release_succeeds_for_org_member() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "get-release-success-test").await;
+
+	// Create a release first
+	let _ = app
+		.post(
+			&format!("/api/crash/projects/{}/releases", project_id),
+			Some(&app.fixtures.org_a.member),
+			json!({
+				"version": "1.0.0"
+			}),
+		)
+		.await;
+
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/releases/1.0.0", project_id),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::OK,
+		"Org member should be able to get release detail"
+	);
+}
+
+#[tokio::test]
+async fn get_release_returns_404_for_nonexistent_version() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "get-release-404-test").await;
+
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/releases/nonexistent", project_id),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::NOT_FOUND,
+		"Getting nonexistent release should return 404"
+	);
+}
+
+// ============================================================================
+// Release Auto-Creation via Crash Capture
+// ============================================================================
+
+#[tokio::test]
+async fn capture_crash_auto_creates_release() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "auto-release-test").await;
+
+	// Capture a crash with a release version
+	let response = app
+		.post(
+			"/api/crash/capture",
+			Some(&app.fixtures.org_a.member),
+			json!({
+				"project_id": project_id,
+				"exception_type": "Error",
+				"exception_value": "Test error",
+				"stacktrace": {
+					"frames": [{
+						"function": "test",
+						"filename": "test.js",
+						"lineno": 1,
+						"in_app": true
+					}]
+				},
+				"release": "3.0.0"
+			}),
+		)
+		.await;
+	assert_eq!(response.status(), StatusCode::OK);
+
+	// Verify the release was auto-created
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/releases/3.0.0", project_id),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::OK,
+		"Release should be auto-created when capturing crash with release version"
+	);
+
+	// Verify crash count was incremented
+	let (_, body) = response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let release: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+	assert_eq!(
+		release["crash_count"], 1,
+		"Release crash count should be 1"
+	);
+	assert_eq!(
+		release["new_issue_count"], 1,
+		"Release new_issue_count should be 1"
+	);
+}
