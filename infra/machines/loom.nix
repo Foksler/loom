@@ -126,10 +126,11 @@
     mode = "0400";
   };
 
-  sops.secrets.loom-zai-api-key = {
-    owner = "loom-server";
-    mode = "0400";
-  };
+  # Z.ai API key disabled until properly encrypted
+  # sops.secrets.loom-zai-api-key = {
+  #   owner = "loom-server";
+  #   mode = "0400";
+  # };
 
   sops.secrets.loom-google-oauth-client-id = {
     owner = "loom-server";
@@ -283,9 +284,10 @@
       apiKeyFile = config.sops.secrets.loom-serper-api-key.path;
     };
 
+    # Z.ai disabled until API key is properly encrypted in loom.yaml
     zai = {
-      enable = true;
-      apiKeyFile = config.sops.secrets.loom-zai-api-key.path;
+      enable = false;
+      # apiKeyFile = config.sops.secrets.loom-zai-api-key.path;
     };
 
     weaver = {
