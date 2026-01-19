@@ -70,6 +70,8 @@ args@{
     "loom-scim/default"
     "loom-server-secrets/default"
     "loom-server-session/default"
+    "loom-server-sessions/default"
+    "loom-sessions-core/default"
     "loom-server-wgtunnel/default"
     "loom-weaver-audit-sidecar/default"
     "loom-weaver-ebpf-common/default"
@@ -97,7 +99,7 @@ args@{
   cargoConfig ? {},
 }:
 let
-  nixifiedLockHash = "3cbd4aa928aef03f4b394664aeee9ad0814241c67522ae733406f1cfa207ec3b";
+  nixifiedLockHash = "629278564ab5418e21b1b6b89f6d60142908b767cc8085d63ced101d195d821b";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -194,6 +196,8 @@ in
     loom-scim = rustPackages.unknown.loom-scim."0.1.0";
     loom-server-secrets = rustPackages.unknown.loom-server-secrets."0.1.0";
     loom-server-session = rustPackages.unknown.loom-server-session."0.1.0";
+    loom-server-sessions = rustPackages.unknown.loom-server-sessions."0.1.0";
+    loom-sessions-core = rustPackages.unknown.loom-sessions-core."0.1.0";
     loom-server-wgtunnel = rustPackages.unknown.loom-server-wgtunnel."0.1.0";
     loom-weaver-audit-sidecar = rustPackages.unknown.loom-weaver-audit-sidecar."0.1.0";
     loom-weaver-ebpf-common = rustPackages.unknown.loom-weaver-ebpf-common."0.1.0";
@@ -6987,9 +6991,11 @@ in
       loom_server_search_serper = (rustPackages."unknown".loom-server-search-serper."0.1.0" { inherit profileName; }).out;
       loom_server_secrets = (rustPackages."unknown".loom-server-secrets."0.1.0" { inherit profileName; }).out;
       loom_server_session = (rustPackages."unknown".loom-server-session."0.1.0" { inherit profileName; }).out;
+      loom_server_sessions = (rustPackages."unknown".loom-server-sessions."0.1.0" { inherit profileName; }).out;
       loom_server_smtp = (rustPackages."unknown".loom-server-smtp."0.1.0" { inherit profileName; }).out;
       loom_server_weaver = (rustPackages."unknown".loom-server-weaver."0.1.0" { inherit profileName; }).out;
       loom_server_wgtunnel = (rustPackages."unknown".loom-server-wgtunnel."0.1.0" { inherit profileName; }).out;
+      loom_sessions_core = (rustPackages."unknown".loom-sessions-core."0.1.0" { inherit profileName; }).out;
       pin_project_lite = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".pin-project-lite."0.2.16" { inherit profileName; }).out;
       prometheus = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".prometheus."0.13.4" { inherit profileName; }).out;
       regex = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".regex."1.12.2" { inherit profileName; }).out;
@@ -7936,6 +7942,32 @@ in
     };
   });
   
+  "unknown".loom-server-sessions."0.1.0" = overridableMkRustCrate (profileName: rec {
+    name = "loom-server-sessions";
+    version = "0.1.0";
+    registry = "unknown";
+    src = fetchCrateLocal workspaceSrc;
+    dependencies = {
+      async_trait = (buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".async-trait."0.1.89" { profileName = "__noProfile"; }).out;
+      chrono = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".chrono."0.4.43" { inherit profileName; }).out;
+      loom_sessions_core = (rustPackages."unknown".loom-sessions-core."0.1.0" { inherit profileName; }).out;
+      serde = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.228" { inherit profileName; }).out;
+      serde_json = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.149" { inherit profileName; }).out;
+      sqlx = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".sqlx."0.8.6" { inherit profileName; }).out;
+      thiserror = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."2.0.18" { inherit profileName; }).out;
+      tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.49.0" { inherit profileName; }).out;
+      tokio_stream = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio-stream."0.1.18" { inherit profileName; }).out;
+      tracing = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tracing."0.1.44" { inherit profileName; }).out;
+      uuid = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".uuid."1.19.0" { inherit profileName; }).out;
+    };
+    devDependencies = {
+      proptest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proptest."1.9.0" { inherit profileName; }).out;
+      tempfile = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tempfile."3.24.0" { inherit profileName; }).out;
+      tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.49.0" { inherit profileName; }).out;
+      tokio_test = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio-test."0.4.5" { inherit profileName; }).out;
+    };
+  });
+  
   "unknown".loom-server-smtp."0.1.0" = overridableMkRustCrate (profileName: rec {
     name = "loom-server-smtp";
     version = "0.1.0";
@@ -8007,6 +8039,28 @@ in
     };
     devDependencies = {
       tokio_test = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio-test."0.4.5" { inherit profileName; }).out;
+    };
+  });
+  
+  "unknown".loom-sessions-core."0.1.0" = overridableMkRustCrate (profileName: rec {
+    name = "loom-sessions-core";
+    version = "0.1.0";
+    registry = "unknown";
+    src = fetchCrateLocal workspaceSrc;
+    features = builtins.concatLists [
+      [ "openapi" ]
+      [ "utoipa" ]
+    ];
+    dependencies = {
+      chrono = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".chrono."0.4.43" { inherit profileName; }).out;
+      serde = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.228" { inherit profileName; }).out;
+      serde_json = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.149" { inherit profileName; }).out;
+      thiserror = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."2.0.18" { inherit profileName; }).out;
+      utoipa = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".utoipa."5.4.0" { inherit profileName; }).out;
+      uuid = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".uuid."1.19.0" { inherit profileName; }).out;
+    };
+    devDependencies = {
+      proptest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proptest."1.9.0" { inherit profileName; }).out;
     };
   });
   

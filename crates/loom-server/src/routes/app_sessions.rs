@@ -18,18 +18,15 @@ use axum::{
 	Json,
 };
 use chrono::{DateTime, Duration, Utc};
-use loom_sessions_core::{
-	AdoptionStage, Platform, ReleaseHealth, Session, SessionId, SessionStatus,
-};
+use loom_crash_core::ProjectId;
+use loom_server_auth::types::OrgId as AuthOrgId;
+use loom_server_crash::CrashRepository;
+use loom_sessions_core::{Platform, ReleaseHealth, Session, SessionId, SessionStatus};
 use loom_server_sessions::SessionsRepository;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
-use uuid::Uuid;
 
-use crate::{
-	api::AppState, auth_middleware::RequireAuth, impl_api_error_response,
-	membership::verify_org_membership,
-};
+use crate::{api::AppState, auth_middleware::RequireAuth, impl_api_error_response};
 
 // ============================================================================
 // Error Response
@@ -42,6 +39,36 @@ pub struct SessionsErrorResponse {
 }
 
 impl_api_error_response!(SessionsErrorResponse);
+
+/// Verify that the current user is a member of the specified organization.
+async fn verify_org_membership(
+	state: &AppState,
+	org_id: &uuid::Uuid,
+	user_id: &loom_server_auth::types::UserId,
+) -> Result<(), (StatusCode, Json<SessionsErrorResponse>)> {
+	let auth_org_id = AuthOrgId::from(*org_id);
+
+	match state.org_repo.get_membership(&auth_org_id, user_id).await {
+		Ok(Some(_)) => Ok(()),
+		Ok(None) => Err((
+			StatusCode::FORBIDDEN,
+			Json(SessionsErrorResponse {
+				error: "forbidden".to_string(),
+				message: "Not a member of this organization".to_string(),
+			}),
+		)),
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			Err((
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(SessionsErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Internal error".to_string(),
+				}),
+			))
+		}
+	}
+}
 
 // ============================================================================
 // Session Start Endpoint
@@ -97,7 +124,7 @@ pub async fn start_session(
 	Json(body): Json<SessionStartRequest>,
 ) -> impl IntoResponse {
 	// Parse project_id and get the project to verify org membership
-	let project_id: Uuid = match body.project_id.parse() {
+	let project_id: ProjectId = match body.project_id.parse() {
 		Ok(id) => id,
 		Err(_) => {
 			return (
@@ -138,7 +165,9 @@ pub async fn start_session(
 	};
 
 	// Verify org membership
-	if let Err(response) = verify_org_membership(&state, &auth.user.id, &project.org_id).await {
+	if let Err(response) =
+		verify_org_membership(&state, &project.org_id.0, &auth.user.id).await
+	{
 		return response.into_response();
 	}
 
@@ -148,10 +177,17 @@ pub async fn start_session(
 		Err(_) => Platform::Other,
 	};
 
-	// Determine if this session should be sampled
-	let sampled = rand::random::<f64>() < body.sample_rate;
-
+	// Generate session ID first for deterministic sampling
 	let session_id = SessionId::new();
+
+	// Deterministic sampling based on session ID hash
+	let sampled = {
+		use std::hash::{Hash, Hasher};
+		let mut hasher = std::collections::hash_map::DefaultHasher::new();
+		session_id.to_string().hash(&mut hasher);
+		let hash = hasher.finish();
+		(hash % 10000) < ((body.sample_rate * 10000.0) as u64)
+	};
 	let now = Utc::now();
 
 	let session = Session {
@@ -375,7 +411,7 @@ pub async fn list_sessions(
 	Query(query): Query<ListSessionsQuery>,
 ) -> impl IntoResponse {
 	// Parse project_id
-	let project_id: Uuid = match query.project_id.parse() {
+	let project_id: ProjectId = match query.project_id.parse() {
 		Ok(id) => id,
 		Err(_) => {
 			return (
@@ -416,7 +452,9 @@ pub async fn list_sessions(
 	};
 
 	// Verify org membership
-	if let Err(response) = verify_org_membership(&state, &auth.user.id, &project.org_id).await {
+	if let Err(response) =
+		verify_org_membership(&state, &project.org_id.0, &auth.user.id).await
+	{
 		return response.into_response();
 	}
 
@@ -518,7 +556,7 @@ pub async fn list_release_health(
 	Query(query): Query<ReleaseHealthQuery>,
 ) -> impl IntoResponse {
 	// Parse project_id
-	let project_id: Uuid = match query.project_id.parse() {
+	let project_id: ProjectId = match query.project_id.parse() {
 		Ok(id) => id,
 		Err(_) => {
 			return (
@@ -559,7 +597,9 @@ pub async fn list_release_health(
 	};
 
 	// Verify org membership
-	if let Err(response) = verify_org_membership(&state, &auth.user.id, &project.org_id).await {
+	if let Err(response) =
+		verify_org_membership(&state, &project.org_id.0, &auth.user.id).await
+	{
 		return response.into_response();
 	}
 
@@ -672,7 +712,7 @@ pub async fn get_release_health(
 	Query(query): Query<ReleaseHealthQuery>,
 ) -> impl IntoResponse {
 	// Parse project_id
-	let project_id: Uuid = match query.project_id.parse() {
+	let project_id: ProjectId = match query.project_id.parse() {
 		Ok(id) => id,
 		Err(_) => {
 			return (
@@ -713,7 +753,9 @@ pub async fn get_release_health(
 	};
 
 	// Verify org membership
-	if let Err(response) = verify_org_membership(&state, &auth.user.id, &project.org_id).await {
+	if let Err(response) =
+		verify_org_membership(&state, &project.org_id.0, &auth.user.id).await
+	{
 		return response.into_response();
 	}
 
