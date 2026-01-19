@@ -11,6 +11,14 @@
 
 ### Recent Progress
 
+**2026-01-19:** Added missed run and timeout detector background jobs
+- Added `list_overdue_monitors()` and `list_timed_out_checkins()` to CronsRepository
+- Created `CronMissedRunDetectorJob` for detecting monitors that miss expected check-ins
+- Created `CronTimeoutDetectorJob` for detecting in-progress check-ins exceeding max_runtime
+- Both jobs registered in main.rs, running every 60 seconds
+- Verified working via curl: monitor correctly transitions to "missed" health, creates system check-in
+- Commit: `4347d1e`
+
 **2026-01-19:** Added cron schedule parsing and next_expected_at calculation
 - Added `schedule.rs` module with `calculate_next_expected()` function
 - Support 5-field Unix cron expressions (auto-converted to 7-field format for cron crate)
@@ -329,8 +337,8 @@ loom-server-crons/
 - [x] Implement cron expression parser ([specs/crons-system.md#6-schedule-parsing](specs/crons-system.md)) ✅
 - [x] Implement `calculate_next_expected()` function ✅
 - [x] Implement ping handlers (in loom-server/src/routes/crons.rs) ([specs/crons-system.md#42-ping-endpoints](specs/crons-system.md))
-- [ ] Implement missed run detector job ([specs/crons-system.md#71-background-scheduler](specs/crons-system.md))
-- [ ] Implement timeout detector job ([specs/crons-system.md#72-timeout-detection](specs/crons-system.md))
+- [x] Implement missed run detector job ([specs/crons-system.md#71-background-scheduler](specs/crons-system.md)) ✅
+- [x] Implement timeout detector job ([specs/crons-system.md#72-timeout-detection](specs/crons-system.md)) ✅
 
 ### 4.3 Create `loom-server-sessions`
 
@@ -833,11 +841,13 @@ Reference: [crates/loom-jobs/](crates/loom-jobs/)
 
 ### 12.1 Register Jobs
 
-- [ ] **Cron missed run detector** — Runs every minute
+- [x] **Cron missed run detector** — Runs every minute ✅
   - Reference: [specs/crons-system.md#71-background-scheduler](specs/crons-system.md)
+  - Implemented in `loom-server/src/jobs/cron_missed_run.rs`
 
-- [ ] **Cron timeout detector** — Runs every minute
+- [x] **Cron timeout detector** — Runs every minute ✅
   - Reference: [specs/crons-system.md#72-timeout-detection](specs/crons-system.md)
+  - Implemented in `loom-server/src/jobs/cron_timeout.rs`
 
 - [ ] **Session aggregator** — Runs every hour
   - Reference: [specs/sessions-system.md#71-hourly-aggregation-job](specs/sessions-system.md)
