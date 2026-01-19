@@ -11,6 +11,15 @@
 
 ### Recent Progress
 
+**2026-01-19:** Added cron schedule parsing and next_expected_at calculation
+- Added `schedule.rs` module with `calculate_next_expected()` function
+- Support 5-field Unix cron expressions (auto-converted to 7-field format for cron crate)
+- Support interval-based schedules
+- Validate cron expressions and IANA timezones
+- Wire up `next_expected_at` calculation in all check-in handlers
+- Monitor creation now calculates initial `next_expected_at`
+- Commits: `5b30c4d` (schedule implementation), `91334b4` (Cargo.nix fix)
+
 **2026-01-19:** Added SDK check-in endpoints for programmatic cron monitoring
 - Added `POST /api/crons/monitors/{slug}/checkins` for SDK check-in creation
 - Added `PATCH /api/crons/checkins/{id}` for updating in-progress check-ins
@@ -317,8 +326,8 @@ loom-server-crons/
 - [x] Create `Cargo.toml`
 - [x] Define `CronsRepository` trait
 - [x] Implement `SqliteCronsRepository`
-- [ ] Implement cron expression parser ([specs/crons-system.md#6-schedule-parsing](specs/crons-system.md))
-- [ ] Implement `calculate_next_expected()` function
+- [x] Implement cron expression parser ([specs/crons-system.md#6-schedule-parsing](specs/crons-system.md)) ✅
+- [x] Implement `calculate_next_expected()` function ✅
 - [x] Implement ping handlers (in loom-server/src/routes/crons.rs) ([specs/crons-system.md#42-ping-endpoints](specs/crons-system.md))
 - [ ] Implement missed run detector job ([specs/crons-system.md#71-background-scheduler](specs/crons-system.md))
 - [ ] Implement timeout detector job ([specs/crons-system.md#72-timeout-detection](specs/crons-system.md))
