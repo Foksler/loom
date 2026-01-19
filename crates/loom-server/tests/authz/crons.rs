@@ -589,3 +589,60 @@ async fn ping_with_nonzero_exit_code_records_failure() {
 		"Ping with exit_code=1 should succeed (records failure internally)"
 	);
 }
+
+// ============================================================================
+// SSE Stream Endpoint (Authenticated)
+// ============================================================================
+
+#[tokio::test]
+async fn org_member_can_access_stream() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let cases = vec![AuthzCase {
+		name: "org_member_can_access_stream",
+		method: Method::GET,
+		path: format!("/api/crons/stream?org_id={}", org_id),
+		user: Some(app.fixtures.org_a.member.clone()),
+		body: None,
+		expected_status: StatusCode::OK,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn unauthenticated_cannot_access_stream() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let cases = vec![AuthzCase {
+		name: "unauthenticated_cannot_access_stream",
+		method: Method::GET,
+		path: format!("/api/crons/stream?org_id={}", org_id),
+		user: None,
+		body: None,
+		expected_status: StatusCode::UNAUTHORIZED,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn org_b_member_cannot_access_org_a_stream() {
+	let app = TestApp::new().await;
+	let org_a_id = app.fixtures.org_a.org.id.to_string();
+
+	// Org B member tries to access Org A's stream
+	let cases = vec![AuthzCase {
+		name: "org_b_member_cannot_access_org_a_stream",
+		method: Method::GET,
+		path: format!("/api/crons/stream?org_id={}", org_a_id),
+		user: Some(app.fixtures.org_b.member.clone()),
+		body: None,
+		// Should fail - org B member not allowed to access org A stream
+		expected_status: StatusCode::FORBIDDEN,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}

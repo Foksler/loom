@@ -4,21 +4,29 @@
 //! Cron monitoring HTTP handlers.
 //!
 //! Implements ping endpoints for simple shell script monitoring and
-//! API endpoints for monitor management.
+//! API endpoints for monitor management, including SSE streaming for real-time updates.
+
+use std::convert::Infallible;
 
 use axum::{
 	extract::{Path, Query, State},
 	http::StatusCode,
-	response::IntoResponse,
+	response::{
+		sse::{Event, Sse},
+		IntoResponse,
+	},
 	Json,
 };
 use chrono::Utc;
+use futures::stream::Stream;
 use serde::{Deserialize, Serialize};
+use tokio_stream::wrappers::BroadcastStream;
+use tokio_stream::StreamExt;
 use tracing::{info, instrument, warn};
 
 use loom_crons_core::{
-	truncate_output, CheckIn, CheckInId, CheckInSource, CheckInStatus, Monitor, MonitorHealth,
-	MonitorId, MonitorSchedule, MonitorStatus, OrgId,
+	truncate_output, CheckIn, CheckInId, CheckInSource, CheckInStatus, CronStreamEvent, Monitor,
+	MonitorHealth, MonitorId, MonitorSchedule, MonitorState, MonitorStatus, OrgId,
 };
 use loom_server_auth::types::OrgId as AuthOrgId;
 use loom_server_crons::{calculate_next_expected, CronsRepository};
@@ -160,6 +168,20 @@ pub async fn ping_success(
 		.await;
 	let _ = state.crons_repo.increment_monitor_stats(monitor.id, is_failure).await;
 
+	// Broadcast SSE event
+	let sse_event = if is_failure {
+		CronStreamEvent::checkin_error(
+			monitor.id,
+			monitor.slug.clone(),
+			checkin.id,
+			params.exit_code,
+			monitor.consecutive_failures + 1,
+		)
+	} else {
+		CronStreamEvent::checkin_ok(monitor.id, monitor.slug.clone(), checkin.id, None)
+	};
+	state.crons_broadcaster.broadcast(monitor.org_id, sse_event).await;
+
 	info!(
 		monitor_id = %monitor.id,
 		monitor_slug = %monitor.slug,
@@ -219,6 +241,11 @@ pub async fn ping_start(
 		tracing::error!(error = %e, "Failed to create checkin");
 		return StatusCode::INTERNAL_SERVER_ERROR.into_response();
 	}
+
+	// Broadcast SSE event
+	let sse_event =
+		CronStreamEvent::checkin_started(monitor.id, monitor.slug.clone(), checkin.id);
+	state.crons_broadcaster.broadcast(monitor.org_id, sse_event).await;
 
 	info!(
 		monitor_id = %monitor.id,
@@ -294,6 +321,16 @@ pub async fn ping_fail(
 		.update_monitor_last_checkin(monitor.id, CheckInStatus::Error, next_expected_at)
 		.await;
 	let _ = state.crons_repo.increment_monitor_stats(monitor.id, true).await;
+
+	// Broadcast SSE event
+	let sse_event = CronStreamEvent::checkin_error(
+		monitor.id,
+		monitor.slug.clone(),
+		checkin.id,
+		params.exit_code,
+		monitor.consecutive_failures + 1,
+	);
+	state.crons_broadcaster.broadcast(monitor.org_id, sse_event).await;
 
 	warn!(
 		monitor_id = %monitor.id,
@@ -388,6 +425,20 @@ pub async fn ping_with_body(
 		.update_monitor_last_checkin(monitor.id, status, next_expected_at)
 		.await;
 	let _ = state.crons_repo.increment_monitor_stats(monitor.id, is_failure).await;
+
+	// Broadcast SSE event
+	let sse_event = if is_failure {
+		CronStreamEvent::checkin_error(
+			monitor.id,
+			monitor.slug.clone(),
+			checkin.id,
+			params.exit_code,
+			monitor.consecutive_failures + 1,
+		)
+	} else {
+		CronStreamEvent::checkin_ok(monitor.id, monitor.slug.clone(), checkin.id, None)
+	};
+	state.crons_broadcaster.broadcast(monitor.org_id, sse_event).await;
 
 	info!(
 		monitor_id = %monitor.id,
@@ -908,6 +959,26 @@ pub async fn create_checkin(
 		let _ = state.crons_repo.increment_monitor_stats(monitor.id, is_failure).await;
 	}
 
+	// Broadcast SSE event
+	let sse_event = match req.status {
+		CheckInStatus::InProgress => {
+			CronStreamEvent::checkin_started(monitor.id, monitor.slug.clone(), checkin.id)
+		}
+		CheckInStatus::Ok => {
+			CronStreamEvent::checkin_ok(monitor.id, monitor.slug.clone(), checkin.id, req.duration_ms)
+		}
+		CheckInStatus::Error | CheckInStatus::Missed | CheckInStatus::Timeout => {
+			CronStreamEvent::checkin_error(
+				monitor.id,
+				monitor.slug.clone(),
+				checkin.id,
+				req.exit_code,
+				monitor.consecutive_failures + 1,
+			)
+		}
+	};
+	state.crons_broadcaster.broadcast(monitor.org_id, sse_event).await;
+
 	info!(
 		monitor_id = %monitor.id,
 		monitor_slug = %monitor.slug,
@@ -1039,6 +1110,26 @@ pub async fn update_checkin(
 		.await;
 	let _ = state.crons_repo.increment_monitor_stats(checkin.monitor_id, is_failure).await;
 
+	// Broadcast SSE event
+	let sse_event = match req.status {
+		CheckInStatus::InProgress => {
+			CronStreamEvent::checkin_started(monitor.id, monitor.slug.clone(), checkin.id)
+		}
+		CheckInStatus::Ok => {
+			CronStreamEvent::checkin_ok(monitor.id, monitor.slug.clone(), checkin.id, checkin.duration_ms)
+		}
+		CheckInStatus::Error | CheckInStatus::Missed | CheckInStatus::Timeout => {
+			CronStreamEvent::checkin_error(
+				monitor.id,
+				monitor.slug.clone(),
+				checkin.id,
+				checkin.exit_code,
+				monitor.consecutive_failures + 1,
+			)
+		}
+	};
+	state.crons_broadcaster.broadcast(monitor.org_id, sse_event).await;
+
 	info!(
 		checkin_id = %checkin.id,
 		monitor_id = %checkin.monitor_id,
@@ -1097,4 +1188,130 @@ pub async fn get_checkin(
 	}
 
 	Json(checkin).into_response()
+}
+
+// ============================================================================
+// SSE Streaming Endpoints
+// ============================================================================
+
+#[derive(Debug, Deserialize)]
+pub struct StreamCronsParams {
+	pub org_id: OrgId,
+}
+
+/// GET /api/crons/stream - SSE stream for all monitors in an organization
+///
+/// Streams real-time updates for cron monitor events including:
+/// - `init`: Full state of all monitors on connect
+/// - `checkin.started`: Job started (in_progress)
+/// - `checkin.ok`: Job completed successfully
+/// - `checkin.error`: Job failed
+/// - `monitor.missed`: Expected check-in didn't arrive
+/// - `monitor.timeout`: Job exceeded max runtime
+/// - `monitor.healthy`: Monitor recovered from failure
+/// - `heartbeat`: Keep-alive (every 30s)
+#[utoipa::path(
+	get,
+	path = "/api/crons/stream",
+	params(
+		("org_id" = OrgId, Query, description = "Organization ID"),
+	),
+	responses(
+		(status = 200, description = "SSE stream connection established"),
+		(status = 401, description = "Not authenticated"),
+		(status = 403, description = "Not a member of the organization"),
+	),
+	tag = "crons"
+)]
+#[instrument(skip(state, current_user))]
+pub async fn stream_crons(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Query(params): Query<StreamCronsParams>,
+) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, (StatusCode, Json<CronsErrorResponse>)>
+{
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	// Verify org membership
+	verify_org_membership(&state, &params.org_id, &current_user.user.id, &locale).await?;
+
+	info!(
+		org_id = %params.org_id,
+		user_id = %current_user.user.id,
+		"Client connected to crons stream"
+	);
+
+	// Build initial state - list all monitors for this org
+	let monitors = state
+		.crons_repo
+		.list_monitors(params.org_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to list monitors for init");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CronsErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?;
+
+	// Convert to MonitorState for SSE init
+	let monitor_states: Vec<MonitorState> = monitors
+		.into_iter()
+		.map(|m| MonitorState {
+			id: m.id,
+			slug: m.slug,
+			name: m.name,
+			status: m.status,
+			health: m.health,
+			last_checkin_status: m.last_checkin_status,
+			last_checkin_at: m.last_checkin_at,
+			next_expected_at: m.next_expected_at,
+			consecutive_failures: m.consecutive_failures,
+		})
+		.collect();
+
+	// Create init event
+	let init_event = CronStreamEvent::init(monitor_states);
+
+	// Subscribe to broadcast channel
+	let receiver = state.crons_broadcaster.subscribe(params.org_id).await;
+	let broadcast_stream = BroadcastStream::new(receiver);
+
+	// Create a stream that first yields the init event, then yields broadcast events
+	let init_stream = futures::stream::once(async move {
+		let json = serde_json::to_string(&init_event).unwrap_or_else(|_| "{}".to_string());
+		Ok::<_, Infallible>(Event::default().event("init").data(json))
+	});
+
+	let updates_stream = broadcast_stream.filter_map(|result| match result {
+		Ok(event) => {
+			let event_type = event.event_type();
+			match serde_json::to_string(&event) {
+				Ok(json) => Some(Ok::<_, Infallible>(
+					Event::default().event(event_type).data(json),
+				)),
+				Err(e) => {
+					tracing::warn!(error = %e, "Failed to serialize crons SSE event");
+					None
+				}
+			}
+		}
+		Err(e) => {
+			tracing::debug!(error = %e, "Broadcast stream error (client may have disconnected)");
+			None
+		}
+	});
+
+	let combined_stream = init_stream.chain(updates_stream);
+
+	Ok(
+		Sse::new(combined_stream).keep_alive(
+			axum::response::sse::KeepAlive::new()
+				.interval(std::time::Duration::from_secs(30))
+				.text("heartbeat"),
+		),
+	)
 }

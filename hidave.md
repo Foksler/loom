@@ -11,6 +11,16 @@
 
 ### Recent Progress
 
+**2026-01-19:** Added SSE stream endpoint for crons monitoring
+- Added `GET /api/crons/stream?org_id={org_id}` SSE endpoint for real-time cron events
+- Created `CronStreamEvent` types in `loom-crons-core/src/sse.rs` for event serialization
+- Created `CronsBroadcaster` in `loom-server-crons/src/sse.rs` for per-org event broadcasting
+- Added `crons_broadcaster` to AppState in `api.rs`
+- Events broadcast: `init`, `checkin.started`, `checkin.ok`, `checkin.error`, `monitor.missed`, `monitor.timeout`, `monitor.healthy`, `heartbeat`
+- All ping handlers and SDK endpoints now broadcast events after check-ins
+- Added 3 authorization tests for stream endpoint (authenticated, unauthenticated, cross-org isolation)
+- Crons monitoring system SSE streaming is now complete
+
 **2026-01-19:** Added crons authorization tests and fixed cross-org security issue
 - Created `crates/loom-server/tests/authz/crons.rs` with 26 comprehensive authorization tests
 - Fixed security vulnerability: crons API endpoints weren't checking org membership
@@ -420,7 +430,7 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
   - `POST /api/crons/monitors/{slug}/checkins` — SDK check-in ✅
   - `PATCH /api/crons/checkins/{id}` — Update check-in ✅
   - `GET /api/crons/checkins/{id}` — Get check-in ✅
-  - [ ] `GET /api/crons/stream` — SSE stream
+  - `GET /api/crons/stream` — SSE stream ✅
   - Reference: [specs/crons-system.md#8-api-endpoints](specs/crons-system.md)
   - Nginx proxy added in `infra/nixos-modules/loom-web.nix` for `/ping/` routes
 
@@ -904,7 +914,7 @@ Reference: [crates/loom-jobs/](crates/loom-jobs/)
 Reference pattern: [crates/loom-server/tests/authz_*_tests.rs](crates/loom-server/tests/)
 
 - [ ] `tests/authz_crash_tests.rs` — Crash endpoint authorization
-- [x] `tests/authz/crons.rs` — Cron endpoint authorization ✅ (26 tests)
+- [x] `tests/authz/crons.rs` — Cron endpoint authorization ✅ (29 tests including stream endpoint)
 - [ ] `tests/authz_sessions_tests.rs` — Session endpoint authorization
 
 ### 13.4 UI Tests

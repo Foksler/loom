@@ -111,6 +111,7 @@ pub struct AppState {
 		Arc<loom_server_analytics::AnalyticsState<loom_server_analytics::SqliteAnalyticsRepository>>,
 	>,
 	pub crons_repo: Arc<loom_server_crons::SqliteCronsRepository>,
+	pub crons_broadcaster: Arc<loom_server_crons::CronsBroadcaster>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -298,8 +299,9 @@ pub async fn create_app_state(
 	let flags_repo = Arc::new(loom_server_flags::SqliteFlagsRepository::new(pool.clone()));
 	let flags_broadcaster = Arc::new(loom_server_flags::FlagsBroadcaster::with_defaults());
 
-	// Initialize crons repository
+	// Initialize crons repository and broadcaster
 	let crons_repo = Arc::new(loom_server_crons::SqliteCronsRepository::new(pool.clone()));
+	let crons_broadcaster = Arc::new(loom_server_crons::CronsBroadcaster::with_defaults());
 
 	// Initialize analytics repository and state with audit hook
 	let analytics_repo = loom_server_analytics::SqliteAnalyticsRepository::new(pool.clone());
@@ -364,6 +366,7 @@ pub async fn create_app_state(
 		analytics_repo: Some(Arc::new(analytics_repo)),
 		analytics_state: Some(Arc::new(analytics_state)),
 		crons_repo,
+		crons_broadcaster,
 	}
 }
 
@@ -1225,6 +1228,7 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/crons/checkins/{id}",
 			get(routes::crons::get_checkin).patch(routes::crons::update_checkin),
 		)
+		.route("/api/crons/stream", get(routes::crons::stream_crons))
 		// Invitation routes (authenticated)
 		.route(
 			"/api/orgs/{org_id}/invitations",
