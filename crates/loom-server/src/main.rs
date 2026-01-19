@@ -203,6 +203,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		tracing::info!("Registered cron monitoring background jobs");
 	}
 
+	// Register session aggregation job
+	{
+		use loom_server::jobs::SessionAggregationJob;
+
+		// Run every hour to aggregate app sessions into release health metrics
+		scheduler.register_periodic(
+			Arc::new(SessionAggregationJob::new(Arc::clone(&state.sessions_repo))),
+			Duration::from_secs(60 * 60), // 1 hour
+		);
+
+		tracing::info!("Registered session aggregation background job");
+	}
+
 	let scheduler = Arc::new(scheduler);
 
 	// Update state with scheduler and repository
