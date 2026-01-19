@@ -440,12 +440,8 @@ mod tests {
 
 		let _receiver = broadcaster.subscribe(org_id).await;
 
-		let event = CronStreamEvent::checkin_ok(
-			MonitorId::new(),
-			"test".to_string(),
-			CheckInId::new(),
-			None,
-		);
+		let event =
+			CronStreamEvent::checkin_ok(MonitorId::new(), "test".to_string(), CheckInId::new(), None);
 		broadcaster.broadcast(org_id, event).await;
 
 		let stats = broadcaster.stats().await;

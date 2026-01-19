@@ -5649,6 +5649,7 @@ dependencies = [
  "loom-server-llm-anthropic",
  "loom-server-llm-openai",
  "loom-server-llm-vertex",
+ "loom-server-llm-zai",
  "proptest",
  "serde",
  "serde_json",
@@ -5669,6 +5670,25 @@ dependencies = [
  "loom-common-http",
  "pin-project-lite",
  "proptest",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-test",
+ "tracing",
+]
+
+[[package]]
+name = "loom-server-llm-zai"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "futures",
+ "loom-common-core",
+ "loom-common-http",
+ "pin-project-lite",
  "reqwest",
  "serde",
  "serde_json",

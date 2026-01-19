@@ -874,10 +874,7 @@ async fn org_b_api_key_cannot_see_org_a_events() {
 
 	// Capture an event with Org A's key using a unique event name
 	// Use simple uuid format without hyphens since event names only allow alphanumeric, _, $, .
-	let unique_event = format!(
-		"cross_org_isolation_test_{}",
-		uuid::Uuid::new_v4().simple()
-	);
+	let unique_event = format!("cross_org_isolation_test_{}", uuid::Uuid::new_v4().simple());
 	let capture_response = request_with_api_key(
 		&app,
 		Method::POST,

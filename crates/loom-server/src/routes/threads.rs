@@ -202,7 +202,12 @@ pub async fn list_threads(
 
 	let threads = state
 		.repo
-		.list_for_owner(&user_id, params.workspace.as_deref(), params.limit, params.offset)
+		.list_for_owner(
+			&user_id,
+			params.workspace.as_deref(),
+			params.limit,
+			params.offset,
+		)
 		.await?;
 
 	let total = state

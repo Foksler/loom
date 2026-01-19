@@ -118,10 +118,7 @@ async fn test_webhook_create_github_compat_format() {
 		.await
 		.unwrap();
 	let webhook: serde_json::Value = serde_json::from_slice(&body).unwrap();
-	assert_eq!(
-		webhook["payload_format"].as_str().unwrap(),
-		"github-compat"
-	);
+	assert_eq!(webhook["payload_format"].as_str().unwrap(), "github-compat");
 }
 
 /// **Test: List webhooks**
@@ -146,17 +143,18 @@ async fn test_webhook_list() {
 	assert!(result["webhooks"].as_array().unwrap().is_empty());
 
 	// Create a webhook
-	app.post(
-		&format!("/api/repos/{repo_id}/webhooks"),
-		Some(owner),
-		json!({
-			"url": "https://example.com/hook1",
-			"secret": "s1",
-			"payload_format": "loom-v1",
-			"events": ["push"]
-		}),
-	)
-	.await;
+	app
+		.post(
+			&format!("/api/repos/{repo_id}/webhooks"),
+			Some(owner),
+			json!({
+				"url": "https://example.com/hook1",
+				"secret": "s1",
+				"payload_format": "loom-v1",
+				"events": ["push"]
+			}),
+		)
+		.await;
 
 	// List should now have one webhook
 	let response = app

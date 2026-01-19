@@ -18,11 +18,7 @@ use super::support::{run_authz_cases, AuthzCase, TestApp};
 // Helper: Create a monitor and return its details
 // ============================================================================
 
-async fn create_test_monitor(
-	app: &TestApp,
-	org_id: &str,
-	slug: &str,
-) -> (String, String) {
+async fn create_test_monitor(app: &TestApp, org_id: &str, slug: &str) -> (String, String) {
 	// Returns (slug, ping_key)
 	let response = app
 		.post(
@@ -116,7 +112,9 @@ async fn ping_with_invalid_key_returns_not_found() {
 	let app = TestApp::new().await;
 
 	// Invalid ping key should return 404
-	let response = app.get("/ping/00000000-0000-0000-0000-000000000000", None).await;
+	let response = app
+		.get("/ping/00000000-0000-0000-0000-000000000000", None)
+		.await;
 	assert_eq!(
 		response.status(),
 		StatusCode::NOT_FOUND,
@@ -128,7 +126,9 @@ async fn ping_with_invalid_key_returns_not_found() {
 async fn ping_start_with_invalid_key_returns_not_found() {
 	let app = TestApp::new().await;
 
-	let response = app.get("/ping/00000000-0000-0000-0000-000000000000/start", None).await;
+	let response = app
+		.get("/ping/00000000-0000-0000-0000-000000000000/start", None)
+		.await;
 	assert_eq!(
 		response.status(),
 		StatusCode::NOT_FOUND,
@@ -140,7 +140,9 @@ async fn ping_start_with_invalid_key_returns_not_found() {
 async fn ping_fail_with_invalid_key_returns_not_found() {
 	let app = TestApp::new().await;
 
-	let response = app.get("/ping/00000000-0000-0000-0000-000000000000/fail", None).await;
+	let response = app
+		.get("/ping/00000000-0000-0000-0000-000000000000/fail", None)
+		.await;
 	assert_eq!(
 		response.status(),
 		StatusCode::NOT_FOUND,
@@ -565,7 +567,9 @@ async fn ping_with_exit_code_zero_succeeds() {
 
 	let (_, ping_key) = create_test_monitor(&app, &org_id, "exit-code-zero").await;
 
-	let response = app.get(&format!("/ping/{}?exit_code=0", ping_key), None).await;
+	let response = app
+		.get(&format!("/ping/{}?exit_code=0", ping_key), None)
+		.await;
 	assert_eq!(
 		response.status(),
 		StatusCode::OK,
@@ -582,7 +586,9 @@ async fn ping_with_nonzero_exit_code_records_failure() {
 
 	// Non-zero exit code should still return 200 (ping was received)
 	// but internally marks the check-in as error status
-	let response = app.get(&format!("/ping/{}?exit_code=1", ping_key), None).await;
+	let response = app
+		.get(&format!("/ping/{}?exit_code=1", ping_key), None)
+		.await;
 	assert_eq!(
 		response.status(),
 		StatusCode::OK,

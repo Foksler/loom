@@ -226,6 +226,9 @@ mod tests {
 
 	#[test]
 	fn truncate_long_string() {
-		assert_eq!(truncate("hello world this is a long string", 15), "hello world ...");
+		assert_eq!(
+			truncate("hello world this is a long string", 15),
+			"hello world ..."
+		);
 	}
 }

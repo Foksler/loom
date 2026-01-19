@@ -395,7 +395,11 @@ async fn send_batch(
 			}
 		}
 		Err(e) => {
-			tracing::warn!("Failed to send batch: {}, buffering {} events", e, event_count);
+			tracing::warn!(
+				"Failed to send batch: {}, buffering {} events",
+				e,
+				event_count
+			);
 			metrics.record_batch_sent(false, event_count, 0);
 			for event in events {
 				metrics.record_event_buffered(event.event_type);

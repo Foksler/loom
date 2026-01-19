@@ -288,14 +288,82 @@ pub async fn proxy_vertex_stream(
 	}
 
 	tracing::debug!(
-			model = %request.model,
-			message_count = request.messages.len(),
-			tool_count = request.tools.len(),
-			"proxy_vertex_stream: starting stream"
+		model = %request.model,
+		message_count = request.messages.len(),
+		tool_count = request.tools.len(),
+		"proxy_vertex_stream: starting stream"
 	);
 
 	let stream = service
 		.complete_streaming_vertex(request)
+		.await
+		.map_err(map_llm_error)?;
+	Ok(create_sse_response(stream))
+}
+
+/// POST /proxy/zai/complete - Synchronous Z.ai completion.
+#[axum::debug_handler]
+pub async fn proxy_zai_complete(
+	State(state): State<AppState>,
+	Json(request): Json<LlmRequest>,
+) -> Result<impl IntoResponse, ServerError> {
+	let service = state.llm_service.as_ref().ok_or_else(|| {
+		tracing::error!("proxy_zai_complete: LLM service not configured");
+		ServerError::ServiceUnavailable("LLM service is not configured on the server".into())
+	})?;
+
+	if !service.has_zai() {
+		tracing::error!("proxy_zai_complete: Z.ai provider not configured");
+		return Err(ServerError::ServiceUnavailable(
+			"Z.ai provider is not configured on the server".into(),
+		));
+	}
+
+	tracing::debug!(
+		model = %request.model,
+		message_count = request.messages.len(),
+		tool_count = request.tools.len(),
+		"proxy_zai_complete: sending request"
+	);
+
+	let response = service.complete_zai(request).await.map_err(map_llm_error)?;
+
+	tracing::info!(
+		finish_reason = ?response.finish_reason,
+		tool_call_count = response.tool_calls.len(),
+		"proxy_zai_complete: returning response"
+	);
+
+	Ok((StatusCode::OK, Json(LlmProxyResponse::from(response))))
+}
+
+/// POST /proxy/zai/stream - Streaming Z.ai completion via SSE.
+#[axum::debug_handler]
+pub async fn proxy_zai_stream(
+	State(state): State<AppState>,
+	Json(request): Json<LlmRequest>,
+) -> Result<Sse<impl futures::Stream<Item = Result<Event, Infallible>>>, ServerError> {
+	let service = state.llm_service.as_ref().ok_or_else(|| {
+		tracing::error!("proxy_zai_stream: LLM service not configured");
+		ServerError::ServiceUnavailable("LLM service is not configured on the server".into())
+	})?;
+
+	if !service.has_zai() {
+		tracing::error!("proxy_zai_stream: Z.ai provider not configured");
+		return Err(ServerError::ServiceUnavailable(
+			"Z.ai provider is not configured on the server".into(),
+		));
+	}
+
+	tracing::debug!(
+		model = %request.model,
+		message_count = request.messages.len(),
+		tool_count = request.tools.len(),
+		"proxy_zai_stream: starting stream"
+	);
+
+	let stream = service
+		.complete_streaming_zai(request)
 		.await
 		.map_err(map_llm_error)?;
 	Ok(create_sse_response(stream))

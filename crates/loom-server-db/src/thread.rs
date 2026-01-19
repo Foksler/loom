@@ -766,15 +766,16 @@ impl ThreadRepository {
 	) -> Result<Vec<ThreadSearchHit>, DbError> {
 		let query = query.trim();
 
-		let is_sha_like = query.len() >= 7
-			&& query.len() <= 40
-			&& query.chars().all(|c| c.is_ascii_hexdigit());
+		let is_sha_like =
+			query.len() >= 7 && query.len() <= 40 && query.chars().all(|c| c.is_ascii_hexdigit());
 
 		if is_sha_like {
-			self.search_by_commit_prefix_for_owner(owner_user_id, query, workspace, limit, offset)
+			self
+				.search_by_commit_prefix_for_owner(owner_user_id, query, workspace, limit, offset)
 				.await
 		} else {
-			self.search_fts_for_owner(owner_user_id, query, workspace, limit, offset)
+			self
+				.search_fts_for_owner(owner_user_id, query, workspace, limit, offset)
 				.await
 		}
 	}
@@ -844,7 +845,10 @@ impl ThreadRepository {
 		let mut hits = Vec::new();
 		for row in rows {
 			let summary = self.row_to_summary(&row)?;
-			hits.push(ThreadSearchHit { summary, score: 1.0 });
+			hits.push(ThreadSearchHit {
+				summary,
+				score: 1.0,
+			});
 		}
 		Ok(hits)
 	}
@@ -1512,8 +1516,7 @@ impl ThreadStore for ThreadRepository {
 		limit: u32,
 		offset: u32,
 	) -> Result<Vec<ThreadSearchHit>, DbError> {
-		ThreadRepository::search_for_owner(self, owner_user_id, query, workspace, limit, offset)
-			.await
+		ThreadRepository::search_for_owner(self, owner_user_id, query, workspace, limit, offset).await
 	}
 
 	async fn upsert_github_installation(

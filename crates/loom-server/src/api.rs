@@ -1511,6 +1511,14 @@ pub fn create_router(state: AppState) -> Router {
 			"/proxy/vertex/stream",
 			post(llm_proxy::proxy_vertex_stream),
 		)
+		.route(
+			"/proxy/zai/complete",
+			post(llm_proxy::proxy_zai_complete),
+		)
+		.route(
+			"/proxy/zai/stream",
+			post(llm_proxy::proxy_zai_stream),
+		)
 		// Server query endpoints
 		.route(
 			"/api/sessions/{session_id}/query-response",

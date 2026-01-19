@@ -41,18 +41,17 @@ pub trait CronsRepository: Send + Sync {
 		status: CheckInStatus,
 		next_expected_at: Option<chrono::DateTime<Utc>>,
 	) -> Result<()>;
-	async fn increment_monitor_stats(
-		&self,
-		id: MonitorId,
-		is_failure: bool,
-	) -> Result<()>;
+	async fn increment_monitor_stats(&self, id: MonitorId, is_failure: bool) -> Result<()>;
 
 	// Background job queries
 	/// Find monitors that are overdue (next_expected_at + margin < now) and haven't received a check-in since.
 	async fn list_overdue_monitors(&self, now: chrono::DateTime<Utc>) -> Result<Vec<Monitor>>;
 
 	/// Find in-progress check-ins that have exceeded the monitor's max_runtime_minutes.
-	async fn list_timed_out_checkins(&self, now: chrono::DateTime<Utc>) -> Result<Vec<(CheckIn, Monitor)>>;
+	async fn list_timed_out_checkins(
+		&self,
+		now: chrono::DateTime<Utc>,
+	) -> Result<Vec<(CheckIn, Monitor)>>;
 }
 
 /// SQLite implementation of the crons repository.
@@ -494,7 +493,10 @@ impl CronsRepository for SqliteCronsRepository {
 	}
 
 	#[instrument(skip(self))]
-	async fn list_timed_out_checkins(&self, now: chrono::DateTime<Utc>) -> Result<Vec<(CheckIn, Monitor)>> {
+	async fn list_timed_out_checkins(
+		&self,
+		now: chrono::DateTime<Utc>,
+	) -> Result<Vec<(CheckIn, Monitor)>> {
 		// Find check-ins where:
 		// 1. status = 'in_progress'
 		// 2. monitor has max_runtime_minutes set
@@ -529,9 +531,7 @@ impl CronsRepository for SqliteCronsRepository {
 		.fetch_all(&self.pool)
 		.await?;
 
-		rows.into_iter()
-			.map(|row| row.try_into())
-			.collect()
+		rows.into_iter().map(|row| row.try_into()).collect()
 	}
 }
 

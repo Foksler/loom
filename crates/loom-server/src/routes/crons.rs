@@ -36,8 +36,7 @@ use crate::auth_middleware::RequireAuth;
 use crate::i18n::{resolve_user_locale, t};
 
 /// Error response for crons endpoints.
-#[derive(Debug, Serialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct CronsErrorResponse {
 	pub error: String,
 	pub message: String,
@@ -86,8 +85,7 @@ pub struct PingParams {
 }
 
 /// Response for ping/start endpoint.
-#[derive(Debug, Serialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct PingStartResponse {
 	pub checkin_id: CheckInId,
 }
@@ -161,12 +159,18 @@ pub async fn ping_success(
 	// Calculate next expected check-in time
 	let next_expected_at = calculate_next_expected(&monitor.schedule, &monitor.timezone, now).ok();
 
-	let _ = state.crons_repo.update_monitor_health(monitor.id, health).await;
+	let _ = state
+		.crons_repo
+		.update_monitor_health(monitor.id, health)
+		.await;
 	let _ = state
 		.crons_repo
 		.update_monitor_last_checkin(monitor.id, status, next_expected_at)
 		.await;
-	let _ = state.crons_repo.increment_monitor_stats(monitor.id, is_failure).await;
+	let _ = state
+		.crons_repo
+		.increment_monitor_stats(monitor.id, is_failure)
+		.await;
 
 	// Broadcast SSE event
 	let sse_event = if is_failure {
@@ -180,7 +184,10 @@ pub async fn ping_success(
 	} else {
 		CronStreamEvent::checkin_ok(monitor.id, monitor.slug.clone(), checkin.id, None)
 	};
-	state.crons_broadcaster.broadcast(monitor.org_id, sse_event).await;
+	state
+		.crons_broadcaster
+		.broadcast(monitor.org_id, sse_event)
+		.await;
 
 	info!(
 		monitor_id = %monitor.id,
@@ -243,9 +250,11 @@ pub async fn ping_start(
 	}
 
 	// Broadcast SSE event
-	let sse_event =
-		CronStreamEvent::checkin_started(monitor.id, monitor.slug.clone(), checkin.id);
-	state.crons_broadcaster.broadcast(monitor.org_id, sse_event).await;
+	let sse_event = CronStreamEvent::checkin_started(monitor.id, monitor.slug.clone(), checkin.id);
+	state
+		.crons_broadcaster
+		.broadcast(monitor.org_id, sse_event)
+		.await;
 
 	info!(
 		monitor_id = %monitor.id,
@@ -315,12 +324,18 @@ pub async fn ping_fail(
 	// Calculate next expected check-in time
 	let next_expected_at = calculate_next_expected(&monitor.schedule, &monitor.timezone, now).ok();
 
-	let _ = state.crons_repo.update_monitor_health(monitor.id, MonitorHealth::Failing).await;
+	let _ = state
+		.crons_repo
+		.update_monitor_health(monitor.id, MonitorHealth::Failing)
+		.await;
 	let _ = state
 		.crons_repo
 		.update_monitor_last_checkin(monitor.id, CheckInStatus::Error, next_expected_at)
 		.await;
-	let _ = state.crons_repo.increment_monitor_stats(monitor.id, true).await;
+	let _ = state
+		.crons_repo
+		.increment_monitor_stats(monitor.id, true)
+		.await;
 
 	// Broadcast SSE event
 	let sse_event = CronStreamEvent::checkin_error(
@@ -330,7 +345,10 @@ pub async fn ping_fail(
 		params.exit_code,
 		monitor.consecutive_failures + 1,
 	);
-	state.crons_broadcaster.broadcast(monitor.org_id, sse_event).await;
+	state
+		.crons_broadcaster
+		.broadcast(monitor.org_id, sse_event)
+		.await;
 
 	warn!(
 		monitor_id = %monitor.id,
@@ -419,12 +437,18 @@ pub async fn ping_with_body(
 	// Calculate next expected check-in time
 	let next_expected_at = calculate_next_expected(&monitor.schedule, &monitor.timezone, now).ok();
 
-	let _ = state.crons_repo.update_monitor_health(monitor.id, health).await;
+	let _ = state
+		.crons_repo
+		.update_monitor_health(monitor.id, health)
+		.await;
 	let _ = state
 		.crons_repo
 		.update_monitor_last_checkin(monitor.id, status, next_expected_at)
 		.await;
-	let _ = state.crons_repo.increment_monitor_stats(monitor.id, is_failure).await;
+	let _ = state
+		.crons_repo
+		.increment_monitor_stats(monitor.id, is_failure)
+		.await;
 
 	// Broadcast SSE event
 	let sse_event = if is_failure {
@@ -438,7 +462,10 @@ pub async fn ping_with_body(
 	} else {
 		CronStreamEvent::checkin_ok(monitor.id, monitor.slug.clone(), checkin.id, None)
 	};
-	state.crons_broadcaster.broadcast(monitor.org_id, sse_event).await;
+	state
+		.crons_broadcaster
+		.broadcast(monitor.org_id, sse_event)
+		.await;
 
 	info!(
 		monitor_id = %monitor.id,
@@ -456,8 +483,7 @@ pub async fn ping_with_body(
 // ============================================================================
 
 /// Request to create a new monitor.
-#[derive(Debug, Deserialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct CreateMonitorRequest {
 	pub org_id: OrgId,
 	pub slug: String,
@@ -483,8 +509,7 @@ fn default_margin() -> u32 {
 	5
 }
 
-#[derive(Debug, Deserialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum MonitorScheduleRequest {
 	Cron { expression: String },
@@ -500,8 +525,7 @@ impl From<MonitorScheduleRequest> for MonitorSchedule {
 	}
 }
 
-#[derive(Debug, Serialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct CreateMonitorResponse {
 	pub monitor: Monitor,
 	pub ping_url: String,
@@ -512,14 +536,12 @@ pub struct ListMonitorsParams {
 	pub org_id: OrgId,
 }
 
-#[derive(Debug, Serialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct ListMonitorsResponse {
 	pub monitors: Vec<MonitorSummary>,
 }
 
-#[derive(Debug, Serialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct MonitorSummary {
 	pub id: MonitorId,
 	pub slug: String,
@@ -569,14 +591,19 @@ pub async fn list_monitors(
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
 	// Verify org membership
-	if let Err(resp) = verify_org_membership(&state, &params.org_id, &current_user.user.id, &locale).await {
+	if let Err(resp) =
+		verify_org_membership(&state, &params.org_id, &current_user.user.id, &locale).await
+	{
 		return resp.into_response();
 	}
 
 	match state.crons_repo.list_monitors(params.org_id).await {
 		Ok(monitors) => {
 			let summaries: Vec<MonitorSummary> = monitors.into_iter().map(Into::into).collect();
-			Json(ListMonitorsResponse { monitors: summaries }).into_response()
+			Json(ListMonitorsResponse {
+				monitors: summaries,
+			})
+			.into_response()
 		}
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to list monitors");
@@ -608,7 +635,9 @@ pub async fn create_monitor(
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
 	// Verify org membership
-	if let Err(resp) = verify_org_membership(&state, &req.org_id, &current_user.user.id, &locale).await {
+	if let Err(resp) =
+		verify_org_membership(&state, &req.org_id, &current_user.user.id, &locale).await
+	{
 		return resp.into_response();
 	}
 
@@ -620,7 +649,11 @@ pub async fn create_monitor(
 			.into_response();
 	}
 
-	if let Ok(Some(_)) = state.crons_repo.get_monitor_by_slug(req.org_id, &req.slug).await {
+	if let Ok(Some(_)) = state
+		.crons_repo
+		.get_monitor_by_slug(req.org_id, &req.slug)
+		.await
+	{
 		return (
 			StatusCode::CONFLICT,
 			Json(serde_json::json!({"error": "Duplicate slug"})),
@@ -706,11 +739,17 @@ pub async fn get_monitor(
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
 	// Verify org membership
-	if let Err(resp) = verify_org_membership(&state, &params.org_id, &current_user.user.id, &locale).await {
+	if let Err(resp) =
+		verify_org_membership(&state, &params.org_id, &current_user.user.id, &locale).await
+	{
 		return resp.into_response();
 	}
 
-	match state.crons_repo.get_monitor_by_slug(params.org_id, &slug).await {
+	match state
+		.crons_repo
+		.get_monitor_by_slug(params.org_id, &slug)
+		.await
+	{
 		Ok(Some(monitor)) => Json(monitor).into_response(),
 		Ok(None) => StatusCode::NOT_FOUND.into_response(),
 		Err(e) => {
@@ -746,11 +785,17 @@ pub async fn delete_monitor(
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
 	// Verify org membership
-	if let Err(resp) = verify_org_membership(&state, &params.org_id, &current_user.user.id, &locale).await {
+	if let Err(resp) =
+		verify_org_membership(&state, &params.org_id, &current_user.user.id, &locale).await
+	{
 		return resp.into_response();
 	}
 
-	let monitor = match state.crons_repo.get_monitor_by_slug(params.org_id, &slug).await {
+	let monitor = match state
+		.crons_repo
+		.get_monitor_by_slug(params.org_id, &slug)
+		.await
+	{
 		Ok(Some(m)) => m,
 		Ok(None) => return StatusCode::NOT_FOUND.into_response(),
 		Err(e) => {
@@ -775,8 +820,7 @@ pub struct ListCheckInsParams {
 	pub limit: Option<u32>,
 }
 
-#[derive(Debug, Serialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct ListCheckInsResponse {
 	pub checkins: Vec<CheckIn>,
 }
@@ -808,11 +852,17 @@ pub async fn list_checkins(
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
 	// Verify org membership
-	if let Err(resp) = verify_org_membership(&state, &params.org_id, &current_user.user.id, &locale).await {
+	if let Err(resp) =
+		verify_org_membership(&state, &params.org_id, &current_user.user.id, &locale).await
+	{
 		return resp.into_response();
 	}
 
-	let monitor = match state.crons_repo.get_monitor_by_slug(params.org_id, &slug).await {
+	let monitor = match state
+		.crons_repo
+		.get_monitor_by_slug(params.org_id, &slug)
+		.await
+	{
 		Ok(Some(m)) => m,
 		Ok(None) => return StatusCode::NOT_FOUND.into_response(),
 		Err(e) => {
@@ -836,8 +886,7 @@ pub async fn list_checkins(
 // ============================================================================
 
 /// Request to create a check-in via SDK.
-#[derive(Debug, Deserialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct CreateCheckInRequest {
 	pub org_id: OrgId,
 	pub status: CheckInStatus,
@@ -860,8 +909,7 @@ pub struct CreateCheckInRequest {
 }
 
 /// Response for check-in creation.
-#[derive(Debug, Serialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct CreateCheckInResponse {
 	pub id: CheckInId,
 	pub status: CheckInStatus,
@@ -894,11 +942,17 @@ pub async fn create_checkin(
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
 	// Verify org membership
-	if let Err(resp) = verify_org_membership(&state, &req.org_id, &current_user.user.id, &locale).await {
+	if let Err(resp) =
+		verify_org_membership(&state, &req.org_id, &current_user.user.id, &locale).await
+	{
 		return resp.into_response();
 	}
 
-	let monitor = match state.crons_repo.get_monitor_by_slug(req.org_id, &slug).await {
+	let monitor = match state
+		.crons_repo
+		.get_monitor_by_slug(req.org_id, &slug)
+		.await
+	{
 		Ok(Some(m)) => m,
 		Ok(None) => return StatusCode::NOT_FOUND.into_response(),
 		Err(e) => {
@@ -916,11 +970,13 @@ pub async fn create_checkin(
 		id: CheckInId::new(),
 		monitor_id: monitor.id,
 		status: req.status,
-		started_at: req.started_at.or(if req.status == CheckInStatus::InProgress {
-			Some(now)
-		} else {
-			None
-		}),
+		started_at: req
+			.started_at
+			.or(if req.status == CheckInStatus::InProgress {
+				Some(now)
+			} else {
+				None
+			}),
 		finished_at: req.finished_at.unwrap_or(now),
 		duration_ms: req.duration_ms,
 		environment: req.environment,
@@ -938,7 +994,10 @@ pub async fn create_checkin(
 	}
 
 	// Update monitor state based on check-in status
-	let is_failure = matches!(req.status, CheckInStatus::Error | CheckInStatus::Missed | CheckInStatus::Timeout);
+	let is_failure = matches!(
+		req.status,
+		CheckInStatus::Error | CheckInStatus::Missed | CheckInStatus::Timeout
+	);
 
 	if req.status != CheckInStatus::InProgress {
 		let health = if is_failure {
@@ -948,15 +1007,20 @@ pub async fn create_checkin(
 		};
 
 		// Calculate next expected check-in time
-		let next_expected_at =
-			calculate_next_expected(&monitor.schedule, &monitor.timezone, now).ok();
+		let next_expected_at = calculate_next_expected(&monitor.schedule, &monitor.timezone, now).ok();
 
-		let _ = state.crons_repo.update_monitor_health(monitor.id, health).await;
+		let _ = state
+			.crons_repo
+			.update_monitor_health(monitor.id, health)
+			.await;
 		let _ = state
 			.crons_repo
 			.update_monitor_last_checkin(monitor.id, req.status, next_expected_at)
 			.await;
-		let _ = state.crons_repo.increment_monitor_stats(monitor.id, is_failure).await;
+		let _ = state
+			.crons_repo
+			.increment_monitor_stats(monitor.id, is_failure)
+			.await;
 	}
 
 	// Broadcast SSE event
@@ -964,9 +1028,12 @@ pub async fn create_checkin(
 		CheckInStatus::InProgress => {
 			CronStreamEvent::checkin_started(monitor.id, monitor.slug.clone(), checkin.id)
 		}
-		CheckInStatus::Ok => {
-			CronStreamEvent::checkin_ok(monitor.id, monitor.slug.clone(), checkin.id, req.duration_ms)
-		}
+		CheckInStatus::Ok => CronStreamEvent::checkin_ok(
+			monitor.id,
+			monitor.slug.clone(),
+			checkin.id,
+			req.duration_ms,
+		),
 		CheckInStatus::Error | CheckInStatus::Missed | CheckInStatus::Timeout => {
 			CronStreamEvent::checkin_error(
 				monitor.id,
@@ -977,7 +1044,10 @@ pub async fn create_checkin(
 			)
 		}
 	};
-	state.crons_broadcaster.broadcast(monitor.org_id, sse_event).await;
+	state
+		.crons_broadcaster
+		.broadcast(monitor.org_id, sse_event)
+		.await;
 
 	info!(
 		monitor_id = %monitor.id,
@@ -998,8 +1068,7 @@ pub async fn create_checkin(
 }
 
 /// Request to update a check-in.
-#[derive(Debug, Deserialize)]
-#[derive(utoipa::ToSchema)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct UpdateCheckInRequest {
 	pub status: CheckInStatus,
 	#[serde(default)]
@@ -1059,7 +1128,9 @@ pub async fn update_checkin(
 	};
 
 	// Verify org membership
-	if let Err(resp) = verify_org_membership(&state, &monitor.org_id, &current_user.user.id, &locale).await {
+	if let Err(resp) =
+		verify_org_membership(&state, &monitor.org_id, &current_user.user.id, &locale).await
+	{
 		return resp.into_response();
 	}
 
@@ -1090,7 +1161,10 @@ pub async fn update_checkin(
 	}
 
 	// Update monitor state
-	let is_failure = matches!(req.status, CheckInStatus::Error | CheckInStatus::Missed | CheckInStatus::Timeout);
+	let is_failure = matches!(
+		req.status,
+		CheckInStatus::Error | CheckInStatus::Missed | CheckInStatus::Timeout
+	);
 	let health = if is_failure {
 		MonitorHealth::Failing
 	} else {
@@ -1103,21 +1177,30 @@ pub async fn update_checkin(
 		_ => None,
 	};
 
-	let _ = state.crons_repo.update_monitor_health(checkin.monitor_id, health).await;
+	let _ = state
+		.crons_repo
+		.update_monitor_health(checkin.monitor_id, health)
+		.await;
 	let _ = state
 		.crons_repo
 		.update_monitor_last_checkin(checkin.monitor_id, req.status, next_expected_at)
 		.await;
-	let _ = state.crons_repo.increment_monitor_stats(checkin.monitor_id, is_failure).await;
+	let _ = state
+		.crons_repo
+		.increment_monitor_stats(checkin.monitor_id, is_failure)
+		.await;
 
 	// Broadcast SSE event
 	let sse_event = match req.status {
 		CheckInStatus::InProgress => {
 			CronStreamEvent::checkin_started(monitor.id, monitor.slug.clone(), checkin.id)
 		}
-		CheckInStatus::Ok => {
-			CronStreamEvent::checkin_ok(monitor.id, monitor.slug.clone(), checkin.id, checkin.duration_ms)
-		}
+		CheckInStatus::Ok => CronStreamEvent::checkin_ok(
+			monitor.id,
+			monitor.slug.clone(),
+			checkin.id,
+			checkin.duration_ms,
+		),
 		CheckInStatus::Error | CheckInStatus::Missed | CheckInStatus::Timeout => {
 			CronStreamEvent::checkin_error(
 				monitor.id,
@@ -1128,7 +1211,10 @@ pub async fn update_checkin(
 			)
 		}
 	};
-	state.crons_broadcaster.broadcast(monitor.org_id, sse_event).await;
+	state
+		.crons_broadcaster
+		.broadcast(monitor.org_id, sse_event)
+		.await;
 
 	info!(
 		checkin_id = %checkin.id,
@@ -1183,7 +1269,9 @@ pub async fn get_checkin(
 	};
 
 	// Verify org membership
-	if let Err(resp) = verify_org_membership(&state, &monitor.org_id, &current_user.user.id, &locale).await {
+	if let Err(resp) =
+		verify_org_membership(&state, &monitor.org_id, &current_user.user.id, &locale).await
+	{
 		return resp.into_response();
 	}
 
@@ -1228,8 +1316,10 @@ pub async fn stream_crons(
 	RequireAuth(current_user): RequireAuth,
 	State(state): State<AppState>,
 	Query(params): Query<StreamCronsParams>,
-) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, (StatusCode, Json<CronsErrorResponse>)>
-{
+) -> Result<
+	Sse<impl Stream<Item = Result<Event, Infallible>>>,
+	(StatusCode, Json<CronsErrorResponse>),
+> {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
 	// Verify org membership

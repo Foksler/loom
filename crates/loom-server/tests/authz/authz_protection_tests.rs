@@ -133,17 +133,18 @@ async fn test_protection_list() {
 	assert!(result["rules"].as_array().unwrap().is_empty());
 
 	// Create a rule
-	app.post(
-		&format!("/api/repos/{repo_id}/protection"),
-		Some(owner),
-		json!({
-			"pattern": "main",
-			"block_direct_push": true,
-			"block_force_push": false,
-			"block_deletion": true
-		}),
-	)
-	.await;
+	app
+		.post(
+			&format!("/api/repos/{repo_id}/protection"),
+			Some(owner),
+			json!({
+				"pattern": "main",
+				"block_direct_push": true,
+				"block_force_push": false,
+				"block_deletion": true
+			}),
+		)
+		.await;
 
 	// List should now have one rule
 	let response = app

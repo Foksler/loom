@@ -20,6 +20,7 @@ pub enum LlmProvider {
 	Anthropic,
 	OpenAi,
 	Vertex,
+	Zai,
 }
 
 impl std::fmt::Display for LlmProvider {
@@ -28,6 +29,7 @@ impl std::fmt::Display for LlmProvider {
 			LlmProvider::Anthropic => write!(f, "anthropic"),
 			LlmProvider::OpenAi => write!(f, "openai"),
 			LlmProvider::Vertex => write!(f, "vertex"),
+			LlmProvider::Zai => write!(f, "zai"),
 		}
 	}
 }
@@ -40,9 +42,12 @@ impl std::str::FromStr for LlmProvider {
 			"anthropic" => Ok(LlmProvider::Anthropic),
 			"openai" => Ok(LlmProvider::OpenAi),
 			"vertex" => Ok(LlmProvider::Vertex),
+			"zai" => Ok(LlmProvider::Zai),
 			_ => Err(ConfigError::InvalidValue {
 				key: "provider".to_string(),
-				message: format!("unknown provider '{s}', expected 'anthropic', 'openai', or 'vertex'"),
+				message: format!(
+					"unknown provider '{s}', expected 'anthropic', 'openai', 'vertex', or 'zai'"
+				),
 			}),
 		}
 	}
@@ -78,6 +83,8 @@ pub struct LlmServiceConfig {
 	pub vertex_project: Option<String>,
 	pub vertex_location: Option<String>,
 	pub vertex_model: Option<String>,
+	pub zai_api_key: Option<SecretString>,
+	pub zai_model: Option<String>,
 }
 
 impl std::fmt::Debug for LlmServiceConfig {
@@ -92,6 +99,8 @@ impl std::fmt::Debug for LlmServiceConfig {
 			.field("vertex_project", &self.vertex_project)
 			.field("vertex_location", &self.vertex_location)
 			.field("vertex_model", &self.vertex_model)
+			.field("zai_api_key", &self.zai_api_key)
+			.field("zai_model", &self.zai_model)
 			.finish()
 	}
 }
@@ -119,8 +128,8 @@ impl LlmServiceConfig {
 	/// Priority: OAUTH_PROVIDERS takes precedence over API_KEY
 	///
 	/// Other environment variables:
-	/// - `LOOM_SERVER_LLM_PROVIDER`: Provider to use ("anthropic", "openai", or
-	///   "vertex")
+	/// - `LOOM_SERVER_LLM_PROVIDER`: Provider to use ("anthropic", "openai", "vertex",
+	///   or "zai")
 	/// - `LOOM_SERVER_ANTHROPIC_MODEL`: Anthropic model name
 	/// - `LOOM_SERVER_OPENAI_MODEL`: OpenAI model name
 	/// - `LOOM_SERVER_OPENAI_ORGANIZATION`: OpenAI organization ID
@@ -129,6 +138,8 @@ impl LlmServiceConfig {
 	///   "us-central1")
 	/// - `LOOM_SERVER_VERTEX_MODEL`: Vertex AI model name (e.g.,
 	///   "gemini-1.5-pro")
+	/// - `LOOM_SERVER_ZAI_API_KEY`: Z.ai API key (智谱AI/ZhipuAI)
+	/// - `LOOM_SERVER_ZAI_MODEL`: Z.ai model name (e.g., "glm-4.7")
 	pub fn from_env() -> Result<Self, ConfigError> {
 		debug!("Loading LLM service configuration from environment");
 
@@ -187,12 +198,15 @@ impl LlmServiceConfig {
 		let vertex_project = env::var("LOOM_SERVER_VERTEX_PROJECT").ok();
 		let vertex_location = env::var("LOOM_SERVER_VERTEX_LOCATION").ok();
 		let vertex_model = env::var("LOOM_SERVER_VERTEX_MODEL").ok();
+		let zai_api_key = load_secret_env("LOOM_SERVER_ZAI_API_KEY")?;
+		let zai_model = env::var("LOOM_SERVER_ZAI_MODEL").ok();
 
 		info!(
 				provider = %provider,
 				anthropic_configured = anthropic_auth.is_some(),
 				openai_configured = openai_api_key.is_some(),
 				vertex_configured = vertex_project.is_some() && vertex_location.is_some(),
+				zai_configured = zai_api_key.is_some(),
 				"Loaded LLM service configuration"
 		);
 
@@ -206,6 +220,8 @@ impl LlmServiceConfig {
 			vertex_project,
 			vertex_location,
 			vertex_model,
+			zai_api_key,
+			zai_model,
 		})
 	}
 
@@ -267,6 +283,18 @@ impl LlmServiceConfig {
 	/// Sets the Vertex AI model.
 	pub fn with_vertex_model(mut self, model: impl Into<String>) -> Self {
 		self.vertex_model = Some(model.into());
+		self
+	}
+
+	/// Sets the Z.ai API key.
+	pub fn with_zai_api_key(mut self, api_key: impl Into<String>) -> Self {
+		self.zai_api_key = Some(Secret::new(api_key.into()));
+		self
+	}
+
+	/// Sets the Z.ai model.
+	pub fn with_zai_model(mut self, model: impl Into<String>) -> Self {
+		self.zai_model = Some(model.into());
 		self
 	}
 }

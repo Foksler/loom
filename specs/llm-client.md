@@ -160,9 +160,10 @@ pub struct ProxyLlmConfig {
 	pub provider: LlmProvider, // Anthropic or OpenAI
 }
 
-pub enum LlmProvider {
+ pub enum LlmProvider {
 	Anthropic,
 	OpenAI,
+	Zai,
 }
 ```
 
@@ -172,6 +173,7 @@ pub enum LlmProvider {
 // Convenience constructors for specific providers
 let anthropic_client = ProxyLlmClient::anthropic("http://localhost:3000")?;
 let openai_client = ProxyLlmClient::openai("http://localhost:3000")?;
+let zai_client = ProxyLlmClient::zai("http://localhost:3000")?;
 
 // Explicit provider selection
 let client = ProxyLlmClient::new("http://localhost:3000", LlmProvider::Anthropic)?;
@@ -191,9 +193,14 @@ For OpenAI provider:
 - `complete()` → `POST /proxy/openai/complete`
 - `complete_streaming()` → `POST /proxy/openai/stream`
 
+For Z.ai provider:
+
+- `complete()` → `POST /proxy/zai/complete`
+- `complete_streaming()` → `POST /proxy/zai/stream`
+
 ### Wire Format
 
-**POST /proxy/{provider}/complete** (e.g., `/proxy/anthropic/complete`, `/proxy/openai/complete`)
+**POST /proxy/{provider}/complete** (e.g., `/proxy/anthropic/complete`, `/proxy/openai/complete`, `/proxy/zai/complete`)
 
 Request body: `LlmRequest` JSON
 
@@ -218,7 +225,7 @@ Response body: `LlmProxyResponse` JSON
 }
 ```
 
-**POST /proxy/{provider}/stream** (e.g., `/proxy/anthropic/stream`, `/proxy/openai/stream`)
+**POST /proxy/{provider}/stream** (e.g., `/proxy/anthropic/stream`, `/proxy/openai/stream`, `/proxy/zai/stream`)
 
 Request body: `LlmRequest` JSON (same as above)
 
@@ -243,7 +250,8 @@ simultaneously and exposes provider-specific methods.
 ```bash
 ANTHROPIC_API_KEY=sk-ant-...
 OPENAI_API_KEY=sk-...
-# Both can be configured at the same time
+ZAI_API_KEY=...
+# All providers can be configured at the same time
 ```
 
 **Architecture:**
@@ -252,6 +260,7 @@ OPENAI_API_KEY=sk-...
 pub struct LlmService {
 	anthropic_client: Option<AnthropicClient>,
 	openai_client: Option<OpenAIClient>,
+	zai_client: Option<ZaiClient>,
 }
 
 impl LlmService {
@@ -260,12 +269,15 @@ impl LlmService {
 	// Provider availability checks
 	fn has_anthropic(&self) -> bool;
 	fn has_openai(&self) -> bool;
+	fn has_zai(&self) -> bool;
 
 	// Provider-specific completion methods
 	async fn complete_anthropic(&self, request: LlmRequest) -> Result<LlmResponse, LlmError>;
 	async fn complete_streaming_anthropic(&self, request: LlmRequest) -> Result<LlmStream, LlmError>;
 	async fn complete_openai(&self, request: LlmRequest) -> Result<LlmResponse, LlmError>;
 	async fn complete_streaming_openai(&self, request: LlmRequest) -> Result<LlmStream, LlmError>;
+	async fn complete_zai(&self, request: LlmRequest) -> Result<LlmResponse, LlmError>;
+	async fn complete_streaming_zai(&self, request: LlmRequest) -> Result<LlmStream, LlmError>;
 }
 ```
 
@@ -335,6 +347,37 @@ data: {"choices":[{"delta":{"tool_calls":[...]}}]}
 data: [DONE]
 ```
 
+### ZaiClient
+
+Located in [`crates/loom-llm-zai/`](../crates/loom-llm-zai/):
+
+**Configuration:**
+
+```rust
+pub struct ZaiConfig {
+	pub api_key: String,
+	pub base_url: String, // Default: "https://api.z.ai/api/paas/v4"
+	pub model: String,    // Default: "glm-4.7"
+}
+```
+
+**API Details:**
+
+- Endpoint: `POST /chat/completions`
+- Headers: `Authorization: Bearer {api_key}`, optional `Accept-Language`
+- OpenAI-compatible API format
+- Supports models: `glm-4.7`, `glm-4.6`, `glm-4.5`, `glm-4.5-air`, `glm-4.5-x`, `glm-4.5-airx`, `glm-4.5-flash`, `glm-4-32b-0414-128k`
+
+**SSE Streaming Format:**
+
+```
+data: {"choices":[{"delta":{"content":"..."}}]}
+data: {"choices":[{"delta":{"tool_calls":[...]}}]}
+data: [DONE]
+```
+
+Uses the same OpenAI-compatible streaming format.
+
 ## Message Format Conversion
 
 ### loom-core Message → Provider Formats
@@ -362,6 +405,12 @@ pub struct Message {
 
 - Direct role mapping: `system`, `user`, `assistant`, `tool`
 - `Role::Tool` includes `tool_call_id` and `name` fields
+
+**Z.ai Conversion** ([`types.rs`](../crates/loom-llm-zai/src/types.rs)):
+
+- Direct role mapping (OpenAI-compatible): `system`, `user`, `assistant`, `tool`
+- `Role::Tool` includes `tool_call_id` and `name` fields
+- Same format as OpenAI (Z.ai API is OpenAI-compatible)
 
 ## Tool Definition Conversion
 
@@ -398,6 +447,21 @@ pub struct ToolDefinition {
 }
 ```
 
+**Z.ai Format:**
+
+```json
+{
+  "type": "function",
+  "function": {
+    "name": "get_weather",
+    "description": "Get current weather",
+    "parameters": { "type": "object", "properties": {...} }
+  }
+}
+```
+
+Z.ai uses the same OpenAI-compatible format.
+
 ## Design Decisions
 
 ### Why async_trait
@@ -426,14 +490,15 @@ Using `Arc<dyn LlmClient>` allows:
 **Client-side (uses proxy with explicit provider):**
 
 ```rust
-// Convenience constructors
-let client: Arc<dyn LlmClient> = Arc::new(ProxyLlmClient::anthropic(config.server_url.clone())?);
-let client: Arc<dyn LlmClient> = Arc::new(ProxyLlmClient::openai(config.server_url.clone())?);
-
 // Explicit provider selection
 let client: Arc<dyn LlmClient> = Arc::new(ProxyLlmClient::new(
     config.server_url.clone(),
     LlmProvider::Anthropic,
+)?);
+
+let client: Arc<dyn LlmClient> = Arc::new(ProxyLlmClient::new(
+    config.server_url.clone(),
+    LlmProvider::Zai,
 )?);
 ```
 
@@ -448,6 +513,9 @@ if service.has_anthropic() {
 }
 if service.has_openai() {
     let response = service.complete_openai(request).await?;
+}
+if service.has_zai() {
+    let response = service.complete_zai(request).await?;
 }
 ```
 
@@ -471,125 +539,139 @@ Ok(LlmStream::new(boxed))
 
 ## Adding New Providers
 
+### ZaiClient Implementation
+
+ZaiClient is implemented in [`crates/loom-llm-zai/`](../crates/loom-llm-zai/) using the OpenAI-compatible Z.ai API (智谱AI/ZhipuAI).
+
+**Key Features:**
+
+- OpenAI-compatible API format
+- Base URL: `https://api.z.ai/api/paas/v4`
+- Default model: `glm-4.7`
+- Streaming via SSE with `data: [DONE]` marker
+- Tool calling support
+- Models: `glm-4.7`, `glm-4.6`, `glm-4.5`, `glm-4.5-air`, `glm-4.5-x`, `glm-4.5-airx`, `glm-4.5-flash`, `glm-4-32b-0414-128k`
+
 ### Step-by-Step Guide: Adding Google Gemini
 
-1. **Create the crate structure:**
-   ```
-   crates/loom-llm-gemini/
-   ├── Cargo.toml
-   └── src/
-       ├── lib.rs
-       ├── client.rs
-       ├── types.rs
-       └── stream.rs
-   ```
+1. **Create a crate structure:**
+    ```
+    crates/loom-llm-gemini/
+    ├── Cargo.toml
+    └── src/
+        ├── lib.rs
+        ├── client.rs
+        ├── types.rs
+        └── stream.rs
+    ```
 
 2. **Add dependencies in `Cargo.toml`:**
-   ```toml
-   [package]
-   name = "loom-llm-gemini"
-   version = "0.1.0"
-   edition = "2021"
+    ```toml
+    [package]
+    name = "loom-llm-gemini"
+    version = "0.1.0"
+    edition = "2021"
 
-   [dependencies]
-   loom-core = { path = "../loom-core" }
-   loom-http = { path = "../loom-http" }
-   async-trait = "0.1"
-   bytes = "1"
-   futures = "0.3"
-   pin-project-lite = "0.2"
-   reqwest = { version = "0.11", features = ["json", "stream"] }
-   serde = { version = "1", features = ["derive"] }
-   serde_json = "1"
-   tracing = "0.1"
-   ```
+    [dependencies]
+    loom-core = { path = "../loom-core" }
+    loom-http = { path = "../loom-http" }
+    async-trait = "0.1"
+    bytes = "1"
+    futures = "0.3"
+    pin-project-lite = "0.2"
+    reqwest = { version = "0.11", features = ["json", "stream"] }
+    serde = { version = "1", features = ["derive"] }
+    serde_json = "1"
+    tracing = "0.1"
+    ```
 
 3. **Define configuration in `types.rs`:**
-   ```rust
-   pub struct GeminiConfig {
-   	pub api_key: String,
-   	pub base_url: String, // "https://generativelanguage.googleapis.com"
-   	pub model: String,    // "gemini-pro"
-   }
-   ```
+    ```rust
+    pub struct GeminiConfig {
+    	pub api_key: String,
+    	pub base_url: String, // "https://generativelanguage.googleapis.com"
+    	pub model: String,    // "gemini-pro"
+    }
+    ```
 
 4. **Define API types in `types.rs`:**
-   - `GeminiRequest` — map from `LlmRequest`
-   - `GeminiResponse` — map to `LlmResponse`
-   - `GeminiMessage`, `GeminiContent`, `GeminiFunctionCall`, etc.
-   - Implement `From<&LlmRequest>` and `TryFrom<GeminiResponse>`
+    - `GeminiRequest` — map from `LlmRequest`
+    - `GeminiResponse` — map to `LlmResponse`
+    - `GeminiMessage`, `GeminiContent`, `GeminiFunctionCall`, etc.
+    - Implement `From<&LlmRequest>` and `TryFrom<GeminiResponse>`
 
-5. **Implement the client in `client.rs`:**
-   ```rust
-   pub struct GeminiClient {
-   	config: GeminiConfig,
-   	http_client: Client,
-   	retry_config: RetryConfig,
-   }
+5. **Implement client in `client.rs`:**
+    ```rust
+    pub struct GeminiClient {
+    	config: GeminiConfig,
+    	http_client: Client,
+    	retry_config: RetryConfig,
+    }
 
-   #[async_trait]
-   impl LlmClient for GeminiClient {
-   	async fn complete(&self, request: LlmRequest) -> Result<LlmResponse, LlmError> {
-   		// 1. Convert LlmRequest → GeminiRequest
-   		// 2. POST to /v1beta/models/{model}:generateContent
-   		// 3. Parse GeminiResponse → LlmResponse
-   	}
+    #[async_trait]
+    impl LlmClient for GeminiClient {
+    	async fn complete(&self, request: LlmRequest) -> Result<LlmResponse, LlmError> {
+    		// 1. Convert LlmRequest → GeminiRequest
+    		// 2. POST to /v1beta/models/{model}:generateContent
+    		// 3. Parse GeminiResponse → LlmResponse
+    	}
 
-   	async fn complete_streaming(&self, request: LlmRequest) -> Result<LlmStream, LlmError> {
-   		// 1. Convert LlmRequest → GeminiRequest with stream=true
-   		// 2. POST to /v1beta/models/{model}:streamGenerateContent
-   		// 3. Wrap response in GeminiStream
-   		// 4. Return LlmStream::new(Box::pin(stream))
-   	}
-   }
-   ```
+    	async fn complete_streaming(&self, request: LlmRequest) -> Result<LlmStream, LlmError> {
+    		// 1. Convert LlmRequest → GeminiRequest with stream=true
+    		// 2. POST to /v1beta/models/{model}:streamGenerateContent
+    		// 3. Wrap response in GeminiStream
+    		// 4. Return LlmStream::new(Box::pin(stream))
+    	}
+    }
+    ```
 
 6. **Implement SSE parsing in `stream.rs`:**
-   ```rust
-   pin_project! {
-   		pub struct GeminiStream<S> {
-   				#[pin]
-   				inner: S,
-   				buffer: String,
-   				state: StreamState,
-   				finished: bool,
-   		}
-   }
+    ```rust
+    pin_project! {
+    		pub struct GeminiStream<S> {
+    				#[pin]
+    				inner: S,
+    				buffer: String,
+    				state: StreamState,
+    				finished: bool,
+    		}
+    }
 
-   impl<S, E> Stream for GeminiStream<S>
-   where
-   	S: Stream<Item = Result<Bytes, E>>,
-   	E: std::error::Error,
-   {
-   	type Item = LlmEvent;
+    impl<S, E> Stream for GeminiStream<S>
+    where
+    	S: Stream<Item = Result<Bytes, E>>,
+    	E: std::error::Error,
+    {
+    	type Item = LlmEvent;
 
-   	fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-   		// Parse Gemini's streaming format
-   		// Emit TextDelta, ToolCallDelta, Completed, or Error
-   	}
-   }
-   ```
+    	fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+    		// Parse Gemini's streaming format
+    		// Emit TextDelta, ToolCallDelta, Completed, or Error
+    	}
+    }
+    ```
 
 7. **Export from `lib.rs`:**
-   ```rust
-   mod client;
-   mod stream;
-   mod types;
+    ```rust
+    mod client;
+    mod stream;
+    mod types;
 
-   pub use client::GeminiClient;
-   pub use types::GeminiConfig;
-   ```
+    pub use client::GeminiClient;
+    pub use types::GeminiConfig;
+    ```
 
 8. **Add to workspace `Cargo.toml`:**
-   ```toml
-   [workspace]
-   members = [
-   	"crates/loom-llm-gemini",
-   	# ...
-   ]
-   ```
+    ```toml
+    [workspace]
+    members = [
+    	"crates/loom-llm-gemini",
+    	# ...
+    ]
+    ```
 
 9. **Write tests:**
-   - Unit tests for type conversions
-   - Unit tests for SSE parsing (mock byte streams)
-   - Integration tests with mock server (optional)
+    - Unit tests for type conversions
+    - Unit tests for SSE parsing (mock byte streams)
+    - Integration tests with mock server (optional)
+

@@ -27,6 +27,7 @@ members = [
 	"crates/loom-server-llm-proxy",
 	"crates/loom-server-llm-service",
 	"crates/loom-server-llm-vertex",
+	"crates/loom-server-llm-zai",
 	"crates/loom-common-secret",
 	"crates/loom-server",
 	"crates/loom-common-thread",

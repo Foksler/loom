@@ -104,7 +104,8 @@ impl Job for CronMissedRunDetectorJob {
 			}
 
 			// Calculate next expected time and update last check-in
-			let next_expected_at = calculate_next_expected(&monitor.schedule, &monitor.timezone, now).ok();
+			let next_expected_at =
+				calculate_next_expected(&monitor.schedule, &monitor.timezone, now).ok();
 
 			if let Err(e) = self
 				.crons_repo

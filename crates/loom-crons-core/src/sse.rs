@@ -324,12 +324,8 @@ mod tests {
 	fn test_event_type() {
 		assert_eq!(CronStreamEvent::init(vec![]).event_type(), "init");
 		assert_eq!(
-			CronStreamEvent::checkin_started(
-				MonitorId::new(),
-				"test".to_string(),
-				CheckInId::new()
-			)
-			.event_type(),
+			CronStreamEvent::checkin_started(MonitorId::new(), "test".to_string(), CheckInId::new())
+				.event_type(),
 			"checkin.started"
 		);
 		assert_eq!(

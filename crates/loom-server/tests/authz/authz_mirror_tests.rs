@@ -106,14 +106,15 @@ async fn test_mirror_list() {
 	assert!(result["mirrors"].as_array().unwrap().is_empty());
 
 	// Create a mirror
-	app.post(
-		&format!("/api/repos/{repo_id}/mirrors"),
-		Some(owner),
-		json!({
-			"remote_url": "https://github.com/org/repo.git"
-		}),
-	)
-	.await;
+	app
+		.post(
+			&format!("/api/repos/{repo_id}/mirrors"),
+			Some(owner),
+			json!({
+				"remote_url": "https://github.com/org/repo.git"
+			}),
+		)
+		.await;
 
 	// List should now have one mirror
 	let response = app

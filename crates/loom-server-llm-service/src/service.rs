@@ -18,6 +18,7 @@ pub use loom_server_llm_anthropic::{
 };
 use loom_server_llm_openai::OpenAIClient;
 use loom_server_llm_vertex::VertexClient;
+use loom_server_llm_zai::ZaiClient;
 use tracing::{debug, info, instrument, warn};
 
 use crate::config::{AnthropicAuthConfig, LlmServiceConfig};
@@ -73,6 +74,9 @@ const DEFAULT_OPENAI_MODEL: &str = "gpt-4o";
 /// Default model for Vertex when client sends "default".
 const DEFAULT_VERTEX_MODEL: &str = "gemini-1.5-pro";
 
+/// Default model for Z.ai when client sends "default".
+const DEFAULT_ZAI_MODEL: &str = "glm-4.7";
+
 /// Service for managing LLM provider interactions.
 ///
 /// This service holds clients for multiple LLM providers (Anthropic, OpenAI,
@@ -85,6 +89,8 @@ pub struct LlmService {
 	openai_model: String,
 	vertex_client: Option<Arc<VertexClient>>,
 	vertex_model: String,
+	zai_client: Option<Arc<ZaiClient>>,
+	zai_model: String,
 	#[allow(dead_code)] // Stored for future graceful shutdown
 	refresh_task_handle: Option<tokio::task::JoinHandle<()>>,
 }
@@ -189,10 +195,30 @@ impl LlmService {
 				None
 			};
 
-		if anthropic_client.is_none() && openai_client.is_none() && vertex_client.is_none() {
+		let zai_client = if let Some(ref api_key) = config.zai_api_key {
+			let mut zai_config = loom_server_llm_zai::ZaiConfig::new(api_key.expose().clone());
+			if let Some(ref model) = config.zai_model {
+				debug!(model = %model, "Using custom Z.ai model");
+				zai_config = zai_config.with_model(model.clone());
+			}
+
+			let client =
+				ZaiClient::new(zai_config).map_err(|e| LlmServiceError::Config(e.to_string()))?;
+			info!("Z.ai client initialized");
+			Some(Arc::new(client))
+		} else {
+			debug!("Z.ai API key not configured");
+			None
+		};
+
+		if anthropic_client.is_none()
+			&& openai_client.is_none()
+			&& vertex_client.is_none()
+			&& zai_client.is_none()
+		{
 			return Err(LlmServiceError::ProviderNotConfigured(
 				"No LLM providers configured. Set LOOM_SERVER_ANTHROPIC_API_KEY, \
-				 LOOM_SERVER_OPENAI_API_KEY, or LOOM_SERVER_VERTEX_PROJECT + LOOM_SERVER_VERTEX_LOCATION"
+				 LOOM_SERVER_OPENAI_API_KEY, LOOM_SERVER_VERTEX_PROJECT + LOOM_SERVER_VERTEX_LOCATION, or LOOM_SERVER_ZAI_API_KEY"
 					.to_string(),
 			));
 		}
@@ -233,14 +259,20 @@ impl LlmService {
 			.vertex_model
 			.clone()
 			.unwrap_or_else(|| DEFAULT_VERTEX_MODEL.to_string());
+		let zai_model = config
+			.zai_model
+			.clone()
+			.unwrap_or_else(|| DEFAULT_ZAI_MODEL.to_string());
 
 		info!(
 			anthropic = anthropic_client.is_some(),
 			openai = openai_client.is_some(),
 			vertex = vertex_client.is_some(),
+			zai = zai_client.is_some(),
 			anthropic_model = %anthropic_model,
 			openai_model = %openai_model,
 			vertex_model = %vertex_model,
+			zai_model = %zai_model,
 			"LLM service initialized"
 		);
 
@@ -251,6 +283,8 @@ impl LlmService {
 			openai_model,
 			vertex_client,
 			vertex_model,
+			zai_client,
+			zai_model,
 			refresh_task_handle,
 		})
 	}
@@ -275,6 +309,11 @@ impl LlmService {
 	/// Returns whether the Vertex AI provider is configured.
 	pub fn has_vertex(&self) -> bool {
 		self.vertex_client.is_some()
+	}
+
+	/// Returns whether the Z.ai provider is configured.
+	pub fn has_zai(&self) -> bool {
+		self.zai_client.is_some()
 	}
 
 	/// Get Anthropic health status.
@@ -379,6 +418,20 @@ impl LlmService {
 				"Substituting default model"
 			);
 			request.with_model(&self.vertex_model)
+		} else {
+			request
+		}
+	}
+
+	/// Substitute "default" model with the configured default for Z.ai.
+	fn resolve_zai_model(&self, request: LlmRequest) -> LlmRequest {
+		if request.model == "default" {
+			debug!(
+				original_model = "default",
+				resolved_model = %self.zai_model,
+				"Substituting default model"
+			);
+			request.with_model(&self.zai_model)
 		} else {
 			request
 		}
@@ -512,6 +565,46 @@ impl LlmService {
 
 		client.complete_streaming(request).await
 	}
+
+	/// Sends a completion request to Z.ai.
+	#[instrument(skip(self, request), fields(provider = "zai"))]
+	pub async fn complete_zai(&self, request: LlmRequest) -> Result<LlmResponse, LlmError> {
+		let client = self
+			.zai_client
+			.as_ref()
+			.ok_or_else(|| LlmError::Api("Z.ai provider not configured".to_string()))?;
+
+		let request = self.resolve_zai_model(request);
+
+		debug!(
+				model = %request.model,
+				message_count = request.messages.len(),
+				tool_count = request.tools.len(),
+				"Sending Z.ai completion request"
+		);
+
+		client.complete(request).await
+	}
+
+	/// Sends a streaming completion request to Z.ai.
+	#[instrument(skip(self, request), fields(provider = "zai"))]
+	pub async fn complete_streaming_zai(&self, request: LlmRequest) -> Result<LlmStream, LlmError> {
+		let client = self
+			.zai_client
+			.as_ref()
+			.ok_or_else(|| LlmError::Api("Z.ai provider not configured".to_string()))?;
+
+		let request = self.resolve_zai_model(request);
+
+		debug!(
+				model = %request.model,
+				message_count = request.messages.len(),
+				tool_count = request.tools.len(),
+				"Sending Z.ai streaming completion request"
+		);
+
+		client.complete_streaming(request).await
+	}
 }
 
 impl std::fmt::Debug for LlmService {
@@ -520,6 +613,7 @@ impl std::fmt::Debug for LlmService {
 			.field("anthropic_configured", &self.anthropic_client.is_some())
 			.field("openai_configured", &self.openai_client.is_some())
 			.field("vertex_configured", &self.vertex_client.is_some())
+			.field("zai_configured", &self.zai_client.is_some())
 			.finish()
 	}
 }
@@ -568,6 +662,17 @@ mod tests {
 		let service = LlmService::new(config).await.unwrap();
 		assert!(service.has_anthropic());
 		assert!(service.has_openai());
+	}
+
+	/// Verifies that has_zai() returns true when configured.
+	#[tokio::test]
+	async fn has_zai_returns_true_when_configured() {
+		let config = LlmServiceConfig::new(LlmProvider::Zai).with_zai_api_key("test-key");
+		let service = LlmService::new(config).await.unwrap();
+		assert!(!service.has_anthropic());
+		assert!(!service.has_openai());
+		assert!(!service.has_vertex());
+		assert!(service.has_zai());
 	}
 
 	/// Verifies that Debug implementation doesn't expose sensitive data.
