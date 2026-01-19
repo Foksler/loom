@@ -278,6 +278,22 @@ in
       };
     };
 
+    zai = {
+      enable = mkEnableOption "Z.ai (智谱AI/ZhipuAI) provider";
+
+      apiKeyFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = "Path to file containing Z.ai API key.";
+      };
+
+      model = mkOption {
+        type = types.str;
+        default = "glm-4.7";
+        description = "Z.ai model to use.";
+      };
+    };
+
     # GitHub App Configuration (for repository integrations)
     githubApp = {
       enable = mkEnableOption "GitHub App integration";

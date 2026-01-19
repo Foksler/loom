@@ -5148,9 +5148,11 @@ dependencies = [
  "loom-server-search-serper",
  "loom-server-secrets",
  "loom-server-session",
+ "loom-server-sessions",
  "loom-server-smtp",
  "loom-server-weaver",
  "loom-server-wgtunnel",
+ "loom-sessions-core",
  "pin-project-lite",
  "prometheus",
  "proptest",
@@ -5875,6 +5877,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-server-sessions"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "loom-sessions-core",
+ "proptest",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tempfile",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-stream",
+ "tokio-test",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "loom-server-smtp"
 version = "0.1.0"
 dependencies = [
@@ -5929,6 +5951,19 @@ dependencies = [
  "tokio",
  "tokio-test",
  "tracing",
+ "utoipa",
+ "uuid",
+]
+
+[[package]]
+name = "loom-sessions-core"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
  "utoipa",
  "uuid",
 ]

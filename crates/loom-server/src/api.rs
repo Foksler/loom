@@ -114,6 +114,7 @@ pub struct AppState {
 	pub crons_broadcaster: Arc<loom_server_crons::CronsBroadcaster>,
 	pub crash_repo: Arc<loom_server_crash::SqliteCrashRepository>,
 	pub crash_broadcaster: Arc<loom_server_crash::CrashBroadcaster>,
+	pub sessions_repo: Arc<loom_server_sessions::SqliteSessionsRepository>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -311,6 +312,11 @@ pub async fn create_app_state(
 		loom_server_crash::CrashBroadcasterConfig::default(),
 	));
 
+	// Initialize sessions repository
+	let sessions_repo = Arc::new(loom_server_sessions::SqliteSessionsRepository::new(
+		pool.clone(),
+	));
+
 	// Initialize analytics repository and state with audit hook
 	let analytics_repo = loom_server_analytics::SqliteAnalyticsRepository::new(pool.clone());
 	let analytics_audit_hook: loom_server_analytics::SharedMergeAuditHook =
@@ -377,6 +383,7 @@ pub async fn create_app_state(
 		crons_broadcaster,
 		crash_repo,
 		crash_broadcaster,
+		sessions_repo,
 	}
 }
 
@@ -1275,6 +1282,27 @@ pub fn create_router(state: AppState) -> Router {
 		.route(
 			"/api/crash/projects/{project_id}/releases/{version}",
 			get(routes::crash::get_release),
+		)
+		// App sessions routes (authenticated)
+		.route(
+			"/api/sessions/start",
+			post(routes::app_sessions::start_session),
+		)
+		.route(
+			"/api/sessions/end",
+			post(routes::app_sessions::end_session),
+		)
+		.route(
+			"/api/app-sessions",
+			get(routes::app_sessions::list_sessions),
+		)
+		.route(
+			"/api/app-sessions/releases",
+			get(routes::app_sessions::list_release_health),
+		)
+		.route(
+			"/api/app-sessions/releases/{version}",
+			get(routes::app_sessions::get_release_health),
 		)
 		// Invitation routes (authenticated)
 		.route(

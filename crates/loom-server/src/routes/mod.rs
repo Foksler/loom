@@ -5,6 +5,7 @@
 
 pub mod admin;
 pub mod admin_anthropic;
+pub mod app_sessions;
 pub mod admin_flags;
 pub mod admin_jobs;
 pub mod admin_logs;

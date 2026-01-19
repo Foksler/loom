@@ -126,6 +126,11 @@
     mode = "0400";
   };
 
+  sops.secrets.loom-zai-api-key = {
+    owner = "loom-server";
+    mode = "0400";
+  };
+
   sops.secrets.loom-google-oauth-client-id = {
     owner = "loom-server";
     mode = "0400";
@@ -276,6 +281,11 @@
     serper = {
       enable = true;
       apiKeyFile = config.sops.secrets.loom-serper-api-key.path;
+    };
+
+    zai = {
+      enable = true;
+      apiKeyFile = config.sops.secrets.loom-zai-api-key.path;
     };
 
     weaver = {
