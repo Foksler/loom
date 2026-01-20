@@ -35,7 +35,7 @@
   - Tested SDK example against production server (TEST-3 created as new issue)
 - Added 16 unit tests for client builder, config, tags, breadcrumbs, shutdown
 - This completes Phase 7.1 of the implementation plan
-- Commit: (pending)
+- Commit: `c6334348`
 
 **2026-01-20:** Added source map symbolication for JavaScript/TypeScript crashes ✅ DEPLOYED
 - Created `loom-crash-symbolicate` crate with:
