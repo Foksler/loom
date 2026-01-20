@@ -11,6 +11,27 @@
 
 ### Recent Progress
 
+**2026-01-20:** Added symbol artifact upload and management endpoints ✅ DEPLOYED
+- Implemented complete artifact management for source map uploads:
+  - `POST /api/crash/projects/{id}/artifacts` — Upload artifacts (multipart)
+  - `GET /api/crash/projects/{id}/artifacts` — List artifacts
+  - `GET /api/crash/projects/{id}/artifacts/{id}` — Get artifact metadata
+  - `DELETE /api/crash/projects/{id}/artifacts/{id}` — Delete artifact
+- Added artifact repository methods to `CrashRepository` trait:
+  - `create_artifact()`, `get_artifact_by_id()`, `get_artifact_by_sha256()`
+  - `get_artifact_by_name()`, `list_artifacts()`, `delete_artifact()`
+  - `delete_old_artifacts()`, `update_artifact_last_accessed()`
+- Features:
+  - SHA256 deduplication for efficient artifact storage
+  - Automatic detection of source map type and `sourcesContent` presence
+  - `last_accessed_at` tracking for artifact cleanup
+- Added 10 authorization tests for artifact endpoints:
+  - List: auth required, membership required, success, 404 for nonexistent project
+  - Get: auth required, membership required, 404 for nonexistent artifact
+  - Delete: auth required, membership required, 404 for nonexistent artifact
+- Verified working in production via curl (upload, list, get, deduplication, delete)
+- Commit: `9d4b3480`
+
 **2026-01-20:** Added batch crash capture endpoint ✅ DEPLOYED
 - Implemented `POST /api/crash/batch` for bulk crash event ingestion
 - Accepts up to 100 events per request (configurable limit)
@@ -476,7 +497,7 @@ loom-server-crash/
   - `create_project()`, `get_project()`, `list_projects()` ✅
   - `create_issue()`, `get_issue()`, `update_issue()`, `list_issues()` ✅
   - `create_event()`, `get_event()`, `list_events_for_issue()` ✅
-  - `create_artifact()`, `get_artifact()`, `list_artifacts()` (TODO)
+  - `create_artifact()`, `get_artifact()`, `list_artifacts()` ✅
   - `create_release()`, `get_release()`, `list_releases()` ✅
 - [x] Implement `SqliteCrashRepository` (basic operations) ✅
 - [x] Implement fingerprinting on ingest ([specs/crash-system.md#41-default-fingerprinting-algorithm](specs/crash-system.md)) ✅
@@ -553,7 +574,7 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
 
 **Path:** `crates/loom-server/src/routes/`
 
-- [x] **`crash.rs`** — Crash analytics routes ✅ MOSTLY COMPLETED 2026-01-19
+- [x] **`crash.rs`** — Crash analytics routes ✅ COMPLETED 2026-01-20
   - `POST /api/crash/capture` — Ingest crash event ✅
   - `GET /api/crash/projects` — List projects ✅
   - `POST /api/crash/projects` — Create project ✅
@@ -565,7 +586,10 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
   - `POST /api/crash/projects/{id}/releases` — Create release ✅
   - `GET /api/crash/projects/{id}/releases/{version}` — Get release detail ✅
   - `POST /api/crash/batch` — Batch ingest ✅
-  - `POST /api/crash/projects/{id}/artifacts` — Upload symbols (multipart) (TODO)
+  - `POST /api/crash/projects/{id}/artifacts` — Upload symbols (multipart) ✅
+  - `GET /api/crash/projects/{id}/artifacts` — List artifacts ✅
+  - `GET /api/crash/projects/{id}/artifacts/{id}` — Get artifact ✅
+  - `DELETE /api/crash/projects/{id}/artifacts/{id}` — Delete artifact ✅
   - `GET /api/crash/projects/{id}/stream` — SSE stream ✅
   - Reference: [specs/crash-system.md#9-api-endpoints](specs/crash-system.md)
 
@@ -1075,7 +1099,7 @@ Reference: [crates/loom-jobs/](crates/loom-jobs/)
 
 Reference pattern: [crates/loom-server/tests/authz_*_tests.rs](crates/loom-server/tests/)
 
-- [x] `tests/authz/crash.rs` — Crash endpoint authorization ✅ (38 tests: project CRUD, capture, batch capture, issues list, issue detail, issue events, releases CRUD)
+- [x] `tests/authz/crash.rs` — Crash endpoint authorization ✅ (52 tests: project CRUD, capture, batch capture, issues list, issue detail, issue events, releases CRUD, artifact CRUD)
 - [x] `tests/authz/crons.rs` — Cron endpoint authorization ✅ (29 tests including stream endpoint)
 - [x] `tests/authz/sessions.rs` — Session endpoint authorization ✅ (19 tests: session start/end, list, release health)
 
