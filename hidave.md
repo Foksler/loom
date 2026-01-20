@@ -11,6 +11,36 @@
 
 ### Recent Progress
 
+**2026-01-20:** Comprehensive API validation via curl and git cli ✅ VERIFIED IN PRODUCTION
+- **All observability APIs validated end-to-end:**
+- **Crash Analytics API:**
+  - `GET /api/crash/projects?org_id={org_id}` — List projects ✅
+  - `POST /api/crash/projects` — Create project ✅ (created test project `019bdb12-8e5e-7c50-ad06-22811a2be633`)
+  - `POST /api/crash/capture` — Capture crash event ✅
+  - `GET /api/crash/projects/{id}/issues` — List issues ✅
+  - `GET /api/crash/projects/{id}/issues/{id}` — Get issue detail ✅
+  - `GET /api/crash/projects/{id}/issues/{id}/events` — List issue events ✅
+  - `POST /api/crash/projects/{id}/issues/{id}/resolve` — Resolve issue ✅
+- **Crons Monitoring API:**
+  - `POST /api/crons/monitors` — Create monitor ✅ (created `daily-backup-test` with ping key `75cfa3bf-6f43-4f76-ba0e-52d86b0e4fb3`)
+  - `GET /ping/{key}` — Success ping ✅
+  - `GET /ping/{key}/start` — Job starting ping ✅
+  - `GET /ping/{key}/fail` — Job failed ping ✅
+  - `GET /api/crons/monitors/{slug}?org_id={org_id}` — Monitor detail ✅
+  - `GET /api/crons/monitors/{slug}/checkins?org_id={org_id}` — List check-ins ✅
+- **Session Analytics API:**
+  - `POST /api/sessions/start` — Start session ✅ (returns session_id, sampled status)
+  - `POST /api/sessions/end` — End session ✅ (requires project_id, session_id, status, duration_ms)
+  - `GET /api/app-sessions?project_id={project_id}` — List sessions ✅
+  - `GET /api/app-sessions/releases?project_id={project_id}` — Release health ✅
+- **SCM Git Hosting:**
+  - `POST /api/repos` — Create repository ✅ (created `test-git-repo`)
+  - Git clone via cli: `git clone https://loom.ghuntley.com/git/ghuntley-personal/test-git-repo.git` ✅
+  - Git push via cli: `git push origin cannon` ✅
+  - Credential helper integration: `loom credential-helper` ✅
+- **Authentication:** Token retrieved from `~/.config/loom/credentials.json` (format: `lt_` prefix)
+- **All endpoints require `Authorization: Bearer {token}` header (except ping endpoints which are public)**
+
 **2026-01-20:** Created loom-crons Rust SDK ✅ DEPLOYED
 - Commit: `532866e7`
 - Created `loom-crons` crate for cron job monitoring:
