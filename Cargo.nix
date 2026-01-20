@@ -102,7 +102,7 @@ args@{
   cargoConfig ? {},
 }:
 let
-  nixifiedLockHash = "60e432cb09c1279d75a5d8d56ce8ae3b03263271d12dd46cc59ea1e73db3549a";
+  nixifiedLockHash = "e30b61a3d7b98078a6674df292e5a0c347173d037d08ed1d2db68039ef670818";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -7443,10 +7443,12 @@ in
     registry = "unknown";
     src = fetchCrateLocal workspaceSrc;
     dependencies = {
+      argon2 = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".argon2."0.5.3" { inherit profileName; }).out;
       async_trait = (buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".async-trait."0.1.89" { profileName = "__noProfile"; }).out;
       chrono = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".chrono."0.4.43" { inherit profileName; }).out;
       loom_crash_core = (rustPackages."unknown".loom-crash-core."0.1.0" { inherit profileName; }).out;
       loom_crash_symbolicate = (rustPackages."unknown".loom-crash-symbolicate."0.1.0" { inherit profileName; }).out;
+      rand_core = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".rand_core."0.6.4" { inherit profileName; }).out;
       serde = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.228" { inherit profileName; }).out;
       serde_json = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.149" { inherit profileName; }).out;
       sqlx = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".sqlx."0.8.6" { inherit profileName; }).out;

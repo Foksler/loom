@@ -9,8 +9,8 @@ use sqlx::SqlitePool;
 use tracing::instrument;
 
 use loom_crash_core::{
-	CrashEvent, CrashEventId, CrashProject, Issue, IssueId, OrgId, PersonId, ProjectId, Release,
-	ReleaseId, SymbolArtifact, SymbolArtifactId, UserId,
+	CrashApiKey, CrashApiKeyId, CrashEvent, CrashEventId, CrashProject, Issue, IssueId, OrgId,
+	PersonId, ProjectId, Release, ReleaseId, SymbolArtifact, SymbolArtifactId, UserId,
 };
 
 use crate::error::{CrashServerError, Result};
@@ -100,6 +100,14 @@ pub trait CrashRepository: Send + Sync {
 	async fn delete_artifact(&self, id: SymbolArtifactId) -> Result<bool>;
 	async fn delete_old_artifacts(&self, cutoff: DateTime<Utc>) -> Result<u64>;
 	async fn update_artifact_last_accessed(&self, id: SymbolArtifactId) -> Result<()>;
+
+	// API key operations
+	async fn create_api_key(&self, api_key: &CrashApiKey) -> Result<()>;
+	async fn get_api_key_by_id(&self, id: CrashApiKeyId) -> Result<Option<CrashApiKey>>;
+	async fn get_api_key_by_hash(&self, key_hash: &str) -> Result<Option<CrashApiKey>>;
+	async fn list_api_keys(&self, project_id: ProjectId) -> Result<Vec<CrashApiKey>>;
+	async fn revoke_api_key(&self, id: CrashApiKeyId) -> Result<bool>;
+	async fn update_api_key_last_used(&self, id: CrashApiKeyId) -> Result<()>;
 }
 
 /// SQLite implementation of the crash repository.
@@ -1058,6 +1066,124 @@ impl CrashRepository for SqliteCrashRepository {
 
 		Ok(())
 	}
+
+	// API key operations
+
+	#[instrument(skip(self, api_key), fields(api_key_id = %api_key.id, project_id = %api_key.project_id))]
+	async fn create_api_key(&self, api_key: &CrashApiKey) -> Result<()> {
+		let allowed_origins_json = serde_json::to_string(&api_key.allowed_origins)?;
+
+		sqlx::query(
+			r#"
+			INSERT INTO crash_api_keys (
+				id, project_id, name, key_type, key_hash,
+				rate_limit_per_minute, allowed_origins,
+				created_by, created_at, last_used_at, revoked_at
+			)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			"#,
+		)
+		.bind(api_key.id.0.to_string())
+		.bind(api_key.project_id.0.to_string())
+		.bind(&api_key.name)
+		.bind(api_key.key_type.to_string())
+		.bind(&api_key.key_hash)
+		.bind(api_key.rate_limit_per_minute.map(|n| n as i32))
+		.bind(allowed_origins_json)
+		.bind(api_key.created_by.0.to_string())
+		.bind(api_key.created_at.to_rfc3339())
+		.bind(api_key.last_used_at.map(|dt| dt.to_rfc3339()))
+		.bind(api_key.revoked_at.map(|dt| dt.to_rfc3339()))
+		.execute(&self.pool)
+		.await?;
+
+		Ok(())
+	}
+
+	#[instrument(skip(self), fields(api_key_id = %id))]
+	async fn get_api_key_by_id(&self, id: CrashApiKeyId) -> Result<Option<CrashApiKey>> {
+		let row = sqlx::query_as::<_, ApiKeyRow>(
+			r#"
+			SELECT id, project_id, name, key_type, key_hash,
+				   rate_limit_per_minute, allowed_origins,
+				   created_by, created_at, last_used_at, revoked_at
+			FROM crash_api_keys
+			WHERE id = ?
+			"#,
+		)
+		.bind(id.0.to_string())
+		.fetch_optional(&self.pool)
+		.await?;
+
+		row.map(TryInto::try_into).transpose()
+	}
+
+	#[instrument(skip(self))]
+	async fn get_api_key_by_hash(&self, key_hash: &str) -> Result<Option<CrashApiKey>> {
+		let row = sqlx::query_as::<_, ApiKeyRow>(
+			r#"
+			SELECT id, project_id, name, key_type, key_hash,
+				   rate_limit_per_minute, allowed_origins,
+				   created_by, created_at, last_used_at, revoked_at
+			FROM crash_api_keys
+			WHERE key_hash = ?
+			"#,
+		)
+		.bind(key_hash)
+		.fetch_optional(&self.pool)
+		.await?;
+
+		row.map(TryInto::try_into).transpose()
+	}
+
+	#[instrument(skip(self), fields(project_id = %project_id))]
+	async fn list_api_keys(&self, project_id: ProjectId) -> Result<Vec<CrashApiKey>> {
+		let rows = sqlx::query_as::<_, ApiKeyRow>(
+			r#"
+			SELECT id, project_id, name, key_type, key_hash,
+				   rate_limit_per_minute, allowed_origins,
+				   created_by, created_at, last_used_at, revoked_at
+			FROM crash_api_keys
+			WHERE project_id = ?
+			ORDER BY created_at DESC
+			"#,
+		)
+		.bind(project_id.0.to_string())
+		.fetch_all(&self.pool)
+		.await?;
+
+		rows.into_iter().map(TryInto::try_into).collect()
+	}
+
+	#[instrument(skip(self), fields(api_key_id = %id))]
+	async fn revoke_api_key(&self, id: CrashApiKeyId) -> Result<bool> {
+		let result = sqlx::query(
+			r#"
+			UPDATE crash_api_keys SET revoked_at = ? WHERE id = ? AND revoked_at IS NULL
+			"#,
+		)
+		.bind(Utc::now().to_rfc3339())
+		.bind(id.0.to_string())
+		.execute(&self.pool)
+		.await?;
+
+		Ok(result.rows_affected() > 0)
+	}
+
+	#[instrument(skip(self), fields(api_key_id = %id))]
+	async fn update_api_key_last_used(&self, id: CrashApiKeyId) -> Result<()> {
+		sqlx::query(
+			r#"
+			UPDATE crash_api_keys SET last_used_at = ? WHERE id = ?
+			"#,
+		)
+		.bind(Utc::now().to_rfc3339())
+		.bind(id.0.to_string())
+		.execute(&self.pool)
+		.await?;
+
+		Ok(())
+	}
 }
 
 // ============================================================================
@@ -1353,6 +1479,43 @@ impl TryFrom<ArtifactRow> for SymbolArtifact {
 				.last_accessed_at
 				.map(|s| parse_datetime(&s))
 				.transpose()?,
+		})
+	}
+}
+
+#[derive(Debug, sqlx::FromRow)]
+struct ApiKeyRow {
+	id: String,
+	project_id: String,
+	name: String,
+	key_type: String,
+	key_hash: String,
+	rate_limit_per_minute: Option<i32>,
+	allowed_origins: String,
+	created_by: String,
+	created_at: String,
+	last_used_at: Option<String>,
+	revoked_at: Option<String>,
+}
+
+impl TryFrom<ApiKeyRow> for CrashApiKey {
+	type Error = CrashServerError;
+
+	fn try_from(row: ApiKeyRow) -> Result<Self> {
+		Ok(CrashApiKey {
+			id: CrashApiKeyId(row.id.parse()?),
+			project_id: ProjectId(row.project_id.parse()?),
+			name: row.name,
+			key_type: row.key_type.parse().map_err(|_| {
+				CrashServerError::Parse(format!("invalid key type: {}", row.key_type))
+			})?,
+			key_hash: row.key_hash,
+			rate_limit_per_minute: row.rate_limit_per_minute.map(|n| n as u32),
+			allowed_origins: serde_json::from_str(&row.allowed_origins)?,
+			created_by: UserId(row.created_by.parse()?),
+			created_at: parse_datetime(&row.created_at)?,
+			last_used_at: row.last_used_at.map(|s| parse_datetime(&s)).transpose()?,
+			revoked_at: row.revoked_at.map(|s| parse_datetime(&s)).transpose()?,
 		})
 	}
 }

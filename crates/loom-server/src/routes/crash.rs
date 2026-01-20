@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 use axum::{
 	extract::{Multipart, Path, Query, State},
-	http::StatusCode,
+	http::{header::HeaderMap, StatusCode},
 	response::sse::{Event, Sse},
 	Json,
 };
@@ -23,15 +23,18 @@ use tokio_stream::StreamExt;
 use tracing::{info, instrument};
 
 use loom_crash_core::{
-	compute_fingerprint, fingerprint, ArtifactType, Breadcrumb, CrashEvent, CrashEventId,
-	CrashProject, Frame, Issue, IssueId, IssueLevel, IssueMetadata, IssuePriority, IssueStatus,
-	OrgId, PersonId, Platform, ProjectId, Release, ReleaseId, Stacktrace, SymbolArtifact,
-	SymbolArtifactId, UserId,
+	compute_fingerprint, fingerprint, ArtifactType, Breadcrumb, CrashApiKey, CrashApiKeyId,
+	CrashEvent, CrashEventId, CrashKeyType, CrashProject, Frame, Issue, IssueId, IssueLevel,
+	IssueMetadata, IssuePriority, IssueStatus, OrgId, PersonId, Platform, ProjectId, Release,
+	ReleaseId, Stacktrace, SymbolArtifact, SymbolArtifactId, UserId,
 };
 use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::middleware::CurrentUser;
 use loom_server_auth::types::OrgId as AuthOrgId;
-use loom_server_crash::{CrashRepository, CrashStreamEvent, SymbolicationService};
+use loom_server_crash::{
+	generate_api_key, hash_api_key, verify_api_key, CrashRepository, CrashStreamEvent,
+	SymbolicationService, KEY_PREFIX_ADMIN, KEY_PREFIX_CAPTURE,
+};
 
 use crate::api::AppState;
 use crate::auth_middleware::RequireAuth;
@@ -543,6 +546,442 @@ pub async fn capture_crash(
 		is_new_issue,
 		is_regression,
 		"Crash event captured"
+	);
+
+	Ok(Json(CaptureResponse {
+		event_id: event.id.to_string(),
+		issue_id: issue.id.to_string(),
+		short_id: issue.short_id,
+		is_new_issue,
+		is_regression,
+	}))
+}
+
+/// API key header name for SDK capture requests.
+const CRASH_API_KEY_HEADER: &str = "x-crash-api-key";
+
+/// Verify an API key for a project.
+/// Returns the verified API key if valid and not revoked.
+async fn verify_project_api_key(
+	state: &AppState,
+	project_id: ProjectId,
+	raw_key: &str,
+) -> Result<CrashApiKey, (StatusCode, Json<CrashErrorResponse>)> {
+	// Get all non-revoked API keys for the project
+	let keys = state.crash_repo.list_api_keys(project_id).await.map_err(|e| {
+		tracing::error!(error = %e, "Failed to list API keys");
+		(
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(CrashErrorResponse {
+				error: "internal_error".to_string(),
+				message: "Internal server error".to_string(),
+			}),
+		)
+	})?;
+
+	// Try to verify against each non-revoked key
+	for key in keys {
+		if key.is_revoked() {
+			continue;
+		}
+
+		match verify_api_key(raw_key, &key.key_hash) {
+			Ok(true) => {
+				// Update last_used timestamp (fire and forget)
+				let crash_repo = state.crash_repo.clone();
+				let key_id = key.id;
+				tokio::spawn(async move {
+					let _ = crash_repo.update_api_key_last_used(key_id).await;
+				});
+
+				return Ok(key);
+			}
+			Ok(false) => continue,
+			Err(e) => {
+				tracing::warn!(error = %e, "API key verification failed");
+				continue;
+			}
+		}
+	}
+
+	Err((
+		StatusCode::UNAUTHORIZED,
+		Json(CrashErrorResponse {
+			error: "invalid_api_key".to_string(),
+			message: "Invalid or revoked API key".to_string(),
+		}),
+	))
+}
+
+/// POST /api/crash/capture (API key auth) - Capture a crash event with API key authentication
+///
+/// This endpoint accepts API key authentication via the `X-Crash-Api-Key` header.
+/// Use this for SDK integrations where user authentication is not available.
+#[utoipa::path(
+	post,
+	path = "/api/crash/capture/sdk",
+	request_body = CaptureRequest,
+	responses(
+		(status = 200, description = "Crash captured", body = CaptureResponse),
+		(status = 400, description = "Invalid request", body = CrashErrorResponse),
+		(status = 401, description = "Invalid API key", body = CrashErrorResponse),
+		(status = 404, description = "Project not found", body = CrashErrorResponse),
+		(status = 500, description = "Internal error", body = CrashErrorResponse),
+	),
+	tag = "crash"
+)]
+#[instrument(skip(state, headers, body), fields(project_id = %body.project_id))]
+pub async fn capture_crash_with_api_key(
+	State(state): State<AppState>,
+	headers: HeaderMap,
+	Json(body): Json<CaptureRequest>,
+) -> Result<Json<CaptureResponse>, (StatusCode, Json<CrashErrorResponse>)> {
+	// Extract API key from header
+	let raw_key = headers
+		.get(CRASH_API_KEY_HEADER)
+		.and_then(|v| v.to_str().ok())
+		.ok_or_else(|| {
+			(
+				StatusCode::UNAUTHORIZED,
+				Json(CrashErrorResponse {
+					error: "missing_api_key".to_string(),
+					message: format!("Missing {} header", CRASH_API_KEY_HEADER),
+				}),
+			)
+		})?;
+
+	// Parse project ID
+	let project_id: ProjectId = body.project_id.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_project_id".to_string(),
+				message: "Invalid project ID".to_string(),
+			}),
+		)
+	})?;
+
+	// Get project
+	let project = state
+		.crash_repo
+		.get_project_by_id(project_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get project");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Internal server error".to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "project_not_found".to_string(),
+					message: "Project not found".to_string(),
+				}),
+			)
+		})?;
+
+	// Verify API key
+	let api_key = verify_project_api_key(&state, project_id, raw_key).await?;
+
+	// Check key type - only capture or admin keys can capture
+	if api_key.key_type != CrashKeyType::Capture && api_key.key_type != CrashKeyType::Admin {
+		return Err((
+			StatusCode::FORBIDDEN,
+			Json(CrashErrorResponse {
+				error: "forbidden".to_string(),
+				message: "API key does not have capture permission".to_string(),
+			}),
+		));
+	}
+
+	// Convert capture request to CrashEvent
+	let platform = body
+		.platform
+		.as_deref()
+		.unwrap_or("javascript")
+		.parse()
+		.unwrap_or(Platform::JavaScript);
+
+	let stacktrace = Stacktrace {
+		frames: body
+			.stacktrace
+			.frames
+			.into_iter()
+			.map(|f| Frame {
+				function: f.function,
+				module: f.module,
+				filename: f.filename,
+				abs_path: f.abs_path,
+				lineno: f.lineno,
+				colno: f.colno,
+				in_app: f.in_app,
+				..Default::default()
+			})
+			.collect(),
+	};
+
+	let breadcrumbs: Vec<Breadcrumb> = body
+		.breadcrumbs
+		.into_iter()
+		.map(|b| Breadcrumb {
+			timestamp: b
+				.timestamp
+				.and_then(|s| chrono::DateTime::parse_from_rfc3339(&s).ok())
+				.map(|dt| dt.with_timezone(&Utc))
+				.unwrap_or_else(Utc::now),
+			category: b.category.unwrap_or_default(),
+			message: b.message,
+			level: b
+				.level
+				.and_then(|l| l.parse().ok())
+				.unwrap_or(loom_crash_core::BreadcrumbLevel::Info),
+			data: b.data,
+		})
+		.collect();
+
+	let timestamp = body
+		.timestamp
+		.and_then(|s| chrono::DateTime::parse_from_rfc3339(&s).ok())
+		.map(|dt| dt.with_timezone(&Utc))
+		.unwrap_or_else(Utc::now);
+
+	let person_id = body.person_id.and_then(|s| s.parse().ok()).map(PersonId);
+
+	let mut event = CrashEvent {
+		id: CrashEventId::new(),
+		org_id: project.org_id,
+		project_id,
+		issue_id: None,
+		person_id,
+		distinct_id: body
+			.distinct_id
+			.unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
+		exception_type: body.exception_type,
+		exception_value: body.exception_value,
+		stacktrace,
+		raw_stacktrace: None,
+		release: body.release,
+		dist: body.dist,
+		environment: body.environment.unwrap_or_else(|| "production".to_string()),
+		platform,
+		runtime: None,
+		server_name: body.server_name,
+		tags: body.tags,
+		extra: body.extra,
+		user_context: None,
+		device_context: None,
+		browser_context: None,
+		os_context: None,
+		active_flags: body.active_flags,
+		request: None,
+		breadcrumbs,
+		timestamp,
+		received_at: Utc::now(),
+	};
+
+	// Symbolicate the stacktrace if source maps are available
+	symbolicate_event(&state, &mut event, project_id).await;
+
+	// Compute fingerprint
+	let fingerprint = compute_fingerprint(&event);
+
+	// Check if issue already exists or create new one
+	let (issue, is_new_issue, is_regression) = match state
+		.crash_repo
+		.get_issue_by_fingerprint(project_id, &fingerprint)
+		.await
+	{
+		Ok(Some(mut existing_issue)) => {
+			// Check for regression
+			let is_regression = if existing_issue.status == IssueStatus::Resolved {
+				existing_issue.status = IssueStatus::Unresolved;
+				existing_issue.times_regressed += 1;
+				existing_issue.last_regressed_at = Some(event.timestamp);
+				existing_issue.regressed_in_release = event.release.clone();
+				true
+			} else {
+				false
+			};
+
+			// Update existing issue
+			existing_issue.event_count += 1;
+			existing_issue.last_seen = event.timestamp;
+			existing_issue.updated_at = Utc::now();
+
+			// Track new user if applicable
+			if let Some(pid) = event.person_id {
+				if !state
+					.crash_repo
+					.issue_has_person(existing_issue.id, pid)
+					.await
+					.unwrap_or(false)
+				{
+					existing_issue.user_count += 1;
+					let _ = state.crash_repo.add_issue_person(existing_issue.id, pid).await;
+				}
+			}
+
+			state.crash_repo.update_issue(&existing_issue).await.map_err(|e| {
+				tracing::error!(error = %e, "Failed to update issue");
+				(
+					StatusCode::INTERNAL_SERVER_ERROR,
+					Json(CrashErrorResponse {
+						error: "internal_error".to_string(),
+						message: "Internal server error".to_string(),
+					}),
+				)
+			})?;
+
+			(existing_issue, false, is_regression)
+		}
+		Ok(None) | Err(_) => {
+			// Create new issue
+			let short_id = state
+				.crash_repo
+				.get_next_short_id(project_id)
+				.await
+				.map_err(|e| {
+					tracing::error!(error = %e, "Failed to get next short ID");
+					(
+						StatusCode::INTERNAL_SERVER_ERROR,
+						Json(CrashErrorResponse {
+							error: "internal_error".to_string(),
+							message: "Internal server error".to_string(),
+						}),
+					)
+				})?;
+
+			let title = format!("{}: {}", event.exception_type, event.exception_value);
+			let culprit = event
+				.stacktrace
+				.frames
+				.iter()
+				.find(|f| f.in_app)
+				.and_then(|f| {
+					let func = f.function.as_deref().unwrap_or("<anonymous>");
+					Some(format!(
+						"{} in {}",
+						func,
+						f.filename.as_deref().unwrap_or("<unknown>")
+					))
+				});
+
+			let issue = Issue {
+				id: IssueId::new(),
+				org_id: project.org_id,
+				project_id,
+				short_id,
+				fingerprint,
+				title,
+				culprit,
+				metadata: IssueMetadata {
+					exception_type: event.exception_type.clone(),
+					exception_value: event.exception_value.clone(),
+					filename: event
+						.stacktrace
+						.frames
+						.iter()
+						.find(|f| f.in_app)
+						.and_then(|f| f.filename.clone()),
+					function: event
+						.stacktrace
+						.frames
+						.iter()
+						.find(|f| f.in_app)
+						.and_then(|f| f.function.clone()),
+				},
+				status: IssueStatus::Unresolved,
+				level: IssueLevel::Error,
+				priority: IssuePriority::Medium,
+				event_count: 1,
+				user_count: if event.person_id.is_some() { 1 } else { 0 },
+				first_seen: event.timestamp,
+				last_seen: event.timestamp,
+				resolved_at: None,
+				resolved_by: None,
+				resolved_in_release: None,
+				times_regressed: 0,
+				last_regressed_at: None,
+				regressed_in_release: None,
+				assigned_to: None,
+				created_at: Utc::now(),
+				updated_at: Utc::now(),
+			};
+
+			state.crash_repo.create_issue(&issue).await.map_err(|e| {
+				tracing::error!(error = %e, "Failed to create issue");
+				(
+					StatusCode::INTERNAL_SERVER_ERROR,
+					Json(CrashErrorResponse {
+						error: "internal_error".to_string(),
+						message: "Internal server error".to_string(),
+					}),
+				)
+			})?;
+
+			// Track person if present
+			if let Some(pid) = event.person_id {
+				let _ = state.crash_repo.add_issue_person(issue.id, pid).await;
+			}
+
+			(issue, true, false)
+		}
+	};
+
+	// Set issue_id on event and save
+	event.issue_id = Some(issue.id);
+	state.crash_repo.create_event(&event).await.map_err(|e| {
+		tracing::error!(error = %e, "Failed to create event");
+		(
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(CrashErrorResponse {
+				error: "internal_error".to_string(),
+				message: "Internal server error".to_string(),
+			}),
+		)
+	})?;
+
+	// Track release if present
+	if let Some(ref release_version) = event.release {
+		// Get or create the release
+		if let Err(e) = state
+			.crash_repo
+			.get_or_create_release(project_id, project.org_id, release_version)
+			.await
+		{
+			tracing::warn!(error = %e, release = %release_version, "Failed to get/create release");
+		}
+
+		// Update release crash count
+		if let Err(e) = state
+			.crash_repo
+			.increment_release_crash_count(project_id, release_version, is_new_issue, is_regression)
+			.await
+		{
+			tracing::warn!(error = %e, release = %release_version, "Failed to increment release crash count");
+		}
+	}
+
+	// Broadcast new crash event
+	state
+		.crash_broadcaster
+		.broadcast_new_crash(project_id, event.id, &issue, is_new_issue)
+		.await;
+
+	info!(
+		event_id = %event.id,
+		issue_id = %issue.id,
+		short_id = %issue.short_id,
+		is_new_issue,
+		is_regression,
+		api_key_id = %api_key.id,
+		"Crash event captured via API key"
 	);
 
 	Ok(Json(CaptureResponse {
@@ -3077,6 +3516,414 @@ pub async fn delete_artifact(
 			Json(CrashErrorResponse {
 				error: "artifact_not_found".to_string(),
 				message: "Artifact not found".to_string(),
+			}),
+		))
+	}
+}
+
+// ============================================================================
+// API Key Management Endpoints
+// ============================================================================
+
+/// Request body for creating an API key.
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
+pub struct CreateApiKeyRequest {
+	pub name: String,
+	/// "capture" for client-safe keys, "admin" for management keys
+	pub key_type: String,
+	pub rate_limit_per_minute: Option<u32>,
+	#[serde(default)]
+	pub allowed_origins: Vec<String>,
+}
+
+/// Response for creating an API key.
+/// Note: The raw key is only returned once at creation time.
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct CreateApiKeyResponse {
+	pub id: String,
+	pub key: String,
+	pub name: String,
+	pub key_type: String,
+	pub created_at: String,
+}
+
+/// Response for listing API keys.
+/// Note: key_hash is not exposed, only metadata.
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct ApiKeyResponse {
+	pub id: String,
+	pub name: String,
+	pub key_type: String,
+	pub rate_limit_per_minute: Option<u32>,
+	pub allowed_origins: Vec<String>,
+	pub created_at: String,
+	pub last_used_at: Option<String>,
+	pub revoked_at: Option<String>,
+}
+
+impl From<CrashApiKey> for ApiKeyResponse {
+	fn from(key: CrashApiKey) -> Self {
+		Self {
+			id: key.id.to_string(),
+			name: key.name,
+			key_type: key.key_type.to_string(),
+			rate_limit_per_minute: key.rate_limit_per_minute,
+			allowed_origins: key.allowed_origins,
+			created_at: key.created_at.to_rfc3339(),
+			last_used_at: key.last_used_at.map(|dt| dt.to_rfc3339()),
+			revoked_at: key.revoked_at.map(|dt| dt.to_rfc3339()),
+		}
+	}
+}
+
+/// POST /api/crash/projects/{project_id}/api-keys - Create a new API key
+#[utoipa::path(
+	post,
+	path = "/api/crash/projects/{project_id}/api-keys",
+	params(
+		("project_id" = String, Path, description = "Project ID"),
+	),
+	request_body = CreateApiKeyRequest,
+	responses(
+		(status = 201, description = "API key created", body = CreateApiKeyResponse),
+		(status = 400, description = "Invalid request", body = CrashErrorResponse),
+		(status = 403, description = "Forbidden", body = CrashErrorResponse),
+		(status = 404, description = "Project not found", body = CrashErrorResponse),
+	),
+	tag = "crash"
+)]
+#[instrument(skip(state, current_user, body), fields(project_id = %project_id))]
+pub async fn create_api_key(
+	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
+	Path(project_id): Path<String>,
+	Json(body): Json<CreateApiKeyRequest>,
+) -> Result<(StatusCode, Json<CreateApiKeyResponse>), (StatusCode, Json<CrashErrorResponse>)> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	// Parse project ID
+	let project_id: ProjectId = project_id.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_project_id".to_string(),
+				message: "Invalid project ID".to_string(),
+			}),
+		)
+	})?;
+
+	// Get project
+	let project = state
+		.crash_repo
+		.get_project_by_id(project_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get project");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "project_not_found".to_string(),
+					message: "Project not found".to_string(),
+				}),
+			)
+		})?;
+
+	// Verify org membership
+	verify_org_membership(&state, &project.org_id, &current_user.user.id, &locale).await?;
+
+	// Validate key type
+	let key_type: CrashKeyType = body.key_type.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_key_type".to_string(),
+				message: "Key type must be 'capture' or 'admin'".to_string(),
+			}),
+		)
+	})?;
+
+	// Generate the raw key
+	let prefix = match key_type {
+		CrashKeyType::Capture => KEY_PREFIX_CAPTURE,
+		CrashKeyType::Admin => KEY_PREFIX_ADMIN,
+	};
+	let raw_key = generate_api_key(prefix);
+
+	// Hash the key for storage
+	let key_hash = hash_api_key(&raw_key).map_err(|e| {
+		tracing::error!(error = %e, "Failed to hash API key");
+		(
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(CrashErrorResponse {
+				error: "internal_error".to_string(),
+				message: t(&locale, "server.api.error.internal").to_string(),
+			}),
+		)
+	})?;
+
+	let now = Utc::now();
+	let api_key = CrashApiKey {
+		id: CrashApiKeyId::new(),
+		project_id,
+		name: body.name.clone(),
+		key_type,
+		key_hash,
+		rate_limit_per_minute: body.rate_limit_per_minute,
+		allowed_origins: body.allowed_origins,
+		created_by: UserId(current_user.user.id.into_inner()),
+		created_at: now,
+		last_used_at: None,
+		revoked_at: None,
+	};
+
+	state.crash_repo.create_api_key(&api_key).await.map_err(|e| {
+		tracing::error!(error = %e, "Failed to create API key");
+		(
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(CrashErrorResponse {
+				error: "internal_error".to_string(),
+				message: t(&locale, "server.api.error.internal").to_string(),
+			}),
+		)
+	})?;
+
+	info!(
+		api_key_id = %api_key.id,
+		project_id = %project_id,
+		key_type = %key_type,
+		"API key created"
+	);
+
+	Ok((
+		StatusCode::CREATED,
+		Json(CreateApiKeyResponse {
+			id: api_key.id.to_string(),
+			key: raw_key,
+			name: api_key.name,
+			key_type: api_key.key_type.to_string(),
+			created_at: api_key.created_at.to_rfc3339(),
+		}),
+	))
+}
+
+/// GET /api/crash/projects/{project_id}/api-keys - List API keys for a project
+#[utoipa::path(
+	get,
+	path = "/api/crash/projects/{project_id}/api-keys",
+	params(
+		("project_id" = String, Path, description = "Project ID"),
+	),
+	responses(
+		(status = 200, description = "API keys retrieved", body = Vec<ApiKeyResponse>),
+		(status = 403, description = "Forbidden", body = CrashErrorResponse),
+		(status = 404, description = "Project not found", body = CrashErrorResponse),
+	),
+	tag = "crash"
+)]
+#[instrument(skip(state, current_user), fields(project_id = %project_id))]
+pub async fn list_api_keys(
+	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
+	Path(project_id): Path<String>,
+) -> Result<Json<Vec<ApiKeyResponse>>, (StatusCode, Json<CrashErrorResponse>)> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	// Parse project ID
+	let project_id: ProjectId = project_id.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_project_id".to_string(),
+				message: "Invalid project ID".to_string(),
+			}),
+		)
+	})?;
+
+	// Get project
+	let project = state
+		.crash_repo
+		.get_project_by_id(project_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get project");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "project_not_found".to_string(),
+					message: "Project not found".to_string(),
+				}),
+			)
+		})?;
+
+	// Verify org membership
+	verify_org_membership(&state, &project.org_id, &current_user.user.id, &locale).await?;
+
+	// List API keys
+	let keys = state
+		.crash_repo
+		.list_api_keys(project_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to list API keys");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?;
+
+	Ok(Json(keys.into_iter().map(ApiKeyResponse::from).collect()))
+}
+
+/// DELETE /api/crash/projects/{project_id}/api-keys/{key_id} - Revoke an API key
+#[utoipa::path(
+	delete,
+	path = "/api/crash/projects/{project_id}/api-keys/{key_id}",
+	params(
+		("project_id" = String, Path, description = "Project ID"),
+		("key_id" = String, Path, description = "API key ID"),
+	),
+	responses(
+		(status = 204, description = "API key revoked"),
+		(status = 403, description = "Forbidden", body = CrashErrorResponse),
+		(status = 404, description = "API key not found", body = CrashErrorResponse),
+	),
+	tag = "crash"
+)]
+#[instrument(skip(state, current_user), fields(project_id = %project_id, key_id = %key_id))]
+pub async fn revoke_api_key(
+	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
+	Path((project_id, key_id)): Path<(String, String)>,
+) -> Result<StatusCode, (StatusCode, Json<CrashErrorResponse>)> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	// Parse IDs
+	let project_id: ProjectId = project_id.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_project_id".to_string(),
+				message: "Invalid project ID".to_string(),
+			}),
+		)
+	})?;
+
+	let key_id: CrashApiKeyId = key_id.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_key_id".to_string(),
+				message: "Invalid API key ID".to_string(),
+			}),
+		)
+	})?;
+
+	// Get project
+	let project = state
+		.crash_repo
+		.get_project_by_id(project_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get project");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "project_not_found".to_string(),
+					message: "Project not found".to_string(),
+				}),
+			)
+		})?;
+
+	// Verify org membership
+	verify_org_membership(&state, &project.org_id, &current_user.user.id, &locale).await?;
+
+	// Verify API key exists and belongs to project
+	let api_key = state
+		.crash_repo
+		.get_api_key_by_id(key_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get API key");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "api_key_not_found".to_string(),
+					message: "API key not found".to_string(),
+				}),
+			)
+		})?;
+
+	if api_key.project_id != project_id {
+		return Err((
+			StatusCode::NOT_FOUND,
+			Json(CrashErrorResponse {
+				error: "api_key_not_found".to_string(),
+				message: "API key not found".to_string(),
+			}),
+		));
+	}
+
+	// Revoke the key
+	let revoked = state.crash_repo.revoke_api_key(key_id).await.map_err(|e| {
+		tracing::error!(error = %e, "Failed to revoke API key");
+		(
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(CrashErrorResponse {
+				error: "internal_error".to_string(),
+				message: t(&locale, "server.api.error.internal").to_string(),
+			}),
+		)
+	})?;
+
+	if revoked {
+		info!(api_key_id = %key_id, "API key revoked");
+		Ok(StatusCode::NO_CONTENT)
+	} else {
+		// Key was already revoked
+		Err((
+			StatusCode::NOT_FOUND,
+			Json(CrashErrorResponse {
+				error: "api_key_not_found".to_string(),
+				message: "API key not found or already revoked".to_string(),
 			}),
 		))
 	}

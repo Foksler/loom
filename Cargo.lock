@@ -5476,11 +5476,13 @@ dependencies = [
 name = "loom-server-crash"
 version = "0.1.0"
 dependencies = [
+ "argon2",
  "async-trait",
  "chrono",
  "loom-crash-core",
  "loom-crash-symbolicate",
  "proptest",
+ "rand_core 0.6.4",
  "serde",
  "serde_json",
  "sqlx",
