@@ -95,8 +95,7 @@ impl SessionAggregate {
 	#[must_use]
 	pub fn crash_free_session_rate(&self) -> f64 {
 		if self.total_sessions > 0 {
-			((self.total_sessions - self.crashed_sessions) as f64 / self.total_sessions as f64)
-				* 100.0
+			((self.total_sessions - self.crashed_sessions) as f64 / self.total_sessions as f64) * 100.0
 		} else {
 			100.0
 		}

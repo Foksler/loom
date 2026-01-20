@@ -216,8 +216,14 @@ mod tests {
 
 	#[test]
 	fn test_session_status_parse() {
-		assert_eq!("active".parse::<SessionStatus>().unwrap(), SessionStatus::Active);
-		assert_eq!("crashed".parse::<SessionStatus>().unwrap(), SessionStatus::Crashed);
+		assert_eq!(
+			"active".parse::<SessionStatus>().unwrap(),
+			SessionStatus::Active
+		);
+		assert_eq!(
+			"crashed".parse::<SessionStatus>().unwrap(),
+			SessionStatus::Crashed
+		);
 	}
 
 	#[test]
@@ -228,7 +234,10 @@ mod tests {
 
 	#[test]
 	fn test_platform_parse() {
-		assert_eq!("javascript".parse::<Platform>().unwrap(), Platform::JavaScript);
+		assert_eq!(
+			"javascript".parse::<Platform>().unwrap(),
+			Platform::JavaScript
+		);
 		assert_eq!("rust".parse::<Platform>().unwrap(), Platform::Rust);
 	}
 }

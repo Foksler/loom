@@ -23,8 +23,8 @@ use tracing::{info, instrument};
 
 use loom_crash_core::{
 	compute_fingerprint, fingerprint, Breadcrumb, CrashEvent, CrashEventId, CrashProject, Frame,
-	Issue, IssueId, IssueLevel, IssueMetadata, IssuePriority, IssueStatus, OrgId, PersonId,
-	Platform, ProjectId, Release, ReleaseId, Stacktrace,
+	Issue, IssueId, IssueLevel, IssueMetadata, IssuePriority, IssueStatus, OrgId, PersonId, Platform,
+	ProjectId, Release, ReleaseId, Stacktrace,
 };
 use loom_server_auth::types::OrgId as AuthOrgId;
 use loom_server_crash::{CrashRepository, CrashStreamEvent};
@@ -1700,8 +1700,7 @@ pub async fn create_release(
 					message: t(&locale, "server.api.error.internal").to_string(),
 				}),
 			)
-		})?
-	{
+		})? {
 		return Err((
 			StatusCode::CONFLICT,
 			Json(CrashErrorResponse {

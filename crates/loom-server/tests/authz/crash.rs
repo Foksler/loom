@@ -996,10 +996,7 @@ async fn capture_crash_auto_creates_release() {
 	let (_, body) = response.into_parts();
 	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
 	let release: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
-	assert_eq!(
-		release["crash_count"], 1,
-		"Release crash count should be 1"
-	);
+	assert_eq!(release["crash_count"], 1, "Release crash count should be 1");
 	assert_eq!(
 		release["new_issue_count"], 1,
 		"Release new_issue_count should be 1"
