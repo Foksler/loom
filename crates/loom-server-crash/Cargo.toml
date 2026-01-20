@@ -11,6 +11,7 @@ description = "Crash analytics server implementation for Loom"
 [dependencies]
 # Internal crates
 loom-crash-core = { path = "../loom-crash-core" }
+loom-crash-symbolicate = { path = "../loom-crash-symbolicate" }
 
 # Async runtime
 async-trait = "0.1"

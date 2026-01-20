@@ -5017,6 +5017,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-crash-symbolicate"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "loom-crash-core",
+ "proptest",
+ "rustc-demangle",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.18",
+ "tracing",
+]
+
+[[package]]
 name = "loom-crons-core"
 version = "0.1.0"
 dependencies = [
@@ -5395,6 +5410,7 @@ dependencies = [
  "async-trait",
  "chrono",
  "loom-crash-core",
+ "loom-crash-symbolicate",
  "proptest",
  "serde",
  "serde_json",
@@ -7380,6 +7396,12 @@ dependencies = [
  "sha2",
  "walkdir",
 ]
+
+[[package]]
+name = "rustc-demangle"
+version = "0.1.27"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b50b8869d9fc858ce7266cce0194bd74df58b9d0e3f6df3a9fc8eb470d95c09d"
 
 [[package]]
 name = "rustc-hash"

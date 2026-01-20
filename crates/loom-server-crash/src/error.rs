@@ -31,6 +31,9 @@ pub enum CrashServerError {
 
 	#[error("parse error: {0}")]
 	Parse(String),
+
+	#[error("symbolication error: {0}")]
+	Symbolication(String),
 }
 
 /// Result type for crash server operations.

@@ -13,7 +13,9 @@
 pub mod error;
 pub mod repository;
 pub mod sse;
+pub mod symbolicate;
 
 pub use error::{CrashServerError, Result};
 pub use repository::{CrashRepository, SqliteCrashRepository};
 pub use sse::{CrashBroadcaster, CrashBroadcasterConfig, CrashStreamEvent};
+pub use symbolicate::SymbolicationService;

@@ -7,6 +7,7 @@
 //! and project configuration.
 
 use std::convert::Infallible;
+use std::sync::Arc;
 
 use axum::{
 	extract::{Multipart, Path, Query, State},
@@ -29,7 +30,7 @@ use loom_crash_core::{
 };
 use loom_server_auth::middleware::CurrentUser;
 use loom_server_auth::types::OrgId as AuthOrgId;
-use loom_server_crash::{CrashRepository, CrashStreamEvent};
+use loom_server_crash::{CrashRepository, CrashStreamEvent, SymbolicationService};
 
 use crate::api::AppState;
 use crate::auth_middleware::RequireAuth;
@@ -69,6 +70,58 @@ async fn verify_org_membership(
 					message: t(locale, "server.api.error.internal").to_string(),
 				}),
 			))
+		}
+	}
+}
+
+/// Symbolicate a crash event's stacktrace if source maps are available.
+///
+/// This function:
+/// 1. Saves the original (minified) stacktrace as raw_stacktrace
+/// 2. Attempts to symbolicate the stacktrace using uploaded source maps
+/// 3. Updates the event's stacktrace with the symbolicated version
+///
+/// Symbolication is only attempted if a release is specified.
+async fn symbolicate_event(
+	state: &AppState,
+	event: &mut CrashEvent,
+	project_id: ProjectId,
+) {
+	// Skip if no release specified
+	let (release, dist) = match (&event.release, &event.dist) {
+		(Some(r), d) => (r.as_str(), d.as_deref()),
+		(None, _) => return,
+	};
+
+	// Save the original (minified) stacktrace
+	let raw_stacktrace = event.stacktrace.clone();
+
+	// Create symbolication service and symbolicate
+	let symbolication_service = SymbolicationService::new(Arc::clone(&state.crash_repo));
+	match symbolication_service
+		.symbolicate(
+			&event.stacktrace,
+			event.platform,
+			project_id,
+			Some(release),
+			dist,
+		)
+		.await
+	{
+		Ok(symbolicated) => {
+			// Only save raw_stacktrace if symbolication actually changed something
+			if symbolicated.frames != raw_stacktrace.frames {
+				event.raw_stacktrace = Some(raw_stacktrace);
+				event.stacktrace = symbolicated;
+				info!(
+					project_id = %project_id,
+					release = ?event.release,
+					"Symbolicated crash stacktrace"
+				);
+			}
+		}
+		Err(e) => {
+			tracing::warn!(error = %e, "Symbolication failed, using original stacktrace");
 		}
 	}
 }
@@ -288,7 +341,10 @@ pub async fn capture_crash(
 		received_at: Utc::now(),
 	};
 
-	// Compute fingerprint
+	// Symbolicate the stacktrace if source maps are available
+	symbolicate_event(&state, &mut event, project_id).await;
+
+	// Compute fingerprint (based on symbolicated stacktrace for better grouping)
 	let fingerprint = compute_fingerprint(&event);
 
 	// Find or create issue
@@ -754,7 +810,10 @@ async fn process_single_capture(
 		received_at: Utc::now(),
 	};
 
-	// Compute fingerprint
+	// Symbolicate the stacktrace if source maps are available
+	symbolicate_event(state, &mut event, project_id).await;
+
+	// Compute fingerprint (based on symbolicated stacktrace for better grouping)
 	let fingerprint = compute_fingerprint(&event);
 
 	// Find or create issue
