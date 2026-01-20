@@ -6,10 +6,24 @@
 # Observability Suite Implementation Plan
 
 **Status:** In Progress\
-**Version:** 1.2\
-**Last Updated:** 2026-01-20
+**Version:** 1.3\
+**Last Updated:** 2026-01-21
 
 ### Recent Progress
+
+**2026-01-21:** Added unresolve and ignore issue lifecycle endpoints ✅ DEPLOYED
+- Implemented two new issue management endpoints from spec Section 9.4:
+  - `POST /api/crash/projects/{id}/issues/{id}/unresolve` — Unresolve issue
+  - `POST /api/crash/projects/{id}/issues/{id}/ignore` — Ignore issue
+- These complete the issue lifecycle as documented in `specs/crash-system.md`
+- Added 13 new authorization tests:
+  - 4 for resolve_issue (auth, membership, success, 404)
+  - 4 for unresolve_issue (auth, membership, success, 404)
+  - 4 for ignore_issue (auth, membership, success, 404)
+  - 1 for full issue lifecycle workflow
+- All endpoints verified working in production via curl
+- Issue lifecycle now fully supports: unresolved → resolved → unresolve, and ignore/unignore
+- Commit: `660cdb97`
 
 **2026-01-20:** Added proptest tests to loom-crash-core ✅
 - Added proptest tests for ID validation in `loom-crash-core`:
@@ -778,12 +792,14 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
 
 **Path:** `crates/loom-server/src/routes/`
 
-- [x] **`crash.rs`** — Crash analytics routes ✅ COMPLETED 2026-01-20
+- [x] **`crash.rs`** — Crash analytics routes ✅ COMPLETED 2026-01-21
   - `POST /api/crash/capture` — Ingest crash event ✅
   - `GET /api/crash/projects` — List projects ✅
   - `POST /api/crash/projects` — Create project ✅
   - `GET /api/crash/projects/{id}/issues` — List issues ✅
   - `POST /api/crash/projects/{id}/issues/{id}/resolve` — Resolve issue ✅
+  - `POST /api/crash/projects/{id}/issues/{id}/unresolve` — Unresolve issue ✅
+  - `POST /api/crash/projects/{id}/issues/{id}/ignore` — Ignore issue ✅
   - `GET /api/crash/projects/{id}/issues/{id}` — Issue detail ✅
   - `GET /api/crash/projects/{id}/issues/{id}/events` — List events for issue ✅
   - `GET /api/crash/projects/{id}/releases` — List releases ✅
