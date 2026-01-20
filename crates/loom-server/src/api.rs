@@ -1262,6 +1262,12 @@ pub fn create_router(state: AppState) -> Router {
 			get(routes::crash::list_projects).post(routes::crash::create_project),
 		)
 		.route(
+			"/api/crash/projects/{project_id}",
+			get(routes::crash::get_project)
+				.patch(routes::crash::update_project)
+				.delete(routes::crash::delete_project),
+		)
+		.route(
 			"/api/crash/projects/{project_id}/issues",
 			get(routes::crash::list_issues),
 		)
@@ -1278,8 +1284,12 @@ pub fn create_router(state: AppState) -> Router {
 			post(routes::crash::ignore_issue),
 		)
 		.route(
+			"/api/crash/projects/{project_id}/issues/{issue_id}/assign",
+			post(routes::crash::assign_issue),
+		)
+		.route(
 			"/api/crash/projects/{project_id}/issues/{issue_id}",
-			get(routes::crash::get_issue),
+			get(routes::crash::get_issue).delete(routes::crash::delete_issue),
 		)
 		.route(
 			"/api/crash/projects/{project_id}/issues/{issue_id}/events",
