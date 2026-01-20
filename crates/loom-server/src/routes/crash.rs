@@ -28,6 +28,7 @@ use loom_crash_core::{
 	OrgId, PersonId, Platform, ProjectId, Release, ReleaseId, Stacktrace, SymbolArtifact,
 	SymbolArtifactId, UserId,
 };
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::middleware::CurrentUser;
 use loom_server_auth::types::OrgId as AuthOrgId;
 use loom_server_crash::{CrashRepository, CrashStreamEvent, SymbolicationService};
@@ -1153,6 +1154,19 @@ pub async fn create_project(
 
 	info!(project_id = %project.id, slug = %project.slug, "Crash project created");
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::CrashProjectCreated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("crash_project", project.id.to_string())
+			.details(serde_json::json!({
+				"org_id": project.org_id.to_string(),
+				"name": project.name.clone(),
+				"slug": project.slug.clone(),
+				"platform": project.platform.to_string(),
+			}))
+			.build(),
+	);
+
 	Ok((StatusCode::CREATED, Json(ProjectResponse::from(project))))
 }
 
@@ -1401,6 +1415,18 @@ pub async fn resolve_issue(
 		.await;
 
 	info!(issue_id = %issue.id, short_id = %issue.short_id, "Issue resolved");
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::CrashIssueResolved)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("crash_issue", issue.id.to_string())
+			.details(serde_json::json!({
+				"project_id": project_id.to_string(),
+				"short_id": issue.short_id.clone(),
+				"title": issue.title.clone(),
+			}))
+			.build(),
+	);
 
 	Ok(Json(IssueResponse::from(issue)))
 }
@@ -2231,6 +2257,17 @@ pub async fn create_release(
 
 	info!(release_id = %release.id, version = %release.version, "Release created");
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::CrashReleaseCreated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("crash_release", release.id.to_string())
+			.details(serde_json::json!({
+				"project_id": project_id.to_string(),
+				"version": release.version.clone(),
+			}))
+			.build(),
+	);
+
 	Ok((StatusCode::CREATED, Json(ReleaseResponse::from(release))))
 }
 
@@ -2659,6 +2696,22 @@ pub async fn upload_artifacts(
 		"Artifact upload completed"
 	);
 
+	if uploaded_count > 0 {
+		state.audit_service.log(
+			AuditLogBuilder::new(AuditEventType::CrashSymbolsUploaded)
+				.actor(AuditUserId::new(current_user.user.id.into_inner()))
+				.resource("crash_project", project_id.to_string())
+				.details(serde_json::json!({
+					"release": release,
+					"total": total,
+					"uploaded_count": uploaded_count,
+					"existing_count": existing_count,
+					"error_count": errors.len(),
+				}))
+				.build(),
+		);
+	}
+
 	Ok(Json(UploadArtifactResponse {
 		total,
 		uploaded_count,
@@ -3004,6 +3057,19 @@ pub async fn delete_artifact(
 			name = %artifact.name,
 			"Artifact deleted"
 		);
+
+		state.audit_service.log(
+			AuditLogBuilder::new(AuditEventType::CrashSymbolsDeleted)
+				.actor(AuditUserId::new(current_user.user.id.into_inner()))
+				.resource("crash_artifact", artifact.id.to_string())
+				.details(serde_json::json!({
+					"project_id": project_id.to_string(),
+					"name": artifact.name.clone(),
+					"release": artifact.release.clone(),
+				}))
+				.build(),
+		);
+
 		Ok(StatusCode::NO_CONTENT)
 	} else {
 		Err((
