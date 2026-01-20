@@ -11,6 +11,16 @@
 
 ### Recent Progress
 
+**2026-01-20:** Added proptest tests to loom-crash-core ✅
+- Added proptest tests for ID validation in `loom-crash-core`:
+  - `org_id_roundtrip` - property-based test for OrgId serialization
+  - `user_id_roundtrip` - property-based test for UserId serialization
+  - `person_id_roundtrip` - property-based test for PersonId serialization
+  - `crash_api_key_id_roundtrip` - property-based test for CrashApiKeyId serialization
+- All 26 tests pass in loom-crash-core (including 4 new proptest tests)
+- This completes Phase 2.1 proptest tests for crash-core
+- openapi ToSchema attributes were already present on all public types
+
 **2026-01-20:** Implemented API key authentication for Crash SDK ✅ DEPLOYED
 - Created `crates/loom-server-crash/src/api_key.rs` with Argon2 hashing:
   - `generate_api_key()` with configurable prefix
@@ -522,9 +532,9 @@ loom-crash-core/
 - [x] Implement `CrashEvent` struct ([specs/crash-system.md#31-crashevent](specs/crash-system.md))
 - [x] Implement `Issue` struct with `IssueStatus` enum ([specs/crash-system.md#32-issue](specs/crash-system.md))
 - [x] Implement fingerprinting function ([specs/crash-system.md#4-fingerprinting](specs/crash-system.md))
-- [x] Add 22 unit tests for event types
-- [ ] Add `#[cfg_attr(feature = "openapi", derive(ToSchema))]` to all public types
-- [ ] Add proptest tests for ID validation
+- [x] Add 26 unit tests for event types ✅ (2026-01-20: 4 new proptest tests)
+- [x] Add `#[cfg_attr(feature = "openapi", derive(ToSchema))]` to all public types ✅
+- [x] Add proptest tests for ID validation ✅ (2026-01-20: OrgId, UserId, PersonId, CrashApiKeyId)
 
 ### 2.2 Create `loom-crons-core` ✅ COMPLETED
 
