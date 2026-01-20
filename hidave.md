@@ -11,6 +11,31 @@
 
 ### Recent Progress
 
+**2026-01-20:** Added source map symbolication for JavaScript/TypeScript crashes ✅ DEPLOYED
+- Created `loom-crash-symbolicate` crate with:
+  - VLQ decoder for source map mappings
+  - Source map v3 parser (`ParsedSourceMap`)
+  - Symbolication processor (`SourceMapProcessor`)
+  - Rust symbol demangling support
+  - Source context extraction from embedded sources
+- Integrated symbolication into crash capture flow:
+  - Both single and batch capture endpoints now symbolicate
+  - Raw (minified) stacktrace preserved in `raw_stacktrace` field
+  - Symbolication runs before fingerprinting for better grouping
+  - Graceful fallback if source maps unavailable
+- Added `SymbolicationService` in `loom-server-crash`:
+  - Async artifact lookup from database
+  - Caches parsed source maps per request
+  - Updates artifact `last_accessed_at` timestamps
+- Added `PartialEq` derives to `Frame` and `Stacktrace` for comparison
+- Verified working in production via curl:
+  - Uploaded source map for release 1.0.0
+  - Captured crash with minified stack trace (bundle.js:1,2,3)
+  - Stack trace symbolicated to original source (src/app.ts:1,2,3)
+  - Source context extracted (pre_context, context_line, post_context)
+- Commit: `e423b932`
+- This completes Phase 3 of the implementation plan
+
 **2026-01-20:** Added symbol artifact cleanup background job ✅ DEPLOYED
 - Created `SymbolArtifactCleanupJob` in `loom-server/src/jobs/symbol_artifact_cleanup.rs`
 - Runs daily to delete symbol artifacts not accessed within 90 days
@@ -412,13 +437,15 @@ loom-sessions-core/
 
 ---
 
-## Phase 3: Source Map Symbolication
+## Phase 3: Source Map Symbolication ✅ COMPLETED
 
 **Goal:** Build the symbolication engine for JavaScript/TypeScript stack traces.
 
+**Status:** Completed 2026-01-20
+
 Reference: [specs/crash-system.md#6-symbolication](specs/crash-system.md)
 
-### 3.1 Create `loom-crash-symbolicate`
+### 3.1 Create `loom-crash-symbolicate` ✅
 
 **Path:** `crates/loom-crash-symbolicate/`
 
@@ -431,33 +458,36 @@ loom-crash-symbolicate/
     ├── sourcemap.rs     # SourceMap parsing and lookup
     ├── vlq.rs           # VLQ decoder for mappings
     ├── rust.rs          # Rust symbol demangling
-    ├── cache.rs         # Symbolication cache
+    ├── processor.rs     # SourceMapProcessor pipeline
     └── error.rs         # Error types
 ```
 
 **Implementation checklist:**
-- [ ] Create `Cargo.toml`:
-  ```toml
-  [dependencies]
-  loom-crash-core = { path = "../loom-crash-core" }
-  serde = { version = "1", features = ["derive"] }
-  serde_json = "1"
-  sha2 = "0.10"
-  hex = "0.4"
-  thiserror = "2"
-  rustc-demangle = "0.1"
-  ```
-- [ ] Implement VLQ decoder ([specs/crash-system.md#63-vlq-decoding](specs/crash-system.md))
+- [x] Create `Cargo.toml` with dependencies ✅
+- [x] Implement VLQ decoder ([specs/crash-system.md#63-vlq-decoding](specs/crash-system.md)) ✅
   - `decode_vlq_segment()` function
   - `decode_vlq_mappings()` function
-- [ ] Implement `ParsedSourceMap` struct
-  - `from_bytes()` constructor
-  - `lookup(line, col)` method
-- [ ] Implement `SourceMapProcessor`
+  - `DecodedMappings` with binary search lookup
+- [x] Implement `ParsedSourceMap` struct ✅
+  - `from_bytes()` and `from_str()` constructors
+  - `lookup(line, col)` method with source root resolution
+  - Embedded source content support
+- [x] Implement `SourceMapProcessor` ✅
   - `symbolicate_js()` method
-  - Source context extraction (pre/post lines)
-- [ ] Implement Rust demangling wrapper using `rustc-demangle`
-- [ ] Add unit tests with sample source maps
+  - `symbolicate_rust()` method
+  - `symbolicate()` method with platform dispatch
+  - Source context extraction (5 lines before/after)
+- [x] Implement Rust demangling wrapper using `rustc-demangle` ✅
+- [x] Add 24 unit tests covering VLQ, source maps, and processor ✅
+
+### 3.2 Integrate with Server ✅
+
+- [x] Added `SymbolicationService` to `loom-server-crash` ✅
+- [x] Integrated symbolication into `capture_crash` handler ✅
+- [x] Integrated symbolication into `process_single_capture` (batch) ✅
+- [x] Symbolication runs before fingerprinting for better grouping ✅
+- [x] Raw stacktrace preserved in `raw_stacktrace` field ✅
+- [x] Graceful fallback when source maps unavailable ✅
 
 ---
 
