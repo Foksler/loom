@@ -11,6 +11,14 @@
 
 ### Recent Progress
 
+**2026-01-20:** Added crash event cleanup background job ✅ DEPLOYED
+- Created `CrashEventCleanupJob` in `loom-server/src/jobs/crash_event_cleanup.rs`
+- Runs daily to delete crash events older than 90 days (configurable)
+- Added `delete_old_events()` method to `CrashRepository` trait
+- Registered in main.rs with 24-hour interval
+- All 275 authz tests pass
+- This completes the crash event cleanup job from Phase 12.1 of the implementation plan
+
 **2026-01-20:** Added app session cleanup background job ✅ DEPLOYED
 - Created `AppSessionCleanupJob` in `loom-server/src/jobs/app_session_cleanup.rs`
 - Runs daily to delete individual app sessions older than 30 days
@@ -994,7 +1002,8 @@ Reference: [crates/loom-jobs/](crates/loom-jobs/)
 - [ ] **Symbol artifact cleanup** — Runs daily
   - Reference: [specs/crash-system.md#13-retention-policy](specs/crash-system.md)
 
-- [ ] **Crash event cleanup** — Runs daily (90 day retention)
+- [x] **Crash event cleanup** — Runs daily (90 day retention) ✅
+  - Implemented in `loom-server/src/jobs/crash_event_cleanup.rs`
 
 ### 12.2 Job Implementation
 

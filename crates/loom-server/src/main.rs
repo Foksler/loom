@@ -229,6 +229,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		tracing::info!("Registered app session cleanup background job");
 	}
 
+	// Register crash event cleanup job
+	{
+		use loom_server::jobs::CrashEventCleanupJob;
+
+		// Run daily to delete old crash events (90-day retention)
+		scheduler.register_periodic(
+			Arc::new(CrashEventCleanupJob::new(Arc::clone(&state.crash_repo))),
+			Duration::from_secs(24 * 60 * 60), // 24 hours
+		);
+
+		tracing::info!("Registered crash event cleanup background job");
+	}
+
 	let scheduler = Arc::new(scheduler);
 
 	// Update state with scheduler and repository

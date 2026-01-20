@@ -42,6 +42,7 @@ pub trait CrashRepository: Send + Sync {
 	async fn create_event(&self, event: &CrashEvent) -> Result<()>;
 	async fn get_event_by_id(&self, id: CrashEventId) -> Result<Option<CrashEvent>>;
 	async fn list_events_for_issue(&self, issue_id: IssueId, limit: u32) -> Result<Vec<CrashEvent>>;
+	async fn delete_old_events(&self, cutoff: DateTime<Utc>) -> Result<u64>;
 
 	// Issue state updates
 	async fn increment_issue_event_count(&self, id: IssueId) -> Result<()>;
@@ -511,6 +512,21 @@ impl CrashRepository for SqliteCrashRepository {
 		.await?;
 
 		rows.into_iter().map(TryInto::try_into).collect()
+	}
+
+	#[instrument(skip(self), fields(cutoff = %cutoff))]
+	async fn delete_old_events(&self, cutoff: DateTime<Utc>) -> Result<u64> {
+		let result = sqlx::query(
+			r#"
+			DELETE FROM crash_events
+			WHERE received_at < ?
+			"#,
+		)
+		.bind(cutoff.to_rfc3339())
+		.execute(&self.pool)
+		.await?;
+
+		Ok(result.rows_affected())
 	}
 
 	#[instrument(skip(self), fields(issue_id = %id))]
@@ -1048,10 +1064,7 @@ impl TryFrom<ReleaseRow> for Release {
 			new_issue_count: row.new_issue_count as u64,
 			regression_count: row.regression_count as u64,
 			user_count: row.user_count as u64,
-			date_released: row
-				.date_released
-				.map(|s| parse_datetime(&s))
-				.transpose()?,
+			date_released: row.date_released.map(|s| parse_datetime(&s)).transpose()?,
 			first_event: row.first_event.map(|s| parse_datetime(&s)).transpose()?,
 			last_event: row.last_event.map(|s| parse_datetime(&s)).transpose()?,
 			created_at: parse_datetime(&row.created_at)?,

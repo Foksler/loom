@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Proprietary
 
 mod app_session_cleanup;
+mod crash_event_cleanup;
 mod cron_missed_run;
 mod cron_timeout;
 mod job_history_cleanup;
@@ -16,6 +17,7 @@ mod weaver_cleanup;
 mod webhook_retry;
 
 pub use app_session_cleanup::AppSessionCleanupJob;
+pub use crash_event_cleanup::CrashEventCleanupJob;
 pub use cron_missed_run::CronMissedRunDetectorJob;
 pub use cron_timeout::CronTimeoutDetectorJob;
 pub use job_history_cleanup::JobHistoryCleanupJob;
