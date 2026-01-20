@@ -10,7 +10,7 @@ use tracing::instrument;
 
 use loom_crash_core::{
 	CrashEvent, CrashEventId, CrashProject, Issue, IssueId, OrgId, PersonId, ProjectId, Release,
-	ReleaseId, UserId,
+	ReleaseId, SymbolArtifact, SymbolArtifactId, UserId,
 };
 
 use crate::error::{CrashServerError, Result};
@@ -75,6 +75,31 @@ pub trait CrashRepository: Send + Sync {
 		is_new_issue: bool,
 		is_regression: bool,
 	) -> Result<()>;
+
+	// Artifact operations
+	async fn create_artifact(&self, artifact: &SymbolArtifact) -> Result<()>;
+	async fn get_artifact_by_id(&self, id: SymbolArtifactId) -> Result<Option<SymbolArtifact>>;
+	async fn get_artifact_by_sha256(
+		&self,
+		project_id: ProjectId,
+		sha256: &str,
+	) -> Result<Option<SymbolArtifact>>;
+	async fn get_artifact_by_name(
+		&self,
+		project_id: ProjectId,
+		release: &str,
+		name: &str,
+		dist: Option<&str>,
+	) -> Result<Option<SymbolArtifact>>;
+	async fn list_artifacts(
+		&self,
+		project_id: ProjectId,
+		release: Option<&str>,
+		limit: u32,
+	) -> Result<Vec<SymbolArtifact>>;
+	async fn delete_artifact(&self, id: SymbolArtifactId) -> Result<bool>;
+	async fn delete_old_artifacts(&self, cutoff: DateTime<Utc>) -> Result<u64>;
+	async fn update_artifact_last_accessed(&self, id: SymbolArtifactId) -> Result<()>;
 }
 
 /// SQLite implementation of the crash repository.
@@ -821,6 +846,218 @@ impl CrashRepository for SqliteCrashRepository {
 
 		Ok(())
 	}
+
+	#[instrument(skip(self, artifact), fields(artifact_id = %artifact.id, name = %artifact.name))]
+	async fn create_artifact(&self, artifact: &SymbolArtifact) -> Result<()> {
+		sqlx::query(
+			r#"
+			INSERT INTO symbol_artifacts (
+				id, org_id, project_id, release, dist,
+				artifact_type, name, data, size_bytes, sha256,
+				source_map_url, sources_content,
+				uploaded_at, uploaded_by, last_accessed_at
+			)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			"#,
+		)
+		.bind(artifact.id.0.to_string())
+		.bind(artifact.org_id.0.to_string())
+		.bind(artifact.project_id.0.to_string())
+		.bind(&artifact.release)
+		.bind(&artifact.dist)
+		.bind(artifact.artifact_type.to_string())
+		.bind(&artifact.name)
+		.bind(&artifact.data)
+		.bind(artifact.size_bytes as i64)
+		.bind(&artifact.sha256)
+		.bind(&artifact.source_map_url)
+		.bind(artifact.sources_content as i32)
+		.bind(artifact.uploaded_at.to_rfc3339())
+		.bind(artifact.uploaded_by.0.to_string())
+		.bind(artifact.last_accessed_at.map(|dt| dt.to_rfc3339()))
+		.execute(&self.pool)
+		.await?;
+
+		Ok(())
+	}
+
+	#[instrument(skip(self), fields(artifact_id = %id))]
+	async fn get_artifact_by_id(&self, id: SymbolArtifactId) -> Result<Option<SymbolArtifact>> {
+		let row = sqlx::query_as::<_, ArtifactRow>(
+			r#"
+			SELECT id, org_id, project_id, release, dist,
+				   artifact_type, name, data, size_bytes, sha256,
+				   source_map_url, sources_content,
+				   uploaded_at, uploaded_by, last_accessed_at
+			FROM symbol_artifacts
+			WHERE id = ?
+			"#,
+		)
+		.bind(id.0.to_string())
+		.fetch_optional(&self.pool)
+		.await?;
+
+		row.map(TryInto::try_into).transpose()
+	}
+
+	#[instrument(skip(self), fields(project_id = %project_id, sha256 = %sha256))]
+	async fn get_artifact_by_sha256(
+		&self,
+		project_id: ProjectId,
+		sha256: &str,
+	) -> Result<Option<SymbolArtifact>> {
+		let row = sqlx::query_as::<_, ArtifactRow>(
+			r#"
+			SELECT id, org_id, project_id, release, dist,
+				   artifact_type, name, data, size_bytes, sha256,
+				   source_map_url, sources_content,
+				   uploaded_at, uploaded_by, last_accessed_at
+			FROM symbol_artifacts
+			WHERE project_id = ? AND sha256 = ?
+			"#,
+		)
+		.bind(project_id.0.to_string())
+		.bind(sha256)
+		.fetch_optional(&self.pool)
+		.await?;
+
+		row.map(TryInto::try_into).transpose()
+	}
+
+	#[instrument(skip(self), fields(project_id = %project_id, release = %release, name = %name))]
+	async fn get_artifact_by_name(
+		&self,
+		project_id: ProjectId,
+		release: &str,
+		name: &str,
+		dist: Option<&str>,
+	) -> Result<Option<SymbolArtifact>> {
+		let row = if let Some(d) = dist {
+			sqlx::query_as::<_, ArtifactRow>(
+				r#"
+				SELECT id, org_id, project_id, release, dist,
+					   artifact_type, name, data, size_bytes, sha256,
+					   source_map_url, sources_content,
+					   uploaded_at, uploaded_by, last_accessed_at
+				FROM symbol_artifacts
+				WHERE project_id = ? AND release = ? AND name = ? AND dist = ?
+				"#,
+			)
+			.bind(project_id.0.to_string())
+			.bind(release)
+			.bind(name)
+			.bind(d)
+			.fetch_optional(&self.pool)
+			.await?
+		} else {
+			sqlx::query_as::<_, ArtifactRow>(
+				r#"
+				SELECT id, org_id, project_id, release, dist,
+					   artifact_type, name, data, size_bytes, sha256,
+					   source_map_url, sources_content,
+					   uploaded_at, uploaded_by, last_accessed_at
+				FROM symbol_artifacts
+				WHERE project_id = ? AND release = ? AND name = ? AND dist IS NULL
+				"#,
+			)
+			.bind(project_id.0.to_string())
+			.bind(release)
+			.bind(name)
+			.fetch_optional(&self.pool)
+			.await?
+		};
+
+		row.map(TryInto::try_into).transpose()
+	}
+
+	#[instrument(skip(self), fields(project_id = %project_id))]
+	async fn list_artifacts(
+		&self,
+		project_id: ProjectId,
+		release: Option<&str>,
+		limit: u32,
+	) -> Result<Vec<SymbolArtifact>> {
+		let rows = if let Some(rel) = release {
+			sqlx::query_as::<_, ArtifactRow>(
+				r#"
+				SELECT id, org_id, project_id, release, dist,
+					   artifact_type, name, data, size_bytes, sha256,
+					   source_map_url, sources_content,
+					   uploaded_at, uploaded_by, last_accessed_at
+				FROM symbol_artifacts
+				WHERE project_id = ? AND release = ?
+				ORDER BY uploaded_at DESC
+				LIMIT ?
+				"#,
+			)
+			.bind(project_id.0.to_string())
+			.bind(rel)
+			.bind(limit as i32)
+			.fetch_all(&self.pool)
+			.await?
+		} else {
+			sqlx::query_as::<_, ArtifactRow>(
+				r#"
+				SELECT id, org_id, project_id, release, dist,
+					   artifact_type, name, data, size_bytes, sha256,
+					   source_map_url, sources_content,
+					   uploaded_at, uploaded_by, last_accessed_at
+				FROM symbol_artifacts
+				WHERE project_id = ?
+				ORDER BY uploaded_at DESC
+				LIMIT ?
+				"#,
+			)
+			.bind(project_id.0.to_string())
+			.bind(limit as i32)
+			.fetch_all(&self.pool)
+			.await?
+		};
+
+		rows.into_iter().map(TryInto::try_into).collect()
+	}
+
+	#[instrument(skip(self), fields(artifact_id = %id))]
+	async fn delete_artifact(&self, id: SymbolArtifactId) -> Result<bool> {
+		let result = sqlx::query("DELETE FROM symbol_artifacts WHERE id = ?")
+			.bind(id.0.to_string())
+			.execute(&self.pool)
+			.await?;
+
+		Ok(result.rows_affected() > 0)
+	}
+
+	#[instrument(skip(self), fields(cutoff = %cutoff))]
+	async fn delete_old_artifacts(&self, cutoff: DateTime<Utc>) -> Result<u64> {
+		let result = sqlx::query(
+			r#"
+			DELETE FROM symbol_artifacts
+			WHERE (last_accessed_at IS NOT NULL AND last_accessed_at < ?)
+			   OR (last_accessed_at IS NULL AND uploaded_at < ?)
+			"#,
+		)
+		.bind(cutoff.to_rfc3339())
+		.bind(cutoff.to_rfc3339())
+		.execute(&self.pool)
+		.await?;
+
+		Ok(result.rows_affected())
+	}
+
+	#[instrument(skip(self), fields(artifact_id = %id))]
+	async fn update_artifact_last_accessed(&self, id: SymbolArtifactId) -> Result<()> {
+		sqlx::query(
+			r#"
+			UPDATE symbol_artifacts SET last_accessed_at = ? WHERE id = ?
+			"#,
+		)
+		.bind(Utc::now().to_rfc3339())
+		.bind(id.0.to_string())
+		.execute(&self.pool)
+		.await?;
+
+		Ok(())
+	}
 }
 
 // ============================================================================
@@ -1068,6 +1305,54 @@ impl TryFrom<ReleaseRow> for Release {
 			first_event: row.first_event.map(|s| parse_datetime(&s)).transpose()?,
 			last_event: row.last_event.map(|s| parse_datetime(&s)).transpose()?,
 			created_at: parse_datetime(&row.created_at)?,
+		})
+	}
+}
+
+#[derive(Debug, sqlx::FromRow)]
+struct ArtifactRow {
+	id: String,
+	org_id: String,
+	project_id: String,
+	release: String,
+	dist: Option<String>,
+	artifact_type: String,
+	name: String,
+	data: Vec<u8>,
+	size_bytes: i64,
+	sha256: String,
+	source_map_url: Option<String>,
+	sources_content: i32,
+	uploaded_at: String,
+	uploaded_by: String,
+	last_accessed_at: Option<String>,
+}
+
+impl TryFrom<ArtifactRow> for SymbolArtifact {
+	type Error = CrashServerError;
+
+	fn try_from(row: ArtifactRow) -> Result<Self> {
+		Ok(SymbolArtifact {
+			id: SymbolArtifactId(row.id.parse()?),
+			org_id: OrgId(row.org_id.parse()?),
+			project_id: ProjectId(row.project_id.parse()?),
+			release: row.release,
+			dist: row.dist,
+			artifact_type: row.artifact_type.parse().map_err(|_| {
+				CrashServerError::Parse(format!("invalid artifact type: {}", row.artifact_type))
+			})?,
+			name: row.name,
+			data: row.data,
+			size_bytes: row.size_bytes as u64,
+			sha256: row.sha256,
+			source_map_url: row.source_map_url,
+			sources_content: row.sources_content != 0,
+			uploaded_at: parse_datetime(&row.uploaded_at)?,
+			uploaded_by: UserId(row.uploaded_by.parse()?),
+			last_accessed_at: row
+				.last_accessed_at
+				.map(|s| parse_datetime(&s))
+				.transpose()?,
 		})
 	}
 }

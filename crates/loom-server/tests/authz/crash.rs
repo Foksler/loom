@@ -1282,3 +1282,233 @@ async fn capture_crash_auto_creates_release() {
 		"Release new_issue_count should be 1"
 	);
 }
+
+// ============================================================================
+// Artifact List Tests
+// ============================================================================
+
+#[tokio::test]
+async fn list_artifacts_requires_auth() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "artifacts-auth-test").await;
+
+	// No auth should return 401
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/artifacts", project_id),
+			None,
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::UNAUTHORIZED,
+		"List artifacts without auth should return 401"
+	);
+}
+
+#[tokio::test]
+async fn list_artifacts_requires_org_membership() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "artifacts-membership-test").await;
+
+	// User from org_b trying to list artifacts in org_a's project should be forbidden
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/artifacts", project_id),
+			Some(&app.fixtures.org_b.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::FORBIDDEN,
+		"Non-member should not be able to list artifacts in another org's project"
+	);
+}
+
+#[tokio::test]
+async fn list_artifacts_succeeds_for_org_member() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "artifacts-success-test").await;
+
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/artifacts", project_id),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::OK,
+		"Org member should be able to list artifacts"
+	);
+}
+
+#[tokio::test]
+async fn list_artifacts_returns_404_for_nonexistent_project() {
+	let app = TestApp::new().await;
+
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/artifacts", uuid::Uuid::new_v4()),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::NOT_FOUND,
+		"Listing artifacts for nonexistent project should return 404"
+	);
+}
+
+// ============================================================================
+// Get Artifact Tests
+// ============================================================================
+
+#[tokio::test]
+async fn get_artifact_requires_auth() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "get-artifact-auth-test").await;
+
+	// No auth should return 401
+	let response = app
+		.get(
+			&format!(
+				"/api/crash/projects/{}/artifacts/{}",
+				project_id,
+				uuid::Uuid::new_v4()
+			),
+			None,
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::UNAUTHORIZED,
+		"Get artifact without auth should return 401"
+	);
+}
+
+#[tokio::test]
+async fn get_artifact_requires_org_membership() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "get-artifact-membership-test").await;
+
+	// User from org_b trying to get artifact in org_a's project should be forbidden
+	let response = app
+		.get(
+			&format!(
+				"/api/crash/projects/{}/artifacts/{}",
+				project_id,
+				uuid::Uuid::new_v4()
+			),
+			Some(&app.fixtures.org_b.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::FORBIDDEN,
+		"Non-member should not be able to get artifact in another org's project"
+	);
+}
+
+#[tokio::test]
+async fn get_artifact_returns_404_for_nonexistent_artifact() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "get-artifact-404-test").await;
+
+	let response = app
+		.get(
+			&format!(
+				"/api/crash/projects/{}/artifacts/{}",
+				project_id,
+				uuid::Uuid::new_v4()
+			),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::NOT_FOUND,
+		"Getting nonexistent artifact should return 404"
+	);
+}
+
+// ============================================================================
+// Delete Artifact Tests
+// ============================================================================
+
+#[tokio::test]
+async fn delete_artifact_requires_auth() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "delete-artifact-auth-test").await;
+
+	// No auth should return 401
+	let response = app
+		.delete(
+			&format!(
+				"/api/crash/projects/{}/artifacts/{}",
+				project_id,
+				uuid::Uuid::new_v4()
+			),
+			None,
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::UNAUTHORIZED,
+		"Delete artifact without auth should return 401"
+	);
+}
+
+#[tokio::test]
+async fn delete_artifact_requires_org_membership() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "delete-artifact-membership-test").await;
+
+	// User from org_b trying to delete artifact in org_a's project should be forbidden
+	let response = app
+		.delete(
+			&format!(
+				"/api/crash/projects/{}/artifacts/{}",
+				project_id,
+				uuid::Uuid::new_v4()
+			),
+			Some(&app.fixtures.org_b.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::FORBIDDEN,
+		"Non-member should not be able to delete artifact in another org's project"
+	);
+}
+
+#[tokio::test]
+async fn delete_artifact_returns_404_for_nonexistent_artifact() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "delete-artifact-404-test").await;
+
+	let response = app
+		.delete(
+			&format!(
+				"/api/crash/projects/{}/artifacts/{}",
+				project_id,
+				uuid::Uuid::new_v4()
+			),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::NOT_FOUND,
+		"Deleting nonexistent artifact should return 404"
+	);
+}

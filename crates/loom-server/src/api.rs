@@ -1284,6 +1284,15 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/crash/projects/{project_id}/releases/{version}",
 			get(routes::crash::get_release),
 		)
+		// Artifact routes (symbol upload)
+		.route(
+			"/api/crash/projects/{project_id}/artifacts",
+			get(routes::crash::list_artifacts).post(routes::crash::upload_artifacts),
+		)
+		.route(
+			"/api/crash/projects/{project_id}/artifacts/{artifact_id}",
+			get(routes::crash::get_artifact).delete(routes::crash::delete_artifact),
+		)
 		// App sessions routes (authenticated)
 		.route(
 			"/api/sessions/start",
