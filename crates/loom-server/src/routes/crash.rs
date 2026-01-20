@@ -1870,6 +1870,269 @@ pub async fn resolve_issue(
 	Ok(Json(IssueResponse::from(issue)))
 }
 
+/// POST /api/crash/projects/{project_id}/issues/{issue_id}/unresolve - Unresolve an issue
+///
+/// Transitions a resolved or ignored issue back to unresolved status.
+#[utoipa::path(
+	post,
+	path = "/api/crash/projects/{project_id}/issues/{issue_id}/unresolve",
+	params(
+		("project_id" = String, Path, description = "Project ID"),
+		("issue_id" = String, Path, description = "Issue ID"),
+	),
+	responses(
+		(status = 200, description = "Issue unresolve", body = IssueResponse),
+		(status = 403, description = "Forbidden", body = CrashErrorResponse),
+		(status = 404, description = "Issue not found", body = CrashErrorResponse),
+	),
+	security(("bearer" = [])),
+	tag = "crash"
+)]
+#[instrument(skip(state, current_user))]
+pub async fn unresolve_issue(
+	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
+	Path((project_id_str, issue_id_str)): Path<(String, String)>,
+) -> Result<Json<IssueResponse>, (StatusCode, Json<CrashErrorResponse>)> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	let project_id: ProjectId = project_id_str.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_project_id".to_string(),
+				message: "Invalid project ID".to_string(),
+			}),
+		)
+	})?;
+
+	let issue_id: IssueId = issue_id_str.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_issue_id".to_string(),
+				message: "Invalid issue ID".to_string(),
+			}),
+		)
+	})?;
+
+	let project = state
+		.crash_repo
+		.get_project_by_id(project_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get project");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "project_not_found".to_string(),
+					message: "Project not found".to_string(),
+				}),
+			)
+		})?;
+
+	verify_org_membership(&state, &project.org_id, &current_user.user.id, &locale).await?;
+
+	let mut issue = state
+		.crash_repo
+		.get_issue_by_id(issue_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get issue");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "issue_not_found".to_string(),
+					message: "Issue not found".to_string(),
+				}),
+			)
+		})?;
+
+	if issue.project_id != project_id {
+		return Err((
+			StatusCode::NOT_FOUND,
+			Json(CrashErrorResponse {
+				error: "issue_not_found".to_string(),
+				message: "Issue not found".to_string(),
+			}),
+		));
+	}
+
+	issue.status = IssueStatus::Unresolved;
+	issue.resolved_at = None;
+	issue.resolved_by = None;
+	issue.resolved_in_release = None;
+
+	state.crash_repo.update_issue(&issue).await.map_err(|e| {
+		tracing::error!(error = %e, "Failed to update issue");
+		(
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(CrashErrorResponse {
+				error: "internal_error".to_string(),
+				message: t(&locale, "server.api.error.internal").to_string(),
+			}),
+		)
+	})?;
+
+	info!(issue_id = %issue.id, short_id = %issue.short_id, "Issue unresolved");
+
+	Ok(Json(IssueResponse::from(issue)))
+}
+
+/// POST /api/crash/projects/{project_id}/issues/{issue_id}/ignore - Ignore an issue
+///
+/// Marks an issue as ignored, which suppresses it from default views.
+#[utoipa::path(
+	post,
+	path = "/api/crash/projects/{project_id}/issues/{issue_id}/ignore",
+	params(
+		("project_id" = String, Path, description = "Project ID"),
+		("issue_id" = String, Path, description = "Issue ID"),
+	),
+	responses(
+		(status = 200, description = "Issue ignored", body = IssueResponse),
+		(status = 403, description = "Forbidden", body = CrashErrorResponse),
+		(status = 404, description = "Issue not found", body = CrashErrorResponse),
+	),
+	security(("bearer" = [])),
+	tag = "crash"
+)]
+#[instrument(skip(state, current_user))]
+pub async fn ignore_issue(
+	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
+	Path((project_id_str, issue_id_str)): Path<(String, String)>,
+) -> Result<Json<IssueResponse>, (StatusCode, Json<CrashErrorResponse>)> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	let project_id: ProjectId = project_id_str.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_project_id".to_string(),
+				message: "Invalid project ID".to_string(),
+			}),
+		)
+	})?;
+
+	let issue_id: IssueId = issue_id_str.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_issue_id".to_string(),
+				message: "Invalid issue ID".to_string(),
+			}),
+		)
+	})?;
+
+	let project = state
+		.crash_repo
+		.get_project_by_id(project_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get project");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "project_not_found".to_string(),
+					message: "Project not found".to_string(),
+				}),
+			)
+		})?;
+
+	verify_org_membership(&state, &project.org_id, &current_user.user.id, &locale).await?;
+
+	let mut issue = state
+		.crash_repo
+		.get_issue_by_id(issue_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get issue");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "issue_not_found".to_string(),
+					message: "Issue not found".to_string(),
+				}),
+			)
+		})?;
+
+	if issue.project_id != project_id {
+		return Err((
+			StatusCode::NOT_FOUND,
+			Json(CrashErrorResponse {
+				error: "issue_not_found".to_string(),
+				message: "Issue not found".to_string(),
+			}),
+		));
+	}
+
+	issue.status = IssueStatus::Ignored;
+
+	state.crash_repo.update_issue(&issue).await.map_err(|e| {
+		tracing::error!(error = %e, "Failed to update issue");
+		(
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(CrashErrorResponse {
+				error: "internal_error".to_string(),
+				message: t(&locale, "server.api.error.internal").to_string(),
+			}),
+		)
+	})?;
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::CrashIssueIgnored)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("crash_issue", issue.id.to_string())
+			.details(serde_json::json!({
+				"project_id": project_id.to_string(),
+				"short_id": issue.short_id.clone(),
+				"title": issue.title.clone(),
+			}))
+			.build(),
+	);
+
+	info!(issue_id = %issue.id, short_id = %issue.short_id, "Issue ignored");
+
+	Ok(Json(IssueResponse::from(issue)))
+}
+
 // ============================================================================
 // Issue Detail Endpoint
 // ============================================================================

@@ -1270,6 +1270,14 @@ pub fn create_router(state: AppState) -> Router {
 			post(routes::crash::resolve_issue),
 		)
 		.route(
+			"/api/crash/projects/{project_id}/issues/{issue_id}/unresolve",
+			post(routes::crash::unresolve_issue),
+		)
+		.route(
+			"/api/crash/projects/{project_id}/issues/{issue_id}/ignore",
+			post(routes::crash::ignore_issue),
+		)
+		.route(
 			"/api/crash/projects/{project_id}/issues/{issue_id}",
 			get(routes::crash::get_issue),
 		)
