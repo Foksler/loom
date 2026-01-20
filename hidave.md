@@ -11,6 +11,17 @@
 
 ### Recent Progress
 
+**2026-01-20:** Added proptest tests to loom-sessions-core ✅
+- Added proptest tests for ID validation in `loom-sessions-core`:
+  - `session_id_roundtrip` - property-based test for SessionId serialization
+  - `session_status_roundtrip` - property-based test for SessionStatus enum
+  - `platform_roundtrip` - property-based test for Platform enum
+  - `session_aggregate_id_roundtrip` - property-based test for SessionAggregateId
+- All 17 tests pass in loom-sessions-core (including new proptest tests)
+- Verified all observability APIs via curl: crash capture, crons check-in, session tracking
+- loom-cli verified working: weaver commands, version, list threads
+- This completes Phase 2.3 proptest tests for sessions
+
 **2026-01-20:** Added session tracking to loom-crash Rust SDK ✅
 - Added `SessionTracker` module to `loom-crash` crate for release health metrics
 - Session tracking features:
@@ -545,6 +556,7 @@ loom-sessions-core/
 - [x] Implement `SessionAggregate` struct ([specs/sessions-system.md#32-sessionaggregate](specs/sessions-system.md)) ✅
 - [x] Implement `ReleaseHealth` struct ([specs/sessions-system.md#33-releasehealth](specs/sessions-system.md)) ✅
 - [x] Add 13 unit tests for session types ✅
+- [x] Add proptest tests for ID validation ✅ (2026-01-20: 4 new proptest tests, 17 total tests)
 
 ### 2.4 Workspace Integration
 
