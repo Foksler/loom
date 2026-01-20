@@ -80,6 +80,7 @@ args@{
     "loom-weaver-wgtunnel/default"
     "loom-flags/default"
     "loom-analytics/default"
+    "loom-crons/default"
     "loom-crash/default"
   ],
   rustPackages,
@@ -101,7 +102,7 @@ args@{
   cargoConfig ? {},
 }:
 let
-  nixifiedLockHash = "be8649005cd8cda03f5f92ff371fe3f268fa91ec10c8e955a3e860d22f72d952";
+  nixifiedLockHash = "60e432cb09c1279d75a5d8d56ce8ae3b03263271d12dd46cc59ea1e73db3549a";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -208,6 +209,7 @@ in
     loom-weaver-wgtunnel = rustPackages.unknown.loom-weaver-wgtunnel."0.1.0";
     loom-flags = rustPackages.unknown.loom-flags."0.1.0";
     loom-analytics = rustPackages.unknown.loom-analytics."0.1.0";
+    loom-crons = rustPackages.unknown.loom-crons."0.1.0";
     loom-crash = rustPackages.unknown.loom-crash."0.1.0";
   };
   "registry+https://github.com/rust-lang/crates.io-index".addr2line."0.25.1" = overridableMkRustCrate (profileName: rec {
@@ -6915,6 +6917,36 @@ in
     };
     devDependencies = {
       proptest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proptest."1.9.0" { inherit profileName; }).out;
+    };
+  });
+  
+  "unknown".loom-crons."0.1.0" = overridableMkRustCrate (profileName: rec {
+    name = "loom-crons";
+    version = "0.1.0";
+    registry = "unknown";
+    src = fetchCrateLocal workspaceSrc;
+    features = builtins.concatLists [
+      (lib.optional (rootFeatures' ? "loom-crons/crash") "crash")
+      (lib.optional (rootFeatures' ? "loom-crons/default") "default")
+      (lib.optional (rootFeatures' ? "loom-crons/crash" || rootFeatures' ? "loom-crons/loom-crash") "loom-crash")
+    ];
+    dependencies = {
+      async_trait = (buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".async-trait."0.1.89" { profileName = "__noProfile"; }).out;
+      chrono = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".chrono."0.4.43" { inherit profileName; }).out;
+      loom_common_http = (rustPackages."unknown".loom-common-http."0.1.0" { inherit profileName; }).out;
+      ${ if rootFeatures' ? "loom-crons/crash" || rootFeatures' ? "loom-crons/loom-crash" then "loom_crash" else null } = (rustPackages."unknown".loom-crash."0.1.0" { inherit profileName; }).out;
+      loom_crons_core = (rustPackages."unknown".loom-crons-core."0.1.0" { inherit profileName; }).out;
+      reqwest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".reqwest."0.12.28" { inherit profileName; }).out;
+      serde = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.228" { inherit profileName; }).out;
+      serde_json = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.149" { inherit profileName; }).out;
+      thiserror = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."2.0.18" { inherit profileName; }).out;
+      tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.49.0" { inherit profileName; }).out;
+      tracing = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tracing."0.1.44" { inherit profileName; }).out;
+      uuid = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".uuid."1.19.0" { inherit profileName; }).out;
+    };
+    devDependencies = {
+      proptest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".proptest."1.9.0" { inherit profileName; }).out;
+      tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.49.0" { inherit profileName; }).out;
     };
   });
   
