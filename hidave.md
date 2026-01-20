@@ -11,6 +11,29 @@
 
 ### Recent Progress
 
+**2026-01-20:** Created loom-crons Rust SDK ✅ DEPLOYED
+- Created `loom-crons` crate for cron job monitoring:
+  - `CronsClient` with builder pattern for configuration
+  - `CronsClientBuilder` with auth_token, base_url, org_id, environment, release
+  - `checkin_start(monitor_slug)` to start a check-in (returns CheckInId)
+  - `checkin_ok(checkin_id, details)` to complete successfully
+  - `checkin_error(checkin_id, details)` to complete with error
+  - `with_monitor(slug, closure)` convenience wrapper for async functions
+  - HTTP transport with retry support via `loom-common-http`
+  - Optional crash client integration (feature `crash`) for linking failures
+- Features:
+  - `CheckInOk` struct with duration_ms, output fields
+  - `CheckInError` struct with duration_ms, exit_code, output, crash_event_id
+  - Automatic duration calculation in `with_monitor` wrapper
+  - Graceful shutdown handling
+  - Thread-safe client with Arc
+- Verified working in production:
+  - Tested SDK check-in endpoint via curl (in_progress → ok/error)
+  - Tested monitor health state updates (failing → healthy)
+  - Tested ping endpoints for shell script monitoring
+- Added 10 unit tests for client builder, config, shutdown, defaults
+- This completes Phase 7.2 of the implementation plan
+
 **2026-01-20:** Created loom-crash Rust SDK ✅ DEPLOYED
 - Created `loom-crash` crate for Rust crash analytics:
   - `CrashClient` with builder pattern for configuration
@@ -316,8 +339,8 @@ This document provides a detailed, phased implementation plan for Loom's observa
 
 | System | Spec | Crates | Web Packages | Migration |
 |--------|------|--------|--------------|-----------|
-| Crash | [specs/crash-system.md](specs/crash-system.md) | `loom-crash-core`, `loom-crash`, `loom-crash-symbolicate`, `loom-server-crash` | `@loom/crash` | `033_crash_analytics.sql` |
-| Crons | [specs/crons-system.md](specs/crons-system.md) | `loom-crons-core`, `loom-crons`, `loom-server-crons` | `@loom/crons` | `034_cron_monitoring.sql` |
+| Crash | [specs/crash-system.md](specs/crash-system.md) | `loom-crash-core`, `loom-crash` ✅, `loom-crash-symbolicate` ✅, `loom-server-crash` ✅ | `@loom/crash` | `033_crash_analytics.sql` |
+| Crons | [specs/crons-system.md](specs/crons-system.md) | `loom-crons-core` ✅, `loom-crons` ✅, `loom-server-crons` ✅ | `@loom/crons` | `034_cron_monitoring.sql` |
 | Sessions | [specs/sessions-system.md](specs/sessions-system.md) | `loom-sessions-core`, `loom-server-sessions` | (in `@loom/crash`) | `035_sessions.sql` (tables: `app_sessions`, `app_session_aggregates`) |
 | UI | [specs/observability-ui.md](specs/observability-ui.md) | — | `web/loom-web/src/lib/components/` | — |
 
@@ -791,39 +814,29 @@ loom-crash/
 - [ ] Implement session tracking integration ([specs/sessions-system.md#52-rust-sdk-session-tracking](specs/sessions-system.md))
 - [ ] Implement analytics/flags integration if features enabled
 
-### 7.2 Create `loom-crons`
+### 7.2 Create `loom-crons` ✅ COMPLETED
 
 **Path:** `crates/loom-crons/`
+
+**Status:** Completed 2026-01-20
 
 **Structure:**
 ```
 loom-crons/
 ├── Cargo.toml
 └── src/
-    ├── lib.rs
-    ├── client.rs        # CronsClient
-    ├── checkin.rs       # Check-in helpers
-    ├── integration.rs   # loom-jobs integration
+    ├── lib.rs           # Public exports
+    ├── client.rs        # CronsClient builder and main API
     └── error.rs         # Error types
 ```
 
 **Implementation checklist:**
-- [ ] Create `Cargo.toml`:
-  ```toml
-  [dependencies]
-  loom-crons-core = { path = "../loom-crons-core" }
-  loom-common-http = { path = "../loom-common-http" }
-  loom-crash = { path = "../loom-crash", optional = true }
-  async-trait = "0.1"
-  tokio = { version = "1", features = ["sync", "time"] }
-  tracing = "0.1"
-
-  [features]
-  crash = ["loom-crash"]
-  ```
-- [ ] Implement `CronsClient` ([specs/crons-system.md#51-rust-sdk-loom-crons](specs/crons-system.md))
-- [ ] Implement `checkin_start()`, `checkin_ok()`, `checkin_error()`
-- [ ] Implement `with_monitor()` convenience wrapper
+- [x] Create `Cargo.toml` with dependencies ✅
+- [x] Implement `CronsClient` ([specs/crons-system.md#51-rust-sdk-loom-crons](specs/crons-system.md)) ✅
+- [x] Implement `checkin_start()`, `checkin_ok()`, `checkin_error()` ✅
+- [x] Implement `with_monitor()` convenience wrapper ✅
+- [x] Added 10 unit tests ✅
+- [x] Verified working in production ✅
 - [ ] Implement loom-jobs auto-instrumentation hook ([specs/crons-system.md#54-integration-with-loom-jobs](specs/crons-system.md))
 
 ---

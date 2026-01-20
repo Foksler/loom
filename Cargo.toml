@@ -65,6 +65,7 @@ members = [
 	"crates/loom-server-analytics",
 	"crates/loom-analytics",
 	"crates/loom-crons-core",
+	"crates/loom-crons",
 	"crates/loom-server-crons",
 	"crates/loom-crash-core",
 	"crates/loom-crash-symbolicate",

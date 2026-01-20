@@ -5082,6 +5082,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-crons"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "loom-common-http",
+ "loom-crash",
+ "loom-crons-core",
+ "proptest",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "loom-crons-core"
 version = "0.1.0"
 dependencies = [
