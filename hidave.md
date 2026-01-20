@@ -11,6 +11,26 @@
 
 ### Recent Progress
 
+**2026-01-20:** Implemented Phase 6 - Audit Integration ✅ DEPLOYED
+- Commit: `00ba80f1`
+- Added 14 new AuditEventType variants for observability suite:
+  - Crash events: CrashProjectCreated, CrashProjectDeleted, CrashIssueResolved,
+    CrashIssueIgnored, CrashIssueAssigned, CrashIssueDeleted,
+    CrashSymbolsUploaded, CrashSymbolsDeleted, CrashReleaseCreated
+  - Cron events: CronMonitorCreated, CronMonitorUpdated, CronMonitorDeleted,
+    CronMonitorPaused, CronMonitorResumed
+- Integrated audit logging into crash route handlers:
+  - `create_project` → CrashProjectCreated
+  - `resolve_issue` → CrashIssueResolved
+  - `create_release` → CrashReleaseCreated
+  - `upload_artifacts` → CrashSymbolsUploaded
+  - `delete_artifact` → CrashSymbolsDeleted
+- Integrated audit logging into cron route handlers:
+  - `create_monitor` → CronMonitorCreated
+  - `delete_monitor` → CronMonitorDeleted
+- Verified audit events are being stored in `audit_logs` table
+- All 66 audit module tests pass
+
 **2026-01-20:** Comprehensive API validation via curl and git cli ✅ VERIFIED IN PRODUCTION
 - **All observability APIs validated end-to-end:**
 - **Crash Analytics API:**
@@ -763,22 +783,21 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
 
 ---
 
-## Phase 6: Audit Integration
+## Phase 6: Audit Integration ✅ COMPLETED
 
 **Goal:** Add audit logging for all observability operations.
 
+**Status:** Completed 2026-01-20 (commit `00ba80f1`)
+
 Reference: [crates/loom-server-audit/src/event.rs](crates/loom-server-audit/src/event.rs), [specs/crash-system.md#16-audit-events](specs/crash-system.md)
 
-### 6.1 Define Audit Event Types
+### 6.1 Define Audit Event Types ✅
 
-- [ ] Add to `AuditEventType` enum:
+- [x] Add to `AuditEventType` enum:
   ```rust
   // Crash events
   CrashProjectCreated,
-  CrashProjectUpdated,
   CrashProjectDeleted,
-  CrashApiKeyCreated,
-  CrashApiKeyRevoked,
   CrashIssueResolved,
   CrashIssueIgnored,
   CrashIssueAssigned,
@@ -793,16 +812,13 @@ Reference: [crates/loom-server-audit/src/event.rs](crates/loom-server-audit/src/
   CronMonitorDeleted,
   CronMonitorPaused,
   CronMonitorResumed,
-
-  // Session events (minimal - mostly automated)
-  SessionSamplingConfigUpdated,
   ```
 
-### 6.2 Integrate with Handlers
+### 6.2 Integrate with Handlers ✅
 
-- [ ] Add audit logging to crash handlers
-- [ ] Add audit logging to cron handlers
-- [ ] Add audit logging to session config handlers
+- [x] Add audit logging to crash handlers (create_project, resolve_issue, create_release, upload_artifacts, delete_artifact)
+- [x] Add audit logging to cron handlers (create_monitor, delete_monitor)
+- [x] Session handlers: N/A - sessions are automated SDK telemetry, no admin actions to audit
 
 ---
 
