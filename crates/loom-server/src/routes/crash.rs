@@ -26,6 +26,7 @@ use loom_crash_core::{
 	Issue, IssueId, IssueLevel, IssueMetadata, IssuePriority, IssueStatus, OrgId, PersonId, Platform,
 	ProjectId, Release, ReleaseId, Stacktrace,
 };
+use loom_server_auth::middleware::CurrentUser;
 use loom_server_auth::types::OrgId as AuthOrgId;
 use loom_server_crash::{CrashRepository, CrashStreamEvent};
 
@@ -493,6 +494,430 @@ pub async fn capture_crash(
 		is_new_issue,
 		is_regression,
 	}))
+}
+
+// ============================================================================
+// Batch Capture Endpoint
+// ============================================================================
+
+/// Request body for batch crash capture endpoint.
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
+pub struct BatchCaptureRequest {
+	/// List of crash events to capture (max 100 per request)
+	pub events: Vec<CaptureRequest>,
+}
+
+/// Result for a single event in a batch capture.
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct BatchCaptureEventResult {
+	/// Index of the event in the request array
+	pub index: usize,
+	/// Whether the event was successfully captured
+	pub success: bool,
+	/// Event ID if successful
+	pub event_id: Option<String>,
+	/// Issue ID if successful
+	pub issue_id: Option<String>,
+	/// Short ID if successful
+	pub short_id: Option<String>,
+	/// Whether this created a new issue
+	pub is_new_issue: Option<bool>,
+	/// Whether this is a regression
+	pub is_regression: Option<bool>,
+	/// Error message if failed
+	pub error: Option<String>,
+}
+
+/// Response for batch crash capture endpoint.
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct BatchCaptureResponse {
+	/// Total number of events in the request
+	pub total: usize,
+	/// Number of successfully captured events
+	pub success_count: usize,
+	/// Number of failed events
+	pub error_count: usize,
+	/// Results for each event in the batch
+	pub results: Vec<BatchCaptureEventResult>,
+}
+
+/// POST /api/crash/batch - Capture multiple crash events in a single request
+#[utoipa::path(
+	post,
+	path = "/api/crash/batch",
+	request_body = BatchCaptureRequest,
+	responses(
+		(status = 200, description = "Batch capture results", body = BatchCaptureResponse),
+		(status = 400, description = "Invalid request", body = CrashErrorResponse),
+		(status = 500, description = "Internal error", body = CrashErrorResponse),
+	),
+	tag = "crash"
+)]
+#[instrument(skip(state, current_user, body), fields(event_count = body.events.len()))]
+pub async fn batch_capture_crash(
+	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
+	Json(body): Json<BatchCaptureRequest>,
+) -> Result<Json<BatchCaptureResponse>, (StatusCode, Json<CrashErrorResponse>)> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	// Validate batch size
+	const MAX_BATCH_SIZE: usize = 100;
+	if body.events.len() > MAX_BATCH_SIZE {
+		return Err((
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "batch_too_large".to_string(),
+				message: format!("Batch size exceeds maximum of {} events", MAX_BATCH_SIZE),
+			}),
+		));
+	}
+
+	if body.events.is_empty() {
+		return Ok(Json(BatchCaptureResponse {
+			total: 0,
+			success_count: 0,
+			error_count: 0,
+			results: vec![],
+		}));
+	}
+
+	let mut results = Vec::with_capacity(body.events.len());
+	let mut success_count = 0;
+	let mut error_count = 0;
+
+	// Process each event
+	for (index, event_request) in body.events.into_iter().enumerate() {
+		let result =
+			process_single_capture(&state, &current_user, &locale, event_request, index).await;
+
+		match result {
+			Ok(capture_result) => {
+				success_count += 1;
+				results.push(BatchCaptureEventResult {
+					index,
+					success: true,
+					event_id: Some(capture_result.event_id),
+					issue_id: Some(capture_result.issue_id),
+					short_id: Some(capture_result.short_id),
+					is_new_issue: Some(capture_result.is_new_issue),
+					is_regression: Some(capture_result.is_regression),
+					error: None,
+				});
+			}
+			Err(error_msg) => {
+				error_count += 1;
+				results.push(BatchCaptureEventResult {
+					index,
+					success: false,
+					event_id: None,
+					issue_id: None,
+					short_id: None,
+					is_new_issue: None,
+					is_regression: None,
+					error: Some(error_msg),
+				});
+			}
+		}
+	}
+
+	info!(
+		total = results.len(),
+		success_count,
+		error_count,
+		"Batch crash capture completed"
+	);
+
+	Ok(Json(BatchCaptureResponse {
+		total: results.len(),
+		success_count,
+		error_count,
+		results,
+	}))
+}
+
+/// Internal helper to process a single capture request within a batch.
+/// Returns Ok(CaptureResponse) on success, Err(String) with error message on failure.
+async fn process_single_capture(
+	state: &AppState,
+	current_user: &CurrentUser,
+	locale: &str,
+	body: CaptureRequest,
+	_index: usize,
+) -> Result<CaptureResponse, String> {
+	// Parse project ID
+	let project_id: ProjectId = body
+		.project_id
+		.parse()
+		.map_err(|_| "Invalid project ID".to_string())?;
+
+	// Get project
+	let project = state
+		.crash_repo
+		.get_project_by_id(project_id)
+		.await
+		.map_err(|e| format!("Failed to get project: {}", e))?
+		.ok_or_else(|| "Project not found".to_string())?;
+
+	// Verify org membership
+	let auth_org_id = AuthOrgId::from(project.org_id.0);
+	match state
+		.org_repo
+		.get_membership(&auth_org_id, &current_user.user.id)
+		.await
+	{
+		Ok(Some(_)) => {}
+		Ok(None) => return Err(t(locale, "server.api.org.not_a_member").to_string()),
+		Err(e) => return Err(format!("Failed to check org membership: {}", e)),
+	}
+
+	// Convert capture request to CrashEvent
+	let platform = body
+		.platform
+		.as_deref()
+		.unwrap_or("javascript")
+		.parse()
+		.unwrap_or(Platform::JavaScript);
+
+	let stacktrace = Stacktrace {
+		frames: body
+			.stacktrace
+			.frames
+			.into_iter()
+			.map(|f| Frame {
+				function: f.function,
+				module: f.module,
+				filename: f.filename,
+				abs_path: f.abs_path,
+				lineno: f.lineno,
+				colno: f.colno,
+				in_app: f.in_app,
+				..Default::default()
+			})
+			.collect(),
+	};
+
+	let breadcrumbs: Vec<Breadcrumb> = body
+		.breadcrumbs
+		.into_iter()
+		.map(|b| Breadcrumb {
+			timestamp: b
+				.timestamp
+				.and_then(|s| chrono::DateTime::parse_from_rfc3339(&s).ok())
+				.map(|dt| dt.with_timezone(&Utc))
+				.unwrap_or_else(Utc::now),
+			category: b.category.unwrap_or_default(),
+			message: b.message,
+			level: b
+				.level
+				.and_then(|l| l.parse().ok())
+				.unwrap_or(loom_crash_core::BreadcrumbLevel::Info),
+			data: b.data,
+		})
+		.collect();
+
+	let timestamp = body
+		.timestamp
+		.and_then(|s| chrono::DateTime::parse_from_rfc3339(&s).ok())
+		.map(|dt| dt.with_timezone(&Utc))
+		.unwrap_or_else(Utc::now);
+
+	let person_id = body.person_id.and_then(|s| s.parse().ok()).map(PersonId);
+
+	let mut event = CrashEvent {
+		id: CrashEventId::new(),
+		org_id: project.org_id,
+		project_id,
+		issue_id: None,
+		person_id,
+		distinct_id: body
+			.distinct_id
+			.unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
+		exception_type: body.exception_type,
+		exception_value: body.exception_value,
+		stacktrace,
+		raw_stacktrace: None,
+		release: body.release,
+		dist: body.dist,
+		environment: body.environment.unwrap_or_else(|| "production".to_string()),
+		platform,
+		runtime: None,
+		server_name: body.server_name,
+		tags: body.tags,
+		extra: body.extra,
+		user_context: None,
+		device_context: None,
+		browser_context: None,
+		os_context: None,
+		active_flags: body.active_flags,
+		request: None,
+		breadcrumbs,
+		timestamp,
+		received_at: Utc::now(),
+	};
+
+	// Compute fingerprint
+	let fingerprint = compute_fingerprint(&event);
+
+	// Find or create issue
+	let (issue, is_new_issue, is_regression) = match state
+		.crash_repo
+		.get_issue_by_fingerprint(project_id, &fingerprint)
+		.await
+		.map_err(|e| format!("Failed to find issue: {}", e))?
+	{
+		Some(mut existing_issue) => {
+			let is_regression = existing_issue.status == IssueStatus::Resolved;
+
+			// Update issue
+			existing_issue.event_count += 1;
+			existing_issue.last_seen = event.timestamp;
+
+			if is_regression {
+				existing_issue.status = IssueStatus::Regressed;
+				existing_issue.times_regressed += 1;
+				existing_issue.last_regressed_at = Some(Utc::now());
+				existing_issue.regressed_in_release = event.release.clone();
+			}
+
+			state
+				.crash_repo
+				.update_issue(&existing_issue)
+				.await
+				.map_err(|e| format!("Failed to update issue: {}", e))?;
+
+			// Track person if present
+			if let Some(pid) = event.person_id {
+				let _ = state
+					.crash_repo
+					.add_issue_person(existing_issue.id, pid)
+					.await;
+			}
+
+			// Broadcast regression if needed
+			if is_regression {
+				state
+					.crash_broadcaster
+					.broadcast_regression(project_id, &existing_issue)
+					.await;
+			}
+
+			(existing_issue, false, is_regression)
+		}
+		None => {
+			// Create new issue
+			let short_id = state
+				.crash_repo
+				.get_next_short_id(project_id)
+				.await
+				.map_err(|e| format!("Failed to get short ID: {}", e))?;
+
+			let culprit = fingerprint::find_culprit(&event);
+			let title = format!(
+				"{}: {}",
+				event.exception_type,
+				fingerprint::truncate(&event.exception_value, 100)
+			);
+
+			let issue = Issue {
+				id: IssueId::new(),
+				org_id: project.org_id,
+				project_id,
+				short_id,
+				fingerprint,
+				title,
+				culprit,
+				metadata: IssueMetadata {
+					exception_type: event.exception_type.clone(),
+					exception_value: event.exception_value.clone(),
+					filename: event
+						.stacktrace
+						.frames
+						.iter()
+						.find(|f| f.in_app)
+						.and_then(|f| f.filename.clone()),
+					function: event
+						.stacktrace
+						.frames
+						.iter()
+						.find(|f| f.in_app)
+						.and_then(|f| f.function.clone()),
+				},
+				status: IssueStatus::Unresolved,
+				level: IssueLevel::Error,
+				priority: IssuePriority::Medium,
+				event_count: 1,
+				user_count: if event.person_id.is_some() { 1 } else { 0 },
+				first_seen: event.timestamp,
+				last_seen: event.timestamp,
+				resolved_at: None,
+				resolved_by: None,
+				resolved_in_release: None,
+				times_regressed: 0,
+				last_regressed_at: None,
+				regressed_in_release: None,
+				assigned_to: None,
+				created_at: Utc::now(),
+				updated_at: Utc::now(),
+			};
+
+			state
+				.crash_repo
+				.create_issue(&issue)
+				.await
+				.map_err(|e| format!("Failed to create issue: {}", e))?;
+
+			// Track person if present
+			if let Some(pid) = event.person_id {
+				let _ = state.crash_repo.add_issue_person(issue.id, pid).await;
+			}
+
+			(issue, true, false)
+		}
+	};
+
+	// Set issue_id on event and save
+	event.issue_id = Some(issue.id);
+	state
+		.crash_repo
+		.create_event(&event)
+		.await
+		.map_err(|e| format!("Failed to create event: {}", e))?;
+
+	// Track release if present
+	if let Some(ref release_version) = event.release {
+		// Get or create the release
+		if let Err(e) = state
+			.crash_repo
+			.get_or_create_release(project_id, project.org_id, release_version)
+			.await
+		{
+			tracing::warn!(error = %e, release = %release_version, "Failed to get/create release");
+		}
+
+		// Update release crash count
+		if let Err(e) = state
+			.crash_repo
+			.increment_release_crash_count(project_id, release_version, is_new_issue, is_regression)
+			.await
+		{
+			tracing::warn!(error = %e, release = %release_version, "Failed to increment release crash count");
+		}
+	}
+
+	// Broadcast new crash event
+	state
+		.crash_broadcaster
+		.broadcast_new_crash(project_id, event.id, &issue, is_new_issue)
+		.await;
+
+	Ok(CaptureResponse {
+		event_id: event.id.to_string(),
+		issue_id: issue.id.to_string(),
+		short_id: issue.short_id,
+		is_new_issue,
+		is_regression,
+	})
 }
 
 // ============================================================================

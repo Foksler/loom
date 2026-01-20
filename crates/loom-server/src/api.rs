@@ -1251,6 +1251,7 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/crash/capture",
 			post(routes::crash::capture_crash),
 		)
+		.route("/api/crash/batch", post(routes::crash::batch_capture_crash))
 		.route(
 			"/api/crash/projects",
 			get(routes::crash::list_projects).post(routes::crash::create_project),
