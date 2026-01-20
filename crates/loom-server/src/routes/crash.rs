@@ -589,8 +589,7 @@ pub async fn batch_capture_crash(
 
 	// Process each event
 	for (index, event_request) in body.events.into_iter().enumerate() {
-		let result =
-			process_single_capture(&state, &current_user, &locale, event_request, index).await;
+		let result = process_single_capture(&state, &current_user, &locale, event_request, index).await;
 
 		match result {
 			Ok(capture_result) => {
@@ -624,9 +623,7 @@ pub async fn batch_capture_crash(
 
 	info!(
 		total = results.len(),
-		success_count,
-		error_count,
-		"Batch crash capture completed"
+		success_count, error_count, "Batch crash capture completed"
 	);
 
 	Ok(Json(BatchCaptureResponse {

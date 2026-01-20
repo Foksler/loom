@@ -242,6 +242,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		tracing::info!("Registered crash event cleanup background job");
 	}
 
+	// Register symbol artifact cleanup job
+	{
+		use loom_server::jobs::SymbolArtifactCleanupJob;
+
+		// Run daily to delete symbol artifacts not accessed in 90 days
+		scheduler.register_periodic(
+			Arc::new(SymbolArtifactCleanupJob::new(Arc::clone(&state.crash_repo))),
+			Duration::from_secs(24 * 60 * 60), // 24 hours
+		);
+
+		tracing::info!("Registered symbol artifact cleanup background job");
+	}
+
 	let scheduler = Arc::new(scheduler);
 
 	// Update state with scheduler and repository

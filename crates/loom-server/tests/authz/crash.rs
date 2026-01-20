@@ -1027,7 +1027,10 @@ async fn batch_capture_requires_org_membership() {
 
 	// Verify the event failed due to membership
 	assert_eq!(result["error_count"], 1, "Should have one failed event");
-	assert_eq!(result["success_count"], 0, "Should have no successful events");
+	assert_eq!(
+		result["success_count"], 0,
+		"Should have no successful events"
+	);
 }
 
 #[tokio::test]

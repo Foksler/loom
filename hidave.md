@@ -11,6 +11,16 @@
 
 ### Recent Progress
 
+**2026-01-20:** Added symbol artifact cleanup background job ✅ DEPLOYED
+- Created `SymbolArtifactCleanupJob` in `loom-server/src/jobs/symbol_artifact_cleanup.rs`
+- Runs daily to delete symbol artifacts not accessed within 90 days
+- Uses existing `delete_old_artifacts()` method from `CrashRepository`
+- Deletes artifacts where:
+  - `last_accessed_at` is older than cutoff, OR
+  - `last_accessed_at` is null AND `uploaded_at` is older than cutoff
+- Follows same pattern as `CrashEventCleanupJob`
+- This completes all Phase 12.1 background jobs for the observability suite
+
 **2026-01-20:** Added symbol artifact upload and management endpoints ✅ DEPLOYED
 - Implemented complete artifact management for source map uploads:
   - `POST /api/crash/projects/{id}/artifacts` — Upload artifacts (multipart)
@@ -1059,8 +1069,9 @@ Reference: [crates/loom-jobs/](crates/loom-jobs/)
   - Reference: [specs/sessions-system.md#72-cleanup-job](specs/sessions-system.md)
   - Implemented in `loom-server/src/jobs/app_session_cleanup.rs`
 
-- [ ] **Symbol artifact cleanup** — Runs daily
+- [x] **Symbol artifact cleanup** — Runs daily (90 day retention) ✅
   - Reference: [specs/crash-system.md#13-retention-policy](specs/crash-system.md)
+  - Implemented in `loom-server/src/jobs/symbol_artifact_cleanup.rs`
 
 - [x] **Crash event cleanup** — Runs daily (90 day retention) ✅
   - Implemented in `loom-server/src/jobs/crash_event_cleanup.rs`
