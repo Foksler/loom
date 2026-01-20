@@ -11,6 +11,27 @@
 
 ### Recent Progress
 
+**2026-01-20:** Added session tracking to loom-crash Rust SDK ✅
+- Added `SessionTracker` module to `loom-crash` crate for release health metrics
+- Session tracking features:
+  - Auto-starts session when client is built (via `build_async()` or `start_session()`)
+  - Auto-ends session when client is shut down
+  - Tracks error counts from `capture_exception()` calls
+  - Tracks crash counts from panic hooks
+  - Deterministic sampling based on session ID hash
+  - Crashed sessions always sent regardless of sample rate
+- New builder options:
+  - `with_session_tracking(bool)` - enable/disable session tracking
+  - `session_sample_rate(f64)` - control sampling rate (0.0-1.0)
+  - `session_distinct_id(String)` - set user/device identifier
+- Session status determined automatically:
+  - `exited` - normal shutdown
+  - `errored` - had handled errors
+  - `crashed` - had unhandled errors/panics
+- Verified via curl: session start/end/listing all working in production
+- 20 unit tests pass (including 3 new session tests)
+- This completes Phase 7.1 session tracking integration
+
 **2026-01-20:** Implemented Phase 6 - Audit Integration ✅ DEPLOYED
 - Commit: `00ba80f1`
 - Added 14 new AuditEventType variants for observability suite:
@@ -858,7 +879,7 @@ loom-crash/
 - [x] Implement user context management ✅
 - [x] Added 16 unit tests ✅
 - [x] Verified working in production ✅
-- [ ] Implement session tracking integration ([specs/sessions-system.md#52-rust-sdk-session-tracking](specs/sessions-system.md))
+- [x] Implement session tracking integration ([specs/sessions-system.md#52-rust-sdk-session-tracking](specs/sessions-system.md)) ✅ (2026-01-20)
 - [ ] Implement analytics/flags integration if features enabled
 
 ### 7.2 Create `loom-crons` ✅ COMPLETED

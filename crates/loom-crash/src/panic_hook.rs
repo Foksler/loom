@@ -31,6 +31,9 @@ pub fn install_panic_hook(client: Arc<CrashClientInner>) {
 
 /// Report a panic to the crash analytics server.
 fn report_panic(client: &CrashClientInner, info: &PanicHookInfo<'_>, backtrace: &Backtrace) {
+	// Record crash in session tracker (for release health metrics)
+	client.record_crash_sync();
+
 	// Extract panic message
 	let message = extract_panic_message(info);
 

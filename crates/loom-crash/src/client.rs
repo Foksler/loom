@@ -19,6 +19,7 @@ use tracing::{debug, error, info};
 use crate::backtrace::capture_backtrace;
 use crate::error::{CrashSdkError, Result};
 use crate::panic_hook::install_panic_hook;
+use crate::session::{SessionConfig, SessionTracker};
 
 /// SDK version for identification.
 const SDK_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -58,6 +59,7 @@ pub struct CrashClientBuilder {
 	environment: Option<String>,
 	server_name: Option<String>,
 	config: ClientConfig,
+	session_config: SessionConfig,
 }
 
 impl CrashClientBuilder {
@@ -71,6 +73,7 @@ impl CrashClientBuilder {
 			environment: None,
 			server_name: None,
 			config: ClientConfig::default(),
+			session_config: SessionConfig::default(),
 		}
 	}
 
@@ -136,7 +139,60 @@ impl CrashClientBuilder {
 		self
 	}
 
+	/// Enables or disables automatic session tracking.
+	///
+	/// When enabled (default), the SDK will automatically track user engagement
+	/// sessions for release health metrics. Sessions are started when the client
+	/// is built and ended when the client is shut down.
+	///
+	/// # Example
+	///
+	/// ```ignore
+	/// let client = CrashClient::builder()
+	///     .auth_token("token")
+	///     .base_url("https://loom.example.com")
+	///     .project_id("proj_xxx")
+	///     .with_session_tracking(true)  // Default: true
+	///     .build()?;
+	/// ```
+	pub fn with_session_tracking(mut self, enabled: bool) -> Self {
+		self.session_config.enabled = enabled;
+		self
+	}
+
+	/// Sets the session sample rate (0.0-1.0).
+	///
+	/// This controls what percentage of sessions are stored. Crashed sessions
+	/// are always stored regardless of this setting.
+	///
+	/// # Example
+	///
+	/// ```ignore
+	/// let client = CrashClient::builder()
+	///     .auth_token("token")
+	///     .base_url("https://loom.example.com")
+	///     .project_id("proj_xxx")
+	///     .session_sample_rate(0.5)  // Store 50% of sessions
+	///     .build()?;
+	/// ```
+	pub fn session_sample_rate(mut self, rate: f64) -> Self {
+		self.session_config.sample_rate = rate.clamp(0.0, 1.0);
+		self
+	}
+
+	/// Sets the distinct ID for session tracking.
+	///
+	/// This is used to identify the user/device across sessions. If not set,
+	/// a random UUID will be generated.
+	pub fn session_distinct_id(mut self, distinct_id: impl Into<String>) -> Self {
+		self.session_config.distinct_id = distinct_id.into();
+		self
+	}
+
 	/// Builds the CrashClient.
+	///
+	/// Note: To start automatic session tracking, call `start_session()` after building,
+	/// or use `build_async()` which does both.
 	pub fn build(self) -> Result<CrashClient> {
 		let auth_token = self.auth_token.ok_or(CrashSdkError::InvalidApiKey)?;
 		let base_url = self.base_url.ok_or(CrashSdkError::InvalidBaseUrl)?;
@@ -150,12 +206,17 @@ impl CrashClientBuilder {
 			.build()
 			.map_err(CrashSdkError::RequestFailed)?;
 
+		// Create session tracker
+		let session_tracker = SessionTracker::new(self.session_config);
+
+		let environment = self.environment.unwrap_or_else(|| "production".to_string());
+
 		let inner = Arc::new(CrashClientInner {
 			auth_token,
 			base_url: base_url.clone(),
 			project_id,
 			release: self.release,
-			environment: self.environment.unwrap_or_else(|| "production".to_string()),
+			environment,
 			server_name: self.server_name,
 			http_client,
 			config: self.config,
@@ -164,11 +225,34 @@ impl CrashClientBuilder {
 			user_context: RwLock::new(None),
 			breadcrumbs: RwLock::new(Vec::new()),
 			closed: AtomicBool::new(false),
+			session_tracker,
 		});
 
 		info!(base_url = %base_url, "Crash client initialized");
 
 		Ok(CrashClient { inner })
+	}
+
+	/// Builds the CrashClient and starts session tracking.
+	///
+	/// This is the recommended way to create a crash client when you want
+	/// automatic session tracking for release health metrics.
+	///
+	/// # Example
+	///
+	/// ```ignore
+	/// let client = CrashClient::builder()
+	///     .auth_token("token")
+	///     .base_url("https://loom.example.com")
+	///     .project_id("proj_xxx")
+	///     .release(env!("CARGO_PKG_VERSION"))
+	///     .build_async()
+	///     .await?;
+	/// ```
+	pub async fn build_async(self) -> Result<CrashClient> {
+		let client = self.build()?;
+		client.start_session().await?;
+		Ok(client)
 	}
 }
 
@@ -193,6 +277,7 @@ pub struct CrashClientInner {
 	user_context: RwLock<Option<UserContext>>,
 	breadcrumbs: RwLock<Vec<Breadcrumb>>,
 	closed: AtomicBool,
+	session_tracker: SessionTracker,
 }
 
 impl CrashClientInner {
@@ -263,6 +348,11 @@ impl CrashClientInner {
 			Err(CrashSdkError::ServerError { status, message })
 		}
 	}
+
+	/// Record a crash in the session tracker (for panic hooks).
+	pub fn record_crash_sync(&self) {
+		self.session_tracker.record_crash_sync();
+	}
 }
 
 /// Client for capturing crash events and reporting them to Loom.
@@ -327,6 +417,52 @@ impl CrashClient {
 		info!("Panic hook installed");
 	}
 
+	/// Starts session tracking for release health metrics.
+	///
+	/// This should be called after building the client if you want automatic
+	/// session tracking. Sessions are automatically ended when `shutdown()` is called.
+	///
+	/// # Example
+	///
+	/// ```ignore
+	/// let client = CrashClient::builder()
+	///     .auth_token("token")
+	///     .base_url("https://loom.example.com")
+	///     .project_id("proj_xxx")
+	///     .build()?;
+	///
+	/// // Start session tracking
+	/// client.start_session().await?;
+	///
+	/// // ... application code ...
+	///
+	/// // Session automatically ends here
+	/// client.shutdown().await?;
+	/// ```
+	pub async fn start_session(&self) -> Result<()> {
+		self.inner
+			.session_tracker
+			.start(
+				&self.inner.project_id,
+				&self.inner.base_url,
+				&self.inner.auth_token,
+				&self.inner.environment,
+				self.inner.release.as_deref(),
+				&self.inner.http_client,
+			)
+			.await
+	}
+
+	/// Returns the current session ID, if session tracking is active.
+	pub fn session_id(&self) -> Option<String> {
+		self.inner.session_tracker.session_id()
+	}
+
+	/// Returns whether session tracking is enabled.
+	pub fn is_session_tracking_enabled(&self) -> bool {
+		self.inner.session_tracker.is_enabled()
+	}
+
 	/// Captures an error and sends it to the crash analytics server.
 	pub async fn capture_error(&self, error: &dyn std::error::Error) -> Result<CaptureResponse> {
 		self.capture_exception(
@@ -338,6 +474,8 @@ impl CrashClient {
 	}
 
 	/// Captures an exception with custom type and message.
+	///
+	/// This method also increments the session error count for release health tracking.
 	pub async fn capture_exception(
 		&self,
 		exception_type: &str,
@@ -345,6 +483,9 @@ impl CrashClient {
 		stacktrace: Stacktrace,
 	) -> Result<CaptureResponse> {
 		self.check_closed()?;
+
+		// Record error in session tracker
+		self.inner.session_tracker.record_error().await;
 
 		// Build tags with SDK info
 		let mut tags = self.inner.tags.read().await.clone();
@@ -472,10 +613,18 @@ impl CrashClient {
 		self.inner.breadcrumbs.write().await.clear();
 	}
 
-	/// Shuts down the client.
+	/// Shuts down the client and ends the current session.
+	///
+	/// This will send the session end request to the server if session tracking
+	/// is enabled. The session status will be determined based on error/crash counts.
 	pub async fn shutdown(&self) -> Result<()> {
 		if self.inner.closed.swap(true, Ordering::SeqCst) {
 			return Ok(());
+		}
+
+		// End session tracking
+		if let Err(e) = self.inner.session_tracker.end().await {
+			error!(error = %e, "Failed to end session during shutdown");
 		}
 
 		info!("Crash client shutdown");

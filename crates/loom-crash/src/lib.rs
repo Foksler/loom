@@ -84,9 +84,11 @@ mod backtrace;
 mod client;
 mod error;
 mod panic_hook;
+mod session;
 
 pub use client::{CaptureResponse, ClientConfig, CrashClient, CrashClientBuilder};
 pub use error::{CrashSdkError, Result};
+pub use session::SessionConfig;
 
 // Re-export core types for convenience
 pub use loom_crash_core::{
