@@ -11,6 +11,27 @@
 
 ### Recent Progress
 
+**2026-01-20:** Implemented API key authentication for Crash SDK ✅ DEPLOYED
+- Created `crates/loom-server-crash/src/api_key.rs` with Argon2 hashing:
+  - `generate_api_key()` with configurable prefix
+  - `hash_api_key()` using Argon2id
+  - `verify_api_key()` for constant-time verification
+  - Key prefixes: `loom_crash_capture_` (SDK capture), `loom_crash_admin_` (management)
+- Added API key management endpoints:
+  - `POST /api/crash/projects/{id}/api-keys` — Create API key (returns raw key once)
+  - `GET /api/crash/projects/{id}/api-keys` — List API keys (hashes not exposed)
+  - `DELETE /api/crash/projects/{id}/api-keys/{key_id}` — Revoke API key
+- Added SDK capture endpoint with API key authentication:
+  - `POST /api/crash/capture/sdk` — Capture with `X-Crash-Api-Key` header
+  - Supports capture-type keys only (not admin keys)
+  - Updates `last_used_at` on successful capture
+- Added 20 authorization tests in `tests/authz/crash.rs`:
+  - API key CRUD: auth required, membership required, success
+  - SDK capture: valid key, invalid key, revoked key, wrong project key
+- Added `post_with_header()` helper to `tests/authz/support.rs`
+- Verified all endpoints working in production via curl
+- This completes Phase 4.1 "Implement API key hashing with Argon2"
+
 **2026-01-20:** Added proptest tests to loom-sessions-core ✅
 - Added proptest tests for ID validation in `loom-sessions-core`:
   - `session_id_roundtrip` - property-based test for SessionId serialization
@@ -675,7 +696,7 @@ loom-server-crash/
 - [x] Implement `SqliteCrashRepository` (basic operations) ✅
 - [x] Implement fingerprinting on ingest ([specs/crash-system.md#41-default-fingerprinting-algorithm](specs/crash-system.md)) ✅
 - [x] Implement regression detection ([specs/crash-system.md#52-regression-detection](specs/crash-system.md)) ✅ (verified working 2026-01-20)
-- [ ] Implement API key hashing with Argon2 (pattern: [crates/loom-server-analytics/src/api_key.rs](crates/loom-server-analytics/src/api_key.rs))
+- [x] Implement API key hashing with Argon2 (pattern: [crates/loom-server-analytics/src/api_key.rs](crates/loom-server-analytics/src/api_key.rs)) ✅
 - [x] Implement SSE broadcaster for events ✅
 
 ### 4.2 Create `loom-server-crons` ✅ COMPLETED (Repository Layer)
