@@ -11,6 +11,29 @@
 
 ### Recent Progress
 
+**2026-01-20:** Verified observability suite endpoints via curl ✅ VERIFIED IN PRODUCTION
+- Crash analytics:
+  - Capture crash events: `POST /api/crash/capture` ✅
+  - Issue listing: `GET /api/crash/projects/{id}/issues` ✅
+  - Issue detail: `GET /api/crash/projects/{id}/issues/{id}` ✅
+  - Issue resolution: `POST /api/crash/projects/{id}/issues/{id}/resolve` ✅
+  - **Regression detection**: Resolved issue correctly transitions to "regressed" status when new crash captured ✅
+    - `times_regressed` incremented
+    - `regressed_in_release` populated with new release version
+    - `last_regressed_at` timestamp set
+  - Release tracking: `GET /api/crash/projects/{id}/releases` ✅
+- Session analytics:
+  - Start session: `POST /api/sessions/start` ✅ (returns session_id, sampled status)
+  - End session: `POST /api/sessions/end` ✅ (requires project_id, session_id, status)
+  - List sessions: `GET /api/app-sessions` ✅
+  - Release health: `GET /api/app-sessions/releases` ✅ (returns crash-free rate, adoption stage)
+- Crons monitoring:
+  - List monitors: `GET /api/crons/monitors` ✅
+  - Monitor detail: `GET /api/crons/monitors/{slug}` ✅
+  - Ping endpoint: `GET /ping/{ping_key}` ✅ (updates health from "missed" to "healthy")
+- Note: loom-cli is for AI assistant features; observability accessed via HTTP API
+- Commit: `9ba65f95` (formatting cleanup)
+
 **2026-01-20:** Added crash event cleanup background job ✅ DEPLOYED
 - Created `CrashEventCleanupJob` in `loom-server/src/jobs/crash_event_cleanup.rs`
 - Runs daily to delete crash events older than 90 days (configurable)
