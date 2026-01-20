@@ -11,6 +11,19 @@
 
 ### Recent Progress
 
+**2026-01-20:** Added batch crash capture endpoint ✅ DEPLOYED
+- Implemented `POST /api/crash/batch` for bulk crash event ingestion
+- Accepts up to 100 events per request (configurable limit)
+- Returns per-event success/failure status with event_id, issue_id, short_id
+- Handles mixed results gracefully (some events succeed, others fail)
+- Added 7 authorization tests in `tests/authz/crash.rs`:
+  - Auth required, org membership required, success with multiple events
+  - Empty events returns empty result
+  - Batch size limit enforced (>100 rejected)
+  - Mixed success/failure handling
+- Verified working locally with dev mode server
+- Commit: `6b22a720`
+
 **2026-01-20:** Verified observability suite endpoints via curl ✅ VERIFIED IN PRODUCTION
 - Crash analytics:
   - Capture crash events: `POST /api/crash/capture` ✅
@@ -467,7 +480,7 @@ loom-server-crash/
   - `create_release()`, `get_release()`, `list_releases()` ✅
 - [x] Implement `SqliteCrashRepository` (basic operations) ✅
 - [x] Implement fingerprinting on ingest ([specs/crash-system.md#41-default-fingerprinting-algorithm](specs/crash-system.md)) ✅
-- [ ] Implement regression detection ([specs/crash-system.md#52-regression-detection](specs/crash-system.md))
+- [x] Implement regression detection ([specs/crash-system.md#52-regression-detection](specs/crash-system.md)) ✅ (verified working 2026-01-20)
 - [ ] Implement API key hashing with Argon2 (pattern: [crates/loom-server-analytics/src/api_key.rs](crates/loom-server-analytics/src/api_key.rs))
 - [x] Implement SSE broadcaster for events ✅
 
@@ -551,7 +564,7 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
   - `GET /api/crash/projects/{id}/releases` — List releases ✅
   - `POST /api/crash/projects/{id}/releases` — Create release ✅
   - `GET /api/crash/projects/{id}/releases/{version}` — Get release detail ✅
-  - `POST /api/crash/batch` — Batch ingest (TODO)
+  - `POST /api/crash/batch` — Batch ingest ✅
   - `POST /api/crash/projects/{id}/artifacts` — Upload symbols (multipart) (TODO)
   - `GET /api/crash/projects/{id}/stream` — SSE stream ✅
   - Reference: [specs/crash-system.md#9-api-endpoints](specs/crash-system.md)
@@ -1062,7 +1075,7 @@ Reference: [crates/loom-jobs/](crates/loom-jobs/)
 
 Reference pattern: [crates/loom-server/tests/authz_*_tests.rs](crates/loom-server/tests/)
 
-- [x] `tests/authz/crash.rs` — Crash endpoint authorization ✅ (32 tests: project CRUD, capture, issues list, issue detail, issue events, releases CRUD)
+- [x] `tests/authz/crash.rs` — Crash endpoint authorization ✅ (38 tests: project CRUD, capture, batch capture, issues list, issue detail, issue events, releases CRUD)
 - [x] `tests/authz/crons.rs` — Cron endpoint authorization ✅ (29 tests including stream endpoint)
 - [x] `tests/authz/sessions.rs` — Session endpoint authorization ✅ (19 tests: session start/end, list, release health)
 
