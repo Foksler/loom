@@ -2113,6 +2113,51 @@ async fn resolve_issue_returns_404_for_nonexistent_issue() {
 	);
 }
 
+#[tokio::test]
+async fn resolve_issue_stores_resolved_in_release() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "resolve-release-test").await;
+	let issue_id = create_test_issue(&app, &project_id).await;
+
+	// Resolve the issue with a release version
+	let response = app
+		.post(
+			&format!(
+				"/api/crash/projects/{}/issues/{}/resolve",
+				project_id, issue_id
+			),
+			Some(&app.fixtures.org_a.member),
+			json!({
+				"resolved_in_release": "v1.2.3"
+			}),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::OK,
+		"Resolving issue with release version should succeed"
+	);
+
+	// Verify the issue detail shows the resolved_in_release
+	let detail_response = app
+		.get(
+			&format!(
+				"/api/crash/projects/{}/issues/{}",
+				project_id, issue_id
+			),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(detail_response.status(), StatusCode::OK);
+
+	let (_, body) = detail_response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let result: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+	assert_eq!(result["status"], "resolved");
+	assert_eq!(result["resolved_in_release"], "v1.2.3");
+}
+
 // ============================================================================
 // Unresolve Issue Tests
 // ============================================================================

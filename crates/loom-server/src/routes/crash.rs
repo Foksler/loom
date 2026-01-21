@@ -1735,6 +1735,13 @@ pub async fn list_issues(
 	Ok(Json(issues.into_iter().map(IssueResponse::from).collect()))
 }
 
+/// Request body for resolving an issue.
+#[derive(Debug, Deserialize, Default, utoipa::ToSchema)]
+pub struct ResolveRequest {
+	/// Optional release version this issue is resolved in.
+	pub resolved_in_release: Option<String>,
+}
+
 /// POST /api/crash/projects/{project_id}/issues/{issue_id}/resolve - Resolve an issue
 #[utoipa::path(
 	post,
@@ -1743,6 +1750,7 @@ pub async fn list_issues(
 		("project_id" = String, Path, description = "Project ID"),
 		("issue_id" = String, Path, description = "Issue ID"),
 	),
+	request_body(content = ResolveRequest, content_type = "application/json", description = "Resolve request with optional release version"),
 	responses(
 		(status = 200, description = "Issue resolved", body = IssueResponse),
 		(status = 403, description = "Forbidden", body = CrashErrorResponse),
@@ -1756,6 +1764,7 @@ pub async fn resolve_issue(
 	State(state): State<AppState>,
 	RequireAuth(current_user): RequireAuth,
 	Path((project_id_str, issue_id_str)): Path<(String, String)>,
+	request: Option<Json<ResolveRequest>>,
 ) -> Result<Json<IssueResponse>, (StatusCode, Json<CrashErrorResponse>)> {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
@@ -1843,6 +1852,9 @@ pub async fn resolve_issue(
 	issue.status = IssueStatus::Resolved;
 	issue.resolved_at = Some(Utc::now());
 	issue.resolved_by = Some(loom_crash_core::UserId(current_user.user.id.into_inner()));
+	issue.resolved_in_release = request
+		.as_ref()
+		.and_then(|r| r.resolved_in_release.clone());
 
 	state.crash_repo.update_issue(&issue).await.map_err(|e| {
 		tracing::error!(error = %e, "Failed to update issue");
@@ -1870,6 +1882,7 @@ pub async fn resolve_issue(
 				"project_id": project_id.to_string(),
 				"short_id": issue.short_id.clone(),
 				"title": issue.title.clone(),
+				"resolved_in_release": issue.resolved_in_release.clone(),
 			}))
 			.build(),
 	);
