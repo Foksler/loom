@@ -18,6 +18,7 @@
 - Added `list_events_for_project` method to CrashRepository trait and implementation
 - Added 11 new authorization tests covering both new endpoints
 - All endpoints verified working in production via curl
+- Commit: `d894d634`
 
 **2026-01-21:** Added project and issue management endpoints ✅ DEPLOYED
 - Implemented remaining endpoints from crash-system spec Section 9.4 and 9.7:
