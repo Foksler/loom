@@ -11,6 +11,21 @@
 
 ### Recent Progress
 
+**2026-01-21:** Fixed resolve_issue to accept resolved_in_release ✅ DEPLOYED
+- Fixed bug where resolve_issue endpoint ignored the `resolved_in_release` field
+- Added `ResolveRequest` struct with optional `resolved_in_release` field
+- Updated resolve_issue handler to accept and store the field in the issue
+- Added `resolved_in_release` to audit log details
+- Added authorization test `resolve_issue_stores_resolved_in_release`
+- Verified working in production via curl:
+  ```bash
+  curl -X POST -H "Content-Type: application/json" \
+    -d '{"resolved_in_release": "v2.0.0"}' \
+    "/api/crash/projects/{id}/issues/{id}/resolve"
+  ```
+- Now 115 authorization tests for crash endpoints (was 114)
+- Commit: `046e8032`
+
 **2026-01-21:** Added event query endpoints ✅ DEPLOYED
 - Implemented event query endpoints from crash-system spec Section 9.5:
   - `GET /api/crash/projects/{id}/events` — List all events for project (with pagination)
