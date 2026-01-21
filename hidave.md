@@ -11,6 +11,23 @@
 
 ### Recent Progress
 
+**2026-01-21:** Added loom crash CLI commands ✅
+- Implemented CLI commands for crash analytics management (from spec Section 7.2):
+  - `loom crash projects -o <org-id>` — List crash projects for an organization
+  - `loom crash issues -p <project-id>` — List issues for a project
+  - `loom crash create-project -o <org> -n <name>` — Create a new project
+  - `loom crash create-api-key -p <project> -n <name>` — Create an API key
+  - `loom crash api-keys -p <project>` — List API keys for a project
+  - `loom crash upload-sourcemaps -p <project> -r <release> <files...>` — Upload source maps
+- Added `crash_client.rs` HTTP client module to loom-cli
+- All commands support `--json` flag for JSON output
+- Verified working in production via CLI:
+  ```bash
+  loom --server-url https://loom.ghuntley.com crash projects -o <org-id>
+  loom --server-url https://loom.ghuntley.com crash issues -p <project-id>
+  ```
+- Also verified via curl with same endpoints
+
 **2026-01-21:** Fixed resolve_issue to accept resolved_in_release ✅ DEPLOYED
 - Fixed bug where resolve_issue endpoint ignored the `resolved_in_release` field
 - Added `ResolveRequest` struct with optional `resolved_in_release` field

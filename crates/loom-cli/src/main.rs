@@ -63,6 +63,7 @@ use loom_cli_tools::{
 use url::Url;
 
 mod auth;
+mod crash_client;
 mod credential_helper;
 mod locale;
 mod update;
@@ -243,6 +244,11 @@ enum Command {
 		#[command(subcommand)]
 		command: WgCommand,
 	},
+	/// Crash analytics commands
+	Crash {
+		#[command(subcommand)]
+		command: CrashCommand,
+	},
 }
 
 #[derive(Subcommand, Debug)]
@@ -251,6 +257,73 @@ enum WgCommand {
 	Devices {
 		#[command(subcommand)]
 		command: loom_cli_wgtunnel::DevicesCommands,
+	},
+}
+
+#[derive(Subcommand, Debug)]
+enum CrashCommand {
+	/// List crash projects for an organization
+	Projects {
+		/// Organization ID (required)
+		#[arg(long, short)]
+		org: String,
+		/// Output as JSON
+		#[arg(long)]
+		json: bool,
+	},
+	/// List issues for a crash project
+	Issues {
+		/// Project ID (required)
+		#[arg(long, short)]
+		project: String,
+		/// Output as JSON
+		#[arg(long)]
+		json: bool,
+	},
+	/// Upload source maps for a release
+	UploadSourcemaps {
+		/// Project ID (required)
+		#[arg(long, short)]
+		project: String,
+		/// Release version (required)
+		#[arg(long, short)]
+		release: String,
+		/// Files to upload (source maps and/or JS files)
+		#[arg(required = true)]
+		files: Vec<std::path::PathBuf>,
+	},
+	/// Create a new crash project
+	CreateProject {
+		/// Organization ID (required)
+		#[arg(long, short)]
+		org: String,
+		/// Project name (required)
+		#[arg(long, short)]
+		name: String,
+		/// Platform (javascript, node, rust)
+		#[arg(long, default_value = "javascript")]
+		platform: String,
+	},
+	/// Create an API key for a crash project
+	CreateApiKey {
+		/// Project ID (required)
+		#[arg(long, short)]
+		project: String,
+		/// Key name (required)
+		#[arg(long, short)]
+		name: String,
+		/// Key type (capture or admin)
+		#[arg(long, short = 't', default_value = "capture")]
+		key_type: String,
+	},
+	/// List API keys for a crash project
+	ApiKeys {
+		/// Project ID (required)
+		#[arg(long, short)]
+		project: String,
+		/// Output as JSON
+		#[arg(long)]
+		json: bool,
 	},
 }
 
@@ -1333,6 +1406,10 @@ async fn main() -> Result<()> {
 				},
 			}
 		}
+		Some(Command::Crash { command }) => {
+			let token = auth::load_token(&args.server_url).await;
+			run_crash_command(&args.server_url, token, command).await
+		}
 		None => {
 			let thread = create_new_thread(&config, &args)?;
 			start_repl_session(&config, &args, thread_store, thread).await
@@ -1643,4 +1720,152 @@ async fn run_weaver_attach(
 
 	Ok(())
 }
-// test change
+
+async fn run_crash_command(
+	server_url: &str,
+	token: Option<loom_common_secret::SecretString>,
+	command: &CrashCommand,
+) -> Result<()> {
+	let mut client = crash_client::CrashClient::new(server_url)?;
+	if let Some(token) = token {
+		client = client.with_token(token);
+	}
+
+	match command {
+		CrashCommand::Projects { org, json } => {
+			let projects = client.list_projects(org).await?;
+			if *json {
+				println!("{}", serde_json::to_string_pretty(&projects)?);
+			} else if projects.is_empty() {
+				println!("No crash projects found for organization.");
+			} else {
+				println!(
+					"{:<40} {:<30} {:<12} {:<20}",
+					"ID", "NAME", "PLATFORM", "CREATED"
+				);
+				println!("{}", "-".repeat(102));
+				for p in &projects {
+					let name_display = if p.name.len() > 28 {
+						format!("{}...", &p.name[..25])
+					} else {
+						p.name.clone()
+					};
+					println!(
+						"{:<40} {:<30} {:<12} {:<20}",
+						p.id,
+						name_display,
+						p.platform,
+						p.created_at.format("%Y-%m-%d %H:%M")
+					);
+				}
+			}
+		}
+		CrashCommand::Issues { project, json } => {
+			let issues = client.list_issues(project).await?;
+			if *json {
+				println!("{}", serde_json::to_string_pretty(&issues)?);
+			} else if issues.is_empty() {
+				println!("No issues found for project.");
+			} else {
+				println!(
+					"{:<12} {:<50} {:<12} {:>8} {:<20}",
+					"SHORT_ID", "TITLE", "STATUS", "EVENTS", "LAST_SEEN"
+				);
+				println!("{}", "-".repeat(102));
+				for issue in &issues {
+					let title_display = if issue.title.len() > 48 {
+						format!("{}...", &issue.title[..45])
+					} else {
+						issue.title.clone()
+					};
+					println!(
+						"{:<12} {:<50} {:<12} {:>8} {:<20}",
+						issue.short_id,
+						title_display,
+						issue.status,
+						issue.event_count,
+						issue.last_seen.format("%Y-%m-%d %H:%M")
+					);
+				}
+			}
+		}
+		CrashCommand::UploadSourcemaps {
+			project,
+			release,
+			files,
+		} => {
+			println!("Uploading source maps for release {}...", release);
+
+			// Convert PathBuf to Path references
+			let file_refs: Vec<&std::path::Path> = files.iter().map(|p| p.as_path()).collect();
+			let result = client
+				.upload_sourcemaps(project, release, &file_refs)
+				.await?;
+
+			println!("Uploaded {} artifact(s):", result.count);
+			for artifact in &result.artifacts {
+				println!(
+					"  {} ({}, {} bytes)",
+					artifact.name, artifact.artifact_type, artifact.size_bytes
+				);
+			}
+		}
+		CrashCommand::CreateProject {
+			org,
+			name,
+			platform,
+		} => {
+			let request = crash_client::CreateProjectRequest {
+				name: name.clone(),
+				org_id: org.clone(),
+				platform: platform.clone(),
+			};
+			let project = client.create_project(&request).await?;
+			println!("Created project:");
+			println!("  ID: {}", project.id);
+			println!("  Name: {}", project.name);
+			println!("  Platform: {}", project.platform);
+		}
+		CrashCommand::CreateApiKey {
+			project,
+			name,
+			key_type,
+		} => {
+			let key = client.create_api_key(project, name, key_type).await?;
+			println!("Created API key:");
+			println!("  ID: {}", key.id);
+			println!("  Name: {}", key.name);
+			println!("  Type: {}", key.key_type);
+			if let Some(raw_key) = &key.raw_key {
+				println!("\n  API Key (save this, it won't be shown again):");
+				println!("  {}", raw_key);
+			}
+		}
+		CrashCommand::ApiKeys { project, json } => {
+			let api_keys = client.list_api_keys(project).await?;
+			if *json {
+				println!("{}", serde_json::to_string_pretty(&api_keys)?);
+			} else if api_keys.is_empty() {
+				println!("No API keys found for project.");
+			} else {
+				println!(
+					"{:<40} {:<30} {:<12} {:<20}",
+					"ID", "NAME", "TYPE", "LAST_USED"
+				);
+				println!("{}", "-".repeat(102));
+				for key in &api_keys {
+					let last_used = key
+						.last_used_at
+						.map(|dt| dt.format("%Y-%m-%d %H:%M").to_string())
+						.unwrap_or_else(|| "never".to_string());
+					println!(
+						"{:<40} {:<30} {:<12} {:<20}",
+						key.id, key.name, key.key_type, last_used
+					);
+				}
+			}
+		}
+	}
+
+	Ok(())
+}

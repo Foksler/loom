@@ -41,7 +41,7 @@ loom-cli-spool = { path = "../loom-cli-spool" }
 loom-cli-tools = { path = "../loom-cli-tools" }
 loom-cli-wgtunnel = { path = "../loom-cli-wgtunnel" }
 loom-common-version = { workspace = true }
-reqwest = { workspace = true }
+reqwest = { workspace = true, features = ["multipart"] }
 self-replace = "1"
 serde = { workspace = true }
 serde_json = { workspace = true }
