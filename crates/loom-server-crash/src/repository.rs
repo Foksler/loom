@@ -43,6 +43,12 @@ pub trait CrashRepository: Send + Sync {
 	async fn create_event(&self, event: &CrashEvent) -> Result<()>;
 	async fn get_event_by_id(&self, id: CrashEventId) -> Result<Option<CrashEvent>>;
 	async fn list_events_for_issue(&self, issue_id: IssueId, limit: u32) -> Result<Vec<CrashEvent>>;
+	async fn list_events_for_project(
+		&self,
+		project_id: ProjectId,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<CrashEvent>>;
 	async fn delete_old_events(&self, cutoff: DateTime<Utc>) -> Result<u64>;
 
 	// Issue state updates
@@ -561,6 +567,38 @@ impl CrashRepository for SqliteCrashRepository {
 		)
 		.bind(issue_id.0.to_string())
 		.bind(limit as i32)
+		.fetch_all(&self.pool)
+		.await?;
+
+		rows.into_iter().map(TryInto::try_into).collect()
+	}
+
+	#[instrument(skip(self), fields(project_id = %project_id))]
+	async fn list_events_for_project(
+		&self,
+		project_id: ProjectId,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<CrashEvent>> {
+		let rows = sqlx::query_as::<_, EventRow>(
+			r#"
+			SELECT id, org_id, project_id, issue_id,
+				   person_id, distinct_id,
+				   exception_type, exception_value, stacktrace, raw_stacktrace,
+				   release, dist, environment, platform, runtime, server_name,
+				   tags, extra, user_context, device_context, browser_context, os_context,
+				   active_flags, request, breadcrumbs,
+				   timestamp, received_at
+			FROM crash_events
+			WHERE project_id = ?
+			ORDER BY timestamp DESC
+			LIMIT ?
+			OFFSET ?
+			"#,
+		)
+		.bind(project_id.0.to_string())
+		.bind(limit as i32)
+		.bind(offset as i32)
 		.fetch_all(&self.pool)
 		.await?;
 
@@ -1526,9 +1564,10 @@ impl TryFrom<ApiKeyRow> for CrashApiKey {
 			id: CrashApiKeyId(row.id.parse()?),
 			project_id: ProjectId(row.project_id.parse()?),
 			name: row.name,
-			key_type: row.key_type.parse().map_err(|_| {
-				CrashServerError::Parse(format!("invalid key type: {}", row.key_type))
-			})?,
+			key_type: row
+				.key_type
+				.parse()
+				.map_err(|_| CrashServerError::Parse(format!("invalid key type: {}", row.key_type)))?,
 			key_hash: row.key_hash,
 			rate_limit_per_minute: row.rate_limit_per_minute.map(|n| n as u32),
 			allowed_origins: serde_json::from_str(&row.allowed_origins)?,

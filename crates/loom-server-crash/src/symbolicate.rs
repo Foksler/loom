@@ -54,7 +54,8 @@ impl<R: CrashRepository + 'static> SymbolicationService<R> {
 
 		match platform {
 			Platform::JavaScript | Platform::Node => {
-				self.symbolicate_js(stacktrace, project_id, release, dist)
+				self
+					.symbolicate_js(stacktrace, project_id, release, dist)
 					.await
 			}
 			Platform::Rust => {
@@ -80,11 +81,10 @@ impl<R: CrashRepository + 'static> SymbolicationService<R> {
 		let mut symbolicated = stacktrace.clone();
 
 		for frame in &mut symbolicated.frames {
-			let (filename, lineno, colno) =
-				match (&frame.filename, frame.lineno, frame.colno) {
-					(Some(f), Some(l), Some(c)) => (f.clone(), l, c),
-					_ => continue, // Can't symbolicate without position info
-				};
+			let (filename, lineno, colno) = match (&frame.filename, frame.lineno, frame.colno) {
+				(Some(f), Some(l), Some(c)) => (f.clone(), l, c),
+				_ => continue, // Can't symbolicate without position info
+			};
 
 			// Look up source map for this file
 			let source_map_name = if filename.ends_with(".map") {
@@ -192,12 +192,7 @@ impl<R: CrashRepository + 'static> SymbolicationService<R> {
 struct EmptyArtifacts;
 
 impl ArtifactLookup for EmptyArtifacts {
-	fn find_source_map(
-		&self,
-		_release: &str,
-		_dist: Option<&str>,
-		_filename: &str,
-	) -> Option<&[u8]> {
+	fn find_source_map(&self, _release: &str, _dist: Option<&str>, _filename: &str) -> Option<&[u8]> {
 		None
 	}
 }

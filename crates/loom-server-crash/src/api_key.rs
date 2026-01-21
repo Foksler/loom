@@ -57,9 +57,11 @@ pub fn hash_api_key(key: &str) -> Result<String> {
 pub fn verify_api_key(key: &str, hash: &str) -> Result<bool> {
 	let parsed_hash = PasswordHash::new(hash).map_err(|_| CrashServerError::InvalidApiKey)?;
 
-	Ok(Argon2::default()
-		.verify_password(key.as_bytes(), &parsed_hash)
-		.is_ok())
+	Ok(
+		Argon2::default()
+			.verify_password(key.as_bytes(), &parsed_hash)
+			.is_ok(),
+	)
 }
 
 #[cfg(test)]

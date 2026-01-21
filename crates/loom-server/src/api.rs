@@ -1295,6 +1295,15 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/crash/projects/{project_id}/issues/{issue_id}/events",
 			get(routes::crash::list_issue_events),
 		)
+		// Event query routes (project-level)
+		.route(
+			"/api/crash/projects/{project_id}/events",
+			get(routes::crash::list_events),
+		)
+		.route(
+			"/api/crash/projects/{project_id}/events/{event_id}",
+			get(routes::crash::get_event),
+		)
 		.route(
 			"/api/crash/projects/{project_id}/stream",
 			get(routes::crash::stream_crash),

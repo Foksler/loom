@@ -1624,7 +1624,10 @@ async fn create_api_key_succeeds_for_org_member() {
 	let result: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
 
 	assert!(result["id"].is_string());
-	assert!(result["key"].as_str().unwrap().starts_with("loom_crash_capture_"));
+	assert!(result["key"]
+		.as_str()
+		.unwrap()
+		.starts_with("loom_crash_capture_"));
 	assert_eq!(result["key_type"], "capture");
 }
 
@@ -1650,7 +1653,10 @@ async fn create_api_key_admin_type() {
 	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
 	let result: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
 
-	assert!(result["key"].as_str().unwrap().starts_with("loom_crash_admin_"));
+	assert!(result["key"]
+		.as_str()
+		.unwrap()
+		.starts_with("loom_crash_admin_"));
 	assert_eq!(result["key_type"], "admin");
 }
 
@@ -2582,10 +2588,7 @@ async fn delete_issue_requires_auth() {
 
 	let response = app
 		.delete(
-			&format!(
-				"/api/crash/projects/{}/issues/{}",
-				project_id, issue_id
-			),
+			&format!("/api/crash/projects/{}/issues/{}", project_id, issue_id),
 			None,
 		)
 		.await;
@@ -2606,10 +2609,7 @@ async fn delete_issue_requires_org_membership() {
 	// User from org_b trying to delete issue in org_a's project
 	let response = app
 		.delete(
-			&format!(
-				"/api/crash/projects/{}/issues/{}",
-				project_id, issue_id
-			),
+			&format!("/api/crash/projects/{}/issues/{}", project_id, issue_id),
 			Some(&app.fixtures.org_b.member),
 		)
 		.await;
@@ -2629,10 +2629,7 @@ async fn delete_issue_succeeds_for_org_member() {
 
 	let response = app
 		.delete(
-			&format!(
-				"/api/crash/projects/{}/issues/{}",
-				project_id, issue_id
-			),
+			&format!("/api/crash/projects/{}/issues/{}", project_id, issue_id),
 			Some(&app.fixtures.org_a.member),
 		)
 		.await;
@@ -2645,10 +2642,7 @@ async fn delete_issue_succeeds_for_org_member() {
 	// Verify issue is gone
 	let response = app
 		.get(
-			&format!(
-				"/api/crash/projects/{}/issues/{}",
-				project_id, issue_id
-			),
+			&format!("/api/crash/projects/{}/issues/{}", project_id, issue_id),
 			Some(&app.fixtures.org_a.member),
 		)
 		.await;
@@ -2949,5 +2943,328 @@ async fn delete_project_returns_404_for_nonexistent_project() {
 		response.status(),
 		StatusCode::NOT_FOUND,
 		"Deleting nonexistent project should return 404"
+	);
+}
+
+// ============================================================================
+// Event Query Helpers
+// ============================================================================
+
+/// Create a test crash event and return both the event_id and issue_id
+async fn create_test_event(app: &TestApp, project_id: &str) -> (String, String) {
+	let response = app
+		.post(
+			"/api/crash/capture",
+			Some(&app.fixtures.org_a.member),
+			json!({
+				"project_id": project_id,
+				"exception_type": "TestError",
+				"exception_value": "Test event for event query tests",
+				"stacktrace": {
+					"frames": [{
+						"function": "testFunction",
+						"filename": "test.js",
+						"lineno": 10,
+						"in_app": true
+					}]
+				}
+			}),
+		)
+		.await;
+
+	assert_eq!(
+		response.status(),
+		StatusCode::OK,
+		"Failed to capture crash for test event"
+	);
+
+	let (_, body) = response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let result: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+
+	let event_id = result["event_id"].as_str().unwrap().to_string();
+	let issue_id = result["issue_id"].as_str().unwrap().to_string();
+	(event_id, issue_id)
+}
+
+// ============================================================================
+// List Project Events Tests
+// ============================================================================
+
+#[tokio::test]
+async fn list_project_events_requires_auth() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "list-proj-events-auth-test").await;
+	let _ = create_test_event(&app, &project_id).await;
+
+	// No auth should return 401
+	let response = app
+		.get(&format!("/api/crash/projects/{}/events", project_id), None)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::UNAUTHORIZED,
+		"List project events without auth should return 401"
+	);
+}
+
+#[tokio::test]
+async fn list_project_events_requires_org_membership() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "list-proj-events-membership-test").await;
+	let _ = create_test_event(&app, &project_id).await;
+
+	// User from org_b trying to list events in org_a's project should be forbidden
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/events", project_id),
+			Some(&app.fixtures.org_b.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::FORBIDDEN,
+		"Non-member should not be able to list events in another org's project"
+	);
+}
+
+#[tokio::test]
+async fn list_project_events_succeeds_for_org_member() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "list-proj-events-success-test").await;
+
+	// Create two events
+	let _ = create_test_event(&app, &project_id).await;
+	let _ = create_test_event(&app, &project_id).await;
+
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/events", project_id),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::OK,
+		"Org member should be able to list project events"
+	);
+
+	// Verify we got events
+	let (_, body) = response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let events: Vec<serde_json::Value> = serde_json::from_slice(&body_bytes).unwrap();
+	assert!(
+		events.len() >= 2,
+		"Should have at least two events for the project"
+	);
+}
+
+#[tokio::test]
+async fn list_project_events_returns_404_for_nonexistent_project() {
+	let app = TestApp::new().await;
+
+	let response = app
+		.get(
+			"/api/crash/projects/01938a6b-cdef-7000-8000-000000000000/events",
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::NOT_FOUND,
+		"List events for nonexistent project should return 404"
+	);
+}
+
+#[tokio::test]
+async fn list_project_events_supports_pagination() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "list-proj-events-pagination-test").await;
+
+	// Create 3 events
+	let _ = create_test_event(&app, &project_id).await;
+	let _ = create_test_event(&app, &project_id).await;
+	let _ = create_test_event(&app, &project_id).await;
+
+	// Request with limit=2
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/events?limit=2", project_id),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(response.status(), StatusCode::OK);
+
+	let (_, body) = response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let events: Vec<serde_json::Value> = serde_json::from_slice(&body_bytes).unwrap();
+	assert_eq!(events.len(), 2, "Should return only 2 events with limit=2");
+
+	// Request with offset=1
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/events?limit=2&offset=1", project_id),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(response.status(), StatusCode::OK);
+
+	let (_, body) = response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let events_offset: Vec<serde_json::Value> = serde_json::from_slice(&body_bytes).unwrap();
+	assert_eq!(
+		events_offset.len(),
+		2,
+		"Should return 2 events with offset=1"
+	);
+}
+
+// ============================================================================
+// Get Single Event Tests
+// ============================================================================
+
+#[tokio::test]
+async fn get_event_requires_auth() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "get-event-auth-test").await;
+	let (event_id, _) = create_test_event(&app, &project_id).await;
+
+	// No auth should return 401
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/events/{}", project_id, event_id),
+			None,
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::UNAUTHORIZED,
+		"Get event without auth should return 401"
+	);
+}
+
+#[tokio::test]
+async fn get_event_requires_org_membership() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "get-event-membership-test").await;
+	let (event_id, _) = create_test_event(&app, &project_id).await;
+
+	// User from org_b trying to get event in org_a's project should be forbidden
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/events/{}", project_id, event_id),
+			Some(&app.fixtures.org_b.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::FORBIDDEN,
+		"Non-member should not be able to get event in another org's project"
+	);
+}
+
+#[tokio::test]
+async fn get_event_succeeds_for_org_member() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "get-event-success-test").await;
+	let (event_id, _) = create_test_event(&app, &project_id).await;
+
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/events/{}", project_id, event_id),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::OK,
+		"Org member should be able to get event"
+	);
+
+	// Verify event data
+	let (_, body) = response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let event: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+	assert_eq!(event["id"], event_id, "Event ID should match");
+	assert_eq!(
+		event["exception_type"], "TestError",
+		"Exception type should match"
+	);
+}
+
+#[tokio::test]
+async fn get_event_returns_404_for_nonexistent_event() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "get-event-404-test").await;
+
+	let response = app
+		.get(
+			&format!(
+				"/api/crash/projects/{}/events/{}",
+				project_id,
+				uuid::Uuid::new_v4()
+			),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::NOT_FOUND,
+		"Get nonexistent event should return 404"
+	);
+}
+
+#[tokio::test]
+async fn get_event_returns_404_for_event_in_different_project() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	// Create two projects
+	let project_a = create_test_project(&app, &org_id, "get-event-diff-proj-a").await;
+	let project_b = create_test_project(&app, &org_id, "get-event-diff-proj-b").await;
+
+	// Create event in project_a
+	let (event_id, _) = create_test_event(&app, &project_a).await;
+
+	// Try to get event using project_b's path
+	let response = app
+		.get(
+			&format!("/api/crash/projects/{}/events/{}", project_b, event_id),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::NOT_FOUND,
+		"Getting event from different project should return 404"
+	);
+}
+
+#[tokio::test]
+async fn get_event_returns_404_for_nonexistent_project() {
+	let app = TestApp::new().await;
+
+	let response = app
+		.get(
+			&format!(
+				"/api/crash/projects/{}/events/{}",
+				uuid::Uuid::new_v4(),
+				uuid::Uuid::new_v4()
+			),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::NOT_FOUND,
+		"Get event for nonexistent project should return 404"
 	);
 }

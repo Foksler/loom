@@ -86,11 +86,7 @@ async fn verify_org_membership(
 /// 3. Updates the event's stacktrace with the symbolicated version
 ///
 /// Symbolication is only attempted if a release is specified.
-async fn symbolicate_event(
-	state: &AppState,
-	event: &mut CrashEvent,
-	project_id: ProjectId,
-) {
+async fn symbolicate_event(state: &AppState, event: &mut CrashEvent, project_id: ProjectId) {
 	// Skip if no release specified
 	let (release, dist) = match (&event.release, &event.dist) {
 		(Some(r), d) => (r.as_str(), d.as_deref()),
@@ -568,16 +564,20 @@ async fn verify_project_api_key(
 	raw_key: &str,
 ) -> Result<CrashApiKey, (StatusCode, Json<CrashErrorResponse>)> {
 	// Get all non-revoked API keys for the project
-	let keys = state.crash_repo.list_api_keys(project_id).await.map_err(|e| {
-		tracing::error!(error = %e, "Failed to list API keys");
-		(
-			StatusCode::INTERNAL_SERVER_ERROR,
-			Json(CrashErrorResponse {
-				error: "internal_error".to_string(),
-				message: "Internal server error".to_string(),
-			}),
-		)
-	})?;
+	let keys = state
+		.crash_repo
+		.list_api_keys(project_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to list API keys");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Internal server error".to_string(),
+				}),
+			)
+		})?;
 
 	// Try to verify against each non-revoked key
 	for key in keys {
@@ -823,20 +823,27 @@ pub async fn capture_crash_with_api_key(
 					.unwrap_or(false)
 				{
 					existing_issue.user_count += 1;
-					let _ = state.crash_repo.add_issue_person(existing_issue.id, pid).await;
+					let _ = state
+						.crash_repo
+						.add_issue_person(existing_issue.id, pid)
+						.await;
 				}
 			}
 
-			state.crash_repo.update_issue(&existing_issue).await.map_err(|e| {
-				tracing::error!(error = %e, "Failed to update issue");
-				(
-					StatusCode::INTERNAL_SERVER_ERROR,
-					Json(CrashErrorResponse {
-						error: "internal_error".to_string(),
-						message: "Internal server error".to_string(),
-					}),
-				)
-			})?;
+			state
+				.crash_repo
+				.update_issue(&existing_issue)
+				.await
+				.map_err(|e| {
+					tracing::error!(error = %e, "Failed to update issue");
+					(
+						StatusCode::INTERNAL_SERVER_ERROR,
+						Json(CrashErrorResponse {
+							error: "internal_error".to_string(),
+							message: "Internal server error".to_string(),
+						}),
+					)
+				})?;
 
 			(existing_issue, false, is_regression)
 		}
@@ -2536,6 +2543,225 @@ pub async fn list_issue_events(
 }
 
 // ============================================================================
+// Event Queries
+// ============================================================================
+
+/// Query parameters for listing events.
+#[derive(Debug, Deserialize, utoipa::IntoParams)]
+pub struct ListEventsParams {
+	#[serde(default = "default_events_limit")]
+	pub limit: u32,
+	#[serde(default)]
+	pub offset: u32,
+}
+
+fn default_events_limit() -> u32 {
+	100
+}
+
+/// GET /api/crash/projects/{project_id}/events - List crash events for a project
+///
+/// Returns all crash events for a project, paginated.
+#[utoipa::path(
+	get,
+	path = "/api/crash/projects/{project_id}/events",
+	params(
+		("project_id" = String, Path, description = "Project ID"),
+		ListEventsParams,
+	),
+	responses(
+		(status = 200, description = "List of crash events", body = Vec<CrashEventResponse>),
+		(status = 401, description = "Not authenticated"),
+		(status = 403, description = "Forbidden", body = CrashErrorResponse),
+		(status = 404, description = "Project not found", body = CrashErrorResponse),
+	),
+	security(("bearer" = [])),
+	tag = "crash"
+)]
+#[instrument(skip(state, current_user))]
+pub async fn list_events(
+	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
+	Path(project_id_str): Path<String>,
+	Query(params): Query<ListEventsParams>,
+) -> Result<Json<Vec<CrashEventResponse>>, (StatusCode, Json<CrashErrorResponse>)> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	let project_id: ProjectId = project_id_str.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_project_id".to_string(),
+				message: "Invalid project ID".to_string(),
+			}),
+		)
+	})?;
+
+	let project = state
+		.crash_repo
+		.get_project_by_id(project_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get project");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "project_not_found".to_string(),
+					message: "Project not found".to_string(),
+				}),
+			)
+		})?;
+
+	verify_org_membership(&state, &project.org_id, &current_user.user.id, &locale).await?;
+
+	// Limit max limit to 1000
+	let limit = params.limit.min(1000);
+
+	let events = state
+		.crash_repo
+		.list_events_for_project(project_id, limit, params.offset)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to list events");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?;
+
+	info!(project_id = %project_id, event_count = %events.len(), "Project events retrieved");
+
+	Ok(Json(
+		events.into_iter().map(CrashEventResponse::from).collect(),
+	))
+}
+
+/// GET /api/crash/projects/{project_id}/events/{event_id} - Get a single crash event
+///
+/// Returns detailed information about a specific crash event.
+#[utoipa::path(
+	get,
+	path = "/api/crash/projects/{project_id}/events/{event_id}",
+	params(
+		("project_id" = String, Path, description = "Project ID"),
+		("event_id" = String, Path, description = "Event ID"),
+	),
+	responses(
+		(status = 200, description = "Crash event detail", body = CrashEventResponse),
+		(status = 401, description = "Not authenticated"),
+		(status = 403, description = "Forbidden", body = CrashErrorResponse),
+		(status = 404, description = "Event or project not found", body = CrashErrorResponse),
+	),
+	security(("bearer" = [])),
+	tag = "crash"
+)]
+#[instrument(skip(state, current_user))]
+pub async fn get_event(
+	State(state): State<AppState>,
+	RequireAuth(current_user): RequireAuth,
+	Path((project_id_str, event_id_str)): Path<(String, String)>,
+) -> Result<Json<CrashEventResponse>, (StatusCode, Json<CrashErrorResponse>)> {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	let project_id: ProjectId = project_id_str.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_project_id".to_string(),
+				message: "Invalid project ID".to_string(),
+			}),
+		)
+	})?;
+
+	let event_id: CrashEventId = event_id_str.parse().map_err(|_| {
+		(
+			StatusCode::BAD_REQUEST,
+			Json(CrashErrorResponse {
+				error: "invalid_event_id".to_string(),
+				message: "Invalid event ID".to_string(),
+			}),
+		)
+	})?;
+
+	let project = state
+		.crash_repo
+		.get_project_by_id(project_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get project");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "project_not_found".to_string(),
+					message: "Project not found".to_string(),
+				}),
+			)
+		})?;
+
+	verify_org_membership(&state, &project.org_id, &current_user.user.id, &locale).await?;
+
+	let event = state
+		.crash_repo
+		.get_event_by_id(event_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to get event");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?
+		.ok_or_else(|| {
+			(
+				StatusCode::NOT_FOUND,
+				Json(CrashErrorResponse {
+					error: "event_not_found".to_string(),
+					message: "Event not found".to_string(),
+				}),
+			)
+		})?;
+
+	// Verify event belongs to the specified project
+	if event.project_id != project_id {
+		return Err((
+			StatusCode::NOT_FOUND,
+			Json(CrashErrorResponse {
+				error: "event_not_found".to_string(),
+				message: "Event not found".to_string(),
+			}),
+		));
+	}
+
+	info!(event_id = %event.id, "Crash event retrieved");
+
+	Ok(Json(CrashEventResponse::from(event)))
+}
+
+// ============================================================================
 // SSE Stream Endpoint
 // ============================================================================
 
@@ -3948,16 +4174,20 @@ pub async fn create_api_key(
 		revoked_at: None,
 	};
 
-	state.crash_repo.create_api_key(&api_key).await.map_err(|e| {
-		tracing::error!(error = %e, "Failed to create API key");
-		(
-			StatusCode::INTERNAL_SERVER_ERROR,
-			Json(CrashErrorResponse {
-				error: "internal_error".to_string(),
-				message: t(&locale, "server.api.error.internal").to_string(),
-			}),
-		)
-	})?;
+	state
+		.crash_repo
+		.create_api_key(&api_key)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to create API key");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(CrashErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(&locale, "server.api.error.internal").to_string(),
+				}),
+			)
+		})?;
 
 	info!(
 		api_key_id = %api_key.id,

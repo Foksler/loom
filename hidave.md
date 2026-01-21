@@ -11,6 +11,14 @@
 
 ### Recent Progress
 
+**2026-01-21:** Added event query endpoints ✅ DEPLOYED
+- Implemented event query endpoints from crash-system spec Section 9.5:
+  - `GET /api/crash/projects/{id}/events` — List all events for project (with pagination)
+  - `GET /api/crash/projects/{id}/events/{id}` — Get single event detail
+- Added `list_events_for_project` method to CrashRepository trait and implementation
+- Added 11 new authorization tests covering both new endpoints
+- All endpoints verified working in production via curl
+
 **2026-01-21:** Added project and issue management endpoints ✅ DEPLOYED
 - Implemented remaining endpoints from crash-system spec Section 9.4 and 9.7:
   - `POST /api/crash/projects/{id}/issues/{id}/assign` — Assign issue to user
@@ -819,6 +827,8 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
   - `GET /api/crash/projects/{id}/issues/{id}` — Issue detail ✅
   - `DELETE /api/crash/projects/{id}/issues/{id}` — Delete issue ✅
   - `GET /api/crash/projects/{id}/issues/{id}/events` — List events for issue ✅
+  - `GET /api/crash/projects/{id}/events` — List events for project ✅
+  - `GET /api/crash/projects/{id}/events/{id}` — Get event detail ✅
   - `GET /api/crash/projects/{id}/releases` — List releases ✅
   - `POST /api/crash/projects/{id}/releases` — Create release ✅
   - `GET /api/crash/projects/{id}/releases/{version}` — Get release detail ✅
