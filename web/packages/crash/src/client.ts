@@ -13,13 +13,15 @@ import type {
 	UserContext,
 	Mechanism,
 	BatchConfig,
-	IssueLevel
+	IssueLevel,
+	SessionConfig
 } from './types';
 import { DEFAULT_BATCH_CONFIG, SDK_NAME, SDK_VERSION } from './types';
 import { ConfigurationError, InvalidBaseUrlError, ClientClosedError } from './errors';
 import { BreadcrumbManager } from './breadcrumb';
 import { parseStackTrace, getExceptionType, getExceptionValue } from './stacktrace';
 import { installGlobalHandlers, uninstallGlobalHandlers } from './global-handler';
+import { SessionTracker } from './session';
 
 /**
  * Validate base URL format.
@@ -177,6 +179,8 @@ export class CrashClient {
 	private readonly beforeSend?: CrashClientOptions['beforeSend'];
 	private readonly analytics?: CrashClientOptions['analytics'];
 	private readonly flags?: CrashClientOptions['flags'];
+	private readonly sessionTracker?: SessionTracker;
+	private readonly sessionTrackingEnabled: boolean;
 
 	private user?: UserContext;
 	private tags: Record<string, string> = {};
@@ -203,6 +207,7 @@ export class CrashClient {
 		this.beforeSend = options.beforeSend;
 		this.analytics = options.analytics;
 		this.flags = options.flags;
+		this.sessionTrackingEnabled = options.sessionTracking ?? false;
 
 		// Create HTTP client
 		const headers: Record<string, string> = {
@@ -231,8 +236,49 @@ export class CrashClient {
 			...options.batch
 		};
 
+		// Initialize session tracker if enabled
+		if (this.sessionTrackingEnabled) {
+			const sessionConfig: SessionConfig = {
+				projectId: options.project,
+				distinctId:
+					options.sessionDistinctId ??
+					options.analytics?.getDistinctId() ??
+					this.generateDistinctId(),
+				personId: options.analytics?.getPersonId?.(),
+				environment: this.environment,
+				release: this.release,
+				sampleRate: options.sessionSampleRate ?? 1.0,
+				baseUrl: options.baseUrl
+			};
+
+			this.sessionTracker = new SessionTracker(this.httpClient, sessionConfig, {
+				debug: this.debug
+			});
+
+			// Start session asynchronously (don't block construction)
+			this.sessionTracker.start().catch((error) => {
+				if (this.debug) {
+					console.error('[Crash] Failed to start session:', error);
+				}
+			});
+		}
+
 		// Start flush timer
 		this.startFlushTimer();
+	}
+
+	/**
+	 * Generate a random distinct ID for anonymous session tracking.
+	 */
+	private generateDistinctId(): string {
+		if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+			return crypto.randomUUID();
+		}
+		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+			const r = (Math.random() * 16) | 0;
+			const v = c === 'x' ? r : (r & 0x3) | 0x8;
+			return v.toString(16);
+		});
 	}
 
 	/**
@@ -292,6 +338,17 @@ export class CrashClient {
 				console.warn('[Crash] Client is closed, exception not captured');
 			}
 			return '';
+		}
+
+		// Record error in session tracker
+		// If the mechanism indicates this was unhandled, record as crash; otherwise as error
+		const isUnhandled = options?.mechanism?.handled === false;
+		if (this.sessionTracker) {
+			if (isUnhandled) {
+				this.sessionTracker.recordCrash();
+			} else {
+				this.sessionTracker.recordError();
+			}
 		}
 
 		const event = this.buildEvent(error, options);
@@ -599,8 +656,41 @@ export class CrashClient {
 			}
 		}
 
+		// End session
+		if (this.sessionTracker) {
+			try {
+				await this.sessionTracker.endAsync();
+			} catch (error) {
+				if (this.debug) {
+					console.error('[Crash] Failed to end session on shutdown:', error);
+				}
+			}
+		}
+
 		if (this.debug) {
 			console.log('[Crash] Client shutdown');
 		}
+	}
+
+	/**
+	 * Get the current session ID if session tracking is enabled.
+	 */
+	getSessionId(): string | undefined {
+		return this.sessionTracker?.getSessionId();
+	}
+
+	/**
+	 * Check if session tracking is enabled and the session is being sampled.
+	 */
+	isSessionSampled(): boolean {
+		return this.sessionTracker?.isSampled() ?? false;
+	}
+
+	/**
+	 * Manually end the current session.
+	 * A new session will need to be started by creating a new CrashClient.
+	 */
+	endSession(): void {
+		this.sessionTracker?.end();
 	}
 }

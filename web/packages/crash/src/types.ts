@@ -257,6 +257,49 @@ export interface BatchConfig {
 export type BeforeSendHook = (event: CrashEvent) => CrashEvent | null | Promise<CrashEvent | null>;
 
 /**
+ * Session status for session tracking.
+ */
+export type SessionStatus = 'active' | 'exited' | 'crashed' | 'abnormal' | 'errored';
+
+/**
+ * Response from session start endpoint.
+ */
+export interface SessionStartResponse {
+	/** Session ID assigned by the server */
+	session_id: string;
+	/** Whether this session is being sampled */
+	sampled: boolean;
+}
+
+/**
+ * Response from session end endpoint.
+ */
+export interface SessionEndResponse {
+	/** Whether the session was ended successfully */
+	success: boolean;
+}
+
+/**
+ * Configuration for session tracking.
+ */
+export interface SessionConfig {
+	/** Project ID for the session */
+	projectId: string;
+	/** Distinct ID for the user (usually from analytics) */
+	distinctId: string;
+	/** Person ID if known (usually from analytics) */
+	personId?: string;
+	/** Environment (e.g., 'production', 'staging') */
+	environment: string;
+	/** Release version */
+	release?: string;
+	/** Sample rate (0.0 - 1.0, default: 1.0) */
+	sampleRate: number;
+	/** Base URL for the session API */
+	baseUrl?: string;
+}
+
+/**
  * Options for creating a CrashClient.
  */
 export interface CrashClientOptions {
@@ -287,6 +330,7 @@ export interface CrashClientOptions {
 	/** Analytics client for identity integration */
 	analytics?: {
 		getDistinctId(): string;
+		getPersonId?(): string | undefined;
 	};
 	/** Flags client for active flags integration */
 	flags?: {
@@ -296,6 +340,8 @@ export interface CrashClientOptions {
 	sessionTracking?: boolean;
 	/** Session sample rate (0.0 - 1.0, default: 1.0) */
 	sessionSampleRate?: number;
+	/** Distinct ID for session tracking (defaults to random UUID or analytics.getDistinctId()) */
+	sessionDistinctId?: string;
 }
 
 /**

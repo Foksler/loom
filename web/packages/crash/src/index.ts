@@ -25,10 +25,17 @@ export type {
 	CaptureOptions,
 	BatchConfig,
 	BeforeSendHook,
-	CrashClientOptions
+	CrashClientOptions,
+	SessionStatus,
+	SessionConfig,
+	SessionStartResponse,
+	SessionEndResponse
 } from './types';
 
 export { SDK_NAME, SDK_VERSION, DEFAULT_BATCH_CONFIG } from './types';
+
+// Session tracking
+export { SessionTracker } from './session';
 
 // Errors
 export {

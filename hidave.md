@@ -11,6 +11,35 @@
 
 ### Recent Progress
 
+**2026-01-24:** Added Session Tracking to @loom/crash TypeScript SDK ✅
+- Implemented `SessionTracker` class in `web/packages/crash/src/session.ts`:
+  - Session ID generation with deterministic sampling based on hash
+  - Error and crash counting via `recordError()` and `recordCrash()` methods
+  - Automatic session end on page unload (beforeunload, pagehide events)
+  - Visibility change handling with 30-minute timeout for hidden pages
+  - `sendBeacon` for reliable session end on page unload
+  - Status determination: exited, errored, crashed based on error/crash counts
+  - Always sends crashed sessions even when not sampled
+- Integrated with `CrashClient`:
+  - `sessionTracking` option to enable session tracking
+  - `sessionSampleRate` option for sampling configuration (0.0-1.0)
+  - `sessionDistinctId` option or auto-detection from analytics client
+  - Auto-starts session on client construction
+  - Auto-ends session on client shutdown
+  - `captureException` automatically increments error/crash counts
+  - New methods: `getSessionId()`, `isSessionSampled()`, `endSession()`
+- Added session types to types.ts: `SessionStatus`, `SessionConfig`, `SessionStartResponse`, `SessionEndResponse`
+- Added 27 unit tests for session tracking (104 total tests pass)
+- Verified via curl:
+  - `POST /api/sessions/start` returns session_id and sampled status ✅
+  - `POST /api/sessions/end` returns `{"success": true}` ✅
+  - Sessions visible in `GET /api/app-sessions?project_id=<id>` ✅
+  - Crashed sessions correctly tracked with status "crashed" ✅
+- Verified via loom-cli:
+  - `loom sessions list -p <project-id>` shows sessions with status/error/crash counts ✅
+  - `loom sessions releases -p <project-id>` lists release health metrics ✅
+- This completes Phase 8.1 session tracking for the TypeScript SDK
+
 **2026-01-24:** Created @loom/crons TypeScript SDK ✅
 - Created `web/packages/crons/` package for cron job monitoring
 - Implemented `CronsClient` class with:
@@ -1251,7 +1280,7 @@ crash/
 - [x] Implement global error handlers ([specs/crash-system.md#84-global-handler-browser](specs/crash-system.md)) ✅ (2026-01-24)
 - [x] Implement stack trace parsing ([specs/crash-system.md#85-stack-trace-parsing-javascript](specs/crash-system.md)) ✅ (2026-01-24)
 - [ ] Implement React error boundary (deferred - requires separate package for React)
-- [ ] Implement session tracking ([specs/sessions-system.md#55-browser-session-tracking](specs/sessions-system.md)) (deferred to Phase 8.3)
+- [x] Implement session tracking ([specs/sessions-system.md#55-browser-session-tracking](specs/sessions-system.md)) ✅ (2026-01-24)
 - [x] Implement breadcrumb API ✅ (2026-01-24)
 - [x] Add vitest tests (77 tests passing) ✅ (2026-01-24)
 
