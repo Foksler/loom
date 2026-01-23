@@ -22,7 +22,13 @@ fn parse_backtrace_string(bt_string: &str) -> Vec<Frame> {
 		let line = line.trim();
 
 		// Skip frame numbers and empty lines
-		if line.is_empty() || line.chars().next().map(|c| c.is_ascii_digit()).unwrap_or(false) {
+		if line.is_empty()
+			|| line
+				.chars()
+				.next()
+				.map(|c| c.is_ascii_digit())
+				.unwrap_or(false)
+		{
 			continue;
 		}
 
@@ -68,7 +74,9 @@ fn parse_frame_line(line: &str) -> Option<Frame> {
 
 	// Extract module from demangled name
 	// e.g., "loom_server::handlers::crash::capture" -> "loom_server::handlers::crash"
-	let module = demangled.rfind("::").map(|idx| demangled[..idx].to_string());
+	let module = demangled
+		.rfind("::")
+		.map(|idx| demangled[..idx].to_string());
 
 	// Determine if this is in-app code
 	// Heuristic: consider it in-app if it doesn't start with std::, core::, alloc::
@@ -171,7 +179,10 @@ mod tests {
 	#[test]
 	fn test_parse_frame_line_demangled() {
 		let frame = parse_frame_line("my_app::handlers::process").unwrap();
-		assert_eq!(frame.function, Some("my_app::handlers::process".to_string()));
+		assert_eq!(
+			frame.function,
+			Some("my_app::handlers::process".to_string())
+		);
 		assert_eq!(frame.module, Some("my_app::handlers".to_string()));
 		assert!(frame.in_app);
 	}

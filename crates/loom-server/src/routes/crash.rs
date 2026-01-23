@@ -1852,9 +1852,7 @@ pub async fn resolve_issue(
 	issue.status = IssueStatus::Resolved;
 	issue.resolved_at = Some(Utc::now());
 	issue.resolved_by = Some(loom_crash_core::UserId(current_user.user.id.into_inner()));
-	issue.resolved_in_release = request
-		.as_ref()
-		.and_then(|r| r.resolved_in_release.clone());
+	issue.resolved_in_release = request.as_ref().and_then(|r| r.resolved_in_release.clone());
 
 	state.crash_repo.update_issue(&issue).await.map_err(|e| {
 		tracing::error!(error = %e, "Failed to update issue");

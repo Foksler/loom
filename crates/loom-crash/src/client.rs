@@ -440,7 +440,8 @@ impl CrashClient {
 	/// client.shutdown().await?;
 	/// ```
 	pub async fn start_session(&self) -> Result<()> {
-		self.inner
+		self
+			.inner
 			.session_tracker
 			.start(
 				&self.inner.project_id,
@@ -465,12 +466,13 @@ impl CrashClient {
 
 	/// Captures an error and sends it to the crash analytics server.
 	pub async fn capture_error(&self, error: &dyn std::error::Error) -> Result<CaptureResponse> {
-		self.capture_exception(
-			std::any::type_name_of_val(error),
-			&error.to_string(),
-			capture_backtrace(),
-		)
-		.await
+		self
+			.capture_exception(
+				std::any::type_name_of_val(error),
+				&error.to_string(),
+				capture_backtrace(),
+			)
+			.await
 	}
 
 	/// Captures an exception with custom type and message.
@@ -572,7 +574,12 @@ impl CrashClient {
 
 	/// Sets a global tag that will be attached to all crash events.
 	pub async fn set_tag(&self, key: impl Into<String>, value: impl Into<String>) {
-		self.inner.tags.write().await.insert(key.into(), value.into());
+		self
+			.inner
+			.tags
+			.write()
+			.await
+			.insert(key.into(), value.into());
 	}
 
 	/// Removes a global tag.
@@ -649,7 +656,8 @@ impl CrashClient {
 		debug!(url = %url, project_id = %request.project_id, "Sending crash event");
 
 		let response = loom_common_http::retry(&self.inner.config.retry_config, || async {
-			self.inner
+			self
+				.inner
 				.http_client
 				.post(&url)
 				.header("Authorization", format!("Bearer {}", self.inner.auth_token))
@@ -888,9 +896,7 @@ mod tests {
 
 		client.shutdown().await.unwrap();
 
-		let result = client
-			.capture_message("test", BreadcrumbLevel::Error)
-			.await;
+		let result = client.capture_message("test", BreadcrumbLevel::Error).await;
 		assert!(matches!(result, Err(CrashSdkError::ClientShutdown)));
 	}
 

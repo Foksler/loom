@@ -92,6 +92,5 @@ pub use session::SessionConfig;
 
 // Re-export core types for convenience
 pub use loom_crash_core::{
-	Breadcrumb, BreadcrumbLevel, DeviceContext, Frame, OsContext, Platform, Stacktrace,
-	UserContext,
+	Breadcrumb, BreadcrumbLevel, DeviceContext, Frame, OsContext, Platform, Stacktrace, UserContext,
 };

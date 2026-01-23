@@ -2142,10 +2142,7 @@ async fn resolve_issue_stores_resolved_in_release() {
 	// Verify the issue detail shows the resolved_in_release
 	let detail_response = app
 		.get(
-			&format!(
-				"/api/crash/projects/{}/issues/{}",
-				project_id, issue_id
-			),
+			&format!("/api/crash/projects/{}/issues/{}", project_id, issue_id),
 			Some(&app.fixtures.org_a.member),
 		)
 		.await;

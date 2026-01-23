@@ -339,7 +339,8 @@ impl SessionTracker {
 	/// Gets the current session ID, if a session is active.
 	pub fn session_id(&self) -> Option<String> {
 		// Use try_read to avoid async
-		self.inner
+		self
+			.inner
 			.try_read()
 			.ok()
 			.and_then(|guard| guard.as_ref().map(|inner| inner.session_id.clone()))

@@ -38,7 +38,9 @@ fn report_panic(client: &CrashClientInner, info: &PanicHookInfo<'_>, backtrace: 
 	let message = extract_panic_message(info);
 
 	// Extract location if available
-	let location = info.location().map(|l| format!("{}:{}:{}", l.file(), l.line(), l.column()));
+	let location = info
+		.location()
+		.map(|l| format!("{}:{}:{}", l.file(), l.line(), l.column()));
 
 	// Parse backtrace into frames
 	let stacktrace = parse_backtrace(backtrace);

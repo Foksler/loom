@@ -84,9 +84,7 @@ mod tests {
 	#[test]
 	fn test_module_extraction() {
 		let mut frame = Frame {
-			function: Some(
-				"_ZN4loom6server8handlers5crash7capture17h1234567890abcdefE".to_string(),
-			),
+			function: Some("_ZN4loom6server8handlers5crash7capture17h1234567890abcdefE".to_string()),
 			..Frame::default()
 		};
 
@@ -95,7 +93,10 @@ mod tests {
 		// Module should be extracted from the demangled name
 		// Note: the exact output depends on rustc-demangle's behavior
 		if let Some(module) = &frame.module {
-			assert!(module.contains("::"), "Module should contain path separators");
+			assert!(
+				module.contains("::"),
+				"Module should contain path separators"
+			);
 		}
 	}
 }

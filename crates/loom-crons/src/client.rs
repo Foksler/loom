@@ -315,14 +315,15 @@ impl CronsClient {
 
 		match f().await {
 			Ok(result) => {
-				self.checkin_ok(
-					checkin_id,
-					CheckInOk {
-						duration_ms: Some(start.elapsed().as_millis() as u64),
-						output: None,
-					},
-				)
-				.await?;
+				self
+					.checkin_ok(
+						checkin_id,
+						CheckInOk {
+							duration_ms: Some(start.elapsed().as_millis() as u64),
+							output: None,
+						},
+					)
+					.await?;
 				Ok(result)
 			}
 			Err(e) => {
@@ -337,16 +338,17 @@ impl CronsClient {
 				#[cfg(not(feature = "crash"))]
 				let crash_event_id: Option<String> = None;
 
-				self.checkin_error(
-					checkin_id,
-					CheckInError {
-						duration_ms: Some(start.elapsed().as_millis() as u64),
-						exit_code: Some(1),
-						output: Some(e.to_string()),
-						crash_event_id,
-					},
-				)
-				.await?;
+				self
+					.checkin_error(
+						checkin_id,
+						CheckInError {
+							duration_ms: Some(start.elapsed().as_millis() as u64),
+							exit_code: Some(1),
+							output: Some(e.to_string()),
+							crash_event_id,
+						},
+					)
+					.await?;
 
 				Err(CronsSdkError::JobFailed(e.to_string()))
 			}
@@ -388,7 +390,8 @@ impl CronsClient {
 		debug!(url = %url, monitor_slug = %monitor_slug, "Creating check-in");
 
 		let response = loom_common_http::retry(&self.inner.config.retry_config, || async {
-			self.inner
+			self
+				.inner
 				.http_client
 				.post(&url)
 				.header("Authorization", format!("Bearer {}", self.inner.auth_token))
@@ -437,7 +440,8 @@ impl CronsClient {
 		debug!(url = %url, checkin_id = %checkin_id, status = %request.status, "Updating check-in");
 
 		let response = loom_common_http::retry(&self.inner.config.retry_config, || async {
-			self.inner
+			self
+				.inner
 				.http_client
 				.patch(&url)
 				.header("Authorization", format!("Bearer {}", self.inner.auth_token))

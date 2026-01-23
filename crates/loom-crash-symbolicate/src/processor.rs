@@ -23,12 +23,7 @@ const CONTEXT_LINES: usize = 5;
 /// Implementations provide access to uploaded symbol artifacts.
 pub trait ArtifactLookup: Send + Sync {
 	/// Find a source map for the given release and filename.
-	fn find_source_map(
-		&self,
-		release: &str,
-		dist: Option<&str>,
-		filename: &str,
-	) -> Option<&[u8]>;
+	fn find_source_map(&self, release: &str, dist: Option<&str>, filename: &str) -> Option<&[u8]>;
 }
 
 /// In-memory artifact store for testing and simple use cases.
@@ -44,20 +39,19 @@ impl InMemoryArtifacts {
 	}
 
 	pub fn add(&mut self, release: &str, filename: &str, data: Vec<u8>) {
-		self.artifacts
+		self
+			.artifacts
 			.insert((release.to_string(), filename.to_string()), data);
 	}
 }
 
 impl ArtifactLookup for InMemoryArtifacts {
-	fn find_source_map(
-		&self,
-		release: &str,
-		_dist: Option<&str>,
-		filename: &str,
-	) -> Option<&[u8]> {
+	fn find_source_map(&self, release: &str, _dist: Option<&str>, filename: &str) -> Option<&[u8]> {
 		// Try exact match first
-		if let Some(data) = self.artifacts.get(&(release.to_string(), filename.to_string())) {
+		if let Some(data) = self
+			.artifacts
+			.get(&(release.to_string(), filename.to_string()))
+		{
 			return Some(data);
 		}
 
@@ -116,11 +110,7 @@ impl<A: ArtifactLookup> SourceMapProcessor<A> {
 		release: &str,
 		dist: Option<&str>,
 	) -> Result<()> {
-		let (filename, lineno, colno) = match (
-			&frame.filename,
-			frame.lineno,
-			frame.colno,
-		) {
+		let (filename, lineno, colno) = match (&frame.filename, frame.lineno, frame.colno) {
 			(Some(f), Some(l), Some(c)) => (f.clone(), l, c),
 			_ => return Ok(()), // Can't symbolicate without position info
 		};
@@ -175,8 +165,7 @@ impl<A: ArtifactLookup> SourceMapProcessor<A> {
 
 			// Extract source context if embedded
 			if let Some(content) = original.source_content {
-				let (pre, line, post) =
-					extract_context(&content, original.line as usize, CONTEXT_LINES);
+				let (pre, line, post) = extract_context(&content, original.line as usize, CONTEXT_LINES);
 				frame.pre_context = pre;
 				frame.context_line = Some(line);
 				frame.post_context = post;
@@ -254,7 +243,9 @@ mod tests {
 			}],
 		};
 
-		let result = processor.symbolicate_js(&stacktrace, "1.0.0", None).unwrap();
+		let result = processor
+			.symbolicate_js(&stacktrace, "1.0.0", None)
+			.unwrap();
 
 		assert_eq!(result.frames.len(), 1);
 		let frame = &result.frames[0];
@@ -281,7 +272,9 @@ mod tests {
 			}],
 		};
 
-		let result = processor.symbolicate_js(&stacktrace, "1.0.0", None).unwrap();
+		let result = processor
+			.symbolicate_js(&stacktrace, "1.0.0", None)
+			.unwrap();
 
 		// Frame should be unchanged
 		assert_eq!(result.frames[0].filename, Some("unknown.js".to_string()));
@@ -354,7 +347,9 @@ mod tests {
 			}],
 		};
 
-		let result = processor.symbolicate_js(&stacktrace, "1.0.0", None).unwrap();
+		let result = processor
+			.symbolicate_js(&stacktrace, "1.0.0", None)
+			.unwrap();
 
 		// Should still find the source map via .map extension fallback
 		assert_eq!(result.frames[0].filename, Some("src/app.ts".to_string()));

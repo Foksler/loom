@@ -105,7 +105,8 @@ impl CrashClient {
 	}
 
 	fn auth_header(&self) -> Option<String> {
-		self.auth_token
+		self
+			.auth_token
 			.as_ref()
 			.map(|t| format!("Bearer {}", t.expose()))
 	}
@@ -216,9 +217,10 @@ impl CrashClient {
 	}
 
 	pub async fn resolve_issue(&self, project_id: &str, issue_id: &str) -> Result<()> {
-		let url = self
-			.base_url
-			.join(&format!("api/crash/projects/{}/issues/{}/resolve", project_id, issue_id))?;
+		let url = self.base_url.join(&format!(
+			"api/crash/projects/{}/issues/{}/resolve",
+			project_id, issue_id
+		))?;
 		let mut req = self.http.post(url).json(&serde_json::json!({}));
 		if let Some(auth) = self.auth_header() {
 			req = req.header("Authorization", auth);
@@ -248,8 +250,7 @@ impl CrashClient {
 			.base_url
 			.join(&format!("api/crash/projects/{}/artifacts", project_id))?;
 
-		let mut form = reqwest::multipart::Form::new()
-			.text("release", release.to_string());
+		let mut form = reqwest::multipart::Form::new().text("release", release.to_string());
 
 		for file_path in files {
 			let file_name = file_path
@@ -262,8 +263,7 @@ impl CrashClient {
 				.await
 				.with_context(|| format!("Failed to read file: {}", file_path.display()))?;
 
-			let part = reqwest::multipart::Part::bytes(file_content)
-				.file_name(file_name);
+			let part = reqwest::multipart::Part::bytes(file_content).file_name(file_name);
 
 			form = form.part("files", part);
 		}

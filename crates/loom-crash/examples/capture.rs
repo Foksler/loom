@@ -77,7 +77,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	// Capture a test error
 	println!("\nCapturing test error...");
 	let response = client
-		.capture_message("Example test error from loom-crash SDK", BreadcrumbLevel::Error)
+		.capture_message(
+			"Example test error from loom-crash SDK",
+			BreadcrumbLevel::Error,
+		)
 		.await?;
 
 	println!("\nCapture successful!");

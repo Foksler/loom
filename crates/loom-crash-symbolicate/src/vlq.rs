@@ -96,12 +96,8 @@ impl DecodedMappings {
 	/// Uses binary search to find the closest mapping at or before the given position.
 	pub fn find(&self, line: u32, column: u32) -> Option<&Mapping> {
 		// First, find all mappings on this line
-		let line_start = self
-			.mappings
-			.partition_point(|m| m.generated_line < line);
-		let line_end = self
-			.mappings
-			.partition_point(|m| m.generated_line <= line);
+		let line_start = self.mappings.partition_point(|m| m.generated_line < line);
+		let line_end = self.mappings.partition_point(|m| m.generated_line <= line);
 
 		if line_start >= line_end {
 			return None;
