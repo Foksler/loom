@@ -65,6 +65,7 @@ use url::Url;
 mod auth;
 mod crash_client;
 mod credential_helper;
+mod crons_client;
 mod locale;
 mod update;
 mod version;
@@ -249,6 +250,11 @@ enum Command {
 		#[command(subcommand)]
 		command: CrashCommand,
 	},
+	/// Crons monitoring commands
+	Crons {
+		#[command(subcommand)]
+		command: CronsCommand,
+	},
 }
 
 #[derive(Subcommand, Debug)]
@@ -324,6 +330,92 @@ enum CrashCommand {
 		/// Output as JSON
 		#[arg(long)]
 		json: bool,
+	},
+}
+
+#[derive(Subcommand, Debug)]
+enum CronsCommand {
+	/// List cron monitors for an organization
+	Monitors {
+		/// Organization ID (required)
+		#[arg(long, short)]
+		org: String,
+		/// Output as JSON
+		#[arg(long)]
+		json: bool,
+	},
+	/// Get details of a specific monitor
+	Get {
+		/// Organization ID (required)
+		#[arg(long, short)]
+		org: String,
+		/// Monitor slug (required)
+		#[arg(long, short)]
+		slug: String,
+		/// Output as JSON
+		#[arg(long)]
+		json: bool,
+	},
+	/// Create a new cron monitor
+	Create {
+		/// Organization ID (required)
+		#[arg(long, short)]
+		org: String,
+		/// Monitor slug (required, URL-safe identifier)
+		#[arg(long, short)]
+		slug: String,
+		/// Monitor name (required)
+		#[arg(long, short)]
+		name: String,
+		/// Cron expression (e.g., "0 0 * * *" for daily at midnight)
+		#[arg(long, short, conflicts_with = "interval")]
+		cron: Option<String>,
+		/// Interval in minutes (alternative to cron expression)
+		#[arg(long, short, conflicts_with = "cron")]
+		interval: Option<u32>,
+		/// Timezone (default: UTC)
+		#[arg(long, default_value = "UTC")]
+		timezone: String,
+		/// Check-in margin in minutes (default: 5)
+		#[arg(long, default_value = "5")]
+		margin: u32,
+		/// Max runtime in minutes (optional)
+		#[arg(long)]
+		max_runtime: Option<u32>,
+	},
+	/// Delete a cron monitor
+	Delete {
+		/// Organization ID (required)
+		#[arg(long, short)]
+		org: String,
+		/// Monitor slug (required)
+		#[arg(long, short)]
+		slug: String,
+	},
+	/// List check-ins for a monitor
+	Checkins {
+		/// Organization ID (required)
+		#[arg(long, short)]
+		org: String,
+		/// Monitor slug (required)
+		#[arg(long, short)]
+		slug: String,
+		/// Maximum number of results
+		#[arg(long, short, default_value = "20")]
+		limit: u32,
+		/// Output as JSON
+		#[arg(long)]
+		json: bool,
+	},
+	/// Send a ping to a monitor (success)
+	Ping {
+		/// Ping key (UUID from monitor details)
+		key: String,
+	},
+	/// Send a fail ping to a monitor
+	PingFail {
+		/// Ping key (UUID from monitor details)
+		key: String,
 	},
 }
 
@@ -1410,6 +1502,10 @@ async fn main() -> Result<()> {
 			let token = auth::load_token(&args.server_url).await;
 			run_crash_command(&args.server_url, token, command).await
 		}
+		Some(Command::Crons { command }) => {
+			let token = auth::load_token(&args.server_url).await;
+			run_crons_command(&args.server_url, token, command).await
+		}
 		None => {
 			let thread = create_new_thread(&config, &args)?;
 			start_repl_session(&config, &args, thread_store, thread).await
@@ -1864,6 +1960,184 @@ async fn run_crash_command(
 					);
 				}
 			}
+		}
+	}
+
+	Ok(())
+}
+
+async fn run_crons_command(
+	server_url: &str,
+	token: Option<loom_common_secret::SecretString>,
+	command: &CronsCommand,
+) -> Result<()> {
+	let mut client = crons_client::CronsClient::new(server_url)?;
+	if let Some(token) = token {
+		client = client.with_token(token);
+	}
+
+	match command {
+		CronsCommand::Monitors { org, json } => {
+			let monitors: Vec<crons_client::MonitorSummary> = client.list_monitors(org).await?;
+			if *json {
+				println!("{}", serde_json::to_string_pretty(&monitors)?);
+			} else if monitors.is_empty() {
+				println!("No monitors found for organization.");
+			} else {
+				println!(
+					"{:<30} {:<30} {:<10} {:<10} {:>6} {:<20}",
+					"SLUG", "NAME", "STATUS", "HEALTH", "FAILS", "LAST_CHECKIN"
+				);
+				println!("{}", "-".repeat(106));
+				for m in &monitors {
+					let name_display = if m.name.len() > 28 {
+						format!("{}...", &m.name[..25])
+					} else {
+						m.name.clone()
+					};
+					let last_checkin = m
+						.last_checkin_at
+						.map(|dt: chrono::DateTime<chrono::Utc>| dt.format("%Y-%m-%d %H:%M").to_string())
+						.unwrap_or_else(|| "never".to_string());
+					println!(
+						"{:<30} {:<30} {:<10} {:<10} {:>6} {:<20}",
+						m.slug, name_display, m.status, m.health, m.consecutive_failures, last_checkin
+					);
+				}
+			}
+		}
+		CronsCommand::Get { org, slug, json } => {
+			let monitor = client.get_monitor(org, slug).await?;
+			if *json {
+				println!("{}", serde_json::to_string_pretty(&monitor)?);
+			} else {
+				println!("Monitor: {}", monitor.name);
+				println!("  ID: {}", monitor.id);
+				println!("  Slug: {}", monitor.slug);
+				println!("  Status: {}", monitor.status);
+				println!("  Health: {}", monitor.health);
+				println!(
+					"  Schedule: {}",
+					match &monitor.schedule {
+						crons_client::MonitorSchedule::Cron { expression } =>
+							format!("cron({})", expression),
+						crons_client::MonitorSchedule::Interval { minutes } =>
+							format!("every {} minutes", minutes),
+					}
+				);
+				println!("  Timezone: {}", monitor.timezone);
+				println!("  Check-in margin: {} minutes", monitor.checkin_margin_minutes);
+				if let Some(max) = monitor.max_runtime_minutes {
+					println!("  Max runtime: {} minutes", max);
+				}
+				println!("  Ping key: {}", monitor.ping_key);
+				println!(
+					"  Ping URL: {}/ping/{}",
+					server_url.trim_end_matches('/'),
+					monitor.ping_key
+				);
+				println!("  Total check-ins: {}", monitor.total_checkins);
+				println!("  Total failures: {}", monitor.total_failures);
+				println!("  Consecutive failures: {}", monitor.consecutive_failures);
+				if let Some(last) = &monitor.last_checkin_at {
+					println!("  Last check-in: {}", last.format("%Y-%m-%d %H:%M:%S UTC"));
+				}
+				if let Some(next) = &monitor.next_expected_at {
+					println!("  Next expected: {}", next.format("%Y-%m-%d %H:%M:%S UTC"));
+				}
+			}
+		}
+		CronsCommand::Create {
+			org,
+			slug,
+			name,
+			cron,
+			interval,
+			timezone,
+			margin,
+			max_runtime,
+		} => {
+			let schedule = match (cron, interval) {
+				(Some(expr), None) => crons_client::MonitorScheduleRequest::Cron {
+					expression: expr.clone(),
+				},
+				(None, Some(mins)) => crons_client::MonitorScheduleRequest::Interval { minutes: *mins },
+				(None, None) => anyhow::bail!("Either --cron or --interval is required"),
+				(Some(_), Some(_)) => {
+					anyhow::bail!("Cannot specify both --cron and --interval")
+				}
+			};
+
+			let request = crons_client::CreateMonitorRequest {
+				org_id: org.clone(),
+				slug: slug.clone(),
+				name: name.clone(),
+				description: None,
+				schedule,
+				timezone: Some(timezone.clone()),
+				checkin_margin_minutes: Some(*margin),
+				max_runtime_minutes: *max_runtime,
+			};
+
+			let result = client.create_monitor(&request).await?;
+			println!("Created monitor:");
+			println!("  ID: {}", result.monitor.id);
+			println!("  Slug: {}", result.monitor.slug);
+			println!("  Name: {}", result.monitor.name);
+			println!("  Ping URL: {}", result.ping_url);
+			println!("\nTo send a ping:");
+			println!("  curl {}", result.ping_url);
+			println!("  curl {}/start", result.ping_url);
+			println!("  curl {}/fail", result.ping_url);
+		}
+		CronsCommand::Delete { org, slug } => {
+			client.delete_monitor(org, slug).await?;
+			println!("Monitor '{}' deleted.", slug);
+		}
+		CronsCommand::Checkins {
+			org,
+			slug,
+			limit,
+			json,
+		} => {
+			let checkins: Vec<crons_client::CheckIn> = client.list_checkins(org, slug, Some(*limit)).await?;
+			if *json {
+				println!("{}", serde_json::to_string_pretty(&checkins)?);
+			} else if checkins.is_empty() {
+				println!("No check-ins found for monitor '{}'.", slug);
+			} else {
+				println!(
+					"{:<40} {:<12} {:>10} {:<8} {:<20}",
+					"ID", "STATUS", "DURATION", "EXIT", "FINISHED"
+				);
+				println!("{}", "-".repeat(90));
+				for c in &checkins {
+					let duration = c
+						.duration_ms
+						.map(|d: u64| format!("{}ms", d))
+						.unwrap_or_else(|| "-".to_string());
+					let exit = c
+						.exit_code
+						.map(|e: i32| e.to_string())
+						.unwrap_or_else(|| "-".to_string());
+					println!(
+						"{:<40} {:<12} {:>10} {:<8} {:<20}",
+						c.id,
+						c.status,
+						duration,
+						exit,
+						c.finished_at.format("%Y-%m-%d %H:%M:%S")
+					);
+				}
+			}
+		}
+		CronsCommand::Ping { key } => {
+			client.ping(key).await?;
+			println!("Ping sent successfully.");
+		}
+		CronsCommand::PingFail { key } => {
+			client.ping_fail(key).await?;
+			println!("Fail ping sent successfully.");
 		}
 	}
 
