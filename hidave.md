@@ -26,6 +26,27 @@
 - Commits: `76625093` (OpenAPI docs), `2a19e0c7` (Cargo.nix update)
 - Deployed to production: Working correctly
 
+**2026-01-23:** Fixed utoipa feature gating and code formatting ✅ DEPLOYED
+- Fixed `utoipa::ToSchema` derive on `MonitorState` in loom-crons-core to be
+  gated behind `openapi` feature (was causing build errors when feature disabled)
+- Applied rustfmt formatting to observability crates
+- All 354 authorization tests pass
+- All crash SDK tests pass (20 tests)
+- All crons SDK tests pass (10 tests)
+- All symbolication tests pass (23 tests)
+- Verified all API endpoints via curl:
+  - Crash capture: `POST /api/crash/capture` ✅
+  - Crash projects: `GET /api/crash/projects` ✅
+  - Crash issues: `GET /api/crash/projects/{id}/issues` ✅
+  - Cron monitors: `POST /api/crons/monitors` ✅
+  - Ping endpoint: `GET /ping/{key}` ✅
+  - Session start: `POST /api/sessions/start` ✅
+- Verified loom-cli commands:
+  - `loom crash projects -o <org-id>` ✅
+  - `loom crash issues -p <project-id>` ✅
+- Commit: `987a58e7`
+- Deployed to production: Working correctly
+
 **2026-01-23:** Added loom-jobs auto-instrumentation hook ✅
 - Created `loom-jobs` crate with `Job` trait and `JobRunner`
 - Added `MonitoredJob` wrapper to `loom-crons` for automatic job monitoring
@@ -38,7 +59,7 @@
   - loom-jobs: 2 tests pass
   - loom-crons (jobs feature): 12 tests pass (including 2 integration tests)
 - Verified workspace builds successfully
-- Commits: N/A (pending commit)
+- Commits: `ee055456` (loom-jobs crate), `292959aa` (Cargo.nix update)
 
 ### Recent Progress
 
