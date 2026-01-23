@@ -11,6 +11,21 @@
 
 ### Recent Progress
 
+**2026-01-24:** Created @loom/crons TypeScript SDK ✅
+- Created `web/packages/crons/` package for cron job monitoring
+- Implemented `CronsClient` class with:
+  - `checkinStart(monitorSlug)` — Start a check-in (returns check-in ID)
+  - `checkinOk(checkinId, details)` — Complete check-in successfully
+  - `checkinError(checkinId, details)` — Complete check-in with error
+  - `withMonitor(slug, fn)` — Async wrapper that handles check-in lifecycle
+  - `close()` — Close the client
+- Crash client integration: optional `crashClient` option for error linking
+- Error types: `CronsError`, `ConfigurationError`, `InvalidBaseUrlError`, `ClientClosedError`, `CheckInError`, `MonitorNotFoundError`, `JobFailedError`
+- 77 unit tests passing (types, errors, client)
+- Verified via curl: check-in start/ok/error flow against production API
+- Verified via CLI: `loom crons checkins` shows SDK check-ins
+- This completes Phase 8.2 and 8.3 of the implementation plan
+
 **2026-01-24:** Created @loom/crash TypeScript SDK ✅
 - Created `web/packages/crash/` package for browser-based crash analytics
 - Implemented `CrashClient` class with builder pattern:
@@ -689,7 +704,7 @@ This document provides a detailed, phased implementation plan for Loom's observa
 | System | Spec | Crates | Web Packages | Migration |
 |--------|------|--------|--------------|-----------|
 | Crash | [specs/crash-system.md](specs/crash-system.md) | `loom-crash-core`, `loom-crash` ✅, `loom-crash-symbolicate` ✅, `loom-server-crash` ✅ | `@loom/crash` | `033_crash_analytics.sql` |
-| Crons | [specs/crons-system.md](specs/crons-system.md) | `loom-crons-core` ✅, `loom-crons` ✅, `loom-server-crons` ✅ | `@loom/crons` | `034_cron_monitoring.sql` |
+| Crons | [specs/crons-system.md](specs/crons-system.md) | `loom-crons-core` ✅, `loom-crons` ✅, `loom-server-crons` ✅ | `@loom/crons` ✅ | `034_cron_monitoring.sql` |
 | Sessions | [specs/sessions-system.md](specs/sessions-system.md) | `loom-sessions-core`, `loom-server-sessions` | (in `@loom/crash`) | `035_sessions.sql` (tables: `app_sessions`, `app_session_aggregates`) |
 | UI | [specs/observability-ui.md](specs/observability-ui.md) | — | `web/loom-web/src/lib/components/` | — |
 
@@ -1240,7 +1255,7 @@ crash/
 - [x] Implement breadcrumb API ✅ (2026-01-24)
 - [x] Add vitest tests (77 tests passing) ✅ (2026-01-24)
 
-### 8.2 Create `@loom/crons`
+### 8.2 Create `@loom/crons` ✅ COMPLETED 2026-01-24
 
 **Path:** `web/packages/crons/`
 
@@ -1254,21 +1269,23 @@ crons/
     ├── index.ts         # Public exports
     ├── client.ts        # CronsClient
     ├── types.ts         # Type definitions
-    ├── checkin.ts       # Check-in helpers
-    └── errors.ts        # Error types
+    ├── errors.ts        # Error types
+    └── *.test.ts        # 77 unit tests
 ```
 
 **Implementation checklist:**
-- [ ] Create `package.json` (following flags/analytics pattern)
-- [ ] Implement `CronsClient` class ([specs/crons-system.md#53-typescript-sdk-loomcrons](specs/crons-system.md))
-- [ ] Implement `checkinStart()`, `checkinOk()`, `checkinError()`
-- [ ] Implement `withMonitor()` async wrapper
-- [ ] Add vitest tests
+- [x] Create `package.json` (following crash/http pattern) ✅ (2026-01-24)
+- [x] Implement `CronsClient` class ([specs/crons-system.md#53-typescript-sdk-loomcrons](specs/crons-system.md)) ✅ (2026-01-24)
+- [x] Implement `checkinStart()`, `checkinOk()`, `checkinError()` ✅ (2026-01-24)
+- [x] Implement `withMonitor()` async wrapper ✅ (2026-01-24)
+- [x] Add vitest tests (77 tests passing) ✅ (2026-01-24)
+- [x] Verified via curl: check-in flow works against production API ✅ (2026-01-24)
+- [x] Verified via CLI: `loom crons checkins` shows SDK check-ins ✅ (2026-01-24)
 
-### 8.3 Update Workspace
+### 8.3 Update Workspace ✅ COMPLETED 2026-01-24
 
-- [ ] Add new packages to `web/pnpm-workspace.yaml`
-- [ ] Run `pnpm install` to link workspaces
+- [x] pnpm-workspace.yaml already includes `packages/*` pattern ✅
+- [x] Run `pnpm install` to link workspaces ✅ (2026-01-24)
 
 ---
 
