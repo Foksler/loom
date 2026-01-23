@@ -11,6 +11,21 @@
 
 ### Recent Progress
 
+**2026-01-24:** Added Monitor Management Endpoints for Crons API ✅
+- Implemented three new endpoints for cron monitor management:
+  - `PATCH /api/crons/monitors/{slug}` — Update monitor settings (name, schedule, timezone, margin, etc.)
+  - `POST /api/crons/monitors/{slug}/pause` — Pause monitoring (won't alert on missed runs)
+  - `POST /api/crons/monitors/{slug}/resume` — Resume monitoring (recalculates next expected time)
+- Full audit logging for all operations (CronMonitorUpdated, CronMonitorPaused, CronMonitorResumed)
+- OpenAPI documentation with proper schemas
+- Added 12 authorization tests covering: org member access, unauthenticated rejection, non-member rejection, 404 for nonexistent monitors, pause/resume workflow
+- All 42 crons authz tests pass
+- Verified via curl:
+  - `PATCH /api/crons/monitors/daily-backup-test` — Successfully updated monitor name ✅
+  - `POST /api/crons/monitors/daily-backup-test/pause` — Status changed to "paused" ✅
+  - `POST /api/crons/monitors/daily-backup-test/resume` — Status changed back to "active" ✅
+- Commit: `48eba63d`
+
 **2026-01-24:** Comprehensive Backend Verification ✅
 - Verified all observability APIs work end-to-end via curl and loom-cli:
 - **Crash Analytics verified:**
@@ -1109,7 +1124,7 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
   - `GET /api/crash/projects/{id}/stream` — SSE stream ✅
   - Reference: [specs/crash-system.md#9-api-endpoints](specs/crash-system.md)
 
-- [x] **`crons.rs`** — Cron monitoring routes ✅ COMPLETED 2026-01-19
+- [x] **`crons.rs`** — Cron monitoring routes ✅ COMPLETED 2026-01-19, Updated 2026-01-24
   - `GET /ping/{key}` — Success ping ✅
   - `GET /ping/{key}/start` — Job starting ✅
   - `GET /ping/{key}/fail` — Job failed ✅
@@ -1117,7 +1132,10 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
   - `GET /api/crons/monitors` — List monitors ✅
   - `POST /api/crons/monitors` — Create monitor ✅
   - `GET /api/crons/monitors/{slug}` — Monitor detail ✅
+  - `PATCH /api/crons/monitors/{slug}` — Update monitor ✅ (2026-01-24)
   - `DELETE /api/crons/monitors/{slug}` — Delete monitor ✅
+  - `POST /api/crons/monitors/{slug}/pause` — Pause monitoring ✅ (2026-01-24)
+  - `POST /api/crons/monitors/{slug}/resume` — Resume monitoring ✅ (2026-01-24)
   - `GET /api/crons/monitors/{slug}/checkins` — List check-ins ✅
   - `POST /api/crons/monitors/{slug}/checkins` — SDK check-in ✅
   - `PATCH /api/crons/checkins/{id}` — Update check-in ✅
