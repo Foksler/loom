@@ -2019,14 +2019,16 @@ async fn run_crons_command(
 				println!(
 					"  Schedule: {}",
 					match &monitor.schedule {
-						crons_client::MonitorSchedule::Cron { expression } =>
-							format!("cron({})", expression),
+						crons_client::MonitorSchedule::Cron { expression } => format!("cron({})", expression),
 						crons_client::MonitorSchedule::Interval { minutes } =>
 							format!("every {} minutes", minutes),
 					}
 				);
 				println!("  Timezone: {}", monitor.timezone);
-				println!("  Check-in margin: {} minutes", monitor.checkin_margin_minutes);
+				println!(
+					"  Check-in margin: {} minutes",
+					monitor.checkin_margin_minutes
+				);
 				if let Some(max) = monitor.max_runtime_minutes {
 					println!("  Max runtime: {} minutes", max);
 				}
@@ -2100,7 +2102,8 @@ async fn run_crons_command(
 			limit,
 			json,
 		} => {
-			let checkins: Vec<crons_client::CheckIn> = client.list_checkins(org, slug, Some(*limit)).await?;
+			let checkins: Vec<crons_client::CheckIn> =
+				client.list_checkins(org, slug, Some(*limit)).await?;
 			if *json {
 				println!("{}", serde_json::to_string_pretty(&checkins)?);
 			} else if checkins.is_empty() {

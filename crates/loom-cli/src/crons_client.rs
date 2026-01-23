@@ -160,7 +160,10 @@ impl CronsClient {
 		Ok(resp.monitors)
 	}
 
-	pub async fn create_monitor(&self, request: &CreateMonitorRequest) -> Result<CreateMonitorResponse> {
+	pub async fn create_monitor(
+		&self,
+		request: &CreateMonitorRequest,
+	) -> Result<CreateMonitorResponse> {
 		let url = self.base_url.join("api/crons/monitors")?;
 		let mut req = self.http.post(url).json(request);
 		if let Some(auth) = self.auth_header() {
@@ -221,7 +224,12 @@ impl CronsClient {
 	// Check-ins
 	// ========================================================================
 
-	pub async fn list_checkins(&self, org_id: &str, slug: &str, limit: Option<u32>) -> Result<Vec<CheckIn>> {
+	pub async fn list_checkins(
+		&self,
+		org_id: &str,
+		slug: &str,
+		limit: Option<u32>,
+	) -> Result<Vec<CheckIn>> {
 		let limit_param = limit.map(|l| format!("&limit={}", l)).unwrap_or_default();
 		let url = self.base_url.join(&format!(
 			"api/crons/monitors/{}/checkins?org_id={}{}",
