@@ -178,6 +178,34 @@ importers:
         specifier: ^4.0.16
         version: 4.0.16(@types/node@25.0.5)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.2)(tsx@4.21.0)
 
+  packages/crash:
+    dependencies:
+      '@loom/analytics':
+        specifier: workspace:*
+        version: link:../analytics
+      '@loom/flags':
+        specifier: workspace:*
+        version: link:../flags
+      '@loom/http':
+        specifier: workspace:*
+        version: link:../http
+    devDependencies:
+      '@fast-check/vitest':
+        specifier: ^0.2.4
+        version: 0.2.4(vitest@4.0.16(@types/node@25.0.5)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.2)(tsx@4.21.0))
+      fast-check:
+        specifier: ^4.5.3
+        version: 4.5.3
+      jsdom:
+        specifier: ^26.1.0
+        version: 26.1.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@25.0.5)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.2)(tsx@4.21.0)
+
   packages/flags:
     dependencies:
       '@loom/http':
