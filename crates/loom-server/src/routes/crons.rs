@@ -840,6 +840,299 @@ pub async fn delete_monitor(
 	StatusCode::NO_CONTENT.into_response()
 }
 
+/// Request body for updating a monitor.
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
+pub struct UpdateMonitorRequest {
+	pub org_id: OrgId,
+	#[serde(default)]
+	pub name: Option<String>,
+	#[serde(default)]
+	pub description: Option<String>,
+	#[serde(default)]
+	pub schedule: Option<MonitorScheduleRequest>,
+	#[serde(default)]
+	pub timezone: Option<String>,
+	#[serde(default)]
+	pub checkin_margin_minutes: Option<u32>,
+	#[serde(default)]
+	pub max_runtime_minutes: Option<Option<u32>>,
+	#[serde(default)]
+	pub environments: Option<Vec<String>>,
+}
+
+/// PATCH /api/crons/monitors/{slug} - Update monitor
+#[utoipa::path(
+	patch,
+	path = "/api/crons/monitors/{slug}",
+	params(
+		("slug" = String, Path, description = "Monitor slug"),
+	),
+	request_body = UpdateMonitorRequest,
+	responses(
+		(status = 200, description = "Monitor updated", body = Monitor),
+		(status = 400, description = "Invalid request"),
+		(status = 401, description = "Not authenticated"),
+		(status = 403, description = "Not a member of the organization"),
+		(status = 404, description = "Monitor not found"),
+	),
+	tag = "crons"
+)]
+#[instrument(skip(state, current_user, req), fields(slug = %slug))]
+pub async fn update_monitor(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(slug): Path<String>,
+	Json(req): Json<UpdateMonitorRequest>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	// Verify org membership
+	if let Err(resp) =
+		verify_org_membership(&state, &req.org_id, &current_user.user.id, &locale).await
+	{
+		return resp.into_response();
+	}
+
+	let mut monitor = match state
+		.crons_repo
+		.get_monitor_by_slug(req.org_id, &slug)
+		.await
+	{
+		Ok(Some(m)) => m,
+		Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get monitor");
+			return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+		}
+	};
+
+	// Track what changed for audit log
+	let mut changes = serde_json::Map::new();
+
+	// Apply updates to monitor
+	if let Some(name) = req.name {
+		changes.insert(
+			"name".to_string(),
+			serde_json::json!({"old": &monitor.name, "new": &name}),
+		);
+		monitor.name = name;
+	}
+	if let Some(description) = req.description {
+		changes.insert(
+			"description".to_string(),
+			serde_json::json!({"old": &monitor.description, "new": &description}),
+		);
+		monitor.description = Some(description);
+	}
+	if let Some(schedule_req) = req.schedule {
+		let schedule: MonitorSchedule = schedule_req.into();
+		changes.insert(
+			"schedule".to_string(),
+			serde_json::json!({"old": serde_json::to_value(&monitor.schedule).unwrap_or_default(), "new": serde_json::to_value(&schedule).unwrap_or_default()}),
+		);
+		monitor.schedule = schedule;
+		// Recalculate next_expected_at when schedule changes
+		monitor.next_expected_at =
+			calculate_next_expected(&monitor.schedule, &monitor.timezone, Utc::now()).ok();
+	}
+	if let Some(timezone) = req.timezone {
+		changes.insert(
+			"timezone".to_string(),
+			serde_json::json!({"old": &monitor.timezone, "new": &timezone}),
+		);
+		monitor.timezone = timezone;
+		// Recalculate next_expected_at when timezone changes
+		monitor.next_expected_at =
+			calculate_next_expected(&monitor.schedule, &monitor.timezone, Utc::now()).ok();
+	}
+	if let Some(margin) = req.checkin_margin_minutes {
+		changes.insert(
+			"checkin_margin_minutes".to_string(),
+			serde_json::json!({"old": monitor.checkin_margin_minutes, "new": margin}),
+		);
+		monitor.checkin_margin_minutes = margin;
+	}
+	if let Some(max_runtime) = req.max_runtime_minutes {
+		changes.insert(
+			"max_runtime_minutes".to_string(),
+			serde_json::json!({"old": monitor.max_runtime_minutes, "new": max_runtime}),
+		);
+		monitor.max_runtime_minutes = max_runtime;
+	}
+	if let Some(environments) = req.environments {
+		changes.insert(
+			"environments".to_string(),
+			serde_json::json!({"old": &monitor.environments, "new": &environments}),
+		);
+		monitor.environments = environments;
+	}
+
+	if let Err(e) = state.crons_repo.update_monitor(&monitor).await {
+		tracing::error!(error = %e, "Failed to update monitor");
+		return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+	}
+
+	info!(monitor_id = %monitor.id, "Monitor updated");
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::CronMonitorUpdated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("cron_monitor", monitor.id.to_string())
+			.details(serde_json::json!({
+				"org_id": monitor.org_id.to_string(),
+				"slug": monitor.slug.clone(),
+				"changes": changes,
+			}))
+			.build(),
+	);
+
+	Json(monitor).into_response()
+}
+
+/// POST /api/crons/monitors/{slug}/pause - Pause monitoring
+#[utoipa::path(
+	post,
+	path = "/api/crons/monitors/{slug}/pause",
+	params(
+		("slug" = String, Path, description = "Monitor slug"),
+		("org_id" = OrgId, Query, description = "Organization ID"),
+	),
+	responses(
+		(status = 200, description = "Monitor paused", body = Monitor),
+		(status = 401, description = "Not authenticated"),
+		(status = 403, description = "Not a member of the organization"),
+		(status = 404, description = "Monitor not found"),
+	),
+	tag = "crons"
+)]
+#[instrument(skip(state, current_user), fields(slug = %slug))]
+pub async fn pause_monitor(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(slug): Path<String>,
+	Query(params): Query<GetMonitorParams>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	// Verify org membership
+	if let Err(resp) =
+		verify_org_membership(&state, &params.org_id, &current_user.user.id, &locale).await
+	{
+		return resp.into_response();
+	}
+
+	let mut monitor = match state
+		.crons_repo
+		.get_monitor_by_slug(params.org_id, &slug)
+		.await
+	{
+		Ok(Some(m)) => m,
+		Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get monitor");
+			return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+		}
+	};
+
+	// Set status to paused
+	let old_status = monitor.status;
+	monitor.status = MonitorStatus::Paused;
+
+	if let Err(e) = state.crons_repo.update_monitor(&monitor).await {
+		tracing::error!(error = %e, "Failed to pause monitor");
+		return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+	}
+
+	info!(monitor_id = %monitor.id, "Monitor paused");
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::CronMonitorPaused)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("cron_monitor", monitor.id.to_string())
+			.details(serde_json::json!({
+				"org_id": monitor.org_id.to_string(),
+				"slug": monitor.slug.clone(),
+				"previous_status": old_status.to_string(),
+			}))
+			.build(),
+	);
+
+	Json(monitor).into_response()
+}
+
+/// POST /api/crons/monitors/{slug}/resume - Resume monitoring
+#[utoipa::path(
+	post,
+	path = "/api/crons/monitors/{slug}/resume",
+	params(
+		("slug" = String, Path, description = "Monitor slug"),
+		("org_id" = OrgId, Query, description = "Organization ID"),
+	),
+	responses(
+		(status = 200, description = "Monitor resumed", body = Monitor),
+		(status = 401, description = "Not authenticated"),
+		(status = 403, description = "Not a member of the organization"),
+		(status = 404, description = "Monitor not found"),
+	),
+	tag = "crons"
+)]
+#[instrument(skip(state, current_user), fields(slug = %slug))]
+pub async fn resume_monitor(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(slug): Path<String>,
+	Query(params): Query<GetMonitorParams>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	// Verify org membership
+	if let Err(resp) =
+		verify_org_membership(&state, &params.org_id, &current_user.user.id, &locale).await
+	{
+		return resp.into_response();
+	}
+
+	let mut monitor = match state
+		.crons_repo
+		.get_monitor_by_slug(params.org_id, &slug)
+		.await
+	{
+		Ok(Some(m)) => m,
+		Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get monitor");
+			return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+		}
+	};
+
+	// Set status to active and recalculate next expected time
+	let old_status = monitor.status;
+	monitor.status = MonitorStatus::Active;
+	monitor.next_expected_at =
+		calculate_next_expected(&monitor.schedule, &monitor.timezone, Utc::now()).ok();
+
+	if let Err(e) = state.crons_repo.update_monitor(&monitor).await {
+		tracing::error!(error = %e, "Failed to resume monitor");
+		return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+	}
+
+	info!(monitor_id = %monitor.id, "Monitor resumed");
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::CronMonitorResumed)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("cron_monitor", monitor.id.to_string())
+			.details(serde_json::json!({
+				"org_id": monitor.org_id.to_string(),
+				"slug": monitor.slug.clone(),
+				"previous_status": old_status.to_string(),
+			}))
+			.build(),
+	);
+
+	Json(monitor).into_response()
+}
+
 #[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct ListCheckInsParams {
 	pub org_id: OrgId,

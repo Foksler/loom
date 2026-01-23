@@ -320,6 +320,316 @@ async fn unauthenticated_cannot_delete_monitor() {
 }
 
 // ============================================================================
+// Monitor Update Endpoints (Authenticated)
+// ============================================================================
+
+#[tokio::test]
+async fn org_member_can_update_monitor() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let (slug, _) = create_test_monitor(&app, &org_id, "update-test-monitor").await;
+
+	let cases = vec![AuthzCase {
+		name: "org_member_can_update_monitor",
+		method: Method::PATCH,
+		path: format!("/api/crons/monitors/{}", slug),
+		user: Some(app.fixtures.org_a.member.clone()),
+		body: Some(json!({
+			"org_id": org_id,
+			"name": "Updated Monitor Name",
+			"checkin_margin_minutes": 10
+		})),
+		expected_status: StatusCode::OK,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn unauthenticated_cannot_update_monitor() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let (slug, _) = create_test_monitor(&app, &org_id, "update-unauth-test").await;
+
+	let cases = vec![AuthzCase {
+		name: "unauthenticated_cannot_update_monitor",
+		method: Method::PATCH,
+		path: format!("/api/crons/monitors/{}", slug),
+		user: None,
+		body: Some(json!({
+			"org_id": org_id,
+			"name": "Should Not Update"
+		})),
+		expected_status: StatusCode::UNAUTHORIZED,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn non_member_cannot_update_monitor() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let (slug, _) = create_test_monitor(&app, &org_id, "update-nonmember-test").await;
+
+	let cases = vec![AuthzCase {
+		name: "non_member_cannot_update_monitor",
+		method: Method::PATCH,
+		path: format!("/api/crons/monitors/{}", slug),
+		// org_b member trying to update org_a monitor
+		user: Some(app.fixtures.org_b.member.clone()),
+		body: Some(json!({
+			"org_id": org_id,
+			"name": "Should Not Update"
+		})),
+		expected_status: StatusCode::FORBIDDEN,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn update_nonexistent_monitor_returns_404() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let cases = vec![AuthzCase {
+		name: "update_nonexistent_monitor_returns_404",
+		method: Method::PATCH,
+		path: "/api/crons/monitors/nonexistent-monitor".to_string(),
+		user: Some(app.fixtures.org_a.member.clone()),
+		body: Some(json!({
+			"org_id": org_id,
+			"name": "Should Not Update"
+		})),
+		expected_status: StatusCode::NOT_FOUND,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+// ============================================================================
+// Monitor Pause/Resume Endpoints (Authenticated)
+// ============================================================================
+
+#[tokio::test]
+async fn org_member_can_pause_monitor() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let (slug, _) = create_test_monitor(&app, &org_id, "pause-test-monitor").await;
+
+	let cases = vec![AuthzCase {
+		name: "org_member_can_pause_monitor",
+		method: Method::POST,
+		path: format!("/api/crons/monitors/{}/pause?org_id={}", slug, org_id),
+		user: Some(app.fixtures.org_a.member.clone()),
+		body: Some(json!({})),
+		expected_status: StatusCode::OK,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn unauthenticated_cannot_pause_monitor() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let (slug, _) = create_test_monitor(&app, &org_id, "pause-unauth-test").await;
+
+	let cases = vec![AuthzCase {
+		name: "unauthenticated_cannot_pause_monitor",
+		method: Method::POST,
+		path: format!("/api/crons/monitors/{}/pause?org_id={}", slug, org_id),
+		user: None,
+		body: Some(json!({})),
+		expected_status: StatusCode::UNAUTHORIZED,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn non_member_cannot_pause_monitor() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let (slug, _) = create_test_monitor(&app, &org_id, "pause-nonmember-test").await;
+
+	let cases = vec![AuthzCase {
+		name: "non_member_cannot_pause_monitor",
+		method: Method::POST,
+		path: format!("/api/crons/monitors/{}/pause?org_id={}", slug, org_id),
+		// org_b member trying to pause org_a monitor
+		user: Some(app.fixtures.org_b.member.clone()),
+		body: Some(json!({})),
+		expected_status: StatusCode::FORBIDDEN,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn pause_nonexistent_monitor_returns_404() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let cases = vec![AuthzCase {
+		name: "pause_nonexistent_monitor_returns_404",
+		method: Method::POST,
+		path: format!(
+			"/api/crons/monitors/nonexistent-monitor/pause?org_id={}",
+			org_id
+		),
+		user: Some(app.fixtures.org_a.member.clone()),
+		body: Some(json!({})),
+		expected_status: StatusCode::NOT_FOUND,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn org_member_can_resume_monitor() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let (slug, _) = create_test_monitor(&app, &org_id, "resume-test-monitor").await;
+
+	// First pause the monitor
+	let _ = app
+		.post(
+			&format!("/api/crons/monitors/{}/pause?org_id={}", slug, org_id),
+			Some(&app.fixtures.org_a.member),
+			json!({}),
+		)
+		.await;
+
+	let cases = vec![AuthzCase {
+		name: "org_member_can_resume_monitor",
+		method: Method::POST,
+		path: format!("/api/crons/monitors/{}/resume?org_id={}", slug, org_id),
+		user: Some(app.fixtures.org_a.member.clone()),
+		body: Some(json!({})),
+		expected_status: StatusCode::OK,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn unauthenticated_cannot_resume_monitor() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let (slug, _) = create_test_monitor(&app, &org_id, "resume-unauth-test").await;
+
+	let cases = vec![AuthzCase {
+		name: "unauthenticated_cannot_resume_monitor",
+		method: Method::POST,
+		path: format!("/api/crons/monitors/{}/resume?org_id={}", slug, org_id),
+		user: None,
+		body: Some(json!({})),
+		expected_status: StatusCode::UNAUTHORIZED,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn non_member_cannot_resume_monitor() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let (slug, _) = create_test_monitor(&app, &org_id, "resume-nonmember-test").await;
+
+	let cases = vec![AuthzCase {
+		name: "non_member_cannot_resume_monitor",
+		method: Method::POST,
+		path: format!("/api/crons/monitors/{}/resume?org_id={}", slug, org_id),
+		// org_b member trying to resume org_a monitor
+		user: Some(app.fixtures.org_b.member.clone()),
+		body: Some(json!({})),
+		expected_status: StatusCode::FORBIDDEN,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn resume_nonexistent_monitor_returns_404() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let cases = vec![AuthzCase {
+		name: "resume_nonexistent_monitor_returns_404",
+		method: Method::POST,
+		path: format!(
+			"/api/crons/monitors/nonexistent-monitor/resume?org_id={}",
+			org_id
+		),
+		user: Some(app.fixtures.org_a.member.clone()),
+		body: Some(json!({})),
+		expected_status: StatusCode::NOT_FOUND,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn pause_and_resume_workflow() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let (slug, _) = create_test_monitor(&app, &org_id, "workflow-test-monitor").await;
+
+	// 1. Check initial status is Active
+	let response = app
+		.get(
+			&format!("/api/crons/monitors/{}?org_id={}", slug, org_id),
+			Some(&app.fixtures.org_a.member),
+		)
+		.await;
+	assert_eq!(response.status(), StatusCode::OK);
+	let (_, body) = response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let monitor: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+	assert_eq!(monitor["status"], "active");
+
+	// 2. Pause the monitor
+	let response = app
+		.post(
+			&format!("/api/crons/monitors/{}/pause?org_id={}", slug, org_id),
+			Some(&app.fixtures.org_a.member),
+			json!({}),
+		)
+		.await;
+	assert_eq!(response.status(), StatusCode::OK);
+	let (_, body) = response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let monitor: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+	assert_eq!(monitor["status"], "paused");
+
+	// 3. Resume the monitor
+	let response = app
+		.post(
+			&format!("/api/crons/monitors/{}/resume?org_id={}", slug, org_id),
+			Some(&app.fixtures.org_a.member),
+			json!({}),
+		)
+		.await;
+	assert_eq!(response.status(), StatusCode::OK);
+	let (_, body) = response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let monitor: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+	assert_eq!(monitor["status"], "active");
+}
+
+// ============================================================================
 // Check-in API Endpoints (Authenticated)
 // ============================================================================
 

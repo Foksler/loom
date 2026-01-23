@@ -1240,7 +1240,17 @@ pub fn create_router(state: AppState) -> Router {
 		)
 		.route(
 			"/api/crons/monitors/{slug}",
-			get(routes::crons::get_monitor).delete(routes::crons::delete_monitor),
+			get(routes::crons::get_monitor)
+				.patch(routes::crons::update_monitor)
+				.delete(routes::crons::delete_monitor),
+		)
+		.route(
+			"/api/crons/monitors/{slug}/pause",
+			post(routes::crons::pause_monitor),
+		)
+		.route(
+			"/api/crons/monitors/{slug}/resume",
+			post(routes::crons::resume_monitor),
 		)
 		.route(
 			"/api/crons/monitors/{slug}/checkins",
