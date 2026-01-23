@@ -197,7 +197,7 @@ pub struct CronInitData {
 }
 
 /// Compact representation of a monitor's current state.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, utoipa::ToSchema)]
 pub struct MonitorState {
 	/// Monitor ID.
 	pub id: MonitorId,

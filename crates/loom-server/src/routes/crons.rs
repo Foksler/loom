@@ -80,7 +80,7 @@ async fn verify_org_membership(
 // ============================================================================
 
 /// Query parameters for ping endpoints.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct PingParams {
 	pub exit_code: Option<i32>,
 }
@@ -532,7 +532,7 @@ pub struct CreateMonitorResponse {
 	pub ping_url: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct ListMonitorsParams {
 	pub org_id: OrgId,
 }
@@ -722,7 +722,7 @@ pub async fn create_monitor(
 		.into_response()
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct GetMonitorParams {
 	pub org_id: OrgId,
 }
@@ -840,7 +840,7 @@ pub async fn delete_monitor(
 	StatusCode::NO_CONTENT.into_response()
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct ListCheckInsParams {
 	pub org_id: OrgId,
 	pub limit: Option<u32>,
@@ -1308,7 +1308,7 @@ pub async fn get_checkin(
 // SSE Streaming Endpoints
 // ============================================================================
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct StreamCronsParams {
 	pub org_id: OrgId,
 }
