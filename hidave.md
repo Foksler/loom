@@ -11,6 +11,21 @@
 
 ### Recent Progress
 
+**2026-01-23:** Added OpenAPI documentation for observability endpoints ✅ DEPLOYED
+- Added crash, crons, app-sessions tags to OpenAPI spec
+- Registered all observability endpoints in ApiDoc paths:
+  - Crash: 26 endpoints (capture, batch, projects, issues, releases, artifacts, api-keys, etc.)
+  - Crons: 12 endpoints (ping, monitors, check-ins, stream)
+  - Sessions: 5 endpoints (start, end, list, release health)
+- Added request/response schemas for all observability types
+- Added ToSchema derives to missing types (MonitorState, PingParams, ListMonitorsParams, GetMonitorParams, ListCheckInsParams, StreamCronsParams)
+- Updated API description to include observability features
+- Verified: All observability endpoints documented and accessible via `/api/openapi.json`
+- Verified: Crash, crons, app-sessions tags present in deployed spec
+- Verified: Endpoints tested via curl successfully
+- Commits: `76625093` (OpenAPI docs), `2a19e0c7` (Cargo.nix update)
+- Deployed to production: Working correctly
+
 **2026-01-23:** Added loom-jobs auto-instrumentation hook ✅
 - Created `loom-jobs` crate with `Job` trait and `JobRunner`
 - Added `MonitoredJob` wrapper to `loom-crons` for automatic job monitoring
@@ -931,11 +946,16 @@ Reference pattern: [crates/loom-server/src/routes/analytics.rs](crates/loom-serv
   - `/api/sessions/*` routes on AuthedRouter (session start/end)
   - `/api/app-sessions/*` routes on AuthedRouter (session list, release health)
 
-### 5.4 Add OpenAPI Documentation
+### 5.4 Add OpenAPI Documentation ✅ COMPLETED 2026-01-23
 
-- [ ] Add `#[utoipa::path(...)]` attributes to all handlers
-- [ ] Add request/response types to API schemas
-- [ ] Update OpenAPI tags for new sections
+- [x] Add `#[utoipa::path(...)]` attributes to all handlers
+- [x] Add request/response types to API schemas
+- [x] Update OpenAPI tags for new sections
+- Verified: All observability endpoints (crash, crons, app-sessions) have utoipa::path documentation
+- Verified: OpenAPI spec includes observability tags and paths
+- Verified: All request/response types have ToSchema derives
+- Verified: Build succeeds with utoipa integration
+- Commit: `76625093`
 
 ---
 
