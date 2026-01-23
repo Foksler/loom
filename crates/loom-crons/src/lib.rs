@@ -80,9 +80,14 @@
 
 mod client;
 mod error;
+#[cfg(feature = "jobs")]
+mod integration;
 
 pub use client::{CheckInError, CheckInOk, ClientConfig, CronsClient, CronsClientBuilder};
 pub use error::{CronsSdkError, Result};
+
+#[cfg(feature = "jobs")]
+pub use integration::{MonitoredJob, WithCronsMonitoring};
 
 // Re-export core types for convenience
 pub use loom_crons_core::{

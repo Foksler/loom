@@ -40,6 +40,7 @@ members = [
 	"crates/loom-common-i18n",
 	"crates/loom-server-geoip",
 	"crates/loom-server-jobs",
+	"crates/loom-jobs",
 	"crates/loom-server-logs",
 	"crates/loom-scim",
 	"crates/loom-server-scim",

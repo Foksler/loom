@@ -7,7 +7,23 @@
 
 **Status:** In Progress\
 **Version:** 1.3\
-**Last Updated:** 2026-01-21
+**Last Updated:** 2026-01-23
+
+### Recent Progress
+
+**2026-01-23:** Added loom-jobs auto-instrumentation hook ✅
+- Created `loom-jobs` crate with `Job` trait and `JobRunner`
+- Added `MonitoredJob` wrapper to `loom-crons` for automatic job monitoring
+- Integration creates check-ins automatically when jobs start and complete
+- New `jobs` feature flag in `loom-crons` for optional integration
+- Added `MonitoredJob` struct with `new()`, `run()`, `id()`, `name()`, `monitor_slug()` methods
+- Added 2 unit tests for MonitoredJob
+- Added example `jobs_integration.rs` demonstrating usage
+- All tests pass:
+  - loom-jobs: 2 tests pass
+  - loom-crons (jobs feature): 12 tests pass (including 2 integration tests)
+- Verified workspace builds successfully
+- Commits: N/A (pending commit)
 
 ### Recent Progress
 
@@ -1024,7 +1040,7 @@ loom-crons/
 - [x] Implement `with_monitor()` convenience wrapper ✅
 - [x] Added 10 unit tests ✅
 - [x] Verified working in production ✅
-- [ ] Implement loom-jobs auto-instrumentation hook ([specs/crons-system.md#54-integration-with-loom-jobs](specs/crons-system.md))
+- [x] Implement loom-jobs auto-instrumentation hook ([specs/crons-system.md#54-integration-with-loom-jobs](specs/crons-system.md)) ✅ (2026-01-23)
 
 ---
 

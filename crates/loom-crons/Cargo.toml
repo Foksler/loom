@@ -12,6 +12,7 @@ license = "Proprietary"
 loom-crons-core = { path = "../loom-crons-core" }
 loom-common-http = { path = "../loom-common-http" }
 loom-crash = { path = "../loom-crash", optional = true }
+loom-jobs = { path = "../loom-jobs", optional = true }
 
 async-trait = "0.1"
 chrono = { version = "0.4", features = ["serde"] }
@@ -30,3 +31,4 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 [features]
 default = []
 crash = ["loom-crash"]
+jobs = ["loom-jobs"]
