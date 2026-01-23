@@ -11,6 +11,27 @@
 
 ### Recent Progress
 
+**2026-01-23:** Added crons CLI commands for monitoring management ✅ DEPLOYED
+- Implemented CLI commands for crons monitoring (completing CLI coverage for observability):
+  - `loom crons monitors -o <org-id>` — List monitors for an organization
+  - `loom crons get -o <org-id> -s <slug>` — Get monitor details (with ping URL)
+  - `loom crons create -o <org> -s <slug> -n <name> --cron <expr>` — Create monitor (cron schedule)
+  - `loom crons create -o <org> -s <slug> -n <name> --interval <mins>` — Create monitor (interval)
+  - `loom crons delete -o <org> -s <slug>` — Delete monitor
+  - `loom crons checkins -o <org> -s <slug>` — List check-ins for a monitor
+  - `loom crons ping <key>` — Send success ping to monitor
+  - `loom crons ping-fail <key>` — Send failure ping to monitor
+- Added `crons_client.rs` HTTP client module to loom-cli
+- All commands support `--json` flag for JSON output
+- Verified working in production via CLI:
+  ```bash
+  loom --server-url https://loom.ghuntley.com crons monitors -o <org-id>
+  loom --server-url https://loom.ghuntley.com crons get -o <org-id> -s daily-backup-test
+  loom --server-url https://loom.ghuntley.com crons ping <ping-key>
+  ```
+- Also verified via curl with same endpoints
+- Commit: `8a3b79a7`
+
 **2026-01-23:** Added OpenAPI documentation for observability endpoints ✅ DEPLOYED
 - Added crash, crons, app-sessions tags to OpenAPI spec
 - Registered all observability endpoints in ApiDoc paths:
@@ -1082,6 +1103,8 @@ loom-crons/
 - [x] Added 10 unit tests ✅
 - [x] Verified working in production ✅
 - [x] Implement loom-jobs auto-instrumentation hook ([specs/crons-system.md#54-integration-with-loom-jobs](specs/crons-system.md)) ✅ (2026-01-23)
+- [x] Implement CLI commands for crons monitoring ✅ (2026-01-23)
+  - `loom crons monitors`, `get`, `create`, `delete`, `checkins`, `ping`, `ping-fail`
 
 ---
 
