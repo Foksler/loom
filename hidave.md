@@ -11,6 +11,17 @@
 
 ### Recent Progress
 
+**2026-01-24:** Added Sessions CLI Commands ✅
+- Created `crates/loom-cli/src/sessions_client.rs` - HTTP client for sessions analytics API
+- Added `SessionsCommand` enum with subcommands: `list`, `releases`, `release`
+- **New CLI commands:**
+  - `loom sessions list -p <project-id>` — List sessions for a project (with pagination)
+  - `loom sessions releases -p <project-id>` — List release health metrics for a project
+  - `loom sessions release -p <project-id> -v <version>` — Get release health detail for specific version
+- All commands support `--json` flag for JSON output
+- Verified via curl and CLI against production server
+- This completes CLI coverage for the observability suite (crash, crons, sessions)
+
 **2026-01-24:** Phase 15 Deployment Verification Complete ✅ VERIFIED IN PRODUCTION
 - Comprehensive end-to-end verification of all observability suite functionality
 - **Crash Analytics API verified:**
@@ -38,6 +49,9 @@
   - `loom crons get -o <org-id> -s <slug>` ✅
   - `loom crons checkins -o <org-id> -s <slug>` ✅
   - `loom crons ping <key>` ✅
+  - `loom sessions list -p <project-id>` ✅
+  - `loom sessions releases -p <project-id>` ✅
+  - `loom sessions release -p <project-id> -v <version>` ✅
 - Health endpoint shows: 12 jobs healthy, all components operational
 - This completes Phase 15 (Deployment & Verification) of the implementation plan
 

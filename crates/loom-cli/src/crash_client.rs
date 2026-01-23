@@ -48,6 +48,7 @@ pub struct CreateProjectRequest {
 	pub platform: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct UploadArtifactResponse {
 	pub id: String,
@@ -153,6 +154,7 @@ impl CrashClient {
 		Ok(project)
 	}
 
+	#[allow(dead_code)]
 	pub async fn get_project(&self, project_id: &str) -> Result<CrashProject> {
 		let url = self
 			.base_url
@@ -173,6 +175,7 @@ impl CrashClient {
 		Ok(project)
 	}
 
+	#[allow(dead_code)]
 	pub async fn delete_project(&self, project_id: &str) -> Result<()> {
 		let url = self
 			.base_url
@@ -216,6 +219,7 @@ impl CrashClient {
 		Ok(issues)
 	}
 
+	#[allow(dead_code)]
 	pub async fn resolve_issue(&self, project_id: &str, issue_id: &str) -> Result<()> {
 		let url = self.base_url.join(&format!(
 			"api/crash/projects/{}/issues/{}/resolve",
@@ -284,6 +288,7 @@ impl CrashClient {
 		Ok(result)
 	}
 
+	#[allow(dead_code)]
 	pub async fn list_artifacts(&self, project_id: &str) -> Result<UploadArtifactsResponse> {
 		let url = self
 			.base_url

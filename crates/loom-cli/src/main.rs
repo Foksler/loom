@@ -67,6 +67,7 @@ mod crash_client;
 mod credential_helper;
 mod crons_client;
 mod locale;
+mod sessions_client;
 mod update;
 mod version;
 mod weaver_client;
@@ -255,6 +256,11 @@ enum Command {
 		#[command(subcommand)]
 		command: CronsCommand,
 	},
+	/// Session analytics commands
+	Sessions {
+		#[command(subcommand)]
+		command: SessionsCommand,
+	},
 }
 
 #[derive(Subcommand, Debug)]
@@ -416,6 +422,58 @@ enum CronsCommand {
 	PingFail {
 		/// Ping key (UUID from monitor details)
 		key: String,
+	},
+}
+
+#[derive(Subcommand, Debug)]
+enum SessionsCommand {
+	/// List sessions for a project
+	List {
+		/// Project ID (required)
+		#[arg(long, short)]
+		project: String,
+		/// Maximum number of results
+		#[arg(long, short, default_value = "50")]
+		limit: u32,
+		/// Offset for pagination
+		#[arg(long, default_value = "0")]
+		offset: u32,
+		/// Output as JSON
+		#[arg(long)]
+		json: bool,
+	},
+	/// List release health for a project
+	Releases {
+		/// Project ID (required)
+		#[arg(long, short)]
+		project: String,
+		/// Environment filter (default: production)
+		#[arg(long, short, default_value = "production")]
+		environment: String,
+		/// Number of days to look back (default: 7)
+		#[arg(long, short, default_value = "7")]
+		days: u32,
+		/// Output as JSON
+		#[arg(long)]
+		json: bool,
+	},
+	/// Get release health detail for a specific version
+	Release {
+		/// Project ID (required)
+		#[arg(long, short)]
+		project: String,
+		/// Release version (required)
+		#[arg(long, short)]
+		version: String,
+		/// Environment filter (default: production)
+		#[arg(long, short, default_value = "production")]
+		environment: String,
+		/// Number of days to look back (default: 7)
+		#[arg(long, short, default_value = "7")]
+		days: u32,
+		/// Output as JSON
+		#[arg(long)]
+		json: bool,
 	},
 }
 
@@ -1506,6 +1564,10 @@ async fn main() -> Result<()> {
 			let token = auth::load_token(&args.server_url).await;
 			run_crons_command(&args.server_url, token, command).await
 		}
+		Some(Command::Sessions { command }) => {
+			let token = auth::load_token(&args.server_url).await;
+			run_sessions_command(&args.server_url, token, command).await
+		}
 		None => {
 			let thread = create_new_thread(&config, &args)?;
 			start_repl_session(&config, &args, thread_store, thread).await
@@ -2141,6 +2203,135 @@ async fn run_crons_command(
 		CronsCommand::PingFail { key } => {
 			client.ping_fail(key).await?;
 			println!("Fail ping sent successfully.");
+		}
+	}
+
+	Ok(())
+}
+
+async fn run_sessions_command(
+	server_url: &str,
+	token: Option<loom_common_secret::SecretString>,
+	command: &SessionsCommand,
+) -> Result<()> {
+	let mut client = sessions_client::SessionsClient::new(server_url)?;
+	if let Some(token) = token {
+		client = client.with_token(token);
+	}
+
+	match command {
+		SessionsCommand::List {
+			project,
+			limit,
+			offset,
+			json,
+		} => {
+			let sessions = client
+				.list_sessions(project, Some(*limit), Some(*offset))
+				.await?;
+			if *json {
+				println!("{}", serde_json::to_string_pretty(&sessions)?);
+			} else if sessions.is_empty() {
+				println!("No sessions found for project.");
+			} else {
+				println!(
+					"{:<40} {:<20} {:<12} {:<12} {:>8} {:>8} {:<20}",
+					"ID", "DISTINCT_ID", "STATUS", "PLATFORM", "ERRORS", "CRASHES", "STARTED"
+				);
+				println!("{}", "-".repeat(120));
+				for s in &sessions {
+					let distinct_display = if s.distinct_id.len() > 18 {
+						format!("{}...", &s.distinct_id[..15])
+					} else {
+						s.distinct_id.clone()
+					};
+					println!(
+						"{:<40} {:<20} {:<12} {:<12} {:>8} {:>8} {:<20}",
+						s.id,
+						distinct_display,
+						s.status,
+						s.platform,
+						s.error_count,
+						s.crash_count,
+						s.started_at.format("%Y-%m-%d %H:%M")
+					);
+				}
+			}
+		}
+		SessionsCommand::Releases {
+			project,
+			environment,
+			days,
+			json,
+		} => {
+			let releases = client
+				.list_release_health(project, Some(environment), Some(*days))
+				.await?;
+			if *json {
+				println!("{}", serde_json::to_string_pretty(&releases)?);
+			} else if releases.is_empty() {
+				println!("No release health data found for project.");
+			} else {
+				println!(
+					"{:<20} {:<15} {:>10} {:>10} {:>12} {:>12} {:<12}",
+					"RELEASE", "ENVIRONMENT", "SESSIONS", "CRASHED", "CFR_SESSION", "CFR_USER", "ADOPTION"
+				);
+				println!("{}", "-".repeat(91));
+				for r in &releases {
+					let release_display = if r.release.len() > 18 {
+						format!("{}...", &r.release[..15])
+					} else {
+						r.release.clone()
+					};
+					println!(
+						"{:<20} {:<15} {:>10} {:>10} {:>11.1}% {:>11.1}% {:<12}",
+						release_display,
+						r.environment,
+						r.total_sessions,
+						r.crashed_sessions,
+						r.crash_free_session_rate * 100.0,
+						r.crash_free_user_rate * 100.0,
+						r.adoption_stage
+					);
+				}
+			}
+		}
+		SessionsCommand::Release {
+			project,
+			version,
+			environment,
+			days,
+			json,
+		} => {
+			let health = client
+				.get_release_health(project, version, Some(environment), Some(*days))
+				.await?;
+			if *json {
+				println!("{}", serde_json::to_string_pretty(&health)?);
+			} else {
+				println!("Release: {}", health.release);
+				println!("  Environment: {}", health.environment);
+				println!("  Total sessions: {}", health.total_sessions);
+				println!("  Crashed sessions: {}", health.crashed_sessions);
+				println!(
+					"  Crash-free session rate: {:.2}%",
+					health.crash_free_session_rate * 100.0
+				);
+				println!(
+					"  Crash-free user rate: {:.2}%",
+					health.crash_free_user_rate * 100.0
+				);
+				println!("  Adoption rate: {:.2}%", health.adoption_rate * 100.0);
+				println!("  Adoption stage: {}", health.adoption_stage);
+				println!(
+					"  First seen: {}",
+					health.first_seen.format("%Y-%m-%d %H:%M:%S UTC")
+				);
+				println!(
+					"  Last seen: {}",
+					health.last_seen.format("%Y-%m-%d %H:%M:%S UTC")
+				);
+			}
 		}
 	}
 
