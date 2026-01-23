@@ -22,7 +22,9 @@ use loom_crash_core::ProjectId;
 use loom_server_auth::types::OrgId as AuthOrgId;
 use loom_server_crash::CrashRepository;
 use loom_server_sessions::SessionsRepository;
-use loom_sessions_core::{Platform, ReleaseHealth, Session, SessionId, SessionStatus};
+use loom_sessions_core::{
+	sampling::should_sample, Platform, ReleaseHealth, Session, SessionId, SessionStatus,
+};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
@@ -179,13 +181,7 @@ pub async fn start_session(
 	let session_id = SessionId::new();
 
 	// Deterministic sampling based on session ID hash
-	let sampled = {
-		use std::hash::{Hash, Hasher};
-		let mut hasher = std::collections::hash_map::DefaultHasher::new();
-		session_id.to_string().hash(&mut hasher);
-		let hash = hasher.finish();
-		(hash % 10000) < ((body.sample_rate * 10000.0) as u64)
-	};
+	let sampled = should_sample(&session_id.to_string(), body.sample_rate);
 	let now = Utc::now();
 
 	let session = Session {

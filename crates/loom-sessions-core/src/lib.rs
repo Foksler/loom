@@ -24,11 +24,13 @@
 pub mod aggregate;
 pub mod error;
 pub mod release_health;
+pub mod sampling;
 pub mod session;
 
 pub use aggregate::{SessionAggregate, SessionAggregateId};
 pub use error::SessionsError;
 pub use release_health::{AdoptionStage, ReleaseHealth};
+pub use sampling::{clamp_sample_rate, is_valid_sample_rate, should_sample};
 pub use session::{Platform, Session, SessionId, SessionStatus};
 
 /// Result type for sessions operations.

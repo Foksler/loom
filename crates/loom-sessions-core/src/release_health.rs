@@ -151,7 +151,8 @@ impl AdoptionStage {
 		} else if rate < 95.0 {
 			AdoptionStage::Adopted
 		} else {
-			AdoptionStage::Adopted
+			// >= 95% adoption means a newer release has replaced this one
+			AdoptionStage::Replaced
 		}
 	}
 }
@@ -217,7 +218,8 @@ mod tests {
 		assert_eq!(AdoptionStage::from_rate(2.0), AdoptionStage::New);
 		assert_eq!(AdoptionStage::from_rate(25.0), AdoptionStage::Growing);
 		assert_eq!(AdoptionStage::from_rate(75.0), AdoptionStage::Adopted);
-		assert_eq!(AdoptionStage::from_rate(98.0), AdoptionStage::Adopted);
+		// >= 95% means a newer release has replaced this one
+		assert_eq!(AdoptionStage::from_rate(98.0), AdoptionStage::Replaced);
 	}
 
 	#[test]

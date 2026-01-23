@@ -11,6 +11,23 @@
 
 ### Recent Progress
 
+**2026-01-24:** Added sampling logic unit tests to loom-sessions-core ✅
+- Created `crates/loom-sessions-core/src/sampling.rs` with deterministic sampling algorithm:
+  - `should_sample(session_id, sample_rate)` - hash-based deterministic sampling
+  - `compute_hash(session_id)` - consistent hash function
+  - `is_valid_sample_rate(rate)` - validation for 0.0-1.0 range
+  - `clamp_sample_rate(rate)` - clamp invalid rates to valid range
+- Added 24 unit tests (17 standard + 7 proptest):
+  - Basic tests: 100% always samples, 0% never samples, deterministic behavior
+  - Edge cases: negative rates, rates > 1.0, boundary conditions
+  - Statistical distribution tests: 10%, 50%, 90% sample rates
+  - Proptest: deterministic sampling, rate validation, hash consistency
+- Refactored `loom-server/src/routes/app_sessions.rs` to use new sampling module
+- All 41 tests pass in loom-sessions-core (was 17, now 41 with sampling tests)
+- Validated via curl: sessions with 100% rate sampled, 0% rate not sampled
+- Validated via CLI: crash projects, crash issues, crons monitors all working
+- This completes Phase 13.1 sampling logic unit tests
+
 **2026-01-24:** Added integration tests for crash and session business logic ✅
 - Created `crates/loom-server/tests/authz/crash_integration.rs` (9 tests):
   - Fingerprinting tests: same crashes grouped, different types/stacks create separate issues
@@ -1429,13 +1446,19 @@ Reference: [crates/loom-jobs/](crates/loom-jobs/)
 
 **Goal:** Comprehensive test coverage for all components.
 
-### 13.1 Unit Tests
+### 13.1 Unit Tests ✅ COMPLETED 2026-01-24
 
-- [ ] Core type validation (proptest)
-- [ ] Fingerprinting algorithm tests
-- [ ] VLQ decoder tests
-- [ ] Cron expression parsing tests
-- [ ] Sampling logic tests
+- [x] Core type validation (proptest) ✅
+  - `loom-crash-core`: OrgId, UserId, PersonId, CrashApiKeyId roundtrip tests
+  - `loom-sessions-core`: SessionId, SessionStatus, Platform, SessionAggregateId roundtrip tests
+- [x] Fingerprinting algorithm tests ✅
+  - `loom-crash-core/src/fingerprint.rs`: 7 tests for fingerprinting logic
+- [x] VLQ decoder tests ✅
+  - `loom-crash-symbolicate/src/vlq.rs`: 7 tests for VLQ decoding
+- [x] Cron expression parsing tests ✅
+  - `loom-server-crons/src/schedule.rs`: 10 tests for cron parsing
+- [x] Sampling logic tests ✅ (NEW 2026-01-24)
+  - `loom-sessions-core/src/sampling.rs`: 24 tests (17 unit + 7 proptest)
 
 ### 13.2 Integration Tests ✅ COMPLETED 2026-01-24
 
