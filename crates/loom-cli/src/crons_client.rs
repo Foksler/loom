@@ -80,6 +80,23 @@ pub struct CreateMonitorRequest {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct UpdateMonitorRequest {
+	pub org_id: String,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub name: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub description: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub schedule: Option<MonitorScheduleRequest>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub timezone: Option<String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub checkin_margin_minutes: Option<u32>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub max_runtime_minutes: Option<Option<u32>>,
+}
+
+#[derive(Debug, Clone, Serialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum MonitorScheduleRequest {
 	Cron { expression: String },
@@ -218,6 +235,72 @@ impl CronsClient {
 		}
 
 		Ok(())
+	}
+
+	pub async fn update_monitor(
+		&self,
+		slug: &str,
+		request: &UpdateMonitorRequest,
+	) -> Result<Monitor> {
+		let url = self
+			.base_url
+			.join(&format!("api/crons/monitors/{}", slug))?;
+		let mut req = self.http.patch(url).json(request);
+		if let Some(auth) = self.auth_header() {
+			req = req.header("Authorization", auth);
+		}
+
+		let response = req.send().await?;
+		if !response.status().is_success() {
+			let status = response.status();
+			let body = response.text().await.unwrap_or_default();
+			anyhow::bail!("Failed to update monitor: {status} - {body}");
+		}
+
+		let monitor: Monitor = response.json().await?;
+		Ok(monitor)
+	}
+
+	pub async fn pause_monitor(&self, org_id: &str, slug: &str) -> Result<Monitor> {
+		let url = self.base_url.join(&format!(
+			"api/crons/monitors/{}/pause?org_id={}",
+			slug, org_id
+		))?;
+		let mut req = self.http.post(url);
+		if let Some(auth) = self.auth_header() {
+			req = req.header("Authorization", auth);
+		}
+
+		let response = req.send().await?;
+		if !response.status().is_success() {
+			let status = response.status();
+			let body = response.text().await.unwrap_or_default();
+			anyhow::bail!("Failed to pause monitor: {status} - {body}");
+		}
+
+		let monitor: Monitor = response.json().await?;
+		Ok(monitor)
+	}
+
+	pub async fn resume_monitor(&self, org_id: &str, slug: &str) -> Result<Monitor> {
+		let url = self.base_url.join(&format!(
+			"api/crons/monitors/{}/resume?org_id={}",
+			slug, org_id
+		))?;
+		let mut req = self.http.post(url);
+		if let Some(auth) = self.auth_header() {
+			req = req.header("Authorization", auth);
+		}
+
+		let response = req.send().await?;
+		if !response.status().is_success() {
+			let status = response.status();
+			let body = response.text().await.unwrap_or_default();
+			anyhow::bail!("Failed to resume monitor: {status} - {body}");
+		}
+
+		let monitor: Monitor = response.json().await?;
+		Ok(monitor)
 	}
 
 	// ========================================================================

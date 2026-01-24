@@ -423,6 +423,63 @@ enum CronsCommand {
 		/// Ping key (UUID from monitor details)
 		key: String,
 	},
+	/// Update a cron monitor
+	Update {
+		/// Organization ID (required)
+		#[arg(long, short)]
+		org: String,
+		/// Monitor slug (required)
+		#[arg(long, short)]
+		slug: String,
+		/// New monitor name
+		#[arg(long, short)]
+		name: Option<String>,
+		/// New description
+		#[arg(long, short)]
+		description: Option<String>,
+		/// New cron expression (e.g., "0 0 * * *")
+		#[arg(long, conflicts_with = "interval")]
+		cron: Option<String>,
+		/// New interval in minutes
+		#[arg(long, conflicts_with = "cron")]
+		interval: Option<u32>,
+		/// New timezone
+		#[arg(long)]
+		timezone: Option<String>,
+		/// New check-in margin in minutes
+		#[arg(long)]
+		margin: Option<u32>,
+		/// New max runtime in minutes (use 0 to clear)
+		#[arg(long)]
+		max_runtime: Option<u32>,
+		/// Output as JSON
+		#[arg(long)]
+		json: bool,
+	},
+	/// Pause monitoring for a cron monitor
+	Pause {
+		/// Organization ID (required)
+		#[arg(long, short)]
+		org: String,
+		/// Monitor slug (required)
+		#[arg(long, short)]
+		slug: String,
+		/// Output as JSON
+		#[arg(long)]
+		json: bool,
+	},
+	/// Resume monitoring for a paused cron monitor
+	Resume {
+		/// Organization ID (required)
+		#[arg(long, short)]
+		org: String,
+		/// Monitor slug (required)
+		#[arg(long, short)]
+		slug: String,
+		/// Output as JSON
+		#[arg(long)]
+		json: bool,
+	},
 }
 
 #[derive(Subcommand, Debug)]
@@ -2203,6 +2260,91 @@ async fn run_crons_command(
 		CronsCommand::PingFail { key } => {
 			client.ping_fail(key).await?;
 			println!("Fail ping sent successfully.");
+		}
+		CronsCommand::Update {
+			org,
+			slug,
+			name,
+			description,
+			cron,
+			interval,
+			timezone,
+			margin,
+			max_runtime,
+			json,
+		} => {
+			// Build schedule if either cron or interval is provided
+			let schedule = match (cron, interval) {
+				(Some(expr), None) => Some(crons_client::MonitorScheduleRequest::Cron {
+					expression: expr.clone(),
+				}),
+				(None, Some(mins)) => {
+					Some(crons_client::MonitorScheduleRequest::Interval { minutes: *mins })
+				}
+				(None, None) => None,
+				_ => unreachable!("clap conflicts_with prevents both being set"),
+			};
+
+			// Handle max_runtime: 0 means clear it (Some(None)), otherwise set it (Some(Some(n)))
+			let max_runtime_option = max_runtime.map(|n| if n == 0 { None } else { Some(n) });
+
+			let request = crons_client::UpdateMonitorRequest {
+				org_id: org.clone(),
+				name: name.clone(),
+				description: description.clone(),
+				schedule,
+				timezone: timezone.clone(),
+				checkin_margin_minutes: *margin,
+				max_runtime_minutes: max_runtime_option,
+			};
+
+			let monitor = client.update_monitor(slug, &request).await?;
+			if *json {
+				println!("{}", serde_json::to_string_pretty(&monitor)?);
+			} else {
+				println!("Monitor '{}' updated:", monitor.slug);
+				println!("  Name: {}", monitor.name);
+				println!("  Status: {}", monitor.status);
+				println!("  Health: {}", monitor.health);
+				println!(
+					"  Schedule: {}",
+					match &monitor.schedule {
+						crons_client::MonitorSchedule::Cron { expression } => format!("cron({})", expression),
+						crons_client::MonitorSchedule::Interval { minutes } =>
+							format!("every {} minutes", minutes),
+					}
+				);
+				println!("  Timezone: {}", monitor.timezone);
+				println!(
+					"  Check-in margin: {} minutes",
+					monitor.checkin_margin_minutes
+				);
+				if let Some(max) = monitor.max_runtime_minutes {
+					println!("  Max runtime: {} minutes", max);
+				}
+			}
+		}
+		CronsCommand::Pause { org, slug, json } => {
+			let monitor = client.pause_monitor(org, slug).await?;
+			if *json {
+				println!("{}", serde_json::to_string_pretty(&monitor)?);
+			} else {
+				println!("Monitor '{}' paused.", monitor.slug);
+				println!("  Status: {}", monitor.status);
+				println!("  Monitoring is temporarily disabled. Use 'loom crons resume' to re-enable.");
+			}
+		}
+		CronsCommand::Resume { org, slug, json } => {
+			let monitor = client.resume_monitor(org, slug).await?;
+			if *json {
+				println!("{}", serde_json::to_string_pretty(&monitor)?);
+			} else {
+				println!("Monitor '{}' resumed.", monitor.slug);
+				println!("  Status: {}", monitor.status);
+				if let Some(next) = &monitor.next_expected_at {
+					println!("  Next expected: {}", next.format("%Y-%m-%d %H:%M:%S UTC"));
+				}
+			}
 		}
 	}
 

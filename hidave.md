@@ -11,6 +11,20 @@
 
 ### Recent Progress
 
+**2026-01-24:** Added CLI Commands for Monitor Update/Pause/Resume ✅
+- Implemented missing CLI commands for the monitor management endpoints:
+  - `loom crons update -o <org> -s <slug> [--name, --cron, --interval, --timezone, --margin, --max-runtime]`
+  - `loom crons pause -o <org> -s <slug>` — Pause monitoring
+  - `loom crons resume -o <org> -s <slug>` — Resume monitoring
+- Added client methods to `crons_client.rs`: `update_monitor`, `pause_monitor`, `resume_monitor`
+- All commands support `--json` flag for JSON output
+- Verified via curl (all three endpoints working) ✅
+- Verified via loom-cli:
+  - `loom crons update -o <org-id> -s test-cron-monitor --name "CLI Updated Monitor" --margin 10` ✅
+  - `loom crons pause -o <org-id> -s test-cron-monitor` — Status changed to "paused" ✅
+  - `loom crons resume -o <org-id> -s test-cron-monitor` — Status changed to "active" ✅
+- This completes CLI coverage for all crons endpoints
+
 **2026-01-24:** Added Monitor Management Endpoints for Crons API ✅
 - Implemented three new endpoints for cron monitor management:
   - `PATCH /api/crons/monitors/{slug}` — Update monitor settings (name, schedule, timezone, margin, etc.)
@@ -1284,8 +1298,9 @@ loom-crons/
 - [x] Added 10 unit tests ✅
 - [x] Verified working in production ✅
 - [x] Implement loom-jobs auto-instrumentation hook ([specs/crons-system.md#54-integration-with-loom-jobs](specs/crons-system.md)) ✅ (2026-01-23)
-- [x] Implement CLI commands for crons monitoring ✅ (2026-01-23)
+- [x] Implement CLI commands for crons monitoring ✅ (2026-01-23, updated 2026-01-24)
   - `loom crons monitors`, `get`, `create`, `delete`, `checkins`, `ping`, `ping-fail`
+  - `loom crons update`, `pause`, `resume` (added 2026-01-24)
 
 ---
 
