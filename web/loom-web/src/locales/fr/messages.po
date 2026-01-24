@@ -23,6 +23,22 @@ msgstr "Admin"
 msgid "nav.jobs"
 msgstr "Tâches"
 
+#: nav.observability
+msgid "nav.observability"
+msgstr "Observability"
+
+#: nav.crashes
+msgid "nav.crashes"
+msgstr "Crashes"
+
+#: nav.crons
+msgid "nav.crons"
+msgstr "Crons"
+
+#: nav.sessions
+msgid "nav.sessions"
+msgstr "Sessions"
+
 #: thread.new
 msgid "thread.new"
 msgstr "Nouveau fil"

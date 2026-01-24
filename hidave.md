@@ -115,6 +115,7 @@ Implemented routes:
 - [x] `/crashes/[projectId]/` — Issue list with filters
 - [x] `/crashes/[projectId]/issues/[issueId]/` — Issue detail with events
 - [x] `/crons/` — Monitor list with health filtering
+- [x] `/crons/new/` — Create new monitor
 - [x] `/crons/[slug]/` — Monitor detail with check-in timeline
 - [x] `/sessions/` — Release health overview
 - [x] `/sessions/releases/[version]/` — Release detail
@@ -128,8 +129,9 @@ Implemented routes:
 
 ### 10.3 Create Layout Components
 
-- [ ] Update sidebar navigation to include observability sections
-- [ ] Create sub-navigation for each section
+- [x] Update header navigation to include observability sections (dropdown menu)
+- [x] Add `/crons/new` route for creating monitors
+- [ ] Create sub-navigation for each section (deferred)
 
 ---
 
@@ -285,6 +287,22 @@ Reference: [specs/observability-ui.md#62-notification-system](specs/observabilit
 
 ---
 
+### 2026-01-25: Web UI Navigation Integration
+
+**Added navigation for observability features:**
+- Added dropdown menu in header navigation with Crashes, Crons, Sessions links
+- Added i18n keys for navigation: `nav.observability`, `nav.crashes`, `nav.crons`, `nav.sessions`
+- Created `/crons/new` route for creating new monitors using MonitorForm component
+
+**Files modified:**
+- `web/loom-web/src/routes/(app)/+layout.svelte` — Added observability dropdown menu
+- `web/loom-web/src/locales/en/messages.po` — Added navigation i18n keys
+- `web/loom-web/src/routes/(app)/crons/new/+page.svelte` — New route for creating monitors
+
+**Build:** Verified pnpm build succeeds
+
+---
+
 ## Summary
 
 | Phase | Description | Status |
@@ -292,7 +310,7 @@ Reference: [specs/observability-ui.md#62-notification-system](specs/observabilit
 | 1-6 | Backend foundation | ✅ Complete |
 | 7-8 | SDKs | ✅ Complete |
 | 9 | Web UI components | ✅ Complete (39/39 components) |
-| 10 | Page routes | ✅ Complete (7 routes) |
+| 10 | Page routes | ✅ Complete (8 routes) |
 | 11 | SSE integration | Pending |
 | 12 | Background jobs | ✅ Complete |
 | 13 | Testing (backend) | ✅ Complete |

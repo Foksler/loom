@@ -87,6 +87,20 @@
 					<a href="/weavers" class="nav-link">
 						{i18n._('nav.weavers')}
 					</a>
+					<div class="nav-group">
+						<span class="nav-group-label">{i18n._('nav.observability')}</span>
+						<div class="nav-group-links">
+							<a href="/crashes" class="nav-link">
+								{i18n._('nav.crashes')}
+							</a>
+							<a href="/crons" class="nav-link">
+								{i18n._('nav.crons')}
+							</a>
+							<a href="/sessions" class="nav-link">
+								{i18n._('nav.sessions')}
+							</a>
+						</div>
+					</div>
 					<a href="/settings/profile" class="nav-link">
 						{i18n._('nav.settings')}
 					</a>
@@ -196,6 +210,60 @@
 	.nav-link-admin:hover {
 		color: var(--color-warning);
 		opacity: 0.8;
+	}
+
+	.nav-group {
+		position: relative;
+		display: flex;
+		align-items: center;
+	}
+
+	.nav-group-label {
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+		font-family: var(--font-mono);
+		cursor: pointer;
+		transition: color 0.15s ease;
+	}
+
+	.nav-group-label:hover {
+		color: var(--color-fg);
+	}
+
+	.nav-group-label::after {
+		content: '▾';
+		margin-left: var(--space-1);
+		font-size: 0.7em;
+	}
+
+	.nav-group-links {
+		display: none;
+		position: absolute;
+		top: 100%;
+		left: 0;
+		background: var(--color-bg-muted);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		padding: var(--space-2);
+		min-width: 120px;
+		z-index: 100;
+		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+	}
+
+	.nav-group:hover .nav-group-links {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+	}
+
+	.nav-group-links .nav-link {
+		padding: var(--space-2) var(--space-3);
+		border-radius: var(--radius-sm);
+		white-space: nowrap;
+	}
+
+	.nav-group-links .nav-link:hover {
+		background: var(--color-bg-subtle);
 	}
 
 	.header-right {
