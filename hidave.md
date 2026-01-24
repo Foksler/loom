@@ -5,7 +5,7 @@
 
 # Observability Suite Implementation Plan (UI Work)
 
-**Status:** UI Work Pending\
+**Status:** UI Components In Progress (31/39)\
 **Last Updated:** 2026-01-24
 
 Reference: [specs/observability-ui.md](specs/observability-ui.md)
@@ -33,11 +33,11 @@ Reference pattern: [web/loom-web/src/lib/ui/](web/loom-web/src/lib/ui/), [web/lo
 
 **Path:** `web/loom-web/src/lib/components/common/`
 
-- [ ] `StatCard.svelte` — Metric display with trend
-- [ ] `Sparkline.svelte` — Mini inline chart
-- [ ] `TimeRangePicker.svelte` — Time range selector
-- [ ] `RelativeTime.svelte` — "5 minutes ago" display
-- [ ] `CopyButton.svelte` — Copy to clipboard
+- [x] `StatCard.svelte` — Metric display with trend
+- [x] `Sparkline.svelte` — Mini inline chart
+- [x] `TimeRangePicker.svelte` — Time range selector
+- [x] `RelativeTime.svelte` — "5 minutes ago" display
+- [x] `CopyButton.svelte` — Copy to clipboard
 
 ### 9.2 Crash Components
 
@@ -45,49 +45,49 @@ Reference pattern: [web/loom-web/src/lib/ui/](web/loom-web/src/lib/ui/), [web/lo
 
 Reference: [specs/observability-ui.md#42-core-component-examples](specs/observability-ui.md)
 
-- [ ] `IssueList.svelte` — Paginated issue list with filters
-- [ ] `IssueListItem.svelte` — Single issue row
-- [ ] `IssueDetail.svelte` — Full issue view
-- [ ] `IssueStatusBadge.svelte` — Status indicator (Unresolved, Resolved, Regressed)
-- [ ] `CrashEventCard.svelte` — Event summary
-- [ ] `CrashEventDetail.svelte` — Full event with context
-- [ ] `Stacktrace.svelte` — Collapsible frame viewer
-- [ ] `StacktraceFrame.svelte` — Single frame with expand
-- [ ] `SourceContext.svelte` — Syntax-highlighted source lines
-- [ ] `Breadcrumbs.svelte` — Breadcrumb timeline
-- [ ] `ActiveFlags.svelte` — Feature flags at crash time
-- [ ] `UserContext.svelte` — User info display
-- [ ] `SymbolUpload.svelte` — Source map upload form
+- [x] `IssueList.svelte` — Paginated issue list with filters
+- [x] `IssueListItem.svelte` — Single issue row
+- [ ] `IssueDetail.svelte` — Full issue view (TODO)
+- [x] `IssueStatusBadge.svelte` — Status indicator (Unresolved, Resolved, Regressed)
+- [x] `CrashEventCard.svelte` — Event summary
+- [ ] `CrashEventDetail.svelte` — Full event with context (TODO)
+- [x] `Stacktrace.svelte` — Collapsible frame viewer
+- [x] `StacktraceFrame.svelte` — Single frame with expand
+- [x] `SourceContext.svelte` — Syntax-highlighted source lines
+- [x] `Breadcrumbs.svelte` — Breadcrumb timeline
+- [x] `ActiveFlags.svelte` — Feature flags at crash time
+- [x] `UserContext.svelte` — User info display
+- [x] `SymbolUpload.svelte` — Source map upload form
 
 ### 9.3 Crons Components
 
 **Path:** `web/loom-web/src/lib/components/crons/`
 
-- [ ] `MonitorList.svelte` — Monitor list with health
-- [ ] `MonitorListItem.svelte` — Single monitor row
-- [ ] `MonitorDetail.svelte` — Monitor with history
-- [ ] `MonitorForm.svelte` — Create/edit monitor
-- [ ] `MonitorStatusBadge.svelte` — Status indicator
-- [ ] `MonitorHealthBadge.svelte` — Health indicator
-- [ ] `CheckInTimeline.svelte` — Check-in history
-- [ ] `CheckInItem.svelte` — Single check-in
-- [ ] `CronScheduleInput.svelte` — Cron expression input
-- [ ] `PingUrlDisplay.svelte` — Ping URL with copy
-- [ ] `UptimeChart.svelte` — Uptime visualization
+- [x] `MonitorList.svelte` — Monitor list with health
+- [x] `MonitorListItem.svelte` — Single monitor row
+- [ ] `MonitorDetail.svelte` — Monitor with history (TODO)
+- [ ] `MonitorForm.svelte` — Create/edit monitor (TODO)
+- [x] `MonitorStatusBadge.svelte` — Status indicator
+- [x] `MonitorHealthBadge.svelte` — Health indicator
+- [x] `CheckInTimeline.svelte` — Check-in history
+- [x] `CheckInItem.svelte` — Single check-in
+- [ ] `CronScheduleInput.svelte` — Cron expression input (TODO)
+- [x] `PingUrlDisplay.svelte` — Ping URL with copy
+- [x] `UptimeChart.svelte` — Uptime visualization
 
 ### 9.4 Sessions Components
 
 **Path:** `web/loom-web/src/lib/components/sessions/`
 
-- [ ] `ReleaseHealthOverview.svelte` — Dashboard card
-- [ ] `ReleaseHealthCard.svelte` — Single release health
-- [ ] `ReleaseList.svelte` — All releases with metrics
-- [ ] `ReleaseListItem.svelte` — Single release row
-- [ ] `ReleaseDetail.svelte` — Release detail page
-- [ ] `CrashFreeChart.svelte` — Crash-free rate over time
-- [ ] `AdoptionChart.svelte` — Release adoption stacked area
-- [ ] `SessionList.svelte` — Recent sessions
-- [ ] `AdoptionStageBadge.svelte` — Adoption stage indicator
+- [x] `ReleaseHealthOverview.svelte` — Dashboard card
+- [x] `ReleaseHealthCard.svelte` — Single release health
+- [x] `ReleaseList.svelte` — All releases with metrics
+- [x] `ReleaseListItem.svelte` — Single release row
+- [ ] `ReleaseDetail.svelte` — Release detail page (TODO)
+- [x] `CrashFreeChart.svelte` — Crash-free rate over time
+- [ ] `AdoptionChart.svelte` — Release adoption stacked area (TODO)
+- [x] `SessionList.svelte` — Recent sessions
+- [x] `AdoptionStageBadge.svelte` — Adoption stage indicator
 
 ### 9.5 Create Storybook Stories
 
@@ -282,7 +282,7 @@ Reference: [specs/observability-ui.md#62-notification-system](specs/observabilit
 |-------|-------------|--------|
 | 1-6 | Backend foundation | ✅ Complete |
 | 7-8 | SDKs | ✅ Complete |
-| 9 | Web UI components | Pending |
+| 9 | Web UI components | ⏳ In Progress (31/39 components done) |
 | 10 | Page routes | Pending |
 | 11 | SSE integration | Pending |
 | 12 | Background jobs | ✅ Complete |
@@ -292,4 +292,4 @@ Reference: [specs/observability-ui.md#62-notification-system](specs/observabilit
 | 14 | Documentation (SDK/Guides) | Pending |
 | 15 | Deployment & verification | ✅ Complete |
 
-**Remaining estimated effort:** ~30-35 hours (UI work)
+**Remaining estimated effort:** ~20-25 hours (UI work: 8 components + stories + routes + SSE)
