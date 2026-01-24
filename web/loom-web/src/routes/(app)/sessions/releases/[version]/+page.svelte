@@ -41,28 +41,60 @@
 	}
 
 	// Convert ReleaseHealth to the format expected by ReleaseDetail
-	const releaseDetailData = $derived(() => {
-		if (!release) return null;
+	type ReleaseDetailFormat = {
+		version: string;
+		crash_free_rate: number;
+		crash_free_users: number;
+		adoption_percentage: number;
+		adoption_stage: 'new' | 'low' | 'adopted' | 'replaced';
+		total_sessions: number;
+		crashed_sessions: number;
+		abnormal_sessions: number;
+		errored_sessions: number;
+		total_users: number;
+		crashed_users: number;
+		first_seen: string;
+		last_seen: string;
+	};
+
+	function computeReleaseDetailData(releaseData: ReleaseHealth | null): ReleaseDetailFormat | null {
+		if (!releaseData) return null;
 		return {
-			version: release.release,
-			crash_free_rate: release.crash_free_session_rate,
-			crash_free_users: release.crash_free_user_rate,
-			adoption_percentage: release.adoption_rate,
-			adoption_stage: release.adoption_stage as 'new' | 'low' | 'adopted' | 'replaced',
-			total_sessions: release.total_sessions,
-			crashed_sessions: release.crashed_sessions,
+			version: releaseData.release,
+			crash_free_rate: releaseData.crash_free_session_rate,
+			crash_free_users: releaseData.crash_free_user_rate,
+			adoption_percentage: releaseData.adoption_rate,
+			adoption_stage: releaseData.adoption_stage as 'new' | 'low' | 'adopted' | 'replaced',
+			total_sessions: releaseData.total_sessions,
+			crashed_sessions: releaseData.crashed_sessions,
 			abnormal_sessions: 0,
-			errored_sessions: release.errored_sessions,
-			total_users: release.total_users,
-			crashed_users: release.crashed_users,
-			first_seen: release.first_seen,
-			last_seen: release.last_seen,
+			errored_sessions: releaseData.errored_sessions,
+			total_users: releaseData.total_users,
+			crashed_users: releaseData.crashed_users,
+			first_seen: releaseData.first_seen,
+			last_seen: releaseData.last_seen,
 		};
-	});
+	}
+
+	const releaseDetailData = $derived(computeReleaseDetailData(release));
 
 	// Convert AppSession to the format expected by SessionList
-	const sessionListData = $derived(() => {
-		return sessions.map((s) => ({
+	type SessionListFormat = {
+		id: string;
+		status: 'active' | 'exited' | 'crashed' | 'abnormal' | 'errored';
+		distinct_id: string;
+		release: string;
+		environment: string;
+		platform: string;
+		crashed: boolean;
+		error_count: number;
+		duration_ms: number | null;
+		started_at: string;
+		ended_at: string | null;
+	};
+
+	function computeSessionListData(sessionsData: AppSession[]): SessionListFormat[] {
+		return sessionsData.map((s) => ({
 			id: s.id,
 			status: s.status as 'active' | 'exited' | 'crashed' | 'abnormal' | 'errored',
 			distinct_id: s.distinct_id,
@@ -75,11 +107,13 @@
 			started_at: s.started_at,
 			ended_at: s.ended_at,
 		}));
-	});
+	}
+
+	const sessionListData = $derived(computeSessionListData(sessions));
 
 	// Generate mock crash-free data
-	const crashFreeData = $derived(() => {
-		if (!release) return [];
+	function computeCrashFreeData(releaseData: ReleaseHealth | null) {
+		if (!releaseData) return [];
 		const data: { timestamp: string; crash_free_rate: number; total_sessions: number; crashed_sessions: number }[] = [];
 		const now = new Date();
 		for (let i = 23; i >= 0; i--) {
@@ -87,15 +121,17 @@
 			timestamp.setHours(timestamp.getHours() - i);
 			data.push({
 				timestamp: timestamp.toISOString(),
-				crash_free_rate: release.crash_free_session_rate + (Math.random() - 0.5) * 2,
-				total_sessions: Math.floor(release.total_sessions / 24),
-				crashed_sessions: Math.floor(release.crashed_sessions / 24),
+				crash_free_rate: releaseData.crash_free_session_rate + (Math.random() - 0.5) * 2,
+				total_sessions: Math.floor(releaseData.total_sessions / 24),
+				crashed_sessions: Math.floor(releaseData.crashed_sessions / 24),
 			});
 		}
 		return data;
-	});
+	}
 
-	function handleSessionClick(session: typeof sessionListData[0]) {
+	const crashFreeData = $derived(computeCrashFreeData(release));
+
+	function handleSessionClick(session: SessionListFormat) {
 		console.log('Session clicked:', session.id);
 	}
 </script>
@@ -109,11 +145,11 @@
 		<div class="loading">Loading release data...</div>
 	{:else if error}
 		<div class="error">{error}</div>
-	{:else if releaseDetailData()}
+	{:else if releaseDetailData}
 		<ReleaseDetail
-			release={releaseDetailData()}
-			crashFreeData={crashFreeData()}
-			recentSessions={sessionListData()}
+			release={releaseDetailData}
+			crashFreeData={crashFreeData}
+			recentSessions={sessionListData}
 			onsessionclick={handleSessionClick}
 		/>
 	{/if}

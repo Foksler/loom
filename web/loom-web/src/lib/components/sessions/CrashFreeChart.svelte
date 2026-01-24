@@ -15,10 +15,12 @@
 
 	let { data, height = 200, showTarget = true, target = 99 }: Props = $props();
 
-	const chartData = $derived(() => {
-		if (data.length === 0) return { points: '', area: '', min: 95, max: 100 };
+	type ChartDataResult = { points: string; area: string; min: number; max: number };
 
-		const rates = data.map((d) => d.crash_free_rate);
+	function computeChartData(inputData: DataPoint[], chartHeight: number): ChartDataResult {
+		if (inputData.length === 0) return { points: '', area: '', min: 95, max: 100 };
+
+		const rates = inputData.map((d) => d.crash_free_rate);
 		const minRate = Math.min(...rates);
 		const maxRate = Math.max(...rates);
 		const min = Math.max(0, Math.floor(minRate - 2));
@@ -28,39 +30,41 @@
 		const width = 100;
 		const padding = 2;
 		const chartWidth = width - padding * 2;
-		const chartHeight = height - padding * 2;
-		const stepX = chartWidth / Math.max(1, data.length - 1);
+		const actualChartHeight = chartHeight - padding * 2;
+		const stepX = chartWidth / Math.max(1, inputData.length - 1);
 
-		const points = data
+		const points = inputData
 			.map((d, i) => {
 				const x = padding + i * stepX;
-				const y = padding + chartHeight - ((d.crash_free_rate - min) / range) * chartHeight;
+				const y = padding + actualChartHeight - ((d.crash_free_rate - min) / range) * actualChartHeight;
 				return `${x},${y}`;
 			})
 			.join(' ');
 
-		const areaPath = (() => {
-			const linePoints = data.map((d, i) => {
-				const x = padding + i * stepX;
-				const y = padding + chartHeight - ((d.crash_free_rate - min) / range) * chartHeight;
-				return `${x},${y}`;
-			});
-			const startX = padding;
-			const endX = padding + (data.length - 1) * stepX;
-			const bottomY = padding + chartHeight;
-			return `M${startX},${bottomY} L${linePoints.join(' L')} L${endX},${bottomY} Z`;
-		})();
+		const linePoints = inputData.map((d, i) => {
+			const x = padding + i * stepX;
+			const y = padding + actualChartHeight - ((d.crash_free_rate - min) / range) * actualChartHeight;
+			return `${x},${y}`;
+		});
+		const startX = padding;
+		const endX = padding + (inputData.length - 1) * stepX;
+		const bottomY = padding + actualChartHeight;
+		const areaPath = `M${startX},${bottomY} L${linePoints.join(' L')} L${endX},${bottomY} Z`;
 
 		return { points, area: areaPath, min, max };
-	});
+	}
 
-	const targetY = $derived(() => {
-		const { min, max } = chartData();
+	const chartData = $derived(computeChartData(data, height));
+
+	function computeTargetY(chartResult: ChartDataResult, chartHeight: number, targetValue: number): number {
+		const { min, max } = chartResult;
 		const range = max - min || 1;
 		const padding = 2;
-		const chartHeight = height - padding * 2;
-		return padding + chartHeight - ((target - min) / range) * chartHeight;
-	});
+		const actualChartHeight = chartHeight - padding * 2;
+		return padding + actualChartHeight - ((targetValue - min) / range) * actualChartHeight;
+	}
+
+	const targetY = $derived(computeTargetY(chartData, height, target));
 
 	const averageRate = $derived(
 		data.length > 0
@@ -83,15 +87,15 @@
 		<div class="chart-empty">No data available</div>
 	{:else}
 		<svg class="chart-svg" viewBox="0 0 100 {height}" preserveAspectRatio="none">
-			<path d={chartData().area} class="chart-area" />
-			<polyline points={chartData().points} class="chart-line" fill="none" />
+			<path d={chartData.area} class="chart-area" />
+			<polyline points={chartData.points} class="chart-line" fill="none" />
 
 			{#if showTarget}
 				<line
 					x1="2"
-					y1={targetY()}
+					y1={targetY}
 					x2="98"
-					y2={targetY()}
+					y2={targetY}
 					class="target-line"
 					stroke-dasharray="2,2"
 				/>
@@ -99,8 +103,8 @@
 		</svg>
 
 		<div class="chart-labels">
-			<span class="label-y">{chartData().max}%</span>
-			<span class="label-y label-min">{chartData().min}%</span>
+			<span class="label-y">{chartData.max}%</span>
+			<span class="label-y label-min">{chartData.min}%</span>
 		</div>
 	{/if}
 </div>

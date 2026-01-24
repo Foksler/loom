@@ -23,29 +23,37 @@
 		'var(--weaver-weld)',
 	];
 
-	const processedReleases = $derived(() => {
-		return releases.map((release, index) => ({
+	type ProcessedRelease = ReleaseData & { color: string };
+
+	function computeProcessedReleases(inputReleases: ReleaseData[]): ProcessedRelease[] {
+		return inputReleases.map((release, index) => ({
 			...release,
 			color: release.color || defaultColors[index % defaultColors.length],
 		}));
-	});
+	}
 
-	const chartData = $derived(() => {
-		if (releases.length === 0 || releases[0].data.length === 0) {
+	const processedReleases = $derived(computeProcessedReleases(releases));
+
+	function computeChartData(
+		inputReleases: ReleaseData[],
+		processed: ProcessedRelease[],
+		chartHeight: number
+	) {
+		if (inputReleases.length === 0 || inputReleases[0].data.length === 0) {
 			return { areas: [], labels: [] };
 		}
 
-		const dataPoints = releases[0].data.length;
+		const dataPoints = inputReleases[0].data.length;
 		const width = 100;
 		const padding = 2;
 		const chartWidth = width - padding * 2;
-		const chartHeight = height - padding * 2;
+		const actualChartHeight = chartHeight - padding * 2;
 		const stepX = chartWidth / Math.max(1, dataPoints - 1);
 
 		const areas: { path: string; color: string; version: string }[] = [];
 
-		for (let r = 0; r < processedReleases().length; r++) {
-			const release = processedReleases()[r];
+		for (let r = 0; r < processed.length; r++) {
+			const release = processed[r];
 			const points: string[] = [];
 			const bottomPoints: string[] = [];
 
@@ -54,16 +62,16 @@
 
 				let stackedY = 0;
 				for (let j = 0; j <= r; j++) {
-					stackedY += processedReleases()[j].data[i]?.percentage ?? 0;
+					stackedY += processed[j].data[i]?.percentage ?? 0;
 				}
 
 				let prevStackedY = 0;
 				for (let j = 0; j < r; j++) {
-					prevStackedY += processedReleases()[j].data[i]?.percentage ?? 0;
+					prevStackedY += processed[j].data[i]?.percentage ?? 0;
 				}
 
-				const y = padding + chartHeight - (stackedY / 100) * chartHeight;
-				const prevY = padding + chartHeight - (prevStackedY / 100) * chartHeight;
+				const y = padding + actualChartHeight - (stackedY / 100) * actualChartHeight;
+				const prevY = padding + actualChartHeight - (prevStackedY / 100) * actualChartHeight;
 
 				points.push(`${x},${y}`);
 				bottomPoints.unshift(`${x},${prevY}`);
@@ -75,14 +83,16 @@
 
 		const labels = [
 			{ value: '100%', y: padding },
-			{ value: '75%', y: padding + chartHeight * 0.25 },
-			{ value: '50%', y: padding + chartHeight * 0.5 },
-			{ value: '25%', y: padding + chartHeight * 0.75 },
-			{ value: '0%', y: padding + chartHeight },
+			{ value: '75%', y: padding + actualChartHeight * 0.25 },
+			{ value: '50%', y: padding + actualChartHeight * 0.5 },
+			{ value: '25%', y: padding + actualChartHeight * 0.75 },
+			{ value: '0%', y: padding + actualChartHeight },
 		];
 
 		return { areas, labels };
-	});
+	}
+
+	const chartData = $derived(computeChartData(releases, processedReleases, height));
 </script>
 
 <div class="adoption-chart">
@@ -95,20 +105,20 @@
 	{:else}
 		<div class="chart-container">
 			<svg class="chart-svg" viewBox="0 0 100 {height}" preserveAspectRatio="none">
-				{#each chartData().areas as area}
+				{#each chartData.areas as area}
 					<path d={area.path} fill={area.color} opacity="0.8" />
 				{/each}
 			</svg>
 
 			<div class="chart-y-labels">
-				{#each chartData().labels as label}
+				{#each chartData.labels as label}
 					<span class="y-label" style="top: {label.y}px">{label.value}</span>
 				{/each}
 			</div>
 		</div>
 
 		<div class="chart-legend">
-			{#each processedReleases() as release}
+			{#each processedReleases as release}
 				<div class="legend-item">
 					<span class="legend-color" style="background-color: {release.color}"></span>
 					<span class="legend-label">{release.version}</span>

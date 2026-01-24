@@ -9,57 +9,61 @@
 
 	let { data, width = 80, height = 24, color = 'accent', filled = false }: Props = $props();
 
-	const points = $derived(() => {
-		if (data.length === 0) return '';
+	function computePoints(inputData: number[], w: number, h: number): string {
+		if (inputData.length === 0) return '';
 
-		const min = Math.min(...data);
-		const max = Math.max(...data);
+		const min = Math.min(...inputData);
+		const max = Math.max(...inputData);
 		const range = max - min || 1;
 		const padding = 2;
-		const chartWidth = width - padding * 2;
-		const chartHeight = height - padding * 2;
-		const stepX = chartWidth / Math.max(1, data.length - 1);
+		const chartWidth = w - padding * 2;
+		const chartHeight = h - padding * 2;
+		const stepX = chartWidth / Math.max(1, inputData.length - 1);
 
-		return data
+		return inputData
 			.map((value, index) => {
 				const x = padding + index * stepX;
 				const y = padding + chartHeight - ((value - min) / range) * chartHeight;
 				return `${x},${y}`;
 			})
 			.join(' ');
-	});
+	}
 
-	const fillPath = $derived(() => {
-		if (data.length === 0) return '';
+	const points = $derived(computePoints(data, width, height));
 
-		const min = Math.min(...data);
-		const max = Math.max(...data);
+	function computeFillPath(inputData: number[], w: number, h: number): string {
+		if (inputData.length === 0) return '';
+
+		const min = Math.min(...inputData);
+		const max = Math.max(...inputData);
 		const range = max - min || 1;
 		const padding = 2;
-		const chartWidth = width - padding * 2;
-		const chartHeight = height - padding * 2;
-		const stepX = chartWidth / Math.max(1, data.length - 1);
+		const chartWidth = w - padding * 2;
+		const chartHeight = h - padding * 2;
+		const stepX = chartWidth / Math.max(1, inputData.length - 1);
 
-		const linePoints = data.map((value, index) => {
+		const linePoints = inputData.map((value, index) => {
 			const x = padding + index * stepX;
 			const y = padding + chartHeight - ((value - min) / range) * chartHeight;
 			return `${x},${y}`;
 		});
 
 		const startX = padding;
-		const endX = padding + (data.length - 1) * stepX;
+		const endX = padding + (inputData.length - 1) * stepX;
 		const bottomY = padding + chartHeight;
 
 		return `M${startX},${bottomY} L${linePoints.join(' L')} L${endX},${bottomY} Z`;
-	});
+	}
+
+	const fillPath = $derived(computeFillPath(data, width, height));
 </script>
 
 <svg class="sparkline sparkline-{color}" {width} {height} viewBox="0 0 {width} {height}">
 	{#if filled && data.length > 0}
-		<path d={fillPath()} class="sparkline-fill" />
+		<path d={fillPath} class="sparkline-fill" />
 	{/if}
 	{#if data.length > 0}
-		<polyline points={points()} class="sparkline-line" fill="none" />
+		<polyline points={points} class="sparkline-line" fill="none" />
 	{/if}
 </svg>
 

@@ -69,16 +69,16 @@
 		}
 	}
 
-	// Generate mock uptime data for the chart
-	const uptimeData = $derived(() => {
-		if (!checkins.length) return [];
+	// Generate uptime data for the chart
+	function computeUptimeData(checkinsData: CheckIn[]) {
+		if (!checkinsData.length) return [];
 		const data: { date: string; status: 'ok' | 'error' | 'missed' | 'none' }[] = [];
 		const now = new Date();
 		for (let i = 29; i >= 0; i--) {
 			const date = new Date(now);
 			date.setDate(date.getDate() - i);
 			const dateStr = date.toISOString().split('T')[0];
-			const dayCheckins = checkins.filter((c) => c.created_at.startsWith(dateStr));
+			const dayCheckins = checkinsData.filter((c) => c.created_at.startsWith(dateStr));
 			if (dayCheckins.length === 0) {
 				data.push({ date: dateStr, status: 'none' });
 			} else if (dayCheckins.some((c) => c.status === 'error')) {
@@ -88,7 +88,9 @@
 			}
 		}
 		return data;
-	});
+	}
+
+	const uptimeData = $derived(computeUptimeData(checkins));
 </script>
 
 <div class="monitor-detail-page">
@@ -114,10 +116,10 @@
 			<PingUrlDisplay pingKey={monitor.ping_key} baseUrl={window.location.origin} />
 		</section>
 
-		{#if uptimeData().length > 0}
+		{#if uptimeData.length > 0}
 			<section class="detail-section">
 				<h2 class="section-title">Uptime (Last 30 Days)</h2>
-				<UptimeChart data={uptimeData()} />
+				<UptimeChart data={uptimeData} />
 			</section>
 		{/if}
 

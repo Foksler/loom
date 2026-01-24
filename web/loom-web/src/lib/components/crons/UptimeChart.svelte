@@ -23,40 +23,44 @@
 		none: 'var(--color-bg-subtle)',
 	};
 
-	const paddedData = $derived(() => {
+	function computePaddedData(inputData: DayData[], numDays: number): DayData[] {
 		const result: DayData[] = [];
 		const today = new Date();
 
-		for (let i = days - 1; i >= 0; i--) {
+		for (let i = numDays - 1; i >= 0; i--) {
 			const date = new Date(today);
 			date.setDate(date.getDate() - i);
 			const dateStr = date.toISOString().split('T')[0];
 
-			const existing = data.find((d) => d.date === dateStr);
+			const existing = inputData.find((d) => d.date === dateStr);
 			result.push(existing ?? { date: dateStr, status: 'none', count: 0 });
 		}
 
 		return result;
-	});
+	}
 
-	const uptimePercentage = $derived(() => {
-		const activeData = data.filter((d) => d.status !== 'none');
+	const paddedData = $derived(computePaddedData(data, days));
+
+	function computeUptimePercentage(inputData: DayData[]): number | null {
+		const activeData = inputData.filter((d) => d.status !== 'none');
 		if (activeData.length === 0) return null;
 
 		const okCount = activeData.filter((d) => d.status === 'ok').length;
 		return Math.round((okCount / activeData.length) * 100);
-	});
+	}
+
+	const uptimePercentage = $derived(computeUptimePercentage(data));
 </script>
 
 <div class="uptime-chart">
 	<div class="chart-header">
 		<span class="chart-title">Uptime</span>
-		{#if uptimePercentage() !== null}
-			<span class="uptime-percentage">{uptimePercentage()}%</span>
+		{#if uptimePercentage !== null}
+			<span class="uptime-percentage">{uptimePercentage}%</span>
 		{/if}
 	</div>
 	<div class="chart-bars">
-		{#each paddedData() as day}
+		{#each paddedData as day}
 			<div
 				class="chart-bar"
 				style="background-color: {statusColors[day.status]}"

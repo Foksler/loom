@@ -4,6 +4,7 @@
 -->
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import { onDestroy } from 'svelte';
 	import { getApiClient } from '$lib/api/client';
 	import type { Monitor, Org } from '$lib/api/types';
 	import { MonitorList, MonitorHealthBadge } from '$lib/components/crons';
@@ -19,53 +20,70 @@
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let healthFilter = $state<string>('all');
-	let sseClient = $state<CronsSSEClient | null>(null);
 	let sseConnected = $state(false);
 
+	// SSE client managed outside of $state to avoid reactivity issues
+	let currentSseClient: CronsSSEClient | null = null;
+	let sseEventCleanup: (() => void) | null = null;
+	let sseStatusCleanup: (() => void) | null = null;
+
+	// Load orgs on mount (runs once)
 	$effect(() => {
 		loadOrgs();
 	});
 
+	// Handle org selection changes
 	$effect(() => {
-		if (selectedOrgId) {
+		const orgId = selectedOrgId;
+		if (orgId) {
 			loadMonitors();
-			// Connect to SSE when org is selected
-			connectSSE(selectedOrgId);
+			connectSSE(orgId);
 		}
-
-		return () => {
-			// Disconnect SSE when component unmounts or org changes
-			if (sseClient) {
-				sseClient.disconnect();
-				sseClient = null;
-			}
-		};
 	});
+
+	// Cleanup SSE on component destroy
+	onDestroy(() => {
+		disconnectSSE();
+	});
+
+	function disconnectSSE() {
+		if (sseEventCleanup) {
+			sseEventCleanup();
+			sseEventCleanup = null;
+		}
+		if (sseStatusCleanup) {
+			sseStatusCleanup();
+			sseStatusCleanup = null;
+		}
+		if (currentSseClient) {
+			currentSseClient.disconnect();
+			currentSseClient = null;
+		}
+		sseConnected = false;
+	}
 
 	function connectSSE(orgId: string) {
 		if (!browser) return;
 
-		// Disconnect existing connection
-		if (sseClient) {
-			sseClient.disconnect();
-		}
+		// Disconnect existing connection first
+		disconnectSSE();
 
 		// Create new SSE client
 		const serverUrl = window.location.origin;
-		sseClient = new CronsSSEClient(serverUrl, orgId);
+		currentSseClient = new CronsSSEClient(serverUrl, orgId);
 
-		// Handle events
-		sseClient.onEvent((event: CronEvent) => {
+		// Handle events - store cleanup function
+		sseEventCleanup = currentSseClient.onEvent((event: CronEvent) => {
 			handleSSEEvent(event);
 		});
 
-		// Handle status changes
-		sseClient.onStatus((status) => {
+		// Handle status changes - store cleanup function
+		sseStatusCleanup = currentSseClient.onStatus((status) => {
 			sseConnected = status === 'connected';
 		});
 
 		// Connect
-		sseClient.connect();
+		currentSseClient.connect();
 	}
 
 	function handleSSEEvent(event: CronEvent) {
@@ -160,10 +178,9 @@
 		}
 	}
 
-	const filteredMonitors = $derived(() => {
-		if (healthFilter === 'all') return monitors;
-		return monitors.filter((m) => m.health === healthFilter);
-	});
+	const filteredMonitors = $derived(
+		healthFilter === 'all' ? monitors : monitors.filter((m) => m.health === healthFilter)
+	);
 
 	function handleMonitorClick(monitor: Monitor) {
 		window.location.href = `/crons/${monitor.slug}?org_id=${selectedOrgId}`;
@@ -232,7 +249,7 @@
 			<Button href="/crons/new">Create Monitor</Button>
 		</div>
 	{:else}
-		<MonitorList monitors={filteredMonitors()} onmonitorclick={handleMonitorClick} />
+		<MonitorList monitors={filteredMonitors} onmonitorclick={handleMonitorClick} />
 	{/if}
 </div>
 

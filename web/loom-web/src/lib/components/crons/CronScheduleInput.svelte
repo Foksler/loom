@@ -18,8 +18,8 @@
 		{ label: 'Every month (1st)', value: '0 0 1 * *' },
 	];
 
-	const cronParts = $derived(() => {
-		const parts = value.split(' ');
+	function parseCronParts(cronValue: string) {
+		const parts = cronValue.split(' ');
 		if (parts.length !== 5) return null;
 		return {
 			minute: parts[0],
@@ -28,7 +28,9 @@
 			month: parts[3],
 			dayOfWeek: parts[4],
 		};
-	});
+	}
+
+	const cronParts = $derived(parseCronParts(value));
 
 	function handleInputChange(event: Event) {
 		const target = event.target as HTMLInputElement;
@@ -82,14 +84,14 @@
 		</div>
 	</div>
 
-	{#if cronParts()}
+	{#if cronParts}
 		<div class="cron-parsed">
 			<span class="parsed-label">Parsed:</span>
-			<span class="parsed-part" title="Minute">{cronParts()!.minute}</span>
-			<span class="parsed-part" title="Hour">{cronParts()!.hour}</span>
-			<span class="parsed-part" title="Day of Month">{cronParts()!.dayOfMonth}</span>
-			<span class="parsed-part" title="Month">{cronParts()!.month}</span>
-			<span class="parsed-part" title="Day of Week">{cronParts()!.dayOfWeek}</span>
+			<span class="parsed-part" title="Minute">{cronParts.minute}</span>
+			<span class="parsed-part" title="Hour">{cronParts.hour}</span>
+			<span class="parsed-part" title="Day of Month">{cronParts.dayOfMonth}</span>
+			<span class="parsed-part" title="Month">{cronParts.month}</span>
+			<span class="parsed-part" title="Day of Week">{cronParts.dayOfWeek}</span>
 		</div>
 	{/if}
 

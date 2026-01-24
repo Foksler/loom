@@ -15,8 +15,8 @@
 	const date = $derived(timestamp instanceof Date ? timestamp : new Date(timestamp));
 	const absoluteTime = $derived(date.toLocaleString());
 
-	const relativeTime = $derived(() => {
-		const diff = now - date.getTime();
+	function computeRelativeTime(currentTime: number, targetDate: Date): string {
+		const diff = currentTime - targetDate.getTime();
 		const seconds = Math.floor(diff / 1000);
 		const minutes = Math.floor(seconds / 60);
 		const hours = Math.floor(minutes / 60);
@@ -33,7 +33,9 @@
 		if (weeks < 4) return `${weeks}w ago`;
 		if (months < 12) return `${months}mo ago`;
 		return `${years}y ago`;
-	});
+	}
+
+	const relativeTime = $derived(computeRelativeTime(now, date));
 
 	onMount(() => {
 		if (live) {
@@ -51,7 +53,7 @@
 </script>
 
 <time class="relative-time" datetime={date.toISOString()} title={showTooltip ? absoluteTime : undefined}>
-	{relativeTime()}
+	{relativeTime}
 </time>
 
 <style>

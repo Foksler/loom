@@ -79,8 +79,8 @@
 	}
 
 	// Generate mock crash-free data for the chart
-	const crashFreeData = $derived(() => {
-		if (!releases.length) return [];
+	function computeCrashFreeData(releasesData: ReleaseHealth[]) {
+		if (!releasesData.length) return [];
 		const data: { timestamp: string; crash_free_rate: number; total_sessions: number; crashed_sessions: number }[] = [];
 		const now = new Date();
 		for (let i = 23; i >= 0; i--) {
@@ -88,13 +88,15 @@
 			timestamp.setHours(timestamp.getHours() - i);
 			data.push({
 				timestamp: timestamp.toISOString(),
-				crash_free_rate: releases[0]?.crash_free_session_rate || 99.5,
+				crash_free_rate: releasesData[0]?.crash_free_session_rate || 99.5,
 				total_sessions: 100,
 				crashed_sessions: 1,
 			});
 		}
 		return data;
-	});
+	}
+
+	const crashFreeData = $derived(computeCrashFreeData(releases));
 </script>
 
 <div class="sessions-page">
@@ -151,8 +153,8 @@
 	{:else}
 		<ReleaseHealthOverview {releases} />
 
-		{#if crashFreeData().length > 0}
-			<CrashFreeChart data={crashFreeData()} />
+		{#if crashFreeData.length > 0}
+			<CrashFreeChart data={crashFreeData} />
 		{/if}
 
 		<section class="releases-section">
