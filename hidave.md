@@ -334,6 +334,10 @@ Reference: [specs/observability-ui.md#62-notification-system](specs/observabilit
 
 Note: Routes use plural form (`/crons` not `/cron`)
 
+**API fix deployed:**
+- Fixed `GET /api/crash/projects` to return `{ projects: [...] }` instead of plain array
+- Matches expected format in web client `CrashProjectListResponse` type
+
 ---
 
 ## Summary
