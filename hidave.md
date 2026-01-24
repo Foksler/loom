@@ -143,8 +143,8 @@ Implemented routes:
 
 **Path:** `web/loom-web/src/lib/realtime/`
 
-- [ ] `observability-sse.ts` — SSE connection manager for observability
-- [ ] Event handlers for: `issue.new`, `issue.regressed`, `monitor.missed`, `release.health_changed`
+- [x] `observability-sse.ts` — SSE connection manager for observability (CronsSSEClient, CrashSSEClient)
+- [x] Event handlers for: `issue.new`, `issue.regressed`, `monitor.missed`, `checkin_ok`, `checkin_error`
 
 ### 11.2 Integrate with Components
 
@@ -157,9 +157,9 @@ Implemented routes:
 
 Reference: [specs/observability-ui.md#62-notification-system](specs/observability-ui.md)
 
-- [ ] Create `NotificationProvider.svelte`
-- [ ] Create `showNotification()` utility
-- [ ] Wire up regression alerts
+- [x] Create `NotificationProvider.svelte`
+- [x] Create `showNotification()` utility
+- [ ] Wire up regression alerts to observability pages
 
 ---
 
@@ -303,6 +303,31 @@ Reference: [specs/observability-ui.md#62-notification-system](specs/observabilit
 
 ---
 
+### 2026-01-25: SSE Client and Notification System
+
+**Created SSE clients for real-time observability updates:**
+- `CronsSSEClient` — Connects to `/api/crons/stream` for cron monitor events
+- `CrashSSEClient` — Connects to `/api/crash/projects/{id}/stream` for crash events
+- Both support auto-reconnect with exponential backoff
+
+**Created notification system:**
+- `NotificationProvider.svelte` — Displays toast notifications for alerts
+- `showNotification()` / `dismissNotification()` utilities
+- Supports info, success, warning, error types with optional links
+
+**Files created:**
+- `web/loom-web/src/lib/realtime/observability-sse.ts` — SSE clients
+- `web/loom-web/src/lib/components/notifications/NotificationProvider.svelte`
+- `web/loom-web/src/lib/components/notifications/index.ts`
+
+**Files modified:**
+- `web/loom-web/src/lib/realtime/index.ts` — Export new SSE clients
+- `web/loom-web/src/routes/(app)/+layout.svelte` — Added NotificationProvider
+
+**Build:** Verified pnpm build succeeds
+
+---
+
 ## Summary
 
 | Phase | Description | Status |
@@ -311,7 +336,7 @@ Reference: [specs/observability-ui.md#62-notification-system](specs/observabilit
 | 7-8 | SDKs | ✅ Complete |
 | 9 | Web UI components | ✅ Complete (39/39 components) |
 | 10 | Page routes | ✅ Complete (8 routes) |
-| 11 | SSE integration | Pending |
+| 11 | SSE integration | In Progress (SSE clients + notifications done) |
 | 12 | Background jobs | ✅ Complete |
 | 13 | Testing (backend) | ✅ Complete |
 | 13 | Testing (UI) | Pending |

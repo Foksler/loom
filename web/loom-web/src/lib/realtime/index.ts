@@ -11,6 +11,26 @@ export * from './wsClientMachine.types';
 export { createAccumulator, accumulateEvent, accumulateTextDeltas } from './accumulator';
 export type { AccumulatedContent } from './accumulator';
 
+// Observability SSE clients
+export { CronsSSEClient, CrashSSEClient } from './observability-sse';
+export type {
+	CronEvent,
+	CronInitEvent,
+	CronCheckinEvent,
+	CronMonitorMissedEvent,
+	CronMonitorUpdatedEvent,
+	MonitorState,
+	CrashEvent,
+	CrashInitEvent,
+	CrashNewIssueEvent,
+	CrashIssueRegressedEvent,
+	CrashIssueResolvedEvent,
+	CrashNewEventEvent,
+	IssueState,
+	CronEventHandler,
+	CrashEventHandler,
+} from './observability-sse';
+
 import { LoomWebSocketClient } from './wsClientService';
 import { LoomSseClient } from './sseClient';
 

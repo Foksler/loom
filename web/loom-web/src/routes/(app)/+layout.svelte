@@ -8,6 +8,7 @@
 	import { getApiClient } from '$lib/api/client';
 	import { i18n, setLocale, getCurrentLocale, isRtl, type Locale, locales } from '$lib/i18n';
 	import { ImpersonationBanner, ThreadDivider } from '$lib/ui';
+	import { NotificationProvider } from '$lib/components/notifications';
 	import type { Snippet } from 'svelte';
 	import type { CurrentUser, ImpersonationState } from '$lib/api/types';
 
@@ -144,6 +145,7 @@
 	<main class="app-main">
 		{@render children()}
 	</main>
+	<NotificationProvider />
 </div>
 
 <style>
