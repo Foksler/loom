@@ -3,10 +3,13 @@
   SPDX-License-Identifier: Proprietary
 -->
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import { getApiClient } from '$lib/api/client';
 	import type { Monitor, Org } from '$lib/api/types';
 	import { MonitorList, MonitorHealthBadge } from '$lib/components/crons';
 	import { Button } from '$lib/ui';
+	import { CronsSSEClient, type CronEvent } from '$lib/realtime';
+	import { showNotification } from '$lib/components/notifications';
 
 	const client = getApiClient();
 
@@ -16,6 +19,8 @@
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let healthFilter = $state<string>('all');
+	let sseClient = $state<CronsSSEClient | null>(null);
+	let sseConnected = $state(false);
 
 	$effect(() => {
 		loadOrgs();
@@ -24,8 +29,110 @@
 	$effect(() => {
 		if (selectedOrgId) {
 			loadMonitors();
+			// Connect to SSE when org is selected
+			connectSSE(selectedOrgId);
 		}
+
+		return () => {
+			// Disconnect SSE when component unmounts or org changes
+			if (sseClient) {
+				sseClient.disconnect();
+				sseClient = null;
+			}
+		};
 	});
+
+	function connectSSE(orgId: string) {
+		if (!browser) return;
+
+		// Disconnect existing connection
+		if (sseClient) {
+			sseClient.disconnect();
+		}
+
+		// Create new SSE client
+		const serverUrl = window.location.origin;
+		sseClient = new CronsSSEClient(serverUrl, orgId);
+
+		// Handle events
+		sseClient.onEvent((event: CronEvent) => {
+			handleSSEEvent(event);
+		});
+
+		// Handle status changes
+		sseClient.onStatus((status) => {
+			sseConnected = status === 'connected';
+		});
+
+		// Connect
+		sseClient.connect();
+	}
+
+	function handleSSEEvent(event: CronEvent) {
+		switch (event.type) {
+			case 'init':
+				// Update monitors from init event
+				monitors = event.monitors.map((m) => ({
+					id: m.id,
+					slug: m.slug,
+					name: m.name,
+					status: m.status,
+					health: m.health,
+					last_checkin_at: m.last_checkin_at,
+					next_expected_at: m.next_expected_at,
+					consecutive_failures: 0, // Not provided in SSE init
+				}));
+				break;
+
+			case 'checkin_ok':
+				// Update monitor health to healthy
+				monitors = monitors.map((m) =>
+					m.slug === event.monitor_slug ? { ...m, health: 'healthy' as const } : m
+				);
+				break;
+
+			case 'checkin_error':
+				// Update monitor health to failing
+				monitors = monitors.map((m) =>
+					m.slug === event.monitor_slug ? { ...m, health: 'failing' as const } : m
+				);
+				showNotification({
+					type: 'error',
+					title: 'Check-in Failed',
+					message: `Monitor "${event.monitor_slug}" reported an error`,
+					link: `/crons/${event.monitor_slug}`,
+				});
+				break;
+
+			case 'monitor_missed':
+				// Update monitor health to missed
+				monitors = monitors.map((m) =>
+					m.slug === event.monitor_slug ? { ...m, health: 'missed' as const } : m
+				);
+				showNotification({
+					type: 'warning',
+					title: 'Monitor Missed',
+					message: `Monitor "${event.monitor_slug}" missed its expected check-in`,
+					link: `/crons/${event.monitor_slug}`,
+				});
+				break;
+
+			case 'monitor_created':
+				// Reload monitors to get the new one
+				loadMonitors();
+				break;
+
+			case 'monitor_deleted':
+				// Remove the deleted monitor
+				monitors = monitors.filter((m) => m.slug !== event.monitor_slug);
+				break;
+
+			case 'monitor_updated':
+				// Reload monitors to get the updated data
+				loadMonitors();
+				break;
+		}
+	}
 
 	async function loadOrgs() {
 		try {
@@ -67,7 +174,12 @@
 	<header class="page-header">
 		<div class="header-content">
 			<div>
-				<h1 class="page-title">Cron Monitors</h1>
+				<h1 class="page-title">
+					Cron Monitors
+					{#if sseConnected}
+						<span class="live-badge" title="Real-time updates active">LIVE</span>
+					{/if}
+				</h1>
 				<p class="page-description">Monitor scheduled jobs and receive alerts for failures</p>
 			</div>
 			<Button href="/crons/new">New Monitor</Button>
@@ -147,11 +259,46 @@
 	}
 
 	.page-title {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
 		margin: 0;
 		font-family: var(--font-mono);
 		font-size: var(--text-2xl);
 		font-weight: 700;
 		color: var(--color-fg);
+	}
+
+	.live-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-1);
+		padding: var(--space-1) var(--space-2);
+		font-size: var(--text-xs);
+		font-weight: 500;
+		color: var(--color-success);
+		background: color-mix(in srgb, var(--color-success) 15%, transparent);
+		border-radius: var(--radius-sm);
+		animation: pulse 2s infinite;
+	}
+
+	.live-badge::before {
+		content: '';
+		display: inline-block;
+		width: 6px;
+		height: 6px;
+		background: var(--color-success);
+		border-radius: 50%;
+	}
+
+	@keyframes pulse {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.7;
+		}
 	}
 
 	.page-description {

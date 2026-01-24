@@ -150,7 +150,7 @@ Implemented routes:
 
 - [ ] Add SSE subscription to overview dashboard
 - [ ] Add SSE subscription to issue list
-- [ ] Add SSE subscription to monitor list
+- [x] Add SSE subscription to monitor list (`/crons` page with LIVE badge indicator)
 - [ ] Add SSE subscription to release health
 
 ### 11.3 Notification System
@@ -325,6 +325,14 @@ Reference: [specs/observability-ui.md#62-notification-system](specs/observabilit
 - `web/loom-web/src/routes/(app)/+layout.svelte` — Added NotificationProvider
 
 **Build:** Verified pnpm build succeeds
+
+**Routes verified (all return HTTP 200):**
+- `https://loom.ghuntley.com/crashes` ✓
+- `https://loom.ghuntley.com/crons` ✓
+- `https://loom.ghuntley.com/crons/new` ✓
+- `https://loom.ghuntley.com/sessions` ✓
+
+Note: Routes use plural form (`/crons` not `/cron`)
 
 ---
 
