@@ -78,6 +78,42 @@
 		window.location.href = `/sessions/releases/${encodeURIComponent(release.release)}?project_id=${selectedProjectId}`;
 	}
 
+	// Compute aggregated overview stats from releases
+	function computeOverviewStats(releasesData: ReleaseHealth[]) {
+		if (!releasesData.length) {
+			return {
+				total_sessions: 0,
+				total_users: 0,
+				crash_free_sessions: 0,
+				crash_free_users: 0,
+				active_releases: 0,
+			};
+		}
+
+		const totalSessions = releasesData.reduce((sum, r) => sum + r.total_sessions, 0);
+		const totalUsers = releasesData.reduce((sum, r) => sum + r.total_users, 0);
+
+		// Weighted average of crash-free rates
+		const weightedCrashFreeSessions =
+			totalSessions > 0
+				? releasesData.reduce((sum, r) => sum + r.crash_free_session_rate * r.total_sessions, 0) / totalSessions
+				: 0;
+		const weightedCrashFreeUsers =
+			totalUsers > 0
+				? releasesData.reduce((sum, r) => sum + r.crash_free_user_rate * r.total_users, 0) / totalUsers
+				: 0;
+
+		return {
+			total_sessions: totalSessions,
+			total_users: totalUsers,
+			crash_free_sessions: weightedCrashFreeSessions,
+			crash_free_users: weightedCrashFreeUsers,
+			active_releases: releasesData.length,
+		};
+	}
+
+	const overviewStats = $derived(computeOverviewStats(releases));
+
 	// Generate mock crash-free data for the chart
 	function computeCrashFreeData(releasesData: ReleaseHealth[]) {
 		if (!releasesData.length) return [];
@@ -151,7 +187,7 @@
 			<p>Start tracking sessions to see release health metrics.</p>
 		</div>
 	{:else}
-		<ReleaseHealthOverview {releases} />
+		<ReleaseHealthOverview stats={overviewStats} />
 
 		{#if crashFreeData.length > 0}
 			<CrashFreeChart data={crashFreeData} />
