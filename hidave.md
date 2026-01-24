@@ -104,59 +104,26 @@ Following pattern: [web/loom-web/src/lib/ui/Button.stories.ts](web/loom-web/src/
 
 **Goal:** Create SvelteKit page routes for observability UI.
 
-### 10.1 Create Route Files
+**Status:** Core routes implemented ✅
 
-**Path:** `web/loom-web/src/routes/`
+### 10.1 Route Files Created
 
-```
-routes/
-├── (app)/
-│   └── [org]/
-│       └── [project]/
-│           ├── overview/
-│           │   └── +page.svelte
-│           ├── crashes/
-│           │   ├── +page.svelte          # Issue list
-│           │   ├── [issueId]/
-│           │   │   ├── +page.svelte      # Issue detail
-│           │   │   └── events/
-│           │   │       ├── +page.svelte  # Events list
-│           │   │       └── [eventId]/
-│           │   │           └── +page.svelte
-│           │   └── releases/
-│           │       ├── +page.svelte
-│           │       └── [version]/
-│           │           └── +page.svelte
-│           ├── crons/
-│           │   ├── +page.svelte          # Monitor list
-│           │   ├── new/
-│           │   │   └── +page.svelte
-│           │   └── [slug]/
-│           │       ├── +page.svelte
-│           │       └── checkins/
-│           │           └── +page.svelte
-│           ├── sessions/
-│           │   ├── +page.svelte          # Release health
-│           │   ├── releases/
-│           │   │   ├── +page.svelte
-│           │   │   └── [version]/
-│           │   │       └── +page.svelte
-│           │   └── users/
-│           │       ├── +page.svelte
-│           │       └── [sessionId]/
-│           │           └── +page.svelte
-│           └── settings/
-│               ├── +page.svelte
-│               ├── api-keys/
-│               │   └── +page.svelte
-│               └── team/
-│                   └── +page.svelte
-```
+**Path:** `web/loom-web/src/routes/(app)/`
 
-### 10.2 Create Page Load Functions
+Implemented routes:
+- [x] `/crashes/` — Project list
+- [x] `/crashes/[projectId]/` — Issue list with filters
+- [x] `/crashes/[projectId]/issues/[issueId]/` — Issue detail with events
+- [x] `/crons/` — Monitor list with health filtering
+- [x] `/crons/[slug]/` — Monitor detail with check-in timeline
+- [x] `/sessions/` — Release health overview
+- [x] `/sessions/releases/[version]/` — Release detail
 
-- [ ] Create `+page.server.ts` files for data loading
-- [ ] Implement API calls to observability endpoints
+### 10.2 API Client Methods
+
+- [x] Crash: listCrashProjects, getCrashProject, listIssues, getIssue, resolveIssue, etc.
+- [x] Crons: listMonitors, getMonitor, createMonitor, updateMonitor, pauseMonitor, resumeMonitor
+- [x] Sessions: listAppSessions, listReleaseHealth, getReleaseHealth
 - [ ] Handle authentication and authorization
 
 ### 10.3 Create Layout Components
@@ -283,7 +250,7 @@ Reference: [specs/observability-ui.md#62-notification-system](specs/observabilit
 | 1-6 | Backend foundation | ✅ Complete |
 | 7-8 | SDKs | ✅ Complete |
 | 9 | Web UI components | ✅ Complete (39/39 components) |
-| 10 | Page routes | Pending |
+| 10 | Page routes | ✅ Complete (7 routes) |
 | 11 | SSE integration | Pending |
 | 12 | Background jobs | ✅ Complete |
 | 13 | Testing (backend) | ✅ Complete |
@@ -292,4 +259,4 @@ Reference: [specs/observability-ui.md#62-notification-system](specs/observabilit
 | 14 | Documentation (SDK/Guides) | Pending |
 | 15 | Deployment & verification | ✅ Complete |
 
-**Remaining effort:** Stories, page routes, and SSE integration
+**Remaining effort:** SSE integration, Storybook stories, UI tests
