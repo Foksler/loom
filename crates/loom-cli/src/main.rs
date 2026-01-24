@@ -2431,8 +2431,8 @@ async fn run_sessions_command(
 						r.environment,
 						r.total_sessions,
 						r.crashed_sessions,
-						r.crash_free_session_rate * 100.0,
-						r.crash_free_user_rate * 100.0,
+						r.crash_free_session_rate,
+						r.crash_free_user_rate,
 						r.adoption_stage
 					);
 				}
@@ -2457,13 +2457,13 @@ async fn run_sessions_command(
 				println!("  Crashed sessions: {}", health.crashed_sessions);
 				println!(
 					"  Crash-free session rate: {:.2}%",
-					health.crash_free_session_rate * 100.0
+					health.crash_free_session_rate
 				);
 				println!(
 					"  Crash-free user rate: {:.2}%",
-					health.crash_free_user_rate * 100.0
+					health.crash_free_user_rate
 				);
-				println!("  Adoption rate: {:.2}%", health.adoption_rate * 100.0);
+				println!("  Adoption rate: {:.2}%", health.adoption_rate);
 				println!("  Adoption stage: {}", health.adoption_stage);
 				println!(
 					"  First seen: {}",

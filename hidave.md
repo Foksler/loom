@@ -18,7 +18,7 @@ Reference: [specs/observability-ui.md](specs/observability-ui.md)
 |--------|------|--------|--------------|-----------|
 | Crash | [specs/crash-system.md](specs/crash-system.md) | `loom-crash-core`, `loom-crash` ✅, `loom-crash-symbolicate` ✅, `loom-server-crash` ✅ | `@loom/crash` | `033_crash_analytics.sql` |
 | Crons | [specs/crons-system.md](specs/crons-system.md) | `loom-crons-core` ✅, `loom-crons` ✅, `loom-server-crons` ✅ | `@loom/crons` ✅ | `034_cron_monitoring.sql` |
-| Sessions | [specs/sessions-system.md](specs/sessions-system.md) | `loom-sessions-core`, `loom-server-sessions` | (in `@loom/crash`) | `035_sessions.sql` (tables: `app_sessions`, `app_session_aggregates`) |
+| Sessions | [specs/sessions-system.md](specs/sessions-system.md) | `loom-sessions-core` ✅, `loom-server-sessions` ✅ | (in `@loom/crash`) | `035_sessions.sql` (tables: `app_sessions`, `app_session_aggregates`) |
 | UI | [specs/observability-ui.md](specs/observability-ui.md) | — | `web/loom-web/src/lib/components/` | — |
 ---
 
@@ -246,10 +246,16 @@ Reference: [specs/observability-ui.md#62-notification-system](specs/observabilit
 - `POST /api/sessions/end` — End a session ✓
 - `GET /api/app-sessions?project_id=...` — List sessions ✓
 - `GET /api/app-sessions/releases?project_id=...` — List release health ✓
+- `GET /api/app-sessions/releases/{version}?project_id=...` — Get release health detail ✓
 
 **Sessions CLI commands verified:**
 - `loom sessions list --project ...` — List sessions ✓
 - `loom sessions releases --project ...` — List release health ✓
+- `loom sessions release --project ... --version ...` — Get release health detail ✓
+
+**Tests:** All 28 sessions authz tests pass (`cargo test -p loom-server --test authz_tests sessions`)
+
+**Bug fix:** Fixed CLI display of crash-free rates (was multiplying by 100 twice, showing 10000% instead of 100%)
 
 ---
 
