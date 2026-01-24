@@ -6,7 +6,7 @@
 # Observability Suite Implementation Plan (UI Work)
 
 **Status:** UI Components Complete (39/39)\
-**Last Updated:** 2026-01-24
+**Last Updated:** 2026-01-25
 
 Reference: [specs/observability-ui.md](specs/observability-ui.md)
 
@@ -257,6 +257,31 @@ Reference: [specs/observability-ui.md#62-notification-system](specs/observabilit
 - `loom crons ping-fail <key>` — Send fail ping ✓
 
 **Tests:** All 42 crons authz tests pass (`cargo test -p loom-server --test authz_tests crons`)
+
+---
+
+### 2026-01-25: Crons Stats Endpoints Implementation
+
+**Stats API endpoints implemented and verified via curl:**
+- `GET /api/crons/monitors/{slug}/stats?org_id=...&period=...` — Get monitor stats ✓
+  - Response includes: total_checkins, successful_checkins, failed_checkins, missed_checkins, timeout_checkins
+  - Duration metrics: avg_duration_ms, p50_duration_ms, p95_duration_ms, max_duration_ms
+  - Uptime percentage calculation
+  - Period options: day, week (default), month
+- `GET /api/crons/stats/overview?org_id=...` — Get org-wide stats overview ✓
+  - Monitor counts: total_monitors, active_monitors, paused_monitors
+  - Health counts: healthy_monitors, failing_monitors, missed_monitors
+  - 24h metrics: total_checkins_24h, total_failures_24h, overall_uptime_percentage
+
+**CLI commands verified:**
+- `loom crons stats --org ... --slug ... --period ...` — Get monitor stats ✓
+- `loom crons overview --org ...` — Get stats overview ✓
+
+**Tests:** All 49 crons authz tests pass (`cargo test -p loom-server --test authz_tests crons`)
+- Added tests for: org_member_can_get_monitor_stats, unauthenticated_cannot_get_monitor_stats,
+  org_b_member_cannot_get_org_a_monitor_stats, nonexistent_monitor_stats_returns_not_found,
+  org_member_can_get_stats_overview, unauthenticated_cannot_get_stats_overview,
+  org_b_member_cannot_get_org_a_stats_overview
 
 ---
 
