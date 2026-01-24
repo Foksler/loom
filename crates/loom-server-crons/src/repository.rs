@@ -9,7 +9,8 @@ use sqlx::SqlitePool;
 use tracing::instrument;
 
 use loom_crons_core::{
-	CheckIn, CheckInId, CheckInStatus, Monitor, MonitorHealth, MonitorId, MonitorSchedule, OrgId,
+	CheckIn, CheckInId, CheckInStatus, Monitor, MonitorHealth, MonitorId, MonitorSchedule,
+	MonitorStats, OrgId, StatsPeriod,
 };
 
 use crate::error::{CronsServerError, Result};
@@ -52,6 +53,13 @@ pub trait CronsRepository: Send + Sync {
 		&self,
 		now: chrono::DateTime<Utc>,
 	) -> Result<Vec<(CheckIn, Monitor)>>;
+
+	/// Get aggregated stats for a monitor over a time period.
+	async fn get_monitor_stats(
+		&self,
+		monitor_id: MonitorId,
+		period: StatsPeriod,
+	) -> Result<MonitorStats>;
 }
 
 /// SQLite implementation of the crons repository.
@@ -533,9 +541,104 @@ impl CronsRepository for SqliteCronsRepository {
 
 		rows.into_iter().map(|row| row.try_into()).collect()
 	}
+
+	#[instrument(skip(self), fields(monitor_id = %monitor_id, period = ?period))]
+	async fn get_monitor_stats(
+		&self,
+		monitor_id: MonitorId,
+		period: StatsPeriod,
+	) -> Result<MonitorStats> {
+		let days = period.days() as i64;
+		let cutoff = (Utc::now() - chrono::Duration::days(days)).to_rfc3339();
+
+		// Query check-ins within the period and aggregate stats
+		let row = sqlx::query_as::<_, StatsAggregateRow>(
+			r#"
+			SELECT
+				COUNT(*) as total_checkins,
+				COALESCE(SUM(CASE WHEN status = 'ok' THEN 1 ELSE 0 END), 0) as successful_checkins,
+				COALESCE(SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END), 0) as failed_checkins,
+				COALESCE(SUM(CASE WHEN status = 'missed' THEN 1 ELSE 0 END), 0) as missed_checkins,
+				COALESCE(SUM(CASE WHEN status = 'timeout' THEN 1 ELSE 0 END), 0) as timeout_checkins,
+				AVG(duration_ms) as avg_duration_ms,
+				MAX(duration_ms) as max_duration_ms
+			FROM cron_checkins
+			WHERE monitor_id = ?
+			  AND created_at >= ?
+			  AND status != 'in_progress'
+			"#,
+		)
+		.bind(monitor_id.0.to_string())
+		.bind(&cutoff)
+		.fetch_one(&self.pool)
+		.await?;
+
+		// Calculate p50 and p95 from duration values
+		let durations: Vec<i64> = sqlx::query_scalar::<_, i64>(
+			r#"
+			SELECT duration_ms
+			FROM cron_checkins
+			WHERE monitor_id = ?
+			  AND created_at >= ?
+			  AND duration_ms IS NOT NULL
+			ORDER BY duration_ms ASC
+			"#,
+		)
+		.bind(monitor_id.0.to_string())
+		.bind(&cutoff)
+		.fetch_all(&self.pool)
+		.await?;
+
+		let p50_duration_ms = percentile(&durations, 50);
+		let p95_duration_ms = percentile(&durations, 95);
+
+		let total = row.total_checkins as u64;
+		let successful = row.successful_checkins as u64;
+		let uptime_percentage = if total > 0 {
+			(successful as f64 / total as f64) * 100.0
+		} else {
+			100.0 // No checkins = 100% uptime (nothing failed)
+		};
+
+		Ok(MonitorStats {
+			monitor_id,
+			period,
+			total_checkins: total,
+			successful_checkins: successful,
+			failed_checkins: row.failed_checkins as u64,
+			missed_checkins: row.missed_checkins as u64,
+			timeout_checkins: row.timeout_checkins as u64,
+			avg_duration_ms: row.avg_duration_ms.map(|d| d as u64),
+			p50_duration_ms,
+			p95_duration_ms,
+			max_duration_ms: row.max_duration_ms.map(|d| d as u64),
+			uptime_percentage,
+			updated_at: Utc::now(),
+		})
+	}
+}
+
+/// Calculate percentile from a sorted slice of durations.
+fn percentile(sorted_values: &[i64], p: u8) -> Option<u64> {
+	if sorted_values.is_empty() {
+		return None;
+	}
+	let index = ((p as f64 / 100.0) * (sorted_values.len() as f64 - 1.0)).round() as usize;
+	Some(sorted_values[index.min(sorted_values.len() - 1)] as u64)
 }
 
 // Database row types for sqlx
+
+#[derive(sqlx::FromRow)]
+struct StatsAggregateRow {
+	total_checkins: i64,
+	successful_checkins: i64,
+	failed_checkins: i64,
+	missed_checkins: i64,
+	timeout_checkins: i64,
+	avg_duration_ms: Option<f64>,
+	max_duration_ms: Option<i64>,
+}
 
 #[derive(sqlx::FromRow)]
 struct MonitorRow {

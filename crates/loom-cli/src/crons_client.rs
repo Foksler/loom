@@ -124,6 +124,43 @@ pub struct ListCheckInsResponse {
 	pub checkins: Vec<CheckIn>,
 }
 
+/// Stats for a single monitor.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct MonitorStats {
+	pub monitor_id: String,
+	pub period: String,
+	pub total_checkins: u64,
+	pub successful_checkins: u64,
+	pub failed_checkins: u64,
+	pub missed_checkins: u64,
+	pub timeout_checkins: u64,
+	pub avg_duration_ms: Option<u64>,
+	pub p50_duration_ms: Option<u64>,
+	pub p95_duration_ms: Option<u64>,
+	pub max_duration_ms: Option<u64>,
+	pub uptime_percentage: f64,
+	pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct MonitorStatsResponse {
+	pub stats: MonitorStats,
+}
+
+/// Overview stats for all monitors in an organization.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct StatsOverview {
+	pub total_monitors: u64,
+	pub active_monitors: u64,
+	pub paused_monitors: u64,
+	pub healthy_monitors: u64,
+	pub failing_monitors: u64,
+	pub missed_monitors: u64,
+	pub total_checkins_24h: u64,
+	pub total_failures_24h: u64,
+	pub overall_uptime_percentage: f64,
+}
+
 pub struct CronsClient {
 	base_url: Url,
 	http: reqwest::Client,
@@ -358,5 +395,58 @@ impl CronsClient {
 			anyhow::bail!("Failed to ping fail: {status} - {body}");
 		}
 		Ok(())
+	}
+
+	// ========================================================================
+	// Stats
+	// ========================================================================
+
+	pub async fn get_monitor_stats(
+		&self,
+		org_id: &str,
+		slug: &str,
+		period: Option<&str>,
+	) -> Result<MonitorStats> {
+		let period_param = period
+			.map(|p| format!("&period={}", p))
+			.unwrap_or_default();
+		let url = self.base_url.join(&format!(
+			"api/crons/monitors/{}/stats?org_id={}{}",
+			slug, org_id, period_param
+		))?;
+		let mut req = self.http.get(url);
+		if let Some(auth) = self.auth_header() {
+			req = req.header("Authorization", auth);
+		}
+
+		let response = req.send().await?;
+		if !response.status().is_success() {
+			let status = response.status();
+			let body = response.text().await.unwrap_or_default();
+			anyhow::bail!("Failed to get monitor stats: {status} - {body}");
+		}
+
+		let resp: MonitorStatsResponse = response.json().await?;
+		Ok(resp.stats)
+	}
+
+	pub async fn get_stats_overview(&self, org_id: &str) -> Result<StatsOverview> {
+		let url = self
+			.base_url
+			.join(&format!("api/crons/stats/overview?org_id={}", org_id))?;
+		let mut req = self.http.get(url);
+		if let Some(auth) = self.auth_header() {
+			req = req.header("Authorization", auth);
+		}
+
+		let response = req.send().await?;
+		if !response.status().is_success() {
+			let status = response.status();
+			let body = response.text().await.unwrap_or_default();
+			anyhow::bail!("Failed to get stats overview: {status} - {body}");
+		}
+
+		let overview: StatsOverview = response.json().await?;
+		Ok(overview)
 	}
 }

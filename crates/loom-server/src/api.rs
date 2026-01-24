@@ -1261,6 +1261,14 @@ pub fn create_router(state: AppState) -> Router {
 			get(routes::crons::get_checkin).patch(routes::crons::update_checkin),
 		)
 		.route("/api/crons/stream", get(routes::crons::stream_crons))
+		.route(
+			"/api/crons/monitors/{slug}/stats",
+			get(routes::crons::get_monitor_stats),
+		)
+		.route(
+			"/api/crons/stats/overview",
+			get(routes::crons::get_stats_overview),
+		)
 		// Crash analytics routes (authenticated)
 		.route(
 			"/api/crash/capture",

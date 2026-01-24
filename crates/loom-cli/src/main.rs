@@ -480,6 +480,30 @@ enum CronsCommand {
 		#[arg(long)]
 		json: bool,
 	},
+	/// Get stats for a specific monitor
+	Stats {
+		/// Organization ID (required)
+		#[arg(long, short)]
+		org: String,
+		/// Monitor slug (required)
+		#[arg(long, short)]
+		slug: String,
+		/// Time period: day, week, month (default: week)
+		#[arg(long, short, default_value = "week")]
+		period: String,
+		/// Output as JSON
+		#[arg(long)]
+		json: bool,
+	},
+	/// Get overview stats for all monitors in an organization
+	Overview {
+		/// Organization ID (required)
+		#[arg(long, short)]
+		org: String,
+		/// Output as JSON
+		#[arg(long)]
+		json: bool,
+	},
 }
 
 #[derive(Subcommand, Debug)]
@@ -2344,6 +2368,65 @@ async fn run_crons_command(
 				if let Some(next) = &monitor.next_expected_at {
 					println!("  Next expected: {}", next.format("%Y-%m-%d %H:%M:%S UTC"));
 				}
+			}
+		}
+		CronsCommand::Stats {
+			org,
+			slug,
+			period,
+			json,
+		} => {
+			let stats = client.get_monitor_stats(org, slug, Some(period)).await?;
+			if *json {
+				println!("{}", serde_json::to_string_pretty(&stats)?);
+			} else {
+				println!("Stats for '{}' ({})", slug, stats.period);
+				println!("{}", "-".repeat(40));
+				println!("  Total check-ins:     {}", stats.total_checkins);
+				println!("  Successful:          {}", stats.successful_checkins);
+				println!("  Failed:              {}", stats.failed_checkins);
+				println!("  Missed:              {}", stats.missed_checkins);
+				println!("  Timeout:             {}", stats.timeout_checkins);
+				println!();
+				println!("  Uptime:              {:.1}%", stats.uptime_percentage);
+				println!();
+				if let Some(avg) = stats.avg_duration_ms {
+					println!("  Avg duration:        {}ms", avg);
+				}
+				if let Some(p50) = stats.p50_duration_ms {
+					println!("  P50 duration:        {}ms", p50);
+				}
+				if let Some(p95) = stats.p95_duration_ms {
+					println!("  P95 duration:        {}ms", p95);
+				}
+				if let Some(max) = stats.max_duration_ms {
+					println!("  Max duration:        {}ms", max);
+				}
+			}
+		}
+		CronsCommand::Overview { org, json } => {
+			let overview = client.get_stats_overview(org).await?;
+			if *json {
+				println!("{}", serde_json::to_string_pretty(&overview)?);
+			} else {
+				println!("Cron Monitoring Overview");
+				println!("{}", "-".repeat(40));
+				println!("  Total monitors:      {}", overview.total_monitors);
+				println!("  Active:              {}", overview.active_monitors);
+				println!("  Paused:              {}", overview.paused_monitors);
+				println!();
+				println!("Health:");
+				println!("  Healthy:             {}", overview.healthy_monitors);
+				println!("  Failing:             {}", overview.failing_monitors);
+				println!("  Missed:              {}", overview.missed_monitors);
+				println!();
+				println!("Last 24 hours:");
+				println!("  Total check-ins:     {}", overview.total_checkins_24h);
+				println!("  Total failures:      {}", overview.total_failures_24h);
+				println!(
+					"  Overall uptime:      {:.1}%",
+					overview.overall_uptime_percentage
+				);
 			}
 		}
 	}

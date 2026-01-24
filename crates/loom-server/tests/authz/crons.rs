@@ -962,3 +962,136 @@ async fn org_b_member_cannot_access_org_a_stream() {
 
 	run_authz_cases(&app, &cases).await;
 }
+
+// ============================================================================
+// Stats Endpoint (Authenticated)
+// ============================================================================
+
+#[tokio::test]
+async fn org_member_can_get_monitor_stats() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let (slug, _) = create_test_monitor(&app, &org_id, "stats-test-monitor").await;
+
+	let cases = vec![AuthzCase {
+		name: "org_member_can_get_monitor_stats",
+		method: Method::GET,
+		path: format!("/api/crons/monitors/{}/stats?org_id={}", slug, org_id),
+		user: Some(app.fixtures.org_a.member.clone()),
+		body: None,
+		expected_status: StatusCode::OK,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn unauthenticated_cannot_get_monitor_stats() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let (slug, _) = create_test_monitor(&app, &org_id, "stats-unauth-test").await;
+
+	let cases = vec![AuthzCase {
+		name: "unauthenticated_cannot_get_monitor_stats",
+		method: Method::GET,
+		path: format!("/api/crons/monitors/{}/stats?org_id={}", slug, org_id),
+		user: None,
+		body: None,
+		expected_status: StatusCode::UNAUTHORIZED,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn org_b_member_cannot_get_org_a_monitor_stats() {
+	let app = TestApp::new().await;
+	let org_a_id = app.fixtures.org_a.org.id.to_string();
+
+	let (slug, _) = create_test_monitor(&app, &org_a_id, "stats-cross-org").await;
+
+	let cases = vec![AuthzCase {
+		name: "org_b_member_cannot_get_org_a_monitor_stats",
+		method: Method::GET,
+		path: format!("/api/crons/monitors/{}/stats?org_id={}", slug, org_a_id),
+		user: Some(app.fixtures.org_b.member.clone()),
+		body: None,
+		expected_status: StatusCode::FORBIDDEN,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn nonexistent_monitor_stats_returns_not_found() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let cases = vec![AuthzCase {
+		name: "nonexistent_monitor_stats_returns_not_found",
+		method: Method::GET,
+		path: format!("/api/crons/monitors/nonexistent-monitor/stats?org_id={}", org_id),
+		user: Some(app.fixtures.org_a.member.clone()),
+		body: None,
+		expected_status: StatusCode::NOT_FOUND,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+// ============================================================================
+// Stats Overview Endpoint (Authenticated)
+// ============================================================================
+
+#[tokio::test]
+async fn org_member_can_get_stats_overview() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let cases = vec![AuthzCase {
+		name: "org_member_can_get_stats_overview",
+		method: Method::GET,
+		path: format!("/api/crons/stats/overview?org_id={}", org_id),
+		user: Some(app.fixtures.org_a.member.clone()),
+		body: None,
+		expected_status: StatusCode::OK,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn unauthenticated_cannot_get_stats_overview() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+
+	let cases = vec![AuthzCase {
+		name: "unauthenticated_cannot_get_stats_overview",
+		method: Method::GET,
+		path: format!("/api/crons/stats/overview?org_id={}", org_id),
+		user: None,
+		body: None,
+		expected_status: StatusCode::UNAUTHORIZED,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
+
+#[tokio::test]
+async fn org_b_member_cannot_get_org_a_stats_overview() {
+	let app = TestApp::new().await;
+	let org_a_id = app.fixtures.org_a.org.id.to_string();
+
+	let cases = vec![AuthzCase {
+		name: "org_b_member_cannot_get_org_a_stats_overview",
+		method: Method::GET,
+		path: format!("/api/crons/stats/overview?org_id={}", org_a_id),
+		user: Some(app.fixtures.org_b.member.clone()),
+		body: None,
+		expected_status: StatusCode::FORBIDDEN,
+	}];
+
+	run_authz_cases(&app, &cases).await;
+}
