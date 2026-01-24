@@ -226,18 +226,35 @@ Reference: [specs/observability-ui.md#62-notification-system](specs/observabilit
 
 ---
 
-### 2026-01-24: Crons Monitor Management Endpoints
+### 2026-01-24: Complete Crons System Verification
 
-**Verified endpoints via curl:**
-- `PATCH /api/crons/monitors/{slug}` — Update monitor (org_id in body)
-- `POST /api/crons/monitors/{slug}/pause?org_id=...` — Pause monitoring
-- `POST /api/crons/monitors/{slug}/resume?org_id=...` — Resume monitoring
+**Full API endpoints verified via curl:**
+- `GET /api/crons/monitors?org_id=...` — List monitors ✓
+- `POST /api/crons/monitors` — Create monitor (returns ping_url) ✓
+- `GET /api/crons/monitors/{slug}?org_id=...` — Get monitor details ✓
+- `PATCH /api/crons/monitors/{slug}` — Update monitor (org_id in body) ✓
+- `DELETE /api/crons/monitors/{slug}?org_id=...` — Delete monitor ✓
+- `POST /api/crons/monitors/{slug}/pause?org_id=...` — Pause monitoring ✓
+- `POST /api/crons/monitors/{slug}/resume?org_id=...` — Resume monitoring ✓
+- `GET /api/crons/monitors/{slug}/checkins?org_id=...` — List check-ins ✓
 
-**Verified CLI commands:**
-- `loom crons monitors` — List monitors ✓
+**Ping endpoints verified via curl (no auth required):**
+- `GET /ping/{key}` — Success ping ✓
+- `GET /ping/{key}/start` — Start ping (returns checkin_id) ✓
+- `GET /ping/{key}/fail?exit_code=...` — Fail ping ✓
+- `POST /ping/{key}` — Ping with body (output capture) ✓
+
+**All CLI commands verified:**
+- `loom crons monitors --org ...` — List monitors ✓
+- `loom crons create --org ... --slug ... --name ... --cron "..."` — Create monitor ✓
+- `loom crons get --org ... --slug ...` — Get monitor details ✓
 - `loom crons update --org ... --slug ... --name ...` — Update monitor ✓
+- `loom crons delete --org ... --slug ...` — Delete monitor ✓
 - `loom crons pause --org ... --slug ...` — Pause monitoring ✓
 - `loom crons resume --org ... --slug ...` — Resume monitoring ✓
+- `loom crons checkins --org ... --slug ...` — List check-ins ✓
+- `loom crons ping <key>` — Send success ping ✓
+- `loom crons ping-fail <key>` — Send fail ping ✓
 
 **Tests:** All 42 crons authz tests pass (`cargo test -p loom-server --test authz_tests crons`)
 
