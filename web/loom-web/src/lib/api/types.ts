@@ -593,6 +593,259 @@ export interface ListLogsResponse {
 	current_id: number;
 }
 
+// =============================================================================
+// Crash Analytics Types
+// =============================================================================
+
+export interface CrashProject {
+	id: string;
+	org_id: string;
+	name: string;
+	slug: string;
+	platform: CrashPlatform;
+	created_at: string;
+	updated_at: string;
+}
+
+export type CrashPlatform = 'javascript' | 'node' | 'rust' | 'other';
+
+export interface CrashProjectListResponse {
+	projects: CrashProject[];
+}
+
+export type IssueStatus = 'unresolved' | 'resolved' | 'ignored' | 'regressed';
+export type IssueLevel = 'error' | 'warning' | 'info';
+export type IssuePriority = 'high' | 'medium' | 'low';
+
+export interface IssueMetadata {
+	exception_type: string;
+	exception_value: string;
+	filename?: string;
+	function?: string;
+}
+
+export interface Issue {
+	id: string;
+	org_id: string;
+	project_id: string;
+	short_id: string;
+	fingerprint: string;
+	title: string;
+	culprit?: string;
+	metadata: IssueMetadata;
+	status: IssueStatus;
+	level: IssueLevel;
+	priority: IssuePriority;
+	event_count: number;
+	user_count: number;
+	first_seen: string;
+	last_seen: string;
+	resolved_at?: string;
+	resolved_by?: string;
+	resolved_in_release?: string;
+	times_regressed: number;
+	last_regressed_at?: string;
+	regressed_in_release?: string;
+	assigned_to?: string;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface IssueListResponse {
+	issues: Issue[];
+	total: number;
+}
+
+export interface CrashFrame {
+	filename?: string;
+	function?: string;
+	lineno?: number;
+	colno?: number;
+	abs_path?: string;
+	context_line?: string;
+	pre_context?: string[];
+	post_context?: string[];
+	in_app: boolean;
+}
+
+export interface CrashStacktrace {
+	frames: CrashFrame[];
+}
+
+export interface CrashBreadcrumb {
+	timestamp: string;
+	category: string;
+	message?: string;
+	level: string;
+	data?: Record<string, unknown>;
+}
+
+export interface CrashUserContext {
+	id?: string;
+	email?: string;
+	username?: string;
+	ip_address?: string;
+}
+
+export interface CrashEvent {
+	id: string;
+	project_id: string;
+	issue_id: string;
+	platform: CrashPlatform;
+	timestamp: string;
+	received_at: string;
+	release?: string;
+	environment: string;
+	exception_type: string;
+	exception_value: string;
+	stacktrace?: CrashStacktrace;
+	raw_stacktrace?: CrashStacktrace;
+	breadcrumbs?: CrashBreadcrumb[];
+	user?: CrashUserContext;
+	tags?: Record<string, string>;
+	extra?: Record<string, unknown>;
+	active_flags?: string[];
+}
+
+export interface CrashEventListResponse {
+	events: CrashEvent[];
+	total: number;
+}
+
+// =============================================================================
+// Crons Monitoring Types
+// =============================================================================
+
+export type MonitorStatus = 'active' | 'paused' | 'disabled';
+export type MonitorHealth = 'healthy' | 'failing' | 'missed' | 'timeout' | 'unknown';
+export type CheckInStatus = 'ok' | 'error' | 'in_progress';
+
+export interface MonitorSchedule {
+	type: 'cron' | 'interval';
+	expression?: string;
+	minutes?: number;
+}
+
+export interface Monitor {
+	id: string;
+	org_id: string;
+	slug: string;
+	name: string;
+	description?: string;
+	status: MonitorStatus;
+	health: MonitorHealth;
+	schedule: MonitorSchedule;
+	timezone: string;
+	checkin_margin_minutes: number;
+	max_runtime_minutes?: number;
+	ping_key: string;
+	environments: string[];
+	last_checkin_at?: string;
+	last_checkin_status?: CheckInStatus;
+	next_expected_at?: string;
+	consecutive_failures: number;
+	total_checkins: number;
+	total_failures: number;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface MonitorListResponse {
+	monitors: Monitor[];
+}
+
+export interface CheckIn {
+	id: string;
+	monitor_id: string;
+	status: CheckInStatus;
+	duration_ms?: number;
+	environment?: string;
+	output?: string;
+	created_at: string;
+}
+
+export interface CheckInListResponse {
+	checkins: CheckIn[];
+	total: number;
+}
+
+export interface CreateMonitorRequest {
+	slug: string;
+	name: string;
+	description?: string;
+	schedule: MonitorSchedule;
+	timezone?: string;
+	checkin_margin_minutes?: number;
+	max_runtime_minutes?: number;
+	environments?: string[];
+}
+
+export interface UpdateMonitorRequest {
+	name?: string;
+	description?: string;
+	schedule?: MonitorSchedule;
+	timezone?: string;
+	checkin_margin_minutes?: number;
+	max_runtime_minutes?: number;
+	environments?: string[];
+}
+
+// =============================================================================
+// Sessions & Release Health Types
+// =============================================================================
+
+export type SessionStatus = 'active' | 'exited' | 'crashed' | 'abnormal';
+export type AdoptionStage = 'new' | 'growing' | 'adopted' | 'replaced';
+
+export interface AppSession {
+	id: string;
+	project_id: string;
+	distinct_id: string;
+	status: SessionStatus;
+	release?: string;
+	environment: string;
+	platform: string;
+	crashed: boolean;
+	error_count: number;
+	duration_ms?: number;
+	started_at: string;
+	ended_at?: string;
+}
+
+export interface AppSessionListResponse {
+	sessions: AppSession[];
+	total: number;
+}
+
+export interface ReleaseHealth {
+	project_id: string;
+	release: string;
+	environment: string;
+	total_sessions: number;
+	crashed_sessions: number;
+	errored_sessions: number;
+	total_users: number;
+	crashed_users: number;
+	crash_free_session_rate: number;
+	crash_free_user_rate: number;
+	adoption_rate: number;
+	adoption_stage: AdoptionStage;
+	first_seen: string;
+	last_seen: string;
+	crash_free_rate_trend?: number;
+}
+
+export interface ReleaseHealthListResponse {
+	releases: ReleaseHealth[];
+}
+
+export interface CrashFreeDataPoint {
+	timestamp: string;
+	crash_free_rate: number;
+	total_sessions: number;
+	crashed_sessions: number;
+}
+
 // Error class for API errors
 export class ApiError extends Error {
 	constructor(

@@ -6,6 +6,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
+		"prebuild": "pnpm lingui:compile",
 		"build": "vite build",
 		"postbuild": "pnpm docs:index || echo 'Docs index: export failed'",
 		"docs:index": "tsx scripts/export-docs-index.ts",

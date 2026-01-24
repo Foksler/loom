@@ -48,6 +48,25 @@ import type {
 	ListWeaversResponse,
 	CreateWeaverRequest,
 	WsTokenResponse,
+	// Crash types
+	CrashProject,
+	CrashProjectListResponse,
+	Issue,
+	IssueListResponse,
+	CrashEvent,
+	CrashEventListResponse,
+	// Crons types
+	Monitor,
+	MonitorListResponse,
+	CheckIn,
+	CheckInListResponse,
+	CreateMonitorRequest,
+	UpdateMonitorRequest,
+	// Sessions types
+	AppSession,
+	AppSessionListResponse,
+	ReleaseHealth,
+	ReleaseHealthListResponse,
 } from './types';
 import { ApiError } from './types';
 
@@ -414,6 +433,154 @@ export class LoomApiClient {
 		await this.request<void>(`/api/weaver/${encodeURIComponent(id)}`, {
 			method: 'DELETE',
 		});
+	}
+
+	// =========================================================================
+	// Crash Analytics
+	// =========================================================================
+
+	async listCrashProjects(orgId: string): Promise<CrashProjectListResponse> {
+		return this.request<CrashProjectListResponse>(`/api/crash/projects?org_id=${encodeURIComponent(orgId)}`);
+	}
+
+	async getCrashProject(projectId: string): Promise<CrashProject> {
+		return this.request<CrashProject>(`/api/crash/projects/${encodeURIComponent(projectId)}`);
+	}
+
+	async listIssues(projectId: string, params: { status?: string; limit?: number; offset?: number } = {}): Promise<IssueListResponse> {
+		const query = new URLSearchParams();
+		if (params.status) query.set('status', params.status);
+		if (params.limit) query.set('limit', String(params.limit));
+		if (params.offset) query.set('offset', String(params.offset));
+
+		const queryStr = query.toString();
+		const path = `/api/crash/projects/${encodeURIComponent(projectId)}/issues${queryStr ? `?${queryStr}` : ''}`;
+		return this.request<IssueListResponse>(path);
+	}
+
+	async getIssue(projectId: string, issueId: string): Promise<Issue> {
+		return this.request<Issue>(`/api/crash/projects/${encodeURIComponent(projectId)}/issues/${encodeURIComponent(issueId)}`);
+	}
+
+	async resolveIssue(projectId: string, issueId: string, releaseVersion?: string): Promise<Issue> {
+		return this.request<Issue>(
+			`/api/crash/projects/${encodeURIComponent(projectId)}/issues/${encodeURIComponent(issueId)}/resolve`,
+			{
+				method: 'POST',
+				body: JSON.stringify({ release_version: releaseVersion }),
+			}
+		);
+	}
+
+	async unresolveIssue(projectId: string, issueId: string): Promise<Issue> {
+		return this.request<Issue>(
+			`/api/crash/projects/${encodeURIComponent(projectId)}/issues/${encodeURIComponent(issueId)}/unresolve`,
+			{ method: 'POST' }
+		);
+	}
+
+	async ignoreIssue(projectId: string, issueId: string): Promise<Issue> {
+		return this.request<Issue>(
+			`/api/crash/projects/${encodeURIComponent(projectId)}/issues/${encodeURIComponent(issueId)}/ignore`,
+			{ method: 'POST' }
+		);
+	}
+
+	async listCrashEvents(projectId: string, issueId: string, params: { limit?: number; offset?: number } = {}): Promise<CrashEventListResponse> {
+		const query = new URLSearchParams();
+		if (params.limit) query.set('limit', String(params.limit));
+		if (params.offset) query.set('offset', String(params.offset));
+
+		const queryStr = query.toString();
+		const path = `/api/crash/projects/${encodeURIComponent(projectId)}/issues/${encodeURIComponent(issueId)}/events${queryStr ? `?${queryStr}` : ''}`;
+		return this.request<CrashEventListResponse>(path);
+	}
+
+	async getCrashEvent(projectId: string, eventId: string): Promise<CrashEvent> {
+		return this.request<CrashEvent>(`/api/crash/projects/${encodeURIComponent(projectId)}/events/${encodeURIComponent(eventId)}`);
+	}
+
+	// =========================================================================
+	// Crons Monitoring
+	// =========================================================================
+
+	async listMonitors(orgId: string): Promise<MonitorListResponse> {
+		return this.request<MonitorListResponse>(`/api/crons/monitors?org_id=${encodeURIComponent(orgId)}`);
+	}
+
+	async getMonitor(orgId: string, slug: string): Promise<Monitor> {
+		return this.request<Monitor>(`/api/crons/monitors/${encodeURIComponent(slug)}?org_id=${encodeURIComponent(orgId)}`);
+	}
+
+	async createMonitor(orgId: string, data: CreateMonitorRequest): Promise<Monitor> {
+		return this.request<Monitor>(`/api/crons/monitors?org_id=${encodeURIComponent(orgId)}`, {
+			method: 'POST',
+			body: JSON.stringify(data),
+		});
+	}
+
+	async updateMonitor(orgId: string, slug: string, data: UpdateMonitorRequest): Promise<Monitor> {
+		return this.request<Monitor>(`/api/crons/monitors/${encodeURIComponent(slug)}`, {
+			method: 'PATCH',
+			body: JSON.stringify({ ...data, org_id: orgId }),
+		});
+	}
+
+	async deleteMonitor(orgId: string, slug: string): Promise<void> {
+		await this.request<void>(`/api/crons/monitors/${encodeURIComponent(slug)}?org_id=${encodeURIComponent(orgId)}`, {
+			method: 'DELETE',
+		});
+	}
+
+	async pauseMonitor(orgId: string, slug: string): Promise<Monitor> {
+		return this.request<Monitor>(`/api/crons/monitors/${encodeURIComponent(slug)}/pause?org_id=${encodeURIComponent(orgId)}`, {
+			method: 'POST',
+		});
+	}
+
+	async resumeMonitor(orgId: string, slug: string): Promise<Monitor> {
+		return this.request<Monitor>(`/api/crons/monitors/${encodeURIComponent(slug)}/resume?org_id=${encodeURIComponent(orgId)}`, {
+			method: 'POST',
+		});
+	}
+
+	async listCheckIns(orgId: string, slug: string, params: { limit?: number; offset?: number } = {}): Promise<CheckInListResponse> {
+		const query = new URLSearchParams();
+		query.set('org_id', orgId);
+		if (params.limit) query.set('limit', String(params.limit));
+		if (params.offset) query.set('offset', String(params.offset));
+
+		return this.request<CheckInListResponse>(`/api/crons/monitors/${encodeURIComponent(slug)}/checkins?${query}`);
+	}
+
+	// =========================================================================
+	// Sessions & Release Health
+	// =========================================================================
+
+	async listAppSessions(projectId: string, params: { limit?: number; offset?: number; release?: string } = {}): Promise<AppSessionListResponse> {
+		const query = new URLSearchParams();
+		query.set('project_id', projectId);
+		if (params.limit) query.set('limit', String(params.limit));
+		if (params.offset) query.set('offset', String(params.offset));
+		if (params.release) query.set('release', params.release);
+
+		return this.request<AppSessionListResponse>(`/api/app-sessions?${query}`);
+	}
+
+	async listReleaseHealth(projectId: string, params: { environment?: string } = {}): Promise<ReleaseHealthListResponse> {
+		const query = new URLSearchParams();
+		query.set('project_id', projectId);
+		if (params.environment) query.set('environment', params.environment);
+
+		return this.request<ReleaseHealthListResponse>(`/api/app-sessions/releases?${query}`);
+	}
+
+	async getReleaseHealth(projectId: string, version: string, params: { environment?: string } = {}): Promise<ReleaseHealth> {
+		const query = new URLSearchParams();
+		query.set('project_id', projectId);
+		if (params.environment) query.set('environment', params.environment);
+
+		return this.request<ReleaseHealth>(`/api/app-sessions/releases/${encodeURIComponent(version)}?${query}`);
 	}
 }
 
