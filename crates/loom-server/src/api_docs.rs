@@ -341,6 +341,7 @@ use utoipa::OpenApi;
             crate::routes::crash::CrashErrorResponse,
             crate::routes::crash::CreateProjectRequest,
             crate::routes::crash::ProjectResponse,
+            crate::routes::crash::ProjectListResponse,
             crate::routes::crash::IssueResponse,
             crate::routes::crash::ResolveRequest,
             crate::routes::crash::IssueDetailResponse,

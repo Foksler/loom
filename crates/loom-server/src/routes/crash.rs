@@ -1476,7 +1476,7 @@ impl From<CrashProject> for ProjectResponse {
 		("org_id" = String, Query, description = "Organization ID"),
 	),
 	responses(
-		(status = 200, description = "List of projects", body = Vec<ProjectResponse>),
+		(status = 200, description = "List of projects", body = ProjectListResponse),
 		(status = 403, description = "Forbidden", body = CrashErrorResponse),
 	),
 	security(("bearer" = [])),
@@ -1487,7 +1487,7 @@ pub async fn list_projects(
 	State(state): State<AppState>,
 	RequireAuth(current_user): RequireAuth,
 	Query(params): Query<ListProjectsParams>,
-) -> Result<Json<Vec<ProjectResponse>>, (StatusCode, Json<CrashErrorResponse>)> {
+) -> Result<Json<ProjectListResponse>, (StatusCode, Json<CrashErrorResponse>)> {
 	let locale = resolve_user_locale(&current_user, &state.default_locale);
 
 	let org_id: OrgId = params.org_id.parse().map_err(|_| {
@@ -1513,14 +1513,20 @@ pub async fn list_projects(
 		)
 	})?;
 
-	Ok(Json(
-		projects.into_iter().map(ProjectResponse::from).collect(),
-	))
+	Ok(Json(ProjectListResponse {
+		projects: projects.into_iter().map(ProjectResponse::from).collect(),
+	}))
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ListProjectsParams {
 	pub org_id: String,
+}
+
+/// Response wrapper for list projects endpoint
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct ProjectListResponse {
+	pub projects: Vec<ProjectResponse>,
 }
 
 /// POST /api/crash/projects - Create a crash project
