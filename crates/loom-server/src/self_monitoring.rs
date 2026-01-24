@@ -326,10 +326,12 @@ async fn ensure_api_key(
 
 	// For internal keys, we store the actual key (not hashed) for retrieval
 	// This is safe because these are system-managed keys
+	// created_by uses a special system user ID to indicate auto-generated keys
+	let system_user_id = "00000000-0000-0000-0000-000000000000";
 	sqlx::query(
 		r#"
-		INSERT INTO crash_api_keys (id, project_id, name, key_prefix, key_hash, key_type, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO crash_api_keys (id, project_id, name, key_prefix, key_hash, key_type, created_by, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 		"#,
 	)
 	.bind(&key_id)
@@ -338,6 +340,7 @@ async fn ensure_api_key(
 	.bind(&key[..10]) // Store prefix for display
 	.bind(&key) // Store full key for internal use
 	.bind("capture")
+	.bind(system_user_id)
 	.bind(now)
 	.execute(pool)
 	.await
