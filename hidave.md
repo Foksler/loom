@@ -340,6 +340,44 @@ Note: Routes use plural form (`/crons` not `/cron`)
 
 ---
 
+### 2026-01-25: Self-Monitoring Implementation
+
+**Self-monitoring infrastructure for Loom monitoring itself:**
+- Created `self_monitoring.rs` module in loom-server
+- Automatically creates "Loom Internal" organization with well-known UUID
+- Creates internal crash projects: loom-server, loom-web, loom-cli
+- Generates internal API keys for crash capture
+- Installs panic hook for automatic loom-server crash reporting
+
+**API endpoints for self-monitoring configuration:**
+- `GET /api/self-monitoring/web-config` - Returns crash SDK config for loom-web
+- `GET /api/self-monitoring/cli-config` - Returns crash SDK config for loom-cli
+- `GET /api/self-monitoring/projects` - Returns internal project IDs
+
+**loom-web integration:**
+- Created `$lib/crash/self-monitoring.ts` - Fetches config and initializes CrashClient
+- Created `SelfMonitoringProvider.svelte` - Wraps app layout with crash monitoring
+- Added @loom/crash dependency
+- Installs global error handlers for automatic crash capture
+
+**loom-cli integration:**
+- Created `self_monitoring.rs` module
+- Added loom-crash dependency
+- Initializes crash monitoring on CLI startup
+- Installs panic hook for automatic crash reporting
+
+**Files created:**
+- `crates/loom-server/src/self_monitoring.rs`
+- `crates/loom-server/src/routes/self_monitoring.rs`
+- `crates/loom-cli/src/self_monitoring.rs`
+- `web/loom-web/src/lib/crash/self-monitoring.ts`
+- `web/loom-web/src/lib/crash/index.ts`
+- `web/loom-web/src/lib/crash/SelfMonitoringProvider.svelte`
+
+**Build:** All components build successfully (cargo build -p loom-server -p loom-cli, pnpm build)
+
+---
+
 ## Summary
 
 | Phase | Description | Status |

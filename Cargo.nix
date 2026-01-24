@@ -32,6 +32,8 @@ args@{
     "loom-wgtunnel-engine/default"
     "loom-wgtunnel-conn/default"
     "loom-wgtunnel-derp/default"
+    "loom-crash/default"
+    "loom-crash-core/default"
     "loom-server-logs/default"
     "loom-redact/default"
     "loom-server-github-app/default"
@@ -45,7 +47,6 @@ args@{
     "loom-server-llm-zai/default"
     "loom-server/default"
     "loom-analytics-core/default"
-    "loom-crash-core/default"
     "loom-crons-core/default"
     "loom-flags-core/default"
     "loom-server-analytics/default"
@@ -82,7 +83,6 @@ args@{
     "loom-flags/default"
     "loom-analytics/default"
     "loom-crons/default"
-    "loom-crash/default"
   ],
   rustPackages,
   buildRustPackages,
@@ -103,7 +103,7 @@ args@{
   cargoConfig ? {},
 }:
 let
-  nixifiedLockHash = "cc38f25d98e3e006684d5f64a49990ced836f87891a2fb03587987859cb474e0";
+  nixifiedLockHash = "02081f70168851874845f2e5981fcf79c2fb5278dee986f64888f08174e4f1e6";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -162,6 +162,8 @@ in
     loom-wgtunnel-engine = rustPackages.unknown.loom-wgtunnel-engine."0.1.0";
     loom-wgtunnel-conn = rustPackages.unknown.loom-wgtunnel-conn."0.1.0";
     loom-wgtunnel-derp = rustPackages.unknown.loom-wgtunnel-derp."0.1.0";
+    loom-crash = rustPackages.unknown.loom-crash."0.1.0";
+    loom-crash-core = rustPackages.unknown.loom-crash-core."0.1.0";
     loom-server-logs = rustPackages.unknown.loom-server-logs."0.1.0";
     loom-redact = rustPackages.unknown.loom-redact."0.1.0";
     loom-server-github-app = rustPackages.unknown.loom-server-github-app."0.1.0";
@@ -175,7 +177,6 @@ in
     loom-server-llm-zai = rustPackages.unknown.loom-server-llm-zai."0.1.0";
     loom-server = rustPackages.unknown.loom-server."0.1.0";
     loom-analytics-core = rustPackages.unknown.loom-analytics-core."0.1.0";
-    loom-crash-core = rustPackages.unknown.loom-crash-core."0.1.0";
     loom-crons-core = rustPackages.unknown.loom-crons-core."0.1.0";
     loom-flags-core = rustPackages.unknown.loom-flags-core."0.1.0";
     loom-server-analytics = rustPackages.unknown.loom-server-analytics."0.1.0";
@@ -212,7 +213,6 @@ in
     loom-flags = rustPackages.unknown.loom-flags."0.1.0";
     loom-analytics = rustPackages.unknown.loom-analytics."0.1.0";
     loom-crons = rustPackages.unknown.loom-crons."0.1.0";
-    loom-crash = rustPackages.unknown.loom-crash."0.1.0";
   };
   "registry+https://github.com/rust-lang/crates.io-index".addr2line."0.25.1" = overridableMkRustCrate (profileName: rec {
     name = "addr2line";
@@ -6455,6 +6455,7 @@ in
       loom_common_secret = (rustPackages."unknown".loom-common-secret."0.1.0" { inherit profileName; }).out;
       loom_common_thread = (rustPackages."unknown".loom-common-thread."0.1.0" { inherit profileName; }).out;
       loom_common_version = (rustPackages."unknown".loom-common-version."0.1.0" { inherit profileName; }).out;
+      loom_crash = (rustPackages."unknown".loom-crash."0.1.0" { inherit profileName; }).out;
       loom_server_llm_proxy = (rustPackages."unknown".loom-server-llm-proxy."0.1.0" { inherit profileName; }).out;
       loom_server_logs = (rustPackages."unknown".loom-server-logs."0.1.0" { inherit profileName; }).out;
       reqwest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".reqwest."0.12.28" { inherit profileName; }).out;
@@ -7103,6 +7104,7 @@ in
       loom_common_secret = (rustPackages."unknown".loom-common-secret."0.1.0" { inherit profileName; }).out;
       loom_common_thread = (rustPackages."unknown".loom-common-thread."0.1.0" { inherit profileName; }).out;
       loom_common_version = (rustPackages."unknown".loom-common-version."0.1.0" { inherit profileName; }).out;
+      loom_crash = (rustPackages."unknown".loom-crash."0.1.0" { inherit profileName; }).out;
       loom_crash_core = (rustPackages."unknown".loom-crash-core."0.1.0" { inherit profileName; }).out;
       loom_crons_core = (rustPackages."unknown".loom-crons-core."0.1.0" { inherit profileName; }).out;
       loom_flags_core = (rustPackages."unknown".loom-flags-core."0.1.0" { inherit profileName; }).out;

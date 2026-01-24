@@ -30,6 +30,7 @@ pub mod orgs;
 pub mod protection;
 pub mod repos;
 pub mod secrets;
+pub mod self_monitoring;
 pub mod serper;
 pub mod sessions;
 pub mod share;

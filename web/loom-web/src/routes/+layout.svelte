@@ -2,6 +2,7 @@
   import '../app.css';
   import { ThemeProvider } from '$lib/ui';
   import { I18nProvider } from '$lib/i18n';
+  import SelfMonitoringProvider from '$lib/crash/SelfMonitoringProvider.svelte';
   import type { Snippet } from 'svelte';
 
   interface Props {
@@ -11,13 +12,15 @@
   let { children }: Props = $props();
 </script>
 
-<ThemeProvider>
-  <I18nProvider>
-    <div class="app-root">
-      {@render children()}
-    </div>
-  </I18nProvider>
-</ThemeProvider>
+<SelfMonitoringProvider>
+  <ThemeProvider>
+    <I18nProvider>
+      <div class="app-root">
+        {@render children()}
+      </div>
+    </I18nProvider>
+  </ThemeProvider>
+</SelfMonitoringProvider>
 
 <style>
   .app-root {

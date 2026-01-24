@@ -67,6 +67,7 @@ mod crash_client;
 mod credential_helper;
 mod crons_client;
 mod locale;
+mod self_monitoring;
 mod sessions_client;
 mod update;
 mod version;
@@ -1334,6 +1335,15 @@ async fn main() -> Result<()> {
 			provider = %config.global.default_provider,
 			"starting loom"
 	);
+
+	// Initialize self-monitoring for crash reporting
+	// This is non-blocking and failures are logged but don't prevent CLI from running
+	tokio::spawn({
+		let server_url = args.server_url.clone();
+		async move {
+			self_monitoring::initialize_self_monitoring(&server_url).await;
+		}
+	});
 
 	// Get auth token for thread sync
 	let auth_token = auth::load_token(&args.server_url).await;

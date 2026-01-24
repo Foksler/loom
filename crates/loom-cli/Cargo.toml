@@ -26,6 +26,7 @@ sha2 = { workspace = true }
 sys-locale = "0.3"
 humantime = "2"
 loom-cli-acp = { path = "../loom-cli-acp" }
+loom-crash = { path = "../loom-crash" }
 loom-cli-auto-commit = { path = "../loom-cli-auto-commit" }
 loom-cli-config = { path = "../loom-cli-config" }
 loom-common-core = { path = "../loom-common-core" }

@@ -26,6 +26,7 @@ pub mod query_metrics;
 pub mod query_security;
 pub mod query_tracing;
 pub mod routes;
+pub mod self_monitoring;
 pub mod server_query;
 pub mod typed_router;
 pub mod validation;

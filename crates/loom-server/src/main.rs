@@ -82,6 +82,41 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	// Run database migrations
 	loom_server::db::run_migrations(&pool).await?;
 
+	// Initialize self-monitoring for Loom itself (internal crash reporting)
+	let base_url = format!(
+		"{}://{}:{}",
+		if config.http.host == "0.0.0.0" || config.http.host == "127.0.0.1" {
+			"http"
+		} else {
+			"https"
+		},
+		&config.http.host,
+		config.http.port
+	);
+	let release = env!("CARGO_PKG_VERSION");
+	let environment = std::env::var("LOOM_ENVIRONMENT").unwrap_or_else(|_| "production".to_string());
+
+	match loom_server::self_monitoring::initialize_self_monitoring(
+		&pool,
+		&base_url,
+		release,
+		&environment,
+	)
+	.await
+	{
+		Ok(self_mon_config) => {
+			tracing::info!(
+				server_api_key = ?self_mon_config.server_api_key.as_ref().map(|k| &k[..10]),
+				web_api_key = ?self_mon_config.web_api_key.as_ref().map(|k| &k[..10]),
+				cli_api_key = ?self_mon_config.cli_api_key.as_ref().map(|k| &k[..10]),
+				"Self-monitoring initialized"
+			);
+		}
+		Err(e) => {
+			tracing::warn!(error = %e, "Failed to initialize self-monitoring, continuing without it");
+		}
+	}
+
 	let repo = Arc::new(ThreadRepository::new(pool.clone()));
 	let mut state = create_app_state(pool.clone(), repo, &config, Some(log_buffer)).await;
 

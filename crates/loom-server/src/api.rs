@@ -904,6 +904,19 @@ pub fn create_router(state: AppState) -> Router {
 		)
 		// Documentation search
 		.route("/docs/search", get(routes::docs::search_handler))
+		// Self-monitoring configuration (public for SDK initialization)
+		.route(
+			"/api/self-monitoring/web-config",
+			get(routes::self_monitoring::get_web_config),
+		)
+		.route(
+			"/api/self-monitoring/cli-config",
+			get(routes::self_monitoring::get_cli_config),
+		)
+		.route(
+			"/api/self-monitoring/projects",
+			get(routes::self_monitoring::get_internal_projects),
+		)
 		// Feature flags SSE streaming (SDK key auth handled in handler)
 		.route("/api/flags/stream", get(routes::flags::stream_flags))
 		// Analytics SDK routes (API key auth handled in handler)

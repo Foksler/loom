@@ -47,6 +47,7 @@ loom-analytics-core = { path = "../loom-analytics-core" }
 loom-server-crons = { path = "../loom-server-crons" }
 loom-crons-core = { path = "../loom-crons-core", features = ["openapi"] }
 loom-server-crash = { path = "../loom-server-crash" }
+loom-crash = { path = "../loom-crash" }
 loom-crash-core = { path = "../loom-crash-core", features = ["openapi"] }
 loom-server-sessions = { path = "../loom-server-sessions" }
 loom-sessions-core = { path = "../loom-sessions-core", features = ["openapi"] }
