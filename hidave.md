@@ -223,6 +223,36 @@ Reference: [specs/observability-ui.md#62-notification-system](specs/observabilit
 
 ## Verification Log
 
+### 2026-01-24: Crash Analytics & Sessions Endpoints
+
+**Crash API endpoints verified via curl:**
+- `GET /api/crash/projects?org_id=...` — List crash projects ✓
+- `POST /api/crash/capture` — Capture crash event ✓
+- `GET /api/crash/projects/{id}/issues` — List issues ✓
+- `GET /api/crash/projects/{id}/issues/{id}` — Get issue details ✓
+- `POST /api/crash/projects/{id}/issues/{id}/resolve` — Resolve issue ✓
+- `POST /api/crash/projects/{id}/issues/{id}/unresolve` — Unresolve issue ✓
+- `POST /api/crash/projects/{id}/issues/{id}/ignore` — Ignore issue ✓
+- `GET /api/crash/projects/{id}/events` — List crash events ✓
+- `GET /api/crash/projects/{id}/api-keys` — List API keys ✓
+- `GET /api/crash/projects/{id}/releases` — List releases ✓
+
+**Crash CLI commands verified:**
+- `loom crash projects --org ...` — List projects ✓
+- `loom crash issues --project ...` — List issues ✓
+
+**Sessions API endpoints verified via curl:**
+- `POST /api/sessions/start` — Start a session ✓
+- `POST /api/sessions/end` — End a session ✓
+- `GET /api/app-sessions?project_id=...` — List sessions ✓
+- `GET /api/app-sessions/releases?project_id=...` — List release health ✓
+
+**Sessions CLI commands verified:**
+- `loom sessions list --project ...` — List sessions ✓
+- `loom sessions releases --project ...` — List release health ✓
+
+---
+
 ### 2026-01-24: Crons Monitor Management Endpoints
 
 **Verified endpoints via curl:**
