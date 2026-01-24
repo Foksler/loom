@@ -21,7 +21,7 @@ pub use loom_server_db::{
 	ThreadSearchHit, UserRepository,
 };
 
-/// Run all database migrations (001-035).
+/// Run all database migrations (001-036).
 ///
 /// # Arguments
 /// * `pool` - SQLite connection pool
@@ -393,6 +393,19 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ServerError> {
 		if let Err(e) = sqlx::query(stmt).execute(pool).await {
 			let msg = e.to_string();
 			if !msg.contains("already exists") && !msg.contains("duplicate column") {
+				return Err(e.into());
+			}
+		}
+	}
+
+	let m36 = include_str!("../../migrations/036_crash_api_keys_key_prefix.sql");
+	for stmt in m36.split(';').filter(|s| !s.trim().is_empty()) {
+		if let Err(e) = sqlx::query(stmt).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists")
+				&& !msg.contains("duplicate column")
+				&& !msg.contains("UNIQUE constraint failed")
+			{
 				return Err(e.into());
 			}
 		}
