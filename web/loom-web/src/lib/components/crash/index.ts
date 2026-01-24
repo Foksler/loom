@@ -1,6 +1,7 @@
 export { default as IssueStatusBadge } from './IssueStatusBadge.svelte';
 export { default as IssueListItem } from './IssueListItem.svelte';
 export { default as IssueList } from './IssueList.svelte';
+export { default as IssueDetail } from './IssueDetail.svelte';
 export { default as Stacktrace } from './Stacktrace.svelte';
 export { default as StacktraceFrame } from './StacktraceFrame.svelte';
 export { default as SourceContext } from './SourceContext.svelte';
@@ -8,4 +9,5 @@ export { default as Breadcrumbs } from './Breadcrumbs.svelte';
 export { default as ActiveFlags } from './ActiveFlags.svelte';
 export { default as UserContext } from './UserContext.svelte';
 export { default as CrashEventCard } from './CrashEventCard.svelte';
+export { default as CrashEventDetail } from './CrashEventDetail.svelte';
 export { default as SymbolUpload } from './SymbolUpload.svelte';
