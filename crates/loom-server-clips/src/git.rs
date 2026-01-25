@@ -199,6 +199,138 @@ impl ClipsGitStore {
 		Ok(total_size)
 	}
 
+	/// Commit files to a clip repository.
+	/// Creates an initial commit with the given files.
+	#[instrument(skip(self, files), fields(clip_id = %clip_id, file_count = files.len()))]
+	pub async fn commit_files(
+		&self,
+		clip_id: ClipId,
+		files: &[(String, String)], // (path, content)
+		author_name: &str,
+		author_email: &str,
+		message: &str,
+	) -> Result<String> {
+		let repo_path = self.get_clip_path(clip_id);
+
+		// Create a temporary directory for the work tree
+		let temp_dir = tempfile::tempdir()?;
+		let work_tree = temp_dir.path();
+
+		// Write files to the work tree
+		for (path, content) in files {
+			let file_path = work_tree.join(path);
+			if let Some(parent) = file_path.parent() {
+				fs::create_dir_all(parent).await?;
+			}
+			fs::write(&file_path, content).await?;
+		}
+
+		// Add all files
+		let output = Command::new("git")
+			.args(["--git-dir", repo_path.to_str().unwrap_or_default()])
+			.args(["--work-tree", work_tree.to_str().unwrap_or_default()])
+			.args(["add", "-A"])
+			.stdout(Stdio::piped())
+			.stderr(Stdio::piped())
+			.output()
+			.await?;
+
+		if !output.status.success() {
+			let stderr = String::from_utf8_lossy(&output.stderr);
+			return Err(ClipsError::Git(format!("git add failed: {}", stderr)));
+		}
+
+		// Create commit
+		let output = Command::new("git")
+			.args(["--git-dir", repo_path.to_str().unwrap_or_default()])
+			.args(["--work-tree", work_tree.to_str().unwrap_or_default()])
+			.args(["commit", "-m", message])
+			.args(["--author", &format!("{} <{}>", author_name, author_email)])
+			.env("GIT_COMMITTER_NAME", author_name)
+			.env("GIT_COMMITTER_EMAIL", author_email)
+			.stdout(Stdio::piped())
+			.stderr(Stdio::piped())
+			.output()
+			.await?;
+
+		if !output.status.success() {
+			let stderr = String::from_utf8_lossy(&output.stderr);
+			return Err(ClipsError::Git(format!("git commit failed: {}", stderr)));
+		}
+
+		// Get the commit hash
+		let output = Command::new("git")
+			.args(["--git-dir", repo_path.to_str().unwrap_or_default()])
+			.args(["rev-parse", "HEAD"])
+			.stdout(Stdio::piped())
+			.stderr(Stdio::piped())
+			.output()
+			.await?;
+
+		if !output.status.success() {
+			let stderr = String::from_utf8_lossy(&output.stderr);
+			return Err(ClipsError::Git(format!("git rev-parse failed: {}", stderr)));
+		}
+
+		let commit_hash = String::from_utf8_lossy(&output.stdout).trim().to_string();
+		info!(%clip_id, %commit_hash, "Committed files to clip");
+
+		Ok(commit_hash)
+	}
+
+	/// Clone a clip repository to create a fork.
+	#[instrument(skip(self), fields(source_clip_id = %source_clip_id, target_clip_id = %target_clip_id))]
+	pub async fn clone_repo(&self, source_clip_id: ClipId, target_clip_id: ClipId) -> Result<()> {
+		let source_path = self.get_clip_path(source_clip_id);
+		let target_path = self.get_clip_path(target_clip_id);
+
+		if let Some(parent) = target_path.parent() {
+			fs::create_dir_all(parent).await?;
+		}
+
+		let output = Command::new("git")
+			.args(["clone", "--bare"])
+			.arg(&source_path)
+			.arg(&target_path)
+			.stdout(Stdio::piped())
+			.stderr(Stdio::piped())
+			.output()
+			.await?;
+
+		if !output.status.success() {
+			let stderr = String::from_utf8_lossy(&output.stderr);
+			return Err(ClipsError::Git(format!("git clone failed: {}", stderr)));
+		}
+
+		info!(%source_clip_id, %target_clip_id, "Cloned clip repository");
+		Ok(())
+	}
+
+	/// Get the latest commit hash for a clip.
+	#[instrument(skip(self), fields(clip_id = %clip_id))]
+	pub async fn get_head_commit(&self, clip_id: ClipId) -> Result<Option<String>> {
+		let repo_path = self.get_clip_path(clip_id);
+
+		let output = Command::new("git")
+			.args(["--git-dir", repo_path.to_str().unwrap_or_default()])
+			.args(["rev-parse", "HEAD"])
+			.stdout(Stdio::piped())
+			.stderr(Stdio::piped())
+			.output()
+			.await?;
+
+		if !output.status.success() {
+			return Ok(None);
+		}
+
+		let hash = String::from_utf8_lossy(&output.stdout).trim().to_string();
+		if hash.is_empty() {
+			Ok(None)
+		} else {
+			Ok(Some(hash))
+		}
+	}
+
 	/// Get the default branch name for a clip.
 	#[instrument(skip(self), fields(clip_id = %clip_id))]
 	pub async fn get_default_branch(&self, clip_id: ClipId) -> Result<Option<String>> {
