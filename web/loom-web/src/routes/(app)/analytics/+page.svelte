@@ -212,7 +212,7 @@
 								<div class="event-meta">
 									<span class="event-time">{formatTimestamp(event.timestamp)}</span>
 								</div>
-								{#if Object.keys(event.properties).length > 0}
+								{#if event.properties && Object.keys(event.properties).length > 0}
 									<div class="event-properties">
 										{#each Object.entries(event.properties).slice(0, 3) as [key, value]}
 											<span class="property-tag">
