@@ -9,6 +9,7 @@ use axum::{
 	http::{header, HeaderMap, StatusCode},
 	response::{IntoResponse, Response},
 };
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 use loom_server_auth::types::OrgId;
 use loom_server_db::clips::{ClipRecord, ClipVisibility, ClipsStore};
 use tracing::instrument;
@@ -232,6 +233,19 @@ pub async fn clips_upload_pack(
 	}
 
 	if let Err(e) = check_clip_read_access(&clip, effective_user.as_ref(), &state, locale).await {
+		// Log access denied
+		if let Some(user) = &effective_user {
+			state.audit_service.log(
+				AuditLogBuilder::new(AuditEventType::ClipAccessDenied)
+					.actor(AuditUserId::new(user.user.id.into_inner()))
+					.resource("clip", clip.id.to_string())
+					.details(serde_json::json!({
+						"action": "upload-pack",
+						"reason": "read_access_denied",
+					}))
+					.build(),
+			);
+		}
 		return match e {
 			ServerError::Unauthorized(msg) => Ok(git_unauthorized_response(&msg)),
 			other => Err(other),
@@ -239,6 +253,16 @@ pub async fn clips_upload_pack(
 	}
 
 	let output = run_git_command(&repo_path, GitService::UploadPack, &body, false).await?;
+
+	// Log successful pull/fetch
+	if let Some(user) = &effective_user {
+		state.audit_service.log(
+			AuditLogBuilder::new(AuditEventType::ClipPulled)
+				.actor(AuditUserId::new(user.user.id.into_inner()))
+				.resource("clip", clip.id.to_string())
+				.build(),
+		);
+	}
 
 	Ok((
 		StatusCode::OK,
@@ -293,6 +317,19 @@ pub async fn clips_receive_pack(
 	}
 
 	if let Err(e) = check_clip_write_access(&clip, effective_user.as_ref(), &state, locale).await {
+		// Log access denied
+		if let Some(user) = &effective_user {
+			state.audit_service.log(
+				AuditLogBuilder::new(AuditEventType::ClipAccessDenied)
+					.actor(AuditUserId::new(user.user.id.into_inner()))
+					.resource("clip", clip.id.to_string())
+					.details(serde_json::json!({
+						"action": "receive-pack",
+						"reason": "write_access_denied",
+					}))
+					.build(),
+			);
+		}
 		return match e {
 			ServerError::Unauthorized(msg) => Ok(git_unauthorized_response(&msg)),
 			other => Err(other),
@@ -322,6 +359,19 @@ pub async fn clips_receive_pack(
 				}
 			}
 		}
+	}
+
+	// Log successful push
+	if let Some(user) = &effective_user {
+		state.audit_service.log(
+			AuditLogBuilder::new(AuditEventType::ClipPushed)
+				.actor(AuditUserId::new(user.user.id.into_inner()))
+				.resource("clip", clip.id.to_string())
+				.details(serde_json::json!({
+					"protocol": "git",
+				}))
+				.build(),
+		);
 	}
 
 	Ok((

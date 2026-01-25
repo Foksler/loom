@@ -171,6 +171,17 @@ pub enum AuditEventType {
 	CronMonitorDeleted,
 	CronMonitorPaused,
 	CronMonitorResumed,
+
+	// Clip events
+	ClipCreated,
+	ClipUpdated,
+	ClipDeleted,
+	ClipForked,
+	ClipStarred,
+	ClipUnstarred,
+	ClipPushed,
+	ClipPulled,
+	ClipAccessDenied,
 }
 
 impl fmt::Display for AuditEventType {
@@ -326,6 +337,17 @@ impl fmt::Display for AuditEventType {
 			AuditEventType::CronMonitorDeleted => "cron_monitor_deleted",
 			AuditEventType::CronMonitorPaused => "cron_monitor_paused",
 			AuditEventType::CronMonitorResumed => "cron_monitor_resumed",
+
+			// Clip events
+			AuditEventType::ClipCreated => "clip_created",
+			AuditEventType::ClipUpdated => "clip_updated",
+			AuditEventType::ClipDeleted => "clip_deleted",
+			AuditEventType::ClipForked => "clip_forked",
+			AuditEventType::ClipStarred => "clip_starred",
+			AuditEventType::ClipUnstarred => "clip_unstarred",
+			AuditEventType::ClipPushed => "clip_pushed",
+			AuditEventType::ClipPulled => "clip_pulled",
+			AuditEventType::ClipAccessDenied => "clip_access_denied",
 		};
 		write!(f, "{s}")
 	}
@@ -405,14 +427,21 @@ impl AuditEventType {
 			| AuditEventType::CrashReleaseCreated
 			| AuditEventType::CrashSymbolsUploaded
 			// Cron monitoring events - normal operations
-			| AuditEventType::CronMonitorCreated => AuditSeverity::Info,
+			| AuditEventType::CronMonitorCreated
+			// Clip events - normal operations
+			| AuditEventType::ClipCreated
+			| AuditEventType::ClipForked
+			| AuditEventType::ClipStarred
+			| AuditEventType::ClipPushed
+			| AuditEventType::ClipPulled => AuditSeverity::Info,
 
 			// Warning: Security-relevant failures
 			AuditEventType::LoginFailed
 			| AuditEventType::AccessDenied
 			| AuditEventType::WeaverPrivilegeChange
 			| AuditEventType::WeaverMemoryExec
-			| AuditEventType::ScimAuthFailure => AuditSeverity::Warning,
+			| AuditEventType::ScimAuthFailure
+			| AuditEventType::ClipAccessDenied => AuditSeverity::Warning,
 
 			// Critical: Security breaches
 			AuditEventType::WeaverSandboxEscape => AuditSeverity::Critical,
@@ -467,7 +496,11 @@ impl AuditEventType {
 			| AuditEventType::CronMonitorUpdated
 			| AuditEventType::CronMonitorDeleted
 			| AuditEventType::CronMonitorPaused
-			| AuditEventType::CronMonitorResumed => AuditSeverity::Notice,
+			| AuditEventType::CronMonitorResumed
+			// Clip events - administrative actions
+			| AuditEventType::ClipUpdated
+			| AuditEventType::ClipDeleted
+			| AuditEventType::ClipUnstarred => AuditSeverity::Notice,
 
 			// Error: Operation failures
 			AuditEventType::LlmRequestFailed => AuditSeverity::Error,

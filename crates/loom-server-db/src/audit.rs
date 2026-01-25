@@ -271,6 +271,16 @@ fn parse_event_type(s: &str) -> Option<AuditEventType> {
 		"sdk_key_revoked" => Some(AuditEventType::SdkKeyRevoked),
 		"environment_created" => Some(AuditEventType::EnvironmentCreated),
 		"environment_deleted" => Some(AuditEventType::EnvironmentDeleted),
+		// Clip events
+		"clip_created" => Some(AuditEventType::ClipCreated),
+		"clip_updated" => Some(AuditEventType::ClipUpdated),
+		"clip_deleted" => Some(AuditEventType::ClipDeleted),
+		"clip_forked" => Some(AuditEventType::ClipForked),
+		"clip_starred" => Some(AuditEventType::ClipStarred),
+		"clip_unstarred" => Some(AuditEventType::ClipUnstarred),
+		"clip_pushed" => Some(AuditEventType::ClipPushed),
+		"clip_pulled" => Some(AuditEventType::ClipPulled),
+		"clip_access_denied" => Some(AuditEventType::ClipAccessDenied),
 		_ => None,
 	}
 }

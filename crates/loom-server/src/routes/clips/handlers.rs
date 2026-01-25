@@ -15,6 +15,8 @@ use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
+
 use crate::{
 	api::AppState,
 	auth_middleware::RequireAuth,
@@ -387,6 +389,20 @@ pub async fn create_clip(
 		"Clip created"
 	);
 
+	// Audit log
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::ClipCreated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("clip", clip_id.to_string())
+			.details(serde_json::json!({
+				"org_id": payload.org_id.to_string(),
+				"name": payload.name,
+				"visibility": format!("{:?}", visibility),
+				"file_count": payload.files.len(),
+			}))
+			.build(),
+	);
+
 	let _ = membership;
 	(
 		StatusCode::CREATED,
@@ -611,6 +627,18 @@ pub async fn update_clip(
 
 	tracing::info!(clip_id = %id, updated_by = %current_user.user.id, "Clip updated");
 
+	// Audit log
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::ClipUpdated)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("clip", id.to_string())
+			.details(serde_json::json!({
+				"name": updated_clip.name,
+				"visibility": format!("{:?}", updated_clip.visibility),
+			}))
+			.build(),
+	);
+
 	(
 		StatusCode::OK,
 		Json(clip_record_to_response(updated_clip, &state.base_url)),
@@ -766,6 +794,18 @@ pub async fn delete_clip(
 	}
 
 	tracing::info!(clip_id = %id, deleted_by = %current_user.user.id, "Clip deleted");
+
+	// Audit log
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::ClipDeleted)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("clip", id.to_string())
+			.details(serde_json::json!({
+				"name": clip.name,
+				"org_id": clip.org_id.map(|id| id.to_string()),
+			}))
+			.build(),
+	);
 
 	StatusCode::NO_CONTENT.into_response()
 }
@@ -1456,11 +1496,24 @@ pub async fn update_clip_files(
 		}
 	}
 
+	// Audit log
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::ClipPushed)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("clip", id.to_string())
+			.details(serde_json::json!({
+				"commit": commit_hash,
+				"file_count": files.len(),
+				"message": commit_message,
+			}))
+			.build(),
+	);
+
 	(
 		StatusCode::OK,
 		Json(ClipFilesResponse {
 			files: file_responses,
-			revision: commit_hash,
+			revision: commit_hash.clone(),
 		}),
 	)
 		.into_response()
@@ -1678,6 +1731,19 @@ pub async fn fork_clip(
 		"Clip forked"
 	);
 
+	// Audit log
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::ClipForked)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("clip", fork_id.to_string())
+			.details(serde_json::json!({
+				"source_clip_id": id.to_string(),
+				"target_org_id": payload.target_org_id.to_string(),
+				"name": fork_name,
+			}))
+			.build(),
+	);
+
 	let _ = membership;
 	(
 		StatusCode::CREATED,
@@ -1875,10 +1941,17 @@ pub async fn star_clip(
 		}
 	};
 
-	let star_count = clips_repo
-		.get_clip_star_count(id)
-		.await
-		.unwrap_or(0);
+	let star_count = clips_repo.get_clip_star_count(id).await.unwrap_or(0);
+
+	// Audit log (only if newly starred)
+	if starred {
+		state.audit_service.log(
+			AuditLogBuilder::new(AuditEventType::ClipStarred)
+				.actor(AuditUserId::new(current_user.user.id.into_inner()))
+				.resource("clip", id.to_string())
+				.build(),
+		);
+	}
 
 	(
 		StatusCode::OK,
@@ -1951,12 +2024,22 @@ pub async fn unstar_clip(
 	}
 
 	// Unstar the clip
-	let _ = clips_repo.unstar_clip(id, current_user.user.id.into_inner()).await;
-
-	let star_count = clips_repo
-		.get_clip_star_count(id)
+	let unstarred = clips_repo
+		.unstar_clip(id, current_user.user.id.into_inner())
 		.await
-		.unwrap_or(0);
+		.unwrap_or(false);
+
+	let star_count = clips_repo.get_clip_star_count(id).await.unwrap_or(0);
+
+	// Audit log (only if actually unstarred)
+	if unstarred {
+		state.audit_service.log(
+			AuditLogBuilder::new(AuditEventType::ClipUnstarred)
+				.actor(AuditUserId::new(current_user.user.id.into_inner()))
+				.resource("clip", id.to_string())
+				.build(),
+		);
+	}
 
 	(
 		StatusCode::OK,
