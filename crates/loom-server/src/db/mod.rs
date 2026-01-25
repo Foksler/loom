@@ -468,6 +468,20 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ServerError> {
 		}
 	}
 
+	let m40 = include_str!("../../migrations/040_whatsapp.sql");
+	for stmt in m40.split(';') {
+		let stmt = stmt.trim();
+		if stmt.is_empty() || stmt.starts_with("--") {
+			continue;
+		}
+		if let Err(e) = sqlx::query(stmt).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists") {
+				tracing::warn!(error = %e, "WhatsApp migration statement failed");
+			}
+		}
+	}
+
 	tracing::debug!("database migrations complete");
 	Ok(())
 }
