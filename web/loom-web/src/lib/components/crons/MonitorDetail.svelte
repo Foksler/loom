@@ -1,32 +1,10 @@
 <script lang="ts">
 	import MonitorStatusBadge from './MonitorStatusBadge.svelte';
 	import MonitorHealthBadge from './MonitorHealthBadge.svelte';
-	import CheckInTimeline from './CheckInTimeline.svelte';
-	import PingUrlDisplay from './PingUrlDisplay.svelte';
-	import UptimeChart from './UptimeChart.svelte';
 	import { RelativeTime, StatCard } from '$lib/components/common';
 
 	type MonitorStatus = 'active' | 'paused' | 'disabled';
 	type MonitorHealth = 'healthy' | 'failing' | 'missed' | 'timeout' | 'unknown';
-	type CheckInStatus = 'in_progress' | 'ok' | 'error' | 'missed' | 'timeout';
-
-	interface CheckIn {
-		id: string;
-		status: CheckInStatus;
-		started_at?: string;
-		finished_at?: string;
-		duration_ms?: number;
-		environment?: string;
-		release?: string;
-		exit_code?: number;
-		output?: string;
-	}
-
-	interface UptimeData {
-		date: string;
-		status: CheckInStatus | 'none';
-		count: number;
-	}
 
 	interface Monitor {
 		id: string;
@@ -52,9 +30,7 @@
 
 	interface Props {
 		monitor: Monitor;
-		checkins: CheckIn[];
-		uptimeData: UptimeData[];
-		baseUrl?: string;
+		recentCheckins?: { id: string }[];
 		onpause?: () => void;
 		onresume?: () => void;
 		onedit?: () => void;
@@ -63,9 +39,7 @@
 
 	let {
 		monitor,
-		checkins,
-		uptimeData,
-		baseUrl = '',
+		recentCheckins = [],
 		onpause,
 		onresume,
 		onedit,
@@ -168,20 +142,6 @@
 				</div>
 			{/if}
 		</div>
-	</section>
-
-	<section class="monitor-section">
-		<PingUrlDisplay pingKey={monitor.ping_key} {baseUrl} />
-	</section>
-
-	{#if uptimeData.length > 0}
-		<section class="monitor-section">
-			<UptimeChart data={uptimeData} />
-		</section>
-	{/if}
-
-	<section class="monitor-section">
-		<CheckInTimeline {checkins} />
 	</section>
 
 	{#if monitor.environments.length > 0}
