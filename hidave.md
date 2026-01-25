@@ -386,6 +386,61 @@ Note: Routes use plural form (`/crons` not `/cron`)
 
 ---
 
+### 2026-01-25: Comprehensive Analytics Click Tracking
+
+**Added explicit click tracking across all major pages in loom-web:**
+
+**Tracking helper functions added to `$lib/analytics/self-monitoring.ts`:**
+- `trackLinkClick(linkName, href, properties)` — Track link clicks with destination
+- `trackButtonClick(buttonName, properties)` — Track button clicks
+- `trackFormSubmit(formName, properties)` — Track form submissions
+- `trackModalOpen(modalName, properties)` — Track modal opens
+- `trackModalClose(modalName, properties)` — Track modal closes
+- `trackFilterChange(filterName, value, properties)` — Track filter changes
+- `trackAction(action, resourceType, resourceId, properties)` — Track user actions
+
+**Pages with tracking added:**
+
+1. **App Layout (`+layout.svelte`):**
+   - All header navigation links (threads, repos, weavers, crashes, crons, sessions, settings, admin)
+   - Logout button
+
+2. **Weavers page (`/weavers`):**
+   - New Weaver button, Logs button, Attach link, Delete button
+   - Modal tracking (create weaver modal open/close)
+   - Image preset selection
+
+3. **Crashes pages (`/crashes`, `/crashes/[projectId]`, `/crashes/[projectId]/issues/[issueId]`):**
+   - Project card links, org filter changes
+   - Issue clicks, status filter, time range picker
+   - Resolve/unresolve/ignore actions, back links, event clicks
+
+4. **Crons pages (`/crons`, `/crons/new`, `/crons/[slug]`):**
+   - New Monitor button, health filter, org filter, monitor clicks
+   - Form submit, cancel button
+   - Pause/resume/delete actions, back link
+
+5. **Sessions page (`/sessions`):**
+   - Org/project/time range filters
+   - Release clicks
+
+6. **Repos page (`/repos`):**
+   - New repo button, repo links
+   - Modal tracking (create repo modal open/close)
+   - Retry button
+
+7. **Settings pages:**
+   - Settings nav links (sessions, profile, orgs)
+   - Profile save form, locale change
+
+**Commits:**
+- `f371b777` — Add analytics click tracking to all major pages
+- `7ef80ff2` — Add analytics tracking to detail pages and settings
+
+**Deployment verified:** Changes pushed to trunk and auto-deployed
+
+---
+
 ### 2026-01-25: Self-Monitoring Implementation
 
 **Self-monitoring infrastructure for Loom monitoring itself:**
