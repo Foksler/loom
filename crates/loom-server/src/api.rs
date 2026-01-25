@@ -1511,8 +1511,16 @@ pub fn create_router(state: AppState) -> Router {
 		.route("/api/clips/{id}", delete(routes::clips::delete_clip))
 		.route("/api/clips/{id}/files", get(routes::clips::list_clip_files))
 		.route(
+			"/api/clips/{id}/files",
+			post(routes::clips::update_clip_files),
+		)
+		.route(
 			"/api/clips/{id}/files/{path:.*}",
 			get(routes::clips::get_clip_file),
+		)
+		.route(
+			"/api/clips/{id}/raw/{path:.*}",
+			get(routes::clips::get_clip_file_raw),
 		)
 		.route("/api/clips/{id}/fork", post(routes::clips::fork_clip))
 		.route(

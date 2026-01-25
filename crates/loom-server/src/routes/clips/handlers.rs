@@ -1180,6 +1180,293 @@ pub async fn get_clip_file(
 }
 
 #[utoipa::path(
+    get,
+    path = "/api/clips/{id}/raw/{path}",
+    params(
+        ("id" = Uuid, Path, description = "Clip ID"),
+        ("path" = String, Path, description = "File path")
+    ),
+    responses(
+        (status = 200, description = "Raw file content"),
+        (status = 404, description = "File not found", body = ClipsErrorResponse)
+    ),
+    tag = "clips"
+)]
+#[tracing::instrument(skip(state))]
+pub async fn get_clip_file_raw(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path((id, path)): Path<(Uuid, String)>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	let clips_repo = match state.clips_repo.as_ref() {
+		Some(repo) => repo,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(ClipsErrorResponse {
+					error: "not_configured".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let clips_git = match state.clips_git_store.as_ref() {
+		Some(git) => git,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(ClipsErrorResponse {
+					error: "not_configured".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Verify clip exists and user has access
+	match clips_repo.get_clip_by_id(id).await {
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return (
+				StatusCode::NOT_FOUND,
+				Json(ClipsErrorResponse {
+					error: "not_found".to_string(),
+					message: "Clip not found".to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get clip");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(ClipsErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	}
+
+	let clip_id = loom_server_clips::ClipId(id);
+
+	// Read raw file (no redaction)
+	match clips_git.read_file_raw(clip_id, &path, None).await {
+		Ok(bytes) => {
+			// Detect content type from path
+			let content_type = detect_content_type(&path);
+			(
+				StatusCode::OK,
+				[(axum::http::header::CONTENT_TYPE, content_type)],
+				bytes,
+			)
+				.into_response()
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to read file");
+			(
+				StatusCode::NOT_FOUND,
+				Json(ClipsErrorResponse {
+					error: "not_found".to_string(),
+					message: "File not found".to_string(),
+				}),
+			)
+				.into_response()
+		}
+	}
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct UpdateFilesRequest {
+	pub files: Vec<CreateClipFile>,
+	pub message: Option<String>,
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/clips/{id}/files",
+    params(
+        ("id" = Uuid, Path, description = "Clip ID")
+    ),
+    request_body = UpdateFilesRequest,
+    responses(
+        (status = 200, description = "Files updated", body = ClipFilesResponse),
+        (status = 404, description = "Clip not found", body = ClipsErrorResponse),
+        (status = 403, description = "Not authorized", body = ClipsErrorResponse)
+    ),
+    tag = "clips"
+)]
+#[tracing::instrument(skip(state, payload))]
+pub async fn update_clip_files(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(id): Path<Uuid>,
+	Json(payload): Json<UpdateFilesRequest>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+
+	let clips_repo = match state.clips_repo.as_ref() {
+		Some(repo) => repo,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(ClipsErrorResponse {
+					error: "not_configured".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let clips_git = match state.clips_git_store.as_ref() {
+		Some(git) => git,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(ClipsErrorResponse {
+					error: "not_configured".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Get clip and verify ownership
+	let clip = match clips_repo.get_clip_by_id(id).await {
+		Ok(Some(c)) => c,
+		Ok(None) => {
+			return (
+				StatusCode::NOT_FOUND,
+				Json(ClipsErrorResponse {
+					error: "not_found".to_string(),
+					message: "Clip not found".to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get clip");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(ClipsErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Check if user has write access
+	let has_access = if let Some(org_id) = clip.org_id {
+		let org_id = OrgId::new(org_id);
+		matches!(
+			state.org_repo.get_membership(&org_id, &current_user.user.id).await,
+			Ok(Some(_))
+		)
+	} else {
+		clip.created_by == current_user.user.id.into_inner()
+	};
+
+	if !has_access {
+		return (
+			StatusCode::FORBIDDEN,
+			Json(ClipsErrorResponse {
+				error: "forbidden".to_string(),
+				message: t(locale, "server.api.error.forbidden").to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	// Prepare files for commit
+	let files: Vec<(String, String)> = payload
+		.files
+		.iter()
+		.map(|f| (f.path.clone(), f.content.clone()))
+		.collect();
+
+	let commit_message = payload
+		.message
+		.unwrap_or_else(|| "Update files".to_string());
+
+	let author_name = &current_user.user.display_name;
+	let author_email = current_user
+		.user
+		.primary_email
+		.as_deref()
+		.unwrap_or("user@loom.local");
+
+	let clip_id = loom_server_clips::ClipId(id);
+
+	// Commit files
+	let commit_hash = match clips_git
+		.commit_files(clip_id, &files, author_name, author_email, &commit_message)
+		.await
+	{
+		Ok(hash) => hash,
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to commit files");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(ClipsErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Update clip stats
+	let file_count = files.len() as u32;
+	let total_size: u64 = files.iter().map(|(_, content)| content.len() as u64).sum();
+	let language = files
+		.first()
+		.and_then(|(path, _)| detect_language_from_path(path));
+
+	let _ = clips_repo
+		.update_clip_stats(id, file_count, total_size, language.as_deref())
+		.await;
+
+	// Build response by reading files back with redaction
+	let mut file_responses = Vec::new();
+	for (path, _) in &files {
+		match clips_git.read_file_redacted(clip_id, path, None).await {
+			Ok(file) => {
+				file_responses.push(ClipFileResponse {
+					path: file.path,
+					content: file.content,
+					size: file.size_bytes,
+					language: file.language,
+					is_redacted: file.is_redacted,
+				});
+			}
+			Err(e) => {
+				tracing::warn!(error = %e, path = %path, "Failed to read back file");
+			}
+		}
+	}
+
+	(
+		StatusCode::OK,
+		Json(ClipFilesResponse {
+			files: file_responses,
+			revision: commit_hash,
+		}),
+	)
+		.into_response()
+}
+
+#[utoipa::path(
     post,
     path = "/api/clips/{id}/fork",
     params(
@@ -1858,4 +2145,27 @@ fn detect_language_from_path(path: &str) -> Option<String> {
 		_ => None,
 	}
 	.map(|s| s.to_string())
+}
+
+fn detect_content_type(path: &str) -> &'static str {
+	let ext = std::path::Path::new(path)
+		.extension()
+		.and_then(|e| e.to_str())
+		.unwrap_or("");
+	match ext.to_lowercase().as_str() {
+		"html" | "htm" => "text/html; charset=utf-8",
+		"css" => "text/css; charset=utf-8",
+		"js" | "mjs" => "application/javascript; charset=utf-8",
+		"json" => "application/json; charset=utf-8",
+		"xml" => "application/xml; charset=utf-8",
+		"png" => "image/png",
+		"jpg" | "jpeg" => "image/jpeg",
+		"gif" => "image/gif",
+		"svg" => "image/svg+xml",
+		"pdf" => "application/pdf",
+		"zip" => "application/zip",
+		"tar" => "application/x-tar",
+		"gz" => "application/gzip",
+		_ => "text/plain; charset=utf-8",
+	}
 }
