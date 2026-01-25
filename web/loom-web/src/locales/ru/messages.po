@@ -2563,6 +2563,10 @@ msgstr "Команды"
 msgid "org.tabs.apiKeys"
 msgstr "API-ключи"
 
+#: org.tabs.whatsapp
+msgid "org.tabs.whatsapp"
+msgstr "WhatsApp"
+
 #: org.tabs.settings
 msgid "org.tabs.settings"
 msgstr "Настройки"

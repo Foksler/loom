@@ -2563,6 +2563,10 @@ msgstr "टीमें"
 msgid "org.tabs.apiKeys"
 msgstr "API कुंजियाँ"
 
+#: org.tabs.whatsapp
+msgid "org.tabs.whatsapp"
+msgstr "WhatsApp"
+
 #: org.tabs.settings
 msgid "org.tabs.settings"
 msgstr "सेटिंग्स"

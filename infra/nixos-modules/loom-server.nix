@@ -441,6 +441,25 @@ in
       };
     };
 
+    # WhatsApp Business API Configuration
+    # Per-org credentials are stored in the database via the web UI.
+    # This configures the HTTP client settings for the WhatsApp Cloud API.
+    whatsapp = {
+      enable = mkEnableOption "WhatsApp Business API integration";
+
+      baseUrl = mkOption {
+        type = types.str;
+        default = "https://graph.facebook.com/v21.0";
+        description = "Base URL for WhatsApp Cloud API (Facebook Graph API).";
+      };
+
+      timeoutSecs = mkOption {
+        type = types.int;
+        default = 30;
+        description = "HTTP request timeout in seconds for WhatsApp API calls.";
+      };
+    };
+
     # GeoIP Configuration
     geoip = {
       enable = mkEnableOption "GeoIP lookup service using MaxMind databases";
@@ -835,6 +854,10 @@ in
         (mkIf cfg.secrets.enable {
           LOOM_SECRETS_SVID_TTL_SECONDS = toString cfg.secrets.svidTtlSeconds;
           LOOM_SECRETS_VERIFY_POD_EXISTS = if cfg.secrets.verifyPodExists then "true" else "false";
+        })
+        (mkIf cfg.whatsapp.enable {
+          LOOM_SERVER_WHATSAPP_BASE_URL = cfg.whatsapp.baseUrl;
+          LOOM_SERVER_WHATSAPP_TIMEOUT_SECS = toString cfg.whatsapp.timeoutSecs;
         })
         (mkIf cfg.geoip.enable {
           LOOM_SERVER_GEOIP_DATABASE_PATH = toString cfg.geoip.databasePath;

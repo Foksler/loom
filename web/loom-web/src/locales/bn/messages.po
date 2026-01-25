@@ -2563,6 +2563,10 @@ msgstr "টিম"
 msgid "org.tabs.apiKeys"
 msgstr "API কী"
 
+#: org.tabs.whatsapp
+msgid "org.tabs.whatsapp"
+msgstr "WhatsApp"
+
 #: org.tabs.settings
 msgid "org.tabs.settings"
 msgstr "সেটিংস"

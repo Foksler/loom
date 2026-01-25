@@ -2563,6 +2563,10 @@ msgstr "팀"
 msgid "org.tabs.apiKeys"
 msgstr "API 키"
 
+#: org.tabs.whatsapp
+msgid "org.tabs.whatsapp"
+msgstr "WhatsApp"
+
 #: org.tabs.settings
 msgid "org.tabs.settings"
 msgstr "설정"

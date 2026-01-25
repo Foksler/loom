@@ -2563,6 +2563,10 @@ msgstr "团队"
 msgid "org.tabs.apiKeys"
 msgstr "API 密钥"
 
+#: org.tabs.whatsapp
+msgid "org.tabs.whatsapp"
+msgstr "WhatsApp"
+
 #: org.tabs.settings
 msgid "org.tabs.settings"
 msgstr "设置"

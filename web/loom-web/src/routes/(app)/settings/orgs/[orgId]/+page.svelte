@@ -22,7 +22,7 @@
 	const orgId = $derived($page.params.orgId!);
 	const client = getApiClient();
 
-	type TabId = 'members' | 'teams' | 'api-keys' | 'settings';
+	type TabId = 'members' | 'teams' | 'api-keys' | 'whatsapp' | 'settings';
 
 	let activeTab = $state<TabId>('members');
 	let org = $state<Org | null>(null);
@@ -56,6 +56,7 @@
 		{ id: 'members', label: 'org.tabs.members' },
 		{ id: 'teams', label: 'org.tabs.teams' },
 		{ id: 'api-keys', label: 'org.tabs.apiKeys' },
+		{ id: 'whatsapp', label: 'org.tabs.whatsapp' },
 		{ id: 'settings', label: 'org.tabs.settings' },
 	];
 
@@ -248,15 +249,25 @@
 	<div class="border-b border-border mb-6">
 		<nav class="flex gap-4">
 			{#each tabs as tab}
-				<button
-					class="px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px
-						{activeTab === tab.id
-							? 'border-accent text-accent'
-							: 'border-transparent text-fg-muted hover:text-fg hover:border-border'}"
-					onclick={() => handleTabChange(tab.id)}
-				>
-					{i18n._(tab.label)}
-				</button>
+				{#if tab.id === 'whatsapp'}
+					<a
+						href="/settings/orgs/{orgId}/whatsapp"
+						class="px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px
+							border-transparent text-fg-muted hover:text-fg hover:border-border"
+					>
+						{i18n._(tab.label)}
+					</a>
+				{:else}
+					<button
+						class="px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px
+							{activeTab === tab.id
+								? 'border-accent text-accent'
+								: 'border-transparent text-fg-muted hover:text-fg hover:border-border'}"
+						onclick={() => handleTabChange(tab.id)}
+					>
+						{i18n._(tab.label)}
+					</button>
+				{/if}
 			{/each}
 		</nav>
 	</div>

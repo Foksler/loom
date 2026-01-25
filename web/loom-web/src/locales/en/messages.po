@@ -2519,6 +2519,10 @@ msgstr "Teams"
 msgid "org.tabs.apiKeys"
 msgstr "API Keys"
 
+#: org.tabs.whatsapp
+msgid "org.tabs.whatsapp"
+msgstr "WhatsApp"
+
 #: org.tabs.settings
 msgid "org.tabs.settings"
 msgstr "Settings"

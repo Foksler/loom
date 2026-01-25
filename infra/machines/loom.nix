@@ -284,6 +284,12 @@
       apiKeyFile = config.sops.secrets.loom-serper-api-key.path;
     };
 
+    # WhatsApp Business API
+    # Per-org credentials are configured via web UI at /settings/orgs/{orgId}/whatsapp
+    whatsapp = {
+      enable = true;
+    };
+
     # Z.ai disabled until API key is properly encrypted in loom.yaml
     zai = {
       enable = false;
