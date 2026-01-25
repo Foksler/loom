@@ -10,7 +10,14 @@ export {
 	identify,
 	reset,
 	setProperties,
-	shutdownAnalytics
+	shutdownAnalytics,
+	trackLinkClick,
+	trackButtonClick,
+	trackFormSubmit,
+	trackModalOpen,
+	trackModalClose,
+	trackFilterChange,
+	trackAction
 } from './self-monitoring';
 
 export { default as AnalyticsProvider } from './AnalyticsProvider.svelte';

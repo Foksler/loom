@@ -8,6 +8,7 @@
 	import { getApiClient } from '$lib/api/client';
 	import type { Weaver, WeaverStatus, Org } from '$lib/api/types';
 	import { Card, Badge, Button, Input, ThreadDivider } from '$lib/ui';
+	import { trackButtonClick, trackLinkClick, trackModalOpen, trackModalClose, trackAction } from '$lib/analytics';
 
 	const client = getApiClient();
 
@@ -69,6 +70,7 @@
 
 	async function createWeaver() {
 		if (!newWeaver.image) return;
+		trackButtonClick('create_weaver', { image: newWeaver.image, org_id: newWeaver.org_id });
 		creating = true;
 		error = null;
 		createLogLines = [];
@@ -141,7 +143,9 @@
 	}
 
 	async function deleteWeaver(id: string) {
+		trackButtonClick('delete_weaver', { weaver_id: id });
 		if (!confirm(i18n._('weavers.deleteConfirm'))) return;
+		trackAction('delete', 'weaver', id);
 		deletingId = id;
 		try {
 			await client.deleteWeaver(id);
@@ -182,6 +186,7 @@
 		if (creating && createdWeaverId) {
 			return;
 		}
+		trackModalClose('create_weaver');
 		showCreateModal = false;
 		const defaultOrgId = orgs.length > 0 ? orgs[0].id : '';
 		newWeaver = { image: DEFAULT_WEAVER_IMAGE, org_id: defaultOrgId, lifetime_hours: 24, workdir: '' };
@@ -201,6 +206,7 @@
 	}
 
 	function openLogsModal(weaver: Weaver) {
+		trackModalOpen('weaver_logs', { weaver_id: weaver.id, weaver_status: weaver.status });
 		logsWeaver = weaver;
 		logLines = [];
 		logsError = null;
@@ -234,6 +240,7 @@
 	}
 
 	function closeLogsModal() {
+		trackModalClose('weaver_logs');
 		showLogsModal = false;
 		logsWeaver = null;
 		logLines = [];
@@ -270,7 +277,7 @@
 			<h1 class="title">{i18n._('weavers.title')}</h1>
 			<p class="subtitle">{i18n._('weavers.subtitle')}</p>
 		</div>
-		<Button onclick={() => (showCreateModal = true)}>
+		<Button onclick={() => { trackButtonClick('new_weaver'); trackModalOpen('create_weaver'); showCreateModal = true; }}>
 			{i18n._('weavers.new')}
 		</Button>
 	</div>
@@ -285,7 +292,7 @@
 		<Card>
 			<div class="error-state">
 				<p class="error-text">{error}</p>
-				<Button variant="secondary" onclick={loadWeavers}>
+				<Button variant="secondary" onclick={() => { trackButtonClick('retry_load_weavers'); loadWeavers(); }}>
 					{i18n._('general.retry')}
 				</Button>
 			</div>
@@ -294,7 +301,7 @@
 		<Card>
 			<div class="empty-state">
 				<p class="empty-text">{i18n._('weavers.empty')}</p>
-				<Button onclick={() => (showCreateModal = true)}>
+				<Button onclick={() => { trackButtonClick('new_weaver_empty_state'); trackModalOpen('create_weaver'); showCreateModal = true; }}>
 					{i18n._('weavers.new')}
 				</Button>
 			</div>
@@ -349,7 +356,7 @@
 								{i18n._('weavers.logs')}
 							</Button>
 							{#if weaver.status === 'running'}
-								<a href="/weavers/{weaver.id}">
+								<a href="/weavers/{weaver.id}" onclick={() => trackLinkClick('attach_weaver', `/weavers/${weaver.id}`, { weaver_id: weaver.id })}>
 									<Button variant="primary" size="sm">
 										{i18n._('weavers.attach')}
 									</Button>

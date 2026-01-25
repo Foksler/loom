@@ -175,3 +175,131 @@ export async function shutdownAnalytics(): Promise<void> {
 		analyticsClient = null;
 	}
 }
+
+// ============================================================================
+// Tracking Helper Functions
+// ============================================================================
+
+/**
+ * Track a link click event.
+ *
+ * @param linkName - Descriptive name of the link (e.g., 'project_card', 'back_button')
+ * @param href - The destination URL
+ * @param properties - Additional properties to track
+ */
+export function trackLinkClick(
+	linkName: string,
+	href: string,
+	properties?: Record<string, unknown>
+): void {
+	capture('link_clicked', {
+		link_name: linkName,
+		href,
+		...properties
+	});
+}
+
+/**
+ * Track a button click event.
+ *
+ * @param buttonName - Descriptive name of the button (e.g., 'create_weaver', 'delete_monitor')
+ * @param properties - Additional properties to track
+ */
+export function trackButtonClick(
+	buttonName: string,
+	properties?: Record<string, unknown>
+): void {
+	capture('button_clicked', {
+		button_name: buttonName,
+		...properties
+	});
+}
+
+/**
+ * Track a form submission event.
+ *
+ * @param formName - Descriptive name of the form (e.g., 'create_org', 'monitor_settings')
+ * @param properties - Additional properties to track
+ */
+export function trackFormSubmit(
+	formName: string,
+	properties?: Record<string, unknown>
+): void {
+	capture('form_submitted', {
+		form_name: formName,
+		...properties
+	});
+}
+
+/**
+ * Track a modal open event.
+ *
+ * @param modalName - Descriptive name of the modal
+ * @param properties - Additional properties to track
+ */
+export function trackModalOpen(
+	modalName: string,
+	properties?: Record<string, unknown>
+): void {
+	capture('modal_opened', {
+		modal_name: modalName,
+		...properties
+	});
+}
+
+/**
+ * Track a modal close event.
+ *
+ * @param modalName - Descriptive name of the modal
+ * @param properties - Additional properties to track
+ */
+export function trackModalClose(
+	modalName: string,
+	properties?: Record<string, unknown>
+): void {
+	capture('modal_closed', {
+		modal_name: modalName,
+		...properties
+	});
+}
+
+/**
+ * Track a filter change event.
+ *
+ * @param filterName - Name of the filter (e.g., 'status', 'time_range', 'org')
+ * @param value - The new filter value
+ * @param properties - Additional properties to track
+ */
+export function trackFilterChange(
+	filterName: string,
+	value: unknown,
+	properties?: Record<string, unknown>
+): void {
+	capture('filter_changed', {
+		filter_name: filterName,
+		filter_value: value,
+		...properties
+	});
+}
+
+/**
+ * Track an action event (resolve, delete, pause, etc.).
+ *
+ * @param action - The action performed (e.g., 'resolve_issue', 'delete_monitor')
+ * @param resourceType - Type of resource (e.g., 'issue', 'monitor', 'weaver')
+ * @param resourceId - ID of the resource
+ * @param properties - Additional properties to track
+ */
+export function trackAction(
+	action: string,
+	resourceType: string,
+	resourceId: string,
+	properties?: Record<string, unknown>
+): void {
+	capture('action_performed', {
+		action,
+		resource_type: resourceType,
+		resource_id: resourceId,
+		...properties
+	});
+}

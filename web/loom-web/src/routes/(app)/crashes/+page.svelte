@@ -7,6 +7,7 @@
 	import { getApiClient } from '$lib/api/client';
 	import type { CrashProject, Org } from '$lib/api/types';
 	import { Card } from '$lib/ui';
+	import { trackLinkClick, trackFilterChange } from '$lib/analytics';
 
 	const client = getApiClient();
 
@@ -66,7 +67,7 @@
 				id="org-select"
 				class="org-select"
 				value={selectedOrgId}
-				onchange={(e) => (selectedOrgId = e.currentTarget.value)}
+				onchange={(e) => { trackFilterChange('org', e.currentTarget.value, { page: 'crashes' }); selectedOrgId = e.currentTarget.value; }}
 			>
 				{#each orgs as org}
 					<option value={org.id}>{org.name}</option>
@@ -89,7 +90,7 @@
 	{:else}
 		<div class="projects-grid">
 			{#each projects as project}
-				<a href="/crashes/{project.id}" class="project-card">
+				<a href="/crashes/{project.id}" class="project-card" onclick={() => trackLinkClick('crash_project', `/crashes/${project.id}`, { project_id: project.id, project_name: project.name })}>
 					<Card>
 						<div class="project-content">
 							<h3 class="project-name">{project.name}</h3>

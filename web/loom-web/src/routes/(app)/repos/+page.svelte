@@ -8,6 +8,7 @@
 	import { Card, Badge, Button, Input, ThreadDivider, LoomFrame } from '$lib/ui';
 	import { CreateRepoModal } from '$lib/components/repos';
 	import { i18n } from '$lib/i18n';
+	import { trackButtonClick, trackLinkClick, trackModalOpen, trackModalClose } from '$lib/analytics';
 
 	let repos = $state<Repository[]>([]);
 	let loading = $state(true);
@@ -44,6 +45,7 @@
 	}
 
 	function handleRepoCreated(repo: Repository) {
+		trackModalClose('create_repo', { created: true, repo_name: repo.name });
 		repos = [repo, ...repos];
 		showCreateModal = false;
 	}
@@ -68,7 +70,7 @@
 <div class="repos-page">
 	<div class="header">
 		<h1 class="title">{i18n._('client.repos.list.title')}</h1>
-		<Button variant="primary" onclick={() => (showCreateModal = true)}>
+		<Button variant="primary" onclick={() => { trackButtonClick('new_repo'); trackModalOpen('create_repo'); showCreateModal = true; }}>
 			<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
 			</svg>
@@ -101,7 +103,7 @@
 		<Card>
 			<div class="error-state">
 				<p class="error-text">{error}</p>
-				<Button variant="secondary" onclick={loadRepos}>
+				<Button variant="secondary" onclick={() => { trackButtonClick('retry_load_repos'); loadRepos(); }}>
 					{i18n._('client.repos.list.try_again')}
 				</Button>
 			</div>
@@ -116,7 +118,7 @@
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
 					</svg>
 					<p class="empty-text">{i18n._('client.repos.list.empty')}</p>
-					<Button variant="primary" onclick={() => (showCreateModal = true)}>
+					<Button variant="primary" onclick={() => { trackButtonClick('create_first_repo'); trackModalOpen('create_repo'); showCreateModal = true; }}>
 						{i18n._('client.repos.list.create_first')}
 					</Button>
 				{/if}
@@ -132,6 +134,7 @@
 								<a
 									href="/repos/{repo.owner_id}/{repo.name}"
 									class="repo-link"
+									onclick={() => trackLinkClick('repo', `/repos/${repo.owner_id}/${repo.name}`, { repo_id: repo.id, repo_name: repo.name })}
 								>
 									{repo.owner_id}/{repo.name}
 								</a>
@@ -157,7 +160,7 @@
 {#if currentUserId}
 	<CreateRepoModal
 		open={showCreateModal}
-		onclose={() => (showCreateModal = false)}
+		onclose={() => { trackModalClose('create_repo', { created: false }); showCreateModal = false; }}
 		oncreate={handleRepoCreated}
 		userId={currentUserId}
 	/>

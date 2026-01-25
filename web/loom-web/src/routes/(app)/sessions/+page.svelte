@@ -7,6 +7,7 @@
 	import type { ReleaseHealth, CrashProject, Org } from '$lib/api/types';
 	import { ReleaseList, ReleaseHealthOverview, CrashFreeChart } from '$lib/components/sessions';
 	import { TimeRangePicker } from '$lib/components/common';
+	import { trackLinkClick, trackFilterChange } from '$lib/analytics';
 
 	const client = getApiClient();
 
@@ -75,6 +76,7 @@
 	}
 
 	function handleReleaseClick(release: ReleaseHealth) {
+		trackLinkClick('session_release', `/sessions/releases/${encodeURIComponent(release.release)}`, { release: release.release, crash_free_rate: release.crash_free_session_rate });
 		window.location.href = `/sessions/releases/${encodeURIComponent(release.release)}?project_id=${selectedProjectId}`;
 	}
 
@@ -149,7 +151,7 @@
 					id="org-select"
 					class="selector-select"
 					value={selectedOrgId}
-					onchange={(e) => (selectedOrgId = e.currentTarget.value)}
+					onchange={(e) => { trackFilterChange('org', e.currentTarget.value, { page: 'sessions' }); selectedOrgId = e.currentTarget.value; }}
 				>
 					{#each orgs as org}
 						<option value={org.id}>{org.name}</option>
@@ -165,7 +167,7 @@
 					id="project-select"
 					class="selector-select"
 					value={selectedProjectId}
-					onchange={(e) => (selectedProjectId = e.currentTarget.value)}
+					onchange={(e) => { trackFilterChange('project', e.currentTarget.value, { page: 'sessions' }); selectedProjectId = e.currentTarget.value; }}
 				>
 					{#each projects as project}
 						<option value={project.id}>{project.name}</option>
@@ -174,7 +176,7 @@
 			</div>
 		{/if}
 
-		<TimeRangePicker value={timeRange} onchange={(value) => (timeRange = value)} />
+		<TimeRangePicker value={timeRange} onchange={(value) => { trackFilterChange('time_range', value, { page: 'sessions' }); timeRange = value; }} />
 	</div>
 
 	{#if loading}

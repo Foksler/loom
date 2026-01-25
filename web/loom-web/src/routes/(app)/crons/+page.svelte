@@ -11,6 +11,7 @@
 	import { Button } from '$lib/ui';
 	import { CronsSSEClient, type CronEvent } from '$lib/realtime';
 	import { showNotification } from '$lib/components/notifications';
+	import { trackLinkClick, trackFilterChange, trackButtonClick } from '$lib/analytics';
 
 	const client = getApiClient();
 
@@ -183,6 +184,7 @@
 	);
 
 	function handleMonitorClick(monitor: Monitor) {
+		trackLinkClick('cron_monitor', `/crons/${monitor.slug}`, { monitor_slug: monitor.slug, monitor_health: monitor.health });
 		window.location.href = `/crons/${monitor.slug}?org_id=${selectedOrgId}`;
 	}
 </script>
@@ -199,7 +201,7 @@
 				</h1>
 				<p class="page-description">Monitor scheduled jobs and receive alerts for failures</p>
 			</div>
-			<Button href="/crons/new">New Monitor</Button>
+			<Button href="/crons/new" onclick={() => trackButtonClick('new_monitor')}>New Monitor</Button>
 		</div>
 	</header>
 
@@ -210,7 +212,7 @@
 				id="org-select"
 				class="org-select"
 				value={selectedOrgId}
-				onchange={(e) => (selectedOrgId = e.currentTarget.value)}
+				onchange={(e) => { trackFilterChange('org', e.currentTarget.value, { page: 'crons' }); selectedOrgId = e.currentTarget.value; }}
 			>
 				{#each orgs as org}
 					<option value={org.id}>{org.name}</option>
@@ -226,7 +228,7 @@
 				id="health-filter"
 				class="filter-select"
 				value={healthFilter}
-				onchange={(e) => (healthFilter = e.currentTarget.value)}
+				onchange={(e) => { trackFilterChange('health', e.currentTarget.value, { page: 'crons' }); healthFilter = e.currentTarget.value; }}
 			>
 				<option value="all">All</option>
 				<option value="healthy">Healthy</option>
@@ -246,7 +248,7 @@
 		<div class="empty-state">
 			<h2>No monitors configured</h2>
 			<p>Create a monitor to start tracking your scheduled jobs.</p>
-			<Button href="/crons/new">Create Monitor</Button>
+			<Button href="/crons/new" onclick={() => trackButtonClick('create_monitor_empty_state')}>Create Monitor</Button>
 		</div>
 	{:else}
 		<MonitorList monitors={filteredMonitors} onmonitorclick={handleMonitorClick} />
