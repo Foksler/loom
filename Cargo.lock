@@ -5554,21 +5554,13 @@ dependencies = [
 name = "loom-server-db"
 version = "0.1.0"
 dependencies = [
- "argon2",
  "async-trait",
  "chrono",
- "loom-analytics-core",
  "loom-common-secret",
  "loom-common-thread",
- "loom-crash-core",
- "loom-crons-core",
- "loom-flags-core",
  "loom-server-audit",
  "loom-server-auth",
- "loom-sessions-core",
- "murmur3",
  "proptest",
- "rand 0.8.5",
  "serde",
  "serde_json",
  "sha2",
