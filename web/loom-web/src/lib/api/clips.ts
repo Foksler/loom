@@ -73,11 +73,10 @@ export interface CreateClipFile {
 }
 
 export interface CreateClipRequest {
-	org_id: string;
 	name: string;
 	description?: string;
 	visibility?: ClipVisibility;
-	files: CreateClipFile[];
+	org_id?: string | null;
 }
 
 export interface UpdateClipRequest {
