@@ -30,13 +30,13 @@
 </script>
 
 <svelte:head>
-	<title>{i18n('client.repos.compare.title')} {data.baseRef}...{data.headRef} - {data.repo.owner_id}/{data.repo.name}</title>
+	<title>{i18n.t('client.repos.compare.title')} {data.baseRef}...{data.headRef} - {data.repo.owner_id}/{data.repo.name}</title>
 </svelte:head>
 
 <div class="space-y-4">
 	<div class="flex items-center gap-4 flex-wrap">
 		<div class="flex items-center gap-2">
-			<span class="text-sm text-fg-muted">{i18n('client.repos.compare.base')}</span>
+			<span class="text-sm text-fg-muted">{i18n.t('client.repos.compare.base')}</span>
 			<BranchSelector
 				branches={data.branches}
 				currentRef={data.baseRef}
@@ -49,7 +49,7 @@
 		</svg>
 
 		<div class="flex items-center gap-2">
-			<span class="text-sm text-fg-muted">{i18n('client.repos.compare.compare')}</span>
+			<span class="text-sm text-fg-muted">{i18n.t('client.repos.compare.compare')}</span>
 			<BranchSelector
 				branches={data.branches}
 				currentRef={data.headRef}

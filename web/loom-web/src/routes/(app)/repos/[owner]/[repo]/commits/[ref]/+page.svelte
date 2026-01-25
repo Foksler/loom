@@ -49,7 +49,7 @@
 </script>
 
 <svelte:head>
-	<title>{i18n('client.repos.commits.title')} - {data.repo.owner_id}/{data.repo.name}</title>
+	<title>{i18n.t('client.repos.commits.title')} - {data.repo.owner_id}/{data.repo.name}</title>
 </svelte:head>
 
 <div class="space-y-4">
@@ -61,7 +61,7 @@
 				onSelect={handleBranchChange}
 			/>
 			<span class="text-sm text-fg-muted">
-				<strong class="text-fg">{data.total}</strong> {i18n('client.repos.commits.count')}
+				<strong class="text-fg">{data.total}</strong> {i18n.t('client.repos.commits.count')}
 			</span>
 		</div>
 	</div>
@@ -75,13 +75,13 @@
 	{#if hasMore || hasPrev}
 		<div class="flex justify-between items-center pt-4">
 			<Button variant="secondary" size="sm" disabled={!hasPrev} onclick={prevPage}>
-				{i18n('client.repos.commits.newer')}
+				{i18n.t('client.repos.commits.newer')}
 			</Button>
 			<span class="text-sm text-fg-muted">
 				{data.offset + 1}-{Math.min(data.offset + data.limit, data.total)} of {data.total}
 			</span>
 			<Button variant="secondary" size="sm" disabled={!hasMore} onclick={nextPage}>
-				{i18n('client.repos.commits.older')}
+				{i18n.t('client.repos.commits.older')}
 			</Button>
 		</div>
 	{/if}

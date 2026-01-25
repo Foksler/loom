@@ -38,7 +38,7 @@
 </script>
 
 <svelte:head>
-	<title>{i18n('client.repos.blame.title')} {fileName} - {data.repo.owner_id}/{data.repo.name}</title>
+	<title>{i18n.t('client.repos.blame.title')} {fileName} - {data.repo.owner_id}/{data.repo.name}</title>
 </svelte:head>
 
 <div class="space-y-4">
@@ -66,7 +66,7 @@
 		</div>
 
 		<a href="{basePath}/blob/{data.currentRef}/{data.currentPath}" class="text-sm text-accent hover:underline">
-			{i18n('client.repos.blame.viewFile')}
+			{i18n.t('client.repos.blame.viewFile')}
 		</a>
 	</div>
 

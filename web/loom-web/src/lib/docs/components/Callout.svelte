@@ -22,10 +22,10 @@
 	};
 
 	const defaultTitles: Record<string, string> = {
-		info: i18n('docs.callout.info'),
-		tip: i18n('docs.callout.tip'),
-		warning: i18n('docs.callout.warning'),
-		danger: i18n('docs.callout.danger'),
+		info: i18n.t('docs.callout.info'),
+		tip: i18n.t('docs.callout.tip'),
+		warning: i18n.t('docs.callout.warning'),
+		danger: i18n.t('docs.callout.danger'),
 	};
 </script>
 

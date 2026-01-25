@@ -15,8 +15,8 @@
 </script>
 
 {#if items.length > 0}
-	<nav class="toc" aria-label={i18n('docs.toc.title')}>
-		<h4 class="toc-title">{i18n('docs.toc.title')}</h4>
+	<nav class="toc" aria-label={i18n.t('docs.toc.title')}>
+		<h4 class="toc-title">{i18n.t('docs.toc.title')}</h4>
 		<ul class="toc-list">
 			{#each items as item}
 				<li class="toc-item" class:depth-3={item.depth === 3}>
