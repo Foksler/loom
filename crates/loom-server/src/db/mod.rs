@@ -411,6 +411,63 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ServerError> {
 		}
 	}
 
+	let m37 = include_str!("../../migrations/037_clips.sql");
+	for stmt in m37.split(';').filter(|s| !s.trim().is_empty()) {
+		if let Err(e) = sqlx::query(stmt).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists") && !msg.contains("duplicate column") {
+				return Err(e.into());
+			}
+		}
+	}
+
+	let m38 = include_str!("../../migrations/038_clip_stars.sql");
+	for stmt in m38.split(';').filter(|s| !s.trim().is_empty()) {
+		if let Err(e) = sqlx::query(stmt).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists") && !msg.contains("duplicate column") {
+				return Err(e.into());
+			}
+		}
+	}
+
+	let m39 = include_str!("../../migrations/039_clips_fts.sql");
+	// FTS migration has triggers - needs special handling like thread_fts
+	if let Some(vt_end) = m39.find(");") {
+		let create_vt = &m39[..vt_end + 2];
+		if let Err(e) = sqlx::query(create_vt.trim()).execute(pool).await {
+			let msg = e.to_string();
+			if !msg.contains("already exists") && !msg.contains("table clips_fts already exists") {
+				tracing::warn!(error = %e, "Clips FTS CREATE VIRTUAL TABLE failed");
+			}
+		}
+
+		let remaining = &m39[vt_end + 2..];
+		for trigger_block in remaining.split("END;") {
+			let trigger = trigger_block.trim();
+			if trigger.is_empty() {
+				continue;
+			}
+			if trigger.contains("CREATE TRIGGER") {
+				let full_trigger = format!("{trigger} END;");
+				if let Err(e) = sqlx::query(&full_trigger).execute(pool).await {
+					let msg = e.to_string();
+					if !msg.contains("already exists") && !msg.contains("trigger") {
+						tracing::warn!(error = %e, "Clips FTS trigger creation failed");
+					}
+				}
+			} else if trigger.contains("INSERT INTO clips_fts") {
+				// Backfill statement
+				if let Err(e) = sqlx::query(trigger).execute(pool).await {
+					let msg = e.to_string();
+					if !msg.contains("UNIQUE constraint") {
+						tracing::warn!(error = %e, "Clips FTS backfill failed");
+					}
+				}
+			}
+		}
+	}
+
 	tracing::debug!("database migrations complete");
 	Ok(())
 }

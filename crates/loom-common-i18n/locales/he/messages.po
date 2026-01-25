@@ -1862,3 +1862,51 @@ msgstr "שיחה לא נמצאה"
 msgid "server.api.whatsapp.otp_message"
 msgstr "קוד האימות שלך ב-Loom הוא: {code}. קוד זה יפוג בעוד 5 דקות."
 
+
+#: ==========================================
+#: API: Clips (Code Snippets)
+#: ==========================================
+
+#: API: Clips - Not configured
+msgid "server.api.clips.not_configured"
+msgstr ""
+
+#: API: Clips - Not found
+msgid "server.api.clips.not_found"
+msgstr ""
+
+#: API: Clips - Name validation
+msgid "server.api.clips.name_invalid"
+msgstr ""
+
+#: API: Clips - Name already exists
+msgid "server.api.clips.name_exists"
+msgstr ""
+
+#: API: Clips - Organization not found
+msgid "server.api.clips.org_not_found"
+msgstr ""
+
+#: API: Clips - Target organization not found
+msgid "server.api.clips.target_org_not_found"
+msgstr ""
+
+#: API: Clips - Failed to initialize repository
+msgid "server.api.clips.repo_init_failed"
+msgstr ""
+
+#: API: Clips - Failed to clone repository
+msgid "server.api.clips.repo_clone_failed"
+msgstr ""
+
+#: API: Clips - Failed to list files
+msgid "server.api.clips.list_files_failed"
+msgstr ""
+
+#: API: Clips - File not found
+msgid "server.api.clips.file_not_found"
+msgstr ""
+
+#: API: Clips - Search query empty
+msgid "server.api.clips.search_empty"
+msgstr ""

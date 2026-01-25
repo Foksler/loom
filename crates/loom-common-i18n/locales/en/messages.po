@@ -1875,3 +1875,51 @@ msgstr "Conversation not found"
 #: API: WhatsApp - OTP message
 msgid "server.api.whatsapp.otp_message"
 msgstr "Your Loom verification code is: {code}. This code expires in 5 minutes."
+
+#: ==========================================
+#: API: Clips (Code Snippets)
+#: ==========================================
+
+#: API: Clips - Not configured
+msgid "server.api.clips.not_configured"
+msgstr "Clips feature is not configured"
+
+#: API: Clips - Not found
+msgid "server.api.clips.not_found"
+msgstr "Clip not found"
+
+#: API: Clips - Name validation
+msgid "server.api.clips.name_invalid"
+msgstr "Clip name must be 1-100 characters"
+
+#: API: Clips - Name already exists
+msgid "server.api.clips.name_exists"
+msgstr "A clip with this name already exists"
+
+#: API: Clips - Organization not found
+msgid "server.api.clips.org_not_found"
+msgstr "Organization not found"
+
+#: API: Clips - Target organization not found
+msgid "server.api.clips.target_org_not_found"
+msgstr "Target organization not found"
+
+#: API: Clips - Failed to initialize repository
+msgid "server.api.clips.repo_init_failed"
+msgstr "Failed to initialize repository"
+
+#: API: Clips - Failed to clone repository
+msgid "server.api.clips.repo_clone_failed"
+msgstr "Failed to clone repository"
+
+#: API: Clips - Failed to list files
+msgid "server.api.clips.list_files_failed"
+msgstr "Failed to list files"
+
+#: API: Clips - File not found
+msgid "server.api.clips.file_not_found"
+msgstr "File not found"
+
+#: API: Clips - Search query empty
+msgid "server.api.clips.search_empty"
+msgstr "Search query cannot be empty"

@@ -1858,3 +1858,51 @@ msgstr "Conversation non trouvée"
 msgid "server.api.whatsapp.otp_message"
 msgstr "Votre code de vérification Loom est : {code}. Ce code expire dans 5 minutes."
 
+
+#: ==========================================
+#: API: Clips (Code Snippets)
+#: ==========================================
+
+#: API: Clips - Not configured
+msgid "server.api.clips.not_configured"
+msgstr "La fonctionnalité clips n'est pas configurée"
+
+#: API: Clips - Not found
+msgid "server.api.clips.not_found"
+msgstr "Clip non trouvé"
+
+#: API: Clips - Name validation
+msgid "server.api.clips.name_invalid"
+msgstr "Le nom du clip doit contenir entre 1 et 100 caractères"
+
+#: API: Clips - Name already exists
+msgid "server.api.clips.name_exists"
+msgstr "Un clip avec ce nom existe déjà"
+
+#: API: Clips - Organization not found
+msgid "server.api.clips.org_not_found"
+msgstr "Organisation non trouvée"
+
+#: API: Clips - Target organization not found
+msgid "server.api.clips.target_org_not_found"
+msgstr "Organisation cible non trouvée"
+
+#: API: Clips - Failed to initialize repository
+msgid "server.api.clips.repo_init_failed"
+msgstr "Échec de l'initialisation du dépôt"
+
+#: API: Clips - Failed to clone repository
+msgid "server.api.clips.repo_clone_failed"
+msgstr "Échec du clonage du dépôt"
+
+#: API: Clips - Failed to list files
+msgid "server.api.clips.list_files_failed"
+msgstr "Échec de la liste des fichiers"
+
+#: API: Clips - File not found
+msgid "server.api.clips.file_not_found"
+msgstr "Fichier non trouvé"
+
+#: API: Clips - Search query empty
+msgid "server.api.clips.search_empty"
+msgstr "La requête de recherche ne peut pas être vide"

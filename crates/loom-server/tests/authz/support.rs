@@ -211,6 +211,8 @@ impl TestApp {
 		let temp_dir = tempfile::tempdir().unwrap();
 		// Set LOOM_SERVER_DATA_DIR for repo disk storage
 		std::env::set_var("LOOM_SERVER_DATA_DIR", temp_dir.path());
+		// Set LOOM_DATA_DIR for clips storage
+		std::env::set_var("LOOM_DATA_DIR", temp_dir.path());
 		let db_path = temp_dir.path().join("test_authz.db");
 		let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 		let pool = loom_server::db::create_pool(&db_url).await.unwrap();

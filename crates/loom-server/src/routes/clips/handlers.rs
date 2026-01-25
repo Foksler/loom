@@ -240,7 +240,7 @@ pub async fn create_clip(
 			StatusCode::BAD_REQUEST,
 			Json(ClipsErrorResponse {
 				error: "invalid_name".to_string(),
-				message: "Clip name must be 1-100 characters".to_string(),
+				message: t(locale, "server.api.clips.name_invalid").to_string(),
 			}),
 		)
 			.into_response();
@@ -285,7 +285,7 @@ pub async fn create_clip(
 				StatusCode::NOT_FOUND,
 				Json(ClipsErrorResponse {
 					error: "not_found".to_string(),
-					message: "Organization not found".to_string(),
+					message: t(locale, "server.api.clips.org_not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -309,7 +309,7 @@ pub async fn create_clip(
 			StatusCode::CONFLICT,
 			Json(ClipsErrorResponse {
 				error: "already_exists".to_string(),
-				message: "A clip with this name already exists".to_string(),
+				message: t(locale, "server.api.clips.name_exists").to_string(),
 			}),
 		)
 			.into_response();
@@ -355,7 +355,7 @@ pub async fn create_clip(
 			StatusCode::INTERNAL_SERVER_ERROR,
 			Json(ClipsErrorResponse {
 				error: "internal_error".to_string(),
-				message: "Failed to initialize repository".to_string(),
+				message: t(locale, "server.api.clips.repo_init_failed").to_string(),
 			}),
 		)
 			.into_response();
@@ -449,6 +449,8 @@ pub async fn get_clip(
 	State(state): State<AppState>,
 	Path((owner, name)): Path<(String, String)>,
 ) -> impl IntoResponse {
+	let locale = &state.default_locale;
+
 	let clips_repo = match state.clips_repo.as_ref() {
 		Some(repo) => repo,
 		None => {
@@ -456,7 +458,7 @@ pub async fn get_clip(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(ClipsErrorResponse {
 					error: "not_configured".to_string(),
-					message: "Clips not configured".to_string(),
+					message: t(locale, "server.api.clips.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -470,7 +472,7 @@ pub async fn get_clip(
 				StatusCode::NOT_FOUND,
 				Json(ClipsErrorResponse {
 					error: "not_found".to_string(),
-					message: "Clip not found".to_string(),
+					message: t(locale, "server.api.clips.not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -481,7 +483,7 @@ pub async fn get_clip(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(ClipsErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Internal error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
 				}),
 			)
 				.into_response();
@@ -540,7 +542,7 @@ pub async fn update_clip(
 				StatusCode::NOT_FOUND,
 				Json(ClipsErrorResponse {
 					error: "not_found".to_string(),
-					message: "Clip not found".to_string(),
+					message: t(locale, "server.api.clips.not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -723,7 +725,7 @@ pub async fn delete_clip(
 				StatusCode::NOT_FOUND,
 				Json(ClipsErrorResponse {
 					error: "not_found".to_string(),
-					message: "Clip not found".to_string(),
+					message: t(locale, "server.api.clips.not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -974,6 +976,8 @@ pub async fn list_public_clips(
 	State(state): State<AppState>,
 	Query(query): Query<ListClipsQuery>,
 ) -> impl IntoResponse {
+	let locale = &state.default_locale;
+
 	let clips_repo = match state.clips_repo.as_ref() {
 		Some(repo) => repo,
 		None => {
@@ -981,7 +985,7 @@ pub async fn list_public_clips(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(ClipsErrorResponse {
 					error: "not_configured".to_string(),
-					message: "Clips not configured".to_string(),
+					message: t(locale, "server.api.clips.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -1000,7 +1004,7 @@ pub async fn list_public_clips(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(ClipsErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Internal error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
 				}),
 			)
 				.into_response();
@@ -1033,6 +1037,8 @@ pub async fn search_clips(
 	State(state): State<AppState>,
 	Query(query): Query<SearchClipsQuery>,
 ) -> impl IntoResponse {
+	let locale = &state.default_locale;
+
 	let clips_repo = match state.clips_repo.as_ref() {
 		Some(repo) => repo,
 		None => {
@@ -1040,7 +1046,7 @@ pub async fn search_clips(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(ClipsErrorResponse {
 					error: "not_configured".to_string(),
-					message: "Clips not configured".to_string(),
+					message: t(locale, "server.api.clips.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -1053,7 +1059,7 @@ pub async fn search_clips(
 			StatusCode::BAD_REQUEST,
 			Json(ClipsErrorResponse {
 				error: "invalid_query".to_string(),
-				message: "Search query cannot be empty".to_string(),
+				message: t(locale, "server.api.clips.search_empty").to_string(),
 			}),
 		)
 			.into_response();
@@ -1074,7 +1080,7 @@ pub async fn search_clips(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(ClipsErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Internal error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
 				}),
 			)
 				.into_response();
@@ -1113,6 +1119,8 @@ pub async fn list_clip_files(
 	State(state): State<AppState>,
 	Path(id): Path<Uuid>,
 ) -> impl IntoResponse {
+	let locale = &state.default_locale;
+
 	let clips_repo = match state.clips_repo.as_ref() {
 		Some(repo) => repo,
 		None => {
@@ -1120,7 +1128,7 @@ pub async fn list_clip_files(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(ClipsErrorResponse {
 					error: "not_configured".to_string(),
-					message: "Clips not configured".to_string(),
+					message: t(locale, "server.api.clips.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -1134,7 +1142,7 @@ pub async fn list_clip_files(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(ClipsErrorResponse {
 					error: "not_configured".to_string(),
-					message: "Clips not configured".to_string(),
+					message: t(locale, "server.api.clips.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -1149,7 +1157,7 @@ pub async fn list_clip_files(
 				StatusCode::NOT_FOUND,
 				Json(ClipsErrorResponse {
 					error: "not_found".to_string(),
-					message: "Clip not found".to_string(),
+					message: t(locale, "server.api.clips.not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -1160,7 +1168,7 @@ pub async fn list_clip_files(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(ClipsErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Internal error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
 				}),
 			)
 				.into_response();
@@ -1178,7 +1186,7 @@ pub async fn list_clip_files(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(ClipsErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Failed to list files".to_string(),
+					message: t(locale, "server.api.clips.list_files_failed").to_string(),
 				}),
 			)
 				.into_response();
@@ -1235,6 +1243,8 @@ pub async fn get_clip_file(
 	State(state): State<AppState>,
 	Path((id, path)): Path<(Uuid, String)>,
 ) -> impl IntoResponse {
+	let locale = &state.default_locale;
+
 	let clips_repo = match state.clips_repo.as_ref() {
 		Some(repo) => repo,
 		None => {
@@ -1242,7 +1252,7 @@ pub async fn get_clip_file(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(ClipsErrorResponse {
 					error: "not_configured".to_string(),
-					message: "Clips not configured".to_string(),
+					message: t(locale, "server.api.clips.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -1256,7 +1266,7 @@ pub async fn get_clip_file(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(ClipsErrorResponse {
 					error: "not_configured".to_string(),
-					message: "Clips not configured".to_string(),
+					message: t(locale, "server.api.clips.not_configured").to_string(),
 				}),
 			)
 				.into_response();
@@ -1271,7 +1281,7 @@ pub async fn get_clip_file(
 				StatusCode::NOT_FOUND,
 				Json(ClipsErrorResponse {
 					error: "not_found".to_string(),
-					message: "Clip not found".to_string(),
+					message: t(locale, "server.api.clips.not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -1282,7 +1292,7 @@ pub async fn get_clip_file(
 				StatusCode::INTERNAL_SERVER_ERROR,
 				Json(ClipsErrorResponse {
 					error: "internal_error".to_string(),
-					message: "Internal error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
 				}),
 			)
 				.into_response();
@@ -1309,7 +1319,7 @@ pub async fn get_clip_file(
 				StatusCode::NOT_FOUND,
 				Json(ClipsErrorResponse {
 					error: "not_found".to_string(),
-					message: "File not found".to_string(),
+					message: t(locale, "server.api.clips.file_not_found").to_string(),
 				}),
 			)
 				.into_response()
@@ -1374,7 +1384,7 @@ pub async fn get_clip_file_raw(
 				StatusCode::NOT_FOUND,
 				Json(ClipsErrorResponse {
 					error: "not_found".to_string(),
-					message: "Clip not found".to_string(),
+					message: t(locale, "server.api.clips.not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -1412,7 +1422,7 @@ pub async fn get_clip_file_raw(
 				StatusCode::NOT_FOUND,
 				Json(ClipsErrorResponse {
 					error: "not_found".to_string(),
-					message: "File not found".to_string(),
+					message: t(locale, "server.api.clips.file_not_found").to_string(),
 				}),
 			)
 				.into_response()
@@ -1485,7 +1495,7 @@ pub async fn update_clip_files(
 				StatusCode::NOT_FOUND,
 				Json(ClipsErrorResponse {
 					error: "not_found".to_string(),
-					message: "Clip not found".to_string(),
+					message: t(locale, "server.api.clips.not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -1676,7 +1686,7 @@ pub async fn fork_clip(
 				StatusCode::NOT_FOUND,
 				Json(ClipsErrorResponse {
 					error: "not_found".to_string(),
-					message: "Clip not found".to_string(),
+					message: t(locale, "server.api.clips.not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -1733,7 +1743,7 @@ pub async fn fork_clip(
 				StatusCode::NOT_FOUND,
 				Json(ClipsErrorResponse {
 					error: "not_found".to_string(),
-					message: "Target organization not found".to_string(),
+					message: t(locale, "server.api.clips.target_org_not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -1760,7 +1770,7 @@ pub async fn fork_clip(
 			StatusCode::CONFLICT,
 			Json(ClipsErrorResponse {
 				error: "already_exists".to_string(),
-				message: "A clip with this name already exists".to_string(),
+				message: t(locale, "server.api.clips.name_exists").to_string(),
 			}),
 		)
 			.into_response();
@@ -1806,7 +1816,7 @@ pub async fn fork_clip(
 			StatusCode::INTERNAL_SERVER_ERROR,
 			Json(ClipsErrorResponse {
 				error: "internal_error".to_string(),
-				message: "Failed to clone repository".to_string(),
+				message: t(locale, "server.api.clips.repo_clone_failed").to_string(),
 			}),
 		)
 			.into_response();
@@ -1910,7 +1920,7 @@ pub async fn list_clip_revisions(
 				StatusCode::NOT_FOUND,
 				Json(ClipsErrorResponse {
 					error: "not_found".to_string(),
-					message: "Clip not found".to_string(),
+					message: t(locale, "server.api.clips.not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -2005,7 +2015,7 @@ pub async fn star_clip(
 				StatusCode::NOT_FOUND,
 				Json(ClipsErrorResponse {
 					error: "not_found".to_string(),
-					message: "Clip not found".to_string(),
+					message: t(locale, "server.api.clips.not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -2103,7 +2113,7 @@ pub async fn unstar_clip(
 				StatusCode::NOT_FOUND,
 				Json(ClipsErrorResponse {
 					error: "not_found".to_string(),
-					message: "Clip not found".to_string(),
+					message: t(locale, "server.api.clips.not_found").to_string(),
 				}),
 			)
 				.into_response();
@@ -2191,7 +2201,7 @@ pub async fn get_clip_star_status(
 				StatusCode::NOT_FOUND,
 				Json(ClipsErrorResponse {
 					error: "not_found".to_string(),
-					message: "Clip not found".to_string(),
+					message: t(locale, "server.api.clips.not_found").to_string(),
 				}),
 			)
 				.into_response();

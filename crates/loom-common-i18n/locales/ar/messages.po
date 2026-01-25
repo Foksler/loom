@@ -1879,3 +1879,51 @@ msgstr "لم يتم العثور على المحادثة"
 #: API: WhatsApp - OTP message
 msgid "server.api.whatsapp.otp_message"
 msgstr "رمز التحقق الخاص بك في Loom هو: {code}. ينتهي هذا الرمز خلال 5 دقائق."
+
+#: ==========================================
+#: API: Clips (Code Snippets)
+#: ==========================================
+
+#: API: Clips - Not configured
+msgid "server.api.clips.not_configured"
+msgstr "ميزة المقاطع غير مكوّنة"
+
+#: API: Clips - Not found
+msgid "server.api.clips.not_found"
+msgstr "المقطع غير موجود"
+
+#: API: Clips - Name validation
+msgid "server.api.clips.name_invalid"
+msgstr "يجب أن يكون اسم المقطع بين 1 و 100 حرف"
+
+#: API: Clips - Name already exists
+msgid "server.api.clips.name_exists"
+msgstr "يوجد مقطع بهذا الاسم بالفعل"
+
+#: API: Clips - Organization not found
+msgid "server.api.clips.org_not_found"
+msgstr "المنظمة غير موجودة"
+
+#: API: Clips - Target organization not found
+msgid "server.api.clips.target_org_not_found"
+msgstr "المنظمة المستهدفة غير موجودة"
+
+#: API: Clips - Failed to initialize repository
+msgid "server.api.clips.repo_init_failed"
+msgstr "فشل في تهيئة المستودع"
+
+#: API: Clips - Failed to clone repository
+msgid "server.api.clips.repo_clone_failed"
+msgstr "فشل في استنساخ المستودع"
+
+#: API: Clips - Failed to list files
+msgid "server.api.clips.list_files_failed"
+msgstr "فشل في سرد الملفات"
+
+#: API: Clips - File not found
+msgid "server.api.clips.file_not_found"
+msgstr "الملف غير موجود"
+
+#: API: Clips - Search query empty
+msgid "server.api.clips.search_empty"
+msgstr "لا يمكن أن يكون استعلام البحث فارغاً"

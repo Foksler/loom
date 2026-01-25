@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS clips (
 
     -- Foreign keys
     FOREIGN KEY (created_by) REFERENCES users(id),
-    FOREIGN KEY (org_id) REFERENCES orgs(id),
+    FOREIGN KEY (org_id) REFERENCES organizations(id),
     FOREIGN KEY (forked_from) REFERENCES clips(id)
 );
 

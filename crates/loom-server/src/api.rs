@@ -1002,6 +1002,15 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/crash/capture/sdk",
 			post(routes::crash::capture_crash_with_api_key),
 		)
+		// Session SDK endpoints (public - uses API key auth in handler)
+		.route(
+			"/api/sessions/start/sdk",
+			post(routes::app_sessions::start_session_with_api_key),
+		)
+		.route(
+			"/api/sessions/end/sdk",
+			post(routes::app_sessions::end_session_with_api_key),
+		)
 		.build();
 
 	// Authenticated routes - require valid session/token
@@ -1563,39 +1572,47 @@ pub fn create_router(state: AppState) -> Router {
 			delete(routes::repos::revoke_repo_team_access),
 		)
 		// Clips routes
+		// NOTE: Routes with literal segments must come BEFORE wildcard-only routes
+		// to ensure proper matching. E.g., /api/clips/{id}/star must come before
+		// /api/clips/{owner}/{name} so that "star" is matched as a literal.
 		.route("/api/clips", post(routes::clips::create_clip))
 		.route("/api/clips/starred", get(routes::clips::list_starred_clips))
 		.route("/api/clips/public", get(routes::clips::list_public_clips))
 		.route("/api/clips/search", get(routes::clips::search_clips))
-		.route(
-			"/api/clips/{owner}/{name}",
-			get(routes::clips::get_clip),
-		)
-		.route("/api/clips/{id}", patch(routes::clips::update_clip))
-		.route("/api/clips/{id}", delete(routes::clips::delete_clip))
+		// ID-based routes with literal third segment (must come before {owner}/{name})
 		.route("/api/clips/{id}/files", get(routes::clips::list_clip_files))
 		.route(
 			"/api/clips/{id}/files",
 			post(routes::clips::update_clip_files),
 		)
 		.route(
-			"/api/clips/{id}/files/*path",
+			"/api/clips/{id}/files/{*path}",
 			get(routes::clips::get_clip_file),
 		)
 		.route(
-			"/api/clips/{id}/raw/*path",
+			"/api/clips/{id}/raw/{*path}",
 			get(routes::clips::get_clip_file_raw),
 		)
 		.route("/api/clips/{id}/fork", post(routes::clips::fork_clip))
 		.route(
+			"/api/clips/{id}/star",
+			post(routes::clips::star_clip).delete(routes::clips::unstar_clip),
+		)
+		.route(
 			"/api/clips/{id}/revisions",
 			get(routes::clips::list_clip_revisions),
 		)
-		.route("/api/clips/{id}/star", post(routes::clips::star_clip))
-		.route("/api/clips/{id}/star", delete(routes::clips::unstar_clip))
 		.route(
 			"/api/clips/{id}/starred",
 			get(routes::clips::get_clip_star_status),
+		)
+		// Single-segment ID routes
+		.route("/api/clips/{id}", patch(routes::clips::update_clip))
+		.route("/api/clips/{id}", delete(routes::clips::delete_clip))
+		// Two-segment wildcard route (must come LAST among /api/clips/* routes)
+		.route(
+			"/api/clips/{owner}/{name}",
+			get(routes::clips::get_clip),
 		)
 		.route(
 			"/api/users/{id}/clips",
