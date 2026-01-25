@@ -36,6 +36,8 @@ pub struct SelfMonitoringConfig {
 	pub server_api_key: Option<String>,
 	pub web_api_key: Option<String>,
 	pub cli_api_key: Option<String>,
+	/// Analytics API key for loom-web (write-only)
+	pub analytics_api_key: Option<String>,
 }
 
 impl Default for SelfMonitoringConfig {
@@ -45,6 +47,7 @@ impl Default for SelfMonitoringConfig {
 			server_api_key: None,
 			web_api_key: None,
 			cli_api_key: None,
+			analytics_api_key: None,
 		}
 	}
 }
@@ -95,6 +98,9 @@ pub async fn initialize_self_monitoring(
 	let web_api_key = ensure_api_key(pool, &web_project_id, "loom-web-internal").await?;
 	let cli_api_key = ensure_api_key(pool, &cli_project_id, "loom-cli-internal").await?;
 
+	// Get or create analytics API key for loom-web
+	let analytics_api_key = ensure_analytics_api_key(pool, &org_id, "loom-web-analytics").await?;
+
 	// Initialize loom-server crash client
 	let crash_client = CrashClientBuilder::new()
 		.base_url(base_url)
@@ -119,6 +125,7 @@ pub async fn initialize_self_monitoring(
 		server_api_key: Some(server_api_key),
 		web_api_key: Some(web_api_key),
 		cli_api_key: Some(cli_api_key),
+		analytics_api_key: Some(analytics_api_key),
 	};
 
 	// Store config globally for API access
@@ -192,6 +199,30 @@ pub fn get_cli_crash_config() -> Option<CliCrashConfig> {
 
 	Some(CliCrashConfig {
 		project_id: LOOM_CLI_PROJECT_ID.to_string(),
+		api_key,
+		release,
+		environment,
+	})
+}
+
+/// Configuration for web analytics SDK initialization.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct WebAnalyticsConfig {
+	pub api_key: String,
+	pub release: String,
+	pub environment: String,
+}
+
+/// Get the web analytics SDK configuration.
+/// Returns None if self-monitoring is not initialized or analytics API key is not available.
+pub fn get_web_analytics_config() -> Option<WebAnalyticsConfig> {
+	let config = SELF_MONITORING_CONFIG.get()?;
+	let api_key = config.analytics_api_key.clone()?;
+	let release = std::env::var("CARGO_PKG_VERSION").unwrap_or_else(|_| "unknown".to_string());
+	let environment =
+		std::env::var("LOOM_ENVIRONMENT").unwrap_or_else(|_| "production".to_string());
+
+	Some(WebAnalyticsConfig {
 		api_key,
 		release,
 		environment,
@@ -347,6 +378,61 @@ async fn ensure_api_key(
 	.map_err(SelfMonitoringError::Database)?;
 
 	info!(project_id = %project_id_str, name = %name, "Created internal API key");
+	Ok(key)
+}
+
+/// Ensure an analytics API key exists for the internal organization, or create one.
+async fn ensure_analytics_api_key(
+	pool: &SqlitePool,
+	org_id: &OrgId,
+	name: &str,
+) -> Result<String, SelfMonitoringError> {
+	let org_id_str = org_id.to_string();
+
+	// Check for existing non-revoked key with this name
+	let existing: Option<(String,)> = sqlx::query_as(
+		r#"
+		SELECT key_hash FROM analytics_api_keys
+		WHERE org_id = ? AND name = ? AND revoked_at IS NULL
+		"#,
+	)
+	.bind(&org_id_str)
+	.bind(name)
+	.fetch_optional(pool)
+	.await
+	.map_err(SelfMonitoringError::Database)?;
+
+	if let Some((key_hash,)) = existing {
+		// Return the stored key (for internal keys, we store the actual key in key_hash)
+		return Ok(key_hash);
+	}
+
+	// Generate new analytics API key (write-only for web frontend)
+	let random = uuid::Uuid::new_v4().to_string().replace('-', "");
+	let key = format!("loom_analytics_write_{}", random);
+	let key_id = uuid::Uuid::new_v4().to_string();
+	let now = chrono::Utc::now();
+
+	// For internal keys, we store the actual key (not hashed) for retrieval
+	// This is safe because these are system-managed keys
+	sqlx::query(
+		r#"
+		INSERT INTO analytics_api_keys (id, org_id, name, key_type, key_hash, created_by, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+		"#,
+	)
+	.bind(&key_id)
+	.bind(&org_id_str)
+	.bind(name)
+	.bind("write")
+	.bind(&key) // Store full key for internal use
+	.bind(SYSTEM_USER_ID)
+	.bind(now)
+	.execute(pool)
+	.await
+	.map_err(SelfMonitoringError::Database)?;
+
+	info!(org_id = %org_id_str, name = %name, "Created internal analytics API key");
 	Ok(key)
 }
 

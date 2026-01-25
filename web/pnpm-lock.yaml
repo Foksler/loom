@@ -16,6 +16,9 @@ importers:
       '@lingui/message-utils':
         specifier: ^5.7.0
         version: 5.7.0
+      '@loom/analytics':
+        specifier: workspace:*
+        version: link:../packages/analytics
       '@loom/crash':
         specifier: workspace:*
         version: link:../packages/crash

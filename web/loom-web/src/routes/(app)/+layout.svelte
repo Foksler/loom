@@ -9,6 +9,7 @@
 	import { i18n, setLocale, getCurrentLocale, isRtl, type Locale, locales } from '$lib/i18n';
 	import { ImpersonationBanner, ThreadDivider } from '$lib/ui';
 	import { NotificationProvider } from '$lib/components/notifications';
+	import { AnalyticsProvider, reset as analyticsReset } from '$lib/analytics';
 	import type { Snippet } from 'svelte';
 	import type { CurrentUser, ImpersonationState } from '$lib/api/types';
 
@@ -58,6 +59,8 @@
 
 	async function handleLogout() {
 		try {
+			// Reset analytics identity on logout
+			analyticsReset();
 			const client = getApiClient();
 			await client.logout();
 			await goto('/login');
@@ -67,6 +70,7 @@
 	}
 </script>
 
+<AnalyticsProvider user={data.user ? { id: data.user.id, email: data.user.email, display_name: data.user.display_name } : null}>
 <div class="app-layout">
 	{#if impersonationState?.is_impersonating}
 		<ImpersonationBanner impersonation={impersonationState} onStop={loadImpersonationState} />
@@ -147,6 +151,7 @@
 	</main>
 	<NotificationProvider />
 </div>
+</AnalyticsProvider>
 
 <style>
 	.app-layout {

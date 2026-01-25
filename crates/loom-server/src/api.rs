@@ -917,6 +917,10 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/self-monitoring/projects",
 			get(routes::self_monitoring::get_internal_projects),
 		)
+		.route(
+			"/api/self-monitoring/analytics-config",
+			get(routes::self_monitoring::get_analytics_config),
+		)
 		// Feature flags SSE streaming (SDK key auth handled in handler)
 		.route("/api/flags/stream", get(routes::flags::stream_flags))
 		// Analytics SDK routes (API key auth handled in handler)

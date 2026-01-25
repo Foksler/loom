@@ -10,8 +10,8 @@ use axum::{http::StatusCode, response::IntoResponse, Json};
 use serde::Serialize;
 
 use crate::self_monitoring::{
-	get_cli_crash_config, get_web_crash_config, LOOM_CLI_PROJECT_ID, LOOM_INTERNAL_ORG_ID,
-	LOOM_SERVER_PROJECT_ID, LOOM_WEB_PROJECT_ID,
+	get_cli_crash_config, get_web_analytics_config, get_web_crash_config, LOOM_CLI_PROJECT_ID,
+	LOOM_INTERNAL_ORG_ID, LOOM_SERVER_PROJECT_ID, LOOM_WEB_PROJECT_ID,
 };
 
 /// Response for the web crash SDK configuration endpoint.
@@ -112,4 +112,38 @@ pub async fn get_internal_projects() -> Json<InternalProjectIds> {
 		web_project_id: LOOM_WEB_PROJECT_ID.to_string(),
 		cli_project_id: LOOM_CLI_PROJECT_ID.to_string(),
 	})
+}
+
+/// Response for the web analytics SDK configuration endpoint.
+#[derive(Debug, Serialize)]
+pub struct WebAnalyticsConfigResponse {
+	pub api_key: String,
+	pub release: String,
+	pub environment: String,
+}
+
+/// GET /api/self-monitoring/analytics-config
+///
+/// Returns the analytics SDK configuration for loom-web.
+/// This endpoint is public (no auth required) since it's needed during
+/// frontend initialization before the user is authenticated.
+pub async fn get_analytics_config() -> impl IntoResponse {
+	match get_web_analytics_config() {
+		Some(config) => (
+			StatusCode::OK,
+			Json(WebAnalyticsConfigResponse {
+				api_key: config.api_key,
+				release: config.release,
+				environment: config.environment,
+			}),
+		)
+			.into_response(),
+		None => (
+			StatusCode::SERVICE_UNAVAILABLE,
+			Json(SelfMonitoringUnavailable {
+				message: "Self-monitoring not initialized".to_string(),
+			}),
+		)
+			.into_response(),
+	}
 }

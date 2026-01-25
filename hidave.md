@@ -340,6 +340,46 @@ Note: Routes use plural form (`/crons` not `/cron`)
 
 ---
 
+### 2026-01-25: Analytics Web Integration (Phase A6)
+
+**Analytics self-monitoring infrastructure:**
+- Added `analytics_api_key` field to `SelfMonitoringConfig` struct
+- Created `ensure_analytics_api_key()` function to auto-generate internal analytics API keys
+- Added `GET /api/self-monitoring/analytics-config` endpoint for web SDK configuration
+
+**loom-web analytics integration:**
+- Added `@loom/analytics` workspace dependency to package.json
+- Created `$lib/analytics/self-monitoring.ts` — Fetches config from server and initializes AnalyticsClient
+- Created `$lib/analytics/AnalyticsProvider.svelte` — Wraps app with auto-identification:
+  - Identifies users on login via `identify()` with user ID, email, and display_name
+  - Resets analytics identity on logout via `reset()`
+- Integrated into `(app)/+layout.svelte` with user data
+- Enabled autocapture for pageviews and pageleave events
+
+**Files created:**
+- `web/loom-web/src/lib/analytics/self-monitoring.ts`
+- `web/loom-web/src/lib/analytics/index.ts`
+- `web/loom-web/src/lib/analytics/AnalyticsProvider.svelte`
+
+**Files modified:**
+- `crates/loom-server/src/self_monitoring.rs` — Added analytics API key support
+- `crates/loom-server/src/routes/self_monitoring.rs` — Added analytics config endpoint
+- `crates/loom-server/src/api.rs` — Registered new route
+- `web/loom-web/package.json` — Added @loom/analytics dependency
+- `web/loom-web/src/routes/(app)/+layout.svelte` — Integrated AnalyticsProvider
+
+**API endpoints verified via curl:**
+- `POST /api/analytics/capture` — Event capture ✓
+- `POST /api/analytics/batch` — Batch capture ✓
+- `POST /api/analytics/identify` — User identification ✓
+- `POST /api/analytics/set` — Set properties ✓
+- `GET /api/orgs/{org_id}/analytics/api-keys` — List API keys ✓
+- `POST /api/orgs/{org_id}/analytics/api-keys` — Create API key ✓
+
+**Build:** All components build successfully
+
+---
+
 ### 2026-01-25: Self-Monitoring Implementation
 
 **Self-monitoring infrastructure for Loom monitoring itself:**
@@ -395,3 +435,198 @@ Note: Routes use plural form (`/crons` not `/cron`)
 | 15 | Deployment & verification | ✅ Complete |
 
 **Remaining effort:** SSE integration, Storybook stories, UI tests
+
+---
+
+## Product Analytics System
+
+**Status:** Backend Complete, Frontend Integration Pending\
+**Spec:** [specs/analytics-system.md](specs/analytics-system.md)
+
+### Quick Reference
+
+| Component | Location | Status |
+|-----------|----------|--------|
+| Core types | `crates/loom-analytics-core/` | ✅ Complete |
+| Rust SDK | `crates/loom-analytics/` | ✅ Complete |
+| Server handlers | `crates/loom-server-analytics/` | ✅ Complete |
+| TypeScript SDK | `web/packages/analytics/` | ✅ Complete |
+| Database | `migrations/032_analytics.sql` | ✅ Complete |
+| API routes | `/api/analytics/*` | ✅ Complete |
+| Config | `loom-server-config/sections/analytics.rs` | ✅ Complete |
+| Flag integration | `loom-flags/src/analytics.rs` | ✅ Complete |
+| Authz tests | `tests/authz/analytics.rs` | ✅ Complete |
+| loom-web integration | `$lib/analytics/` | ✅ Complete |
+| Analytics UI pages | — | ❌ Not started |
+
+---
+
+### Phase A1: Backend Crates ✅ Complete
+
+#### A1.1 loom-analytics-core
+**Path:** `crates/loom-analytics-core/`
+
+- [x] `person.rs` — Person, PersonWithIdentities types
+- [x] `identity.rs` — PersonIdentity, IdentityType enum
+- [x] `event.rs` — Event, EventProperty types
+- [x] `identify.rs` — IdentifyPayload, AliasPayload
+- [x] `api_key.rs` — AnalyticsApiKey, AnalyticsKeyType
+- [x] `error.rs` — Error types with thiserror
+
+#### A1.2 loom-analytics (Rust SDK)
+**Path:** `crates/loom-analytics/`
+
+- [x] `client.rs` — AnalyticsClient with builder pattern
+- [x] `batch.rs` — Event batching with flush interval
+- [x] `properties.rs` — Properties helper type
+- [x] `error.rs` — SDK error types
+
+#### A1.3 loom-server-analytics
+**Path:** `crates/loom-server-analytics/`
+
+- [x] `routes.rs` — Axum route definitions
+- [x] `handlers/capture.rs` — Event capture endpoint
+- [x] `handlers/identify.rs` — Identity resolution
+- [x] `handlers/persons.rs` — Person queries
+- [x] `handlers/events.rs` — Event queries
+- [x] `handlers/api_keys.rs` — API key management
+- [x] `repository.rs` — Database operations
+- [x] `identity_resolution.rs` — Merge logic
+- [x] `middleware.rs` — API key auth middleware
+- [x] `api_key.rs` — Key validation
+
+---
+
+### Phase A2: Database Schema ✅ Complete
+
+**Migration:** `crates/loom-server/migrations/032_analytics.sql`
+
+- [x] `analytics_persons` — Tracked users
+- [x] `analytics_person_identities` — distinct_id → person mapping
+- [x] `analytics_events` — Event records
+- [x] `analytics_person_merges` — Merge audit trail
+- [x] `analytics_api_keys` — API key storage
+
+---
+
+### Phase A3: API Endpoints ✅ Complete
+
+**Path:** `crates/loom-server/src/routes/analytics.rs`
+
+SDK Routes (API Key Auth):
+- [x] `POST /api/analytics/capture` — Single event (Write key)
+- [x] `POST /api/analytics/batch` — Batch events (Write key)
+- [x] `POST /api/analytics/identify` — Identity resolution (Write key)
+- [x] `POST /api/analytics/alias` — Alias distinct_ids (Write key)
+- [x] `POST /api/analytics/set` — Set person properties (Write key)
+- [x] `GET /api/analytics/persons` — List persons (ReadWrite key)
+- [x] `GET /api/analytics/persons/{id}` — Get person (ReadWrite key)
+- [x] `GET /api/analytics/persons/by-distinct-id/{id}` — Lookup by distinct_id (ReadWrite key)
+- [x] `GET /api/analytics/events` — List events (ReadWrite key)
+- [x] `GET /api/analytics/events/count` — Count events (ReadWrite key)
+- [x] `POST /api/analytics/events/export` — Bulk export (ReadWrite key)
+
+Management Routes (User Auth):
+- [x] `GET /api/orgs/{org_id}/analytics/api-keys` — List keys
+- [x] `POST /api/orgs/{org_id}/analytics/api-keys` — Create key
+- [x] `DELETE /api/orgs/{org_id}/analytics/api-keys/{id}` — Revoke key
+
+---
+
+### Phase A4: TypeScript SDK ✅ Complete
+
+**Path:** `web/packages/analytics/`
+
+- [x] `client.ts` — AnalyticsClient class
+- [x] `batch.ts` — BatchProcessor for event queuing
+- [x] `storage.ts` — DistinctIdManager (localStorage, cookie, memory)
+- [x] `types.ts` — TypeScript type definitions
+- [x] `errors.ts` — Error classes with isRetryable()
+- [x] `index.ts` — Public exports
+- [x] Unit tests for all modules
+
+**Features:**
+- [x] `capture()` — Track events
+- [x] `identify()` — Link anonymous → authenticated
+- [x] `alias()` — Link two distinct_ids
+- [x] `set()` — Set person properties
+- [x] `reset()` — Generate new anonymous ID (logout)
+- [x] Autocapture ($pageview, $pageleave)
+- [x] Configurable batching (interval, max size)
+- [x] Multiple storage modes
+
+---
+
+### Phase A5: Integration & Configuration ✅ Complete
+
+- [x] Config section: `loom-server-config/sections/analytics.rs`
+  - `LOOM_ANALYTICS_ENABLED`
+  - `LOOM_ANALYTICS_BATCH_SIZE`
+  - `LOOM_ANALYTICS_FLUSH_INTERVAL_SECS`
+  - `LOOM_ANALYTICS_EVENT_RETENTION_DAYS`
+- [x] Feature flag integration: `loom-flags/src/analytics.rs`
+  - `$feature_flag_called` event capture
+- [x] Authorization tests: `tests/authz/analytics.rs` (1017 lines)
+
+---
+
+### Phase A6: loom-web Integration ✅ Complete
+
+**Goal:** Integrate @loom/analytics SDK into the web frontend.
+
+- [x] Add `@loom/analytics` dependency to loom-web package.json
+- [x] Create `$lib/analytics/self-monitoring.ts` — Fetch config and initialize AnalyticsClient
+- [x] Create `AnalyticsProvider.svelte` — Wrap app layout with user identification
+- [x] Auto-track pageviews on route changes (via autocapture)
+- [x] Wire identify() to auth state changes
+- [x] Call reset() on logout
+- [x] Add self-monitoring analytics endpoint to loom-server (`GET /api/self-monitoring/analytics-config`)
+
+---
+
+### Phase A7: Analytics UI Pages ❌ Not Started
+
+**Goal:** Create pages to view analytics data (persons, events).
+
+**Path:** `web/loom-web/src/routes/(app)/analytics/`
+
+- [ ] `/analytics/` — Overview dashboard
+- [ ] `/analytics/persons/` — Person list with search
+- [ ] `/analytics/persons/[id]/` — Person detail with events
+- [ ] `/analytics/events/` — Event explorer with filters
+- [ ] `/analytics/api-keys/` — API key management
+
+**Components needed:** `web/loom-web/src/lib/components/analytics/`
+
+- [ ] `PersonList.svelte` — Paginated person list
+- [ ] `PersonDetail.svelte` — Person profile with identities
+- [ ] `EventList.svelte` — Event timeline/table
+- [ ] `EventDetail.svelte` — Single event view
+- [ ] `ApiKeyList.svelte` — API key management
+- [ ] `ApiKeyForm.svelte` — Create API key form
+
+---
+
+### Phase A8: SDK Documentation ❌ Not Started
+
+- [ ] README for `@loom/analytics`
+- [ ] README for `loom-analytics` crate
+- [ ] Integration guide: Getting started with product analytics
+- [ ] API reference documentation
+
+---
+
+### Analytics Summary
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| A1 | Backend crates | ✅ Complete |
+| A2 | Database schema | ✅ Complete |
+| A3 | API endpoints | ✅ Complete |
+| A4 | TypeScript SDK | ✅ Complete |
+| A5 | Config & integration | ✅ Complete |
+| A6 | loom-web integration | ✅ Complete |
+| A7 | Analytics UI pages | ❌ Not started |
+| A8 | SDK documentation | ❌ Not started |
+
+**Remaining effort:** Analytics UI pages, SDK documentation
