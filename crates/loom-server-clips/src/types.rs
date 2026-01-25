@@ -180,3 +180,18 @@ pub struct ClipFile {
 	/// Detected language/syntax.
 	pub language: Option<String>,
 }
+
+/// A revision (commit) in a clip's history.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClipRevision {
+	/// Git commit SHA.
+	pub sha: String,
+	/// Author name.
+	pub author_name: String,
+	/// Author email.
+	pub author_email: String,
+	/// Commit timestamp (ISO 8601).
+	pub timestamp: String,
+	/// Commit message.
+	pub message: String,
+}

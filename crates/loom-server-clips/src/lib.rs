@@ -18,4 +18,4 @@ pub mod types;
 pub use error::{ClipsError, Result};
 pub use git::ClipsGitStore;
 pub use store::{ClipsRepository, ClipsStore, SqliteClipsRepository};
-pub use types::{Clip, ClipFile, ClipId, ClipVisibility, OrgId, UserId};
+pub use types::{Clip, ClipFile, ClipId, ClipRevision, ClipVisibility, OrgId, UserId};

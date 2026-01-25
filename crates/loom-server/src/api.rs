@@ -1515,6 +1515,10 @@ pub fn create_router(state: AppState) -> Router {
 			get(routes::clips::get_clip_file),
 		)
 		.route("/api/clips/{id}/fork", post(routes::clips::fork_clip))
+		.route(
+			"/api/clips/{id}/revisions",
+			get(routes::clips::list_clip_revisions),
+		)
 		.route("/api/clips/{id}/star", post(routes::clips::star_clip))
 		.route("/api/clips/{id}/star", delete(routes::clips::unstar_clip))
 		.route(

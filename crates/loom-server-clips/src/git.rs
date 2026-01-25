@@ -355,6 +355,55 @@ impl ClipsGitStore {
 			Ok(Some(branch))
 		}
 	}
+
+	/// List commits (revisions) for a clip.
+	#[instrument(skip(self), fields(clip_id = %clip_id))]
+	pub async fn list_commits(
+		&self,
+		clip_id: ClipId,
+		limit: u32,
+	) -> Result<Vec<crate::types::ClipRevision>> {
+		let repo_path = self.get_clip_path(clip_id);
+
+		// Use git log with a specific format to parse commits
+		let output = Command::new("git")
+			.args(["--git-dir", repo_path.to_str().unwrap_or_default()])
+			.args([
+				"log",
+				&format!("-{}", limit),
+				"--format=%H%x00%an%x00%ae%x00%aI%x00%s",
+			])
+			.stdout(Stdio::piped())
+			.stderr(Stdio::piped())
+			.output()
+			.await?;
+
+		if !output.status.success() {
+			let stderr = String::from_utf8_lossy(&output.stderr);
+			if stderr.contains("does not have any commits") {
+				return Ok(vec![]);
+			}
+			return Err(ClipsError::Git(format!("git log failed: {}", stderr)));
+		}
+
+		let stdout = String::from_utf8_lossy(&output.stdout);
+		let mut revisions = Vec::new();
+
+		for line in stdout.lines() {
+			let parts: Vec<&str> = line.split('\0').collect();
+			if parts.len() == 5 {
+				revisions.push(crate::types::ClipRevision {
+					sha: parts[0].to_string(),
+					author_name: parts[1].to_string(),
+					author_email: parts[2].to_string(),
+					timestamp: parts[3].to_string(),
+					message: parts[4].to_string(),
+				});
+			}
+		}
+
+		Ok(revisions)
+	}
 }
 
 /// Detect language from file extension.
