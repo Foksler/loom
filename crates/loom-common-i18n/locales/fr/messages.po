@@ -1758,3 +1758,103 @@ msgstr "A platform kill switch with this key already exists"
 msgid "server.api.admin.strategies.listed"
 msgstr "Listed platform strategies"
 
+# ============================================================================
+# WhatsApp API responses
+# ============================================================================
+
+#: API: WhatsApp - Not configured
+msgid "server.api.whatsapp.not_configured"
+msgstr "L'intégration WhatsApp n'est pas configurée"
+
+#: API: WhatsApp - Invalid signature
+msgid "server.api.whatsapp.invalid_signature"
+msgstr "Signature du webhook invalide"
+
+#: API: WhatsApp - Invalid phone format
+msgid "server.api.whatsapp.invalid_phone"
+msgstr "Format de numéro de téléphone invalide (doit être E.164)"
+
+#: API: WhatsApp - OTP expired
+msgid "server.api.whatsapp.otp_expired"
+msgstr "Le code de vérification a expiré"
+
+#: API: WhatsApp - OTP invalid
+msgid "server.api.whatsapp.otp_invalid"
+msgstr "Code de vérification invalide"
+
+#: API: WhatsApp - Too many OTP attempts
+msgid "server.api.whatsapp.otp_too_many_attempts"
+msgstr "Trop de tentatives échouées. Veuillez demander un nouveau code."
+
+#: API: WhatsApp - Phone already linked
+msgid "server.api.whatsapp.phone_already_linked"
+msgstr "Ce numéro de téléphone est déjà lié à un compte"
+
+#: API: WhatsApp - Session expired
+msgid "server.api.whatsapp.session_expired"
+msgstr "Session expirée. Le client doit d'abord envoyer un message."
+
+#: API: WhatsApp - Admin required
+msgid "server.api.whatsapp.admin_required"
+msgstr "Accès administrateur de l'organisation requis"
+
+#: API: WhatsApp - Phone not linked
+msgid "server.api.whatsapp.not_linked"
+msgstr "Aucun numéro WhatsApp lié à ce compte"
+
+#: API: WhatsApp - Phone not linked (legacy)
+msgid "server.api.whatsapp.phone_not_linked"
+msgstr "Le numéro de téléphone n'est lié à aucun compte"
+
+#: API: WhatsApp - OTP sent
+msgid "server.api.whatsapp.otp_sent"
+msgstr "Code de vérification envoyé sur votre WhatsApp"
+
+#: API: WhatsApp - Phone linked
+msgid "server.api.whatsapp.phone_linked"
+msgstr "Numéro de téléphone lié avec succès"
+
+#: API: WhatsApp - Phone unlinked
+msgid "server.api.whatsapp.phone_unlinked"
+msgstr "Numéro de téléphone délié avec succès"
+
+#: API: WhatsApp - Config created
+msgid "server.api.whatsapp.config_created"
+msgstr "Configuration WhatsApp créée avec succès"
+
+#: API: WhatsApp - Config updated
+msgid "server.api.whatsapp.config_updated"
+msgstr "Configuration WhatsApp mise à jour avec succès"
+
+#: API: WhatsApp - Config deleted
+msgid "server.api.whatsapp.config_deleted"
+msgstr "Configuration WhatsApp supprimée avec succès"
+
+#: API: WhatsApp - Group created
+msgid "server.api.whatsapp.group_created"
+msgstr "Groupe de conversation créé avec succès"
+
+#: API: WhatsApp - Group updated
+msgid "server.api.whatsapp.group_updated"
+msgstr "Groupe de conversation mis à jour avec succès"
+
+#: API: WhatsApp - Group deleted
+msgid "server.api.whatsapp.group_deleted"
+msgstr "Groupe de conversation supprimé avec succès"
+
+#: API: WhatsApp - Group not found
+msgid "server.api.whatsapp.group_not_found"
+msgstr "Groupe de conversation non trouvé"
+
+#: API: WhatsApp - Conversation moved
+msgid "server.api.whatsapp.conversation_moved"
+msgstr "Conversation déplacée vers le groupe avec succès"
+
+#: API: WhatsApp - Conversation not found
+msgid "server.api.whatsapp.conversation_not_found"
+msgstr "Conversation non trouvée"
+
+#: API: WhatsApp - OTP message
+msgid "server.api.whatsapp.otp_message"
+msgstr "Votre code de vérification Loom est : {code}. Ce code expire dans 5 minutes."
+

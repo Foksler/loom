@@ -74,6 +74,20 @@ import type {
 	AnalyticsPerson,
 	AnalyticsPersonListResponse,
 	AnalyticsListParams,
+	// WhatsApp types
+	WhatsAppConfig,
+	CreateWhatsAppConfigRequest,
+	WhatsAppGroup,
+	CreateWhatsAppGroupRequest,
+	WhatsAppGroupListResponse,
+	WhatsAppConversation,
+	WhatsAppConversationListResponse,
+	MoveConversationRequest,
+	LinkPhoneRequest,
+	LinkPhoneResponse,
+	VerifyPhoneRequest,
+	VerifyPhoneResponse,
+	WhatsAppSuccessResponse,
 } from './types';
 import { ApiError } from './types';
 
@@ -624,6 +638,82 @@ export class LoomApiClient {
 		if (params.offset) query.set('offset', String(params.offset));
 
 		return this.request<AnalyticsPersonListResponse>(`/api/orgs/${orgId}/analytics/persons?${query}`);
+	}
+
+	// =========================================================================
+	// WhatsApp Integration
+	// =========================================================================
+
+	// Config management
+	async getWhatsAppConfig(orgId: string): Promise<WhatsAppConfig> {
+		return this.request<WhatsAppConfig>(`/api/orgs/${encodeURIComponent(orgId)}/whatsapp/config`);
+	}
+
+	async createOrUpdateWhatsAppConfig(orgId: string, data: CreateWhatsAppConfigRequest): Promise<WhatsAppConfig> {
+		return this.request<WhatsAppConfig>(`/api/orgs/${encodeURIComponent(orgId)}/whatsapp/config`, {
+			method: 'POST',
+			body: JSON.stringify(data),
+		});
+	}
+
+	async deleteWhatsAppConfig(orgId: string): Promise<WhatsAppSuccessResponse> {
+		return this.request<WhatsAppSuccessResponse>(`/api/orgs/${encodeURIComponent(orgId)}/whatsapp/config`, {
+			method: 'DELETE',
+		});
+	}
+
+	// Group management
+	async listWhatsAppGroups(orgId: string): Promise<WhatsAppGroupListResponse> {
+		return this.request<WhatsAppGroupListResponse>(`/api/orgs/${encodeURIComponent(orgId)}/whatsapp/groups`);
+	}
+
+	async createWhatsAppGroup(orgId: string, data: CreateWhatsAppGroupRequest): Promise<WhatsAppGroup> {
+		return this.request<WhatsAppGroup>(`/api/orgs/${encodeURIComponent(orgId)}/whatsapp/groups`, {
+			method: 'POST',
+			body: JSON.stringify(data),
+		});
+	}
+
+	async deleteWhatsAppGroup(orgId: string, groupId: string): Promise<WhatsAppSuccessResponse> {
+		return this.request<WhatsAppSuccessResponse>(
+			`/api/orgs/${encodeURIComponent(orgId)}/whatsapp/groups/${encodeURIComponent(groupId)}`,
+			{ method: 'DELETE' }
+		);
+	}
+
+	// Conversation management
+	async moveWhatsAppConversation(orgId: string, conversationId: string, groupId: string | null): Promise<WhatsAppSuccessResponse> {
+		const data: MoveConversationRequest = { group_id: groupId };
+		return this.request<WhatsAppSuccessResponse>(
+			`/api/orgs/${encodeURIComponent(orgId)}/whatsapp/conversations/${encodeURIComponent(conversationId)}/move`,
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	// Phone linking (user settings)
+	async requestWhatsAppLink(phoneNumber: string): Promise<LinkPhoneResponse> {
+		const data: LinkPhoneRequest = { phone_number: phoneNumber };
+		return this.request<LinkPhoneResponse>('/api/users/me/whatsapp/link', {
+			method: 'POST',
+			body: JSON.stringify(data),
+		});
+	}
+
+	async verifyWhatsAppLink(phoneNumber: string, otp: string): Promise<VerifyPhoneResponse> {
+		const data: VerifyPhoneRequest = { phone_number: phoneNumber, otp };
+		return this.request<VerifyPhoneResponse>('/api/users/me/whatsapp/verify', {
+			method: 'POST',
+			body: JSON.stringify(data),
+		});
+	}
+
+	async unlinkWhatsApp(): Promise<WhatsAppSuccessResponse> {
+		return this.request<WhatsAppSuccessResponse>('/api/users/me/whatsapp/unlink', {
+			method: 'DELETE',
+		});
 	}
 }
 

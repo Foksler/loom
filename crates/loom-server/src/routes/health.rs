@@ -39,6 +39,7 @@ pub async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
 		jobs,
 		secrets,
 		scim,
+		whatsapp,
 	) = tokio::join!(
 		health::check_database(&state.repo),
 		async { health::check_bin_dir() },
@@ -50,7 +51,8 @@ pub async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
 		async { health::check_geoip(state.geoip_service.as_ref()) },
 		health::check_jobs(state.job_scheduler.as_ref()),
 		health::check_secrets(state.secrets_service.as_ref(), state.svid_issuer.as_ref()),
-		health::check_scim(&state.scim_config, &state.org_repo)
+		health::check_scim(&state.scim_config, &state.org_repo),
+		health::check_whatsapp(state.whatsapp_repo.as_ref())
 	);
 
 	let llm_providers = health::check_llm_providers(state.llm_service.as_deref()).await;
@@ -77,6 +79,7 @@ pub async fn health_check(State(state): State<AppState>) -> impl IntoResponse {
 		secrets,
 		serper,
 		smtp,
+		whatsapp,
 	};
 
 	let status = health::aggregate_status(&components);

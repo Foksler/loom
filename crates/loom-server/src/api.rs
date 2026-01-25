@@ -117,6 +117,8 @@ pub struct AppState {
 	pub sessions_repo: Arc<loom_server_sessions::SqliteSessionsRepository>,
 	pub clips_repo: Option<Arc<loom_server_db::ClipsRepository>>,
 	pub clips_git_store: Option<Arc<loom_server_clips::ClipsGitStore>>,
+	pub whatsapp_repo: Option<Arc<loom_server_whatsapp::WhatsAppRepository>>,
+	pub whatsapp_service: Option<Arc<loom_server_whatsapp::WhatsAppService>>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -338,6 +340,13 @@ pub async fn create_app_state(
 	);
 	tracing::info!("Analytics system initialized with audit logging");
 
+	// Initialize WhatsApp repository and service
+	let whatsapp_repo = Arc::new(loom_server_whatsapp::WhatsAppRepository::new(pool.clone()));
+	let whatsapp_service = Arc::new(loom_server_whatsapp::WhatsAppService::new(
+		whatsapp_repo.clone(),
+	));
+	tracing::info!("WhatsApp integration initialized");
+
 	AppState {
 		repo,
 		user_repo,
@@ -397,6 +406,8 @@ pub async fn create_app_state(
 		sessions_repo,
 		clips_repo: Some(clips_repo),
 		clips_git_store: Some(clips_git_store),
+		whatsapp_repo: Some(whatsapp_repo),
+		whatsapp_service: Some(whatsapp_service),
 	}
 }
 
@@ -879,6 +890,15 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/github/webhook",
 			post(routes::github::github_webhook),
 		)
+		// WhatsApp webhooks (signature verified separately)
+		.route(
+			"/api/whatsapp/webhook",
+			get(routes::whatsapp::whatsapp_webhook_verify),
+		)
+		.route(
+			"/api/whatsapp/webhook",
+			post(routes::whatsapp::whatsapp_webhook),
+		)
 		// Weaver auth routes (public - auth via K8s SA JWT)
 		.route(
 			"/internal/weaver-auth/token",
@@ -1055,6 +1075,36 @@ pub fn create_router(state: AppState) -> Router {
 		.route(
 			"/api/orgs/{org_id}/members/{user_id}",
 			delete(routes::orgs::remove_org_member),
+		)
+		// WhatsApp config routes
+		.route(
+			"/api/orgs/{org_id}/whatsapp/config",
+			get(routes::orgs::whatsapp::get_whatsapp_config),
+		)
+		.route(
+			"/api/orgs/{org_id}/whatsapp/config",
+			post(routes::orgs::whatsapp::create_or_update_whatsapp_config),
+		)
+		.route(
+			"/api/orgs/{org_id}/whatsapp/config",
+			delete(routes::orgs::whatsapp::delete_whatsapp_config),
+		)
+		// WhatsApp group routes
+		.route(
+			"/api/orgs/{org_id}/whatsapp/groups",
+			get(routes::orgs::whatsapp::list_whatsapp_groups),
+		)
+		.route(
+			"/api/orgs/{org_id}/whatsapp/groups",
+			post(routes::orgs::whatsapp::create_whatsapp_group),
+		)
+		.route(
+			"/api/orgs/{org_id}/whatsapp/groups/{group_id}",
+			delete(routes::orgs::whatsapp::delete_whatsapp_group),
+		)
+		.route(
+			"/api/orgs/{org_id}/whatsapp/conversations/{conversation_id}/move",
+			post(routes::orgs::whatsapp::move_whatsapp_conversation),
 		)
 		// Team routes
 		.route(
@@ -1472,6 +1522,19 @@ pub fn create_router(state: AppState) -> Router {
 		.route(
 			"/api/users/me/identities/{id}",
 			delete(routes::users::unlink_identity),
+		)
+		// WhatsApp phone linking routes
+		.route(
+			"/api/users/me/whatsapp/link",
+			post(routes::users::whatsapp_link_phone),
+		)
+		.route(
+			"/api/users/me/whatsapp/verify",
+			post(routes::users::whatsapp_verify_phone),
+		)
+		.route(
+			"/api/users/me/whatsapp/unlink",
+			delete(routes::users::whatsapp_unlink_phone),
 		)
 		// Repository routes
 		.route("/api/repos", post(routes::repos::create_repo))

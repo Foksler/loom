@@ -107,6 +107,12 @@ Loom's integrated observability platform: analytics, crash tracking, cron monito
 | [web-search-system.md](./web-search-system.md) | [loom-google-cse](../crates/loom-google-cse/) | Google CSE integration |
 | [github-app-system.md](./github-app-system.md) | [loom-github-app](../crates/loom-github-app/) | GitHub App for API access |
 
+## Messaging Integrations
+
+| Spec | Code | Purpose |
+|------|------|---------|
+| [whatsapp-system.md](./whatsapp-system.md) | [loom-whatsapp](../crates/loom-whatsapp/), [loom-server-whatsapp](../crates/loom-server-whatsapp/) | WhatsApp Business API integration |
+
 ## Weaver (Remote Execution)
 
 | Spec | Code | Purpose |

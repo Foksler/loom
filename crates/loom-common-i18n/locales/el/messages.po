@@ -1762,3 +1762,103 @@ msgstr "A platform kill switch with this key already exists"
 msgid "server.api.admin.strategies.listed"
 msgstr "Listed platform strategies"
 
+# ============================================================================
+# WhatsApp API responses
+# ============================================================================
+
+#: API: WhatsApp - Not configured
+msgid "server.api.whatsapp.not_configured"
+msgstr "Η ενσωμάτωση WhatsApp δεν έχει διαμορφωθεί"
+
+#: API: WhatsApp - Invalid signature
+msgid "server.api.whatsapp.invalid_signature"
+msgstr "Μη έγκυρη υπογραφή webhook"
+
+#: API: WhatsApp - Invalid phone format
+msgid "server.api.whatsapp.invalid_phone"
+msgstr "Μη έγκυρη μορφή αριθμού τηλεφώνου (πρέπει να είναι E.164)"
+
+#: API: WhatsApp - OTP expired
+msgid "server.api.whatsapp.otp_expired"
+msgstr "Ο κωδικός επαλήθευσης έχει λήξει"
+
+#: API: WhatsApp - OTP invalid
+msgid "server.api.whatsapp.otp_invalid"
+msgstr "Μη έγκυρος κωδικός επαλήθευσης"
+
+#: API: WhatsApp - Too many OTP attempts
+msgid "server.api.whatsapp.otp_too_many_attempts"
+msgstr "Πάρα πολλές αποτυχημένες προσπάθειες. Παρακαλώ ζητήστε νέο κωδικό."
+
+#: API: WhatsApp - Phone already linked
+msgid "server.api.whatsapp.phone_already_linked"
+msgstr "Αυτός ο αριθμός τηλεφώνου είναι ήδη συνδεδεμένος με λογαριασμό"
+
+#: API: WhatsApp - Session expired
+msgid "server.api.whatsapp.session_expired"
+msgstr "Η συνεδρία έληξε. Ο πελάτης πρέπει να στείλει μήνυμα πρώτα."
+
+#: API: WhatsApp - Admin required
+msgid "server.api.whatsapp.admin_required"
+msgstr "Απαιτείται πρόσβαση διαχειριστή οργανισμού"
+
+#: API: WhatsApp - Phone not linked
+msgid "server.api.whatsapp.not_linked"
+msgstr "Δεν υπάρχει αριθμός WhatsApp συνδεδεμένος με αυτόν τον λογαριασμό"
+
+#: API: WhatsApp - Phone not linked (legacy)
+msgid "server.api.whatsapp.phone_not_linked"
+msgstr "Ο αριθμός τηλεφώνου δεν είναι συνδεδεμένος με κανέναν λογαριασμό"
+
+#: API: WhatsApp - OTP sent
+msgid "server.api.whatsapp.otp_sent"
+msgstr "Ο κωδικός επαλήθευσης εστάλη στο WhatsApp σας"
+
+#: API: WhatsApp - Phone linked
+msgid "server.api.whatsapp.phone_linked"
+msgstr "Ο αριθμός τηλεφώνου συνδέθηκε επιτυχώς"
+
+#: API: WhatsApp - Phone unlinked
+msgid "server.api.whatsapp.phone_unlinked"
+msgstr "Ο αριθμός τηλεφώνου αποσυνδέθηκε επιτυχώς"
+
+#: API: WhatsApp - Config created
+msgid "server.api.whatsapp.config_created"
+msgstr "Η διαμόρφωση WhatsApp δημιουργήθηκε επιτυχώς"
+
+#: API: WhatsApp - Config updated
+msgid "server.api.whatsapp.config_updated"
+msgstr "Η διαμόρφωση WhatsApp ενημερώθηκε επιτυχώς"
+
+#: API: WhatsApp - Config deleted
+msgid "server.api.whatsapp.config_deleted"
+msgstr "Η διαμόρφωση WhatsApp διαγράφηκε επιτυχώς"
+
+#: API: WhatsApp - Group created
+msgid "server.api.whatsapp.group_created"
+msgstr "Η ομάδα συνομιλίας δημιουργήθηκε επιτυχώς"
+
+#: API: WhatsApp - Group updated
+msgid "server.api.whatsapp.group_updated"
+msgstr "Η ομάδα συνομιλίας ενημερώθηκε επιτυχώς"
+
+#: API: WhatsApp - Group deleted
+msgid "server.api.whatsapp.group_deleted"
+msgstr "Η ομάδα συνομιλίας διαγράφηκε επιτυχώς"
+
+#: API: WhatsApp - Group not found
+msgid "server.api.whatsapp.group_not_found"
+msgstr "Η ομάδα συνομιλίας δεν βρέθηκε"
+
+#: API: WhatsApp - Conversation moved
+msgid "server.api.whatsapp.conversation_moved"
+msgstr "Η συνομιλία μεταφέρθηκε στην ομάδα επιτυχώς"
+
+#: API: WhatsApp - Conversation not found
+msgid "server.api.whatsapp.conversation_not_found"
+msgstr "Η συνομιλία δεν βρέθηκε"
+
+#: API: WhatsApp - OTP message
+msgid "server.api.whatsapp.otp_message"
+msgstr "Ο κωδικός επαλήθευσης Loom είναι: {code}. Αυτός ο κωδικός λήγει σε 5 λεπτά."
+

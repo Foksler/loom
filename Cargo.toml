@@ -75,6 +75,8 @@ members = [
 	"crates/loom-sessions-core",
 	"crates/loom-server-sessions",
 	"crates/loom-server-clips",
+	"crates/loom-whatsapp",
+	"crates/loom-server-whatsapp",
 	]
 
 [workspace.package]
@@ -184,6 +186,8 @@ loom-server-sessions = { path = "crates/loom-server-sessions" }
 loom-analytics = { path = "crates/loom-analytics" }
 loom-server-analytics = { path = "crates/loom-server-analytics" }
 loom-common-http = { path = "crates/loom-common-http" }
+loom-whatsapp = { path = "crates/loom-whatsapp" }
+loom-server-whatsapp = { path = "crates/loom-server-whatsapp" }
 
 # Build profile optimizations for faster development builds
 [profile.dev]

@@ -60,6 +60,8 @@ loom-server-scm = { path = "../loom-server-scm" }
 loom-server-scm-mirror = { path = "../loom-server-scm-mirror" }
 loom-server-session = { path = "../loom-server-session" }
 loom-server-wgtunnel = { path = "../loom-server-wgtunnel" }
+loom-server-whatsapp = { path = "../loom-server-whatsapp" }
+loom-whatsapp = { path = "../loom-whatsapp" }
 gix = { version = "0.68", default-features = false, features = ["revision"] }
 loom-server-search-google-cse = { path = "../loom-server-search-google-cse", features = ["openapi"] }
 loom-server-search-serper = { path = "../loom-server-search-serper", features = ["openapi"] }

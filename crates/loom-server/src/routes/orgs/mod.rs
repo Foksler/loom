@@ -13,6 +13,7 @@ pub mod common;
 pub mod join_requests;
 pub mod members;
 pub mod orgs_crud;
+pub mod whatsapp;
 
 use crate::impl_api_error_response;
 

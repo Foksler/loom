@@ -44,6 +44,7 @@ pub mod weaver_auth;
 pub mod weaver_secrets;
 pub mod webhooks;
 pub mod wgtunnel;
+pub mod whatsapp;
 
 // Re-export clips types
 pub use clips::ClipsErrorResponse;

@@ -207,6 +207,17 @@ pub struct ScimHealth {
 	pub error: Option<String>,
 }
 
+/// WhatsApp component health.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct WhatsAppHealth {
+	pub status: HealthStatus,
+	pub latency_ms: u64,
+	pub configured: bool,
+	pub configs_count: usize,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub error: Option<String>,
+}
+
 /// Individual authentication provider health.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct AuthProviderHealth {
@@ -243,6 +254,8 @@ pub struct HealthComponents {
 	pub secrets: Option<SecretsHealth>,
 	pub serper: SerperHealth,
 	pub smtp: SmtpHealth,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub whatsapp: Option<WhatsAppHealth>,
 }
 
 /// Complete health check response.
@@ -1091,6 +1104,40 @@ pub async fn check_scim(scim_config: &ScimConfig, org_repo: &OrgRepository) -> S
 	}
 }
 
+const WHATSAPP_CHECK_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// Check WhatsApp integration health.
+///
+/// Verifies that the WhatsApp integration is configured and can access its repository.
+pub async fn check_whatsapp(
+	repo: Option<&Arc<loom_server_whatsapp::WhatsAppRepository>>,
+) -> Option<WhatsAppHealth> {
+	let repo = repo?;
+
+	let start = Instant::now();
+
+	let (status, configs_count, error) =
+		match timeout(WHATSAPP_CHECK_TIMEOUT, repo.count_enabled_configs()).await {
+			Ok(Ok(count)) => (HealthStatus::Healthy, count, None),
+			Ok(Err(e)) => (HealthStatus::Degraded, 0, Some(e.to_string())),
+			Err(_) => (
+				HealthStatus::Degraded,
+				0,
+				Some("WhatsApp health check timed out".to_string()),
+			),
+		};
+
+	let latency_ms = start.elapsed().as_millis() as u64;
+
+	Some(WhatsAppHealth {
+		status,
+		latency_ms,
+		configured: true,
+		configs_count,
+		error,
+	})
+}
+
 /// Aggregate component statuses into overall status.
 pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
 	let mut statuses = vec![
@@ -1118,6 +1165,10 @@ pub fn aggregate_status(components: &HealthComponents) -> HealthStatus {
 
 	if components.scim.enabled {
 		statuses.push(components.scim.status);
+	}
+
+	if let Some(ref whatsapp) = components.whatsapp {
+		statuses.push(whatsapp.status);
 	}
 
 	if statuses

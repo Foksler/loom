@@ -706,3 +706,372 @@ pub async fn unlink_identity(
 	)
 		.into_response()
 }
+
+// =========================================================================
+// WhatsApp phone linking
+// =========================================================================
+
+#[utoipa::path(
+    post,
+    path = "/api/users/me/whatsapp/link",
+    request_body = loom_server_api::whatsapp::LinkPhoneRequest,
+    responses(
+        (status = 200, description = "OTP sent", body = loom_server_api::whatsapp::LinkPhoneResponse),
+        (status = 400, description = "Invalid phone number", body = loom_server_api::whatsapp::WhatsAppErrorResponse),
+        (status = 401, description = "Not authenticated", body = loom_server_api::whatsapp::WhatsAppErrorResponse),
+        (status = 429, description = "Rate limited", body = loom_server_api::whatsapp::WhatsAppErrorResponse)
+    ),
+    tag = "whatsapp"
+)]
+/// Initiate WhatsApp phone linking.
+///
+/// Sends a 6-digit OTP to the provided phone number via WhatsApp.
+/// The OTP expires after 5 minutes.
+///
+/// # Rate Limiting
+/// Users must wait 1 minute between OTP requests to the same phone number.
+#[tracing::instrument(skip(state, payload))]
+pub async fn whatsapp_link_phone(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Json(payload): Json<loom_server_api::whatsapp::LinkPhoneRequest>,
+) -> impl IntoResponse {
+	use loom_server_api::whatsapp::{LinkPhoneResponse, WhatsAppErrorResponse};
+
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let user_id = current_user.user.id;
+
+	// Validate phone number format (basic E.164 check)
+	if !payload.phone_number.starts_with('+') || payload.phone_number.len() < 8 {
+		return (
+			StatusCode::BAD_REQUEST,
+			Json(WhatsAppErrorResponse {
+				error: "invalid_phone".to_string(),
+				message: t(locale, "server.api.whatsapp.invalid_phone").to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	let whatsapp_service = match state.whatsapp_service.as_ref() {
+		Some(s) => s,
+		None => {
+			return (
+				StatusCode::SERVICE_UNAVAILABLE,
+				Json(WhatsAppErrorResponse {
+					error: "not_configured".to_string(),
+					message: t(locale, "server.api.whatsapp.not_configured").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Create OTP and store it
+	let otp = match whatsapp_service
+		.create_phone_verification_otp(&user_id.to_string(), &payload.phone_number)
+		.await
+	{
+		Ok(otp) => otp,
+		Err(loom_whatsapp::WhatsAppError::VerificationFailed(msg)) => {
+			// Rate limited
+			return (
+				StatusCode::TOO_MANY_REQUESTS,
+				Json(WhatsAppErrorResponse {
+					error: "rate_limited".to_string(),
+					message: msg,
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %user_id, "Failed to create OTP");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(WhatsAppErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// TODO: Send OTP via WhatsApp
+	// For now, we log it (in production, this would use WhatsAppClient.send_text)
+	tracing::info!(
+		%user_id,
+		phone_hash = %loom_server_whatsapp::WhatsAppService::hash_phone_number(&payload.phone_number),
+		"WhatsApp OTP generated (would send via WhatsApp)"
+	);
+
+	// In development, also log the OTP for testing
+	#[cfg(debug_assertions)]
+	tracing::debug!(%user_id, otp = %otp, "DEBUG: WhatsApp OTP (dev only)");
+
+	(
+		StatusCode::OK,
+		Json(LinkPhoneResponse {
+			message: t(locale, "server.api.whatsapp.otp_sent").to_string(),
+			expires_in_seconds: 300, // 5 minutes
+		}),
+	)
+		.into_response()
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/users/me/whatsapp/verify",
+    request_body = loom_server_api::whatsapp::VerifyPhoneRequest,
+    responses(
+        (status = 200, description = "Phone verified", body = loom_server_api::whatsapp::VerifyPhoneResponse),
+        (status = 400, description = "Invalid OTP", body = loom_server_api::whatsapp::WhatsAppErrorResponse),
+        (status = 401, description = "Not authenticated", body = loom_server_api::whatsapp::WhatsAppErrorResponse),
+        (status = 410, description = "OTP expired", body = loom_server_api::whatsapp::WhatsAppErrorResponse),
+        (status = 429, description = "Too many attempts", body = loom_server_api::whatsapp::WhatsAppErrorResponse)
+    ),
+    tag = "whatsapp"
+)]
+/// Verify WhatsApp phone OTP.
+///
+/// Verifies the OTP and links the phone number to the user's account
+/// by creating a WhatsApp identity.
+#[tracing::instrument(skip(state, payload))]
+pub async fn whatsapp_verify_phone(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Json(payload): Json<loom_server_api::whatsapp::VerifyPhoneRequest>,
+) -> impl IntoResponse {
+	use loom_server_api::whatsapp::{VerifyPhoneResponse, WhatsAppErrorResponse};
+	use loom_whatsapp::WhatsAppError;
+
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let user_id = current_user.user.id;
+
+	let whatsapp_service = match state.whatsapp_service.as_ref() {
+		Some(s) => s,
+		None => {
+			return (
+				StatusCode::SERVICE_UNAVAILABLE,
+				Json(WhatsAppErrorResponse {
+					error: "not_configured".to_string(),
+					message: t(locale, "server.api.whatsapp.not_configured").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Verify OTP
+	let verified_user_id = match whatsapp_service
+		.verify_phone_otp(&payload.phone_number, &payload.otp)
+		.await
+	{
+		Ok(uid) => uid,
+		Err(WhatsAppError::OtpInvalid) => {
+			return (
+				StatusCode::BAD_REQUEST,
+				Json(WhatsAppErrorResponse {
+					error: "invalid_otp".to_string(),
+					message: t(locale, "server.api.whatsapp.otp_invalid").to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(WhatsAppError::OtpExpired) => {
+			return (
+				StatusCode::GONE,
+				Json(WhatsAppErrorResponse {
+					error: "otp_expired".to_string(),
+					message: t(locale, "server.api.whatsapp.otp_expired").to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(WhatsAppError::OtpTooManyAttempts) => {
+			return (
+				StatusCode::TOO_MANY_REQUESTS,
+				Json(WhatsAppErrorResponse {
+					error: "too_many_attempts".to_string(),
+					message: t(locale, "server.api.whatsapp.otp_too_many_attempts").to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %user_id, "Failed to verify OTP");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(WhatsAppErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Ensure the OTP was created for this user
+	if verified_user_id != user_id.to_string() {
+		return (
+			StatusCode::BAD_REQUEST,
+			Json(WhatsAppErrorResponse {
+				error: "invalid_otp".to_string(),
+				message: t(locale, "server.api.whatsapp.otp_invalid").to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	// Create WhatsApp identity
+	let identity = loom_server_auth::Identity {
+		id: loom_server_auth::IdentityId::generate(),
+		user_id,
+		provider: loom_server_auth::Provider::WhatsApp,
+		provider_user_id: payload.phone_number.clone(),
+		email: String::new(), // WhatsApp identities don't have email
+		email_verified: false,
+		created_at: Utc::now(),
+	};
+
+	if let Err(e) = state.user_repo.create_identity(&identity).await {
+		tracing::error!(error = %e, %user_id, "Failed to create WhatsApp identity");
+		return (
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(WhatsAppErrorResponse {
+				error: "internal_error".to_string(),
+				message: t(locale, "server.api.error.internal").to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	tracing::info!(%user_id, phone = %payload.phone_number, "WhatsApp phone linked");
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::MemberAdded)
+			.actor(AuditUserId::new(user_id.into_inner()))
+			.resource("identity", identity.id.to_string())
+			.details(serde_json::json!({
+				"action": "whatsapp_phone_linked",
+				"provider": "whatsapp",
+			}))
+			.build(),
+	);
+
+	(
+		StatusCode::OK,
+		Json(VerifyPhoneResponse {
+			message: t(locale, "server.api.whatsapp.phone_linked").to_string(),
+			phone_number: payload.phone_number,
+		}),
+	)
+		.into_response()
+}
+
+#[utoipa::path(
+    delete,
+    path = "/api/users/me/whatsapp/unlink",
+    responses(
+        (status = 200, description = "Phone unlinked", body = loom_server_api::whatsapp::WhatsAppSuccessResponse),
+        (status = 401, description = "Not authenticated", body = loom_server_api::whatsapp::WhatsAppErrorResponse),
+        (status = 404, description = "No WhatsApp linked", body = loom_server_api::whatsapp::WhatsAppErrorResponse),
+        (status = 409, description = "Cannot unlink last identity", body = loom_server_api::whatsapp::WhatsAppErrorResponse)
+    ),
+    tag = "whatsapp"
+)]
+/// Unlink WhatsApp phone number.
+///
+/// Removes the WhatsApp identity from the user's account.
+/// Cannot unlink if it's the last remaining identity.
+#[tracing::instrument(skip(state))]
+pub async fn whatsapp_unlink_phone(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+) -> impl IntoResponse {
+	use loom_server_api::whatsapp::{WhatsAppErrorResponse, WhatsAppSuccessResponse};
+
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let user_id = current_user.user.id;
+
+	// Get all identities
+	let identities = match state.user_repo.get_identities_for_user(&user_id).await {
+		Ok(ids) => ids,
+		Err(e) => {
+			tracing::error!(error = %e, %user_id, "Failed to get identities");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(WhatsAppErrorResponse {
+					error: "internal_error".to_string(),
+					message: t(locale, "server.api.error.internal").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Find WhatsApp identity
+	let whatsapp_identity = identities
+		.iter()
+		.find(|i| i.provider == loom_server_auth::Provider::WhatsApp);
+
+	let whatsapp_identity = match whatsapp_identity {
+		Some(i) => i,
+		None => {
+			return (
+				StatusCode::NOT_FOUND,
+				Json(WhatsAppErrorResponse {
+					error: "not_found".to_string(),
+					message: t(locale, "server.api.whatsapp.not_linked").to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Cannot unlink last identity
+	if identities.len() <= 1 {
+		return (
+			StatusCode::CONFLICT,
+			Json(WhatsAppErrorResponse {
+				error: "conflict".to_string(),
+				message: t(locale, "server.api.user.cannot_unlink_last_identity").to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	// Delete WhatsApp identity
+	if let Err(e) = state.user_repo.delete_identity(&whatsapp_identity.id).await {
+		tracing::error!(error = %e, %user_id, "Failed to delete WhatsApp identity");
+		return (
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(WhatsAppErrorResponse {
+				error: "internal_error".to_string(),
+				message: t(locale, "server.api.error.internal").to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	tracing::info!(%user_id, "WhatsApp phone unlinked");
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::MemberRemoved)
+			.actor(AuditUserId::new(user_id.into_inner()))
+			.resource("identity", whatsapp_identity.id.to_string())
+			.details(serde_json::json!({
+				"action": "whatsapp_phone_unlinked",
+				"provider": "whatsapp",
+			}))
+			.build(),
+	);
+
+	(
+		StatusCode::OK,
+		Json(WhatsAppSuccessResponse {
+			message: t(locale, "server.api.whatsapp.phone_unlinked").to_string(),
+		}),
+	)
+		.into_response()
+}

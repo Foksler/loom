@@ -1758,3 +1758,103 @@ msgstr "A platform kill switch with this key already exists"
 msgid "server.api.admin.strategies.listed"
 msgstr "Listed platform strategies"
 
+# ============================================================================
+# WhatsApp API responses
+# ============================================================================
+
+#: API: WhatsApp - Not configured
+msgid "server.api.whatsapp.not_configured"
+msgstr "WhatsApp連携が設定されていません"
+
+#: API: WhatsApp - Invalid signature
+msgid "server.api.whatsapp.invalid_signature"
+msgstr "無効なwebhook署名"
+
+#: API: WhatsApp - Invalid phone format
+msgid "server.api.whatsapp.invalid_phone"
+msgstr "無効な電話番号形式（E.164形式である必要があります）"
+
+#: API: WhatsApp - OTP expired
+msgid "server.api.whatsapp.otp_expired"
+msgstr "確認コードの有効期限が切れています"
+
+#: API: WhatsApp - OTP invalid
+msgid "server.api.whatsapp.otp_invalid"
+msgstr "無効な確認コード"
+
+#: API: WhatsApp - Too many OTP attempts
+msgid "server.api.whatsapp.otp_too_many_attempts"
+msgstr "試行回数が多すぎます。新しいコードをリクエストしてください。"
+
+#: API: WhatsApp - Phone already linked
+msgid "server.api.whatsapp.phone_already_linked"
+msgstr "この電話番号は既にアカウントにリンクされています"
+
+#: API: WhatsApp - Session expired
+msgid "server.api.whatsapp.session_expired"
+msgstr "セッションが期限切れです。お客様が先にメッセージを送信する必要があります。"
+
+#: API: WhatsApp - Admin required
+msgid "server.api.whatsapp.admin_required"
+msgstr "組織管理者のアクセスが必要です"
+
+#: API: WhatsApp - Phone not linked
+msgid "server.api.whatsapp.not_linked"
+msgstr "このアカウントにリンクされたWhatsApp電話番号がありません"
+
+#: API: WhatsApp - Phone not linked (legacy)
+msgid "server.api.whatsapp.phone_not_linked"
+msgstr "電話番号はどのアカウントにもリンクされていません"
+
+#: API: WhatsApp - OTP sent
+msgid "server.api.whatsapp.otp_sent"
+msgstr "確認コードをWhatsAppに送信しました"
+
+#: API: WhatsApp - Phone linked
+msgid "server.api.whatsapp.phone_linked"
+msgstr "電話番号が正常にリンクされました"
+
+#: API: WhatsApp - Phone unlinked
+msgid "server.api.whatsapp.phone_unlinked"
+msgstr "電話番号が正常にリンク解除されました"
+
+#: API: WhatsApp - Config created
+msgid "server.api.whatsapp.config_created"
+msgstr "WhatsApp設定が正常に作成されました"
+
+#: API: WhatsApp - Config updated
+msgid "server.api.whatsapp.config_updated"
+msgstr "WhatsApp設定が正常に更新されました"
+
+#: API: WhatsApp - Config deleted
+msgid "server.api.whatsapp.config_deleted"
+msgstr "WhatsApp設定が正常に削除されました"
+
+#: API: WhatsApp - Group created
+msgid "server.api.whatsapp.group_created"
+msgstr "会話グループが正常に作成されました"
+
+#: API: WhatsApp - Group updated
+msgid "server.api.whatsapp.group_updated"
+msgstr "会話グループが正常に更新されました"
+
+#: API: WhatsApp - Group deleted
+msgid "server.api.whatsapp.group_deleted"
+msgstr "会話グループが正常に削除されました"
+
+#: API: WhatsApp - Group not found
+msgid "server.api.whatsapp.group_not_found"
+msgstr "会話グループが見つかりません"
+
+#: API: WhatsApp - Conversation moved
+msgid "server.api.whatsapp.conversation_moved"
+msgstr "会話がグループに正常に移動されました"
+
+#: API: WhatsApp - Conversation not found
+msgid "server.api.whatsapp.conversation_not_found"
+msgstr "会話が見つかりません"
+
+#: API: WhatsApp - OTP message
+msgid "server.api.whatsapp.otp_message"
+msgstr "Loomの確認コードは：{code}です。このコードは5分後に期限切れになります。"
+

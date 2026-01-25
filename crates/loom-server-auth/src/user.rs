@@ -342,6 +342,8 @@ pub enum Provider {
 	Google,
 	/// Email magic link (passwordless).
 	MagicLink,
+	/// WhatsApp phone linking.
+	WhatsApp,
 }
 
 impl std::fmt::Display for Provider {
@@ -350,6 +352,7 @@ impl std::fmt::Display for Provider {
 			Provider::GitHub => write!(f, "github"),
 			Provider::Google => write!(f, "google"),
 			Provider::MagicLink => write!(f, "magic_link"),
+			Provider::WhatsApp => write!(f, "whatsapp"),
 		}
 	}
 }

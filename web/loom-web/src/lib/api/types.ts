@@ -909,6 +909,95 @@ export interface AnalyticsListParams {
 	end_date?: string;
 }
 
+// =========================================================================
+// WhatsApp Types
+// =========================================================================
+
+export interface WhatsAppConfig {
+	id: string;
+	phone_number_id: string;
+	enabled: boolean;
+	webhook_url: string;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface CreateWhatsAppConfigRequest {
+	phone_number_id: string;
+	access_token: string;
+	app_secret: string;
+	verify_token: string;
+}
+
+export interface WhatsAppGroup {
+	id: string;
+	name: string;
+	description: string | null;
+	color: string | null;
+	is_default: boolean;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface CreateWhatsAppGroupRequest {
+	name: string;
+	description?: string;
+	color?: string;
+}
+
+export interface WhatsAppGroupListResponse {
+	groups: WhatsAppGroup[];
+}
+
+export interface WhatsAppConversation {
+	id: string;
+	wa_phone_number: string;
+	group_id: string | null;
+	user_id: string | null;
+	thread_id: string | null;
+	last_customer_message_at: string;
+	session_expires_at: string;
+	session_active: boolean;
+	status: string;
+	created_at: string;
+}
+
+export interface WhatsAppConversationListResponse {
+	conversations: WhatsAppConversation[];
+}
+
+export interface MoveConversationRequest {
+	group_id: string | null;
+}
+
+export interface LinkPhoneRequest {
+	phone_number: string;
+}
+
+export interface LinkPhoneResponse {
+	message: string;
+	expires_in_seconds: number;
+}
+
+export interface VerifyPhoneRequest {
+	phone_number: string;
+	otp: string;
+}
+
+export interface VerifyPhoneResponse {
+	message: string;
+	phone_number: string;
+}
+
+export interface WhatsAppSuccessResponse {
+	message: string;
+}
+
+export interface WhatsAppErrorResponse {
+	error: string;
+	message: string;
+}
+
 export class ApiError extends Error {
 	constructor(
 		public readonly status: number,

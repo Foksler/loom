@@ -24,6 +24,7 @@ pub mod threads;
 pub mod users;
 pub mod weaver;
 pub mod webhooks;
+pub mod whatsapp;
 
 pub use admin::{
 	AccountDetailsResponse, AccountStatus, AccountsSummary, AdminErrorResponse, AdminSuccessResponse,
@@ -127,4 +128,11 @@ pub use weaver::{
 pub use webhooks::{
 	CreateWebhookRequest, ListWebhooksResponse, PayloadFormatApi, WebhookErrorResponse,
 	WebhookResponse, WebhookSuccessResponse,
+};
+pub use whatsapp::{
+	CreateWhatsAppConfigRequest, CreateWhatsAppGroupRequest, LinkPhoneRequest, LinkPhoneResponse,
+	ListWhatsAppConversationsResponse, ListWhatsAppGroupsResponse, MoveConversationRequest,
+	UpdateWhatsAppGroupRequest, VerifyPhoneRequest, VerifyPhoneResponse, WhatsAppConfigResponse,
+	WhatsAppConversationResponse, WhatsAppErrorResponse, WhatsAppGroupResponse,
+	WhatsAppSuccessResponse,
 };

@@ -1762,3 +1762,103 @@ msgstr "A platform kill switch with this key already exists"
 msgid "server.api.admin.strategies.listed"
 msgstr "Listed platform strategies"
 
+# ============================================================================
+# WhatsApp API responses
+# ============================================================================
+
+#: API: WhatsApp - Not configured
+msgid "server.api.whatsapp.not_configured"
+msgstr "WhatsApp integratsioon pole seadistatud"
+
+#: API: WhatsApp - Invalid signature
+msgid "server.api.whatsapp.invalid_signature"
+msgstr "Vigane webhook allkiri"
+
+#: API: WhatsApp - Invalid phone format
+msgid "server.api.whatsapp.invalid_phone"
+msgstr "Vigane telefoninumbri vorming (peab olema E.164)"
+
+#: API: WhatsApp - OTP expired
+msgid "server.api.whatsapp.otp_expired"
+msgstr "Kinnituskood on aegunud"
+
+#: API: WhatsApp - OTP invalid
+msgid "server.api.whatsapp.otp_invalid"
+msgstr "Vigane kinnituskood"
+
+#: API: WhatsApp - Too many OTP attempts
+msgid "server.api.whatsapp.otp_too_many_attempts"
+msgstr "Liiga palju ebaõnnestunud katseid. Palun küsige uus kood."
+
+#: API: WhatsApp - Phone already linked
+msgid "server.api.whatsapp.phone_already_linked"
+msgstr "See telefoninumber on juba kontoga seotud"
+
+#: API: WhatsApp - Session expired
+msgid "server.api.whatsapp.session_expired"
+msgstr "Sessioon aegunud. Klient peab esmalt sõnumi saatma."
+
+#: API: WhatsApp - Admin required
+msgid "server.api.whatsapp.admin_required"
+msgstr "Vajalik organisatsiooni administraatori ligipääs"
+
+#: API: WhatsApp - Phone not linked
+msgid "server.api.whatsapp.not_linked"
+msgstr "Selle kontoga pole WhatsApp telefoninumbrit seotud"
+
+#: API: WhatsApp - Phone not linked (legacy)
+msgid "server.api.whatsapp.phone_not_linked"
+msgstr "Telefoninumber pole ühegi kontoga seotud"
+
+#: API: WhatsApp - OTP sent
+msgid "server.api.whatsapp.otp_sent"
+msgstr "Kinnituskood saadetud teie WhatsAppi"
+
+#: API: WhatsApp - Phone linked
+msgid "server.api.whatsapp.phone_linked"
+msgstr "Telefoninumber edukalt seotud"
+
+#: API: WhatsApp - Phone unlinked
+msgid "server.api.whatsapp.phone_unlinked"
+msgstr "Telefoninumber edukalt lahti seotud"
+
+#: API: WhatsApp - Config created
+msgid "server.api.whatsapp.config_created"
+msgstr "WhatsApp seadistus edukalt loodud"
+
+#: API: WhatsApp - Config updated
+msgid "server.api.whatsapp.config_updated"
+msgstr "WhatsApp seadistus edukalt uuendatud"
+
+#: API: WhatsApp - Config deleted
+msgid "server.api.whatsapp.config_deleted"
+msgstr "WhatsApp seadistus edukalt kustutatud"
+
+#: API: WhatsApp - Group created
+msgid "server.api.whatsapp.group_created"
+msgstr "Vestlusgrupp edukalt loodud"
+
+#: API: WhatsApp - Group updated
+msgid "server.api.whatsapp.group_updated"
+msgstr "Vestlusgrupp edukalt uuendatud"
+
+#: API: WhatsApp - Group deleted
+msgid "server.api.whatsapp.group_deleted"
+msgstr "Vestlusgrupp edukalt kustutatud"
+
+#: API: WhatsApp - Group not found
+msgid "server.api.whatsapp.group_not_found"
+msgstr "Vestlusgruppi ei leitud"
+
+#: API: WhatsApp - Conversation moved
+msgid "server.api.whatsapp.conversation_moved"
+msgstr "Vestlus edukalt gruppi viidud"
+
+#: API: WhatsApp - Conversation not found
+msgid "server.api.whatsapp.conversation_not_found"
+msgstr "Vestlust ei leitud"
+
+#: API: WhatsApp - OTP message
+msgid "server.api.whatsapp.otp_message"
+msgstr "Teie Loom kinnituskood on: {code}. See kood aegub 5 minuti pärast."
+
