@@ -19,6 +19,7 @@
 //! - Push: always requires authentication
 
 pub mod access;
+pub mod clips;
 pub mod common;
 pub mod handlers;
 pub mod mirror;
