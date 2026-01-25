@@ -162,6 +162,8 @@ export interface Mechanism {
 export interface CrashEvent {
 	/** Event ID (UUID) */
 	event_id?: string;
+	/** Project ID (required by SDK endpoints) */
+	project_id?: string;
 	/** Exception type (e.g., 'TypeError', 'ReferenceError') */
 	exception_type: string;
 	/** Exception message */

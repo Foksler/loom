@@ -535,9 +535,12 @@ export class CrashClient {
 	 * Send a single event to the server.
 	 */
 	private async sendEvent(event: CrashEvent): Promise<CaptureResponse> {
+		// Add project_id for SDK endpoints
+		const payload = this.useSdkEndpoints ? { ...event, project_id: this.project } : event;
+
 		const response = await this.httpClient.postJson<CaptureResponse>(
 			this.getCaptureEndpoint(),
-			event
+			payload
 		);
 
 		if (this.debug) {
