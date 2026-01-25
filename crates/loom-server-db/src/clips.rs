@@ -60,6 +60,7 @@ pub struct ClipRecord {
 	pub file_count: u32,
 	pub size_bytes: u64,
 	pub language: Option<String>,
+	pub star_count: u32,
 	pub created_at: DateTime<Utc>,
 	pub updated_at: DateTime<Utc>,
 }
@@ -107,6 +108,16 @@ pub trait ClipsStore: Send + Sync {
 		language: Option<&str>,
 	) -> Result<()>;
 	async fn clip_name_exists(&self, owner: &str, name: &str) -> Result<bool>;
+	async fn star_clip(&self, clip_id: Uuid, user_id: Uuid) -> Result<bool>;
+	async fn unstar_clip(&self, clip_id: Uuid, user_id: Uuid) -> Result<bool>;
+	async fn is_clip_starred(&self, clip_id: Uuid, user_id: Uuid) -> Result<bool>;
+	async fn get_clip_star_count(&self, clip_id: Uuid) -> Result<u32>;
+	async fn list_user_starred_clips(
+		&self,
+		user_id: Uuid,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ClipRecord>>;
 }
 
 /// SQLite implementation of clips store.
@@ -165,6 +176,7 @@ impl ClipsStore for ClipsRepository {
 			file_count: 0,
 			size_bytes: 0,
 			language: None,
+			star_count: 0,
 			created_at: now,
 			updated_at: now,
 		})
@@ -176,7 +188,7 @@ impl ClipsStore for ClipsRepository {
 			r#"
 			SELECT id, owner, name, description, visibility,
 				   created_by, org_id, is_fork, forked_from,
-				   file_count, size_bytes, language,
+				   file_count, size_bytes, language, star_count,
 				   created_at, updated_at
 			FROM clips
 			WHERE id = ?
@@ -195,7 +207,7 @@ impl ClipsStore for ClipsRepository {
 			r#"
 			SELECT id, owner, name, description, visibility,
 				   created_by, org_id, is_fork, forked_from,
-				   file_count, size_bytes, language,
+				   file_count, size_bytes, language, star_count,
 				   created_at, updated_at
 			FROM clips
 			WHERE owner = ? AND name = ?
@@ -220,7 +232,7 @@ impl ClipsStore for ClipsRepository {
 			r#"
 			SELECT id, owner, name, description, visibility,
 				   created_by, org_id, is_fork, forked_from,
-				   file_count, size_bytes, language,
+				   file_count, size_bytes, language, star_count,
 				   created_at, updated_at
 			FROM clips
 			WHERE created_by = ? AND org_id IS NULL
@@ -243,7 +255,7 @@ impl ClipsStore for ClipsRepository {
 			r#"
 			SELECT id, owner, name, description, visibility,
 				   created_by, org_id, is_fork, forked_from,
-				   file_count, size_bytes, language,
+				   file_count, size_bytes, language, star_count,
 				   created_at, updated_at
 			FROM clips
 			WHERE org_id = ?
@@ -266,7 +278,7 @@ impl ClipsStore for ClipsRepository {
 			r#"
 			SELECT id, owner, name, description, visibility,
 				   created_by, org_id, is_fork, forked_from,
-				   file_count, size_bytes, language,
+				   file_count, size_bytes, language, star_count,
 				   created_at, updated_at
 			FROM clips
 			WHERE visibility = 'public'
@@ -369,6 +381,115 @@ impl ClipsStore for ClipsRepository {
 
 		Ok(count > 0)
 	}
+
+	#[instrument(skip(self), fields(clip_id = %clip_id, user_id = %user_id))]
+	async fn star_clip(&self, clip_id: Uuid, user_id: Uuid) -> Result<bool> {
+		let now = Utc::now().to_rfc3339();
+
+		let result = sqlx::query(
+			r#"
+			INSERT OR IGNORE INTO clip_stars (clip_id, user_id, created_at)
+			VALUES (?, ?, ?)
+			"#,
+		)
+		.bind(clip_id.to_string())
+		.bind(user_id.to_string())
+		.bind(&now)
+		.execute(&self.pool)
+		.await?;
+
+		if result.rows_affected() > 0 {
+			sqlx::query("UPDATE clips SET star_count = star_count + 1 WHERE id = ?")
+				.bind(clip_id.to_string())
+				.execute(&self.pool)
+				.await?;
+			Ok(true)
+		} else {
+			Ok(false)
+		}
+	}
+
+	#[instrument(skip(self), fields(clip_id = %clip_id, user_id = %user_id))]
+	async fn unstar_clip(&self, clip_id: Uuid, user_id: Uuid) -> Result<bool> {
+		let result = sqlx::query(
+			r#"
+			DELETE FROM clip_stars WHERE clip_id = ? AND user_id = ?
+			"#,
+		)
+		.bind(clip_id.to_string())
+		.bind(user_id.to_string())
+		.execute(&self.pool)
+		.await?;
+
+		if result.rows_affected() > 0 {
+			sqlx::query("UPDATE clips SET star_count = MAX(0, star_count - 1) WHERE id = ?")
+				.bind(clip_id.to_string())
+				.execute(&self.pool)
+				.await?;
+			Ok(true)
+		} else {
+			Ok(false)
+		}
+	}
+
+	#[instrument(skip(self), fields(clip_id = %clip_id, user_id = %user_id))]
+	async fn is_clip_starred(&self, clip_id: Uuid, user_id: Uuid) -> Result<bool> {
+		let count = sqlx::query_scalar::<_, i32>(
+			r#"
+			SELECT COUNT(*) FROM clip_stars WHERE clip_id = ? AND user_id = ?
+			"#,
+		)
+		.bind(clip_id.to_string())
+		.bind(user_id.to_string())
+		.fetch_one(&self.pool)
+		.await?;
+
+		Ok(count > 0)
+	}
+
+	#[instrument(skip(self), fields(clip_id = %clip_id))]
+	async fn get_clip_star_count(&self, clip_id: Uuid) -> Result<u32> {
+		let count = sqlx::query_scalar::<_, i32>(
+			r#"
+			SELECT star_count FROM clips WHERE id = ?
+			"#,
+		)
+		.bind(clip_id.to_string())
+		.fetch_optional(&self.pool)
+		.await?
+		.unwrap_or(0);
+
+		Ok(count as u32)
+	}
+
+	#[instrument(skip(self), fields(user_id = %user_id))]
+	async fn list_user_starred_clips(
+		&self,
+		user_id: Uuid,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ClipRecord>> {
+		let rows = sqlx::query_as::<_, ClipRow>(
+			r#"
+			SELECT c.id, c.owner, c.name, c.description, c.visibility,
+				   c.created_by, c.org_id, c.is_fork, c.forked_from,
+				   c.file_count, c.size_bytes, c.language, c.star_count,
+				   c.created_at, c.updated_at
+			FROM clips c
+			INNER JOIN clip_stars s ON c.id = s.clip_id
+			WHERE s.user_id = ?
+			ORDER BY s.created_at DESC
+			LIMIT ? OFFSET ?
+			"#,
+		)
+		.bind(user_id.to_string())
+		.bind(limit as i32)
+		.bind(offset as i32)
+		.fetch_all(&self.pool)
+		.await?;
+
+		rows.into_iter().map(TryInto::try_into).collect()
+	}
 }
 
 /// Row type for SQLite.
@@ -386,6 +507,7 @@ struct ClipRow {
 	file_count: i32,
 	size_bytes: i64,
 	language: Option<String>,
+	star_count: i32,
 	created_at: String,
 	updated_at: String,
 }
@@ -421,6 +543,7 @@ impl TryFrom<ClipRow> for ClipRecord {
 			file_count: row.file_count as u32,
 			size_bytes: row.size_bytes as u64,
 			language: row.language,
+			star_count: row.star_count as u32,
 			created_at: DateTime::parse_from_rfc3339(&row.created_at)
 				.map(|dt| dt.with_timezone(&Utc))
 				.map_err(|_| DbError::Internal(format!("invalid datetime: {}", row.created_at)))?,

@@ -1499,6 +1499,36 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/repos/{id}/teams/{tid}",
 			delete(routes::repos::revoke_repo_team_access),
 		)
+		// Clips routes
+		.route("/api/clips", post(routes::clips::create_clip))
+		.route("/api/clips/starred", get(routes::clips::list_starred_clips))
+		.route("/api/clips/public", get(routes::clips::list_public_clips))
+		.route(
+			"/api/clips/{owner}/{name}",
+			get(routes::clips::get_clip),
+		)
+		.route("/api/clips/{id}", patch(routes::clips::update_clip))
+		.route("/api/clips/{id}", delete(routes::clips::delete_clip))
+		.route("/api/clips/{id}/files", get(routes::clips::list_clip_files))
+		.route(
+			"/api/clips/{id}/files/{path:.*}",
+			get(routes::clips::get_clip_file),
+		)
+		.route("/api/clips/{id}/fork", post(routes::clips::fork_clip))
+		.route("/api/clips/{id}/star", post(routes::clips::star_clip))
+		.route("/api/clips/{id}/star", delete(routes::clips::unstar_clip))
+		.route(
+			"/api/clips/{id}/starred",
+			get(routes::clips::get_clip_star_status),
+		)
+		.route(
+			"/api/users/{id}/clips",
+			get(routes::clips::list_user_clips),
+		)
+		.route(
+			"/api/orgs/{id}/clips",
+			get(routes::clips::list_org_clips),
+		)
 		// Branch protection routes
 		.route(
 			"/api/repos/{id}/protection",
