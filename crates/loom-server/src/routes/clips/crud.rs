@@ -87,8 +87,8 @@ pub async fn create_clip(
 			.into_response();
 	}
 
-	// Determine owner: org slug if org_id provided, otherwise user's display_name
-	let (owner_slug, org_id_for_record) = if let Some(org_uuid) = payload.org_id {
+	// Determine owner org: use provided org_id or user's personal org
+	let org = if let Some(org_uuid) = payload.org_id {
 		// Check org membership
 		let org_id = OrgId::new(org_uuid);
 		let _membership = match state
@@ -121,7 +121,7 @@ pub async fn create_clip(
 		};
 
 		// Get org for the owner name
-		let org = match state.org_repo.get_org_by_id(&org_id).await {
+		match state.org_repo.get_org_by_id(&org_id).await {
 			Ok(Some(o)) => o,
 			Ok(None) => {
 				return (
@@ -144,13 +144,27 @@ pub async fn create_clip(
 				)
 					.into_response();
 			}
-		};
-
-		(org.slug, Some(org_uuid))
+		}
 	} else {
-		// Personal clip - use user's display name as owner
-		(current_user.user.display_name.clone(), None)
+		// Personal clip - get or create user's personal org
+		match state.org_repo.ensure_personal_org(&current_user.user.id).await {
+			Ok(o) => o,
+			Err(e) => {
+				tracing::error!(error = %e, "Failed to ensure personal org");
+				return (
+					StatusCode::INTERNAL_SERVER_ERROR,
+					Json(ClipsErrorResponse {
+						error: "internal_error".to_string(),
+						message: t(locale, "server.api.error.internal").to_string(),
+					}),
+				)
+					.into_response();
+			}
+		}
 	};
+
+	let owner_slug = org.slug.clone();
+	let org_id_for_record = Some(org.id.into_inner());
 
 	// Check if clip name already exists for this owner
 	if let Ok(true) = clips_repo.clip_name_exists(&owner_slug, &payload.name).await {
