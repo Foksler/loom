@@ -1335,9 +1335,115 @@ logger.info('User submitted message', { threadId, component: 'MessageInput' });
 
 ---
 
-## 12. Dependencies
+## 12. Analytics Integration
 
-### 12.1 Production Dependencies
+loom-web uses the `@loom/analytics` SDK for product analytics via the self-monitoring system.
+
+### 12.1 Setup
+
+Analytics is initialized automatically via `AnalyticsProvider` in the app layout:
+
+```svelte
+<script>
+import { AnalyticsProvider } from '$lib/analytics';
+</script>
+
+<AnalyticsProvider user={data.user ? { id: data.user.id, email: data.user.email } : null}>
+  {@render children()}
+</AnalyticsProvider>
+```
+
+### 12.2 Tracking Helper Functions
+
+Import tracking helpers from `$lib/analytics`:
+
+```typescript
+import {
+  capture,                // Generic event capture
+  trackLinkClick,         // Link navigation
+  trackButtonClick,       // Button interactions
+  trackFormSubmit,        // Form submissions
+  trackModalOpen,         // Modal open events
+  trackModalClose,        // Modal close events
+  trackFilterChange,      // Filter/dropdown changes
+  trackAction             // CRUD actions on resources
+} from '$lib/analytics';
+```
+
+### 12.3 Usage Patterns
+
+**Track navigation:**
+```svelte
+<a href="/threads" onclick={() => trackLinkClick('nav_threads', '/threads')}>
+  Threads
+</a>
+```
+
+**Track button clicks:**
+```svelte
+<button onclick={() => { trackButtonClick('create_weaver'); handleCreate(); }}>
+  New Weaver
+</button>
+```
+
+**Track modals:**
+```svelte
+<script>
+function openModal(item) {
+  trackModalOpen('delete_confirmation', { item_id: item.id });
+  modalItem = item;
+}
+</script>
+```
+
+**Track filters:**
+```svelte
+<select onchange={(e) => {
+  trackFilterChange('status', e.currentTarget.value);
+  selectedStatus = e.currentTarget.value;
+}}>
+```
+
+**Track resource actions:**
+```svelte
+<button onclick={() => {
+  trackAction('delete', 'monitor', monitor.id);
+  handleDelete();
+}}>
+  Delete
+</button>
+```
+
+### 12.4 Event Naming Conventions
+
+| Event | Properties | Description |
+|-------|------------|-------------|
+| `link_clicked` | `link_name`, `href` | User clicked a link |
+| `button_clicked` | `button_name` | User clicked a button |
+| `form_submitted` | `form_name` | User submitted a form |
+| `modal_opened` | `modal_name` | Modal was opened |
+| `modal_closed` | `modal_name` | Modal was closed |
+| `filter_changed` | `filter_name`, `filter_value` | Filter selection changed |
+| `action_performed` | `action`, `resource_type`, `resource_id` | CRUD action performed |
+| `nav_clicked` | `item`, `path` | Navigation item clicked |
+
+### 12.5 Identity Management
+
+```typescript
+import { identify, reset } from '$lib/analytics';
+
+// On login - link anonymous activity to authenticated user
+await identify(user.id, { email: user.email, display_name: user.display_name });
+
+// On logout - reset identity for next user
+reset();
+```
+
+---
+
+## 13. Dependencies
+
+### 13.1 Production Dependencies
 
 ```json
 {
@@ -1352,7 +1458,7 @@ logger.info('User submitted message', { threadId, component: 'MessageInput' });
 }
 ```
 
-### 12.2 Development Dependencies
+### 13.2 Development Dependencies
 
 ```json
 {
@@ -1379,9 +1485,9 @@ logger.info('User submitted message', { threadId, component: 'MessageInput' });
 
 ---
 
-## 13. Build & Development
+## 14. Build & Development
 
-### 13.1 Scripts
+### 14.1 Scripts
 
 ```json
 {
@@ -1404,7 +1510,7 @@ logger.info('User submitted message', { threadId, component: 'MessageInput' });
 }
 ```
 
-### 13.2 Vite Configuration
+### 14.2 Vite Configuration
 
 ```typescript
 // vite.config.ts
@@ -1437,7 +1543,7 @@ export default defineConfig({
 });
 ```
 
-### 13.3 Environment Variables
+### 14.3 Environment Variables
 
 | Variable               | Required | Default         | Description                    |
 | ---------------------- | -------- | --------------- | ------------------------------ |
@@ -1446,15 +1552,15 @@ export default defineConfig({
 
 ---
 
-## 14. Future Considerations
+## 15. Future Considerations
 
-### 14.1 Phase 2 Enhancements
+### 15.1 Phase 2 Enhancements
 
 - **Full browser agent**: Server-hosted agent that accepts input via WebSocket
 - **Session management**: `POST /v1/threads/{id}/session` to bind sessions
 - **Authentication**: Real auth beyond stubs, user/org association
 
-### 14.2 Phase 3+ Enhancements
+### 15.2 Phase 3+ Enhancements
 
 - **Multi-user collaboration**: Presence, CRDTs for concurrent editing
 - **Offline support**: Service worker, local cache, sync queue

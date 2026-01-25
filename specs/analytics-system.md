@@ -565,7 +565,133 @@ Both SDKs use shared HTTP client libraries:
 
 ---
 
-## 9. Database Schema
+## 9. loom-web Tracking Patterns
+
+The loom-web application uses helper functions to ensure consistent event naming and properties across all tracked interactions.
+
+### 9.1 Tracking Helper Functions
+
+Import from `$lib/analytics`:
+
+```typescript
+import {
+  capture,
+  trackLinkClick,
+  trackButtonClick,
+  trackFormSubmit,
+  trackModalOpen,
+  trackModalClose,
+  trackFilterChange,
+  trackAction
+} from '$lib/analytics';
+```
+
+### 9.2 Function Signatures
+
+| Function | Parameters | Event Name |
+|----------|------------|------------|
+| `trackLinkClick` | `linkName: string, href: string, properties?` | `link_clicked` |
+| `trackButtonClick` | `buttonName: string, properties?` | `button_clicked` |
+| `trackFormSubmit` | `formName: string, properties?` | `form_submitted` |
+| `trackModalOpen` | `modalName: string, properties?` | `modal_opened` |
+| `trackModalClose` | `modalName: string, properties?` | `modal_closed` |
+| `trackFilterChange` | `filterName: string, value: unknown, properties?` | `filter_changed` |
+| `trackAction` | `action: string, resourceType: string, resourceId: string, properties?` | `action_performed` |
+
+### 9.3 Usage Examples
+
+**Link tracking:**
+```svelte
+<a href="/threads" onclick={() => trackLinkClick('nav_threads', '/threads')}>
+  Threads
+</a>
+```
+
+**Button tracking:**
+```svelte
+<button onclick={() => { trackButtonClick('create_weaver'); handleCreate(); }}>
+  New Weaver
+</button>
+```
+
+**Modal tracking:**
+```svelte
+<script>
+function openDeleteModal(weaver: Weaver) {
+  trackModalOpen('delete_weaver', { weaver_id: weaver.id });
+  deleteModal = weaver;
+}
+
+function closeDeleteModal() {
+  trackModalClose('delete_weaver');
+  deleteModal = null;
+}
+</script>
+```
+
+**Filter tracking:**
+```svelte
+<select onchange={(e) => {
+  const value = e.currentTarget.value;
+  trackFilterChange('org_filter', value);
+  selectedOrg = value;
+}}>
+```
+
+**Action tracking:**
+```svelte
+<button onclick={() => {
+  trackAction('resolve', 'issue', issue.id);
+  handleResolve();
+}}>
+  Resolve
+</button>
+```
+
+**Form tracking:**
+```svelte
+<form onsubmit={(e) => {
+  trackFormSubmit('create_monitor', { org_id: selectedOrg });
+  handleSubmit(e);
+}}>
+```
+
+### 9.4 Event Property Conventions
+
+| Property | Description | Example |
+|----------|-------------|---------|
+| `link_name` | Descriptive link identifier | `'project_card'`, `'back_button'` |
+| `href` | Destination URL | `'/crashes/proj-123'` |
+| `button_name` | Descriptive button identifier | `'create_weaver'`, `'delete_monitor'` |
+| `form_name` | Form identifier | `'create_org'`, `'profile_settings'` |
+| `modal_name` | Modal identifier | `'delete_confirmation'`, `'logs_viewer'` |
+| `filter_name` | Filter identifier | `'status'`, `'time_range'`, `'org'` |
+| `filter_value` | Selected filter value | `'active'`, `'7d'`, `'org-123'` |
+| `action` | Action performed | `'resolve'`, `'delete'`, `'pause'` |
+| `resource_type` | Type of resource | `'issue'`, `'monitor'`, `'weaver'` |
+| `resource_id` | Resource identifier | `'issue-abc'`, `'mon-xyz'` |
+
+### 9.5 Navigation Tracking
+
+Navigation paths are automatically tracked via the `nav_clicked` event in the app layout:
+
+```svelte
+<script>
+function trackNavClick(item: string, path: string) {
+  capture('nav_clicked', { item, path });
+}
+</script>
+
+<nav>
+  <a href="/threads" onclick={() => trackNavClick('threads', '/threads')}>
+    Threads
+  </a>
+</nav>
+```
+
+---
+
+## 10. Database Schema
 
 ### 9.1 Migration: `XXX_analytics.sql`
 
@@ -652,16 +778,16 @@ CREATE INDEX idx_analytics_api_keys_key_hash ON analytics_api_keys(key_hash);
 
 ---
 
-## 10. API Key Management
+## 11. API Key Management
 
-### 10.1 Key Types
+### 11.1 Key Types
 
 | Type | Prefix | Use Case | Capabilities |
 |------|--------|----------|--------------|
 | Write | `loom_analytics_write_` | Client-side, public | Capture, identify, alias |
 | ReadWrite | `loom_analytics_rw_` | Server-side, secret | All write + query/export |
 
-### 10.2 Key Format
+### 11.2 Key Format
 
 ```
 loom_analytics_{type}_{random}
@@ -671,7 +797,7 @@ loom_analytics_write_7a3b9f2e1c4d8a5b6e0f3c2d1a4b5c6d7e8f9a0b
 loom_analytics_rw_8b4c0g3f2d5e9a6c7f1g4d3e2b5a6c7d8e9f0a1b
 ```
 
-### 10.3 Authentication
+### 11.3 Authentication
 
 SDK requests include:
 
@@ -688,9 +814,9 @@ Server validates:
 
 ---
 
-## 11. Configuration
+## 12. Configuration
 
-### 11.1 Environment Variables
+### 12.1 Environment Variables
 
 | Variable | Type | Description | Default |
 |----------|------|-------------|---------|
@@ -701,7 +827,7 @@ Server validates:
 
 ---
 
-## 12. Audit Events
+## 13. Audit Events
 
 Analytics operations logged via `loom-server-audit`:
 
@@ -714,9 +840,9 @@ Analytics operations logged via `loom-server-audit`:
 
 ---
 
-## 13. Permissions
+## 14. Permissions
 
-### 13.1 API Key Management
+### 14.1 API Key Management
 
 | Action | Org Admin | Org Member | Super Admin |
 |--------|-----------|------------|-------------|
@@ -724,7 +850,7 @@ Analytics operations logged via `loom-server-audit`:
 | Create API key | ✓ | ✗ | ✓ |
 | Revoke API key | ✓ | ✗ | ✓ |
 
-### 13.2 Query Access
+### 14.2 Query Access
 
 | Action | Write Key | ReadWrite Key |
 |--------|-----------|---------------|
@@ -736,9 +862,9 @@ Analytics operations logged via `loom-server-audit`:
 
 ---
 
-## 14. Security Considerations
+## 15. Security Considerations
 
-### 14.1 IP Address Handling
+### 15.1 IP Address Handling
 
 IP addresses are sensitive data. Use `loom-secret::Secret`:
 
@@ -756,14 +882,14 @@ This ensures:
 - Explicit `.expose()` required to access
 - Serialization can be controlled
 
-### 14.2 Write Key Safety
+### 15.2 Write Key Safety
 
 Write-only keys are safe for client-side because:
 - Cannot read any data back
 - Cannot query other users
 - Scoped to single org
 
-### 14.3 Event Validation
+### 15.3 Event Validation
 
 Validate incoming events:
 - `event_name`: Max 200 chars, alphanumeric + underscore + `$` prefix
@@ -772,7 +898,7 @@ Validate incoming events:
 
 ---
 
-## 15. Rust Dependencies
+## 16. Rust Dependencies
 
 ```toml
 # loom-analytics-core
