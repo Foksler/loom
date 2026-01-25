@@ -7,6 +7,7 @@
 	import { getApiClient } from '$lib/api/client';
 	import type { Issue, CrashEvent } from '$lib/api/types';
 	import { IssueDetail, CrashEventCard } from '$lib/components/crash';
+	import { trackLinkClick, trackAction } from '$lib/analytics';
 
 	const client = getApiClient();
 	const projectId = $derived($page.params.projectId);
@@ -42,6 +43,7 @@
 
 	async function handleResolve() {
 		if (!issue) return;
+		trackAction('resolve', 'issue', issueId);
 		try {
 			issue = await client.resolveIssue(projectId, issueId);
 		} catch (e) {
@@ -51,6 +53,7 @@
 
 	async function handleUnresolve() {
 		if (!issue) return;
+		trackAction('unresolve', 'issue', issueId);
 		try {
 			issue = await client.unresolveIssue(projectId, issueId);
 		} catch (e) {
@@ -60,6 +63,7 @@
 
 	async function handleIgnore() {
 		if (!issue) return;
+		trackAction('ignore', 'issue', issueId);
 		try {
 			issue = await client.ignoreIssue(projectId, issueId);
 		} catch (e) {
@@ -68,6 +72,7 @@
 	}
 
 	function handleEventClick(event: CrashEvent) {
+		trackLinkClick('crash_event', `event_${event.id}`, { event_id: event.id });
 		// Could navigate to event detail or show in modal
 		console.log('Event clicked:', event.id);
 	}
@@ -75,7 +80,7 @@
 
 <div class="issue-detail-page">
 	<header class="page-header">
-		<a href="/crashes/{projectId}" class="back-link">&larr; Issues</a>
+		<a href="/crashes/{projectId}" class="back-link" onclick={() => trackLinkClick('back_to_issues', `/crashes/${projectId}`)}>&larr; Issues</a>
 	</header>
 
 	{#if loading}

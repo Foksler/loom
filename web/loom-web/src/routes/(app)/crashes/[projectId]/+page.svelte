@@ -8,6 +8,7 @@
 	import type { Issue, CrashProject } from '$lib/api/types';
 	import { IssueList, IssueStatusBadge } from '$lib/components/crash';
 	import { TimeRangePicker } from '$lib/components/common';
+	import { trackLinkClick, trackFilterChange } from '$lib/analytics';
 
 	const client = getApiClient();
 	const projectId = $derived($page.params.projectId);
@@ -46,11 +47,14 @@
 	}
 
 	function handleIssueClick(issue: Issue) {
+		trackLinkClick('crash_issue', `/crashes/${projectId}/issues/${issue.id}`, { issue_id: issue.id, issue_status: issue.status });
 		window.location.href = `/crashes/${projectId}/issues/${issue.id}`;
 	}
 
 	function handleStatusChange(e: Event) {
-		statusFilter = (e.target as HTMLSelectElement).value;
+		const value = (e.target as HTMLSelectElement).value;
+		trackFilterChange('status', value, { page: 'crash_project' });
+		statusFilter = value;
 		loadData();
 	}
 </script>
@@ -58,7 +62,7 @@
 <div class="issues-page">
 	<header class="page-header">
 		<div class="header-top">
-			<a href="/crashes" class="back-link">&larr; Projects</a>
+			<a href="/crashes" class="back-link" onclick={() => trackLinkClick('back_to_projects', '/crashes')}>&larr; Projects</a>
 		</div>
 		{#if project}
 			<h1 class="page-title">{project.name}</h1>
@@ -84,7 +88,7 @@
 		</div>
 		<TimeRangePicker
 			value={timeRange}
-			onchange={(value) => (timeRange = value)}
+			onchange={(value) => { trackFilterChange('time_range', value, { page: 'crash_project' }); timeRange = value; }}
 		/>
 	</div>
 

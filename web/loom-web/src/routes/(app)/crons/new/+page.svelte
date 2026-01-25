@@ -8,6 +8,7 @@
 	import type { Org } from '$lib/api/types';
 	import { MonitorForm } from '$lib/components/crons';
 	import { Card } from '$lib/ui';
+	import { trackFormSubmit, trackButtonClick, trackFilterChange } from '$lib/analytics';
 
 	const client = getApiClient();
 
@@ -50,6 +51,7 @@
 	async function handleSubmit(data: MonitorFormData) {
 		if (!selectedOrgId) return;
 
+		trackFormSubmit('create_monitor', { monitor_slug: data.slug, schedule_type: data.schedule_type });
 		submitting = true;
 		error = null;
 
@@ -75,6 +77,7 @@
 	}
 
 	function handleCancel() {
+		trackButtonClick('cancel_create_monitor');
 		goto('/crons');
 	}
 </script>
@@ -92,7 +95,7 @@
 				id="org-select"
 				class="org-select"
 				value={selectedOrgId}
-				onchange={(e) => (selectedOrgId = e.currentTarget.value)}
+				onchange={(e) => { trackFilterChange('org', e.currentTarget.value, { page: 'crons_new' }); selectedOrgId = e.currentTarget.value; }}
 			>
 				{#each orgs as org}
 					<option value={org.id}>{org.name}</option>

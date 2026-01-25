@@ -6,6 +6,7 @@
 	import { page } from '$app/stores';
 	import { i18n } from '$lib/i18n';
 	import type { Snippet } from 'svelte';
+	import { trackLinkClick } from '$lib/analytics';
 
 	interface Props {
 		children: Snippet;
@@ -32,6 +33,7 @@
 								{$page.url.pathname === item.href
 									? 'bg-accent text-white'
 									: 'text-fg-muted hover:bg-bg-muted hover:text-fg'}"
+							onclick={() => trackLinkClick('settings_nav', item.href)}
 						>
 							{i18n._(item.label)}
 						</a>

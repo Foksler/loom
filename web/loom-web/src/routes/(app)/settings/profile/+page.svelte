@@ -9,6 +9,7 @@
 	import { getApiClient } from '$lib/api/client';
 	import { authStore } from '$lib/auth';
 	import { Card, Button, Input, ThreadDivider } from '$lib/ui';
+	import { trackFormSubmit, trackFilterChange } from '$lib/analytics';
 
 	const parentData = $derived($page.data as { user: import('$lib/api/types').CurrentUser & { username?: string } });
 	const user = $derived(parentData.user);
@@ -55,6 +56,7 @@
 			return;
 		}
 
+		trackFormSubmit('profile_settings');
 		saving = true;
 		successMessage = null;
 		errorMessage = null;
@@ -98,6 +100,7 @@
 
 	function handleLocaleChange(event: Event) {
 		const target = event.target as HTMLSelectElement;
+		trackFilterChange('locale', target.value, { page: 'profile_settings' });
 		selectedLocale = target.value as Locale;
 	}
 </script>

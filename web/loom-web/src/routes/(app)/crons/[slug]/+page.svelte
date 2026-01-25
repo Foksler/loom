@@ -8,6 +8,7 @@
 	import type { Monitor, CheckIn } from '$lib/api/types';
 	import { MonitorDetail, CheckInTimeline, PingUrlDisplay, UptimeChart } from '$lib/components/crons';
 	import { Button } from '$lib/ui';
+	import { trackLinkClick, trackButtonClick, trackAction } from '$lib/analytics';
 
 	const client = getApiClient();
 	const slug = $derived($page.params.slug);
@@ -43,6 +44,7 @@
 
 	async function handlePause() {
 		if (!monitor) return;
+		trackAction('pause', 'monitor', slug);
 		try {
 			monitor = await client.pauseMonitor(orgId, slug);
 		} catch (e) {
@@ -52,6 +54,7 @@
 
 	async function handleResume() {
 		if (!monitor) return;
+		trackAction('resume', 'monitor', slug);
 		try {
 			monitor = await client.resumeMonitor(orgId, slug);
 		} catch (e) {
@@ -61,6 +64,7 @@
 
 	async function handleDelete() {
 		if (!monitor || !confirm('Are you sure you want to delete this monitor?')) return;
+		trackAction('delete', 'monitor', slug);
 		try {
 			await client.deleteMonitor(orgId, slug);
 			window.location.href = '/crons';
@@ -95,7 +99,7 @@
 
 <div class="monitor-detail-page">
 	<header class="page-header">
-		<a href="/crons" class="back-link">&larr; Monitors</a>
+		<a href="/crons" class="back-link" onclick={() => trackLinkClick('back_to_monitors', '/crons')}>&larr; Monitors</a>
 	</header>
 
 	{#if loading}
