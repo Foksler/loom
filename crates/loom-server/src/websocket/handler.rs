@@ -230,7 +230,7 @@ async fn handle_message(
 	text: &str,
 	conn: &Arc<WebSocketConnection>,
 	tx: &mpsc::Sender<Message>,
-	session_repo: &Arc<crate::db::SessionRepository>,
+	session_repo: &Arc<crate::db::AuthSessionRepository>,
 	api_key_repo: &Arc<crate::db::ApiKeyRepository>,
 	user_repo: &Arc<crate::db::UserRepository>,
 ) -> Result<(), String> {
@@ -247,7 +247,7 @@ async fn handle_auth_message(
 	text: &str,
 	conn: &Arc<WebSocketConnection>,
 	tx: &mpsc::Sender<Message>,
-	session_repo: &Arc<crate::db::SessionRepository>,
+	session_repo: &Arc<crate::db::AuthSessionRepository>,
 	api_key_repo: &Arc<crate::db::ApiKeyRepository>,
 	user_repo: &Arc<crate::db::UserRepository>,
 ) -> Result<(), String> {
@@ -282,7 +282,7 @@ async fn handle_token_auth(
 	token: &str,
 	conn: &Arc<WebSocketConnection>,
 	tx: &mpsc::Sender<Message>,
-	session_repo: &Arc<crate::db::SessionRepository>,
+	session_repo: &Arc<crate::db::AuthSessionRepository>,
 	api_key_repo: &Arc<crate::db::ApiKeyRepository>,
 	user_repo: &Arc<crate::db::UserRepository>,
 ) -> Result<(), String> {
@@ -325,7 +325,7 @@ async fn handle_session_auth(
 	session_token: &str,
 	conn: &Arc<WebSocketConnection>,
 	tx: &mpsc::Sender<Message>,
-	session_repo: &Arc<crate::db::SessionRepository>,
+	session_repo: &Arc<crate::db::AuthSessionRepository>,
 	user_repo: &Arc<crate::db::UserRepository>,
 ) -> Result<(), String> {
 	match validate_session_token(session_token, session_repo, user_repo).await {
@@ -409,7 +409,7 @@ async fn handle_authenticated_message(
 #[tracing::instrument(skip(session_token, session_repo, user_repo))]
 async fn validate_session_token(
 	session_token: &str,
-	session_repo: &Arc<crate::db::SessionRepository>,
+	session_repo: &Arc<crate::db::AuthSessionRepository>,
 	user_repo: &Arc<crate::db::UserRepository>,
 ) -> Option<CurrentUser> {
 	let token_hash = hash_token(session_token);
@@ -457,7 +457,7 @@ async fn validate_session_token(
 #[tracing::instrument(skip(token, session_repo, user_repo))]
 async fn validate_access_token(
 	token: &str,
-	session_repo: &Arc<crate::db::SessionRepository>,
+	session_repo: &Arc<crate::db::AuthSessionRepository>,
 	user_repo: &Arc<crate::db::UserRepository>,
 ) -> Option<CurrentUser> {
 	let token_hash = hash_token(token);
@@ -547,7 +547,7 @@ async fn validate_api_key(
 #[tracing::instrument(skip(token, session_repo, user_repo))]
 async fn validate_ws_token(
 	token: &str,
-	session_repo: &Arc<crate::db::SessionRepository>,
+	session_repo: &Arc<crate::db::AuthSessionRepository>,
 	user_repo: &Arc<crate::db::UserRepository>,
 ) -> Option<CurrentUser> {
 	let token_hash = hash_token(token);

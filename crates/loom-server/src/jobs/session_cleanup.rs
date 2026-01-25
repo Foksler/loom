@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: Proprietary
 
 use async_trait::async_trait;
-use loom_server_db::SessionRepository;
+use loom_server_db::AuthSessionRepository;
 use loom_server_jobs::{Job, JobContext, JobError, JobOutput};
 use tracing::instrument;
 
 pub struct SessionCleanupJob {
-	session_repo: SessionRepository,
+	session_repo: AuthSessionRepository,
 }
 
 impl SessionCleanupJob {
-	pub fn new(session_repo: SessionRepository) -> Self {
+	pub fn new(session_repo: AuthSessionRepository) -> Self {
 		Self { session_repo }
 	}
 }

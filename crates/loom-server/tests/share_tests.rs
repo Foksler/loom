@@ -35,7 +35,7 @@ async fn setup_test_app() -> (
 	axum::Router,
 	Arc<ThreadRepository>,
 	loom_server::db::UserRepository,
-	loom_server::db::SessionRepository,
+	loom_server::db::AuthSessionRepository,
 	tempfile::TempDir,
 ) {
 	let dir = tempdir().unwrap();
@@ -48,7 +48,7 @@ async fn setup_test_app() -> (
 	let state = create_app_state(pool.clone(), repo.clone(), &config, None).await;
 
 	let user_repo = loom_server::db::UserRepository::new(pool.clone());
-	let session_repo = loom_server::db::SessionRepository::new(pool);
+	let session_repo = loom_server::db::AuthSessionRepository::new(pool);
 
 	(create_router(state), repo, user_repo, session_repo, dir)
 }
@@ -56,7 +56,7 @@ async fn setup_test_app() -> (
 /// Creates a test user and session, returning the session token.
 async fn create_test_user_with_session(
 	user_repo: &loom_server::db::UserRepository,
-	session_repo: &loom_server::db::SessionRepository,
+	session_repo: &loom_server::db::AuthSessionRepository,
 	email: &str,
 ) -> (User, String) {
 	let user = User {

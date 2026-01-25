@@ -42,7 +42,7 @@ use loom_server_config::QueueOverflowPolicy;
 
 use crate::{
 	db::{
-		ApiKeyRepository, AuditRepository, OrgRepository, SessionRepository, ShareRepository,
+		ApiKeyRepository, AuditRepository, AuthSessionRepository, OrgRepository, ShareRepository,
 		TeamRepository, ThreadRepository, UserRepository,
 	},
 	llm_proxy,
@@ -59,7 +59,7 @@ use sqlx::SqlitePool;
 pub struct AppState {
 	pub repo: Arc<ThreadRepository>,
 	pub user_repo: Arc<UserRepository>,
-	pub session_repo: Arc<SessionRepository>,
+	pub session_repo: Arc<AuthSessionRepository>,
 	pub org_repo: Arc<OrgRepository>,
 	pub team_repo: Arc<TeamRepository>,
 	pub api_key_repo: Arc<ApiKeyRepository>,
@@ -133,7 +133,7 @@ pub async fn create_app_state(
 ) -> AppState {
 	// Create auth repositories
 	let user_repo = Arc::new(UserRepository::new(pool.clone()));
-	let session_repo = Arc::new(SessionRepository::new(pool.clone()));
+	let session_repo = Arc::new(AuthSessionRepository::new(pool.clone()));
 	let org_repo = Arc::new(OrgRepository::new(pool.clone()));
 	let team_repo = Arc::new(TeamRepository::new(pool.clone()));
 	let api_key_repo = Arc::new(ApiKeyRepository::new(pool.clone()));
@@ -1579,11 +1579,11 @@ pub fn create_router(state: AppState) -> Router {
 			post(routes::clips::update_clip_files),
 		)
 		.route(
-			"/api/clips/{id}/files/{path:.*}",
+			"/api/clips/{id}/files/*path",
 			get(routes::clips::get_clip_file),
 		)
 		.route(
-			"/api/clips/{id}/raw/{path:.*}",
+			"/api/clips/{id}/raw/*path",
 			get(routes::clips::get_clip_file_raw),
 		)
 		.route("/api/clips/{id}/fork", post(routes::clips::fork_clip))

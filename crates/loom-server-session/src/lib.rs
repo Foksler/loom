@@ -14,7 +14,7 @@
 
 use loom_server_audit::{AuditEventType, AuditLogBuilder, AuditService, UserId as AuditUserId};
 use loom_server_auth::{generate_session_token, hash_token, Session, SessionType, UserId};
-use loom_server_db::SessionRepository;
+use loom_server_db::AuthSessionRepository;
 use std::sync::Arc;
 use thiserror::Error;
 
@@ -108,14 +108,14 @@ pub struct SessionResponse {
 }
 
 pub struct SessionService {
-	session_repo: Arc<SessionRepository>,
+	session_repo: Arc<AuthSessionRepository>,
 	audit_service: Arc<AuditService>,
 	cookie_name: String,
 }
 
 impl SessionService {
 	pub fn new(
-		session_repo: Arc<SessionRepository>,
+		session_repo: Arc<AuthSessionRepository>,
 		audit_service: Arc<AuditService>,
 		cookie_name: impl Into<String>,
 	) -> Self {

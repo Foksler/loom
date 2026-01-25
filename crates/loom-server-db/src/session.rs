@@ -22,7 +22,7 @@ use uuid::Uuid;
 use crate::error::DbError;
 
 #[async_trait]
-pub trait SessionStore: Send + Sync {
+pub trait AuthSessionStore: Send + Sync {
 	async fn create_session(&self, session: &Session, token_hash: &str) -> Result<(), DbError>;
 	async fn get_session_by_token_hash(&self, token_hash: &str) -> Result<Option<Session>, DbError>;
 	async fn get_sessions_for_user(&self, user_id: &UserId) -> Result<Vec<Session>, DbError>;
@@ -81,7 +81,7 @@ pub trait SessionStore: Send + Sync {
 }
 
 #[async_trait]
-impl SessionStore for SessionRepository {
+impl AuthSessionStore for AuthSessionRepository {
 	async fn create_session(&self, session: &Session, token_hash: &str) -> Result<(), DbError> {
 		self.create_session(session, token_hash).await
 	}
@@ -234,11 +234,11 @@ impl SessionStore for SessionRepository {
 /// Manages authentication sessions across multiple session types.
 /// All tokens are stored as hashes, never in plaintext.
 #[derive(Clone)]
-pub struct SessionRepository {
+pub struct AuthSessionRepository {
 	pool: SqlitePool,
 }
 
-impl SessionRepository {
+impl AuthSessionRepository {
 	/// Create a new session repository with the given pool.
 	///
 	/// # Arguments
@@ -1060,7 +1060,7 @@ fn parse_session_row(row: &sqlx::sqlite::SqliteRow) -> Result<Session, DbError> 
 // WebSocket Token Repository Methods
 // =============================================================================
 
-impl SessionRepository {
+impl AuthSessionRepository {
 	/// Create a new WebSocket authentication token.
 	///
 	/// WS tokens are short-lived (30 seconds), single-use tokens for WebSocket

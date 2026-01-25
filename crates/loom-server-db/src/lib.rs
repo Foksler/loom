@@ -154,7 +154,7 @@ pub use secrets::{
 	CreateSecretParams, CreateVersionParams, EncryptedDekRow, SecretFilterParams, SecretRow,
 	SecretVersionRow, SecretsRepository, SecretsStore, StoreDekParams,
 };
-pub use session::{SessionRepository, SessionStore};
+pub use session::{AuthSessionRepository, AuthSessionStore};
 pub use share::{ShareRepository, ShareStore};
 pub use team::{ScimTeam, TeamRepository, TeamStore};
 pub use thread::{ThreadRepository, ThreadSearchHit, ThreadStore};

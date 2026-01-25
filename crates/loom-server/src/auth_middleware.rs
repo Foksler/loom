@@ -58,7 +58,7 @@ use tracing::instrument;
 
 use crate::{
 	api::AppState,
-	db::{ApiKeyRepository, SessionRepository, UserRepository},
+	db::{ApiKeyRepository, AuthSessionRepository, UserRepository},
 	error::ErrorResponse,
 };
 
@@ -190,7 +190,7 @@ pub async fn auth_layer(
 #[instrument(skip(session_token, session_repo, user_repo), fields(session_id = tracing::field::Empty))]
 async fn authenticate_session(
 	session_token: &str,
-	session_repo: &Arc<SessionRepository>,
+	session_repo: &Arc<AuthSessionRepository>,
 	user_repo: &Arc<UserRepository>,
 ) -> Option<AuthContext> {
 	let token_hash = hash_token(session_token);
@@ -319,7 +319,7 @@ async fn authenticate_api_key(
 #[instrument(skip(access_token, session_repo, user_repo), fields(token_id = tracing::field::Empty))]
 async fn authenticate_access_token(
 	access_token: &str,
-	session_repo: &Arc<SessionRepository>,
+	session_repo: &Arc<AuthSessionRepository>,
 	user_repo: &Arc<UserRepository>,
 ) -> Option<AuthContext> {
 	let token_hash = hash_token(access_token);

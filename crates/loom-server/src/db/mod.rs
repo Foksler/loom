@@ -17,7 +17,7 @@ use crate::error::ServerError;
 
 pub use loom_server_db::{
 	create_pool, ApiKeyRepository, DbError, GithubInstallation, GithubInstallationInfo, GithubRepo,
-	OrgRepository, SessionRepository, ShareRepository, TeamRepository, ThreadRepository,
+	AuthSessionRepository, OrgRepository, ShareRepository, TeamRepository, ThreadRepository,
 	ThreadSearchHit, UserRepository,
 };
 
