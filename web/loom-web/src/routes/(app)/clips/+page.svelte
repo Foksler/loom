@@ -62,7 +62,7 @@
 			const params = languageFilter ? { language: languageFilter } : {};
 			let response;
 			if (activeTab === 'my' && currentUser) {
-				response = await clipsClient.listUserClips(currentUser.user.id, params);
+				response = await clipsClient.listUserClips(currentUser.id, params);
 			} else if (activeTab === 'starred') {
 				response = await clipsClient.listStarredClips(params);
 			} else {

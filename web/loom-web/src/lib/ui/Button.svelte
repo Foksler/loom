@@ -7,6 +7,7 @@
     disabled?: boolean;
     loading?: boolean;
     type?: 'button' | 'submit' | 'reset';
+    href?: string;
     onclick?: (event: MouseEvent) => void;
     class?: string;
     children: Snippet;
@@ -18,26 +19,43 @@
     disabled = false,
     loading = false,
     type = 'button',
+    href,
     onclick,
     class: className = '',
     children,
   }: Props = $props();
 </script>
 
-<button
-  {type}
-  {disabled}
-  class="btn btn-{variant} btn-{size} {className}"
-  onclick={onclick}
->
-  {#if loading}
-    <svg class="spinner" viewBox="0 0 24 24" fill="none">
-      <circle class="spinner-track" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="spinner-head" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    </svg>
-  {/if}
-  {@render children()}
-</button>
+{#if href && !disabled}
+  <a
+    {href}
+    class="btn btn-{variant} btn-{size} {className}"
+    onclick={onclick}
+  >
+    {#if loading}
+      <svg class="spinner" viewBox="0 0 24 24" fill="none">
+        <circle class="spinner-track" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="spinner-head" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    {/if}
+    {@render children()}
+  </a>
+{:else}
+  <button
+    {type}
+    {disabled}
+    class="btn btn-{variant} btn-{size} {className}"
+    onclick={onclick}
+  >
+    {#if loading}
+      <svg class="spinner" viewBox="0 0 24 24" fill="none">
+        <circle class="spinner-track" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="spinner-head" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    {/if}
+    {@render children()}
+  </button>
+{/if}
 
 <style>
   .btn {
@@ -49,6 +67,7 @@
     border-radius: var(--radius-md);
     cursor: pointer;
     transition: all 0.15s ease;
+    text-decoration: none;
   }
 
   .btn:focus-visible {
