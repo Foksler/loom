@@ -868,3 +868,402 @@ pub async fn get_release_health(
 
 	Json::<ReleaseHealthResponse>(health.into()).into_response()
 }
+
+// ============================================================================
+// SDK Endpoints (API Key Authentication)
+// ============================================================================
+
+use axum::http::header::HeaderMap;
+use loom_crash_core::{CrashApiKey, CrashKeyType};
+use loom_server_crash::verify_api_key;
+
+/// API key header name for SDK capture requests.
+const CRASH_API_KEY_HEADER: &str = "x-crash-api-key";
+
+/// Verify an API key for a project.
+/// Returns the verified API key if valid and not revoked.
+async fn verify_project_api_key(
+	state: &AppState,
+	project_id: ProjectId,
+	raw_key: &str,
+) -> Result<CrashApiKey, (StatusCode, Json<SessionsErrorResponse>)> {
+	// Get all non-revoked API keys for the project
+	let keys = state
+		.crash_repo
+		.list_api_keys(project_id)
+		.await
+		.map_err(|e| {
+			tracing::error!(error = %e, "Failed to list API keys");
+			(
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(SessionsErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Internal server error".to_string(),
+				}),
+			)
+		})?;
+
+	// Try to verify against each non-revoked key
+	for key in keys {
+		if key.is_revoked() {
+			continue;
+		}
+
+		match verify_api_key(raw_key, &key.key_hash) {
+			Ok(true) => {
+				// Update last_used timestamp (fire and forget)
+				let crash_repo = state.crash_repo.clone();
+				let key_id = key.id;
+				tokio::spawn(async move {
+					let _ = crash_repo.update_api_key_last_used(key_id).await;
+				});
+
+				return Ok(key);
+			}
+			Ok(false) => continue,
+			Err(e) => {
+				tracing::warn!(error = %e, "API key verification failed");
+				continue;
+			}
+		}
+	}
+
+	Err((
+		StatusCode::UNAUTHORIZED,
+		Json(SessionsErrorResponse {
+			error: "invalid_api_key".to_string(),
+			message: "Invalid or revoked API key".to_string(),
+		}),
+	))
+}
+
+/// POST /api/sessions/start/sdk - Start a session with API key authentication
+///
+/// This endpoint accepts API key authentication via the `X-Crash-Api-Key` header.
+/// Use this for SDK integrations where user authentication is not available.
+#[utoipa::path(
+	post,
+	path = "/api/sessions/start/sdk",
+	request_body = SessionStartRequest,
+	responses(
+		(status = 201, description = "Session started", body = SessionStartResponse),
+		(status = 400, description = "Invalid request", body = SessionsErrorResponse),
+		(status = 401, description = "Invalid API key", body = SessionsErrorResponse),
+		(status = 404, description = "Project not found", body = SessionsErrorResponse),
+		(status = 500, description = "Internal error", body = SessionsErrorResponse),
+	),
+	tag = "app-sessions"
+)]
+#[instrument(skip(state, headers, body), fields(project_id = %body.project_id))]
+pub async fn start_session_with_api_key(
+	State(state): State<AppState>,
+	headers: HeaderMap,
+	Json(body): Json<SessionStartRequest>,
+) -> impl IntoResponse {
+	// Extract API key from header
+	let raw_key = match headers
+		.get(CRASH_API_KEY_HEADER)
+		.and_then(|v| v.to_str().ok())
+	{
+		Some(k) => k,
+		None => {
+			return (
+				StatusCode::UNAUTHORIZED,
+				Json(SessionsErrorResponse {
+					error: "missing_api_key".to_string(),
+					message: format!("Missing {} header", CRASH_API_KEY_HEADER),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Parse project_id
+	let project_id: ProjectId = match body.project_id.parse() {
+		Ok(id) => id,
+		Err(_) => {
+			return (
+				StatusCode::BAD_REQUEST,
+				Json(SessionsErrorResponse {
+					error: "invalid_project_id".to_string(),
+					message: "Invalid project ID format".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Get project
+	let project = match state.crash_repo.get_project_by_id(project_id).await {
+		Ok(Some(p)) => p,
+		Ok(None) => {
+			return (
+				StatusCode::NOT_FOUND,
+				Json(SessionsErrorResponse {
+					error: "project_not_found".to_string(),
+					message: "Project not found".to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get project");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(SessionsErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Internal server error".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Verify API key
+	let api_key = match verify_project_api_key(&state, project_id, raw_key).await {
+		Ok(k) => k,
+		Err(e) => return e.into_response(),
+	};
+
+	// Check key type - only capture or admin keys can start sessions
+	if api_key.key_type != CrashKeyType::Capture && api_key.key_type != CrashKeyType::Admin {
+		return (
+			StatusCode::FORBIDDEN,
+			Json(SessionsErrorResponse {
+				error: "forbidden".to_string(),
+				message: "API key does not have session tracking permission".to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	// Parse platform
+	let platform: Platform = match body.platform.parse() {
+		Ok(p) => p,
+		Err(_) => Platform::Other,
+	};
+
+	// Generate session ID first for deterministic sampling
+	let session_id = SessionId::new();
+
+	// Deterministic sampling based on session ID hash
+	let sampled = should_sample(&session_id.to_string(), body.sample_rate);
+	let now = Utc::now();
+
+	let session = Session {
+		id: session_id.clone(),
+		org_id: project.org_id.to_string(),
+		project_id: body.project_id.clone(),
+		person_id: body.person_id,
+		distinct_id: body.distinct_id,
+		status: SessionStatus::Active,
+		release: body.release,
+		environment: body.environment,
+		error_count: 0,
+		crash_count: 0,
+		crashed: false,
+		started_at: now,
+		ended_at: None,
+		duration_ms: None,
+		platform,
+		user_agent: body.user_agent,
+		sampled,
+		sample_rate: body.sample_rate,
+		created_at: now,
+		updated_at: now,
+	};
+
+	// Only store if sampled
+	if sampled {
+		if let Err(e) = state.sessions_repo.create_session(&session).await {
+			tracing::error!(error = %e, "Failed to create session");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(SessionsErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Failed to create session".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	}
+
+	tracing::info!(
+		session_id = %session_id,
+		sampled,
+		api_key_id = %api_key.id,
+		"Session started via API key"
+	);
+
+	(
+		StatusCode::CREATED,
+		Json(SessionStartResponse {
+			session_id: session_id.to_string(),
+			sampled,
+		}),
+	)
+		.into_response()
+}
+
+/// POST /api/sessions/end/sdk - End a session with API key authentication
+///
+/// This endpoint accepts API key authentication via the `X-Crash-Api-Key` header.
+/// Use this for SDK integrations where user authentication is not available.
+#[utoipa::path(
+	post,
+	path = "/api/sessions/end/sdk",
+	request_body = SessionEndRequest,
+	responses(
+		(status = 200, description = "Session ended", body = SessionEndResponse),
+		(status = 400, description = "Invalid request", body = SessionsErrorResponse),
+		(status = 401, description = "Invalid API key", body = SessionsErrorResponse),
+		(status = 404, description = "Project not found", body = SessionsErrorResponse),
+		(status = 500, description = "Internal error", body = SessionsErrorResponse),
+	),
+	tag = "app-sessions"
+)]
+#[instrument(skip(state, headers, body), fields(session_id = %body.session_id))]
+pub async fn end_session_with_api_key(
+	State(state): State<AppState>,
+	headers: HeaderMap,
+	Json(body): Json<SessionEndRequest>,
+) -> impl IntoResponse {
+	// Extract API key from header
+	let raw_key = match headers
+		.get(CRASH_API_KEY_HEADER)
+		.and_then(|v| v.to_str().ok())
+	{
+		Some(k) => k,
+		None => {
+			return (
+				StatusCode::UNAUTHORIZED,
+				Json(SessionsErrorResponse {
+					error: "missing_api_key".to_string(),
+					message: format!("Missing {} header", CRASH_API_KEY_HEADER),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Parse project_id
+	let project_id: ProjectId = match body.project_id.parse() {
+		Ok(id) => id,
+		Err(_) => {
+			return (
+				StatusCode::BAD_REQUEST,
+				Json(SessionsErrorResponse {
+					error: "invalid_project_id".to_string(),
+					message: "Invalid project ID format".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Get project (just verifying it exists)
+	match state.crash_repo.get_project_by_id(project_id).await {
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return (
+				StatusCode::NOT_FOUND,
+				Json(SessionsErrorResponse {
+					error: "project_not_found".to_string(),
+					message: "Project not found".to_string(),
+				}),
+			)
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to get project");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(SessionsErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Internal server error".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	// Verify API key
+	let api_key = match verify_project_api_key(&state, project_id, raw_key).await {
+		Ok(k) => k,
+		Err(e) => return e.into_response(),
+	};
+
+	// Check key type - only capture or admin keys can end sessions
+	if api_key.key_type != CrashKeyType::Capture && api_key.key_type != CrashKeyType::Admin {
+		return (
+			StatusCode::FORBIDDEN,
+			Json(SessionsErrorResponse {
+				error: "forbidden".to_string(),
+				message: "API key does not have session tracking permission".to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	let session_id: SessionId = match body.session_id.parse() {
+		Ok(id) => id,
+		Err(_) => {
+			return (
+				StatusCode::BAD_REQUEST,
+				Json(SessionsErrorResponse {
+					error: "invalid_session_id".to_string(),
+					message: "Invalid session ID format".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let status: SessionStatus = match body.status.parse() {
+		Ok(s) => s,
+		Err(_) => {
+			return (
+				StatusCode::BAD_REQUEST,
+				Json(SessionsErrorResponse {
+					error: "invalid_status".to_string(),
+					message: "Invalid session status".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let ended_at = Utc::now();
+
+	if let Err(e) = state
+		.sessions_repo
+		.end_session(
+			&session_id,
+			status,
+			body.error_count,
+			body.crash_count,
+			ended_at,
+			body.duration_ms,
+		)
+		.await
+	{
+		tracing::error!(error = %e, "Failed to end session");
+		return (
+			StatusCode::INTERNAL_SERVER_ERROR,
+			Json(SessionsErrorResponse {
+				error: "internal_error".to_string(),
+				message: "Failed to end session".to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	tracing::info!(
+		session_id = %session_id,
+		status = %body.status,
+		api_key_id = %api_key.id,
+		"Session ended via API key"
+	);
+
+	Json(SessionEndResponse { success: true }).into_response()
+}

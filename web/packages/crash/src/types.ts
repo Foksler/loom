@@ -297,6 +297,8 @@ export interface SessionConfig {
 	sampleRate: number;
 	/** Base URL for the session API */
 	baseUrl?: string;
+	/** Whether to use SDK endpoints (API key auth) instead of user auth endpoints */
+	useSdkEndpoints?: boolean;
 }
 
 /**

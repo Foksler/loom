@@ -143,6 +143,20 @@ export class SessionTracker {
 	}
 
 	/**
+	 * Get the appropriate endpoint path based on config.
+	 */
+	private getStartEndpoint(): string {
+		return this.config.useSdkEndpoints ? '/api/sessions/start/sdk' : '/api/sessions/start';
+	}
+
+	/**
+	 * Get the appropriate end endpoint path based on config.
+	 */
+	private getEndEndpoint(): string {
+		return this.config.useSdkEndpoints ? '/api/sessions/end/sdk' : '/api/sessions/end';
+	}
+
+	/**
 	 * Start the session and register event handlers.
 	 */
 	async start(): Promise<void> {
@@ -157,7 +171,7 @@ export class SessionTracker {
 
 		try {
 			const response = await this.httpClient.postJson<SessionStartResponse>(
-				'/api/sessions/start',
+				this.getStartEndpoint(),
 				{
 					project_id: this.config.projectId,
 					distinct_id: this.config.distinctId,
@@ -327,7 +341,7 @@ export class SessionTracker {
 		} else {
 			// Fallback to regular HTTP request (Node.js or browsers without sendBeacon)
 			this.httpClient
-				.post('/api/sessions/end', JSON.parse(body))
+				.post(this.getEndEndpoint(), JSON.parse(body))
 				.then(() => {
 					if (this.debug) {
 						console.log('[Session] Session ended via HTTP');
@@ -353,7 +367,7 @@ export class SessionTracker {
 
 		// Get baseUrl from the config or fall back to relative path
 		const baseUrl = this.config.baseUrl ?? '';
-		return `${baseUrl}/api/sessions/end`;
+		return `${baseUrl}${this.getEndEndpoint()}`;
 	}
 
 	/**
@@ -379,7 +393,7 @@ export class SessionTracker {
 		const durationMs = endedAt.getTime() - this.startedAt.getTime();
 
 		try {
-			await this.httpClient.post('/api/sessions/end', {
+			await this.httpClient.post(this.getEndEndpoint(), {
 				project_id: this.config.projectId,
 				session_id: this.sessionId,
 				status: this.getStatus(),

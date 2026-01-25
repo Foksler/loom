@@ -192,6 +192,8 @@ export class CrashClient {
 	private eventQueue: CrashEvent[] = [];
 	private flushTimer?: ReturnType<typeof setTimeout>;
 
+	private readonly useSdkEndpoints: boolean;
+
 	constructor(options: CrashClientOptions) {
 		validateBaseUrl(options.baseUrl);
 
@@ -208,6 +210,8 @@ export class CrashClient {
 		this.analytics = options.analytics;
 		this.flags = options.flags;
 		this.sessionTrackingEnabled = options.sessionTracking ?? false;
+		// Use SDK endpoints when API key auth is being used (not user auth token)
+		this.useSdkEndpoints = !!options.apiKey && !options.authToken;
 
 		// Create HTTP client
 		const headers: Record<string, string> = {
@@ -248,7 +252,8 @@ export class CrashClient {
 				environment: this.environment,
 				release: this.release,
 				sampleRate: options.sessionSampleRate ?? 1.0,
-				baseUrl: options.baseUrl
+				baseUrl: options.baseUrl,
+				useSdkEndpoints: this.useSdkEndpoints
 			};
 
 			this.sessionTracker = new SessionTracker(this.httpClient, sessionConfig, {
@@ -520,10 +525,20 @@ export class CrashClient {
 	}
 
 	/**
+	 * Get the appropriate capture endpoint based on auth type.
+	 */
+	private getCaptureEndpoint(): string {
+		return this.useSdkEndpoints ? '/api/crash/capture/sdk' : '/api/crash/capture';
+	}
+
+	/**
 	 * Send a single event to the server.
 	 */
 	private async sendEvent(event: CrashEvent): Promise<CaptureResponse> {
-		const response = await this.httpClient.postJson<CaptureResponse>('/api/crash/capture', event);
+		const response = await this.httpClient.postJson<CaptureResponse>(
+			this.getCaptureEndpoint(),
+			event
+		);
 
 		if (this.debug) {
 			console.log('[Crash] Event sent:', response.event_id);

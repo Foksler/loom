@@ -516,3 +516,252 @@ async fn session_can_be_marked_as_abnormal() {
 		"Should be able to end session with abnormal status"
 	);
 }
+
+// ============================================================================
+// SDK Endpoint Tests (API Key Authentication)
+// ============================================================================
+
+async fn create_api_key(app: &TestApp, project_id: &str) -> String {
+	let response = app
+		.post(
+			&format!("/api/crash/projects/{}/api-keys", project_id),
+			Some(&app.fixtures.org_a.member),
+			json!({
+				"name": "test-api-key",
+				"key_type": "capture"
+			}),
+		)
+		.await;
+
+	assert_eq!(
+		response.status(),
+		StatusCode::CREATED,
+		"Failed to create API key"
+	);
+
+	let (_, body) = response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let result: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+
+	result["key"].as_str().unwrap().to_string()
+}
+
+#[tokio::test]
+async fn start_session_sdk_requires_api_key() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "session-sdk-start-no-key").await;
+
+	// No API key should return 401
+	let response = app
+		.post(
+			"/api/sessions/start/sdk",
+			None,
+			json!({
+				"project_id": project_id,
+				"distinct_id": "user-123",
+				"platform": "javascript",
+				"environment": "production",
+				"sample_rate": 1.0
+			}),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::UNAUTHORIZED,
+		"Start session SDK without API key should return 401"
+	);
+}
+
+#[tokio::test]
+async fn start_session_sdk_with_invalid_api_key() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "session-sdk-start-invalid-key").await;
+
+	// Invalid API key should return 401
+	let response = app
+		.post_with_header(
+			"/api/sessions/start/sdk",
+			"x-crash-api-key",
+			"invalid-key",
+			json!({
+				"project_id": project_id,
+				"distinct_id": "user-123",
+				"platform": "javascript",
+				"environment": "production",
+				"sample_rate": 1.0
+			}),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::UNAUTHORIZED,
+		"Start session SDK with invalid API key should return 401"
+	);
+}
+
+#[tokio::test]
+async fn start_session_sdk_succeeds_with_valid_api_key() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "session-sdk-start-success").await;
+	let api_key = create_api_key(&app, &project_id).await;
+
+	let response = app
+		.post_with_header(
+			"/api/sessions/start/sdk",
+			"x-crash-api-key",
+			&api_key,
+			json!({
+				"project_id": project_id,
+				"distinct_id": "user-123",
+				"platform": "javascript",
+				"environment": "production",
+				"sample_rate": 1.0
+			}),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::CREATED,
+		"Start session SDK with valid API key should succeed"
+	);
+
+	// Verify response contains session_id
+	let (_, body) = response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let result: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+	assert!(
+		result["session_id"].is_string(),
+		"Response should contain session_id"
+	);
+}
+
+#[tokio::test]
+async fn end_session_sdk_requires_api_key() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "session-sdk-end-no-key").await;
+	let session_id = create_test_session(&app, &project_id).await;
+
+	// No API key should return 401
+	let response = app
+		.post(
+			"/api/sessions/end/sdk",
+			None,
+			json!({
+				"project_id": project_id,
+				"session_id": session_id,
+				"status": "exited",
+				"duration_ms": 60000
+			}),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::UNAUTHORIZED,
+		"End session SDK without API key should return 401"
+	);
+}
+
+#[tokio::test]
+async fn end_session_sdk_succeeds_with_valid_api_key() {
+	let app = TestApp::new().await;
+	let org_id = app.fixtures.org_a.org.id.to_string();
+	let project_id = create_test_project(&app, &org_id, "session-sdk-end-success").await;
+	let api_key = create_api_key(&app, &project_id).await;
+
+	// First start a session using SDK endpoint
+	let start_response = app
+		.post_with_header(
+			"/api/sessions/start/sdk",
+			"x-crash-api-key",
+			&api_key,
+			json!({
+				"project_id": project_id,
+				"distinct_id": "user-123",
+				"platform": "javascript",
+				"environment": "production",
+				"sample_rate": 1.0
+			}),
+		)
+		.await;
+	assert_eq!(start_response.status(), StatusCode::CREATED);
+
+	let (_, body) = start_response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let result: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+	let session_id = result["session_id"].as_str().unwrap();
+
+	// End the session
+	let response = app
+		.post_with_header(
+			"/api/sessions/end/sdk",
+			"x-crash-api-key",
+			&api_key,
+			json!({
+				"project_id": project_id,
+				"session_id": session_id,
+				"status": "exited",
+				"duration_ms": 60000
+			}),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::OK,
+		"End session SDK with valid API key should succeed"
+	);
+}
+
+#[tokio::test]
+async fn sdk_endpoint_rejects_wrong_project_api_key() {
+	let app = TestApp::new().await;
+	let org_a_id = app.fixtures.org_a.org.id.to_string();
+	let org_b_id = app.fixtures.org_b.org.id.to_string();
+
+	// Create project in org_a
+	let project_a = create_test_project(&app, &org_a_id, "session-sdk-cross-project-a").await;
+	let api_key_a = create_api_key(&app, &project_a).await;
+
+	// Create project in org_b
+	let project_b_response = app
+		.post(
+			"/api/crash/projects",
+			Some(&app.fixtures.org_b.member),
+			json!({
+				"org_id": org_b_id,
+				"name": "Test Project B",
+				"slug": "session-sdk-cross-project-b",
+				"platform": "javascript"
+			}),
+		)
+		.await;
+	assert_eq!(project_b_response.status(), StatusCode::CREATED);
+	let (_, body) = project_b_response.into_parts();
+	let body_bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+	let result: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+	let project_b = result["id"].as_str().unwrap().to_string();
+
+	// Try to use project_a's API key for project_b - should fail
+	let response = app
+		.post_with_header(
+			"/api/sessions/start/sdk",
+			"x-crash-api-key",
+			&api_key_a,
+			json!({
+				"project_id": project_b,
+				"distinct_id": "user-123",
+				"platform": "javascript",
+				"environment": "production",
+				"sample_rate": 1.0
+			}),
+		)
+		.await;
+	assert_eq!(
+		response.status(),
+		StatusCode::UNAUTHORIZED,
+		"Using API key from different project should return 401"
+	);
+}
