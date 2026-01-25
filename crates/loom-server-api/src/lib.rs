@@ -5,6 +5,7 @@ pub mod admin;
 pub mod analytics;
 pub mod api_keys;
 pub mod auth;
+pub mod clips;
 pub mod cse;
 pub mod flags;
 pub mod github;
@@ -50,6 +51,11 @@ pub use auth::{
 	DeviceCodeCompleteRequest, DeviceCodeCompleteResponse, DeviceCodePollRequest,
 	DeviceCodePollResponse, DeviceCodeStartResponse, MagicLinkRequest, OAuthCallbackQuery,
 	WsTokenResponse,
+};
+pub use clips::{
+	ClipFileResponse, ClipResponse, ClipVisibilityApi, ClipsErrorResponse, ClipsSuccessResponse,
+	CreateClipRequest, ForkClipRequest, ListClipFilesResponse, ListClipsQuery, ListClipsResponse,
+	UpdateClipRequest,
 };
 pub use cse::{CseProxyRequest, CseProxyResponse, CseProxyResultItem};
 pub use flags::{

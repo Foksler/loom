@@ -13,6 +13,7 @@ pub mod api_keys;
 pub mod app_sessions;
 pub mod auth;
 pub mod bin;
+pub mod clips;
 pub mod crash;
 pub mod crons;
 pub mod cse;
@@ -43,6 +44,9 @@ pub mod weaver_auth;
 pub mod weaver_secrets;
 pub mod webhooks;
 pub mod wgtunnel;
+
+// Re-export clips types
+pub use clips::ClipsErrorResponse;
 
 // Re-export all API types from loom-server-api for backward compatibility
 pub use loom_server_api::admin::*;

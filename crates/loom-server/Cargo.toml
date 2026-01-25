@@ -51,6 +51,7 @@ loom-crash = { path = "../loom-crash" }
 loom-crash-core = { path = "../loom-crash-core", features = ["openapi"] }
 loom-server-sessions = { path = "../loom-server-sessions" }
 loom-sessions-core = { path = "../loom-sessions-core", features = ["openapi"] }
+loom-server-clips = { path = "../loom-server-clips" }
 loom-common-i18n = { path = "../loom-common-i18n" }
 loom-server-geoip = { path = "../loom-server-geoip" }
 loom-server-github-app = { path = "../loom-server-github-app", features = ["openapi"] }

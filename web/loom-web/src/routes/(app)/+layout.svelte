@@ -93,6 +93,9 @@
 					<a href="/repos" class="nav-link" onclick={() => trackNavClick('repos', '/repos')}>
 						Repos
 					</a>
+					<a href="/clips" class="nav-link" onclick={() => trackNavClick('clips', '/clips')}>
+						Clips
+					</a>
 					<a href="/weavers" class="nav-link" onclick={() => trackNavClick('weavers', '/weavers')}>
 						{i18n._('nav.weavers')}
 					</a>

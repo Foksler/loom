@@ -111,6 +111,7 @@
 
 pub mod api_key;
 pub mod audit;
+pub mod clips;
 pub mod cse;
 pub mod docs;
 mod error;
@@ -162,4 +163,7 @@ pub use user::{ScimUserRow, UserRepository, UserStore};
 pub use wgtunnel::{
 	DeviceRowTuple, IpAllocationRow, SessionRowTuple, WeaverRowTuple, WgTunnelRepository,
 	WgTunnelStore,
+};
+pub use clips::{
+	ClipRecord, ClipVisibility, ClipsRepository, ClipsStore, CreateClipParams, UpdateClipParams,
 };

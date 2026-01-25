@@ -89,6 +89,7 @@ Loom's integrated observability platform: analytics, crash tracking, cron monito
 | Spec | Code | Purpose |
 |------|------|---------|
 | [scm-system.md](./scm-system.md) | [loom-scm](../crates/loom-server-scm/), [loom-scm-mirror](../crates/loom-scm-mirror/) | Git hosting, mirroring, webhooks, branch protection |
+| [clips-system.md](./clips-system.md) | [loom-server-clips](../crates/loom-server-clips/) | Short-form code snippets (gists) with secret redaction |
 
 ## Spool (Version Control)
 

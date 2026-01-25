@@ -115,6 +115,8 @@ pub struct AppState {
 	pub crash_repo: Arc<loom_server_crash::SqliteCrashRepository>,
 	pub crash_broadcaster: Arc<loom_server_crash::CrashBroadcaster>,
 	pub sessions_repo: Arc<loom_server_sessions::SqliteSessionsRepository>,
+	pub clips_repo: Option<Arc<loom_server_db::ClipsRepository>>,
+	pub clips_git_store: Option<Arc<loom_server_clips::ClipsGitStore>>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -317,6 +319,15 @@ pub async fn create_app_state(
 		pool.clone(),
 	));
 
+	// Initialize clips repository and git store
+	let clips_repo = Arc::new(loom_server_db::ClipsRepository::new(pool.clone()));
+	let clips_git_store = Arc::new(loom_server_clips::ClipsGitStore::new(
+		std::path::PathBuf::from(
+			std::env::var("LOOM_DATA_DIR").unwrap_or_else(|_| "/var/lib/loom".to_string()),
+		)
+		.join("clips"),
+	));
+
 	// Initialize analytics repository and state with audit hook
 	let analytics_repo = loom_server_analytics::SqliteAnalyticsRepository::new(pool.clone());
 	let analytics_audit_hook: loom_server_analytics::SharedMergeAuditHook =
@@ -384,6 +395,8 @@ pub async fn create_app_state(
 		crash_repo,
 		crash_broadcaster,
 		sessions_repo,
+		clips_repo: Some(clips_repo),
+		clips_git_store: Some(clips_git_store),
 	}
 }
 
