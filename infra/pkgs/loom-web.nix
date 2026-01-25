@@ -33,6 +33,7 @@ stdenv.mkDerivation (finalAttrs: {
     # Build workspace dependencies first
     pnpm --filter @loom/http run build
     pnpm --filter @loom/crash run build
+    pnpm --filter @loom/analytics run build
     # Then build loom-web
     pnpm --filter @loom/web run lingui:compile
     pnpm --filter @loom/web run build
