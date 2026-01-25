@@ -1406,6 +1406,18 @@ msgstr "Pekerjaan Latar Belakang"
 msgid "admin.health.auth_providers"
 msgstr "Penyedia Autentikasi"
 
+#: admin.health.scim
+msgid "admin.health.scim"
+msgstr "SCIM"
+
+#: admin.health.secrets
+msgid "admin.health.secrets"
+msgstr "Secrets"
+
+#: admin.health.whatsapp
+msgid "admin.health.whatsapp"
+msgstr "WhatsApp"
+
 #: jobs.title
 msgid "jobs.title"
 msgstr "Pekerjaan Latar Belakang"

@@ -274,6 +274,40 @@
 			});
 		}
 
+		// SCIM
+		if (c.scim) {
+			components.push({
+				name: i18n._('admin.health.scim'),
+				status: c.scim.status,
+				configured: c.scim.configured,
+				error: c.scim.error,
+				extra: c.scim.enabled ? (c.scim.org_exists ? 'org verified' : 'org not found') : 'disabled',
+			});
+		}
+
+		// Secrets
+		if (c.secrets) {
+			components.push({
+				name: i18n._('admin.health.secrets'),
+				status: c.secrets.status,
+				latency: c.secrets.latency_ms,
+				configured: c.secrets.configured,
+				error: c.secrets.error,
+			});
+		}
+
+		// WhatsApp
+		if (c.whatsapp) {
+			components.push({
+				name: i18n._('admin.health.whatsapp'),
+				status: c.whatsapp.status,
+				latency: c.whatsapp.latency_ms,
+				configured: c.whatsapp.configured,
+				error: c.whatsapp.error,
+				extra: `${c.whatsapp.configs_count} config(s)`,
+			});
+		}
+
 		return components;
 	}
 

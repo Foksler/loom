@@ -1198,6 +1198,18 @@ msgstr "Bakgrundsjobb"
 msgid "admin.health.auth_providers"
 msgstr "Autentiseringsleverantörer"
 
+#: admin.health.scim
+msgid "admin.health.scim"
+msgstr "SCIM"
+
+#: admin.health.secrets
+msgid "admin.health.secrets"
+msgstr "Secrets"
+
+#: admin.health.whatsapp
+msgid "admin.health.whatsapp"
+msgstr "WhatsApp"
+
 #: nav.weavers
 msgid "nav.weavers"
 msgstr "Weavers"

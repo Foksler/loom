@@ -1879,6 +1879,18 @@ msgstr "Tâches en arrière-plan"
 msgid "admin.health.auth_providers"
 msgstr "Fournisseurs d'authentification"
 
+#: admin.health.scim
+msgid "admin.health.scim"
+msgstr "SCIM"
+
+#: admin.health.secrets
+msgid "admin.health.secrets"
+msgstr "Secrets"
+
+#: admin.health.whatsapp
+msgid "admin.health.whatsapp"
+msgstr "WhatsApp"
+
 #: thread.noThreadsFound
 msgid "thread.noThreadsFound"
 msgstr "Aucun fil trouvé"

@@ -548,6 +548,32 @@ export interface AuthProvidersHealth {
 	providers: AuthProviderHealth[];
 }
 
+export interface ScimHealth {
+	status: HealthStatus;
+	enabled: boolean;
+	configured: boolean;
+	org_id?: string;
+	org_exists: boolean;
+	error?: string;
+}
+
+export interface SecretsHealth {
+	status: HealthStatus;
+	latency_ms: number;
+	configured: boolean;
+	master_key_present: boolean;
+	svid_signing_key_present: boolean;
+	error?: string;
+}
+
+export interface WhatsAppHealth {
+	status: HealthStatus;
+	latency_ms: number;
+	configured: boolean;
+	configs_count: number;
+	error?: string;
+}
+
 export interface HealthComponents {
 	database: DatabaseHealth;
 	bin_dir: BinDirHealth;
@@ -560,6 +586,9 @@ export interface HealthComponents {
 	geoip: GeoIpHealth;
 	jobs?: JobsHealth;
 	auth_providers: AuthProvidersHealth;
+	scim: ScimHealth;
+	secrets?: SecretsHealth;
+	whatsapp?: WhatsAppHealth;
 }
 
 export interface HealthVersionInfo {

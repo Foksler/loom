@@ -1406,6 +1406,18 @@ msgstr "Taustatööd"
 msgid "admin.health.auth_providers"
 msgstr "Autentimisteenuse pakkujad"
 
+#: admin.health.scim
+msgid "admin.health.scim"
+msgstr "SCIM"
+
+#: admin.health.secrets
+msgid "admin.health.secrets"
+msgstr "Secrets"
+
+#: admin.health.whatsapp
+msgid "admin.health.whatsapp"
+msgstr "WhatsApp"
+
 #: jobs.title
 msgid "jobs.title"
 msgstr "Taustatööd"

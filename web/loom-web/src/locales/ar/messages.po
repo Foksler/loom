@@ -1879,6 +1879,18 @@ msgstr "المهام الخلفية"
 msgid "admin.health.auth_providers"
 msgstr "موفرو المصادقة"
 
+#: admin.health.scim
+msgid "admin.health.scim"
+msgstr "SCIM"
+
+#: admin.health.secrets
+msgid "admin.health.secrets"
+msgstr "Secrets"
+
+#: admin.health.whatsapp
+msgid "admin.health.whatsapp"
+msgstr "WhatsApp"
+
 #: thread.noThreadsFound
 msgid "thread.noThreadsFound"
 msgstr "لم يتم العثور على محادثات"
