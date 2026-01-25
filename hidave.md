@@ -378,6 +378,12 @@ Note: Routes use plural form (`/crons` not `/cron`)
 
 **Build:** All components build successfully
 
+**Deployment verified:**
+- `GET /api/self-monitoring/analytics-config` returns API key, release, environment ✓
+- `POST /api/analytics/capture` with self-monitoring key — Event captured ✓
+- `POST /api/analytics/identify` with self-monitoring key — User identified ✓
+- `POST /api/analytics/batch` with self-monitoring key — Batch captured ✓
+
 ---
 
 ### 2026-01-25: Self-Monitoring Implementation
