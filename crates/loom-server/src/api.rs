@@ -1566,6 +1566,7 @@ pub fn create_router(state: AppState) -> Router {
 		.route("/api/clips", post(routes::clips::create_clip))
 		.route("/api/clips/starred", get(routes::clips::list_starred_clips))
 		.route("/api/clips/public", get(routes::clips::list_public_clips))
+		.route("/api/clips/search", get(routes::clips::search_clips))
 		.route(
 			"/api/clips/{owner}/{name}",
 			get(routes::clips::get_clip),

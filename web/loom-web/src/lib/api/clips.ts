@@ -103,6 +103,22 @@ export interface ListClipsParams {
 	visibility?: ClipVisibility;
 }
 
+export interface SearchClipsParams {
+	q: string;
+	page?: number;
+	per_page?: number;
+}
+
+export interface ClipSearchHit {
+	clip: Clip;
+	score: number;
+}
+
+export interface ClipSearchResponse {
+	hits: ClipSearchHit[];
+	total: number;
+}
+
 export class ClipsApiClient {
 	constructor(private baseUrl: string = '') {}
 
@@ -210,6 +226,16 @@ export class ClipsApiClient {
 		const queryStr = query.toString();
 		const path = `/api/clips/starred${queryStr ? `?${queryStr}` : ''}`;
 		return this.request<ListClipsResponse>(path);
+	}
+
+	async searchClips(params: SearchClipsParams): Promise<ClipSearchResponse> {
+		const query = new URLSearchParams();
+		query.set('q', params.q);
+		if (params.page) query.set('page', String(params.page));
+		if (params.per_page) query.set('per_page', String(params.per_page));
+
+		const path = `/api/clips/search?${query.toString()}`;
+		return this.request<ClipSearchResponse>(path);
 	}
 
 	// =========================================================================

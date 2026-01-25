@@ -63,6 +63,26 @@ pub struct ListClipsQuery {
 	pub per_page: Option<u32>,
 }
 
+#[derive(Debug, Deserialize, IntoParams)]
+pub struct SearchClipsQuery {
+	/// Search query
+	pub q: String,
+	pub page: Option<u32>,
+	pub per_page: Option<u32>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ClipSearchHitResponse {
+	pub clip: ClipResponse,
+	pub score: f64,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ClipSearchResponse {
+	pub hits: Vec<ClipSearchHitResponse>,
+	pub total: usize,
+}
+
 #[derive(Debug, Serialize, ToSchema)]
 pub struct ClipResponse {
 	pub id: Uuid,
@@ -992,6 +1012,84 @@ pub async fn list_public_clips(
 		clips: clips
 			.into_iter()
 			.map(|c| clip_record_to_response(c, &state.base_url))
+			.collect(),
+	};
+
+	(StatusCode::OK, Json(response)).into_response()
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/clips/search",
+    params(SearchClipsQuery),
+    responses(
+        (status = 200, description = "Search results", body = ClipSearchResponse),
+        (status = 400, description = "Invalid query", body = ClipsErrorResponse)
+    ),
+    tag = "clips"
+)]
+#[tracing::instrument(skip(state))]
+pub async fn search_clips(
+	State(state): State<AppState>,
+	Query(query): Query<SearchClipsQuery>,
+) -> impl IntoResponse {
+	let clips_repo = match state.clips_repo.as_ref() {
+		Some(repo) => repo,
+		None => {
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(ClipsErrorResponse {
+					error: "not_configured".to_string(),
+					message: "Clips not configured".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let search_query = query.q.trim();
+	if search_query.is_empty() {
+		return (
+			StatusCode::BAD_REQUEST,
+			Json(ClipsErrorResponse {
+				error: "invalid_query".to_string(),
+				message: "Search query cannot be empty".to_string(),
+			}),
+		)
+			.into_response();
+	}
+
+	let page = query.page.unwrap_or(1);
+	let per_page = query.per_page.unwrap_or(20).min(50);
+	let offset = (page.saturating_sub(1)) * per_page;
+
+	let hits = match clips_repo
+		.search_public_clips(search_query, per_page, offset)
+		.await
+	{
+		Ok(h) => h,
+		Err(e) => {
+			tracing::error!(error = %e, "Failed to search clips");
+			return (
+				StatusCode::INTERNAL_SERVER_ERROR,
+				Json(ClipsErrorResponse {
+					error: "internal_error".to_string(),
+					message: "Internal error".to_string(),
+				}),
+			)
+				.into_response();
+		}
+	};
+
+	let total = hits.len();
+	let response = ClipSearchResponse {
+		total,
+		hits: hits
+			.into_iter()
+			.map(|hit| ClipSearchHitResponse {
+				clip: clip_record_to_response(hit.clip, &state.base_url),
+				score: hit.score,
+			})
 			.collect(),
 	};
 

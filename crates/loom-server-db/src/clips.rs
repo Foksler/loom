@@ -45,6 +45,13 @@ impl std::str::FromStr for ClipVisibility {
 	}
 }
 
+/// Search result for a clip.
+#[derive(Debug, Clone)]
+pub struct ClipSearchHit {
+	pub clip: ClipRecord,
+	pub score: f64,
+}
+
 /// Clip record from the database.
 #[derive(Debug, Clone)]
 pub struct ClipRecord {
@@ -118,6 +125,13 @@ pub trait ClipsStore: Send + Sync {
 		limit: u32,
 		offset: u32,
 	) -> Result<Vec<ClipRecord>>;
+	/// Search public clips using full-text search.
+	async fn search_public_clips(
+		&self,
+		query: &str,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ClipSearchHit>>;
 }
 
 /// SQLite implementation of clips store.
@@ -490,6 +504,68 @@ impl ClipsStore for ClipsRepository {
 
 		rows.into_iter().map(TryInto::try_into).collect()
 	}
+
+	#[instrument(skip(self), fields(query = %query))]
+	async fn search_public_clips(
+		&self,
+		query: &str,
+		limit: u32,
+		offset: u32,
+	) -> Result<Vec<ClipSearchHit>> {
+		let query = query.trim();
+		if query.is_empty() {
+			return Ok(vec![]);
+		}
+
+		// Escape the query for FTS5 - wrap in quotes and escape inner quotes
+		let fts_query = format!("\"{}\"", query.replace('"', " "));
+
+		let rows = sqlx::query_as::<_, ClipSearchRow>(
+			r#"
+			SELECT c.id, c.owner, c.name, c.description, c.visibility,
+				   c.created_by, c.org_id, c.is_fork, c.forked_from,
+				   c.file_count, c.size_bytes, c.language, c.star_count,
+				   c.created_at, c.updated_at,
+				   bm25(clips_fts) AS score
+			FROM clips_fts
+			JOIN clips c ON c.id = clips_fts.clip_id
+			WHERE clips_fts MATCH ?
+			  AND c.visibility = 'public'
+			ORDER BY score ASC, c.star_count DESC, c.updated_at DESC
+			LIMIT ? OFFSET ?
+			"#,
+		)
+		.bind(&fts_query)
+		.bind(limit as i32)
+		.bind(offset as i32)
+		.fetch_all(&self.pool)
+		.await?;
+
+		rows.into_iter()
+			.map(|row| {
+				let score = row.score;
+				let clip: ClipRecord = ClipRow {
+					id: row.id,
+					owner: row.owner,
+					name: row.name,
+					description: row.description,
+					visibility: row.visibility,
+					created_by: row.created_by,
+					org_id: row.org_id,
+					is_fork: row.is_fork,
+					forked_from: row.forked_from,
+					file_count: row.file_count,
+					size_bytes: row.size_bytes,
+					language: row.language,
+					star_count: row.star_count,
+					created_at: row.created_at,
+					updated_at: row.updated_at,
+				}
+				.try_into()?;
+				Ok(ClipSearchHit { clip, score })
+			})
+			.collect()
+	}
 }
 
 /// Row type for SQLite.
@@ -510,6 +586,27 @@ struct ClipRow {
 	star_count: i32,
 	created_at: String,
 	updated_at: String,
+}
+
+/// Row type for search results with score.
+#[derive(Debug, sqlx::FromRow)]
+struct ClipSearchRow {
+	id: String,
+	owner: String,
+	name: String,
+	description: Option<String>,
+	visibility: String,
+	created_by: String,
+	org_id: Option<String>,
+	is_fork: bool,
+	forked_from: Option<String>,
+	file_count: i32,
+	size_bytes: i64,
+	language: Option<String>,
+	star_count: i32,
+	created_at: String,
+	updated_at: String,
+	score: f64,
 }
 
 impl TryFrom<ClipRow> for ClipRecord {

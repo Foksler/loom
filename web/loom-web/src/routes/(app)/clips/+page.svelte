@@ -21,6 +21,8 @@
 	let error = $state<string | null>(null);
 	let activeTab = $state<'my' | 'starred' | 'explore'>('my');
 	let languageFilter = $state<string>('');
+	let searchQuery = $state<string>('');
+	let isSearching = $state(false);
 
 	$effect(() => {
 		if (browser) {
@@ -55,6 +57,7 @@
 	async function loadClips() {
 		loading = true;
 		error = null;
+		isSearching = false;
 		try {
 			const params = languageFilter ? { language: languageFilter } : {};
 			let response;
@@ -73,6 +76,43 @@
 		}
 	}
 
+	async function handleSearch() {
+		if (!searchQuery.trim()) {
+			isSearching = false;
+			loadClips();
+			return;
+		}
+
+		loading = true;
+		error = null;
+		isSearching = true;
+		trackButtonClick('search_clips', { query: searchQuery });
+
+		try {
+			const response = await clipsClient.searchClips({ q: searchQuery });
+			clips = response.hits.map((h) => h.clip);
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Search failed';
+		} finally {
+			loading = false;
+		}
+	}
+
+	function handleSearchInput(e: Event) {
+		const target = e.target as HTMLInputElement;
+		searchQuery = target.value;
+		if (!searchQuery.trim()) {
+			isSearching = false;
+			loadClips();
+		}
+	}
+
+	function handleSearchKeydown(e: KeyboardEvent) {
+		if (e.key === 'Enter') {
+			handleSearch();
+		}
+	}
+
 	function handleClipClick(clip: Clip) {
 		trackLinkClick('clip', `/clips/${clip.owner}/${clip.name}`, {
 			clip_id: clip.id,
@@ -85,6 +125,8 @@
 	function handleTabChange(tab: 'my' | 'starred' | 'explore') {
 		trackFilterChange('clips_tab', tab, { page: 'clips' });
 		activeTab = tab;
+		searchQuery = '';
+		isSearching = false;
 	}
 
 	function handleLanguageChange(e: Event) {
@@ -131,6 +173,20 @@
 	</div>
 
 	<div class="filters">
+		{#if activeTab === 'explore'}
+			<div class="filter-group search-group">
+				<input
+					id="search-input"
+					type="text"
+					class="filter-input search-input"
+					placeholder="Search public clips..."
+					value={searchQuery}
+					oninput={handleSearchInput}
+					onkeydown={handleSearchKeydown}
+				/>
+				<Button size="sm" onclick={handleSearch}>Search</Button>
+			</div>
+		{/if}
 		<div class="filter-group">
 			<label class="filter-label" for="language-filter">Language</label>
 			<input
@@ -150,10 +206,16 @@
 		<div class="error">{error}</div>
 	{:else if clips.length === 0}
 		<div class="empty-state">
-			{#if activeTab === 'my'}
+			{#if isSearching}
+				<h2>No results</h2>
+				<p>No clips found matching "{searchQuery}".</p>
+			{:else if activeTab === 'my'}
 				<h2>No clips yet</h2>
 				<p>Create your first clip to get started.</p>
 				<Button href="/clips/new" onclick={() => trackButtonClick('create_clip_empty_state')}>Create Clip</Button>
+			{:else if activeTab === 'starred'}
+				<h2>No starred clips</h2>
+				<p>Star clips to save them here.</p>
 			{:else}
 				<h2>No public clips</h2>
 				<p>Be the first to share a public clip!</p>
@@ -256,6 +318,15 @@
 		font-family: var(--font-mono);
 		font-size: var(--text-sm);
 		color: var(--color-fg);
+	}
+
+	.search-group {
+		flex: 1;
+		max-width: 400px;
+	}
+
+	.search-input {
+		flex: 1;
 	}
 
 	.loading,
