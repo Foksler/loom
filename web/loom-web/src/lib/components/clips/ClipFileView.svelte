@@ -29,7 +29,7 @@
 			{/if}
 		</div>
 		<div class="file-meta">
-			<span class="meta-item">{formatBytes(file.size_bytes)}</span>
+			<span class="meta-item">{formatBytes(file.size)}</span>
 			{#if file.is_redacted}
 				<span class="redacted-badge">Contains redacted content</span>
 			{/if}

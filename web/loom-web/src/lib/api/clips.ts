@@ -22,6 +22,7 @@ export interface Clip {
 	file_count: number;
 	size_bytes: number;
 	language: string | null;
+	star_count: number;
 	clone_url: string;
 	created_at: string;
 	updated_at: string;
@@ -30,9 +31,17 @@ export interface Clip {
 export interface ClipFile {
 	path: string;
 	content: string;
-	size_bytes: number;
+	size: number;
 	is_redacted: boolean;
 	language: string | null;
+}
+
+export interface ClipRevision {
+	sha: string;
+	author_name: string;
+	author_email: string;
+	timestamp: string;
+	message: string;
 }
 
 export interface ListClipsResponse {
@@ -40,14 +49,35 @@ export interface ListClipsResponse {
 }
 
 export interface ListClipFilesResponse {
-	files: string[];
+	files: ClipFile[];
+	revision: string;
+}
+
+export interface ClipFilesResponse {
+	files: ClipFile[];
+	revision: string;
+}
+
+export interface ClipRevisionsResponse {
+	revisions: ClipRevision[];
+}
+
+export interface StarClipResponse {
+	starred: boolean;
+	star_count: number;
+}
+
+export interface CreateClipFile {
+	path: string;
+	content: string;
 }
 
 export interface CreateClipRequest {
+	org_id: string;
 	name: string;
 	description?: string;
 	visibility?: ClipVisibility;
-	org_id?: string;
+	files: CreateClipFile[];
 }
 
 export interface UpdateClipRequest {
@@ -56,9 +86,14 @@ export interface UpdateClipRequest {
 	visibility?: ClipVisibility;
 }
 
+export interface UpdateFilesRequest {
+	files: CreateClipFile[];
+	message?: string;
+}
+
 export interface ForkClipRequest {
+	target_org_id: string;
 	name?: string;
-	org_id?: string;
 }
 
 export interface ListClipsParams {
@@ -75,6 +110,7 @@ export class ClipsApiClient {
 		const url = `${this.baseUrl}${path}`;
 		const response = await fetch(url, {
 			...options,
+			credentials: 'include',
 			headers: {
 				'Content-Type': 'application/json',
 				...options.headers,
@@ -93,6 +129,10 @@ export class ClipsApiClient {
 		return response.json();
 	}
 
+	// =========================================================================
+	// Clip CRUD
+	// =========================================================================
+
 	async createClip(request: CreateClipRequest): Promise<Clip> {
 		return this.request<Clip>('/api/clips', {
 			method: 'POST',
@@ -100,32 +140,34 @@ export class ClipsApiClient {
 		});
 	}
 
-	async getClip(owner: string, name: string): Promise<Clip> {
+	async getClipByOwnerName(owner: string, name: string): Promise<Clip> {
 		return this.request<Clip>(
 			`/api/clips/${encodeURIComponent(owner)}/${encodeURIComponent(name)}`
 		);
 	}
 
-	async updateClip(owner: string, name: string, request: UpdateClipRequest): Promise<Clip> {
-		return this.request<Clip>(
-			`/api/clips/${encodeURIComponent(owner)}/${encodeURIComponent(name)}`,
-			{
-				method: 'PATCH',
-				body: JSON.stringify(request),
-			}
-		);
+	async getClipById(id: string): Promise<Clip> {
+		return this.request<Clip>(`/api/clips/${encodeURIComponent(id)}`);
 	}
 
-	async deleteClip(owner: string, name: string): Promise<void> {
-		await this.request<void>(
-			`/api/clips/${encodeURIComponent(owner)}/${encodeURIComponent(name)}`,
-			{
-				method: 'DELETE',
-			}
-		);
+	async updateClip(id: string, request: UpdateClipRequest): Promise<Clip> {
+		return this.request<Clip>(`/api/clips/${encodeURIComponent(id)}`, {
+			method: 'PATCH',
+			body: JSON.stringify(request),
+		});
 	}
 
-	async listUserClips(params: ListClipsParams = {}): Promise<ListClipsResponse> {
+	async deleteClip(id: string): Promise<void> {
+		await this.request<void>(`/api/clips/${encodeURIComponent(id)}`, {
+			method: 'DELETE',
+		});
+	}
+
+	// =========================================================================
+	// Clip Listings
+	// =========================================================================
+
+	async listUserClips(userId: string, params: ListClipsParams = {}): Promise<ListClipsResponse> {
 		const query = new URLSearchParams();
 		if (params.limit) query.set('limit', String(params.limit));
 		if (params.offset) query.set('offset', String(params.offset));
@@ -133,7 +175,7 @@ export class ClipsApiClient {
 		if (params.visibility) query.set('visibility', params.visibility);
 
 		const queryStr = query.toString();
-		const path = queryStr ? `/api/clips/user?${queryStr}` : '/api/clips/user';
+		const path = `/api/users/${encodeURIComponent(userId)}/clips${queryStr ? `?${queryStr}` : ''}`;
 		return this.request<ListClipsResponse>(path);
 	}
 
@@ -145,9 +187,7 @@ export class ClipsApiClient {
 		if (params.visibility) query.set('visibility', params.visibility);
 
 		const queryStr = query.toString();
-		const path = queryStr
-			? `/api/clips/org/${encodeURIComponent(orgId)}?${queryStr}`
-			: `/api/clips/org/${encodeURIComponent(orgId)}`;
+		const path = `/api/orgs/${encodeURIComponent(orgId)}/clips${queryStr ? `?${queryStr}` : ''}`;
 		return this.request<ListClipsResponse>(path);
 	}
 
@@ -158,25 +198,102 @@ export class ClipsApiClient {
 		if (params.language) query.set('language', params.language);
 
 		const queryStr = query.toString();
-		const path = queryStr ? `/api/clips/explore?${queryStr}` : '/api/clips/explore';
+		const path = `/api/clips/public${queryStr ? `?${queryStr}` : ''}`;
 		return this.request<ListClipsResponse>(path);
 	}
 
-	async listClipFiles(owner: string, name: string): Promise<ListClipFilesResponse> {
+	async listStarredClips(params: ListClipsParams = {}): Promise<ListClipsResponse> {
+		const query = new URLSearchParams();
+		if (params.limit) query.set('limit', String(params.limit));
+		if (params.offset) query.set('offset', String(params.offset));
+
+		const queryStr = query.toString();
+		const path = `/api/clips/starred${queryStr ? `?${queryStr}` : ''}`;
+		return this.request<ListClipsResponse>(path);
+	}
+
+	// =========================================================================
+	// Files
+	// =========================================================================
+
+	async listClipFiles(id: string, revision?: string): Promise<ListClipFilesResponse> {
+		const query = revision ? `?ref=${encodeURIComponent(revision)}` : '';
 		return this.request<ListClipFilesResponse>(
-			`/api/clips/${encodeURIComponent(owner)}/${encodeURIComponent(name)}/files`
+			`/api/clips/${encodeURIComponent(id)}/files${query}`
 		);
 	}
 
-	async getClipFile(owner: string, name: string, filePath: string): Promise<ClipFile> {
+	async getClipFile(id: string, filePath: string, revision?: string): Promise<ClipFile> {
+		const query = revision ? `?ref=${encodeURIComponent(revision)}` : '';
 		return this.request<ClipFile>(
-			`/api/clips/${encodeURIComponent(owner)}/${encodeURIComponent(name)}/files/${encodeURIComponent(filePath)}`
+			`/api/clips/${encodeURIComponent(id)}/files/${filePath}${query}`
 		);
 	}
 
-	async forkClip(owner: string, name: string, request: ForkClipRequest = {}): Promise<Clip> {
+	async getClipFileRaw(id: string, filePath: string, revision?: string): Promise<string> {
+		const query = revision ? `?ref=${encodeURIComponent(revision)}` : '';
+		const url = `${this.baseUrl}/api/clips/${encodeURIComponent(id)}/raw/${filePath}${query}`;
+		const response = await fetch(url, { credentials: 'include' });
+
+		if (!response.ok) {
+			throw new Error(`API Error: ${response.status}`);
+		}
+
+		return response.text();
+	}
+
+	async updateClipFiles(id: string, request: UpdateFilesRequest): Promise<ClipFilesResponse> {
+		return this.request<ClipFilesResponse>(
+			`/api/clips/${encodeURIComponent(id)}/files`,
+			{
+				method: 'POST',
+				body: JSON.stringify(request),
+			}
+		);
+	}
+
+	// =========================================================================
+	// Revisions
+	// =========================================================================
+
+	async listClipRevisions(id: string, limit?: number): Promise<ClipRevisionsResponse> {
+		const query = limit ? `?limit=${limit}` : '';
+		return this.request<ClipRevisionsResponse>(
+			`/api/clips/${encodeURIComponent(id)}/revisions${query}`
+		);
+	}
+
+	// =========================================================================
+	// Stars
+	// =========================================================================
+
+	async starClip(id: string): Promise<StarClipResponse> {
+		return this.request<StarClipResponse>(
+			`/api/clips/${encodeURIComponent(id)}/star`,
+			{ method: 'POST' }
+		);
+	}
+
+	async unstarClip(id: string): Promise<StarClipResponse> {
+		return this.request<StarClipResponse>(
+			`/api/clips/${encodeURIComponent(id)}/star`,
+			{ method: 'DELETE' }
+		);
+	}
+
+	async getClipStarStatus(id: string): Promise<StarClipResponse> {
+		return this.request<StarClipResponse>(
+			`/api/clips/${encodeURIComponent(id)}/starred`
+		);
+	}
+
+	// =========================================================================
+	// Fork
+	// =========================================================================
+
+	async forkClip(id: string, request: ForkClipRequest): Promise<Clip> {
 		return this.request<Clip>(
-			`/api/clips/${encodeURIComponent(owner)}/${encodeURIComponent(name)}/fork`,
+			`/api/clips/${encodeURIComponent(id)}/fork`,
 			{
 				method: 'POST',
 				body: JSON.stringify(request),

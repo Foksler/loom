@@ -6,7 +6,7 @@
 	import { browser } from '$app/environment';
 	import { getClipsClient, type Clip, type ClipVisibility } from '$lib/api/clips';
 	import { getApiClient } from '$lib/api/client';
-	import type { Org } from '$lib/api/types';
+	import type { Org, CurrentUser } from '$lib/api/types';
 	import { ClipList } from '$lib/components/clips';
 	import { Button } from '$lib/ui';
 	import { trackLinkClick, trackFilterChange, trackButtonClick } from '$lib/analytics';
@@ -14,26 +14,34 @@
 	const clipsClient = getClipsClient();
 	const apiClient = getApiClient();
 
+	let currentUser = $state<CurrentUser | null>(null);
 	let orgs = $state<Org[]>([]);
 	let clips = $state<Clip[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
-	let activeTab = $state<'my' | 'explore'>('my');
+	let activeTab = $state<'my' | 'starred' | 'explore'>('my');
 	let languageFilter = $state<string>('');
 
 	$effect(() => {
 		if (browser) {
+			loadCurrentUser();
 			loadOrgs();
-			loadClips();
 		}
 	});
 
 	$effect(() => {
-		if (browser) {
-			const tab = activeTab;
+		if (browser && (currentUser || activeTab !== 'my')) {
 			loadClips();
 		}
 	});
+
+	async function loadCurrentUser() {
+		try {
+			currentUser = await apiClient.getCurrentUser();
+		} catch (e) {
+			console.error('Failed to load current user:', e);
+		}
+	}
 
 	async function loadOrgs() {
 		try {
@@ -49,9 +57,14 @@
 		error = null;
 		try {
 			const params = languageFilter ? { language: languageFilter } : {};
-			const response = activeTab === 'my'
-				? await clipsClient.listUserClips(params)
-				: await clipsClient.listPublicClips(params);
+			let response;
+			if (activeTab === 'my' && currentUser) {
+				response = await clipsClient.listUserClips(currentUser.user.id, params);
+			} else if (activeTab === 'starred') {
+				response = await clipsClient.listStarredClips(params);
+			} else {
+				response = await clipsClient.listPublicClips(params);
+			}
 			clips = response.clips;
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Failed to load clips';
@@ -69,7 +82,7 @@
 		window.location.href = `/clips/${clip.owner}/${clip.name}`;
 	}
 
-	function handleTabChange(tab: 'my' | 'explore') {
+	function handleTabChange(tab: 'my' | 'starred' | 'explore') {
 		trackFilterChange('clips_tab', tab, { page: 'clips' });
 		activeTab = tab;
 	}
@@ -100,6 +113,13 @@
 			onclick={() => handleTabChange('my')}
 		>
 			My Clips
+		</button>
+		<button
+			class="tab"
+			class:active={activeTab === 'starred'}
+			onclick={() => handleTabChange('starred')}
+		>
+			Starred
 		</button>
 		<button
 			class="tab"
