@@ -9,9 +9,13 @@
 	import { i18n, setLocale, getCurrentLocale, isRtl, type Locale, locales } from '$lib/i18n';
 	import { ImpersonationBanner, ThreadDivider } from '$lib/ui';
 	import { NotificationProvider } from '$lib/components/notifications';
-	import { AnalyticsProvider, reset as analyticsReset } from '$lib/analytics';
+	import { AnalyticsProvider, reset as analyticsReset, capture } from '$lib/analytics';
 	import type { Snippet } from 'svelte';
 	import type { CurrentUser, ImpersonationState } from '$lib/api/types';
+
+	function trackNavClick(item: string, path: string) {
+		capture('nav_clicked', { item, path });
+	}
 
 	interface Props {
 		children: Snippet;
@@ -79,38 +83,38 @@
 	<header class="app-header">
 		<div class="header-content">
 			<div class="header-left">
-				<a href="/threads" class="logo">
+				<a href="/threads" class="logo" onclick={() => trackNavClick('logo', '/threads')}>
 					Loom
 				</a>
 				<nav class="nav">
-					<a href="/threads" class="nav-link">
+					<a href="/threads" class="nav-link" onclick={() => trackNavClick('threads', '/threads')}>
 						{i18n._('nav.threads')}
 					</a>
-					<a href="/repos" class="nav-link">
+					<a href="/repos" class="nav-link" onclick={() => trackNavClick('repos', '/repos')}>
 						Repos
 					</a>
-					<a href="/weavers" class="nav-link">
+					<a href="/weavers" class="nav-link" onclick={() => trackNavClick('weavers', '/weavers')}>
 						{i18n._('nav.weavers')}
 					</a>
 					<div class="nav-group">
 						<span class="nav-group-label">{i18n._('nav.observability')}</span>
 						<div class="nav-group-links">
-							<a href="/crashes" class="nav-link">
+							<a href="/crashes" class="nav-link" onclick={() => trackNavClick('crashes', '/crashes')}>
 								{i18n._('nav.crashes')}
 							</a>
-							<a href="/crons" class="nav-link">
+							<a href="/crons" class="nav-link" onclick={() => trackNavClick('crons', '/crons')}>
 								{i18n._('nav.crons')}
 							</a>
-							<a href="/sessions" class="nav-link">
+							<a href="/sessions" class="nav-link" onclick={() => trackNavClick('sessions', '/sessions')}>
 								{i18n._('nav.sessions')}
 							</a>
 						</div>
 					</div>
-					<a href="/settings/profile" class="nav-link">
+					<a href="/settings/profile" class="nav-link" onclick={() => trackNavClick('settings', '/settings/profile')}>
 						{i18n._('nav.settings')}
 					</a>
 					{#if isSystemAdmin}
-						<a href="/admin" class="nav-link nav-link-admin">
+						<a href="/admin" class="nav-link nav-link-admin" onclick={() => trackNavClick('admin', '/admin')}>
 							{i18n._('nav.admin')}
 						</a>
 					{/if}
@@ -137,7 +141,7 @@
 							{data.user.display_name}
 						</span>
 					</div>
-					<button onclick={handleLogout} class="logout-btn">
+					<button onclick={() => { trackNavClick('logout', '/login'); handleLogout(); }} class="logout-btn">
 						{i18n._('auth.signOut')}
 					</button>
 				{/if}
