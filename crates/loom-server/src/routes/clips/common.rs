@@ -14,10 +14,11 @@ use uuid::Uuid;
 
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateClipRequest {
-	pub org_id: Uuid,
+	pub org_id: Option<Uuid>,
 	pub name: String,
 	pub description: Option<String>,
 	pub visibility: Option<String>,
+	#[serde(default)]
 	pub files: Vec<CreateClipFile>,
 }
 

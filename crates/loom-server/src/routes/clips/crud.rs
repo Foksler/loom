@@ -87,65 +87,73 @@ pub async fn create_clip(
 			.into_response();
 	}
 
-	// Check org membership
-	let org_id = OrgId::new(payload.org_id);
-	let membership = match state
-		.org_repo
-		.get_membership(&org_id, &current_user.user.id)
-		.await
-	{
-		Ok(Some(m)) => m,
-		Ok(None) => {
-			return (
-				StatusCode::FORBIDDEN,
-				Json(ClipsErrorResponse {
-					error: "forbidden".to_string(),
-					message: t(locale, "server.api.error.forbidden").to_string(),
-				}),
-			)
-				.into_response();
-		}
-		Err(e) => {
-			tracing::error!(error = %e, "Failed to check org membership");
-			return (
-				StatusCode::INTERNAL_SERVER_ERROR,
-				Json(ClipsErrorResponse {
-					error: "internal_error".to_string(),
-					message: t(locale, "server.api.error.internal").to_string(),
-				}),
-			)
-				.into_response();
-		}
+	// Determine owner: org slug if org_id provided, otherwise user's display_name
+	let (owner_slug, org_id_for_record) = if let Some(org_uuid) = payload.org_id {
+		// Check org membership
+		let org_id = OrgId::new(org_uuid);
+		let _membership = match state
+			.org_repo
+			.get_membership(&org_id, &current_user.user.id)
+			.await
+		{
+			Ok(Some(m)) => m,
+			Ok(None) => {
+				return (
+					StatusCode::FORBIDDEN,
+					Json(ClipsErrorResponse {
+						error: "forbidden".to_string(),
+						message: t(locale, "server.api.error.forbidden").to_string(),
+					}),
+				)
+					.into_response();
+			}
+			Err(e) => {
+				tracing::error!(error = %e, "Failed to check org membership");
+				return (
+					StatusCode::INTERNAL_SERVER_ERROR,
+					Json(ClipsErrorResponse {
+						error: "internal_error".to_string(),
+						message: t(locale, "server.api.error.internal").to_string(),
+					}),
+				)
+					.into_response();
+			}
+		};
+
+		// Get org for the owner name
+		let org = match state.org_repo.get_org_by_id(&org_id).await {
+			Ok(Some(o)) => o,
+			Ok(None) => {
+				return (
+					StatusCode::NOT_FOUND,
+					Json(ClipsErrorResponse {
+						error: "not_found".to_string(),
+						message: t(locale, "server.api.clips.org_not_found").to_string(),
+					}),
+				)
+					.into_response();
+			}
+			Err(e) => {
+				tracing::error!(error = %e, "Failed to get organization");
+				return (
+					StatusCode::INTERNAL_SERVER_ERROR,
+					Json(ClipsErrorResponse {
+						error: "internal_error".to_string(),
+						message: t(locale, "server.api.error.internal").to_string(),
+					}),
+				)
+					.into_response();
+			}
+		};
+
+		(org.slug, Some(org_uuid))
+	} else {
+		// Personal clip - use user's display name as owner
+		(current_user.user.display_name.clone(), None)
 	};
 
-	// Get org for the owner name
-	let org = match state.org_repo.get_org_by_id(&org_id).await {
-		Ok(Some(o)) => o,
-		Ok(None) => {
-			return (
-				StatusCode::NOT_FOUND,
-				Json(ClipsErrorResponse {
-					error: "not_found".to_string(),
-					message: t(locale, "server.api.clips.org_not_found").to_string(),
-				}),
-			)
-				.into_response();
-		}
-		Err(e) => {
-			tracing::error!(error = %e, "Failed to get organization");
-			return (
-				StatusCode::INTERNAL_SERVER_ERROR,
-				Json(ClipsErrorResponse {
-					error: "internal_error".to_string(),
-					message: t(locale, "server.api.error.internal").to_string(),
-				}),
-			)
-				.into_response();
-		}
-	};
-
-	// Check if clip name already exists
-	if let Ok(true) = clips_repo.clip_name_exists(&org.slug, &payload.name).await {
+	// Check if clip name already exists for this owner
+	if let Ok(true) = clips_repo.clip_name_exists(&owner_slug, &payload.name).await {
 		return (
 			StatusCode::CONFLICT,
 			Json(ClipsErrorResponse {
@@ -162,12 +170,12 @@ pub async fn create_clip(
 
 	let params = CreateClipParams {
 		id: clip_id,
-		owner: org.slug.clone(),
+		owner: owner_slug.clone(),
 		name: payload.name.clone(),
 		description: payload.description.clone(),
 		visibility,
 		created_by: current_user.user.id.into_inner(),
-		org_id: Some(payload.org_id),
+		org_id: org_id_for_record,
 		is_fork: false,
 		forked_from: None,
 	};
@@ -245,7 +253,8 @@ pub async fn create_clip(
 	tracing::info!(
 		clip_id = %clip_id,
 		name = %payload.name,
-		org_id = %payload.org_id,
+		org_id = ?org_id_for_record,
+		owner = %owner_slug,
 		created_by = %current_user.user.id,
 		"Clip created"
 	);
@@ -256,15 +265,14 @@ pub async fn create_clip(
 			.actor(AuditUserId::new(current_user.user.id.into_inner()))
 			.resource("clip", clip_id.to_string())
 			.details(serde_json::json!({
-				"org_id": payload.org_id.to_string(),
+				"org_id": org_id_for_record.map(|id| id.to_string()),
+				"owner": owner_slug,
 				"name": payload.name,
 				"visibility": format!("{:?}", visibility),
 				"file_count": payload.files.len(),
 			}))
 			.build(),
 	);
-
-	let _ = membership;
 	(
 		StatusCode::CREATED,
 		Json(clip_record_to_response(clip, &state.base_url)),
