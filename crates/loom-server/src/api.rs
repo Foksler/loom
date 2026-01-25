@@ -1250,6 +1250,19 @@ pub fn create_router(state: AppState) -> Router {
 			"/api/orgs/{org_id}/analytics/api-keys/{key_id}",
 			delete(routes::analytics::revoke_api_key),
 		)
+		// Analytics query routes (user auth for web UI)
+		.route(
+			"/api/orgs/{org_id}/analytics/events",
+			get(routes::analytics::list_events_user_auth),
+		)
+		.route(
+			"/api/orgs/{org_id}/analytics/events/count",
+			get(routes::analytics::count_events_user_auth),
+		)
+		.route(
+			"/api/orgs/{org_id}/analytics/persons",
+			get(routes::analytics::list_persons_user_auth),
+		)
 		// Cron monitoring API routes (authenticated)
 		.route(
 			"/api/crons/monitors",

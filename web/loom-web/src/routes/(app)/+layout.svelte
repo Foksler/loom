@@ -99,6 +99,9 @@
 					<div class="nav-group">
 						<span class="nav-group-label">{i18n._('nav.observability')}</span>
 						<div class="nav-group-links">
+							<a href="/analytics" class="nav-link" onclick={() => trackNavClick('analytics', '/analytics')}>
+								Analytics
+							</a>
 							<a href="/crashes" class="nav-link" onclick={() => trackNavClick('crashes', '/crashes')}>
 								{i18n._('nav.crashes')}
 							</a>

@@ -892,3 +892,203 @@ async fn extract_api_key_context(
 		key_type,
 	})
 }
+
+// ============================================================================
+// User Auth Routes (Session Auth for Web UI)
+// ============================================================================
+
+/// List events for an organization (requires user auth).
+#[utoipa::path(
+    get,
+    path = "/api/orgs/{org_id}/analytics/events",
+    params(
+        ("org_id" = String, Path, description = "Organization ID"),
+        ListEventsQuery
+    ),
+    responses(
+        (status = 200, description = "List of events", body = ListEventsResponse),
+        (status = 401, description = "Not authenticated", body = AnalyticsErrorResponse),
+        (status = 404, description = "Organization not found", body = AnalyticsErrorResponse)
+    ),
+    tag = "analytics"
+)]
+#[tracing::instrument(skip(state), fields(%org_id))]
+pub async fn list_events_user_auth(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(org_id): Path<String>,
+	Query(query): Query<ListEventsQuery>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		AnalyticsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	// Check org membership
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<AnalyticsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<AnalyticsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	let analytics_state = match &state.analytics_state {
+		Some(s) => s.clone(),
+		None => {
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
+		}
+	};
+
+	// Create a context that grants read access for this org
+	let analytics_org_id = AnalyticsOrgId(org_id.into_inner());
+	let api_key_ctx = AnalyticsApiKeyContext {
+		api_key_id: loom_analytics_core::AnalyticsApiKeyId(uuid::Uuid::nil()),
+		org_id: analytics_org_id,
+		key_type: loom_analytics_core::AnalyticsKeyType::ReadWrite,
+	};
+
+	list_events_impl(analytics_state, api_key_ctx, query)
+		.await
+		.into_response()
+}
+
+/// Count events for an organization (requires user auth).
+#[utoipa::path(
+    get,
+    path = "/api/orgs/{org_id}/analytics/events/count",
+    params(
+        ("org_id" = String, Path, description = "Organization ID"),
+        CountEventsQuery
+    ),
+    responses(
+        (status = 200, description = "Event count", body = CountEventsResponse),
+        (status = 401, description = "Not authenticated", body = AnalyticsErrorResponse),
+        (status = 404, description = "Organization not found", body = AnalyticsErrorResponse)
+    ),
+    tag = "analytics"
+)]
+#[tracing::instrument(skip(state), fields(%org_id))]
+pub async fn count_events_user_auth(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(org_id): Path<String>,
+	Query(query): Query<CountEventsQuery>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		AnalyticsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	// Check org membership
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<AnalyticsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<AnalyticsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	let analytics_state = match &state.analytics_state {
+		Some(s) => s.clone(),
+		None => {
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
+		}
+	};
+
+	let analytics_org_id = AnalyticsOrgId(org_id.into_inner());
+	let api_key_ctx = AnalyticsApiKeyContext {
+		api_key_id: loom_analytics_core::AnalyticsApiKeyId(uuid::Uuid::nil()),
+		org_id: analytics_org_id,
+		key_type: loom_analytics_core::AnalyticsKeyType::ReadWrite,
+	};
+
+	count_events_impl(analytics_state, api_key_ctx, query)
+		.await
+		.into_response()
+}
+
+/// List persons for an organization (requires user auth).
+#[utoipa::path(
+    get,
+    path = "/api/orgs/{org_id}/analytics/persons",
+    params(
+        ("org_id" = String, Path, description = "Organization ID"),
+        ListPersonsQuery
+    ),
+    responses(
+        (status = 200, description = "List of persons", body = ListPersonsResponse),
+        (status = 401, description = "Not authenticated", body = AnalyticsErrorResponse),
+        (status = 404, description = "Organization not found", body = AnalyticsErrorResponse)
+    ),
+    tag = "analytics"
+)]
+#[tracing::instrument(skip(state), fields(%org_id))]
+pub async fn list_persons_user_auth(
+	RequireAuth(current_user): RequireAuth,
+	State(state): State<AppState>,
+	Path(org_id): Path<String>,
+	Query(query): Query<ListPersonsQuery>,
+) -> impl IntoResponse {
+	let locale = resolve_user_locale(&current_user, &state.default_locale);
+	let org_id = parse_id!(
+		AnalyticsErrorResponse,
+		shared_parse_org_id(&org_id, &t(locale, "server.api.org.invalid_id"))
+	);
+
+	// Check org membership
+	match state
+		.org_repo
+		.get_membership(&org_id, &current_user.user.id)
+		.await
+	{
+		Ok(Some(_)) => {}
+		Ok(None) => {
+			return not_found::<AnalyticsErrorResponse>(t(locale, "server.api.org.not_a_member"))
+				.into_response();
+		}
+		Err(e) => {
+			tracing::error!(error = %e, %org_id, "Failed to check org membership");
+			return internal_error::<AnalyticsErrorResponse>(t(locale, "server.api.error.internal"))
+				.into_response();
+		}
+	}
+
+	let analytics_state = match &state.analytics_state {
+		Some(s) => s.clone(),
+		None => {
+			return internal_error::<AnalyticsErrorResponse>("Analytics not configured").into_response()
+		}
+	};
+
+	let analytics_org_id = AnalyticsOrgId(org_id.into_inner());
+	let api_key_ctx = AnalyticsApiKeyContext {
+		api_key_id: loom_analytics_core::AnalyticsApiKeyId(uuid::Uuid::nil()),
+		org_id: analytics_org_id,
+		key_type: loom_analytics_core::AnalyticsKeyType::ReadWrite,
+	};
+
+	list_persons_impl(analytics_state, api_key_ctx, query)
+		.await
+		.into_response()
+}

@@ -847,6 +847,68 @@ export interface CrashFreeDataPoint {
 }
 
 // Error class for API errors
+// =============================================================================
+// Product Analytics Types
+// =============================================================================
+
+export interface AnalyticsEvent {
+	id: string;
+	org_id: string;
+	person_id?: string;
+	distinct_id: string;
+	event_name: string;
+	properties: Record<string, unknown>;
+	timestamp: string;
+	ip_address?: string;
+	user_agent?: string;
+	lib?: string;
+	lib_version?: string;
+	created_at: string;
+}
+
+export interface AnalyticsEventListResponse {
+	events: AnalyticsEvent[];
+	has_more: boolean;
+}
+
+export interface AnalyticsEventCountResponse {
+	count: number;
+}
+
+export interface AnalyticsPerson {
+	id: string;
+	org_id: string;
+	properties: Record<string, unknown>;
+	created_at: string;
+	updated_at: string;
+	merged_into_id?: string;
+	merged_at?: string;
+	identities: AnalyticsPersonIdentity[];
+}
+
+export interface AnalyticsPersonIdentity {
+	id: string;
+	person_id: string;
+	distinct_id: string;
+	identity_type: 'anonymous' | 'identified';
+	created_at: string;
+}
+
+export interface AnalyticsPersonListResponse {
+	persons: AnalyticsPerson[];
+	has_more: boolean;
+}
+
+export interface AnalyticsListParams {
+	limit?: number;
+	offset?: number;
+	event_name?: string;
+	distinct_id?: string;
+	person_id?: string;
+	start_date?: string;
+	end_date?: string;
+}
+
 export class ApiError extends Error {
 	constructor(
 		public readonly status: number,

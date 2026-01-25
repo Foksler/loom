@@ -67,6 +67,13 @@ import type {
 	AppSessionListResponse,
 	ReleaseHealth,
 	ReleaseHealthListResponse,
+	// Analytics types
+	AnalyticsEvent,
+	AnalyticsEventListResponse,
+	AnalyticsEventCountResponse,
+	AnalyticsPerson,
+	AnalyticsPersonListResponse,
+	AnalyticsListParams,
 } from './types';
 import { ApiError } from './types';
 
@@ -581,6 +588,42 @@ export class LoomApiClient {
 		if (params.environment) query.set('environment', params.environment);
 
 		return this.request<ReleaseHealth>(`/api/app-sessions/releases/${encodeURIComponent(version)}?${query}`);
+	}
+
+	// =========================================================================
+	// Product Analytics
+	// =========================================================================
+
+	async listAnalyticsEvents(orgId: string, params: AnalyticsListParams = {}): Promise<AnalyticsEventListResponse> {
+		const query = new URLSearchParams();
+		if (params.limit) query.set('limit', String(params.limit));
+		if (params.offset) query.set('offset', String(params.offset));
+		if (params.event_name) query.set('event_name', params.event_name);
+		if (params.distinct_id) query.set('distinct_id', params.distinct_id);
+		if (params.person_id) query.set('person_id', params.person_id);
+		if (params.start_date) query.set('start_date', params.start_date);
+		if (params.end_date) query.set('end_date', params.end_date);
+
+		return this.request<AnalyticsEventListResponse>(`/api/orgs/${orgId}/analytics/events?${query}`);
+	}
+
+	async countAnalyticsEvents(orgId: string, params: AnalyticsListParams = {}): Promise<AnalyticsEventCountResponse> {
+		const query = new URLSearchParams();
+		if (params.event_name) query.set('event_name', params.event_name);
+		if (params.distinct_id) query.set('distinct_id', params.distinct_id);
+		if (params.person_id) query.set('person_id', params.person_id);
+		if (params.start_date) query.set('start_date', params.start_date);
+		if (params.end_date) query.set('end_date', params.end_date);
+
+		return this.request<AnalyticsEventCountResponse>(`/api/orgs/${orgId}/analytics/events/count?${query}`);
+	}
+
+	async listAnalyticsPersons(orgId: string, params: { limit?: number; offset?: number } = {}): Promise<AnalyticsPersonListResponse> {
+		const query = new URLSearchParams();
+		if (params.limit) query.set('limit', String(params.limit));
+		if (params.offset) query.set('offset', String(params.offset));
+
+		return this.request<AnalyticsPersonListResponse>(`/api/orgs/${orgId}/analytics/persons?${query}`);
 	}
 }
 
