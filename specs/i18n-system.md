@@ -5,9 +5,9 @@
 
 # Internationalization (i18n) System Specification
 
-**Status:** Draft\
-**Version:** 1.0\
-**Last Updated:** 2024-12-30
+**Status:** Implemented\
+**Version:** 1.1\
+**Last Updated:** 2026-01-25
 
 ---
 
@@ -45,7 +45,7 @@ workflows and supports both left-to-right (LTR) and right-to-left (RTL) language
 ### Crate Structure
 
 ```
-crates/loom-i18n/
+crates/loom-common-i18n/
 ├── Cargo.toml
 ├── build.rs                    # Compiles .po → .mo at build time
 ├── src/
@@ -58,22 +58,23 @@ crates/loom-i18n/
     │   └── messages.po         # English (source)
     ├── es/
     │   └── messages.po         # Spanish
-    └── ar/
-        └── messages.po         # Arabic (RTL)
+    ├── ar/
+    │   └── messages.po         # Arabic (RTL)
+    └── ... (17 locales total)
 ```
 
 ### Dependency Graph
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│ loom-server │────▶│  loom-auth  │────▶│  loom-i18n  │
-└─────────────┘     └─────────────┘     └─────────────┘
-                                               │
-                                               ▼
-                                        ┌─────────────┐
-                                        │   gettext   │
-                                        │ (pure Rust) │
-                                        └─────────────┘
+┌─────────────┐     ┌─────────────┐     ┌──────────────────┐
+│ loom-server │────▶│  loom-auth  │────▶│ loom-common-i18n │
+└─────────────┘     └─────────────┘     └──────────────────┘
+                                                  │
+                                                  ▼
+                                           ┌─────────────┐
+                                           │   gettext   │
+                                           │ (pure Rust) │
+                                           └─────────────┘
 ```
 
 ---
@@ -186,13 +187,28 @@ server.email.invitation.subject = "You've been invited to join {org_name} on Loo
 
 ## 5. Supported Locales
 
-### Initial Locales
+### Supported Locales (17 total)
 
 | Code | Language | Native Name | Direction |
 |------|----------|-------------|-----------|
 | `en` | English | English | LTR |
 | `es` | Spanish | Español | LTR |
+| `fr` | French | Français | LTR |
 | `ar` | Arabic | العربية | RTL |
+| `he` | Hebrew | עברית | RTL |
+| `bn` | Bengali | বাংলা | LTR |
+| `el` | Greek | Ελληνικά | LTR |
+| `et` | Estonian | Eesti | LTR |
+| `hi` | Hindi | हिन्दी | LTR |
+| `id` | Indonesian | Bahasa Indonesia | LTR |
+| `it` | Italian | Italiano | LTR |
+| `ja` | Japanese | 日本語 | LTR |
+| `ko` | Korean | 한국어 | LTR |
+| `nl` | Dutch | Nederlands | LTR |
+| `pt` | Portuguese | Português | LTR |
+| `ru` | Russian | Русский | LTR |
+| `sv` | Swedish | Svenska | LTR |
+| `zh-CN` | Chinese (Simplified) | 简体中文 | LTR |
 
 ### Locale Metadata
 
@@ -660,14 +676,13 @@ msgstr[1] "Your account will be deleted in {count} days."
 
 ### Additional Locales
 
-Priority order for future locales:
+Most priority locales have been implemented. Potential future additions:
 
-1. French (`fr`) - LTR
-2. German (`de`) - LTR
-3. Portuguese (`pt`) - LTR
-4. Hebrew (`he`) - RTL
-5. Chinese Simplified (`zh-CN`) - LTR
-6. Japanese (`ja`) - LTR
+1. German (`de`) - LTR
+2. Polish (`pl`) - LTR
+3. Turkish (`tr`) - LTR
+4. Vietnamese (`vi`) - LTR
+5. Thai (`th`) - LTR
 
 ### Translation Management
 

@@ -5,9 +5,9 @@
 
 # Health Check System Specification
 
-**Status:** Draft\
-**Version:** 1.1\
-**Last Updated:** 2025-01-18
+**Status:** Implemented\
+**Version:** 1.2\
+**Last Updated:** 2026-01-25
 
 ---
 
@@ -48,6 +48,7 @@ diagnostic information.
 | LLM Providers    | Non-critical | `degraded` - inference unavailable    |
 | Google CSE       | Non-critical | `degraded` - web search unavailable   |
 | Auth Providers   | Non-critical | `degraded` - some login methods unavailable |
+| WhatsApp         | Non-critical | `degraded` - WhatsApp messaging unavailable |
 
 ---
 
@@ -264,6 +265,24 @@ Validates that authentication providers (OAuth, Magic Link) are properly configu
 - No providers configured → `unhealthy`
 - Individual unconfigured providers → `degraded` (per-provider)
 
+### 4.6 WhatsApp Check
+
+Verifies WhatsApp integration status by counting enabled configurations.
+
+**Timeout:** 5 seconds
+
+**Checks performed:**
+
+1. Repository accessible
+2. Count of enabled WhatsApp configs
+
+**Status mapping:**
+
+- Repository query succeeds → `healthy`
+- Repository query fails → `degraded`
+- Repository query times out → `degraded`
+- Not configured (repo is None) → not included in response
+
 ---
 
 ## 5. Response Schema
@@ -297,6 +316,7 @@ interface HealthComponents {
 	llm_providers: LlmProvidersHealth;
 	google_cse: GoogleCseHealth;
 	auth_providers: AuthProvidersHealth;
+	whatsapp?: WhatsAppHealth;
 }
 ```
 
@@ -363,6 +383,18 @@ interface AuthProviderHealth {
 	name: string; // "github", "google", "okta", "magic_link"
 	status: HealthStatus;
 	configured: boolean;
+	error?: string;
+}
+```
+
+### 5.9 WhatsAppHealth
+
+```typescript
+interface WhatsAppHealth {
+	status: HealthStatus;
+	latency_ms: number;
+	configured: boolean;
+	configs_count: number;  // Number of enabled org configs
 	error?: string;
 }
 ```

@@ -138,5 +138,5 @@ Loom's integrated observability platform: analytics, crash tracking, cron monito
 | [distribution.md](./distribution.md) | [loom-version](../crates/loom-version/) | Binary builds and self-update |
 | [container-system.md](./container-system.md) | [docker/](../docker/), [flake.nix](../flake.nix) | Docker/OCI via Nix |
 | [sbom-system.md](./sbom-system.md) | [.github/](../.github/) | SBOM generation (SPDX/CycloneDX) |
-| [i18n-system.md](./i18n-system.md) | [loom-i18n](../crates/loom-i18n/) | Internationalization with gettext |
+| [i18n-system.md](./i18n-system.md) | [loom-common-i18n](../crates/loom-common-i18n/) | Internationalization with gettext (17 locales) |
 | [testing.md](./testing.md) | [crates/](../crates/) | Property-based testing with proptest |
