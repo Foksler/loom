@@ -470,8 +470,14 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ServerError> {
 
 	let m40 = include_str!("../../migrations/040_whatsapp.sql");
 	for stmt in m40.split(';') {
+		// Strip leading comment lines to get to actual SQL
+		let stmt: String = stmt
+			.lines()
+			.filter(|line| !line.trim().starts_with("--"))
+			.collect::<Vec<_>>()
+			.join("\n");
 		let stmt = stmt.trim();
-		if stmt.is_empty() || stmt.starts_with("--") {
+		if stmt.is_empty() {
 			continue;
 		}
 		if let Err(e) = sqlx::query(stmt).execute(pool).await {
