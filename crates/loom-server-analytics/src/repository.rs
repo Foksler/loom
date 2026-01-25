@@ -657,6 +657,14 @@ impl AnalyticsRepository for SqliteAnalyticsRepository {
 				continue;
 			}
 
+			// For internal keys (created by self-monitoring), the key_hash may contain
+			// the raw key directly. Check for direct match first.
+			if key.key_hash == raw_key {
+				tracing::debug!(api_key_id = %key.id, "API key matched directly (internal key)");
+				return Ok(Some(key));
+			}
+
+			// Try argon2 verification for properly hashed keys
 			match crate::api_key::verify_api_key(raw_key, &key.key_hash) {
 				Ok(true) => {
 					tracing::debug!(api_key_id = %key.id, "API key verified successfully");
@@ -664,7 +672,8 @@ impl AnalyticsRepository for SqliteAnalyticsRepository {
 				}
 				Ok(false) => continue,
 				Err(e) => {
-					tracing::warn!(api_key_id = %key.id, error = %e, "Failed to verify API key hash");
+					// This is expected for internal keys where hash format is raw key
+					tracing::trace!(api_key_id = %key.id, error = %e, "Failed to verify API key hash (may be internal key)");
 					continue;
 				}
 			}
@@ -697,6 +706,14 @@ impl AnalyticsRepository for SqliteAnalyticsRepository {
 				}
 			};
 
+			// For internal keys (created by self-monitoring), the key_hash may contain
+			// the raw key directly. Check for direct match first.
+			if key.key_hash == raw_key {
+				tracing::debug!(api_key_id = %key.id, org_id = %key.org_id, "API key matched directly (internal key)");
+				return Ok(Some(key));
+			}
+
+			// Try argon2 verification for properly hashed keys
 			match crate::api_key::verify_api_key(raw_key, &key.key_hash) {
 				Ok(true) => {
 					tracing::debug!(api_key_id = %key.id, org_id = %key.org_id, "API key verified successfully");
@@ -704,7 +721,8 @@ impl AnalyticsRepository for SqliteAnalyticsRepository {
 				}
 				Ok(false) => continue,
 				Err(e) => {
-					tracing::warn!(api_key_id = %key.id, error = %e, "Failed to verify API key hash");
+					// This is expected for internal keys where hash format is raw key
+					tracing::trace!(api_key_id = %key.id, error = %e, "Failed to verify API key hash (may be internal key)");
 					continue;
 				}
 			}
