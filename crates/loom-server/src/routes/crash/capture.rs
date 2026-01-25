@@ -44,7 +44,8 @@ pub struct CaptureRequest {
 	pub project_id: String,
 	pub exception_type: String,
 	pub exception_value: String,
-	pub stacktrace: CaptureStacktrace,
+	#[serde(default)]
+	pub stacktrace: Option<CaptureStacktrace>,
 	#[serde(default)]
 	pub environment: Option<String>,
 	pub platform: Option<String>,
@@ -165,19 +166,22 @@ fn convert_capture_request(
 	let stacktrace = Stacktrace {
 		frames: body
 			.stacktrace
-			.frames
-			.into_iter()
-			.map(|f| Frame {
-				function: f.function,
-				module: f.module,
-				filename: f.filename,
-				abs_path: f.abs_path,
-				lineno: f.lineno,
-				colno: f.colno,
-				in_app: f.in_app,
-				..Default::default()
+			.map(|st| {
+				st.frames
+					.into_iter()
+					.map(|f| Frame {
+						function: f.function,
+						module: f.module,
+						filename: f.filename,
+						abs_path: f.abs_path,
+						lineno: f.lineno,
+						colno: f.colno,
+						in_app: f.in_app,
+						..Default::default()
+					})
+					.collect()
 			})
-			.collect(),
+			.unwrap_or_default(),
 	};
 
 	let breadcrumbs: Vec<Breadcrumb> = body
