@@ -51,11 +51,24 @@ pub fn hash_api_key(key: &str) -> Result<String> {
 		.map_err(|_| CrashServerError::ApiKeyHash)
 }
 
-/// Verifies a raw API key against a stored Argon2 hash.
+/// Verifies a raw API key against a stored hash or plaintext key.
+///
+/// Supports two storage formats:
+/// 1. Argon2 hashes (starting with `$argon2`) - verified using Argon2
+/// 2. Plaintext keys - verified using constant-time comparison (for system-generated keys)
 ///
 /// Returns `true` if the key matches, `false` otherwise.
-pub fn verify_api_key(key: &str, hash: &str) -> Result<bool> {
-	let parsed_hash = PasswordHash::new(hash).map_err(|_| CrashServerError::InvalidApiKey)?;
+pub fn verify_api_key(key: &str, hash_or_key: &str) -> Result<bool> {
+	// System-generated keys are stored as plaintext (not hashed)
+	// They don't start with $argon2
+	if !hash_or_key.starts_with("$argon2") {
+		// Constant-time comparison to prevent timing attacks
+		use subtle::ConstantTimeEq;
+		return Ok(key.as_bytes().ct_eq(hash_or_key.as_bytes()).into());
+	}
+
+	// Standard Argon2 hash verification
+	let parsed_hash = PasswordHash::new(hash_or_key).map_err(|_| CrashServerError::InvalidApiKey)?;
 
 	Ok(
 		Argon2::default()
