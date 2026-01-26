@@ -286,6 +286,17 @@ pub async fn create_join_request(
 		"Join request created"
 	);
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::MemberAdded)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("org", org_id.to_string())
+			.action("join_request_created")
+			.details(serde_json::json!({
+				"org_slug": org.slug,
+			}))
+			.build(),
+	);
+
 	(
 		StatusCode::CREATED,
 		Json(InvitationSuccessResponse {
@@ -656,6 +667,18 @@ pub async fn reject_join_request(
 		org_id = %org_id,
 		request_id = %request_id,
 		"Join request rejected"
+	);
+
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::MemberRemoved)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("org", org_id.to_string())
+			.action("join_request_rejected")
+			.details(serde_json::json!({
+				"request_id": request_id,
+				"target_user_id": join_request.user_id.to_string(),
+			}))
+			.build(),
 	);
 
 	(

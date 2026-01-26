@@ -799,6 +799,17 @@ pub async fn restore_org(
 
 	tracing::info!(%org_id, restored_by = %current_user.user.id, "Organization restored");
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::OrgRestored)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("org", org.id.to_string())
+			.details(serde_json::json!({
+				"name": org.name,
+				"slug": org.slug,
+			}))
+			.build(),
+	);
+
 	(
 		StatusCode::OK,
 		Json(OrgSuccessResponse {

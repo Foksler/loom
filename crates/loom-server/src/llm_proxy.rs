@@ -20,6 +20,47 @@ use std::convert::Infallible;
 use tokio_stream::wrappers::ReceiverStream;
 
 use crate::{api::AppState, error::ServerError};
+use loom_server_audit::{AuditEventType, AuditLogBuilder};
+use std::sync::Arc;
+
+/// Log LLM request started for audit tracking.
+fn log_llm_request_started(state: &AppState, provider: &str, model: &str, message_count: usize) {
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::LlmRequestStarted)
+			.details(serde_json::json!({
+				"provider": provider,
+				"model": model,
+				"message_count": message_count,
+			}))
+			.build(),
+	);
+}
+
+/// Log LLM request completed for audit tracking.
+fn log_llm_request_completed(state: &AppState, provider: &str, model: &str, tool_call_count: usize) {
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::LlmRequestCompleted)
+			.details(serde_json::json!({
+				"provider": provider,
+				"model": model,
+				"tool_call_count": tool_call_count,
+			}))
+			.build(),
+	);
+}
+
+/// Log LLM request failed for audit tracking.
+fn log_llm_request_failed(state: &AppState, provider: &str, model: &str, error: &str) {
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::LlmRequestFailed)
+			.details(serde_json::json!({
+				"provider": provider,
+				"model": model,
+				"error": error,
+			}))
+			.build(),
+	);
+}
 
 /// Wire format for LLM streaming events sent over SSE.
 ///
@@ -106,6 +147,11 @@ pub async fn proxy_anthropic_complete(
 		));
 	}
 
+	let model = request.model.clone();
+	let message_count = request.messages.len();
+
+	log_llm_request_started(&state, "anthropic", &model, message_count);
+
 	tracing::debug!(
 			model = %request.model,
 			message_count = request.messages.len(),
@@ -113,10 +159,15 @@ pub async fn proxy_anthropic_complete(
 			"proxy_anthropic_complete: sending request"
 	);
 
-	let response = service
-		.complete_anthropic(request)
-		.await
-		.map_err(map_llm_error)?;
+	let response = match service.complete_anthropic(request).await {
+		Ok(resp) => resp,
+		Err(e) => {
+			log_llm_request_failed(&state, "anthropic", &model, &e.to_string());
+			return Err(map_llm_error(e));
+		}
+	};
+
+	log_llm_request_completed(&state, "anthropic", &model, response.tool_calls.len());
 
 	tracing::info!(
 			finish_reason = ?response.finish_reason,
@@ -145,6 +196,11 @@ pub async fn proxy_anthropic_stream(
 		));
 	}
 
+	let model = request.model.clone();
+	let message_count = request.messages.len();
+
+	log_llm_request_started(&state, "anthropic", &model, message_count);
+
 	tracing::debug!(
 			model = %request.model,
 			message_count = request.messages.len(),
@@ -152,11 +208,14 @@ pub async fn proxy_anthropic_stream(
 			"proxy_anthropic_stream: starting stream"
 	);
 
-	let stream = service
-		.complete_streaming_anthropic(request)
-		.await
-		.map_err(map_llm_error)?;
-	Ok(create_sse_response(stream))
+	let stream = match service.complete_streaming_anthropic(request).await {
+		Ok(s) => s,
+		Err(e) => {
+			log_llm_request_failed(&state, "anthropic", &model, &e.to_string());
+			return Err(map_llm_error(e));
+		}
+	};
+	Ok(create_sse_response(stream, state.audit_service.clone(), "anthropic".to_string(), model))
 }
 
 /// POST /proxy/openai/complete - Synchronous OpenAI completion.
@@ -177,6 +236,11 @@ pub async fn proxy_openai_complete(
 		));
 	}
 
+	let model = request.model.clone();
+	let message_count = request.messages.len();
+
+	log_llm_request_started(&state, "openai", &model, message_count);
+
 	tracing::debug!(
 			model = %request.model,
 			message_count = request.messages.len(),
@@ -184,10 +248,15 @@ pub async fn proxy_openai_complete(
 			"proxy_openai_complete: sending request"
 	);
 
-	let response = service
-		.complete_openai(request)
-		.await
-		.map_err(map_llm_error)?;
+	let response = match service.complete_openai(request).await {
+		Ok(resp) => resp,
+		Err(e) => {
+			log_llm_request_failed(&state, "openai", &model, &e.to_string());
+			return Err(map_llm_error(e));
+		}
+	};
+
+	log_llm_request_completed(&state, "openai", &model, response.tool_calls.len());
 
 	tracing::info!(
 			finish_reason = ?response.finish_reason,
@@ -216,6 +285,11 @@ pub async fn proxy_openai_stream(
 		));
 	}
 
+	let model = request.model.clone();
+	let message_count = request.messages.len();
+
+	log_llm_request_started(&state, "openai", &model, message_count);
+
 	tracing::debug!(
 			model = %request.model,
 			message_count = request.messages.len(),
@@ -223,11 +297,14 @@ pub async fn proxy_openai_stream(
 			"proxy_openai_stream: starting stream"
 	);
 
-	let stream = service
-		.complete_streaming_openai(request)
-		.await
-		.map_err(map_llm_error)?;
-	Ok(create_sse_response(stream))
+	let stream = match service.complete_streaming_openai(request).await {
+		Ok(s) => s,
+		Err(e) => {
+			log_llm_request_failed(&state, "openai", &model, &e.to_string());
+			return Err(map_llm_error(e));
+		}
+	};
+	Ok(create_sse_response(stream, state.audit_service.clone(), "openai".to_string(), model))
 }
 
 /// POST /proxy/vertex/complete - Synchronous Vertex AI completion.
@@ -248,6 +325,11 @@ pub async fn proxy_vertex_complete(
 		));
 	}
 
+	let model = request.model.clone();
+	let message_count = request.messages.len();
+
+	log_llm_request_started(&state, "vertex", &model, message_count);
+
 	tracing::debug!(
 			model = %request.model,
 			message_count = request.messages.len(),
@@ -255,10 +337,15 @@ pub async fn proxy_vertex_complete(
 			"proxy_vertex_complete: sending request"
 	);
 
-	let response = service
-		.complete_vertex(request)
-		.await
-		.map_err(map_llm_error)?;
+	let response = match service.complete_vertex(request).await {
+		Ok(resp) => resp,
+		Err(e) => {
+			log_llm_request_failed(&state, "vertex", &model, &e.to_string());
+			return Err(map_llm_error(e));
+		}
+	};
+
+	log_llm_request_completed(&state, "vertex", &model, response.tool_calls.len());
 
 	tracing::info!(
 			finish_reason = ?response.finish_reason,
@@ -287,6 +374,11 @@ pub async fn proxy_vertex_stream(
 		));
 	}
 
+	let model = request.model.clone();
+	let message_count = request.messages.len();
+
+	log_llm_request_started(&state, "vertex", &model, message_count);
+
 	tracing::debug!(
 		model = %request.model,
 		message_count = request.messages.len(),
@@ -294,11 +386,14 @@ pub async fn proxy_vertex_stream(
 		"proxy_vertex_stream: starting stream"
 	);
 
-	let stream = service
-		.complete_streaming_vertex(request)
-		.await
-		.map_err(map_llm_error)?;
-	Ok(create_sse_response(stream))
+	let stream = match service.complete_streaming_vertex(request).await {
+		Ok(s) => s,
+		Err(e) => {
+			log_llm_request_failed(&state, "vertex", &model, &e.to_string());
+			return Err(map_llm_error(e));
+		}
+	};
+	Ok(create_sse_response(stream, state.audit_service.clone(), "vertex".to_string(), model))
 }
 
 /// POST /proxy/zai/complete - Synchronous Z.ai completion.
@@ -319,6 +414,11 @@ pub async fn proxy_zai_complete(
 		));
 	}
 
+	let model = request.model.clone();
+	let message_count = request.messages.len();
+
+	log_llm_request_started(&state, "zai", &model, message_count);
+
 	tracing::debug!(
 		model = %request.model,
 		message_count = request.messages.len(),
@@ -326,7 +426,15 @@ pub async fn proxy_zai_complete(
 		"proxy_zai_complete: sending request"
 	);
 
-	let response = service.complete_zai(request).await.map_err(map_llm_error)?;
+	let response = match service.complete_zai(request).await {
+		Ok(resp) => resp,
+		Err(e) => {
+			log_llm_request_failed(&state, "zai", &model, &e.to_string());
+			return Err(map_llm_error(e));
+		}
+	};
+
+	log_llm_request_completed(&state, "zai", &model, response.tool_calls.len());
 
 	tracing::info!(
 		finish_reason = ?response.finish_reason,
@@ -355,6 +463,11 @@ pub async fn proxy_zai_stream(
 		));
 	}
 
+	let model = request.model.clone();
+	let message_count = request.messages.len();
+
+	log_llm_request_started(&state, "zai", &model, message_count);
+
 	tracing::debug!(
 		model = %request.model,
 		message_count = request.messages.len(),
@@ -362,11 +475,14 @@ pub async fn proxy_zai_stream(
 		"proxy_zai_stream: starting stream"
 	);
 
-	let stream = service
-		.complete_streaming_zai(request)
-		.await
-		.map_err(map_llm_error)?;
-	Ok(create_sse_response(stream))
+	let stream = match service.complete_streaming_zai(request).await {
+		Ok(s) => s,
+		Err(e) => {
+			log_llm_request_failed(&state, "zai", &model, &e.to_string());
+			return Err(map_llm_error(e));
+		}
+	};
+	Ok(create_sse_response(stream, state.audit_service.clone(), "zai".to_string(), model))
 }
 
 /// Creates an SSE response from an LlmStream.
@@ -387,6 +503,9 @@ pub async fn proxy_zai_stream(
 /// - Parser in `ProxyLlmStream` handles conversion
 fn create_sse_response(
 	stream: LlmStream,
+	audit_service: Arc<loom_server_audit::AuditService>,
+	provider: String,
+	model: String,
 ) -> Sse<impl futures::Stream<Item = Result<Event, Infallible>>> {
 	let (tx, rx) = tokio::sync::mpsc::channel::<Result<Event, Infallible>>(32);
 
@@ -428,6 +547,18 @@ fn create_sse_response(
 							tool_call_count = response.tool_calls.len(),
 							"stream completed"
 					);
+
+					// Log completion audit event
+					audit_service.log(
+						AuditLogBuilder::new(AuditEventType::LlmRequestCompleted)
+							.details(serde_json::json!({
+								"provider": &provider,
+								"model": &model,
+								"tool_call_count": response.tool_calls.len(),
+							}))
+							.build(),
+					);
+
 					let stream_event = LlmStreamEvent::Completed {
 						response: LlmProxyResponse::from(response),
 					};
@@ -441,6 +572,18 @@ fn create_sse_response(
 				}
 				LlmEvent::Error(err) => {
 					tracing::warn!(error = %err, "stream error");
+
+					// Log error audit event
+					audit_service.log(
+						AuditLogBuilder::new(AuditEventType::LlmRequestFailed)
+							.details(serde_json::json!({
+								"provider": &provider,
+								"model": &model,
+								"error": err.to_string(),
+							}))
+							.build(),
+					);
+
 					let stream_event = LlmStreamEvent::Error {
 						message: err.to_string(),
 					};

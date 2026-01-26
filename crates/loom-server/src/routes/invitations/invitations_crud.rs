@@ -493,6 +493,18 @@ pub async fn cancel_invitation(
 		"Invitation cancelled"
 	);
 
+	state.audit_service.log(
+		AuditLogBuilder::new(AuditEventType::MemberRemoved)
+			.actor(AuditUserId::new(current_user.user.id.into_inner()))
+			.resource("invitation", invitation_id.to_string())
+			.action("invitation_cancelled")
+			.details(serde_json::json!({
+				"org_id": org_id.to_string(),
+				"email": invitation.email,
+			}))
+			.build(),
+	);
+
 	(
 		StatusCode::OK,
 		Json(InvitationSuccessResponse {

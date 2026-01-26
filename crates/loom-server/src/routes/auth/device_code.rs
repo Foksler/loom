@@ -227,6 +227,16 @@ pub async fn device_complete(
 		Ok(true) => {
 			// SECURITY: Don't log user_code as it's a secret
 			tracing::info!(user_id = %current_user.user.id, "Device code completed by user");
+
+			state.audit_service.log(
+				AuditLogBuilder::new(AuditEventType::DeviceCodeCompleted)
+					.actor(AuditUserId::new(current_user.user.id.into_inner()))
+					.details(serde_json::json!({
+						"step": "user_authorization",
+					}))
+					.build(),
+			);
+
 			Json(DeviceCodeCompleteResponse {
 				message: t(locale, "server.api.auth.device_authorized").to_string(),
 			})

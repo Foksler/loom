@@ -61,6 +61,7 @@ use crate::{
 	db::{ApiKeyRepository, AuthSessionRepository, UserRepository},
 	error::ErrorResponse,
 };
+use loom_server_audit::{AuditEventType, AuditLogBuilder, UserId as AuditUserId};
 
 /// Authentication middleware that extracts auth context from requests.
 ///
@@ -127,6 +128,16 @@ pub async fn auth_layer(
 					if let Some(ref user) = auth_ctx.current_user {
 						span.record("auth_method", "api_key");
 						span.record("user_id", tracing::field::display(&user.user.id));
+
+						// Log API key usage for security auditing
+						if let Some(api_key_id) = user.api_key_id {
+							state.audit_service.log(
+								AuditLogBuilder::new(AuditEventType::ApiKeyUsed)
+									.actor(AuditUserId::new(user.user.id.into_inner()))
+									.resource("api_key", api_key_id.to_string())
+									.build(),
+							);
+						}
 					}
 					request.extensions_mut().insert(auth_ctx);
 					return next.run(request).await;

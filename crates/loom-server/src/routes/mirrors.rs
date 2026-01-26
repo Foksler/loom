@@ -460,12 +460,11 @@ pub async fn delete_mirror(
 	match mirror_store.delete(mirror_id).await {
 		Ok(()) => {
 			state.audit_service.log(
-				AuditLogBuilder::new(AuditEventType::RepoDeleted)
+				AuditLogBuilder::new(AuditEventType::MirrorDeleted)
 					.actor(AuditUserId::new(current_user.user.id.into_inner()))
 					.resource("mirror", mirror_id.to_string())
 					.details(serde_json::json!({
 						"repo_id": id.to_string(),
-						"action": "mirror_deleted",
 					}))
 					.build(),
 			);

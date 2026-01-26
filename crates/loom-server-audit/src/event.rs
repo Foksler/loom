@@ -12,9 +12,12 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::fmt;
 use uuid::Uuid;
+
+use crate::redaction::{redact_details, redact_optional_string, redact_string};
 
 /// Default retention period for audit logs in days.
 pub const DEFAULT_AUDIT_RETENTION_DAYS: i64 = 90;
@@ -112,7 +115,11 @@ pub enum AuditEventType {
 	RepoCreated,
 	RepoDeleted,
 	MirrorCreated,
+	MirrorDeleted,
 	MirrorSynced,
+	WebhookCreated,
+	WebhookUpdated,
+	WebhookDeleted,
 	WebhookReceived,
 
 	// SCIM events
@@ -274,7 +281,11 @@ impl fmt::Display for AuditEventType {
 			AuditEventType::RepoCreated => "repo_created",
 			AuditEventType::RepoDeleted => "repo_deleted",
 			AuditEventType::MirrorCreated => "mirror_created",
+			AuditEventType::MirrorDeleted => "mirror_deleted",
 			AuditEventType::MirrorSynced => "mirror_synced",
+			AuditEventType::WebhookCreated => "webhook_created",
+			AuditEventType::WebhookUpdated => "webhook_updated",
+			AuditEventType::WebhookDeleted => "webhook_deleted",
 			AuditEventType::WebhookReceived => "webhook_received",
 
 			// User management events
@@ -401,6 +412,8 @@ impl AuditEventType {
 			| AuditEventType::RepoCreated
 			| AuditEventType::MirrorCreated
 			| AuditEventType::MirrorSynced
+			| AuditEventType::WebhookCreated
+			| AuditEventType::WebhookUpdated
 			| AuditEventType::WebhookReceived
 			| AuditEventType::ScimUserCreated
 			| AuditEventType::ScimUserUpdated
@@ -469,6 +482,8 @@ impl AuditEventType {
 			| AuditEventType::UserRestored
 			| AuditEventType::WeaverDeleted
 			| AuditEventType::RepoDeleted
+			| AuditEventType::MirrorDeleted
+			| AuditEventType::WebhookDeleted
 			| AuditEventType::ScimUserDeleted
 			| AuditEventType::ScimUserDeprovisioned
 			| AuditEventType::ScimGroupDeleted
@@ -767,7 +782,28 @@ impl AuditLogBuilder {
 	}
 
 	/// Build the audit log entry.
-	pub fn build(self) -> AuditLogEntry {
+	///
+	/// Automatically redacts secrets from sensitive fields using `loom-redact` patterns.
+	/// The following fields are redacted:
+	/// - `details`: All string values in the JSON structure
+	/// - `resource_id`: May contain identifiers that could be secrets
+	/// - `action`: Custom action descriptions may contain secrets
+	/// - `user_agent`: Unlikely but could contain leaked tokens
+	pub fn build(mut self) -> AuditLogEntry {
+		// Redact secrets from fields that may contain sensitive data
+		let details = redact_details(&self.details);
+		redact_optional_string(&mut self.resource_id);
+		redact_optional_string(&mut self.user_agent);
+
+		// Redact action if custom, otherwise use event type display
+		let action = match self.action {
+			Some(ref a) => match redact_string(a) {
+				Cow::Borrowed(s) => s.to_string(),
+				Cow::Owned(s) => s,
+			},
+			None => self.event_type.to_string(),
+		};
+
 		AuditLogEntry {
 			id: Uuid::new_v4(),
 			timestamp: Utc::now(),
@@ -779,10 +815,10 @@ impl AuditLogBuilder {
 			impersonating_user_id: self.impersonating_user_id,
 			resource_type: self.resource_type,
 			resource_id: self.resource_id,
-			action: self.action.unwrap_or_else(|| self.event_type.to_string()),
+			action,
 			ip_address: self.ip_address,
 			user_agent: self.user_agent,
-			details: self.details,
+			details,
 			trace_id: self.trace_id,
 			span_id: self.span_id,
 			request_id: self.request_id,
@@ -848,7 +884,7 @@ mod tests {
 			assert_eq!(event, AuditEventType::AccessDenied);
 		}
 
-		const ALL_EVENT_TYPES: [AuditEventType; 85] = [
+		const ALL_EVENT_TYPES: [AuditEventType; 89] = [
 			AuditEventType::Login,
 			AuditEventType::Logout,
 			AuditEventType::LoginFailed,
@@ -896,7 +932,11 @@ mod tests {
 			AuditEventType::RepoCreated,
 			AuditEventType::RepoDeleted,
 			AuditEventType::MirrorCreated,
+			AuditEventType::MirrorDeleted,
 			AuditEventType::MirrorSynced,
+			AuditEventType::WebhookCreated,
+			AuditEventType::WebhookUpdated,
+			AuditEventType::WebhookDeleted,
 			AuditEventType::WebhookReceived,
 			// Feature flag events
 			AuditEventType::FlagCreated,
@@ -1487,6 +1527,89 @@ mod tests {
 
 			assert_eq!(entry.actor_user_id, Some(target_user));
 			assert_eq!(entry.impersonating_user_id, Some(admin_user));
+		}
+
+		fn github_pat() -> String {
+			format!("ghp_{}", "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8")
+		}
+
+		#[test]
+		fn redacts_secrets_in_details() {
+			let entry = AuditLogBuilder::new(AuditEventType::Login)
+				.details(json!({
+					"token": format!("Bearer {}", github_pat()),
+					"user": "test@example.com"
+				}))
+				.build();
+
+			let token_val = entry.details["token"].as_str().unwrap();
+			assert!(
+				token_val.contains("[REDACTED:"),
+				"Expected redaction in details: {}",
+				token_val
+			);
+			assert!(!token_val.contains(&github_pat()));
+			assert_eq!(entry.details["user"], "test@example.com");
+		}
+
+		#[test]
+		fn redacts_secrets_in_action() {
+			let entry = AuditLogBuilder::new(AuditEventType::Login)
+				.action(format!("User logged in with token {}", github_pat()))
+				.build();
+
+			assert!(
+				entry.action.contains("[REDACTED:"),
+				"Expected redaction in action: {}",
+				entry.action
+			);
+			assert!(!entry.action.contains(&github_pat()));
+		}
+
+		#[test]
+		fn redacts_secrets_in_resource_id() {
+			let entry = AuditLogBuilder::new(AuditEventType::ApiKeyUsed)
+				.resource("api_key", github_pat())
+				.build();
+
+			let resource_id = entry.resource_id.as_ref().unwrap();
+			assert!(
+				resource_id.contains("[REDACTED:"),
+				"Expected redaction in resource_id: {}",
+				resource_id
+			);
+			assert!(!resource_id.contains(&github_pat()));
+		}
+
+		#[test]
+		fn redacts_secrets_in_user_agent() {
+			let entry = AuditLogBuilder::new(AuditEventType::Login)
+				.user_agent(format!("CustomClient/1.0 token={}", github_pat()))
+				.build();
+
+			let user_agent = entry.user_agent.as_ref().unwrap();
+			assert!(
+				user_agent.contains("[REDACTED:"),
+				"Expected redaction in user_agent: {}",
+				user_agent
+			);
+			assert!(!user_agent.contains(&github_pat()));
+		}
+
+		#[test]
+		fn preserves_non_secret_values() {
+			let entry = AuditLogBuilder::new(AuditEventType::Login)
+				.action("User logged in successfully")
+				.resource("session", "sess-12345")
+				.user_agent("Mozilla/5.0")
+				.details(json!({"ip": "192.168.1.1", "method": "password"}))
+				.build();
+
+			assert_eq!(entry.action, "User logged in successfully");
+			assert_eq!(entry.resource_id, Some("sess-12345".to_string()));
+			assert_eq!(entry.user_agent, Some("Mozilla/5.0".to_string()));
+			assert_eq!(entry.details["ip"], "192.168.1.1");
+			assert_eq!(entry.details["method"], "password");
 		}
 	}
 

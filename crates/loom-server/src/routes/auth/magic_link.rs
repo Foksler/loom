@@ -15,6 +15,21 @@ use loom_server_session::{AuthMethod, SessionRequest};
 
 use crate::{api::AppState, client_info::ClientInfo, i18n::t};
 
+/// Log a failed magic link login attempt for security auditing.
+fn log_magic_link_login_failed(state: &AppState, error: &str, ip_address: Option<&str>) {
+	let mut builder = AuditLogBuilder::new(AuditEventType::LoginFailed)
+		.details(serde_json::json!({
+			"method": "magic_link",
+			"error": error,
+		}));
+
+	if let Some(ip) = ip_address {
+		builder = builder.ip_address(ip.to_string());
+	}
+
+	state.audit_service.log(builder.build());
+}
+
 use super::common::{
 	AuthErrorResponse, AuthSuccessResponse, MagicLinkRequest, MagicLinkVerifyQuery,
 };
@@ -178,6 +193,7 @@ pub async fn verify_magic_link(
 		Some((id, email, _)) => (id, email),
 		None => {
 			tracing::debug!("Magic link not found or invalid token");
+			log_magic_link_login_failed(&state, "invalid_token", client_info.ip_address.as_deref());
 			return (
 				StatusCode::BAD_REQUEST,
 				Json(AuthErrorResponse {
@@ -196,6 +212,7 @@ pub async fn verify_magic_link(
 		Ok(true) => {}
 		Ok(false) => {
 			tracing::debug!(link_id = %link_id, "Magic link already claimed by another request");
+			log_magic_link_login_failed(&state, "already_claimed", client_info.ip_address.as_deref());
 			return (
 				StatusCode::BAD_REQUEST,
 				Json(AuthErrorResponse {

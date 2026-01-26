@@ -9,6 +9,7 @@ use axum::{
 	response::{IntoResponse, Redirect},
 	Json,
 };
+use loom_server_audit::{AuditEventType, AuditLogBuilder};
 use loom_server_session::{AuthMethod, SessionRequest};
 
 use crate::{
@@ -17,6 +18,21 @@ use crate::{
 	i18n::{t, t_fmt},
 	oauth_state::{generate_nonce, generate_state, sanitize_redirect},
 };
+
+/// Log a failed OAuth login attempt for security auditing.
+fn log_oauth_login_failed(state: &AppState, provider: &str, error: &str, ip_address: Option<&str>) {
+	let mut builder = AuditLogBuilder::new(AuditEventType::LoginFailed)
+		.details(serde_json::json!({
+			"provider": provider,
+			"error": error,
+		}));
+
+	if let Some(ip) = ip_address {
+		builder = builder.ip_address(ip.to_string());
+	}
+
+	state.audit_service.log(builder.build());
+}
 
 use super::common::{AuthErrorResponse, OAuthCallbackQuery, OAuthLoginQuery, OAuthRedirectResponse};
 
@@ -239,6 +255,7 @@ pub async fn callback_github(
 	let locale = state.default_locale.as_str();
 	if let Some(error) = &query.error {
 		tracing::warn!(error = %error, "GitHub OAuth error");
+		log_oauth_login_failed(&state, "github", error, client_info.ip_address.as_deref());
 		return (
 			StatusCode::BAD_REQUEST,
 			Json(AuthErrorResponse {
@@ -265,6 +282,7 @@ pub async fn callback_github(
 	};
 
 	let (Some(code), Some(oauth_state)) = (&query.code, &query.state) else {
+		log_oauth_login_failed(&state, "github", "missing_code_or_state", client_info.ip_address.as_deref());
 		return (
 			StatusCode::BAD_REQUEST,
 			Json(AuthErrorResponse {
@@ -282,6 +300,7 @@ pub async fn callback_github(
 	{
 		Some(entry) => entry,
 		None => {
+			log_oauth_login_failed(&state, "github", "invalid_state", client_info.ip_address.as_deref());
 			return (
 				StatusCode::BAD_REQUEST,
 				Json(AuthErrorResponse {
@@ -297,6 +316,7 @@ pub async fn callback_github(
 		Ok(resp) => resp,
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to exchange GitHub code");
+			log_oauth_login_failed(&state, "github", "token_exchange_failed", client_info.ip_address.as_deref());
 			return (
 				StatusCode::BAD_REQUEST,
 				Json(AuthErrorResponse {
@@ -315,6 +335,7 @@ pub async fn callback_github(
 		Ok(user) => user,
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to get GitHub user");
+			log_oauth_login_failed(&state, "github", "user_fetch_failed", client_info.ip_address.as_deref());
 			return (
 				StatusCode::BAD_REQUEST,
 				Json(AuthErrorResponse {
@@ -342,6 +363,7 @@ pub async fn callback_github(
 					Some(email) => email,
 					None => {
 						tracing::warn!(login = %github_user.login, "No verified email found for GitHub user");
+						log_oauth_login_failed(&state, "github", "no_verified_email", client_info.ip_address.as_deref());
 						return (
 							StatusCode::BAD_REQUEST,
 							Json(AuthErrorResponse {
@@ -355,6 +377,7 @@ pub async fn callback_github(
 			}
 			Err(e) => {
 				tracing::warn!(error = %e, login = %github_user.login, "Failed to fetch GitHub emails");
+				log_oauth_login_failed(&state, "github", "email_fetch_failed", client_info.ip_address.as_deref());
 				return (
 					StatusCode::BAD_REQUEST,
 					Json(AuthErrorResponse {
@@ -420,6 +443,7 @@ pub async fn callback_google(
 	let locale = state.default_locale.as_str();
 	if let Some(error) = &query.error {
 		tracing::warn!(error = %error, "Google OAuth error");
+		log_oauth_login_failed(&state, "google", error, client_info.ip_address.as_deref());
 		return (
 			StatusCode::BAD_REQUEST,
 			Json(AuthErrorResponse {
@@ -446,6 +470,7 @@ pub async fn callback_google(
 	};
 
 	let (Some(code), Some(oauth_state)) = (&query.code, &query.state) else {
+		log_oauth_login_failed(&state, "google", "missing_code_or_state", client_info.ip_address.as_deref());
 		return (
 			StatusCode::BAD_REQUEST,
 			Json(AuthErrorResponse {
@@ -463,6 +488,7 @@ pub async fn callback_google(
 	{
 		Some(entry) => entry,
 		None => {
+			log_oauth_login_failed(&state, "google", "invalid_state", client_info.ip_address.as_deref());
 			return (
 				StatusCode::BAD_REQUEST,
 				Json(AuthErrorResponse {
@@ -478,6 +504,7 @@ pub async fn callback_google(
 		Ok(resp) => resp,
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to exchange Google code");
+			log_oauth_login_failed(&state, "google", "token_exchange_failed", client_info.ip_address.as_deref());
 			return (
 				StatusCode::BAD_REQUEST,
 				Json(AuthErrorResponse {
@@ -496,6 +523,7 @@ pub async fn callback_google(
 		Ok(user) => user,
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to get Google user");
+			log_oauth_login_failed(&state, "google", "user_fetch_failed", client_info.ip_address.as_deref());
 			return (
 				StatusCode::BAD_REQUEST,
 				Json(AuthErrorResponse {
@@ -509,6 +537,7 @@ pub async fn callback_google(
 
 	if !google_user.email_verified {
 		tracing::warn!(email = %google_user.email, "Google email not verified");
+		log_oauth_login_failed(&state, "google", "email_not_verified", client_info.ip_address.as_deref());
 		return (
 			StatusCode::BAD_REQUEST,
 			Json(AuthErrorResponse {
@@ -570,6 +599,7 @@ pub async fn callback_okta(
 	let locale = state.default_locale.as_str();
 	if let Some(error) = &query.error {
 		tracing::warn!(error = %error, "Okta OAuth error");
+		log_oauth_login_failed(&state, "okta", error, client_info.ip_address.as_deref());
 		return (
 			StatusCode::BAD_REQUEST,
 			Json(AuthErrorResponse {
@@ -596,6 +626,7 @@ pub async fn callback_okta(
 	};
 
 	let (Some(code), Some(oauth_state)) = (&query.code, &query.state) else {
+		log_oauth_login_failed(&state, "okta", "missing_code_or_state", client_info.ip_address.as_deref());
 		return (
 			StatusCode::BAD_REQUEST,
 			Json(AuthErrorResponse {
@@ -613,6 +644,7 @@ pub async fn callback_okta(
 	{
 		Some(entry) => entry,
 		None => {
+			log_oauth_login_failed(&state, "okta", "invalid_state", client_info.ip_address.as_deref());
 			return (
 				StatusCode::BAD_REQUEST,
 				Json(AuthErrorResponse {
@@ -628,6 +660,7 @@ pub async fn callback_okta(
 		Ok(resp) => resp,
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to exchange Okta code");
+			log_oauth_login_failed(&state, "okta", "token_exchange_failed", client_info.ip_address.as_deref());
 			return (
 				StatusCode::BAD_REQUEST,
 				Json(AuthErrorResponse {
@@ -646,6 +679,7 @@ pub async fn callback_okta(
 		Ok(user) => user,
 		Err(e) => {
 			tracing::error!(error = %e, "Failed to get Okta user");
+			log_oauth_login_failed(&state, "okta", "user_fetch_failed", client_info.ip_address.as_deref());
 			return (
 				StatusCode::BAD_REQUEST,
 				Json(AuthErrorResponse {
@@ -659,6 +693,7 @@ pub async fn callback_okta(
 
 	if !okta_user.email_verified.unwrap_or(false) {
 		tracing::warn!(email = %okta_user.email, "Okta email not verified");
+		log_oauth_login_failed(&state, "okta", "email_not_verified", client_info.ip_address.as_deref());
 		return (
 			StatusCode::BAD_REQUEST,
 			Json(AuthErrorResponse {

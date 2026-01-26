@@ -386,11 +386,10 @@ pub async fn create_repo_webhook(
 	match webhook_store.create(&webhook).await {
 		Ok(created) => {
 			state.audit_service.log(
-				AuditLogBuilder::new(AuditEventType::WebhookReceived)
+				AuditLogBuilder::new(AuditEventType::WebhookCreated)
 					.actor(AuditUserId::new(current_user.user.id.into_inner()))
 					.resource("webhook", created.id.to_string())
 					.details(serde_json::json!({
-						"action": "repo_webhook_created",
 						"repo_id": id.to_string(),
 						"url": &created.url,
 					}))
@@ -500,11 +499,10 @@ pub async fn delete_repo_webhook(
 	match webhook_store.delete(wid).await {
 		Ok(()) => {
 			state.audit_service.log(
-				AuditLogBuilder::new(AuditEventType::WebhookReceived)
+				AuditLogBuilder::new(AuditEventType::WebhookDeleted)
 					.actor(AuditUserId::new(current_user.user.id.into_inner()))
 					.resource("webhook", wid.to_string())
 					.details(serde_json::json!({
-						"action": "repo_webhook_deleted",
 						"repo_id": id.to_string(),
 					}))
 					.build(),
@@ -689,11 +687,10 @@ pub async fn create_org_webhook(
 	match webhook_store.create(&webhook).await {
 		Ok(created) => {
 			state.audit_service.log(
-				AuditLogBuilder::new(AuditEventType::WebhookReceived)
+				AuditLogBuilder::new(AuditEventType::WebhookCreated)
 					.actor(AuditUserId::new(current_user.user.id.into_inner()))
 					.resource("webhook", created.id.to_string())
 					.details(serde_json::json!({
-						"action": "org_webhook_created",
 						"org_id": id.to_string(),
 						"url": &created.url,
 					}))
@@ -803,11 +800,10 @@ pub async fn delete_org_webhook(
 	match webhook_store.delete(wid).await {
 		Ok(()) => {
 			state.audit_service.log(
-				AuditLogBuilder::new(AuditEventType::WebhookReceived)
+				AuditLogBuilder::new(AuditEventType::WebhookDeleted)
 					.actor(AuditUserId::new(current_user.user.id.into_inner()))
 					.resource("webhook", wid.to_string())
 					.details(serde_json::json!({
-						"action": "org_webhook_deleted",
 						"org_id": id.to_string(),
 					}))
 					.build(),
