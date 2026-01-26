@@ -152,11 +152,13 @@
 				</div>
 			</section>
 
-			<section class="issue-section">
-				<Stacktrace stacktrace={issue.latest_event.stacktrace} />
-			</section>
+			{#if issue.latest_event.stacktrace}
+				<section class="issue-section">
+					<Stacktrace stacktrace={issue.latest_event.stacktrace} />
+				</section>
+			{/if}
 
-			{#if issue.latest_event.breadcrumbs.length > 0}
+			{#if issue.latest_event.breadcrumbs && issue.latest_event.breadcrumbs.length > 0}
 				<section class="issue-section">
 					<Breadcrumbs breadcrumbs={issue.latest_event.breadcrumbs} />
 				</section>
@@ -167,7 +169,7 @@
 					<UserContext user={issue.latest_event.user_context} />
 				{/if}
 
-				{#if Object.keys(issue.latest_event.active_flags).length > 0}
+				{#if issue.latest_event.active_flags && Object.keys(issue.latest_event.active_flags).length > 0}
 					<ActiveFlags flags={issue.latest_event.active_flags} />
 				{/if}
 			</div>

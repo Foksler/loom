@@ -29,8 +29,9 @@
 	let expandedFrames = $state<Set<number>>(new Set());
 	let showAllFrames = $state(false);
 
-	const inAppFrames = $derived(stacktrace.frames.filter((f) => f.in_app));
-	const displayedFrames = $derived(showAllFrames ? stacktrace.frames : inAppFrames);
+	const frames = $derived(stacktrace?.frames ?? []);
+	const inAppFrames = $derived(frames.filter((f) => f.in_app));
+	const displayedFrames = $derived(showAllFrames ? frames : inAppFrames);
 
 	function toggleFrame(index: number) {
 		const newSet = new Set(expandedFrames);
@@ -57,7 +58,7 @@
 		<h3 class="stacktrace-title">{title}</h3>
 		<div class="stacktrace-controls">
 			<span class="frame-count">
-				{displayedFrames.length} of {stacktrace.frames.length} frames
+				{displayedFrames.length} of {frames.length} frames
 			</span>
 			<button class="control-btn" onclick={() => (showAllFrames = !showAllFrames)}>
 				{showAllFrames ? 'App only' : 'All frames'}
