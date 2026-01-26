@@ -119,6 +119,7 @@ pub struct AppState {
 	pub clips_git_store: Option<Arc<loom_server_clips::ClipsGitStore>>,
 	pub whatsapp_repo: Option<Arc<loom_server_whatsapp::WhatsAppRepository>>,
 	pub whatsapp_service: Option<Arc<loom_server_whatsapp::WhatsAppService>>,
+	pub mcp_sessions: Option<Arc<routes::mcp::McpSessionStore>>,
 }
 
 /// Creates the application state, initializing optional components.
@@ -347,6 +348,10 @@ pub async fn create_app_state(
 	));
 	tracing::info!("WhatsApp integration initialized");
 
+	// Initialize MCP session store
+	let mcp_sessions = routes::mcp::create_session_store();
+	tracing::info!("MCP session store initialized");
+
 	AppState {
 		repo,
 		user_repo,
@@ -408,6 +413,7 @@ pub async fn create_app_state(
 		clips_git_store: Some(clips_git_store),
 		whatsapp_repo: Some(whatsapp_repo),
 		whatsapp_service: Some(whatsapp_service),
+		mcp_sessions: Some(mcp_sessions),
 	}
 }
 
@@ -1828,7 +1834,9 @@ pub fn create_router(state: AppState) -> Router {
 			.route(
 				"/api/weavers/cleanup",
 				post(routes::weaver::trigger_cleanup),
-			);
+			)
+			// MCP endpoint for weaver provisioning
+			.route("/mcp", post(routes::mcp::mcp_handler));
 	}
 
 	// Add WireGuard tunnel routes if enabled

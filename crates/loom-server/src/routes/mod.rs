@@ -26,6 +26,7 @@ pub mod github;
 pub mod health;
 pub mod invitations;
 pub mod maintenance;
+pub mod mcp;
 pub mod mirrors;
 pub mod orgs;
 pub mod protection;
